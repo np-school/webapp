@@ -39,6 +39,7 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+        .room-card:hover img { transform: scale(1.05); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
@@ -85,7 +86,7 @@
         </section>
     </main>
 
-    <!-- Dashboard View (Authenticated) -->
+    <!-- Dashboard View -->
     <main id="privateView" class="hidden max-w-7xl mx-auto px-6 py-10">
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Sidebar -->
@@ -106,7 +107,7 @@
                 <div class="pt-8 px-5" id="sidebarProfile"></div>
             </div>
 
-            <!-- Content -->
+            <!-- Content Area -->
             <div class="flex-1 space-y-8">
                 <!-- Tab: Dashboard -->
                 <div id="tab-dashboard" class="tab-content active space-y-8">
@@ -134,7 +135,6 @@
                         </div>
                     </div>
 
-                    <!-- My Bookings Table -->
                     <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                             <h4 class="font-bold">รายการจองล่าสุด</h4>
@@ -159,8 +159,73 @@
                     </div>
                 </div>
 
-                <!-- Tab: Room Booking Form -->
-                <div id="tab-room-booking" class="tab-content space-y-6">
+                <!-- Tab: Room Booking -->
+                <div id="tab-room-booking" class="tab-content space-y-10">
+                    
+                    <!-- 1. Room Directory Display -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-bold text-slate-800 flex items-center gap-2 px-2">
+                            <i data-lucide="info" class="w-5 h-5 text-blue-600"></i> รายละเอียดห้องและสถานที่
+                        </h4>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <!-- Room 1 -->
+                            <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden group transition-all hover:shadow-xl">
+                                <div class="h-32 overflow-hidden bg-slate-200">
+                                    <img src="https://images.unsplash.com/photo-1517502884422-41eaead166d4?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-500">
+                                </div>
+                                <div class="p-5 space-y-3">
+                                    <h5 class="font-bold text-slate-900">ห้องประชุมนพเก้า</h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 50 คน</span>
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="airplay" class="w-3 h-3"></i> โปรเจคเตอร์</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Room 2 -->
+                            <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden group transition-all hover:shadow-xl">
+                                <div class="h-32 overflow-hidden bg-slate-200">
+                                    <img src="https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-500">
+                                </div>
+                                <div class="p-5 space-y-3">
+                                    <h5 class="font-bold text-slate-900">ห้องปฏิบัติการคอม 1</h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 40 คน</span>
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="monitor" class="w-3 h-3"></i> PC 40 ชุด</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Room 3 -->
+                            <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden group transition-all hover:shadow-xl">
+                                <div class="h-32 overflow-hidden bg-slate-200">
+                                    <img src="https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-500">
+                                </div>
+                                <div class="p-5 space-y-3">
+                                    <h5 class="font-bold text-slate-900">หอประชุมโรงเรียน</h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 500 คน</span>
+                                        <span class="px-2 py-1 bg-slate-100 rounded-md text-[10px] text-slate-600 flex items-center gap-1"><i data-lucide="mic" class="w-3 h-3"></i> เครื่องเสียง</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Availability Schedule Summary -->
+                    <div class="bg-blue-900 text-white p-8 rounded-[2rem] shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h4 class="text-xl font-bold flex items-center gap-2">
+                                    <i data-lucide="calendar-check" class="text-blue-300"></i> ตารางการจองวันนี้
+                                </h4>
+                                <p class="text-blue-200 text-sm" id="currentDateDisplay"></p>
+                            </div>
+                        </div>
+                        <div id="scheduleSummary" class="space-y-3">
+                            <p class="text-blue-300/50 italic text-sm py-4">กำลังโหลดข้อมูลการจอง...</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Booking Form -->
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <h3 class="text-2xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
                             <i data-lucide="plus-circle" class="text-blue-600"></i> แบบฟอร์มขอใช้ห้อง/สถานที่
@@ -218,13 +283,11 @@
         <p class="text-[11px] text-slate-400">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
     </footer>
 
-    <!-- Firebase SDK Implementation -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
             authDomain: "np-webapp-74616.firebaseapp.com",
@@ -242,9 +305,9 @@
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let unsubscribeBookings = null;
+        let unsubscribeUserBookings = null;
+        let unsubscribeGlobalBookings = null;
 
-        // UI Handlers
         const loadingOverlay = document.getElementById('loadingOverlay');
 
         onAuthStateChanged(auth, (user) => {
@@ -255,11 +318,20 @@
                 document.getElementById('welcomeText').innerText = `สวัสดี, ${user.displayName}`;
                 updateUserUI(user);
                 fetchUserBookings(user.uid);
+                fetchGlobalSchedule(); // โหลดตารางรวม
+                
+                // ตั้งค่าวันที่ปัจจุบันในฟอร์มและป้ายกำกับ
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('bookingDate').value = today;
+                document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('th-TH', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                });
             } else {
                 document.getElementById('publicView').classList.remove('hidden');
                 document.getElementById('privateView').classList.add('hidden');
                 resetNavUI();
-                if (unsubscribeBookings) unsubscribeBookings();
+                if (unsubscribeUserBookings) unsubscribeUserBookings();
+                if (unsubscribeGlobalBookings) unsubscribeGlobalBookings();
             }
             loadingOverlay.style.display = 'none';
         });
@@ -278,6 +350,8 @@
         };
 
         // --- Firestore Functions ---
+        
+        // ฟังก์ชันจอง
         const bookingForm = document.getElementById('bookingForm');
         bookingForm.onsubmit = async (e) => {
             e.preventDefault();
@@ -288,6 +362,7 @@
                 await addDoc(collection(db, "bookings"), {
                     userId: currentUser.uid,
                     userName: currentUser.displayName,
+                    userPhoto: currentUser.photoURL,
                     room: document.getElementById('roomSelect').value,
                     date: document.getElementById('bookingDate').value,
                     startTime: document.getElementById('startTime').value,
@@ -299,6 +374,7 @@
                 
                 bookingForm.reset();
                 showTab('dashboard');
+                // ใช้การแจ้งเตือนแบบ UI แทน alert ถ้าเป็นไปได้ แต่เบื้องต้นใช้ alert ก่อน
                 alert("ส่งคำขอจองเรียบร้อยแล้ว!");
             } catch (error) {
                 console.error("Booking Error: ", error);
@@ -308,6 +384,7 @@
             }
         };
 
+        // ดึงรายการจองเฉพาะของผู้ใช้ (Dashboard)
         function fetchUserBookings(uid) {
             const q = query(
                 collection(db, "bookings"), 
@@ -315,7 +392,7 @@
                 orderBy("createdAt", "desc")
             );
 
-            unsubscribeBookings = onSnapshot(q, (snapshot) => {
+            unsubscribeUserBookings = onSnapshot(q, (snapshot) => {
                 const tableBody = document.getElementById('bookingTableBody');
                 const countEl = document.getElementById('bookingCount');
                 let html = '';
@@ -343,8 +420,49 @@
                     `;
                 });
                 tableBody.innerHTML = html;
-            }, (error) => {
-                console.error("Snapshot error: ", error);
+            });
+        }
+
+        // ดึงตารางรวมของวันนี้ (Room Booking Tab)
+        function fetchGlobalSchedule() {
+            const today = new Date().toISOString().split('T')[0];
+            const q = query(
+                collection(db, "bookings"),
+                where("date", "==", today),
+                orderBy("startTime", "asc")
+            );
+
+            unsubscribeGlobalBookings = onSnapshot(q, (snapshot) => {
+                const summaryEl = document.getElementById('scheduleSummary');
+                let html = '';
+
+                if (snapshot.empty) {
+                    summaryEl.innerHTML = `<div class="bg-blue-800/50 p-6 rounded-2xl border border-blue-700 text-center text-blue-200 text-sm italic">ไม่มีการจองสำหรับวันนี้</div>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isMyBooking = data.userId === currentUser.uid;
+                    html += `
+                        <div class="flex items-center justify-between bg-blue-800/80 p-4 rounded-2xl border border-blue-700/50">
+                            <div class="flex items-center gap-4">
+                                <div class="text-xs font-bold bg-blue-600 px-3 py-1 rounded-lg">${data.startTime} - ${data.endTime}</div>
+                                <div>
+                                    <p class="font-bold text-sm">${data.room}</p>
+                                    <p class="text-[10px] text-blue-300 flex items-center gap-1">
+                                        <i data-lucide="user" class="w-3 h-3"></i> โดย: ${isMyBooking ? 'คุณ' : data.userName}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-[10px] font-bold uppercase ${data.status === 'approved' ? 'text-green-400' : 'text-amber-400'}">
+                                ${data.status === 'approved' ? 'อนุมัติแล้ว' : 'รอตรวจสอบ'}
+                            </div>
+                        </div>
+                    `;
+                });
+                summaryEl.innerHTML = html;
+                lucide.createIcons();
             });
         }
 
@@ -382,6 +500,7 @@
             });
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
+            window.scrollTo(0, 0);
         };
 
         lucide.createIcons();
