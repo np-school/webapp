@@ -7,6 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- ✅ Firebase compat (ไม่ใช้ ES module — แก้ปัญหา chrome-extension conflict) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     body { font-family: 'Sarabun', sans-serif; }
     .card-custom {
@@ -121,7 +127,6 @@
   <main id="mainContent" class="max-w-[1600px] mx-auto p-6 space-y-6 opacity-0 transition-opacity duration-500">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <!-- Calendar -->
       <div class="lg:col-span-3 space-y-6">
         <div class="card-custom overflow-hidden">
           <div class="p-4 border-b border-slate-100 flex items-center justify-between text-blue-700 font-bold text-sm">
@@ -158,7 +163,6 @@
         </div>
       </div>
 
-      <!-- Day Detail -->
       <div class="lg:col-span-9">
         <div class="card-custom h-full flex flex-col">
           <div class="p-4 border-b border-blue-600 flex items-center justify-between">
@@ -174,13 +178,12 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="card-custom overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
           <i data-lucide="layout-list" class="w-4 h-4"></i> ประวัติการขอใช้บริการทั้งหมด
         </div>
-        <button id="openBookingBtn" onclick="toggleModal()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-lg flex items-center gap-1 transition-all">
+        <button onclick="toggleModal()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-lg flex items-center gap-1 transition-all">
           <i data-lucide="plus" class="w-3 h-3"></i> จองใหม่
         </button>
       </div>
@@ -275,88 +278,73 @@
     </div>
   </div>
 
-  <!-- ✅ Script อยู่ถูกที่ — นอก modal, ก่อนปิด body -->
-  <script type="module">
-    import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // ── Config เดียวกับ index.html ────────────────
-    const firebaseConfig = {
+  <script>
+    // ── Firebase Init ──────────────────────────────
+    var firebaseConfig = {
       apiKey:    "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
       authDomain:"np-webapp-74616.firebaseapp.com",
       projectId: "np-webapp-74616",
       appId:     "1:275537025660:web:4fdc11e0fe22e679f6c7f9"
     };
 
-    // ── ใช้ชื่อ app เดียวกัน ทำให้ Auth state share กัน ──
-    let app;
-    try {
-      // ถ้า index.html initialize ไปแล้ว ให้ใช้ instance เดิม
-      const { getApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
-      app = getApp();
-    } catch {
-      app = initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
 
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+    var auth = firebase.auth();
+    var db   = firebase.firestore();
 
-    let currentUser  = null;
-    let allBookings  = [];
-    let viewYear     = new Date().getFullYear();
-    let viewMonth    = new Date().getMonth();
-    let selectedDate = new Date().toISOString().split('T')[0];
-    let selectedFile = null;
-    let dataListenerStarted = false;
+    var currentUser     = null;
+    var allBookings     = [];
+    var viewYear        = new Date().getFullYear();
+    var viewMonth       = new Date().getMonth();
+    var selectedDate    = new Date().toISOString().split('T')[0];
+    var selectedFile    = null;
+    var listenerStarted = false;
 
     // ── Toast ──────────────────────────────────────
-    function showToast(message, type = 'success') {
-      const toast = document.createElement('div');
-      toast.className = `toast-notification ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white text-sm font-bold`;
+    function showToast(message, type) {
+      var toast = document.createElement('div');
+      toast.className = 'toast-notification ' + (type === 'error' ? 'bg-red-500' : 'bg-green-500') + ' text-white text-sm font-bold';
       toast.textContent = message;
       document.body.appendChild(toast);
-      setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+      setTimeout(function() {
+        toast.classList.add('hide');
+        setTimeout(function() { toast.remove(); }, 300);
+      }, 3000);
     }
 
-    // ── Hide Loading ───────────────────────────────
+    // ── Loading ────────────────────────────────────
     function hideLoading() {
-      const loader = document.getElementById('loadingOverlay');
-      const main   = document.getElementById('mainContent');
+      var loader = document.getElementById('loadingOverlay');
+      var main   = document.getElementById('mainContent');
       loader.style.opacity = '0';
-      setTimeout(() => { loader.classList.add('hidden'); main.classList.remove('opacity-0'); }, 300);
+      setTimeout(function() {
+        loader.classList.add('hidden');
+        main.classList.remove('opacity-0');
+      }, 300);
     }
 
-    // ── Auth State ─────────────────────────────────
-    // onAuthStateChanged เรียกครั้งเดียว — ไม่ว่า login หรือเปล่า
-    onAuthStateChanged(auth, (user) => {
+    // ── Auth ───────────────────────────────────────
+    auth.onAuthStateChanged(function(user) {
       currentUser = user;
-
       if (user && !user.isAnonymous) {
-        // ✅ login แล้ว — แสดงชื่อและรูป
         document.getElementById('userNameDisplay').innerText = user.displayName || 'ผู้ใช้ทั่วไป';
         if (user.photoURL) document.getElementById('userPhotoDisplay').src = user.photoURL;
       } else {
-        // ยังไม่ login — แสดงข้อความ
         document.getElementById('userNameDisplay').innerText = 'ยังไม่ได้ล็อกอิน';
       }
-
-      // ✅ โหลดข้อมูลทุกกรณี (ทั้ง login และไม่ login ดูปฏิทินได้)
-      // เรียกแค่ครั้งเดียว
-      if (!dataListenerStarted) {
-        dataListenerStarted = true;
+      if (!listenerStarted) {
+        listenerStarted = true;
         initDataListeners();
       }
     });
 
     // ── Modal ──────────────────────────────────────
-    window.toggleModal = () => {
-      const modal = document.getElementById('bookingModal');
-      const isHidden = modal.classList.contains('hidden');
-
+    function toggleModal() {
+      var modal    = document.getElementById('bookingModal');
+      var isHidden = modal.classList.contains('hidden');
       if (isHidden) {
-        // ✅ เช็ค login ก่อนเปิด modal
         if (!currentUser || currentUser.isAnonymous) {
           showToast('กรุณาล็อกอินด้วยบัญชีโรงเรียนก่อนจอง', 'error');
           return;
@@ -369,214 +357,224 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = 'auto';
-        window.clearFile();
+        clearFile();
         document.getElementById('bookingForm').reset();
       }
-    };
+    }
 
     // ── File Upload ────────────────────────────────
-    const fileInput   = document.getElementById('fileInput');
-    const uploadArea  = document.getElementById('uploadArea');
-    const filePreview = document.getElementById('filePreview');
-    const fileError   = document.getElementById('fileError');
-
-    fileInput.addEventListener('change', handleFileSelect);
-    uploadArea.addEventListener('dragover',  (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-    uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('dragover'));
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
-      if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileSelect(); }
-    });
+    function clearFile() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('filePreview').classList.add('hidden');
+      document.getElementById('fileError').classList.add('hidden');
+      selectedFile = null;
+    }
 
     function handleFileSelect() {
-      const file = fileInput.files[0];
-      fileError.classList.add('hidden');
+      var file = document.getElementById('fileInput').files[0];
+      document.getElementById('fileError').classList.add('hidden');
       if (!file) return;
       if (!file.type.startsWith('image/')) {
-        fileError.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น';
-        fileError.classList.remove('hidden');
-        fileInput.value = ''; selectedFile = null; return;
+        document.getElementById('fileError').textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น';
+        document.getElementById('fileError').classList.remove('hidden');
+        document.getElementById('fileInput').value = '';
+        selectedFile = null; return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        fileError.textContent = 'ไฟล์ขนาดใหญ่เกินไป (ไม่เกิน 5MB)';
-        fileError.classList.remove('hidden');
-        fileInput.value = ''; selectedFile = null; return;
+        document.getElementById('fileError').textContent = 'ไฟล์ขนาดใหญ่เกินไป (ไม่เกิน 5MB)';
+        document.getElementById('fileError').classList.remove('hidden');
+        document.getElementById('fileInput').value = '';
+        selectedFile = null; return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      var reader = new FileReader();
+      reader.onload = function(e) {
         document.getElementById('previewImage').src = e.target.result;
-        document.getElementById('fileName').textContent = `${file.name} (${(file.size/1024).toFixed(2)} KB)`;
-        filePreview.classList.remove('hidden');
-        selectedFile = { file, dataUrl: e.target.result };
+        document.getElementById('fileName').textContent = file.name + ' (' + (file.size/1024).toFixed(2) + ' KB)';
+        document.getElementById('filePreview').classList.remove('hidden');
+        selectedFile = { file: file, dataUrl: e.target.result };
       };
       reader.readAsDataURL(file);
     }
 
-    window.clearFile = () => {
-      fileInput.value = '';
-      filePreview.classList.add('hidden');
-      fileError.classList.add('hidden');
-      selectedFile = null;
-    };
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+    var uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover',  function(e) { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', function()  { uploadArea.classList.remove('dragover'); });
+    uploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        document.getElementById('fileInput').files = e.dataTransfer.files;
+        handleFileSelect();
+      }
+    });
 
     // ── Calendar ───────────────────────────────────
-    window.changeMonth = (delta) => {
+    function changeMonth(delta) {
       viewMonth += delta;
       if (viewMonth > 11) { viewMonth = 0; viewYear++; }
       if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
       renderCalendar();
-    };
+    }
 
     function renderCalendar() {
-      const grid  = document.getElementById('calendarDaysGrid');
-      const label = document.getElementById('currentMonthLabel');
+      var grid  = document.getElementById('calendarDaysGrid');
+      var label = document.getElementById('currentMonthLabel');
       grid.innerHTML = '';
 
-      const firstDay    = new Date(viewYear, viewMonth, 1).getDay();
-      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-      const todayStr    = new Date().toISOString().split('T')[0];
+      var firstDay    = new Date(viewYear, viewMonth, 1).getDay();
+      var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      var todayStr    = new Date().toISOString().split('T')[0];
 
       label.innerText = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(viewYear, viewMonth));
 
-      for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day empty"></div>`;
+      for (var i = 0; i < firstDay; i++) {
+        var empty = document.createElement('div');
+        empty.className = 'calendar-day empty';
+        grid.appendChild(empty);
+      }
 
-      const bookingMap = {};
-      allBookings.forEach(b => { if (!bookingMap[b.date]) bookingMap[b.date] = []; bookingMap[b.date].push(b); });
+      var bookingMap = {};
+      allBookings.forEach(function(b) {
+        if (!bookingMap[b.date]) bookingMap[b.date] = [];
+        bookingMap[b.date].push(b);
+      });
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateKey     = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday     = dateKey === todayStr;
-        const isSelected  = dateKey === selectedDate;
-        const dayBookings = bookingMap[dateKey] || [];
-        const hasBooking  = dayBookings.length > 0;
-        const isFull      = dayBookings.length >= 3;
+      for (var d = 1; d <= daysInMonth; d++) {
+        var dateKey     = viewYear + '-' + String(viewMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        var isToday     = dateKey === todayStr;
+        var isSelected  = dateKey === selectedDate;
+        var dayBookings = bookingMap[dateKey] || [];
+        var hasBooking  = dayBookings.length > 0;
+        var isFull      = dayBookings.length >= 3;
 
-        const dayEl = document.createElement('div');
-        dayEl.className = `calendar-day ${isToday?'is-today':''} ${hasBooking?'has-booking':''} ${isFull?'is-full':''} ${isSelected?'is-selected':''}`;
+        var dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day' +
+          (isToday    ? ' is-today'    : '') +
+          (hasBooking ? ' has-booking' : '') +
+          (isFull     ? ' is-full'     : '') +
+          (isSelected ? ' is-selected' : '');
         dayEl.innerText = d;
-        dayEl.onclick = () => { selectedDate = dateKey; renderCalendar(); updateSelectedDateView(dateKey, dayBookings); };
+        (function(dk, db) {
+          dayEl.onclick = function() { selectedDate = dk; renderCalendar(); updateSelectedDateView(dk, db); };
+        })(dateKey, dayBookings);
         grid.appendChild(dayEl);
       }
     }
 
     function updateSelectedDateView(dateKey, dayBookings) {
-      const todayList = document.getElementById('todayBookingsList');
+      var todayList = document.getElementById('todayBookingsList');
       document.getElementById('selectedDateLabel').innerText =
         new Date(dateKey + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
 
-      if (dayBookings.length === 0) {
-        todayList.innerHTML = `<div class="text-center py-20 text-slate-300 italic text-sm">ไม่มีข้อมูลการจองในวันที่เลือก</div>`;
+      if (!dayBookings || dayBookings.length === 0) {
+        todayList.innerHTML = '<div class="text-center py-20 text-slate-300 italic text-sm">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
         return;
       }
-      todayList.innerHTML = dayBookings.map(data => `
-        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-3 border-l-4 ${data.status==='approved'?'border-green-500':'border-amber-500'}">
-          <div class="flex-1">
-            <p class="font-bold text-sm text-blue-800">${data.room}</p>
-            <p class="text-[10px] text-slate-500">${data.startTime} - ${data.endTime} | ${data.userName || '-'}</p>
-          </div>
-          <span class="text-[9px] font-bold ${data.status==='approved'?'text-green-600 bg-green-100':'text-amber-600 bg-amber-100'} px-2 py-1 rounded">
-            ${data.status==='approved'?'อนุมัติแล้ว':'รอพิจารณา'}
-          </span>
-        </div>
-      `).join('');
+      todayList.innerHTML = dayBookings.map(function(data) {
+        var isApp = data.status === 'approved';
+        return '<div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-3 border-l-4 ' + (isApp ? 'border-green-500' : 'border-amber-500') + '">' +
+          '<div class="flex-1">' +
+            '<p class="font-bold text-sm text-blue-800">' + data.room + '</p>' +
+            '<p class="text-[10px] text-slate-500">' + data.startTime + ' - ' + data.endTime + ' | ' + (data.userName || '-') + '</p>' +
+          '</div>' +
+          '<span class="text-[9px] font-bold ' + (isApp ? 'text-green-600 bg-green-100' : 'text-amber-600 bg-amber-100') + ' px-2 py-1 rounded">' +
+            (isApp ? 'อนุมัติแล้ว' : 'รอพิจารณา') +
+          '</span></div>';
+      }).join('');
     }
 
-    // ── Firestore Listener ─────────────────────────
+    // ── Firestore ──────────────────────────────────
     function initDataListeners() {
-      const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-
-      onSnapshot(q, (snapshot) => {
-        const tableBody = document.getElementById('mainBookingTableBody');
+      db.collection('bookings').orderBy('createdAt', 'desc').onSnapshot(function(snapshot) {
         allBookings = [];
-        const todayStr = new Date().toISOString().split('T')[0];
-        let appToday = 0, penToday = 0;
-        let tableHtml = '';
+        var todayStr = new Date().toISOString().split('T')[0];
+        var appToday = 0, penToday = 0, tableHtml = '';
 
-        snapshot.forEach(doc => allBookings.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(function(doc) {
+          allBookings.push(Object.assign({ id: doc.id }, doc.data()));
+        });
 
+        var tableBody = document.getElementById('mainBookingTableBody');
         if (allBookings.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">ยังไม่มีประวัติการจอง</td></tr>`;
+          tableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">ยังไม่มีประวัติการจอง</td></tr>';
         } else {
-          let idx = allBookings.length;
-          allBookings.forEach(data => {
-            const isApp = data.status === 'approved';
-            tableHtml += `
-              <tr class="border-b border-slate-50 hover:bg-slate-50 cursor-pointer" onclick="viewDate('${data.date}')">
-                <td class="px-4 py-3 text-center text-slate-400 font-mono">${idx--}</td>
-                <td class="px-4 py-3 font-bold">${data.date}</td>
-                <td class="px-4 py-3 text-blue-700 font-bold">${data.room}</td>
-                <td class="px-4 py-3">${data.startTime}-${data.endTime}</td>
-                <td class="px-4 py-3 text-xs">${data.userName || '-'}</td>
-                <td class="px-4 py-3 truncate max-w-[100px]">${data.purpose}</td>
-                <td class="px-4 py-3 text-center">
-                  <span class="px-2 py-0.5 rounded text-[9px] font-bold ${isApp?'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}">
-                    ${isApp?'อนุมัติ':'รอตรวจ'}
-                  </span>
-                </td>
-              </tr>`;
-            if (data.date === todayStr) isApp ? appToday++ : penToday++;
+          var idx = allBookings.length;
+          allBookings.forEach(function(data) {
+            var isApp = data.status === 'approved';
+            tableHtml +=
+              '<tr class="border-b border-slate-50 hover:bg-slate-50 cursor-pointer" onclick="viewDate(\'' + data.date + '\')">' +
+                '<td class="px-4 py-3 text-center text-slate-400 font-mono">' + (idx--) + '</td>' +
+                '<td class="px-4 py-3 font-bold">' + data.date + '</td>' +
+                '<td class="px-4 py-3 text-blue-700 font-bold">' + data.room + '</td>' +
+                '<td class="px-4 py-3">' + data.startTime + '-' + data.endTime + '</td>' +
+                '<td class="px-4 py-3 text-xs">' + (data.userName || '-') + '</td>' +
+                '<td class="px-4 py-3 truncate max-w-[100px]">' + data.purpose + '</td>' +
+                '<td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-bold ' +
+                  (isApp ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700') + '">' +
+                  (isApp ? 'อนุมัติ' : 'รอตรวจ') + '</span></td>' +
+              '</tr>';
+            if (data.date === todayStr) { isApp ? appToday++ : penToday++; }
           });
           tableBody.innerHTML = tableHtml;
         }
 
         document.getElementById('approvedToday').innerText = appToday;
         document.getElementById('pendingToday').innerText  = penToday;
-
         renderCalendar();
-        updateSelectedDateView(selectedDate, allBookings.filter(b => b.date === selectedDate));
+        updateSelectedDateView(selectedDate, allBookings.filter(function(b) { return b.date === selectedDate; }));
         hideLoading();
         lucide.createIcons();
 
-      }, (error) => {
-        console.error("Firestore error:", error);
+      }, function(error) {
+        console.error('Firestore error:', error);
         hideLoading();
       });
     }
 
-    window.viewDate = (d) => {
-      const parts = d.split('-');
+    function viewDate(d) {
+      var parts = d.split('-');
       viewYear  = parseInt(parts[0]);
       viewMonth = parseInt(parts[1]) - 1;
       selectedDate = d;
       renderCalendar();
-      updateSelectedDateView(d, allBookings.filter(b => b.date === d));
-    };
+      updateSelectedDateView(d, allBookings.filter(function(b) { return b.date === d; }));
+    }
 
     // ── Form Submit ────────────────────────────────
-    document.getElementById('bookingForm').onsubmit = async (e) => {
+    document.getElementById('bookingForm').onsubmit = function(e) {
       e.preventDefault();
       if (!currentUser || currentUser.isAnonymous) {
         showToast('กรุณาล็อกอินด้วยบัญชีโรงเรียนก่อน', 'error');
         return;
       }
-      const submitBtn = document.getElementById('submitBtn');
+      var submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'กำลังบันทึก...';
-      try {
-        await addDoc(collection(db, "bookings"), {
-          userId:        currentUser.uid,
-          userName:      currentUser.displayName,
-          userPhoto:     currentUser.photoURL,
-          room:          document.getElementById('roomSelect').value,
-          date:          document.getElementById('bookingDate').value,
-          startTime:     document.getElementById('startTime').value,
-          endTime:       document.getElementById('endTime').value,
-          purpose:       document.getElementById('purpose').value,
-          status:        'pending',
-          hasImage:      !!selectedFile,
-          imageFileName: selectedFile ? selectedFile.file.name : null,
-          imageSize:     selectedFile ? selectedFile.file.size : 0,
-          createdAt:     serverTimestamp()
-        });
-        window.toggleModal();
+
+      db.collection('bookings').add({
+        userId:        currentUser.uid,
+        userName:      currentUser.displayName,
+        userPhoto:     currentUser.photoURL,
+        room:          document.getElementById('roomSelect').value,
+        date:          document.getElementById('bookingDate').value,
+        startTime:     document.getElementById('startTime').value,
+        endTime:       document.getElementById('endTime').value,
+        purpose:       document.getElementById('purpose').value,
+        status:        'pending',
+        hasImage:      !!selectedFile,
+        imageFileName: selectedFile ? selectedFile.file.name : null,
+        imageSize:     selectedFile ? selectedFile.file.size : 0,
+        createdAt:     firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        toggleModal();
         showToast('บันทึกข้อมูลสำเร็จ ✓');
-      } catch (err) {
+      }).catch(function(err) {
         showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
-      } finally {
+      }).finally(function() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'บันทึกข้อมูล';
-      }
+      });
     };
 
     lucide.createIcons();
