@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <style>
     * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; }
     #loadingOverlay { display:flex; position:fixed; inset:0; background:rgba(255,255,255,0.92); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
@@ -33,7 +34,7 @@
 
     .modal-bg { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
     .modal-bg.open { display:flex; }
-    .modal-box { background:white; border-radius:16px; width:100%; max-width:600px; overflow:hidden; display:flex; flex-direction:column; max-height:92vh; }
+    .modal-box { background:white; border-radius:16px; width:100%; max-width:700px; overflow:hidden; display:flex; flex-direction:column; max-height:92vh; }
 
     .toast { position:fixed; bottom:20px; right:20px; padding:14px 20px; border-radius:8px; color:white; font-weight:700; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:9999; animation:toastIn 0.3s ease; }
     .toast.hide { animation:toastOut 0.3s ease forwards; }
@@ -49,18 +50,124 @@
     .form-group { margin-bottom:18px; }
     .section-title { font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f1f5f9; }
 
-    /* Time slots */
-    .time-slot { padding:7px 6px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; color:#475569; cursor:pointer; background:white; transition:all 0.15s; text-align:center; }
-    .time-slot:hover { border-color:#93c5fd; background:#eff6ff; color:#1d4ed8; }
-    .time-slot.selected { background:#1d4ed8; border-color:#1d4ed8; color:white; }
+    /* ── Time Slots Grid ── */
+    .time-slots-container { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 8px;
+    }
+    
+    .time-slot-btn {
+      padding: 12px 8px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      background: white;
+      transition: all 0.2s;
+      position: relative;
+      text-align: center;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .time-slot-btn:hover {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    
+    .time-slot-btn.selected {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: white;
+      box-shadow: 0 4px 8px rgba(29, 78, 216, 0.3);
+    }
+    
+    .time-slot-btn.start-range {
+      border-radius: 10px 0 0 10px;
+    }
+    
+    .time-slot-btn.in-range {
+      background: #bfdbfe;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      border-radius: 0;
+    }
+    
+    .time-slot-btn.end-range {
+      border-radius: 0 10px 10px 0;
+    }
 
-    /* Equipment checkboxes */
-    .equip-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; cursor:pointer; transition:all 0.15s; }
-    .equip-item:hover { border-color:#93c5fd; background:#f8faff; }
-    .equip-item.checked { border-color:#1d4ed8; background:#eff6ff; }
-    .equip-item input[type=checkbox] { width:16px; height:16px; accent-color:#1d4ed8; flex-shrink:0; cursor:pointer; }
-    .equip-item label { font-size:13px; font-weight:600; color:#374151; cursor:pointer; flex:1; }
-    .equip-qty { width:64px !important; padding:4px 8px; font-size:12px; border-radius:6px; }
+    /* ── Equipment Grid ── */
+    .equipment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .equip-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+      text-align: center;
+    }
+
+    .equip-card:hover {
+      border-color: #93c5fd;
+      background: #f8faff;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.1);
+    }
+
+    .equip-card.selected {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2);
+    }
+
+    .equip-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+
+    .equip-card.selected .equip-icon {
+      background: #1d4ed8;
+      color: white;
+    }
+
+    .equip-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .equip-card.selected .equip-name {
+      color: #1d4ed8;
+    }
+
+    .equip-qty-input {
+      width: 70px !important;
+      padding: 6px 8px !important;
+      font-size: 12px !important;
+      border-radius: 6px !important;
+      margin-top: 4px;
+    }
 
     /* File upload */
     .upload-area { border:2px dashed #bfdbfe; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:#f8faff; }
@@ -73,6 +180,36 @@
     tr:hover td { background:#f8fafc; cursor:pointer; }
     .badge-g { background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
     .badge-a { background:#fef9c3; color:#b45309; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
+
+    .time-summary-tag {
+      display: inline-block;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1d4ed8;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .btn-all-day {
+      padding: 6px 12px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1d4ed8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-all-day:hover {
+      background: #1d4ed8;
+      color: white;
+      border-color: #1d4ed8;
+    }
   </style>
 </head>
 <body style="background:#f8fafc; min-height:100vh; overflow-x:hidden;">
@@ -242,17 +379,22 @@
           </div>
           <div>
             <label class="form-label">วันที่ใช้งาน</label>
-            <input type="date" id="bookingDate" required>
+            <input type="date" id="bookingDate" required onchange="updateTimeSlotGrid()">
           </div>
         </div>
 
+        <!-- ช่วงเวลา -->
         <div class="form-group">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-            <label class="form-label" style="margin-bottom:0;">ช่วงเวลาที่จอง <span style="font-size:11px; font-weight:400; color:#94a3b8;">(คลิกเลือกช่องละ 1 ชม.)</span></label>
-            <span id="timeSlotLabel" style="font-size:12px; font-weight:700; color:#94a3b8; background:#f8fafc; padding:3px 10px; border-radius:20px; border:1px solid #e2e8f0;">ยังไม่ได้เลือก</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <label class="form-label" style="margin-bottom:0;">ช่วงเวลาที่จอง</label>
+            <button type="button" class="btn-all-day" onclick="selectAllDaySlots(event)">
+              <i data-lucide="sun" style="width:12px;height:12px;margin-right:4px;display:inline;"></i> เลือกตลอดวัน
+            </button>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:6px;" id="timeSlotGrid"></div>
-          <p style="font-size:11px; color:#94a3b8; margin-top:6px; font-style:italic;">* สามารถเลือกหลายช่วงเวลาต่อเนื่องกันได้</p>
+          <p style="font-size:11px; color:#64748b; margin-bottom:8px;">คลิกเลือกเวลาเริ่มต้น จากนั้นคล��กเวลาสิ้นสุด เพื่อเลือกช่วงเวลา</p>
+          <div class="time-slots-container" id="timeSlotGrid"></div>
+          <div id="timeSlotSummary" style="margin-top:8px;"></div>
+          <p id="timeError" style="display:none; font-size:11px; color:#ef4444; margin-top:6px; font-weight:600;"></p>
         </div>
 
         <!-- ── ส่วนที่ 2: ข้อมูลผู้จอง ── -->
@@ -283,64 +425,10 @@
         <!-- ── ส่วนที่ 3: อุปกรณ์เพิ่มเติม ── -->
         <div class="section-title">อุปกรณ์เพิ่มเติม (ถ้ามี)</div>
 
-        <div style="display:flex; flex-direction:column; gap:8px;" class="form-group">
-
-          <!-- Apple TV -->
-          <div class="equip-item" id="eq-appletv" onclick="toggleEquip('appletv', this)">
-            <input type="checkbox" id="cb-appletv" onclick="event.stopPropagation(); toggleEquip('appletv', document.getElementById('eq-appletv'))">
-            <label for="cb-appletv">Apple TV</label>
-          </div>
-
-          <!-- ไมโครโฟน -->
-          <div class="equip-item" id="eq-mic" onclick="toggleEquip('mic', this)">
-            <input type="checkbox" id="cb-mic" onclick="event.stopPropagation(); toggleEquip('mic', document.getElementById('eq-mic'))">
-            <label for="cb-mic">ไมโครโฟน</label>
-          </div>
-
-          <!-- จอโปรเจตเตอร์ -->
-          <div class="equip-item" id="eq-projector" onclick="toggleEquip('projector', this)">
-            <input type="checkbox" id="cb-projector" onclick="event.stopPropagation(); toggleEquip('projector', document.getElementById('eq-projector'))">
-            <label for="cb-projector">จอโปรเจตเตอร์</label>
-          </div>
-
-          <!-- ชุดต่อขยายจอ -->
-          <div class="equip-item" id="eq-extender" onclick="toggleEquip('extender', this)">
-            <input type="checkbox" id="cb-extender" onclick="event.stopPropagation(); toggleEquip('extender', document.getElementById('eq-extender'))">
-            <label for="cb-extender">ชุดต่อขยายจอ</label>
-          </div>
-
-          <!-- โต๊ะ -->
-          <div class="equip-item" id="eq-table" onclick="toggleEquip('table', this)">
-            <input type="checkbox" id="cb-table" onclick="event.stopPropagation(); toggleEquip('table', document.getElementById('eq-table'))">
-            <label for="cb-table">โต๊ะ</label>
-            <div id="qty-table-wrap" style="display:none; align-items:center; gap:6px;">
-              <input type="number" id="qty-table" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()" style="width:80px;">
-              <span style="font-size:12px; color:#64748b;">ตัว</span>
-            </div>
-          </div>
-
-          <!-- เก้าอี้ -->
-          <div class="equip-item" id="eq-chair" onclick="toggleEquip('chair', this)">
-            <input type="checkbox" id="cb-chair" onclick="event.stopPropagation(); toggleEquip('chair', document.getElementById('eq-chair'))">
-            <label for="cb-chair">เก้าอี้</label>
-            <div id="qty-chair-wrap" style="display:none; align-items:center; gap:6px;">
-              <input type="number" id="qty-chair" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()" style="width:80px;">
-              <span style="font-size:12px; color:#64748b;">ตัว</span>
-            </div>
-          </div>
-
-          <!-- อื่นๆ -->
-          <div class="equip-item" id="eq-other" onclick="toggleEquip('other', this)">
-            <input type="checkbox" id="cb-other" onclick="event.stopPropagation(); toggleEquip('other', document.getElementById('eq-other'))">
-            <label for="cb-other">อื่นๆ</label>
-            <div id="qty-other-wrap" style="display:none; flex:1;">
-              <input type="text" id="qty-other" placeholder="ระบุอุปกรณ์เพิ่มเติม..." onclick="event.stopPropagation()" style="font-size:12px; padding:4px 8px; border-radius:6px;">
-            </div>
-          </div>
-        </div>
+        <div class="equipment-grid form-group" id="equipmentGrid"></div>
 
         <!-- ── ส่วนที่ 4: แนบไฟล์ผังโต๊ะ ── -->
-        <div class="section-title">ผังการจัดโต๊ะ (ถ้ามี)</div>
+        <div class="section-title">ผังก��รจัดโต๊ะ (ถ้ามี)</div>
 
         <div class="form-group">
           <input type="file" id="layoutFile" accept="image/*" style="display:none;" onchange="handleFile(this)">
@@ -364,6 +452,12 @@
             </div>
           </div>
           <p id="fileError" style="display:none; font-size:12px; color:#ef4444; margin-top:6px; font-weight:600;"></p>
+          <div id="uploadProgress" style="display:none; margin-top:8px;">
+            <div style="height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+              <div id="progressBar" style="height:100%;background:#1d4ed8;width:0%;transition:width 0.3s;"></div>
+            </div>
+            <p id="progressText" style="font-size:11px;color:#64748b;margin-top:4px;text-align:center;">กำลังอัปโหลด...</p>
+          </div>
         </div>
 
         <!-- Buttons -->
@@ -385,6 +479,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     var auth = firebase.auth();
     var db   = firebase.firestore();
+    var storage = firebase.storage();
 
     var currentUser     = null;
     var allBookings     = [];
@@ -394,9 +489,10 @@
     var listenerStarted = false;
     var selectedFile    = null;
 
-    // ── Time Slots ─────────────────────────────────
+    // ── Time Slots Configuration ────────────��────────────────────
     var TIME_SLOTS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
-    var selectedSlots = [];
+    var selectedSlotStart = null;
+    var selectedSlotEnd   = null;
 
     function buildTimeSlotGrid() {
       var grid = document.getElementById('timeSlotGrid');
@@ -404,110 +500,215 @@
       TIME_SLOTS.forEach(function(t, i) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'time-slot';
+        btn.className = 'time-slot-btn';
         btn.textContent = t;
         btn.dataset.index = i;
-        btn.onclick = function() { toggleSlot(i); };
+        btn.onclick = function(e) { 
+          e.preventDefault();
+          selectTimeSlot(i);
+        };
         grid.appendChild(btn);
       });
+      renderTimeSlots();
     }
 
-    function toggleSlot(idx) {
-      var pos = selectedSlots.indexOf(idx);
-      if (pos === -1) selectedSlots.push(idx);
-      else selectedSlots.splice(pos, 1);
-      selectedSlots.sort(function(a,b){ return a-b; });
-      renderSlots();
+    function selectTimeSlot(idx) {
+      if (selectedSlotStart === null) {
+        selectedSlotStart = idx;
+        selectedSlotEnd = idx;
+      } else if (selectedSlotStart !== null && selectedSlotEnd === selectedSlotStart) {
+        if (idx > selectedSlotStart) {
+          selectedSlotEnd = idx;
+        } else if (idx < selectedSlotStart) {
+          selectedSlotEnd = selectedSlotStart;
+          selectedSlotStart = idx;
+        } else {
+          selectedSlotStart = null;
+          selectedSlotEnd = null;
+        }
+      } else {
+        selectedSlotStart = idx;
+        selectedSlotEnd = idx;
+      }
+      renderTimeSlots();
     }
 
-    function renderSlots() {
-      document.querySelectorAll('.time-slot').forEach(function(btn) {
+    function selectAllDaySlots(e) {
+      e.preventDefault();
+      selectedSlotStart = 0;
+      selectedSlotEnd = TIME_SLOTS.length - 1;
+      renderTimeSlots();
+    }
+
+    function renderTimeSlots() {
+      var btns = document.querySelectorAll('.time-slot-btn');
+      btns.forEach(function(btn) {
         var i = parseInt(btn.dataset.index);
-        btn.className = 'time-slot' + (selectedSlots.indexOf(i) !== -1 ? ' selected' : '');
+        btn.className = 'time-slot-btn';
+        
+        if (selectedSlotStart !== null && selectedSlotEnd !== null) {
+          var start = Math.min(selectedSlotStart, selectedSlotEnd);
+          var end = Math.max(selectedSlotStart, selectedSlotEnd);
+          
+          if (i === start && i === end) {
+            btn.className += ' selected';
+          } else if (i === start) {
+            btn.className += ' selected start-range';
+          } else if (i === end) {
+            btn.className += ' selected end-range';
+          } else if (i > start && i < end) {
+            btn.className += ' in-range';
+          }
+        }
       });
-      updateSlotLabel();
+      updateTimeSlotSummary();
     }
 
-    function updateSlotLabel() {
-      var lbl = document.getElementById('timeSlotLabel');
-      if (!selectedSlots.length) {
-        lbl.textContent = 'ยังไม่ได้เลือก';
-        lbl.style.color = '#94a3b8'; lbl.style.background = '#f8fafc'; lbl.style.borderColor = '#e2e8f0';
+    function updateTimeSlotSummary() {
+      var summary = document.getElementById('timeSlotSummary');
+      var error = document.getElementById('timeError');
+      
+      if (selectedSlotStart === null || selectedSlotEnd === null) {
+        summary.innerHTML = '';
+        error.style.display = 'none';
         return;
       }
-      var startHr = parseInt(TIME_SLOTS[selectedSlots[0]]);
-      var endHr   = parseInt(TIME_SLOTS[selectedSlots[selectedSlots.length-1]]) + 1;
-      lbl.textContent = String(startHr).padStart(2,'0')+':00 - '+String(endHr).padStart(2,'0')+':00 ('+selectedSlots.length+' ชม.)';
-      lbl.style.color = '#1d4ed8'; lbl.style.background = '#eff6ff'; lbl.style.borderColor = '#93c5fd';
+
+      var start = Math.min(selectedSlotStart, selectedSlotEnd);
+      var end = Math.max(selectedSlotStart, selectedSlotEnd);
+      var startHr = parseInt(TIME_SLOTS[start]);
+      var endHr = parseInt(TIME_SLOTS[end]) + 1;
+      var hours = end - start + 1;
+
+      summary.innerHTML = 
+        '<div class="time-summary-tag">' +
+        String(startHr).padStart(2,'0') + ':00 - ' + String(endHr).padStart(2,'0') + ':00 (' + hours + ' ชม.)' +
+        '</div>';
+      error.style.display = 'none';
     }
 
     function getTimeRange() {
-      if (!selectedSlots.length) return null;
-      var startHr = parseInt(TIME_SLOTS[selectedSlots[0]]);
-      var endHr   = parseInt(TIME_SLOTS[selectedSlots[selectedSlots.length-1]]) + 1;
+      if (selectedSlotStart === null || selectedSlotEnd === null) return null;
+      var start = Math.min(selectedSlotStart, selectedSlotEnd);
+      var end = Math.max(selectedSlotStart, selectedSlotEnd);
+      var startHr = parseInt(TIME_SLOTS[start]);
+      var endHr = parseInt(TIME_SLOTS[end]) + 1;
       return { start: String(startHr).padStart(2,'0')+':00', end: String(endHr).padStart(2,'0')+':00' };
     }
 
-    function resetSlots() { selectedSlots = []; renderSlots(); }
+    function resetTimeSlots() {
+      selectedSlotStart = null;
+      selectedSlotEnd = null;
+      renderTimeSlots();
+    }
 
-    // ── Equipment ──────────────────────────────────
-    function toggleEquip(id, el) {
-      var cb = document.getElementById('cb-'+id);
-      cb.checked = !cb.checked;
-      el.classList.toggle('checked', cb.checked);
-      var qtyWrap = document.getElementById('qty-'+id+'-wrap');
-      if (qtyWrap) qtyWrap.style.display = cb.checked ? 'flex' : 'none';
+    function updateTimeSlotGrid() {
+      buildTimeSlotGrid();
+    }
+
+    // ── Equipment Data ─────────────────────────────────
+    var EQUIPMENT_LIST = [
+      { id: 'appletv', name: 'Apple TV', icon: 'tv', hasQty: false },
+      { id: 'mic', name: 'ไมโครโฟน', icon: 'mic2', hasQty: false },
+      { id: 'projector', name: 'จอโปรเจตเตอร์', icon: 'projector', hasQty: false },
+      { id: 'extender', name: 'ชุดต่อขยายจอ', icon: 'wifi', hasQty: false },
+      { id: 'table', name: 'โต๊ะ', icon: 'square', hasQty: true },
+      { id: 'chair', name: 'เก้าอี้', icon: 'circle', hasQty: true },
+      { id: 'other', name: 'อื่นๆ', icon: 'package', hasQty: true }
+    ];
+
+    function buildEquipmentGrid() {
+      var grid = document.getElementById('equipmentGrid');
+      grid.innerHTML = '';
+      
+      EQUIPMENT_LIST.forEach(function(eq) {
+        var card = document.createElement('div');
+        card.className = 'equip-card';
+        card.id = 'eq-' + eq.id;
+        
+        var iconHTML = '<i data-lucide="' + eq.icon + '" style="width:24px;height:24px;"></i>';
+        
+        var html = '<div class="equip-icon">' + iconHTML + '</div>' +
+                   '<div class="equip-name">' + eq.name + '</div>';
+        
+        if (eq.hasQty) {
+          html += '<input type="number" id="qty-' + eq.id + '" class="equip-qty-input" placeholder="จำนวน" min="1" style="display:none;" onclick="event.stopPropagation()">';
+        }
+        
+        card.innerHTML = html;
+        card.onclick = function() { toggleEquipmentCard(eq.id, card); };
+        grid.appendChild(card);
+      });
+      
+      lucide.createIcons();
+    }
+
+    function toggleEquipmentCard(id, card) {
+      card.classList.toggle('selected');
+      var qtyInput = document.getElementById('qty-' + id);
+      if (qtyInput) {
+        qtyInput.style.display = card.classList.contains('selected') ? 'block' : 'none';
+        if (card.classList.contains('selected')) {
+          qtyInput.focus();
+        } else {
+          qtyInput.value = '';
+        }
+      }
     }
 
     function getEquipment() {
       var items = [];
-      var list = ['appletv','mic','projector','extender'];
-      var names = { appletv:'Apple TV', mic:'ไมโครโฟน', projector:'จอโปรเจตเตอร์', extender:'ชุดต่อขยายจอ' };
-      list.forEach(function(id) {
-        if (document.getElementById('cb-'+id).checked) items.push(names[id]);
+      EQUIPMENT_LIST.forEach(function(eq) {
+        var card = document.getElementById('eq-' + eq.id);
+        if (card && card.classList.contains('selected')) {
+          if (eq.hasQty) {
+            var qty = document.getElementById('qty-' + eq.id).value;
+            if (qty) items.push(eq.name + ' ' + qty + ' ' + (eq.id === 'other' ? '' : 'ชิ้น'));
+          } else {
+            items.push(eq.name);
+          }
+        }
       });
-      if (document.getElementById('cb-table').checked) {
-        var q = document.getElementById('qty-table').value;
-        items.push('โต๊ะ '+(q||'?')+' ตัว');
-      }
-      if (document.getElementById('cb-chair').checked) {
-        var q2 = document.getElementById('qty-chair').value;
-        items.push('เก้าอี้ '+(q2||'?')+' ตัว');
-      }
-      if (document.getElementById('cb-other').checked) {
-        var oth = document.getElementById('qty-other').value;
-        if (oth) items.push(oth);
-      }
       return items;
     }
 
     function resetEquipment() {
-      ['appletv','mic','projector','extender','table','chair','other'].forEach(function(id) {
-        var cb = document.getElementById('cb-'+id);
-        if (cb) { cb.checked = false; }
-        var el = document.getElementById('eq-'+id);
-        if (el) el.classList.remove('checked');
-        var wrap = document.getElementById('qty-'+id+'-wrap');
-        if (wrap) wrap.style.display = 'none';
-        var qty = document.getElementById('qty-'+id);
-        if (qty) qty.value = '';
+      document.querySelectorAll('.equip-card').forEach(function(card) {
+        card.classList.remove('selected');
+      });
+      EQUIPMENT_LIST.forEach(function(eq) {
+        if (eq.hasQty) {
+          var qtyInput = document.getElementById('qty-' + eq.id);
+          if (qtyInput) {
+            qtyInput.style.display = 'none';
+            qtyInput.value = '';
+          }
+        }
       });
     }
 
-    // ── File Upload ────────────────────────────────
+    // ── File Upload to Firebase Storage ────────────────────────────────
     function handleFile(input) {
       var file = input.files[0];
       var err = document.getElementById('fileError');
       err.style.display = 'none';
+      
       if (!file) return;
+      
       if (!file.type.startsWith('image/')) {
         err.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF)';
-        err.style.display = 'block'; input.value = ''; return;
+        err.style.display = 'block'; 
+        input.value = ''; 
+        return;
       }
+      
       if (file.size > 5 * 1024 * 1024) {
         err.textContent = 'ไฟล์ขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่';
-        err.style.display = 'block'; input.value = ''; return;
+        err.style.display = 'block'; 
+        input.value = ''; 
+        return;
       }
+      
       var reader = new FileReader();
       reader.onload = function(e) {
         document.getElementById('previewImg').src = e.target.result;
@@ -516,7 +717,7 @@
         document.getElementById('uploadDefault').style.display = 'none';
         document.getElementById('uploadPreview').style.display = 'block';
         document.getElementById('uploadArea').classList.add('has-file');
-        selectedFile = { name: file.name, size: file.size, dataUrl: e.target.result };
+        selectedFile = { file: file, name: file.name, size: file.size };
       };
       reader.readAsDataURL(file);
     }
@@ -593,12 +794,13 @@
         m.classList.add('open');
         document.body.style.overflow = 'hidden';
         buildTimeSlotGrid();
+        buildEquipmentGrid();
         lucide.createIcons();
       } else {
         m.classList.remove('open');
         document.body.style.overflow = '';
         document.getElementById('bookingForm').reset();
-        resetSlots();
+        resetTimeSlots();
         resetEquipment();
         clearFile({ stopPropagation: function(){} });
       }
@@ -696,37 +898,69 @@
       updateDayView(d,allBookings.filter(function(b){return b.date===d;}));
     }
 
-    // ── Submit ─────────────────────────────────────
+    // ── Submit with Image Upload ───────────────────────────────────
     function submitBooking(e) {
       e.preventDefault();
+      
       var timeRange = getTimeRange();
-      if (!timeRange) { showToast('กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง','error'); return; }
+      if (!timeRange) { 
+        document.getElementById('timeError').textContent = 'กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง';
+        document.getElementById('timeError').style.display = 'block';
+        return; 
+      }
+      
       var equipment = getEquipment();
       var btn = document.getElementById('submitBtn');
-      btn.disabled=true; btn.textContent='กำลังบันทึก...';
-      db.collection('bookings').add({
-        userId:       currentUser.uid,
-        userName:     currentUser.displayName,
-        userPhoto:    currentUser.photoURL,
-        fullName:     document.getElementById('fullName').value,
-        position:     document.getElementById('position').value,
-        attendees:    parseInt(document.getElementById('attendees').value)||0,
-        room:         document.getElementById('roomSelect').value,
-        date:         document.getElementById('bookingDate').value,
-        startTime:    timeRange.start,
-        endTime:      timeRange.end,
-        purpose:      document.getElementById('purpose').value,
-        equipment:    equipment,
-        hasLayout:    !!selectedFile,
-        layoutName:   selectedFile ? selectedFile.name : null,
-        status:       'pending',
-        createdAt:    firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){
-        toggleModal(); showToast('บันทึกข้อมูลสำเร็จ ✓');
+      btn.disabled = true; 
+      btn.textContent = 'กำลังบันทึก...';
+
+      // Upload file if exists
+      var uploadPromise = Promise.resolve(null);
+      if (selectedFile) {
+        document.getElementById('uploadProgress').style.display = 'block';
+        var fileRef = storage.ref('layouts/' + currentUser.uid + '/' + Date.now() + '_' + selectedFile.name);
+        uploadPromise = fileRef.put(selectedFile.file, { 
+          contentType: selectedFile.file.type 
+        }).on('state_changed', 
+          function(snapshot) {
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+          }
+        ).then(function() {
+          return fileRef.getDownloadURL();
+        });
+      }
+
+      uploadPromise.then(function(layoutUrl) {
+        var bookingData = {
+          userId:       currentUser.uid,
+          userName:     currentUser.displayName,
+          userPhoto:    currentUser.photoURL,
+          fullName:     document.getElementById('fullName').value,
+          position:     document.getElementById('position').value,
+          attendees:    parseInt(document.getElementById('attendees').value)||0,
+          room:         document.getElementById('roomSelect').value,
+          date:         document.getElementById('bookingDate').value,
+          startTime:    timeRange.start,
+          endTime:      timeRange.end,
+          purpose:      document.getElementById('purpose').value,
+          equipment:    equipment,
+          hasLayout:    !!layoutUrl,
+          layoutUrl:    layoutUrl,
+          status:       'pending',
+          createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        return db.collection('bookings').add(bookingData);
+      }).then(function() {
+        toggleModal(); 
+        showToast('บันทึกข้อมูลสำเร็จ ✓');
       }).catch(function(err){
-        showToast('เกิดข้อผิดพลาด: '+err.message,'error');
+        showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
       }).finally(function(){
-        btn.disabled=false; btn.textContent='ยืนยันข้อมูลการจอง';
+        btn.disabled = false; 
+        btn.textContent = 'ยืนยันข้อมูลการจอง';
+        document.getElementById('uploadProgress').style.display = 'none';
       });
     }
 
