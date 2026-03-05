@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .sidebar-btn.active { 
+            background-color: #1d4ed8; 
+            color: white; 
+            box-shadow: 0 10px 15px -3px rgba(30, 64, 175, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <nav class="sticky top-0 z-50 bg-blue-700 px-6 py-3 shadow-lg border-b border-blue-800">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-14 w-auto drop-shadow-md">
+                <div class="border-l border-blue-600/50 pl-4">
+                    <h1 class="text-lg md:text-xl font-bold text-white leading-tight">โรงเรียนหนองกี่พิทยาคม</h1>
+                    <div class="flex items-center gap-1 text-blue-100/80 text-xs">
+                        <i data-lucide="map-pin" class="w-3 h-3 text-red-400"></i> จังหวัดบุรีรัมย์
+                    </div>
+                </div>
+            </div>
+            <button id="loginBtn" class="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-all shadow-md active:scale-95">
+                <span class="hidden sm:inline">เข้าสู่ระบบด้วย Google</span>
+                <span class="sm:hidden">เข้าสู่ระบบ</span>
+            </button>
+        </div>
+    </nav>
+
+    <main id="publicView" class="block">
+        <section class="max-w-7xl mx-auto px-6 py-16 grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
+                    <i data-lucide="bell" class="w-4 h-4"></i> ระบบสารสนเทศและบริการออนไลน์
+                </div>
+                <h2 class="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.15]">ยกระดับบริการ <br><span class="text-blue-600 italic">เพื่อชาว NP</span></h2>
+                <p class="text-lg text-slate-600 max-w-lg">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว โปร่งใส เข้าถึงได้ทุกที่ทุกเวลา</p>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="simulateLogin()" class="px-8 py-4 bg-blue-700 text-white font-bold rounded-2xl hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 flex items-center gap-2">เริ่มใช้งานระบบ <i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="bg-white p-2 rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000" class="rounded-[2rem] w-full aspect-video object-cover">
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white py-24 px-6 border-y border-slate-100">
+            <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
+                <div class="bg-slate-50 rounded-[2.5rem] p-10 border border-transparent hover:border-blue-200 hover:bg-white hover:shadow-2xl transition-all">
+                    <i data-lucide="home" class="w-12 h-12 text-blue-600 mb-6"></i>
+                    <h4 class="text-2xl font-bold mb-4">ระบบการขอใช้ห้อง/สถานที่</h4>
+                    <p class="text-slate-600 mb-6">จองห้องประชุม ห้องปฏิบัติการคอมพิวเตอร์ หรือพื้นที่ทำกิจกรรม ตรวจสอบสถานะว่างได้ทันที</p>
+                    <div class="text-sm text-slate-500 space-y-2">
+                        <p>1. ล็อกอินด้วยบัญชีโรงเรียน</p>
+                        <p>2. ระบุข้อมูลและวันเวลาที่ต้องการ</p>
+                    </div>
+                </div>
+                <div class="bg-slate-50 rounded-[2.5rem] p-10 border border-transparent hover:border-orange-200 hover:bg-white hover:shadow-2xl transition-all">
+                    <i data-lucide="monitor" class="w-12 h-12 text-orange-600 mb-6"></i>
+                    <h4 class="text-2xl font-bold mb-4">ระบบการขอใช้ข้อมูลกล้องวงจรปิด</h4>
+                    <p class="text-slate-600 mb-6">ยื่นคำร้องขอตรวจสอบภาพจากกล้อง CCTV ตามระเบียบความปลอดภัยและ พ.ร.บ. คุ้มครองข้อมูล</p>
+                    <div class="text-sm text-slate-500 space-y-2">
+                        <p>1. กรอกแบบฟอร์มขอใช้ข้อมูลออนไลน์</p>
+                        <p>2. เจ้าหน้าที่ดำเนินการภายใน 1-3 วันทำการ</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <main id="privateView" class="hidden max-w-7xl mx-auto px-6 py-10">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="lg:w-72 space-y-2">
+                <p class="px-5 pb-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">เมนูหลัก</p>
+                <button onclick="showTab('dashboard')" class="sidebar-btn active w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i> หน้าแรก
+                </button>
+                <div class="pt-4 pb-2">
+                    <p class="px-5 pb-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">บริการออนไลน์</p>
+                </div>
+                <button onclick="showTab('room-booking')" class="sidebar-btn w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all">
+                    <i data-lucide="calendar" class="w-5 h-5"></i> ขอใช้ห้อง/สถานที่
+                </button>
+                <button onclick="showTab('cctv-request')" class="sidebar-btn w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all">
+                    <i data-lucide="monitor" class="w-5 h-5"></i> ขอข้อมูล CCTV
+                </button>
+                <div class="pt-8 px-5">
+                    <button onclick="simulateLogout()" class="w-full py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 flex items-center justify-center gap-2">
+                        <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 space-y-8">
+                <div id="tab-dashboard" class="tab-content active space-y-8">
+                    <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <h3 class="text-2xl font-extrabold">ยินดีต้อนรับเข้าสู่ระบบ</h3>
+                        <p class="text-slate-500">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center"><i data-lucide="home"></i></div>
+                            <div><p class="text-xs font-bold text-blue-600">การจองห้อง</p><p class="text-xl font-black">0 รายการ</p></div>
+                        </div>
+                        <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-orange-600 text-white rounded-xl flex items-center justify-center"><i data-lucide="monitor"></i></div>
+                            <div><p class="text-xs font-bold text-orange-600">คำขอ CCTV</p><p class="text-xl font-black">0 รายการ</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-room-booking" class="tab-content">
+                    <div class="bg-white p-20 rounded-[2.5rem] border border-slate-100 text-center space-y-6">
+                        <i data-lucide="settings" class="w-16 h-16 text-blue-300 mx-auto animate-spin"></i>
+                        <h4 class="text-2xl font-bold">ระบบจองสถานที่กำลังพัฒนา</h4>
+                        <p class="text-slate-500">คุณจะสามารถกรอกแบบฟอร์มออนไลน์ได้ในเร็วๆ นี้</p>
+                    </div>
+                </div>
+
+                <div id="tab-cctv-request" class="tab-content">
+                    <div class="bg-white p-20 rounded-[2.5rem] border border-slate-100 text-center space-y-6">
+                        <i data-lucide="monitor" class="w-16 h-16 text-orange-300 mx-auto"></i>
+                        <h4 class="text-2xl font-bold">ระบบขอข้อมูล CCTV กำลังพัฒนา</h4>
+                        <p class="text-slate-500">เจ้าหน้าที่กำลังดำเนินการเชื่อมต่อระบบตรวจสอบสิทธิ์</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-12 border-t border-slate-200 mt-20 text-center">
+        <p class="font-bold text-slate-800 uppercase tracking-wide">NONGKI PITTAYAKOM SCHOOL</p>
+        <p class="text-[11px] text-slate-400">© 2026 ระบบสารสนเทศและบริการออนไลน์ โรงเรียนหนองกี่พิทยาคม จังหวัดบุรีรัมย์</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Simple State Management
+        function simulateLogin() {
+            document.getElementById('publicView').classList.add('hidden');
+            document.getElementById('privateView').classList.remove('hidden');
+            document.getElementById('loginBtn').innerHTML = 'ออกจากระบบ';
+            document.getElementById('loginBtn').onclick = simulateLogout;
+        }
+
+        function simulateLogout() {
+            document.getElementById('publicView').classList.remove('hidden');
+            document.getElementById('privateView').classList.add('hidden');
+            document.getElementById('loginBtn').innerHTML = 'เข้าสู่ระบบด้วย Google';
+            document.getElementById('loginBtn').onclick = simulateLogin;
+        }
+
+        function showTab(tabName) {
+            // Update Sidebar UI
+            document.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText.includes(tabName === 'dashboard' ? 'หน้าแรก' : (tabName === 'room-booking' ? 'สถานที่' : 'CCTV'))) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update Tab Content
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // สำหรับการใช้งาน Firebase จริง คุณต้องเพิ่ม Firebase SDK ลงในส่วน <script> ด้านบน 
+        // และเปลี่ยนฟังก์ชัน simulateLogin ให้เป็นการเรียกใช้ Firebase Auth ครับ
+    </script>
+</body>
+</html>
