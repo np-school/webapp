@@ -12,15 +12,28 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; }
-    .card { background:white; border-radius:1rem; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-    .th-blue { background:#1d4ed8; color:white; }
-    #loadingOverlay { display:flex; position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
+
+    /* Loading */
+    #loadingOverlay { display:flex; position:fixed; inset:0; background:rgba(255,255,255,0.92); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
     .spinner { border:3px solid #e2e8f0; border-top:3px solid #1d4ed8; border-radius:50%; width:48px; height:48px; animation:spin 0.8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
 
-    input, select, textarea { border:1px solid #cbd5e1; padding:8px 12px; border-radius:8px; outline:none; font-size:14px; width:100%; font-family:'Sarabun',sans-serif; }
-    input:focus, select:focus, textarea:focus { border-color:#1d4ed8; }
+    /* Sidebar btn — เหมือน index.html */
+    .sidebar-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px; border-radius: 16px;
+      font-weight: 700; color: #64748b;
+      width: 100%; background: none; border: none;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s; font-size: 14px;
+    }
+    .sidebar-btn:hover { background: #f1f5f9; }
+    .sidebar-btn.active { background: #1d4ed8; color: white; box-shadow: 0 10px 15px -3px rgba(30,64,175,0.2); }
 
+    /* Card */
+    .card { background:white; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+
+    /* Calendar */
     .cal-day { aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer; transition:all 0.15s; position:relative; font-size:11px; font-weight:600; border:1px solid transparent; }
     .cal-day:hover:not(.empty) { background:#f1f5f9; }
     .cal-day.has-booking::after { content:''; position:absolute; bottom:3px; width:4px; height:4px; background:#eab308; border-radius:50%; }
@@ -30,174 +43,180 @@
     .cal-day.is-selected { border:2px solid #1d4ed8; background:#eff6ff; }
     .cal-day.empty { cursor:default; }
 
+    /* Modal */
     .modal-bg { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
     .modal-bg.open { display:flex; }
     .modal-box { background:white; border-radius:16px; width:100%; max-width:512px; overflow:hidden; display:flex; flex-direction:column; max-height:90vh; }
 
+    /* Toast */
     .toast { position:fixed; bottom:20px; right:20px; padding:14px 20px; border-radius:8px; color:white; font-weight:700; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:9999; animation:toastIn 0.3s ease; }
     .toast.hide { animation:toastOut 0.3s ease forwards; }
     @keyframes toastIn  { from { transform:translateX(400px); opacity:0; } to { transform:translateX(0); opacity:1; } }
     @keyframes toastOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(400px); opacity:0; } }
 
-    /* Login overlay */
-    #loginOverlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); z-index:2000; align-items:center; justify-content:center; }
-    #loginOverlay.open { display:flex; }
-    .login-box { background:white; border-radius:24px; padding:40px; width:100%; max-width:400px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
-
+    input, select, textarea { border:1px solid #cbd5e1; padding:8px 12px; border-radius:8px; outline:none; font-size:14px; width:100%; }
+    input:focus, select:focus, textarea:focus { border-color:#1d4ed8; }
     table { width:100%; border-collapse:collapse; font-size:11px; }
     th, td { padding:12px 16px; text-align:left; }
     td { border-bottom:1px solid #f8fafc; }
     tr:hover td { background:#f8fafc; cursor:pointer; }
-
     .badge-g { background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
     .badge-a { background:#fef9c3; color:#b45309; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
   </style>
 </head>
-<body style="background:#f8fafc; min-height:100vh;">
+<body style="background:#f8fafc; min-height:100vh; overflow-x:hidden;">
 
-  <!-- Loading -->
   <div id="loadingOverlay">
     <div class="spinner"></div>
     <p style="margin-top:16px; color:#64748b; font-size:14px; font-weight:700;">กำลังเตรียมข้อมูล...</p>
   </div>
 
-  <!-- Login Overlay (แสดงเมื่อยังไม่ได้ login) -->
-  <div id="loginOverlay">
-    <div class="login-box">
-      <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:64px; margin:0 auto 16px;">
-      <h2 style="font-size:20px; font-weight:800; color:#0f172a; margin-bottom:8px;">ระบบขอใช้ห้อง/สถานที่</h2>
-      <p style="color:#64748b; font-size:14px; margin-bottom:32px;">โรงเรียนหนองกี่พิทยาคม<br>กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
-      <button onclick="handleLogin()" style="width:100%; padding:14px; background:#1d4ed8; color:white; font-weight:700; font-size:16px; border:none; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-        เข้าสู่ระบบด้วย Google
-      </button>
-      <a href="index.html" style="display:block; margin-top:16px; color:#64748b; font-size:13px; text-decoration:none;">← กลับหน้าแรก</a>
-    </div>
-  </div>
-
-  <!-- Navbar (เหมือน index.html) -->
+  <!-- Navbar — เหมือน index.html -->
   <nav style="position:sticky; top:0; z-index:50; background:#1d4ed8; padding:12px 24px; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-bottom:1px solid #1e40af;">
-    <div style="max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
-      <a href="index.html" style="display:flex; align-items:center; gap:16px; text-decoration:none;">
-        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px; width:auto;">
+    <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:56px; width:auto;">
         <div style="border-left:1px solid rgba(99,149,255,0.5); padding-left:16px;">
-          <div style="font-size:15px; font-weight:700; color:white;">โรงเรียนหนองกี่พิทยาคม</div>
-          <div style="font-size:11px; color:#bfdbfe;">ระบบขอใช้ห้อง/สถานที่</div>
+          <div style="font-size:18px; font-weight:700; color:white;">โรงเรียนหนองกี่พิทยาคม</div>
+          <div style="display:flex; align-items:center; gap:4px; color:rgba(191,219,254,0.8); font-size:12px;">
+            <i data-lucide="map-pin" style="width:12px; height:12px; color:#f87171;"></i> จังหวัดบุรีรัมย์
+          </div>
         </div>
-      </a>
-      <div id="userNavSection">
-        <!-- จะถูก render โดย JS -->
       </div>
+      <div id="userNavSection"></div>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <div id="mainContent" style="max-width:1400px; margin:0 auto; padding:24px; display:none;">
+  <!-- Layout: Sidebar + Content — เหมือน index.html -->
+  <div id="mainContent" style="display:none; max-width:1200px; margin:0 auto; padding:40px 24px;">
+    <div style="display:flex; gap:32px; align-items:flex-start;">
 
-    <div style="display:grid; grid-template-columns:300px 1fr; gap:24px; margin-bottom:24px;">
-
-      <!-- Left: Calendar + Summary -->
-      <div style="display:flex; flex-direction:column; gap:24px;">
-        <div class="card" style="overflow:hidden;">
-          <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
-              <i data-lucide="calendar" style="width:16px; height:16px;"></i> ปฏิทินรายเดือน
-            </div>
-            <div style="display:flex; gap:4px;">
-              <button onclick="changeMonth(-1)" style="padding:4px; background:none; border:none; cursor:pointer; color:#1d4ed8; border-radius:4px; display:flex;"><i data-lucide="chevron-left" style="width:16px; height:16px;"></i></button>
-              <button onclick="changeMonth(1)"  style="padding:4px; background:none; border:none; cursor:pointer; color:#1d4ed8; border-radius:4px; display:flex;"><i data-lucide="chevron-right" style="width:16px; height:16px;"></i></button>
-            </div>
-          </div>
-          <div style="padding:16px; text-align:center;">
-            <div style="margin-bottom:12px; font-weight:700; font-size:14px; color:#334155;" id="currentMonthLabel"></div>
-            <div style="display:grid; grid-template-columns:repeat(7,1fr); font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:8px;">
-              <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
-            </div>
-            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px;" id="calendarDaysGrid"></div>
-            <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; font-size:9px; font-weight:700; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:12px;">
-              <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:50%; background:#1d4ed8; display:inline-block;"></span>วันนี้</span>
-              <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:50%; background:#eab308; display:inline-block;"></span>มีจอง</span>
-              <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:50%; background:#fecaca; border:1px solid #fca5a5; display:inline-block;"></span>จองเต็ม</span>
-            </div>
-          </div>
+      <!-- Sidebar — copy จาก index.html -->
+      <div style="width:288px; flex-shrink:0;">
+        <p style="padding:0 20px 12px; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px;">เมนูหลัก</p>
+        <a href="index.html" class="sidebar-btn">
+          <i data-lucide="home" style="width:20px; height:20px;"></i> หน้าแรก
+        </a>
+        <div style="padding:16px 20px 12px;">
+          <p style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px;">บริการออนไลน์</p>
         </div>
-
-        <div class="card" style="padding:20px;">
-          <div style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">สรุปวันนี้</div>
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-            <div style="width:40px; height:40px; background:#dcfce7; color:#16a34a; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-              <i data-lucide="check" style="width:20px; height:20px;"></i>
-            </div>
-            <div><div style="font-size:10px; color:#64748b;">อนุมัติ</div><div style="font-size:18px; font-weight:700;" id="approvedToday">0</div></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="width:40px; height:40px; background:#fef9c3; color:#d97706; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-              <i data-lucide="clock" style="width:20px; height:20px;"></i>
-            </div>
-            <div><div style="font-size:10px; color:#64748b;">รอตรวจ</div><div style="font-size:18px; font-weight:700;" id="pendingToday">0</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Day Detail -->
-      <div class="card" style="display:flex; flex-direction:column;">
-        <div style="padding:16px; border-bottom:1px solid #bfdbfe; display:flex; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
-            <i data-lucide="info" style="width:16px; height:16px;"></i> รายละเอียดการจองในวันที่เลือก
-          </div>
-          <span id="selectedDateLabel" style="font-size:10px; color:#94a3b8; font-weight:700;"></span>
-        </div>
-        <div id="todayBookingsList" style="flex:1; padding:24px; overflow-y:auto; max-height:380px;">
-          <div style="text-align:center; padding:80px 0; color:#cbd5e1; font-style:italic; font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="card" style="overflow:hidden;">
-      <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-        <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
-          <i data-lucide="layout-list" style="width:16px; height:16px;"></i> ประวัติการขอใช้บริการทั้งหมด
-        </div>
-        <button onclick="toggleModal()" style="padding:8px 16px; background:#1d4ed8; color:white; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:4px;">
-          <i data-lucide="plus" style="width:12px; height:12px;"></i> จองใหม่
+        <a href="room-booking.html" class="sidebar-btn active">
+          <i data-lucide="calendar" style="width:20px; height:20px; flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
+        </a>
+        <button onclick="showComingSoon()" class="sidebar-btn">
+          <i data-lucide="monitor" style="width:20px; height:20px; flex-shrink:0;"></i> ระบบขอใช้ข้อมูลกล้องวงจรปิด
         </button>
+        <!-- Profile — เหมือน index.html -->
+        <div style="padding:32px 20px 0;" id="sidebarProfile"></div>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead class="th-blue">
-            <tr>
-              <th style="width:48px; text-align:center; border-right:1px solid rgba(255,255,255,0.2);">ที่</th>
-              <th style="border-right:1px solid rgba(255,255,255,0.2);">วันที่</th>
-              <th style="border-right:1px solid rgba(255,255,255,0.2);">สถานที่</th>
-              <th style="border-right:1px solid rgba(255,255,255,0.2);">ช่วงเวลา</th>
-              <th style="border-right:1px solid rgba(255,255,255,0.2);">ผู้จอง</th>
-              <th style="border-right:1px solid rgba(255,255,255,0.2);">วัตถุประสงค์</th>
-              <th style="text-align:center;">สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="mainBookingTableBody">
-            <tr><td colspan="7" style="text-align:center; color:#94a3b8; font-style:italic; padding:40px;">กำลังเชื่อมต่อข้อมูล...</td></tr>
-          </tbody>
-        </table>
+
+      <!-- Content Area -->
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:24px;">
+
+        <!-- Calendar + Day Detail -->
+        <div style="display:grid; grid-template-columns:260px 1fr; gap:24px;">
+
+          <!-- Calendar -->
+          <div style="display:flex; flex-direction:column; gap:24px;">
+            <div class="card" style="overflow:hidden;">
+              <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
+                  <i data-lucide="calendar" style="width:16px; height:16px;"></i> ปฏิทิน
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <button onclick="changeMonth(-1)" style="padding:4px; background:none; border:none; cursor:pointer; color:#1d4ed8; border-radius:4px; display:flex;"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
+                  <button onclick="changeMonth(1)"  style="padding:4px; background:none; border:none; cursor:pointer; color:#1d4ed8; border-radius:4px; display:flex;"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
+                </div>
+              </div>
+              <div style="padding:16px; text-align:center;">
+                <div style="margin-bottom:12px; font-weight:700; font-size:13px; color:#334155;" id="currentMonthLabel"></div>
+                <div style="display:grid; grid-template-columns:repeat(7,1fr); font-size:10px; font-weight:700; color:#94a3b8; margin-bottom:8px;">
+                  <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:3px;" id="calendarDaysGrid"></div>
+                <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; font-size:9px; font-weight:700; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:10px;">
+                  <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#1d4ed8;display:inline-block;"></span>วันนี้</span>
+                  <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#eab308;display:inline-block;"></span>มีจอง</span>
+                  <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#fecaca;border:1px solid #fca5a5;display:inline-block;"></span>จองเต็ม</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- สรุปวันนี้ -->
+            <div class="card" style="padding:20px;">
+              <div style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">สรุปวันนี้</div>
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                <div style="width:40px;height:40px;background:#dcfce7;color:#16a34a;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i data-lucide="check" style="width:20px;height:20px;"></i></div>
+                <div><div style="font-size:10px;color:#64748b;">อนุมัติ</div><div style="font-size:18px;font-weight:700;" id="approvedToday">0</div></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px;height:40px;background:#fef9c3;color:#d97706;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i data-lucide="clock" style="width:20px;height:20px;"></i></div>
+                <div><div style="font-size:10px;color:#64748b;">รอตรวจ</div><div style="font-size:18px;font-weight:700;" id="pendingToday">0</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day Detail -->
+          <div class="card" style="display:flex; flex-direction:column; min-height:300px;">
+            <div style="padding:16px; border-bottom:1px solid #bfdbfe; display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
+                <i data-lucide="info" style="width:16px;height:16px;"></i> รายละเอียดการจองในวันที่เลือก
+              </div>
+              <span id="selectedDateLabel" style="font-size:10px; color:#94a3b8; font-weight:700;"></span>
+            </div>
+            <div id="todayBookingsList" style="flex:1; padding:24px; overflow-y:auto; max-height:380px;">
+              <div style="text-align:center; padding:80px 0; color:#cbd5e1; font-style:italic; font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" style="overflow:hidden;">
+          <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
+              <i data-lucide="layout-list" style="width:16px;height:16px;"></i> ประวัติการขอใช้บริการทั้งหมด
+            </div>
+            <button onclick="toggleModal()" style="padding:8px 16px; background:#1d4ed8; color:white; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+              <i data-lucide="plus" style="width:12px;height:12px;"></i> จองใหม่
+            </button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead style="background:#1d4ed8; color:white;">
+                <tr>
+                  <th style="width:48px; text-align:center; border-right:1px solid rgba(255,255,255,0.2);">ที่</th>
+                  <th style="border-right:1px solid rgba(255,255,255,0.2);">วันที่</th>
+                  <th style="border-right:1px solid rgba(255,255,255,0.2);">สถานที่</th>
+                  <th style="border-right:1px solid rgba(255,255,255,0.2);">ช่วงเวลา</th>
+                  <th style="border-right:1px solid rgba(255,255,255,0.2);">ผู้จอง</th>
+                  <th style="border-right:1px solid rgba(255,255,255,0.2);">วัตถุประสงค์</th>
+                  <th style="text-align:center;">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="mainBookingTableBody">
+                <tr><td colspan="7" style="text-align:center;color:#94a3b8;font-style:italic;padding:40px;">กำลังเชื่อมต่อข้อมูล...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal จอง -->
   <div id="bookingModal" class="modal-bg">
     <div class="modal-box">
       <div style="background:#1d4ed8; padding:20px; color:white; display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:8px; font-weight:700;">
-          <i data-lucide="plus-circle" style="width:20px; height:20px;"></i> แบบฟอร์มขอใช้สถานที่
+          <i data-lucide="plus-circle" style="width:20px;height:20px;"></i> แบบฟอร์มขอใช้สถานที่
         </div>
-        <button onclick="toggleModal()" style="background:none; border:none; color:white; cursor:pointer;">
-          <i data-lucide="x" style="width:20px; height:20px;"></i>
+        <button onclick="toggleModal()" style="background:none; border:none; color:white; cursor:pointer; opacity:0.7;">
+          <i data-lucide="x" style="width:20px;height:20px;"></i>
         </button>
       </div>
       <form id="bookingForm" style="padding:24px; overflow-y:auto; flex:1;" onsubmit="submitBooking(event)">
         <div style="margin-bottom:16px;">
-          <label style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:4px;">สถานที่</label>
+          <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:4px;">สถานที่</label>
           <select id="roomSelect" required>
             <option value="">-- เลือกสถานที่ --</option>
             <option value="หอประชุมพุทธรักษา">หอประชุมพุทธรักษา (ความจุ 800 คน)</option>
@@ -210,11 +229,11 @@
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
           <div>
-            <label style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:4px;">วันที่ต้องการใช้</label>
+            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:4px;">วันที่ต้องการใช้</label>
             <input type="date" id="bookingDate" required>
           </div>
           <div>
-            <label style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:4px;">เวลา (เริ่ม-จบ)</label>
+            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:4px;">เวลา (เริ่ม-จบ)</label>
             <div style="display:flex; gap:8px;">
               <input type="time" id="startTime" required>
               <input type="time" id="endTime" required>
@@ -222,12 +241,12 @@
           </div>
         </div>
         <div style="margin-bottom:16px;">
-          <label style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:4px;">วัตถุประสงค์การใช้</label>
+          <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:block;margin-bottom:4px;">วัตถุประสงค์การใช้</label>
           <textarea id="purpose" rows="3" placeholder="ระบุเหตุผลหรือกิจกรรม..." required></textarea>
         </div>
         <div style="display:flex; gap:12px; margin-top:8px;">
-          <button type="button" onclick="toggleModal()" style="flex:1; padding:12px; border:1px solid #cbd5e1; background:white; border-radius:12px; font-weight:700; cursor:pointer;">ยกเลิก</button>
-          <button type="submit" id="submitBtn" style="flex:1; padding:12px; background:#1d4ed8; color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer;">บันทึกข้อมูล</button>
+          <button type="button" onclick="toggleModal()" style="flex:1;padding:12px;border:1px solid #cbd5e1;background:white;border-radius:12px;font-weight:700;cursor:pointer;">ยกเลิก</button>
+          <button type="submit" id="submitBtn" style="flex:1;padding:12px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;">บันทึกข้อมูล</button>
         </div>
       </form>
     </div>
@@ -241,17 +260,16 @@
       appId:     "1:275537025660:web:4fdc11e0fe22e679f6c7f9"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
     var auth = firebase.auth();
     var db   = firebase.firestore();
-    var currentUser     = null;
-    var allBookings     = [];
-    var viewYear        = new Date().getFullYear();
-    var viewMonth       = new Date().getMonth();
-    var selectedDate    = new Date().toISOString().split('T')[0];
+
+    var currentUser  = null;
+    var allBookings  = [];
+    var viewYear     = new Date().getFullYear();
+    var viewMonth    = new Date().getMonth();
+    var selectedDate = new Date().toISOString().split('T')[0];
     var listenerStarted = false;
 
-    // ── Toast ──────────────────────────────────────
     function showToast(msg, type) {
       var t = document.createElement('div');
       t.className = 'toast';
@@ -270,62 +288,54 @@
     auth.onAuthStateChanged(function(user) {
       currentUser = user;
       if (user && !user.isAnonymous) {
-        // login แล้ว — ซ่อน login overlay, แสดง main
-        document.getElementById('loginOverlay').classList.remove('open');
         updateNavUser(user);
+        updateSidebarProfile(user);
         if (!listenerStarted) { listenerStarted = true; initData(); }
         else hideLoading();
       } else {
-        // ยังไม่ login — แสดง login overlay
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('loginOverlay').classList.add('open');
-        document.getElementById('mainContent').style.display = 'none';
-        updateNavGuest();
+        // ยังไม่ login — redirect กลับ index
+        window.location.href = 'index.html';
       }
     });
 
-    function handleLogin() {
-      document.getElementById('loadingOverlay').style.display = 'flex';
-      document.getElementById('loginOverlay').classList.remove('open');
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(err) {
-        console.error(err);
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('loginOverlay').classList.add('open');
-        showToast('เข้าสู่ระบบไม่สำเร็จ: ' + err.message, 'error');
-      });
-    }
-
     function handleLogout() {
-      auth.signOut();
+      auth.signOut().then(function() { window.location.href = 'index.html'; });
     }
 
+    // Navbar — เหมือน index.html
     function updateNavUser(user) {
       document.getElementById('userNavSection').innerHTML =
-        '<div style="display:flex; align-items:center; gap:12px;">' +
-          '<span style="color:#bfdbfe; font-size:12px; font-weight:700;">' + (user.displayName||'') + '</span>' +
-          '<img src="' + user.photoURL + '" style="width:36px; height:36px; border-radius:50%; border:2px solid rgba(255,255,255,0.3);">' +
-          '<button onclick="handleLogout()" style="padding:6px 12px; background:#1e40af; color:white; font-size:12px; font-weight:700; border:1px solid #2563eb; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:4px;">' +
-            '<i data-lucide="log-out" style="width:12px; height:12px;"></i> ออกจากระบบ' +
+        '<div style="display:flex;align-items:center;gap:12px;">' +
+          '<img src="' + user.photoURL + '" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);">' +
+          '<button onclick="handleLogout()" style="padding:8px;background:none;border:none;cursor:pointer;color:rgba(191,219,254,0.8);">' +
+            '<i data-lucide="log-out" style="width:20px;height:20px;"></i>' +
           '</button>' +
-          '<a href="index.html" style="padding:6px 12px; background:#1e40af; color:white; font-size:12px; font-weight:700; border:1px solid #2563eb; border-radius:8px; text-decoration:none;">← กลับหน้าแรก</a>' +
         '</div>';
       lucide.createIcons();
     }
 
-    function updateNavGuest() {
-      document.getElementById('userNavSection').innerHTML =
-        '<div style="display:flex; align-items:center; gap:8px;">' +
-          '<button onclick="handleLogin()" style="padding:8px 16px; background:white; color:#1d4ed8; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer;">เข้าสู่ระบบ</button>' +
-          '<a href="index.html" style="padding:8px 12px; background:#1e40af; color:white; font-size:12px; font-weight:700; border:1px solid #2563eb; border-radius:8px; text-decoration:none;">← กลับหน้าแรก</a>' +
+    // Sidebar profile — เหมือน index.html
+    function updateSidebarProfile(user) {
+      document.getElementById('sidebarProfile').innerHTML =
+        '<div style="background:white;padding:20px;border-radius:24px;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+          '<div style="display:flex;align-items:center;gap:12px;overflow:hidden;">' +
+            '<img src="' + user.photoURL + '" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
+            '<div style="overflow:hidden;">' +
+              '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + user.displayName + '</p>' +
+              '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + user.email + '</p>' +
+            '</div>' +
+          '</div>' +
         '</div>';
-      lucide.createIcons();
+    }
+
+    function showComingSoon() {
+      showToast('ระบบนี้อยู่ระหว่างพัฒนา', 'error');
     }
 
     // ── Modal ──────────────────────────────────────
     function toggleModal() {
       var m = document.getElementById('bookingModal');
       if (!m.classList.contains('open')) {
-        if (!currentUser || currentUser.isAnonymous) { showToast('กรุณาล็อกอินก่อนจอง', 'error'); return; }
         m.classList.add('open');
         document.body.style.overflow = 'hidden';
         lucide.createIcons();
@@ -352,13 +362,11 @@
       var days  = new Date(viewYear, viewMonth + 1, 0).getDate();
       var today = new Date().toISOString().split('T')[0];
       label.textContent = new Intl.DateTimeFormat('th-TH', { month:'long', year:'numeric' }).format(new Date(viewYear, viewMonth));
-
       for (var i = 0; i < first; i++) {
         var e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
       }
       var bmap = {};
-      allBookings.forEach(function(b) { if (!bmap[b.date]) bmap[b.date] = []; bmap[b.date].push(b); });
-
+      allBookings.forEach(function(b) { if (!bmap[b.date]) bmap[b.date]=[]; bmap[b.date].push(b); });
       for (var d = 1; d <= days; d++) {
         var dk = viewYear + '-' + String(viewMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
         var db = bmap[dk] || [];
@@ -368,11 +376,8 @@
         if (db.length > 0)       cls += ' has-booking';
         if (db.length >= 3)      cls += ' is-full';
         if (dk === selectedDate) cls += ' is-selected';
-        el.className   = cls;
-        el.textContent = d;
-        (function(k, b) {
-          el.onclick = function() { selectedDate = k; renderCalendar(); updateDayView(k, b); };
-        })(dk, db);
+        el.className = cls; el.textContent = d;
+        (function(k,b){ el.onclick = function(){ selectedDate=k; renderCalendar(); updateDayView(k,b); }; })(dk,db);
         grid.appendChild(el);
       }
     }
@@ -380,18 +385,17 @@
     function updateDayView(dateKey, dayBookings) {
       var list = document.getElementById('todayBookingsList');
       document.getElementById('selectedDateLabel').textContent =
-        new Date(dateKey + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
+        new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
       if (!dayBookings || !dayBookings.length) {
-        list.innerHTML = '<div style="text-align:center; padding:80px 0; color:#cbd5e1; font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
+        list.innerHTML = '<div style="text-align:center;padding:80px 0;color:#cbd5e1;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
         return;
       }
       list.innerHTML = dayBookings.map(function(b) {
-        var ok = b.status === 'approved';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:#f8fafc;border-radius:12px;margin-bottom:12px;border-left:4px solid ' + (ok?'#22c55e':'#f59e0b') + ';">' +
-          '<div><div style="font-weight:700;font-size:14px;color:#1e3a8a;">' + b.room + '</div>' +
-          '<div style="font-size:10px;color:#64748b;">' + b.startTime + ' - ' + b.endTime + ' | ' + (b.userName||'-') + '</div></div>' +
-          '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;' + (ok?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#b45309;') + '">' +
-          (ok?'อนุมัติแล้ว':'รอพิจารณา') + '</span></div>';
+        var ok = b.status==='approved';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:#f8fafc;border-radius:12px;margin-bottom:12px;border-left:4px solid '+(ok?'#22c55e':'#f59e0b')+';">' +
+          '<div><div style="font-weight:700;font-size:14px;color:#1e3a8a;">'+b.room+'</div>' +
+          '<div style="font-size:10px;color:#64748b;">'+b.startTime+' - '+b.endTime+' | '+(b.userName||'-')+'</div></div>' +
+          '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;'+(ok?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#b45309;')+'">'+(ok?'อนุมัติแล้ว':'รอพิจารณา')+'</span></div>';
       }).join('');
     }
 
@@ -400,71 +404,55 @@
       db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap) {
         allBookings = [];
         var today = new Date().toISOString().split('T')[0];
-        var app = 0, pen = 0, html = '';
-        snap.forEach(function(doc) { allBookings.push(Object.assign({ id:doc.id }, doc.data())); });
-
+        var app=0, pen=0, html='';
+        snap.forEach(function(doc){ allBookings.push(Object.assign({id:doc.id},doc.data())); });
         var tbody = document.getElementById('mainBookingTableBody');
         if (!allBookings.length) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';
         } else {
           var idx = allBookings.length;
           allBookings.forEach(function(b) {
-            var ok = b.status === 'approved';
-            html += '<tr onclick="viewDate(\'' + b.date + '\')">' +
-              '<td style="text-align:center;color:#94a3b8;font-family:monospace;">' + (idx--) + '</td>' +
-              '<td style="font-weight:700;">' + b.date + '</td>' +
-              '<td style="color:#1d4ed8;font-weight:700;">' + b.room + '</td>' +
-              '<td>' + b.startTime + '-' + b.endTime + '</td>' +
-              '<td style="font-size:11px;">' + (b.userName||'-') + '</td>' +
-              '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.purpose + '</td>' +
-              '<td style="text-align:center;"><span class="' + (ok?'badge-g':'badge-a') + '">' + (ok?'อนุมัติ':'รอตรวจ') + '</span></td></tr>';
-            if (b.date === today) ok ? app++ : pen++;
+            var ok = b.status==='approved';
+            html += '<tr onclick="viewDate(\''+b.date+'\')">' +
+              '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>' +
+              '<td style="font-weight:700;">'+b.date+'</td>' +
+              '<td style="color:#1d4ed8;font-weight:700;">'+b.room+'</td>' +
+              '<td>'+b.startTime+'-'+b.endTime+'</td>' +
+              '<td style="font-size:11px;">'+(b.userName||'-')+'</td>' +
+              '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>' +
+              '<td style="text-align:center;"><span class="'+(ok?'badge-g':'badge-a')+'">'+(ok?'อนุมัติ':'รอตรวจ')+'</span></td></tr>';
+            if (b.date===today) ok?app++:pen++;
           });
           tbody.innerHTML = html;
         }
         document.getElementById('approvedToday').textContent = app;
         document.getElementById('pendingToday').textContent  = pen;
         renderCalendar();
-        updateDayView(selectedDate, allBookings.filter(function(b) { return b.date === selectedDate; }));
+        updateDayView(selectedDate, allBookings.filter(function(b){ return b.date===selectedDate; }));
         hideLoading();
         lucide.createIcons();
-      }, function(err) {
-        console.error(err);
-        hideLoading();
-      });
+      }, function(err){ console.error(err); hideLoading(); });
     }
 
     function viewDate(d) {
-      var p = d.split('-');
-      viewYear = +p[0]; viewMonth = +p[1]-1; selectedDate = d;
+      var p=d.split('-'); viewYear=+p[0]; viewMonth=+p[1]-1; selectedDate=d;
       renderCalendar();
-      updateDayView(d, allBookings.filter(function(b) { return b.date === d; }));
+      updateDayView(d, allBookings.filter(function(b){ return b.date===d; }));
     }
 
-    // ── Submit ─────────────────────────────────────
     function submitBooking(e) {
       e.preventDefault();
-      if (!currentUser || currentUser.isAnonymous) { showToast('กรุณาล็อกอินก่อนจอง','error'); return; }
       var btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+      btn.disabled=true; btn.textContent='กำลังบันทึก...';
       db.collection('bookings').add({
-        userId:   currentUser.uid,
-        userName: currentUser.displayName,
-        userPhoto:currentUser.photoURL,
-        room:     document.getElementById('roomSelect').value,
-        date:     document.getElementById('bookingDate').value,
-        startTime:document.getElementById('startTime').value,
-        endTime:  document.getElementById('endTime').value,
-        purpose:  document.getElementById('purpose').value,
-        status:   'pending',
+        userId:currentUser.uid, userName:currentUser.displayName, userPhoto:currentUser.photoURL,
+        room:document.getElementById('roomSelect').value, date:document.getElementById('bookingDate').value,
+        startTime:document.getElementById('startTime').value, endTime:document.getElementById('endTime').value,
+        purpose:document.getElementById('purpose').value, status:'pending',
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        toggleModal(); showToast('บันทึกข้อมูลสำเร็จ ✓');
-      }).catch(function(err) {
-        showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
-      }).finally(function() {
-        btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
-      });
+      }).then(function(){ toggleModal(); showToast('บันทึกข้อมูลสำเร็จ ✓'); })
+        .catch(function(err){ showToast('เกิดข้อผิดพลาด: '+err.message,'error'); })
+        .finally(function(){ btn.disabled=false; btn.textContent='บันทึกข้อมูล'; });
     }
 
     lucide.createIcons();
