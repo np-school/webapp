@@ -26,25 +26,19 @@
             position: fixed;
             inset: 0;
             background: rgba(255, 255, 255, 0.95);
-            z-index: 9999;
+            z-index: 999;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.3s ease-out;
         }
         input, select, textarea {
             border: 1px solid #cbd5e1;
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
             outline: none;
             font-size: 0.875rem;
             width: 100%;
-            background: #f8fafc;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: #1d4ed8;
-            background: white;
-            ring: 2px;
-            ring-color: #bfdbfe;
         }
 
         .calendar-day {
@@ -52,15 +46,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
             font-size: 11px;
             font-weight: 600;
+            border: 1px solid transparent;
         }
         .calendar-day:hover:not(.empty) {
             background-color: #f1f5f9;
+            transform: translateY(-2px);
         }
         .calendar-day.has-booking::after {
             content: '';
@@ -71,15 +67,45 @@
             background-color: #eab308;
             border-radius: 50%;
         }
+        .calendar-day.is-full {
+            background-color: #fee2e2 !important; 
+            color: #b91c1c !important; 
+            border: 1px solid #fecaca;
+        }
         .calendar-day.is-today {
             background-color: #1d4ed8 !important;
             color: white !important;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
         }
         .calendar-day.is-selected {
-            outline: 2px solid #1d4ed8;
+            border: 2px solid #1d4ed8;
             background-color: #eff6ff;
         }
         .calendar-day.empty { cursor: default; }
+
+        /* สไตล์สำหรับปุ่มเลือกช่วงเวลา */
+        .time-slot {
+            padding: 8px;
+            text-align: center;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .time-slot.selected {
+            background-color: #1d4ed8;
+            color: white;
+            border-color: #1d4ed8;
+        }
+        .time-slot.unavailable {
+            background-color: #f1f5f9;
+            color: #cbd5e1;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -89,20 +115,25 @@
         <p class="mt-4 text-slate-500 text-sm font-bold">กำลังเตรียมข้อมูล...</p>
     </div>
 
-    <nav class="sticky top-0 z-40 bg-blue-700 px-6 py-3 shadow-lg">
+    <nav class="sticky top-0 z-50 bg-blue-700 px-6 py-3 shadow-lg">
         <div class="max-w-full mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-10 w-auto">
-                <div class="border-l border-blue-500 pl-4 hidden sm:block">
-                    <h1 class="text-white font-bold leading-tight">ระบบขอใช้สถานที่</h1>
-                    <p class="text-blue-100 text-[10px]">โรงเรียนหนองกี่พิทยาคม</p>
-                </div>
+                <a href="index.html" class="flex items-center gap-4 hover:opacity-90">
+                    <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-10 w-auto">
+                    <div class="border-l border-blue-500 pl-4">
+                        <h1 class="text-white font-bold leading-tight">ระบบขอใช้ห้อง/สถานที่</h1>
+                        <p class="text-blue-100 text-[10px]">โรงเรียนหนองกี่พิทยาคม</p>
+                    </div>
+                </a>
             </div>
             <div class="flex items-center gap-4">
                 <div id="userInfo" class="flex items-center gap-2 text-white">
-                    <span id="userNameDisplay" class="text-xs font-bold hidden md:block italic">ผู้ใช้ทั่วไป</span>
-                    <img id="userPhotoDisplay" src="https://ui-avatars.com/api/?name=User&background=random" class="w-8 h-8 rounded-full border border-white/20">
+                    <span id="userNameDisplay" class="text-xs font-bold hidden md:block italic text-blue-200">กำลังโหลด...</span>
+                    <img id="userPhotoDisplay" src="https://ui-avatars.com/api/?name=Guest&background=random" class="w-8 h-8 rounded-full border border-white/20">
                 </div>
+                <a href="index.html" class="px-4 py-1.5 bg-blue-800 text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition-all border border-blue-600 flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-3 h-3"></i> กลับหน้าแรก
+                </a>
             </div>
         </div>
     </nav>
@@ -110,16 +141,15 @@
     <main id="mainContent" class="max-w-[1600px] mx-auto p-6 space-y-6 opacity-0 transition-opacity duration-500">
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-4 xl:col-span-3 space-y-6">
-                <!-- ปฏิทินแสดงเป็นเดือน -->
+            <div class="lg:col-span-3 space-y-6">
                 <div class="card-custom overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex items-center justify-between text-blue-700 font-bold text-sm">
                         <div class="flex items-center gap-2">
                             <i data-lucide="calendar" class="w-4 h-4"></i> ปฏิทินรายเดือน
                         </div>
                         <div class="flex items-center gap-1">
-                            <button id="prevMonth" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <button id="nextMonth" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                            <button onclick="changeMonth(-1)" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button onclick="changeMonth(1)" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     <div class="p-4 text-center">
@@ -130,97 +160,117 @@
                             <div class="text-red-400">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-400">ส</div>
                         </div>
                         <div class="grid grid-cols-7 gap-1" id="calendarDaysGrid"></div>
+                        <div class="mt-4 flex flex-wrap gap-2 justify-center text-[9px] font-bold text-slate-400 border-t pt-3">
+                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-blue-600"></div> วันนี้</div>
+                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-yellow-400"></div> มีจอง</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card-custom p-5">
-                    <button id="openModalBtn" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 flex items-center justify-center gap-2 transition-all">
-                        <i data-lucide="plus-circle" class="w-5 h-5"></i> จองใหม่
-                    </button>
+                <div class="card-custom p-5 space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">สรุปวันนี้</h4>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-5 h-5"></i></div>
+                        <div><p class="text-[10px] text-slate-500">อนุมัติ</p><p class="text-lg font-bold" id="approvedToday">0</p></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
+                        <div><p class="text-[10px] text-slate-500">รอตรวจ</p><p class="text-lg font-bold" id="pendingToday">0</p></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-8 xl:col-span-9">
-                <div class="card-custom h-full flex flex-col min-h-[400px]">
-                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="lg:col-span-9">
+                <div class="card-custom h-full flex flex-col">
+                    <div class="p-4 border-b border-blue-600 flex items-center justify-between">
                         <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
-                            <i data-lucide="info" class="w-4 h-4 text-blue-600"></i> รายการจองวันที่ <span id="selectedDateLabel"></span>
+                            <i data-lucide="info" class="w-4 h-4 text-blue-600"></i> รายละเอียดการจองในวันที่เลือก
                         </div>
+                        <span class="text-[10px] text-slate-400 font-bold" id="selectedDateLabel"></span>
                     </div>
-                    <div class="flex-1 p-6" id="todayBookingsList">
-                        <div class="text-center py-20 text-slate-300 italic text-sm">เลือกวันที่เพื่อดูข้อมูล</div>
+                    <div class="flex-1 p-6 overflow-y-auto max-h-[400px]" id="todayBookingsList">
+                        <div class="text-center py-20 text-slate-300 italic text-sm">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card-custom overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b border-slate-100">
-                <h3 class="text-blue-700 font-bold text-sm flex items-center gap-2">
-                    <i data-lucide="table" class="w-4 h-4"></i> ประวัติการขอใช้บริการล่าสุด
-                </h3>
+            <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+                    <i data-lucide="layout-list" class="w-4 h-4"></i> ประวัติการจองทั้งหมด
+                </div>
+                <button onclick="toggleModal()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-lg flex items-center gap-1 transition-all">
+                    <i data-lucide="plus" class="w-3 h-3"></i> จองใหม่
+                </button>
             </div>
+
             <div class="overflow-x-auto">
-                <table class="w-full text-[11px] text-left">
+                <table class="w-full text-[11px] text-left border-collapse">
                     <thead class="table-header-custom font-bold">
                         <tr>
-                            <th class="px-4 py-3">วันที่ใช้</th>
-                            <th class="px-4 py-3">สถานที่</th>
-                            <th class="px-4 py-3">เวลา</th>
-                            <th class="px-4 py-3">ผู้จอง</th>
-                            <th class="px-4 py-3">สถานะ</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30 w-12 text-center">ที่</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30">วันที่</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30">สถานที่</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30">ช่วงเวลา</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30">ผู้จอง</th>
+                            <th class="px-4 py-3 border-r border-blue-500/30">วัตถุประสงค์</th>
+                            <th class="px-4 py-3 text-center">สถานะ</th>
                         </tr>
                     </thead>
                     <tbody id="mainBookingTableBody" class="bg-white">
-                        <tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">กำลังโหลด...</td></tr>
+                        <tr><td colspan="7" class="px-4 py-10 text-center text-slate-400 italic">กำลังเชื่อมต่อข้อมูล...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Modal Form -->
-    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-[999] hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+    <!-- Modal ฟอร์มการจอง -->
+    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-[1000] hidden items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 my-auto">
             <div class="bg-blue-700 p-5 text-white flex justify-between items-center">
-                <h2 class="font-bold flex items-center gap-2"><i data-lucide="clipboard-list" class="w-5 h-5"></i> รายละเอียดการจอง</h2>
-                <button id="closeModalBtn" class="p-1 hover:bg-white/10 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="flex items-center gap-2 font-bold"><i data-lucide="plus-circle" class="w-5 h-5"></i> แบบฟอร์มขอใช้สถานที่</div>
+                <button onclick="toggleModal()"><i data-lucide="x" class="w-5 h-5 opacity-50 hover:opacity-100"></i></button>
             </div>
-            <form id="bookingForm" class="p-6 space-y-4">
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">สถานที่</label>
+            <form id="bookingForm" class="p-6 space-y-4 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">สถานที่</label>
                         <select id="roomSelect" required>
-                            <option value="">-- เลือกห้องประชุม/สถานที่ --</option>
+                            <option value="">-- เลือกสถานที่ --</option>
                             <option value="ห้องประชุมนพเก้า">ห้องประชุมนพเก้า</option>
                             <option value="ห้องคอมพิวเตอร์ 1">ห้องคอมพิวเตอร์ 1</option>
                             <option value="หอประชุมโรงเรียน">หอประชุมโรงเรียน</option>
+                            <option value="ห้องสมุดดิจิทัล">ห้องสมุดดิจิทัล</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">วันที่ต้องการ</label>
-                            <input type="date" id="bookingDate" required>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">เริ่ม</label>
-                                <input type="time" id="startTime" required>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">ถึง</label>
-                                <input type="time" id="endTime" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">วัตถุประสงค์</label>
-                        <textarea id="purpose" rows="3" placeholder="ระบุรายละเอียดกิจกรรม..." required></textarea>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">วันที่ต้องการใช้</label>
+                        <input type="date" id="bookingDate" required>
                     </div>
                 </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" id="cancelBtn" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold hover:bg-slate-50">ยกเลิก</button>
-                    <button type="submit" class="flex-1 py-3 bg-blue-700 text-white rounded-xl font-bold shadow-lg hover:bg-blue-800">ยืนยันการจอง</button>
+
+                <!-- ส่วนการเลือกช่วงเวลา (Slots) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">เลือกช่วงเวลา (6:00 - 22:00)</label>
+                        <span id="slotSummary" class="text-[10px] font-bold text-blue-600">ยังไม่ได้เลือกเวลา</span>
+                    </div>
+                    <div id="timeSlotsGrid" class="grid grid-cols-4 sm:grid-cols-8 gap-2 border p-3 rounded-xl bg-slate-50">
+                        <!-- Slots will be injected here via JS -->
+                    </div>
+                    <p class="text-[9px] text-slate-400 italic">* คลิกเพื่อเลือกช่วงเวลาที่ต้องการ (สามารถเลือกหลายช่วงที่ต่อเนื่องกันได้)</p>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">วัตถุประสงค์การใช้</label>
+                    <textarea id="purpose" rows="2" placeholder="ระบุเหตุผลหรือกิจกรรม..." required></textarea>
+                </div>
+                
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleModal()" class="flex-1 py-3 border rounded-xl font-bold">ยกเลิก</button>
+                    <button type="submit" id="btnSubmit" class="flex-1 py-3 bg-blue-700 text-white rounded-xl font-bold shadow-lg disabled:opacity-50">ยืนยันการจอง</button>
                 </div>
             </form>
         </div>
@@ -244,153 +294,261 @@
 
         let currentUser = null;
         let allBookings = [];
-        let viewDate = new Date();
+        let viewYear = new Date().getFullYear();
+        let viewMonth = new Date().getMonth();
         let selectedDate = new Date().toISOString().split('T')[0];
-
-        // Modal Logic
-        const modal = document.getElementById('bookingModal');
-        const openBtn = document.getElementById('openModalBtn');
-        const closeBtn = document.getElementById('closeModalBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-
-        function toggleModal(show) {
-            if (show) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-        }
-
-        openBtn.addEventListener('click', () => toggleModal(true));
-        closeBtn.addEventListener('click', () => toggleModal(false));
-        cancelBtn.addEventListener('click', () => toggleModal(false));
+        let selectedSlots = []; // เก็บตัวเลขชั่วโมงที่เลือก
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('userNameDisplay').innerText = user.displayName || 'Anonymous';
+                document.getElementById('userNameDisplay').innerText = user.displayName || 'ผู้ใช้ทั่วไป';
+                if (user.photoURL) document.getElementById('userPhotoDisplay').src = user.photoURL;
             } else {
                 signInAnonymously(auth);
             }
-            fetchBookings();
+            initDataListeners();
         });
 
-        function fetchBookings() {
-            const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
-                allBookings = [];
-                snapshot.forEach(doc => allBookings.push({id: doc.id, ...doc.data()}));
-                renderAll();
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('opacity-0');
-            });
+        // สร้างปุ่มช่วงเวลา 06:00 - 22:00
+        function initTimeSlots() {
+            const grid = document.getElementById('timeSlotsGrid');
+            grid.innerHTML = '';
+            selectedSlots = [];
+            updateSlotSummary();
+
+            for(let hour = 6; hour < 22; hour++) {
+                const hourStr = String(hour).padStart(2, '0');
+                const nextHourStr = String(hour + 1).padStart(2, '0');
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.innerText = `${hourStr}:00`;
+                slot.dataset.hour = hour;
+                
+                slot.onclick = () => {
+                    if (slot.classList.contains('unavailable')) return;
+                    
+                    if (selectedSlots.includes(hour)) {
+                        selectedSlots = selectedSlots.filter(h => h !== hour);
+                    } else {
+                        selectedSlots.push(hour);
+                    }
+                    selectedSlots.sort((a, b) => a - b);
+                    renderSlotsState();
+                };
+                grid.appendChild(slot);
+            }
         }
 
-        function renderAll() {
-            renderCalendar();
-            renderTable();
-            renderList(selectedDate);
-            lucide.createIcons();
+        function renderSlotsState() {
+            const slots = document.querySelectorAll('.time-slot');
+            slots.forEach(slot => {
+                const hour = parseInt(slot.dataset.hour);
+                if (selectedSlots.includes(hour)) {
+                    slot.classList.add('selected');
+                } else {
+                    slot.classList.remove('selected');
+                }
+            });
+            updateSlotSummary();
         }
+
+        function updateSlotSummary() {
+            const summary = document.getElementById('slotSummary');
+            if (selectedSlots.length === 0) {
+                summary.innerText = 'ยังไม่ได้เลือกเวลา';
+                summary.classList.replace('text-blue-600', 'text-slate-400');
+                return;
+            }
+            summary.classList.replace('text-slate-400', 'text-blue-600');
+            const start = Math.min(...selectedSlots);
+            const end = Math.max(...selectedSlots) + 1;
+            summary.innerText = `${String(start).padStart(2, '0')}:00 - ${String(end).padStart(2, '0')}:00 น.`;
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('loadingOverlay');
+            const main = document.getElementById('mainContent');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                main.classList.remove('opacity-0');
+            }, 300);
+        }
+
+        window.toggleModal = () => {
+            const modal = document.getElementById('bookingModal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+            if (!modal.classList.contains('hidden')) {
+                initTimeSlots();
+                // ตั้งค่าวันที่เริ่มต้นเป็นวันที่เลือกในปฏิทิน
+                document.getElementById('bookingDate').value = selectedDate;
+            }
+        };
+
+        window.changeMonth = (delta) => {
+            viewMonth += delta;
+            if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+            if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+            renderCalendar();
+        };
 
         function renderCalendar() {
             const grid = document.getElementById('calendarDaysGrid');
             const label = document.getElementById('currentMonthLabel');
             grid.innerHTML = '';
-            
-            const month = viewDate.getMonth();
-            const year = viewDate.getFullYear();
-            
-            label.innerText = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(viewDate);
-            
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
-            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div class="calendar-day empty"></div>';
-            
+
+            const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            label.innerText = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(viewYear, viewMonth));
+
+            for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-day empty"></div>`;
+
+            const bookingMap = {};
+            allBookings.forEach(b => {
+                if (!bookingMap[b.date]) bookingMap[b.date] = [];
+                bookingMap[b.date].push(b);
+            });
+
             for(let d=1; d<=daysInMonth; d++) {
-                const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const hasBooking = allBookings.some(b => b.date === dStr);
-                const isToday = dStr === new Date().toISOString().split('T')[0];
-                const isSel = dStr === selectedDate;
+                const dateKey = `${viewYear}-${String(viewMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = dateKey === todayStr;
+                const isSelected = dateKey === selectedDate;
+                const dayBookings = bookingMap[dateKey] || [];
+                const hasBooking = dayBookings.length > 0;
 
                 const dayEl = document.createElement('div');
-                dayEl.className = `calendar-day ${isToday ? 'is-today' : ''} ${isSel ? 'is-selected' : ''} ${hasBooking ? 'has-booking' : ''}`;
+                dayEl.className = `calendar-day ${isToday ? 'is-today' : ''} ${hasBooking ? 'has-booking' : ''} ${isSelected ? 'is-selected' : ''}`;
                 dayEl.innerText = d;
                 dayEl.onclick = () => {
-                    selectedDate = dStr;
-                    renderAll();
+                    selectedDate = dateKey;
+                    renderCalendar();
+                    updateSelectedDateView(dateKey, dayBookings);
                 };
                 grid.appendChild(dayEl);
             }
         }
 
-        function renderList(date) {
-            const list = document.getElementById('todayBookingsList');
-            document.getElementById('selectedDateLabel').innerText = new Date(date).toLocaleDateString('th-TH');
-            const filtered = allBookings.filter(b => b.date === date);
-            
-            if (filtered.length === 0) {
-                list.innerHTML = `<div class="text-center py-20 text-slate-300 italic">ไม่มีรายการจองในวันที่เลือก</div>`;
+        function updateSelectedDateView(dateKey, dayBookings) {
+            const todayList = document.getElementById('todayBookingsList');
+            const label = document.getElementById('selectedDateLabel');
+            label.innerText = new Date(dateKey).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (dayBookings.length === 0) {
+                todayList.innerHTML = `<div class="text-center py-20 text-slate-300 italic text-sm">ไม่มีข้อมูลการจองในวันที่เลือก</div>`;
                 return;
             }
-            
-            list.innerHTML = filtered.map(b => `
-                <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500 mb-3 flex justify-between items-center">
+
+            todayList.innerHTML = dayBookings.map(data => `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-3 border-l-4 ${data.status === 'approved' ? 'border-green-500' : 'border-amber-500'}">
                     <div>
-                        <h4 class="font-bold text-blue-800">${b.room}</h4>
-                        <p class="text-[10px] text-slate-500">${b.startTime} - ${b.endTime} | โดย ${b.userName || 'ผู้ใช้ทั่วไป'}</p>
+                        <p class="font-bold text-sm text-blue-800">${data.room}</p>
+                        <p class="text-[10px] text-slate-500">${data.startTime} - ${data.endTime} | โดย ${data.userName}</p>
                     </div>
-                    <span class="text-[9px] font-bold px-2 py-1 rounded bg-blue-100 text-blue-700 uppercase">${b.status}</span>
+                    <span class="text-[9px] font-bold ${data.status === 'approved' ? 'text-green-600' : 'text-amber-600'}">
+                        ${data.status === 'approved' ? 'อนุมัติแล้ว' : 'รอพิจารณา'}
+                    </span>
                 </div>
             `).join('');
         }
 
-        function renderTable() {
-            const body = document.getElementById('mainBookingTableBody');
-            body.innerHTML = allBookings.slice(0, 10).map(b => `
-                <tr class="border-b hover:bg-slate-50">
-                    <td class="px-4 py-3 font-bold">${b.date}</td>
-                    <td class="px-4 py-3 text-blue-600">${b.room}</td>
-                    <td class="px-4 py-3">${b.startTime}-${b.endTime}</td>
-                    <td class="px-4 py-3">${b.userName || 'N/A'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-slate-100">${b.status}</span></td>
-                </tr>
-            `).join('') || '<tr><td colspan="5" class="p-10 text-center text-slate-300">ไม่พบประวัติ</td></tr>';
+        function initDataListeners() {
+            const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const tableBody = document.getElementById('mainBookingTableBody');
+                allBookings = [];
+                let tableHtml = '';
+                const todayStr = new Date().toISOString().split('T')[0];
+                let appToday = 0, penToday = 0;
+
+                snapshot.forEach((doc) => {
+                    allBookings.push({id: doc.id, ...doc.data()});
+                });
+
+                if (allBookings.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">ยังไม่มีประวัติการจอง</td></tr>`;
+                } else {
+                    let idx = allBookings.length;
+                    allBookings.forEach(data => {
+                        const isApp = data.status === 'approved';
+                        tableHtml += `
+                            <tr class="border-b border-slate-50 hover:bg-slate-50 cursor-pointer" onclick="viewDate('${data.date}')">
+                                <td class="px-4 py-3 text-center text-slate-400 font-mono">${idx--}</td>
+                                <td class="px-4 py-3 font-bold">${data.date}</td>
+                                <td class="px-4 py-3 text-blue-700 font-bold">${data.room}</td>
+                                <td class="px-4 py-3">${data.startTime}-${data.endTime}</td>
+                                <td class="px-4 py-3 text-xs">${data.userName}</td>
+                                <td class="px-4 py-3 truncate max-w-[100px]">${data.purpose}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold ${isApp ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                                        ${isApp ? 'อนุมัติ' : 'รอตรวจ'}
+                                    </span>
+                                </td>
+                            </tr>`;
+                        if(data.date === todayStr) isApp ? appToday++ : penToday++;
+                    });
+                    tableBody.innerHTML = tableHtml;
+                }
+
+                document.getElementById('approvedToday').innerText = appToday;
+                document.getElementById('pendingToday').innerText = penToday;
+                renderCalendar();
+                updateSelectedDateView(selectedDate, allBookings.filter(b => b.date === selectedDate));
+                hideLoading();
+                lucide.createIcons();
+            });
         }
 
-        document.getElementById('prevMonth').onclick = () => { viewDate.setMonth(viewDate.getMonth() - 1); renderAll(); };
-        document.getElementById('nextMonth').onclick = () => { viewDate.setMonth(viewDate.getMonth() + 1); renderAll(); };
+        window.viewDate = (d) => {
+            const parts = d.split('-');
+            viewYear = parseInt(parts[0]);
+            viewMonth = parseInt(parts[1]) - 1;
+            selectedDate = d;
+            renderCalendar();
+            updateSelectedDateView(d, allBookings.filter(b => b.date === d));
+        };
 
         document.getElementById('bookingForm').onsubmit = async (e) => {
             e.preventDefault();
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "กำลังบันทึก...";
+            if (selectedSlots.length === 0) return alert("กรุณาเลือกช่วงเวลาที่ต้องการจอง");
+            if (!currentUser) return alert("กรุณารอการเชื่อมต่อสักครู่...");
+            
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "กำลังบันทึก...";
+
+            // คำนวณเวลาเริ่มและสิ้นสุดจาก slots ที่เลือก
+            const startH = Math.min(...selectedSlots);
+            const endH = Math.max(...selectedSlots) + 1;
+            const startTime = `${String(startH).padStart(2, '0')}:00`;
+            const endTime = `${String(endH).padStart(2, '0')}:00`;
 
             try {
                 await addDoc(collection(db, "bookings"), {
-                    userId: currentUser?.uid || "anon",
-                    userName: currentUser?.displayName || "Anonymous",
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName || "ผู้ใช้ทั่วไป",
                     room: document.getElementById('roomSelect').value,
                     date: document.getElementById('bookingDate').value,
-                    startTime: document.getElementById('startTime').value,
-                    endTime: document.getElementById('endTime').value,
+                    startTime: startTime,
+                    endTime: endTime,
+                    slots: selectedSlots, // เก็บอาเรย์ slots ไว้ตรวจสอบความซ้ำซ้อนในอนาคตได้
                     purpose: document.getElementById('purpose').value,
                     status: 'pending',
                     createdAt: serverTimestamp()
                 });
+                toggleModal();
                 e.target.reset();
-                toggleModal(false);
-            } catch (err) {
-                alert("เกิดข้อผิดพลาด: " + err.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "ยืนยันการจอง";
+            } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); }
+            finally { 
+                btn.disabled = false; 
+                btn.innerText = "ยืนยันการจอง";
             }
         };
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
