@@ -13,17 +13,14 @@
       background: white;
       border-radius: 1rem;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
-    .table-header-custom {
-      background-color: #1d4ed8;
-      color: white;
-    }
+    .table-header-custom { background-color: #1d4ed8; color: white; }
     #loadingOverlay {
       display: flex;
       position: fixed;
       inset: 0;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255,255,255,0.95);
       z-index: 999;
       flex-direction: column;
       align-items: center;
@@ -39,7 +36,7 @@
       width: 100%;
     }
     .calendar-day {
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 1/1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -51,39 +48,20 @@
       font-weight: 600;
       border: 1px solid transparent;
     }
-    .calendar-day:hover:not(.empty) {
-      background-color: #f1f5f9;
-      transform: translateY(-2px);
-    }
+    .calendar-day:hover:not(.empty) { background-color: #f1f5f9; transform: translateY(-2px); }
     .calendar-day.has-booking::after {
       content: '';
       position: absolute;
       bottom: 4px;
-      width: 4px;
-      height: 4px;
+      width: 4px; height: 4px;
       background-color: #eab308;
       border-radius: 50%;
     }
-    .calendar-day.is-full {
-      background-color: #fee2e2 !important;
-      color: #b91c1c !important;
-      border: 1px solid #fecaca;
-    }
-    .calendar-day.is-full::after {
-      background-color: #b91c1c;
-    }
-    .calendar-day.is-today {
-      background-color: #1d4ed8 !important;
-      color: white !important;
-      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
-    }
-    .calendar-day.is-today::after {
-      background-color: white;
-    }
-    .calendar-day.is-selected {
-      border: 2px solid #1d4ed8;
-      background-color: #eff6ff;
-    }
+    .calendar-day.is-full { background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca; }
+    .calendar-day.is-full::after { background-color: #b91c1c; }
+    .calendar-day.is-today { background-color: #1d4ed8 !important; color: white !important; box-shadow: 0 4px 10px rgba(29,78,216,0.3); }
+    .calendar-day.is-today::after { background-color: white; }
+    .calendar-day.is-selected { border: 2px solid #1d4ed8; background-color: #eff6ff; }
     .calendar-day.empty { cursor: default; }
     .upload-area {
       border: 2px dashed #bfdbfe;
@@ -92,48 +70,31 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.3s;
-      background-color: rgba(191, 219, 254, 0.1);
+      background-color: rgba(191,219,254,0.1);
     }
-    .upload-area:hover {
-      border-color: #1d4ed8;
-      background-color: rgba(29, 78, 216, 0.05);
-    }
-    .upload-area.dragover {
-      border-color: #1d4ed8;
-      background-color: rgba(29, 78, 216, 0.1);
-    }
+    .upload-area:hover { border-color: #1d4ed8; background-color: rgba(29,78,216,0.05); }
+    .upload-area.dragover { border-color: #1d4ed8; background-color: rgba(29,78,216,0.1); }
     .toast-notification {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 20px; right: 20px;
       padding: 1rem 1.5rem;
       border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       animation: slideIn 0.3s ease-out;
       z-index: 9999;
     }
-    @keyframes slideIn {
-      from { transform: translateX(400px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(400px); opacity: 0; }
-    }
-    .toast-notification.hide {
-      animation: slideOut 0.3s ease-in forwards;
-    }
+    @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+    .toast-notification.hide { animation: slideOut 0.3s ease-in forwards; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
-  <!-- Loading Overlay -->
   <div id="loadingOverlay">
     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
     <p class="mt-4 text-slate-500 text-sm font-bold">กำลังเตรียมข้อมูลปฏิทิน...</p>
   </div>
 
-  <!-- Navbar -->
   <nav class="sticky top-0 z-50 bg-blue-700 px-6 py-3 shadow-lg">
     <div class="max-w-full mx-auto flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -157,46 +118,29 @@
     </div>
   </nav>
 
-  <!-- Main Content -->
   <main id="mainContent" class="max-w-[1600px] mx-auto p-6 space-y-6 opacity-0 transition-opacity duration-500">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <!-- Left: Calendar + Summary -->
+      <!-- Calendar -->
       <div class="lg:col-span-3 space-y-6">
         <div class="card-custom overflow-hidden">
           <div class="p-4 border-b border-slate-100 flex items-center justify-between text-blue-700 font-bold text-sm">
-            <div class="flex items-center gap-2">
-              <i data-lucide="calendar" class="w-4 h-4"></i> ปฏิทินรายเดือน
-            </div>
+            <div class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> ปฏิทินรายเดือน</div>
             <div class="flex items-center gap-1">
               <button onclick="changeMonth(-1)" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-              <button onclick="changeMonth(1)" class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              <button onclick="changeMonth(1)"  class="p-1 hover:bg-slate-100 rounded text-blue-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             </div>
           </div>
           <div class="p-4 text-center">
-            <div class="mb-4">
-              <span id="currentMonthLabel" class="font-bold text-sm text-slate-700"></span>
-            </div>
+            <div class="mb-4"><span id="currentMonthLabel" class="font-bold text-sm text-slate-700"></span></div>
             <div class="grid grid-cols-7 text-[10px] text-slate-400 font-bold mb-2 uppercase">
-              <div class="text-red-400">อา</div>
-              <div>จ</div>
-              <div>อ</div>
-              <div>พ</div>
-              <div>พฤ</div>
-              <div>ศ</div>
-              <div class="text-blue-400">ส</div>
+              <div class="text-red-400">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-400">ส</div>
             </div>
             <div class="grid grid-cols-7 gap-1" id="calendarDaysGrid"></div>
             <div class="mt-4 flex flex-wrap gap-2 justify-center text-[9px] font-bold text-slate-400 border-t pt-3">
-              <div class="flex items-center gap-1">
-                <div class="w-2 h-2 rounded-full bg-blue-600"></div> วันนี้
-              </div>
-              <div class="flex items-center gap-1">
-                <div class="w-2 h-2 rounded-full bg-yellow-400"></div> มีจอง
-              </div>
-              <div class="flex items-center gap-1">
-                <div class="w-2 h-2 rounded-full bg-red-200 border border-red-300"></div> จองเต็ม
-              </div>
+              <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-blue-600"></div> วันนี้</div>
+              <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-yellow-400"></div> มีจอง</div>
+              <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-red-200 border border-red-300"></div> จองเต็ม</div>
             </div>
           </div>
         </div>
@@ -204,27 +148,17 @@
         <div class="card-custom p-5 space-y-4">
           <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">สรุปวันนี้</h4>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-              <i data-lucide="check" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <p class="text-[10px] text-slate-500">อนุมัติ</p>
-              <p class="text-lg font-bold" id="approvedToday">0</p>
-            </div>
+            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-5 h-5"></i></div>
+            <div><p class="text-[10px] text-slate-500">อนุมัติ</p><p class="text-lg font-bold" id="approvedToday">0</p></div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
-              <i data-lucide="clock" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <p class="text-[10px] text-slate-500">รอตรวจ</p>
-              <p class="text-lg font-bold" id="pendingToday">0</p>
-            </div>
+            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
+            <div><p class="text-[10px] text-slate-500">รอตรวจ</p><p class="text-lg font-bold" id="pendingToday">0</p></div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Day Detail -->
+      <!-- Day Detail -->
       <div class="lg:col-span-9">
         <div class="card-custom h-full flex flex-col">
           <div class="p-4 border-b border-blue-600 flex items-center justify-between">
@@ -234,9 +168,7 @@
             <span class="text-[10px] text-slate-400 font-bold" id="selectedDateLabel"></span>
           </div>
           <div class="flex-1 p-6 overflow-y-auto max-h-[400px]" id="todayBookingsList">
-            <div class="text-center py-20 text-slate-300 italic text-sm">
-              เลือกวันที่ในปฏิทินเพื่อดูรายการจอง
-            </div>
+            <div class="text-center py-20 text-slate-300 italic text-sm">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
           </div>
         </div>
       </div>
@@ -266,29 +198,24 @@
             </tr>
           </thead>
           <tbody id="mainBookingTableBody" class="bg-white">
-            <tr>
-              <td colspan="7" class="px-4 py-10 text-center text-slate-400 italic">กำลังเชื่อมต่อข้อมูล...</td>
-            </tr>
+            <tr><td colspan="7" class="px-4 py-10 text-center text-slate-400 italic">กำลังเชื่อมต่อข้อมูล...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </main>
 
-  <!-- ✅ Modal อยู่นอก main และมีโครงสร้างถูกต้อง (ไม่ซ้อน div) -->
+  <!-- Modal -->
   <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-[1000] hidden items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-      <!-- Modal Header -->
-      <div class="bg-blue-700 p-5 text-white flex justify-between items-center sticky top-0 z-10">
+      <div class="bg-blue-700 p-5 text-white flex justify-between items-center">
         <div class="flex items-center gap-2 font-bold">
           <i data-lucide="plus-circle" class="w-5 h-5"></i> แบบฟอร์มขอใช้สถานที่
         </div>
         <button type="button" onclick="toggleModal()" class="focus:outline-none hover:opacity-70">
-          <i data-lucide="x" class="w-5 h-5 opacity-50 hover:opacity-100"></i>
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-
-      <!-- Modal Form -->
       <form id="bookingForm" class="p-6 space-y-4 text-sm overflow-y-auto flex-1">
         <div class="space-y-1">
           <label class="text-[10px] font-bold text-slate-400 uppercase">สถานที่</label>
@@ -302,7 +229,6 @@
             <option value="สนามกีฬา">สนามกีฬา (ไม่จำกัดจำนวนคน)</option>
           </select>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-1">
             <label class="text-[10px] font-bold text-slate-400 uppercase">วันที่ต้องการใช้</label>
@@ -316,12 +242,10 @@
             </div>
           </div>
         </div>
-
         <div class="space-y-1">
           <label class="text-[10px] font-bold text-slate-400 uppercase">วัตถุประสงค์การใช้</label>
           <textarea id="purpose" rows="3" placeholder="ระบุเหตุผลหรือกิจกรรม..." required></textarea>
         </div>
-
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-2">
             <i data-lucide="image" class="w-3 h-3"></i> แนบรูปภาพเอกสาร (ไม่บังคับ)
@@ -343,7 +267,6 @@
           </div>
           <p id="fileError" class="text-xs text-red-600 font-semibold hidden"></p>
         </div>
-
         <div class="pt-4 flex gap-3">
           <button type="button" onclick="toggleModal()" class="flex-1 py-3 border rounded-xl font-bold hover:bg-slate-50">ยกเลิก</button>
           <button type="submit" id="submitBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-xl font-bold shadow-lg hover:bg-blue-800 transition-all">บันทึกข้อมูล</button>
@@ -352,29 +275,41 @@
     </div>
   </div>
 
-  <!-- ✅ Script อยู่นอก modal และนอก main — ถูกต้อง -->
+  <!-- ✅ Script อยู่ถูกที่ — นอก modal, ก่อนปิด body -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // ── Config เดียวกับ index.html ────────────────
     const firebaseConfig = {
-      apiKey: "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
-      authDomain: "np-webapp-74616.firebaseapp.com",
+      apiKey:    "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
+      authDomain:"np-webapp-74616.firebaseapp.com",
       projectId: "np-webapp-74616",
-      appId: "1:275537025660:web:4fdc11e0fe22e679f6c7f9"
+      appId:     "1:275537025660:web:4fdc11e0fe22e679f6c7f9"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    // ── ใช้ชื่อ app เดียวกัน ทำให้ Auth state share กัน ──
+    let app;
+    try {
+      // ถ้า index.html initialize ไปแล้ว ให้ใช้ instance เดิม
+      const { getApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+      app = getApp();
+    } catch {
+      app = initializeApp(firebaseConfig);
+    }
 
-    let currentUser = null;
-    let allBookings = [];
-    let viewYear = new Date().getFullYear();
-    let viewMonth = new Date().getMonth();
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let currentUser  = null;
+    let allBookings  = [];
+    let viewYear     = new Date().getFullYear();
+    let viewMonth    = new Date().getMonth();
     let selectedDate = new Date().toISOString().split('T')[0];
     let selectedFile = null;
+    let dataListenerStarted = false;
 
     // ── Toast ──────────────────────────────────────
     function showToast(message, type = 'success') {
@@ -382,66 +317,38 @@
       toast.className = `toast-notification ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white text-sm font-bold`;
       toast.textContent = message;
       document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('hide');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
-    // ── File Upload ────────────────────────────────
-    const fileInput  = document.getElementById('fileInput');
-    const uploadArea = document.getElementById('uploadArea');
-    const filePreview = document.getElementById('filePreview');
-    const fileError  = document.getElementById('fileError');
+    // ── Hide Loading ───────────────────────────────
+    function hideLoading() {
+      const loader = document.getElementById('loadingOverlay');
+      const main   = document.getElementById('mainContent');
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.classList.add('hidden'); main.classList.remove('opacity-0'); }, 300);
+    }
 
-    fileInput.addEventListener('change', handleFileSelect);
-    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
-      if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
-        handleFileSelect();
+    // ── Auth State ─────────────────────────────────
+    // onAuthStateChanged เรียกครั้งเดียว — ไม่ว่า login หรือเปล่า
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+
+      if (user && !user.isAnonymous) {
+        // ✅ login แล้ว — แสดงชื่อและรูป
+        document.getElementById('userNameDisplay').innerText = user.displayName || 'ผู้ใช้ทั่วไป';
+        if (user.photoURL) document.getElementById('userPhotoDisplay').src = user.photoURL;
+      } else {
+        // ยังไม่ login — แสดงข้อความ
+        document.getElementById('userNameDisplay').innerText = 'ยังไม่ได้ล็อกอิน';
+      }
+
+      // ✅ โหลดข้อมูลทุกกรณี (ทั้ง login และไม่ login ดูปฏิทินได้)
+      // เรียกแค่ครั้งเดียว
+      if (!dataListenerStarted) {
+        dataListenerStarted = true;
+        initDataListeners();
       }
     });
-
-    function handleFileSelect() {
-      const file = fileInput.files[0];
-      fileError.classList.add('hidden');
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        fileError.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น';
-        fileError.classList.remove('hidden');
-        fileInput.value = '';
-        selectedFile = null;
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        fileError.textContent = 'ไฟล์ขนาดใหญ่เกินไป (ไม่เกิน 5MB)';
-        fileError.classList.remove('hidden');
-        fileInput.value = '';
-        selectedFile = null;
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        document.getElementById('previewImage').src = e.target.result;
-        document.getElementById('fileName').textContent = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
-        filePreview.classList.remove('hidden');
-        selectedFile = { file, dataUrl: e.target.result };
-      };
-      reader.readAsDataURL(file);
-    }
-
-    window.clearFile = () => {
-      fileInput.value = '';
-      filePreview.classList.add('hidden');
-      fileError.classList.add('hidden');
-      selectedFile = null;
-    };
 
     // ── Modal ──────────────────────────────────────
     window.toggleModal = () => {
@@ -449,9 +356,9 @@
       const isHidden = modal.classList.contains('hidden');
 
       if (isHidden) {
-        // ตรวจสอบว่า login แล้วหรือยัง
+        // ✅ เช็ค login ก่อนเปิด modal
         if (!currentUser || currentUser.isAnonymous) {
-          showToast('กรุณาลงชื่อเข้าใช้ด้วยบัญชีโรงเรียนก่อน', 'error');
+          showToast('กรุณาล็อกอินด้วยบัญชีโรงเรียนก่อนจอง', 'error');
           return;
         }
         modal.classList.remove('hidden');
@@ -465,6 +372,52 @@
         window.clearFile();
         document.getElementById('bookingForm').reset();
       }
+    };
+
+    // ── File Upload ────────────────────────────────
+    const fileInput   = document.getElementById('fileInput');
+    const uploadArea  = document.getElementById('uploadArea');
+    const filePreview = document.getElementById('filePreview');
+    const fileError   = document.getElementById('fileError');
+
+    fileInput.addEventListener('change', handleFileSelect);
+    uploadArea.addEventListener('dragover',  (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileSelect(); }
+    });
+
+    function handleFileSelect() {
+      const file = fileInput.files[0];
+      fileError.classList.add('hidden');
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        fileError.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น';
+        fileError.classList.remove('hidden');
+        fileInput.value = ''; selectedFile = null; return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        fileError.textContent = 'ไฟล์ขนาดใหญ่เกินไป (ไม่เกิน 5MB)';
+        fileError.classList.remove('hidden');
+        fileInput.value = ''; selectedFile = null; return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('previewImage').src = e.target.result;
+        document.getElementById('fileName').textContent = `${file.name} (${(file.size/1024).toFixed(2)} KB)`;
+        filePreview.classList.remove('hidden');
+        selectedFile = { file, dataUrl: e.target.result };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    window.clearFile = () => {
+      fileInput.value = '';
+      filePreview.classList.add('hidden');
+      fileError.classList.add('hidden');
+      selectedFile = null;
     };
 
     // ── Calendar ───────────────────────────────────
@@ -486,105 +439,61 @@
 
       label.innerText = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(viewYear, viewMonth));
 
-      for (let i = 0; i < firstDay; i++) {
-        grid.innerHTML += `<div class="calendar-day empty"></div>`;
-      }
+      for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day empty"></div>`;
 
       const bookingMap = {};
-      allBookings.forEach(b => {
-        if (!bookingMap[b.date]) bookingMap[b.date] = [];
-        bookingMap[b.date].push(b);
-      });
+      allBookings.forEach(b => { if (!bookingMap[b.date]) bookingMap[b.date] = []; bookingMap[b.date].push(b); });
 
       for (let d = 1; d <= daysInMonth; d++) {
-        const dateKey    = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday    = dateKey === todayStr;
-        const isSelected = dateKey === selectedDate;
+        const dateKey     = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday     = dateKey === todayStr;
+        const isSelected  = dateKey === selectedDate;
         const dayBookings = bookingMap[dateKey] || [];
-        const hasBooking = dayBookings.length > 0;
-        const isFull     = dayBookings.length >= 3;
+        const hasBooking  = dayBookings.length > 0;
+        const isFull      = dayBookings.length >= 3;
 
         const dayEl = document.createElement('div');
-        dayEl.className = `calendar-day ${isToday ? 'is-today' : ''} ${hasBooking ? 'has-booking' : ''} ${isFull ? 'is-full' : ''} ${isSelected ? 'is-selected' : ''}`;
+        dayEl.className = `calendar-day ${isToday?'is-today':''} ${hasBooking?'has-booking':''} ${isFull?'is-full':''} ${isSelected?'is-selected':''}`;
         dayEl.innerText = d;
-        dayEl.onclick = () => {
-          selectedDate = dateKey;
-          renderCalendar();
-          updateSelectedDateView(dateKey, dayBookings);
-        };
+        dayEl.onclick = () => { selectedDate = dateKey; renderCalendar(); updateSelectedDateView(dateKey, dayBookings); };
         grid.appendChild(dayEl);
       }
     }
 
     function updateSelectedDateView(dateKey, dayBookings) {
       const todayList = document.getElementById('todayBookingsList');
-      const label     = document.getElementById('selectedDateLabel');
-
-      label.innerText = new Date(dateKey + 'T00:00:00').toLocaleDateString('th-TH', {
-        day: 'numeric', month: 'long', year: 'numeric'
-      });
+      document.getElementById('selectedDateLabel').innerText =
+        new Date(dateKey + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
 
       if (dayBookings.length === 0) {
         todayList.innerHTML = `<div class="text-center py-20 text-slate-300 italic text-sm">ไม่มีข้อมูลการจองในวันที่เลือก</div>`;
         return;
       }
-
       todayList.innerHTML = dayBookings.map(data => `
-        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-3 border-l-4 ${data.status === 'approved' ? 'border-green-500' : 'border-amber-500'}">
+        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-3 border-l-4 ${data.status==='approved'?'border-green-500':'border-amber-500'}">
           <div class="flex-1">
             <p class="font-bold text-sm text-blue-800">${data.room}</p>
-            <p class="text-[10px] text-slate-500">${data.startTime} - ${data.endTime} | ${data.userName}</p>
+            <p class="text-[10px] text-slate-500">${data.startTime} - ${data.endTime} | ${data.userName || '-'}</p>
           </div>
-          <span class="text-[9px] font-bold ${data.status === 'approved' ? 'text-green-600 bg-green-100' : 'text-amber-600 bg-amber-100'} px-2 py-1 rounded">
-            ${data.status === 'approved' ? 'อนุมัติแล้ว' : 'รอพิจารณา'}
+          <span class="text-[9px] font-bold ${data.status==='approved'?'text-green-600 bg-green-100':'text-amber-600 bg-amber-100'} px-2 py-1 rounded">
+            ${data.status==='approved'?'อนุมัติแล้ว':'รอพิจารณา'}
           </span>
         </div>
       `).join('');
     }
 
-    // ── Auth ───────────────────────────────────────
-    function hideLoading() {
-      const loader = document.getElementById('loadingOverlay');
-      const main   = document.getElementById('mainContent');
-      loader.style.opacity = '0';
-      setTimeout(() => {
-        loader.classList.add('hidden');
-        main.classList.remove('opacity-0');
-      }, 300);
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user && !user.isAnonymous) {
-        currentUser = user;
-        document.getElementById('userNameDisplay').innerText = user.displayName || 'ผู้ใช้ทั่วไป';
-        if (user.photoURL) document.getElementById('userPhotoDisplay').src = user.photoURL;
-        initDataListeners();
-      } else {
-        currentUser = user; // เก็บไว้ตรวจสอบใน toggleModal
-        if (!user) {
-          signInAnonymously(auth);
-        } else {
-          // Anonymous — แสดง UI แต่ไม่ให้จอง
-          document.getElementById('userNameDisplay').innerText = 'กรุณาล็อกอิน';
-          initDataListeners(); // ยังโหลดข้อมูลได้ แต่จองไม่ได้
-        }
-      }
-    });
-
-    // ── Firestore ──────────────────────────────────
+    // ── Firestore Listener ─────────────────────────
     function initDataListeners() {
       const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
 
       onSnapshot(q, (snapshot) => {
         const tableBody = document.getElementById('mainBookingTableBody');
         allBookings = [];
-        let tableHtml = '';
         const todayStr = new Date().toISOString().split('T')[0];
         let appToday = 0, penToday = 0;
+        let tableHtml = '';
 
-        snapshot.forEach((doc) => {
-          allBookings.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach(doc => allBookings.push({ id: doc.id, ...doc.data() }));
 
         if (allBookings.length === 0) {
           tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">ยังไม่มีประวัติการจอง</td></tr>`;
@@ -601,8 +510,8 @@
                 <td class="px-4 py-3 text-xs">${data.userName || '-'}</td>
                 <td class="px-4 py-3 truncate max-w-[100px]">${data.purpose}</td>
                 <td class="px-4 py-3 text-center">
-                  <span class="px-2 py-0.5 rounded text-[9px] font-bold ${isApp ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
-                    ${isApp ? 'อนุมัติ' : 'รอตรวจ'}
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold ${isApp?'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}">
+                    ${isApp?'อนุมัติ':'รอตรวจ'}
                   </span>
                 </td>
               </tr>`;
@@ -620,7 +529,7 @@
         lucide.createIcons();
 
       }, (error) => {
-        console.error("Firebase Error:", error);
+        console.error("Firestore error:", error);
         hideLoading();
       });
     }
@@ -638,14 +547,12 @@
     document.getElementById('bookingForm').onsubmit = async (e) => {
       e.preventDefault();
       if (!currentUser || currentUser.isAnonymous) {
-        showToast('กรุณาลงชื่อเข้าใช้ด้วยบัญชีโรงเรียน', 'error');
+        showToast('กรุณาล็อกอินด้วยบัญชีโรงเรียนก่อน', 'error');
         return;
       }
-
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'กำลังบันทึก...';
-
       try {
         await addDoc(collection(db, "bookings"), {
           userId:        currentUser.uid,
@@ -662,7 +569,6 @@
           imageSize:     selectedFile ? selectedFile.file.size : 0,
           createdAt:     serverTimestamp()
         });
-
         window.toggleModal();
         showToast('บันทึกข้อมูลสำเร็จ ✓');
       } catch (err) {
@@ -673,9 +579,7 @@
       }
     };
 
-    // Init icons ครั้งแรก
     lucide.createIcons();
   </script>
-
 </body>
 </html>
