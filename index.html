@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+
+  <!-- ✅ Tailwind CSS แบบ stylesheet ไม่ใช่ script -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- ✅ Firebase compat (ไม่ใช้ ES module) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -17,41 +19,40 @@
     body { font-family: 'Sarabun', sans-serif; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .sidebar-btn.active {
-      background-color: #1d4ed8;
-      color: white;
-      box-shadow: 0 10px 15px -3px rgba(30, 64, 175, 0.2);
-    }
+    .sidebar-btn { display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:16px; font-weight:700; color:#64748b; width:100%; background:none; border:none; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .sidebar-btn:hover { background:#f1f5f9; }
+    .sidebar-btn.active { background:#1d4ed8; color:white; box-shadow:0 10px 15px -3px rgba(30,64,175,0.2); }
     #loadingOverlay {
       display: flex;
       position: fixed;
       inset: 0;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255,255,255,0.9);
       z-index: 100;
       align-items: center;
       justify-content: center;
     }
+    .spinner { border:3px solid #e2e8f0; border-top:3px solid #1d4ed8; border-radius:50%; width:48px; height:48px; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+<body style="background:#f8fafc; color:#0f172a; overflow-x:hidden;">
 
-  <div id="loadingOverlay">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-  </div>
+  <div id="loadingOverlay"><div class="spinner"></div></div>
 
-  <nav class="sticky top-0 z-50 bg-blue-700 px-6 py-3 shadow-lg border-b border-blue-800">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-14 w-auto drop-shadow-md">
-        <div class="border-l border-blue-600/50 pl-4">
-          <h1 class="text-lg md:text-xl font-bold text-white leading-tight">โรงเรียนหนองกี่พิทยาคม</h1>
-          <div class="flex items-center gap-1 text-blue-100/80 text-xs">
-            <i data-lucide="map-pin" class="w-3 h-3 text-red-400"></i> จังหวัดบุรีรัมย์
+  <!-- Navbar -->
+  <nav style="position:sticky; top:0; z-index:50; background:#1d4ed8; padding:12px 24px; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-bottom:1px solid #1e40af;">
+    <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:56px; width:auto;">
+        <div style="border-left:1px solid rgba(99,149,255,0.5); padding-left:16px;">
+          <div style="font-size:18px; font-weight:700; color:white;">โรงเรียนหนองกี่พิทยาคม</div>
+          <div style="display:flex; align-items:center; gap:4px; color:rgba(191,219,254,0.8); font-size:12px;">
+            <i data-lucide="map-pin" style="width:12px; height:12px; color:#f87171;"></i> จังหวัดบุรีรัมย์
           </div>
         </div>
       </div>
-      <div id="userNavSection" class="flex items-center gap-3">
-        <button id="loginBtn" onclick="handleLogin()" class="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-all shadow-md active:scale-95">
+      <div id="userNavSection">
+        <button onclick="handleLogin()" style="display:flex; align-items:center; gap:8px; padding:10px 20px; background:white; color:#1d4ed8; font-weight:700; border-radius:12px; border:none; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
           เข้าสู่ระบบด้วย Google
         </button>
       </div>
@@ -59,93 +60,100 @@
   </nav>
 
   <!-- Public View -->
-  <main id="publicView" class="block">
-    <section class="max-w-7xl mx-auto px-6 py-16 grid lg:grid-cols-2 gap-12 items-center">
-      <div class="space-y-8">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
-          <i data-lucide="bell" class="w-4 h-4"></i> ระบบสารสนเทศและบริการออนไลน์
+  <main id="publicView">
+    <section style="max-width:1200px; margin:0 auto; padding:64px 24px; display:grid; grid-template-columns:1fr; gap:48px; align-items:center;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; background:#eff6ff; color:#1d4ed8; border-radius:999px; font-size:14px; font-weight:700; margin-bottom:32px;">
+            <i data-lucide="bell" style="width:16px; height:16px;"></i> ระบบสารสนเทศและบริการออนไลน์
+          </div>
+          <h2 style="font-size:clamp(2rem,5vw,4rem); font-weight:800; color:#0f172a; line-height:1.2; margin-bottom:24px;">
+            ยกระดับบริการ <br><span style="color:#1d4ed8; font-style:italic;">เพื่อชาว NP</span>
+          </h2>
+          <p style="font-size:18px; color:#475569; max-width:480px; line-height:1.7; margin-bottom:32px;">
+            ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา
+          </p>
+          <button onclick="handleLogin()" style="padding:16px 32px; background:#1d4ed8; color:white; font-weight:700; border-radius:16px; border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; gap:8px; box-shadow:0 20px 25px -5px rgba(29,78,216,0.3);">
+            เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:20px; height:20px;"></i>
+          </button>
         </div>
-        <h2 class="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.15]">
-          ยกระดับบริการ <br><span class="text-blue-600 italic">เพื่อชาว NP</span>
-        </h2>
-        <p class="text-lg text-slate-600 max-w-lg leading-relaxed">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
-        <button onclick="handleLogin()" class="px-8 py-4 bg-blue-700 text-white font-bold rounded-2xl hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 flex items-center gap-2 group">
-          เริ่มใช้งานระบบ <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-        </button>
-      </div>
-      <div class="relative">
-        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000" class="rounded-[2.5rem] w-full aspect-video object-cover shadow-2xl">
+        <div>
+          <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
+            style="border-radius:40px; width:100%; aspect-ratio:16/9; object-fit:cover; box-shadow:0 25px 50px rgba(0,0,0,0.2);">
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- Dashboard View -->
-  <main id="privateView" class="hidden max-w-7xl mx-auto px-6 py-10">
-    <div class="flex flex-col lg:flex-row gap-8">
-      <!-- Sidebar -->
-      <div class="lg:w-72 space-y-2">
-        <p class="px-5 pb-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">เมนูหลัก</p>
-        <button onclick="showTab('dashboard')" class="sidebar-btn active w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all">
-          <i data-lucide="home" class="w-5 h-5"></i> หน้าแรก
-        </button>
-        <div class="pt-4 pb-2">
-          <p class="px-5 pb-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">บริการออนไลน์</p>
-        </div>
-        <a href="room-booking.html" class="sidebar-btn w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all text-left">
-          <i data-lucide="calendar" class="w-5 h-5 shrink-0"></i> ระบบขอใช้ห้อง/สถานที่
-        </a>
-        <button onclick="showTab('cctv-request')" class="sidebar-btn w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-slate-500 transition-all text-left">
-          <i data-lucide="monitor" class="w-5 h-5 shrink-0"></i> ระบบขอใช้ข้อมูลกล้องวงจรปิด
-        </button>
-        <div class="pt-8 px-5" id="sidebarProfile"></div>
-      </div>
+  <!-- Private View (Dashboard) -->
+  <main id="privateView" style="display:none; max-width:1200px; margin:0 auto; padding:40px 24px;">
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <div style="display:grid; grid-template-columns:288px 1fr; gap:32px; align-items:start;">
 
-      <!-- Content Area -->
-      <div class="flex-1 space-y-8">
-        <!-- Tab: Dashboard -->
-        <div id="tab-dashboard" class="tab-content active space-y-8">
-          <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h3 id="welcomeText" class="text-2xl font-extrabold text-slate-900">ยินดีต้อนรับ</h3>
-              <p class="text-slate-500 text-sm">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
-            </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-6">
-            <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
-              <div class="w-12 h-12 bg-blue-700 text-white rounded-xl flex items-center justify-center"><i data-lucide="calendar"></i></div>
-              <div>
-                <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">การจองของฉัน</p>
-                <p id="bookingCount" class="text-xl font-black">0 รายการ</p>
-              </div>
-            </div>
-            <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 flex items-center gap-4">
-              <div class="w-12 h-12 bg-orange-600 text-white rounded-xl flex items-center justify-center"><i data-lucide="monitor"></i></div>
-              <div>
-                <p class="text-xs font-bold text-orange-600 uppercase tracking-widest">คำขอ CCTV</p>
-                <p class="text-xl font-black">0 รายการ</p>
-              </div>
-            </div>
-          </div>
+        <!-- Sidebar -->
+        <div>
+          <p style="padding:0 20px 12px; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px;">เมนูหลัก</p>
+          <button onclick="showTab('dashboard')" class="sidebar-btn active">
+            <i data-lucide="home" style="width:20px; height:20px;"></i> หน้าแรก
+          </button>
+          <p style="padding:16px 20px 12px; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:2px;">บริการออนไลน์</p>
+          <a href="room-booking.html" class="sidebar-btn">
+            <i data-lucide="calendar" style="width:20px; height:20px; flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
+          </a>
+          <button onclick="showTab('cctv-request')" class="sidebar-btn">
+            <i data-lucide="monitor" style="width:20px; height:20px; flex-shrink:0;"></i> ระบบขอใช้ข้อมูลกล้องวงจรปิด
+          </button>
+          <div style="padding:32px 20px 0;" id="sidebarProfile"></div>
         </div>
 
-        <!-- Tab: CCTV -->
-        <div id="tab-cctv-request" class="tab-content">
-          <div class="bg-white p-20 rounded-[2.5rem] border border-slate-100 text-center space-y-6">
-            <i data-lucide="monitor" class="w-16 h-16 text-orange-300 mx-auto"></i>
-            <h4 class="text-2xl font-bold text-slate-800">ระบบขอใช้ข้อมูลกล้องวงจรปิด</h4>
-            <p class="text-slate-500 max-w-sm mx-auto">ขณะนี้อยู่ระหว่างการปรับปรุงระบบความปลอดภัย ข้อมูลจะเปิดให้บริการเร็วๆ นี้</p>
+        <!-- Content -->
+        <div>
+          <!-- Tab Dashboard -->
+          <div id="tab-dashboard" class="tab-content active">
+            <div style="background:white; padding:32px; border-radius:32px; border:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:24px;">
+              <h3 id="welcomeText" style="font-size:24px; font-weight:800; color:#0f172a; margin-bottom:4px;">ยินดีต้อนรับ</h3>
+              <p style="color:#64748b; font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+              <div style="background:#eff6ff; padding:24px; border-radius:32px; border:1px solid #dbeafe; display:flex; align-items:center; gap:16px;">
+                <div style="width:48px; height:48px; background:#1d4ed8; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="calendar"></i>
+                </div>
+                <div>
+                  <p style="font-size:11px; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:1px;">การจองของฉัน</p>
+                  <p id="bookingCount" style="font-size:20px; font-weight:900;">0 รายการ</p>
+                </div>
+              </div>
+              <div style="background:#fff7ed; padding:24px; border-radius:32px; border:1px solid #fed7aa; display:flex; align-items:center; gap:16px;">
+                <div style="width:48px; height:48px; background:#ea580c; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="monitor"></i>
+                </div>
+                <div>
+                  <p style="font-size:11px; font-weight:700; color:#ea580c; text-transform:uppercase; letter-spacing:1px;">คำขอ CCTV</p>
+                  <p style="font-size:20px; font-weight:900;">0 รายการ</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab CCTV -->
+          <div id="tab-cctv-request" class="tab-content">
+            <div style="background:white; padding:80px; border-radius:40px; border:1px solid #f1f5f9; text-align:center;">
+              <i data-lucide="monitor" style="width:64px; height:64px; color:#fdba74; margin:0 auto 24px;"></i>
+              <h4 style="font-size:24px; font-weight:700; color:#1e293b; margin-bottom:12px;">ระบบขอใช้ข้อมูลกล้องวงจรปิด</h4>
+              <p style="color:#64748b; max-width:320px; margin:0 auto;">ขณะนี้อยู่ระหว่างการปรับปรุงระบบความปลอดภัย ข้อมูลจะเปิดให้บริการเร็วๆ นี้</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </main>
 
-  <footer class="py-12 border-t border-slate-200 mt-20 text-center">
-    <p class="font-bold text-slate-800 uppercase tracking-widest">NONGKI PITTAYAKOM SCHOOL</p>
-    <p class="text-[11px] text-slate-400">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
+  <footer style="padding:48px 24px; border-top:1px solid #e2e8f0; margin-top:80px; text-align:center;">
+    <p style="font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:3px;">NONGKI PITTAYAKOM SCHOOL</p>
+    <p style="font-size:11px; color:#94a3b8; margin-top:4px;">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
   </footer>
 
-  <!-- ✅ script ธรรมดา ไม่ใช้ type="module" -->
   <script>
     var firebaseConfig = {
       apiKey:    "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
@@ -154,36 +162,32 @@
       appId:     "1:275537025660:web:4fdc11e0fe22e679f6c7f9"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
     var auth = firebase.auth();
     var db   = firebase.firestore();
     var loadingOverlay = document.getElementById('loadingOverlay');
 
-    // ── Auth State ─────────────────────────────────
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        document.getElementById('publicView').classList.add('hidden');
-        document.getElementById('privateView').classList.remove('hidden');
-        document.getElementById('welcomeText').innerText = 'สวัสดี, ' + user.displayName;
+        document.getElementById('publicView').style.display  = 'none';
+        document.getElementById('privateView').style.display = 'block';
+        document.getElementById('welcomeText').textContent   = 'สวัสดี, ' + user.displayName;
         updateUserUI(user);
         fetchUserStats(user.uid);
       } else {
-        document.getElementById('publicView').classList.remove('hidden');
-        document.getElementById('privateView').classList.add('hidden');
+        document.getElementById('publicView').style.display  = 'block';
+        document.getElementById('privateView').style.display = 'none';
         resetNavUI();
       }
       loadingOverlay.style.display = 'none';
     });
 
-    // ── Login / Logout ─────────────────────────────
     function handleLogin() {
       var provider = new firebase.auth.GoogleAuthProvider();
       loadingOverlay.style.display = 'flex';
-      auth.signInWithPopup(provider).catch(function(error) {
-        console.error(error);
+      auth.signInWithPopup(provider).catch(function(err) {
+        console.error(err);
         loadingOverlay.style.display = 'none';
       });
     }
@@ -193,48 +197,46 @@
       auth.signOut();
     }
 
-    // ── Stats ──────────────────────────────────────
     function fetchUserStats(uid) {
-      db.collection('bookings').where('userId', '==', uid).onSnapshot(function(snapshot) {
-        document.getElementById('bookingCount').innerText = snapshot.size + ' รายการ';
+      db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap) {
+        document.getElementById('bookingCount').textContent = snap.size + ' รายการ';
       });
     }
 
-    // ── UI ─────────────────────────────────────────
     function updateUserUI(user) {
       document.getElementById('userNavSection').innerHTML =
-        '<div class="flex items-center gap-3">' +
-          '<img src="' + user.photoURL + '" class="w-10 h-10 rounded-full border-2 border-white/20">' +
-          '<button onclick="handleLogout()" class="p-2 text-blue-200 hover:text-red-300 transition-colors"><i data-lucide="log-out" class="w-5 h-5"></i></button>' +
+        '<div style="display:flex; align-items:center; gap:12px;">' +
+          '<img src="' + user.photoURL + '" style="width:40px; height:40px; border-radius:50%; border:2px solid rgba(255,255,255,0.2);">' +
+          '<button onclick="handleLogout()" style="padding:8px; background:none; border:none; cursor:pointer; color:rgba(191,219,254,0.8);">' +
+            '<i data-lucide="log-out" style="width:20px; height:20px;"></i>' +
+          '</button>' +
         '</div>';
-
       document.getElementById('sidebarProfile').innerHTML =
-        '<div class="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm space-y-4">' +
-          '<div class="flex items-center gap-3 overflow-hidden">' +
-            '<img src="' + user.photoURL + '" class="w-10 h-10 rounded-full">' +
-            '<div class="truncate">' +
-              '<p class="text-xs font-bold text-slate-800 truncate">' + user.displayName + '</p>' +
-              '<p class="text-[10px] text-slate-400 truncate">' + user.email + '</p>' +
+        '<div style="background:white; padding:20px; border-radius:24px; border:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+          '<div style="display:flex; align-items:center; gap:12px; overflow:hidden;">' +
+            '<img src="' + user.photoURL + '" style="width:40px; height:40px; border-radius:50%; flex-shrink:0;">' +
+            '<div style="overflow:hidden;">' +
+              '<p style="font-size:12px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + user.displayName + '</p>' +
+              '<p style="font-size:10px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + user.email + '</p>' +
             '</div>' +
           '</div>' +
         '</div>';
-
       lucide.createIcons();
     }
 
     function resetNavUI() {
       document.getElementById('userNavSection').innerHTML =
-        '<button onclick="handleLogin()" class="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-all shadow-md">เข้าสู่ระบบด้วย Google</button>';
+        '<button onclick="handleLogin()" style="display:flex; align-items:center; gap:8px; padding:10px 20px; background:white; color:#1d4ed8; font-weight:700; border-radius:12px; border:none; cursor:pointer;">เข้าสู่ระบบด้วย Google</button>';
       lucide.createIcons();
     }
 
-    // ── Tabs ───────────────────────────────────────
-    function showTab(tabName) {
-      document.querySelectorAll('.sidebar-btn').forEach(function(btn) { btn.classList.remove('active'); });
-      var targetBtn = document.querySelector('[onclick="showTab(\'' + tabName + '\')"]');
-      if (targetBtn) targetBtn.classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(function(tab) { tab.classList.remove('active'); });
-      document.getElementById('tab-' + tabName).classList.add('active');
+    function showTab(name) {
+      document.querySelectorAll('.sidebar-btn').forEach(function(b) { b.classList.remove('active'); });
+      var btn = document.querySelector('[onclick="showTab(\'' + name + '\')"]');
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+      var tab = document.getElementById('tab-' + name);
+      if (tab) tab.classList.add('active');
     }
 
     lucide.createIcons();
