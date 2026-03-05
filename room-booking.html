@@ -11,17 +11,12 @@
 
     <style>
         body { font-family: 'Sarabun', sans-serif; }
-        .calendar-container {
-            min-height: 800px;
-        }
         .calendar-grid {
             display: grid;
             grid-template-cols: repeat(7, 1fr);
         }
         .day-card {
-            min-height: 140px;
-            border-right: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
+            min-height: 100px;
             transition: all 0.2s ease;
         }
         .day-card:hover:not(.disabled) {
@@ -29,14 +24,12 @@
         }
         .day-card.disabled {
             background-color: #f1f5f9;
-            color: #94a3b8;
+            color: #cbd5e1;
             cursor: not-allowed;
         }
         .day-card.today {
             background-color: #eff6ff;
-        }
-        .time-slot-btn {
-            transition: all 0.2s;
+            border: 2px solid #3b82f6;
         }
         .time-slot-btn.booked {
             background-color: #fee2e2;
@@ -44,105 +37,194 @@
             border: 1px solid #fecaca;
             cursor: not-allowed;
         }
-        .time-slot-btn.available:hover {
-            background-color: #dcfce7;
-            border-color: #4ade80;
-            transform: translateY(-2px);
+        .table-header {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900">
+<body class="bg-slate-50 text-slate-900 pb-20">
 
     <!-- Header -->
-    <header class="bg-blue-800 text-white p-6 shadow-lg">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="p-2 bg-white rounded-xl">
-                    <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-12">
-                </div>
+    <header class="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-40">
+        <div class="max-w-[1600px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" class="h-10 bg-white rounded-lg p-1">
                 <div>
-                    <h1 class="text-2xl font-black">ระบบจองห้องประชุมและสถานที่</h1>
-                    <p class="text-blue-200 text-sm">โรงเรียนหนองกี่พิทยาคม</p>
+                    <h1 class="text-lg font-black leading-none">ระบบจองห้องประชุม</h1>
+                    <p class="text-[10px] text-blue-200">โรงเรียนหนองกี่พิทยาคม</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3 bg-blue-900/50 p-2 px-4 rounded-full border border-blue-700">
-                <i data-lucide="user" class="w-5 h-5"></i>
-                <span class="font-bold">เจ้าหน้าที่ระบบ (ทดสอบ)</span>
+            <div class="flex items-center gap-4 text-sm font-bold">
+                <span class="bg-blue-700 px-4 py-2 rounded-full border border-blue-600 flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4"></i> เจ้าหน้าที่ระบบ
+                </span>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-8">
-        <!-- Calendar Controls -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <div class="flex items-center gap-4">
-                <button onclick="changeMonth(-1)" class="p-3 hover:bg-slate-100 rounded-2xl transition-all border border-slate-200">
-                    <i data-lucide="chevron-left"></i>
-                </button>
-                <h2 id="monthDisplay" class="text-3xl font-black text-slate-800 min-w-[200px] text-center">เดือน...</h2>
-                <button onclick="changeMonth(1)" class="p-3 hover:bg-slate-100 rounded-2xl transition-all border border-slate-200">
-                    <i data-lucide="chevron-right"></i>
-                </button>
-            </div>
-            <div class="flex gap-2">
-                <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-bold text-slate-500">
-                    <span class="w-3 h-3 bg-red-400 rounded-full"></span> จองเต็มแล้ว
-                </div>
-                <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-bold text-slate-500">
-                    <span class="w-3 h-3 bg-blue-500 rounded-full"></span> วันนี้
-                </div>
-            </div>
-        </div>
-
-        <!-- Big Calendar -->
-        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden mb-12">
-            <!-- Day Labels -->
-            <div class="calendar-grid bg-slate-50 border-b border-slate-200">
-                <div class="p-4 text-center text-sm font-black text-red-500">อาทิตย์</div>
-                <div class="p-4 text-center text-sm font-black text-slate-500">จันทร์</div>
-                <div class="p-4 text-center text-sm font-black text-slate-500">อังคาร</div>
-                <div class="p-4 text-center text-sm font-black text-slate-500">พุธ</div>
-                <div class="p-4 text-center text-sm font-black text-slate-500">พฤหัสบดี</div>
-                <div class="p-4 text-center text-sm font-black text-slate-500">ศุกร์</div>
-                <div class="p-4 text-center text-sm font-black text-blue-500">เสาร์</div>
-            </div>
-            <!-- Calendar Days -->
-            <div id="calendarGrid" class="calendar-grid">
-                <!-- Javascript will inject days here -->
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal: View Day Slots -->
-    <div id="dayModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white w-full max-w-4xl rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-            <div class="flex flex-col md:flex-row h-[85vh] md:h-auto">
-                <!-- Left: Info -->
-                <div class="bg-blue-800 text-white p-8 md:w-1/3 flex flex-col justify-between">
-                    <div>
-                        <h3 id="modalDateLabel" class="text-3xl font-black mb-2">1 มกราคม 2567</h3>
-                        <p class="text-blue-200 font-medium">เลือกช่วงเวลาที่ต้องการจอง</p>
-                        <div class="mt-8 space-y-4">
-                            <div class="flex items-center gap-3 text-sm">
-                                <i data-lucide="clock" class="w-5 h-5 opacity-60"></i>
-                                <span>เวลาให้บริการ: 06:00 - 22:00</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-sm">
-                                <i data-lucide="info" class="w-5 h-5 opacity-60"></i>
-                                <span>ช่วงเวลาละ 1 ชั่วโมง</span>
-                            </div>
+    <main class="max-w-[1600px] mx-auto p-4 lg:p-6 space-y-6">
+        
+        <!-- Top Row: Calendar & Today's Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Calendar and Status -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Mini Calendar Card -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex items-center gap-2 text-blue-700 font-bold">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                        <span>ปฏิทินการจอง</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <h3 id="monthDisplay" class="font-bold text-slate-700">เดือน...</h3>
+                            <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="calendar-grid text-[10px] font-bold text-slate-400 text-center mb-2">
+                            <div class="text-red-500">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-500">ส</div>
+                        </div>
+                        <div id="calendarGrid" class="calendar-grid gap-1">
+                            <!-- Days injected here -->
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-4 text-[10px] font-bold text-slate-500">
+                            <div class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> วันนี้</div>
+                            <div class="flex items-center gap-1"><span class="w-2 h-2 bg-yellow-400 rounded-full"></span> มีการจอง</div>
                         </div>
                     </div>
-                    <button onclick="closeModal()" class="mt-8 py-3 px-6 bg-white/10 hover:bg-white/20 rounded-2xl font-bold transition-all border border-white/20">
-                        ปิดหน้าต่าง
-                    </button>
                 </div>
-                <!-- Right: Slots -->
-                <div class="flex-1 p-8 overflow-y-auto">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="slotsContainer">
-                        <!-- Slots will be injected here -->
+
+                <!-- Room Status Card -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex items-center gap-2 text-blue-700 font-bold">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                        <span>สถานะห้องประชุม</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span class="text-sm font-bold">ห้องประชุมนพเก้า</span>
+                            <span class="px-3 py-1 bg-green-100 text-green-600 text-[10px] font-bold rounded-full uppercase">Available</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span class="text-sm font-bold">ห้องประชุมอินทนิล</span>
+                            <span class="px-3 py-1 bg-red-100 text-red-600 text-[10px] font-bold rounded-full uppercase">In Use</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Right: Today's Bookings -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 h-full overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex items-center gap-3 text-blue-800">
+                        <div class="bg-green-600 p-2 rounded-xl text-white">
+                            <i data-lucide="list-checks" class="w-6 h-6"></i>
+                        </div>
+                        <h2 class="text-2xl font-black">การจองวันนี้</h2>
+                    </div>
+                    <div class="flex-1 p-6">
+                        <div class="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 opacity-50">
+                            <i data-lucide="calendar-off" class="w-16 h-16"></i>
+                            <p class="font-bold">ไม่มีรายการจองในวันนี้</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Row: Table -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 text-blue-800">
+                    <div class="bg-blue-600 p-2 rounded-xl text-white">
+                        <i data-lucide="layout-list" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-2xl font-black">ตารางการจองห้องประชุม</h2>
+                </div>
+                <button class="bg-blue-50 text-blue-700 px-6 py-2.5 rounded-full font-bold border border-blue-100 hover:bg-blue-100 transition-all flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i> จองใหม่
+                </button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap gap-3">
+                <input type="date" class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 ring-blue-500/20">
+                <select class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 ring-blue-500/20">
+                    <option value="">-- ทุกห้อง --</option>
+                    <option>ห้องประชุมนพเก้า</option>
+                    <option>ห้องประชุมอินทนิล</option>
+                </select>
+                <select class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 ring-blue-500/20">
+                    <option value="">-- ทุกสถานะ --</option>
+                    <option>อนุมัติแล้ว</option>
+                    <option>รออนุมัติ</option>
+                </select>
+                <button class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-200 transition-all flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> ล้างตัวกรอง
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="table-header text-white text-xs font-black uppercase tracking-wider">
+                            <th class="p-4 rounded-tl-xl">เลขที่</th>
+                            <th class="p-4">วันที่</th>
+                            <th class="p-4">ห้องประชุม</th>
+                            <th class="p-4">ช่วงเวลา</th>
+                            <th class="p-4">ผู้จอง / ฝ่าย</th>
+                            <th class="p-4">วัตถุประสงค์</th>
+                            <th class="p-4 rounded-tr-xl">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm font-medium text-slate-600">
+                        <!-- Example Row -->
+                        <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                            <td class="p-4">001</td>
+                            <td class="p-4">05/03/2567</td>
+                            <td class="p-4 font-bold text-slate-800">ห้องนพเก้า</td>
+                            <td class="p-4">09:00 - 12:00</td>
+                            <td class="p-4">งานวิชาการ</td>
+                            <td class="p-4">ประชุมพัฒนาหลักสูตร</td>
+                            <td class="p-4"><span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-[10px]">อนุมัติ</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Statistics -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden min-h-[300px]">
+            <div class="p-6 border-b border-slate-100 text-blue-800">
+                <h2 class="text-2xl font-black">สถิติการจองห้องประชุม</h2>
+            </div>
+            <div class="p-12 flex items-center justify-center">
+                <div class="text-center text-slate-300">
+                    <i data-lucide="bar-chart-3" class="w-20 h-20 mx-auto mb-4 opacity-20"></i>
+                    <p class="font-bold uppercase tracking-widest text-xs">Waiting for data analytics...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: View Day Slots (Same Logic) -->
+    <div id="dayModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="modalDateLabel" class="text-xl font-black text-slate-800 tracking-tight">วันที่...</h3>
+                <button onclick="closeModal()" class="p-2 hover:bg-slate-100 rounded-full transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-8">
+                <p class="text-slate-500 font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4"></i> ช่วงเวลาที่เปิดให้จอง
+                </p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="slotsContainer">
+                    <!-- Slots will be injected here -->
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="closeModal()" class="px-6 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition-all">ยกเลิก</button>
             </div>
         </div>
     </div>
@@ -151,12 +233,9 @@
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
         
-        // Mock Data: จำลองว่าบางวันมีการจองไปแล้ว
-        // รูปแบบ: { "YYYY-MM-DD": [ช่วงเวลาที่โดนจอง h1, h2, ...] }
         const mockBookings = {
-            "2024-05-15": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], // เต็มวัน
-            "2024-05-20": [9, 10, 14, 15], // บางส่วน
-            "2024-05-25": [18, 19, 20] // ช่วงเย็น
+            "2024-03-05": [9, 10, 11], 
+            "2024-03-10": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] 
         };
 
         function renderCalendar() {
@@ -170,36 +249,24 @@
             const monthName = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(currentYear, currentMonth));
             monthDisplay.innerText = monthName;
 
-            // Empty cells for first week
             for (let i = 0; i < firstDay; i++) {
-                grid.innerHTML += `<div class="day-card disabled border-r border-b"></div>`;
+                grid.innerHTML += `<div class="day-card disabled border border-slate-50"></div>`;
             }
 
-            // Actual days
             const today = new Date();
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const dayBookings = mockBookings[dateKey] || [];
-                const isFull = dayBookings.length >= 16; // 6:00 - 22:00 = 16 hours
+                const hasBooking = mockBookings[dateKey] && mockBookings[dateKey].length > 0;
                 const isToday = today.getDate() === day && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
 
                 grid.innerHTML += `
-                    <div onclick="${isFull ? '' : `openModal('${dateKey}')`}" 
-                         class="day-card p-4 cursor-pointer flex flex-col justify-between ${isFull ? 'disabled' : ''} ${isToday ? 'today' : ''}">
-                        <div class="flex justify-between items-start">
-                            <span class="text-xl font-black ${isToday ? 'text-blue-600 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center' : 'text-slate-700'}">${day}</span>
-                            ${isFull ? '<span class="text-[10px] bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">FULL</span>' : ''}
-                        </div>
-                        <div class="mt-4">
-                            <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-500" style="width: ${(dayBookings.length / 16) * 100}%"></div>
-                            </div>
-                            <p class="text-[10px] mt-1 font-bold text-slate-400">จองแล้ว ${dayBookings.length}/16 ชม.</p>
-                        </div>
+                    <div onclick="openModal('${dateKey}')" 
+                         class="day-card p-2 cursor-pointer border border-slate-100 rounded-xl relative flex items-center justify-center font-bold text-sm ${isToday ? 'today' : 'text-slate-600'}">
+                        ${day}
+                        ${hasBooking ? '<span class="absolute bottom-1 w-1 h-1 bg-yellow-400 rounded-full"></span>' : ''}
                     </div>
                 `;
             }
-
             lucide.createIcons();
         }
 
@@ -221,16 +288,15 @@
                 
                 container.innerHTML += `
                     <button ${isBooked ? 'disabled' : ''} 
-                            class="time-slot-btn p-4 rounded-2xl border-2 text-center font-black ${isBooked ? 'booked' : 'available border-slate-100 bg-slate-50 text-slate-700'}">
-                        <span class="block text-[10px] opacity-50 mb-1">${isBooked ? 'มีจองแล้ว' : 'ว่าง'}</span>
+                            class="p-3 rounded-xl border-2 text-[11px] text-center font-bold transition-all ${isBooked ? 'bg-red-50 text-red-500 border-red-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-500 hover:text-blue-600'}">
                         ${timeStr}
+                        <span class="block text-[8px] opacity-60">${isBooked ? 'ไม่ว่าง' : 'ว่าง'}</span>
                     </button>
                 `;
             }
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            lucide.createIcons();
         }
 
         function closeModal() {
@@ -240,20 +306,12 @@
 
         function changeMonth(dir) {
             currentMonth += dir;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
             renderCalendar();
         }
 
-        // Initialize
-        window.onload = () => {
-            renderCalendar();
-        };
+        window.onload = () => { renderCalendar(); };
     </script>
 </body>
 </html>
