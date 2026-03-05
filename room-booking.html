@@ -33,21 +33,39 @@
 
     .modal-bg { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
     .modal-bg.open { display:flex; }
-    .modal-box { background:white; border-radius:16px; width:100%; max-width:560px; overflow:hidden; display:flex; flex-direction:column; max-height:92vh; }
+    .modal-box { background:white; border-radius:16px; width:100%; max-width:600px; overflow:hidden; display:flex; flex-direction:column; max-height:92vh; }
 
     .toast { position:fixed; bottom:20px; right:20px; padding:14px 20px; border-radius:8px; color:white; font-weight:700; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:9999; animation:toastIn 0.3s ease; }
     .toast.hide { animation:toastOut 0.3s ease forwards; }
     @keyframes toastIn  { from { transform:translateX(400px); opacity:0; } to { transform:translateX(0); opacity:1; } }
     @keyframes toastOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(400px); opacity:0; } }
 
-    input, select, textarea { border:1px solid #cbd5e1; padding:10px 12px; border-radius:10px; outline:none; font-size:14px; width:100%; font-family:'Sarabun',sans-serif; }
-    input:focus, select:focus, textarea:focus { border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+    input[type=text], input[type=number], input[type=date], select, textarea {
+      border:1px solid #e2e8f0; padding:10px 12px; border-radius:10px; outline:none; font-size:14px; width:100%; background:white;
+    }
+    input:focus, select:focus, textarea:focus { border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.08); }
 
-    /* Time slot buttons */
-    .time-slot { padding:8px 10px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; font-weight:600; color:#475569; cursor:pointer; background:white; transition:all 0.15s; text-align:center; }
+    .form-label { font-size:13px; font-weight:700; color:#374151; display:block; margin-bottom:6px; }
+    .form-group { margin-bottom:18px; }
+    .section-title { font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f1f5f9; }
+
+    /* Time slots */
+    .time-slot { padding:7px 6px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; color:#475569; cursor:pointer; background:white; transition:all 0.15s; text-align:center; }
     .time-slot:hover { border-color:#93c5fd; background:#eff6ff; color:#1d4ed8; }
     .time-slot.selected { background:#1d4ed8; border-color:#1d4ed8; color:white; }
-    .time-slot.in-range { background:#dbeafe; border-color:#93c5fd; color:#1d4ed8; }
+
+    /* Equipment checkboxes */
+    .equip-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; cursor:pointer; transition:all 0.15s; }
+    .equip-item:hover { border-color:#93c5fd; background:#f8faff; }
+    .equip-item.checked { border-color:#1d4ed8; background:#eff6ff; }
+    .equip-item input[type=checkbox] { width:16px; height:16px; accent-color:#1d4ed8; flex-shrink:0; cursor:pointer; }
+    .equip-item label { font-size:13px; font-weight:600; color:#374151; cursor:pointer; flex:1; }
+    .equip-qty { width:64px !important; padding:4px 8px; font-size:12px; border-radius:6px; }
+
+    /* File upload */
+    .upload-area { border:2px dashed #bfdbfe; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:#f8faff; }
+    .upload-area:hover { border-color:#1d4ed8; background:#eff6ff; }
+    .upload-area.has-file { border-color:#22c55e; background:#f0fdf4; }
 
     table { width:100%; border-collapse:collapse; font-size:11px; }
     th, td { padding:12px 16px; text-align:left; }
@@ -55,9 +73,6 @@
     tr:hover td { background:#f8fafc; cursor:pointer; }
     .badge-g { background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
     .badge-a { background:#fef9c3; color:#b45309; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
-
-    .form-label { font-size:13px; font-weight:700; color:#374151; display:block; margin-bottom:6px; }
-    .form-group { margin-bottom:20px; }
   </style>
 </head>
 <body style="background:#f8fafc; min-height:100vh; overflow-x:hidden;">
@@ -107,9 +122,8 @@
 
       <!-- Content -->
       <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:24px;">
-
-        <!-- Calendar + Day Detail -->
         <div style="display:grid; grid-template-columns:260px 1fr; gap:24px;">
+          <!-- Calendar -->
           <div style="display:flex; flex-direction:column; gap:24px;">
             <div class="card" style="overflow:hidden;">
               <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
@@ -147,6 +161,7 @@
             </div>
           </div>
 
+          <!-- Day Detail -->
           <div class="card" style="display:flex; flex-direction:column; min-height:300px;">
             <div style="padding:16px; border-bottom:1px solid #bfdbfe; display:flex; align-items:center; justify-content:space-between;">
               <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-weight:700; font-size:14px;">
@@ -197,7 +212,7 @@
   <div id="bookingModal" class="modal-bg">
     <div class="modal-box">
       <!-- Header -->
-      <div style="background:#1d4ed8; padding:20px 24px; color:white; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+      <div style="background:#1d4ed8; padding:18px 24px; color:white; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
         <div style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:16px;">
           <i data-lucide="calendar" style="width:20px;height:20px;"></i> แบบฟอร์มการจอง
         </div>
@@ -206,11 +221,13 @@
         </button>
       </div>
 
-      <!-- Body -->
+      <!-- Form Body -->
       <form id="bookingForm" style="padding:24px; overflow-y:auto; flex:1;" onsubmit="submitBooking(event)">
 
-        <!-- Row 1: ห้อง + วันที่ -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" class="form-group">
+        <!-- ── ส่วนที่ 1: ข้อมูลสถานที่และเวลา ── -->
+        <div class="section-title">ข้อมูลสถานที่และเวลา</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" class="form-group">
           <div>
             <label class="form-label">ห้องที่ต้องการจอง</label>
             <select id="roomSelect" required>
@@ -229,20 +246,124 @@
           </div>
         </div>
 
-        <!-- Time Slots -->
         <div class="form-group">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
             <label class="form-label" style="margin-bottom:0;">ช่วงเวลาที่จอง <span style="font-size:11px; font-weight:400; color:#94a3b8;">(คลิกเลือกช่องละ 1 ชม.)</span></label>
-            <span id="timeSlotLabel" style="font-size:12px; font-weight:700; color:#1d4ed8; background:#eff6ff; padding:3px 10px; border-radius:20px;">ยังไม่ได้เลือก</span>
+            <span id="timeSlotLabel" style="font-size:12px; font-weight:700; color:#94a3b8; background:#f8fafc; padding:3px 10px; border-radius:20px; border:1px solid #e2e8f0;">ยังไม่ได้เลือก</span>
           </div>
           <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:6px;" id="timeSlotGrid"></div>
-          <p style="font-size:11px; color:#94a3b8; margin-top:8px; font-style:italic;">* สามารถเลือกหลายช่วงเวลาต่อเนื่องกันได้</p>
+          <p style="font-size:11px; color:#94a3b8; margin-top:6px; font-style:italic;">* สามารถเลือกหลายช่วงเวลาต่อเนื่องกันได้</p>
         </div>
 
-        <!-- วัตถุประสงค์ -->
+        <!-- ── ส่วนที่ 2: ข้อมูลผู้จอง ── -->
+        <div class="section-title">ข้อมูลผู้จอง</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" class="form-group">
+          <div>
+            <label class="form-label">ชื่อ-นามสกุล</label>
+            <input type="text" id="fullName" placeholder="ระบุชื่อ-นามสกุล" required>
+          </div>
+          <div>
+            <label class="form-label">ตำแหน่ง</label>
+            <input type="text" id="position" placeholder="เช่น ครู, นักเรียน, บุคลากร" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" class="form-group">
+          <div>
+            <label class="form-label">จำนวนผู้เข้าร่วม</label>
+            <input type="number" id="attendees" placeholder="จำนวนคน" min="1" required>
+          </div>
+          <div>
+            <label class="form-label">วัตถุประสงค์</label>
+            <input type="text" id="purpose" placeholder="ระบุวัตถุประสงค์" required>
+          </div>
+        </div>
+
+        <!-- ── ส่วนที่ 3: อุปกรณ์เพิ่มเติม ── -->
+        <div class="section-title">อุปกรณ์เพิ่มเติม (ถ้ามี)</div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;" class="form-group">
+
+          <!-- Apple TV -->
+          <div class="equip-item" id="eq-appletv" onclick="toggleEquip('appletv', this)">
+            <input type="checkbox" id="cb-appletv" onclick="event.stopPropagation(); toggleEquip('appletv', document.getElementById('eq-appletv'))">
+            <label for="cb-appletv">Apple TV</label>
+          </div>
+
+          <!-- ไมโครโฟน -->
+          <div class="equip-item" id="eq-mic" onclick="toggleEquip('mic', this)">
+            <input type="checkbox" id="cb-mic" onclick="event.stopPropagation(); toggleEquip('mic', document.getElementById('eq-mic'))">
+            <label for="cb-mic">ไมโครโฟน</label>
+          </div>
+
+          <!-- จอโปรเจตเตอร์ -->
+          <div class="equip-item" id="eq-projector" onclick="toggleEquip('projector', this)">
+            <input type="checkbox" id="cb-projector" onclick="event.stopPropagation(); toggleEquip('projector', document.getElementById('eq-projector'))">
+            <label for="cb-projector">จอโปรเจตเตอร์</label>
+          </div>
+
+          <!-- ชุดต่อขยายจอ -->
+          <div class="equip-item" id="eq-extender" onclick="toggleEquip('extender', this)">
+            <input type="checkbox" id="cb-extender" onclick="event.stopPropagation(); toggleEquip('extender', document.getElementById('eq-extender'))">
+            <label for="cb-extender">ชุดต่อขยายจอ</label>
+          </div>
+
+          <!-- โต๊ะ -->
+          <div class="equip-item" id="eq-table" onclick="toggleEquip('table', this)">
+            <input type="checkbox" id="cb-table" onclick="event.stopPropagation(); toggleEquip('table', document.getElementById('eq-table'))">
+            <label for="cb-table">โต๊ะ</label>
+            <div id="qty-table-wrap" style="display:none; align-items:center; gap:6px;">
+              <input type="number" id="qty-table" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()" style="width:80px;">
+              <span style="font-size:12px; color:#64748b;">ตัว</span>
+            </div>
+          </div>
+
+          <!-- เก้าอี้ -->
+          <div class="equip-item" id="eq-chair" onclick="toggleEquip('chair', this)">
+            <input type="checkbox" id="cb-chair" onclick="event.stopPropagation(); toggleEquip('chair', document.getElementById('eq-chair'))">
+            <label for="cb-chair">เก้าอี้</label>
+            <div id="qty-chair-wrap" style="display:none; align-items:center; gap:6px;">
+              <input type="number" id="qty-chair" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()" style="width:80px;">
+              <span style="font-size:12px; color:#64748b;">ตัว</span>
+            </div>
+          </div>
+
+          <!-- อื่นๆ -->
+          <div class="equip-item" id="eq-other" onclick="toggleEquip('other', this)">
+            <input type="checkbox" id="cb-other" onclick="event.stopPropagation(); toggleEquip('other', document.getElementById('eq-other'))">
+            <label for="cb-other">อื่นๆ</label>
+            <div id="qty-other-wrap" style="display:none; flex:1;">
+              <input type="text" id="qty-other" placeholder="ระบุอุปกรณ์เพิ่มเติม..." onclick="event.stopPropagation()" style="font-size:12px; padding:4px 8px; border-radius:6px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ส่วนที่ 4: แนบไฟล์ผังโต๊ะ ── -->
+        <div class="section-title">ผังการจัดโต๊ะ (ถ้ามี)</div>
+
         <div class="form-group">
-          <label class="form-label">วัตถุประสงค์</label>
-          <textarea id="purpose" rows="4" placeholder="ระบุเหตุผลในการขอใช้สถานที่..." required style="resize:vertical;"></textarea>
+          <input type="file" id="layoutFile" accept="image/*" style="display:none;" onchange="handleFile(this)">
+          <div class="upload-area" id="uploadArea" onclick="document.getElementById('layoutFile').click()">
+            <div id="uploadDefault">
+              <i data-lucide="image" style="width:32px;height:32px;color:#93c5fd;margin:0 auto 8px;display:block;"></i>
+              <p style="font-size:13px; font-weight:700; color:#1d4ed8;">คลิกเพื่อแนบรูปภาพผังโต๊ะ</p>
+              <p style="font-size:11px; color:#94a3b8; margin-top:4px;">JPG, PNG, GIF — ขนาดไม่เกิน 5MB</p>
+            </div>
+            <div id="uploadPreview" style="display:none;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img id="previewImg" src="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;">
+                  <div style="text-align:left;">
+                    <p id="fileName" style="font-size:13px;font-weight:700;color:#1e293b;"></p>
+                    <p id="fileSize" style="font-size:11px;color:#64748b;"></p>
+                  </div>
+                </div>
+                <button type="button" onclick="clearFile(event)" style="background:#fee2e2;border:none;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;">ลบ</button>
+              </div>
+            </div>
+          </div>
+          <p id="fileError" style="display:none; font-size:12px; color:#ef4444; margin-top:6px; font-weight:600;"></p>
         </div>
 
         <!-- Buttons -->
@@ -255,7 +376,6 @@
   </div>
 
   <script>
-    // ── Firebase ───────────────────────────────────
     var firebaseConfig = {
       apiKey:    "AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU",
       authDomain:"np-webapp-74616.firebaseapp.com",
@@ -272,10 +392,11 @@
     var viewMonth       = new Date().getMonth();
     var selectedDate    = new Date().toISOString().split('T')[0];
     var listenerStarted = false;
+    var selectedFile    = null;
 
     // ── Time Slots ─────────────────────────────────
     var TIME_SLOTS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
-    var selectedSlots = []; // เก็บ index ที่เลือก
+    var selectedSlots = [];
 
     function buildTimeSlotGrid() {
       var grid = document.getElementById('timeSlotGrid');
@@ -293,21 +414,16 @@
 
     function toggleSlot(idx) {
       var pos = selectedSlots.indexOf(idx);
-      if (pos === -1) {
-        selectedSlots.push(idx);
-        selectedSlots.sort(function(a,b){ return a-b; });
-      } else {
-        selectedSlots.splice(pos, 1);
-      }
+      if (pos === -1) selectedSlots.push(idx);
+      else selectedSlots.splice(pos, 1);
+      selectedSlots.sort(function(a,b){ return a-b; });
       renderSlots();
     }
 
     function renderSlots() {
-      var btns = document.querySelectorAll('.time-slot');
-      btns.forEach(function(btn) {
+      document.querySelectorAll('.time-slot').forEach(function(btn) {
         var i = parseInt(btn.dataset.index);
-        btn.className = 'time-slot';
-        if (selectedSlots.indexOf(i) !== -1) btn.classList.add('selected');
+        btn.className = 'time-slot' + (selectedSlots.indexOf(i) !== -1 ? ' selected' : '');
       });
       updateSlotLabel();
     }
@@ -316,32 +432,102 @@
       var lbl = document.getElementById('timeSlotLabel');
       if (!selectedSlots.length) {
         lbl.textContent = 'ยังไม่ได้เลือก';
-        lbl.style.color = '#94a3b8';
-        lbl.style.background = '#f8fafc';
+        lbl.style.color = '#94a3b8'; lbl.style.background = '#f8fafc'; lbl.style.borderColor = '#e2e8f0';
         return;
       }
-      var start = TIME_SLOTS[selectedSlots[0]];
-      var endIdx = selectedSlots[selectedSlots.length-1];
-      // end = start of last slot + 1hr
-      var endHour = parseInt(TIME_SLOTS[endIdx].split(':')[0]) + 1;
-      var end = String(endHour).padStart(2,'0') + ':00';
-      lbl.textContent = start + ' - ' + end + ' (' + selectedSlots.length + ' ชม.)';
-      lbl.style.color = '#1d4ed8';
-      lbl.style.background = '#eff6ff';
+      var startHr = parseInt(TIME_SLOTS[selectedSlots[0]]);
+      var endHr   = parseInt(TIME_SLOTS[selectedSlots[selectedSlots.length-1]]) + 1;
+      lbl.textContent = String(startHr).padStart(2,'0')+':00 - '+String(endHr).padStart(2,'0')+':00 ('+selectedSlots.length+' ชม.)';
+      lbl.style.color = '#1d4ed8'; lbl.style.background = '#eff6ff'; lbl.style.borderColor = '#93c5fd';
     }
 
     function getTimeRange() {
       if (!selectedSlots.length) return null;
-      var start = TIME_SLOTS[selectedSlots[0]];
-      var endIdx = selectedSlots[selectedSlots.length-1];
-      var endHour = parseInt(TIME_SLOTS[endIdx].split(':')[0]) + 1;
-      var end = String(endHour).padStart(2,'0') + ':00';
-      return { start: start, end: end };
+      var startHr = parseInt(TIME_SLOTS[selectedSlots[0]]);
+      var endHr   = parseInt(TIME_SLOTS[selectedSlots[selectedSlots.length-1]]) + 1;
+      return { start: String(startHr).padStart(2,'0')+':00', end: String(endHr).padStart(2,'0')+':00' };
     }
 
-    function resetSlots() {
-      selectedSlots = [];
-      renderSlots();
+    function resetSlots() { selectedSlots = []; renderSlots(); }
+
+    // ── Equipment ──────────────────────────────────
+    function toggleEquip(id, el) {
+      var cb = document.getElementById('cb-'+id);
+      cb.checked = !cb.checked;
+      el.classList.toggle('checked', cb.checked);
+      var qtyWrap = document.getElementById('qty-'+id+'-wrap');
+      if (qtyWrap) qtyWrap.style.display = cb.checked ? 'flex' : 'none';
+    }
+
+    function getEquipment() {
+      var items = [];
+      var list = ['appletv','mic','projector','extender'];
+      var names = { appletv:'Apple TV', mic:'ไมโครโฟน', projector:'จอโปรเจตเตอร์', extender:'ชุดต่อขยายจอ' };
+      list.forEach(function(id) {
+        if (document.getElementById('cb-'+id).checked) items.push(names[id]);
+      });
+      if (document.getElementById('cb-table').checked) {
+        var q = document.getElementById('qty-table').value;
+        items.push('โต๊ะ '+(q||'?')+' ตัว');
+      }
+      if (document.getElementById('cb-chair').checked) {
+        var q2 = document.getElementById('qty-chair').value;
+        items.push('เก้าอี้ '+(q2||'?')+' ตัว');
+      }
+      if (document.getElementById('cb-other').checked) {
+        var oth = document.getElementById('qty-other').value;
+        if (oth) items.push(oth);
+      }
+      return items;
+    }
+
+    function resetEquipment() {
+      ['appletv','mic','projector','extender','table','chair','other'].forEach(function(id) {
+        var cb = document.getElementById('cb-'+id);
+        if (cb) { cb.checked = false; }
+        var el = document.getElementById('eq-'+id);
+        if (el) el.classList.remove('checked');
+        var wrap = document.getElementById('qty-'+id+'-wrap');
+        if (wrap) wrap.style.display = 'none';
+        var qty = document.getElementById('qty-'+id);
+        if (qty) qty.value = '';
+      });
+    }
+
+    // ── File Upload ────────────────────────────────
+    function handleFile(input) {
+      var file = input.files[0];
+      var err = document.getElementById('fileError');
+      err.style.display = 'none';
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        err.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF)';
+        err.style.display = 'block'; input.value = ''; return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        err.textContent = 'ไฟล์ขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่';
+        err.style.display = 'block'; input.value = ''; return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = (file.size/1024).toFixed(1) + ' KB';
+        document.getElementById('uploadDefault').style.display = 'none';
+        document.getElementById('uploadPreview').style.display = 'block';
+        document.getElementById('uploadArea').classList.add('has-file');
+        selectedFile = { name: file.name, size: file.size, dataUrl: e.target.result };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearFile(e) {
+      e.stopPropagation();
+      document.getElementById('layoutFile').value = '';
+      document.getElementById('uploadDefault').style.display = 'block';
+      document.getElementById('uploadPreview').style.display = 'none';
+      document.getElementById('uploadArea').classList.remove('has-file');
+      selectedFile = null;
     }
 
     // ── Toast ──────────────────────────────────────
@@ -413,6 +599,8 @@
         document.body.style.overflow = '';
         document.getElementById('bookingForm').reset();
         resetSlots();
+        resetEquipment();
+        clearFile({ stopPropagation: function(){} });
       }
     }
 
@@ -429,14 +617,12 @@
       var label = document.getElementById('currentMonthLabel');
       grid.innerHTML = '';
       var first = new Date(viewYear, viewMonth, 1).getDay();
-      var days  = new Date(viewYear, viewMonth + 1, 0).getDate();
+      var days  = new Date(viewYear, viewMonth+1, 0).getDate();
       var today = new Date().toISOString().split('T')[0];
       label.textContent = new Intl.DateTimeFormat('th-TH', { month:'long', year:'numeric' }).format(new Date(viewYear, viewMonth));
-      for (var i = 0; i < first; i++) {
-        var e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
-      }
+      for (var i = 0; i < first; i++) { var e=document.createElement('div'); e.className='cal-day empty'; grid.appendChild(e); }
       var bmap = {};
-      allBookings.forEach(function(b) { if (!bmap[b.date]) bmap[b.date]=[]; bmap[b.date].push(b); });
+      allBookings.forEach(function(b){ if(!bmap[b.date]) bmap[b.date]=[]; bmap[b.date].push(b); });
       for (var d = 1; d <= days; d++) {
         var dk = viewYear+'-'+String(viewMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
         var db = bmap[dk]||[];
@@ -464,7 +650,7 @@
         var ok=b.status==='approved';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:#f8fafc;border-radius:12px;margin-bottom:12px;border-left:4px solid '+(ok?'#22c55e':'#f59e0b')+';">' +
           '<div><div style="font-weight:700;font-size:14px;color:#1e3a8a;">'+b.room+'</div>' +
-          '<div style="font-size:10px;color:#64748b;">'+b.startTime+' - '+b.endTime+' | '+(b.userName||'-')+'</div></div>' +
+          '<div style="font-size:10px;color:#64748b;">'+b.startTime+' - '+b.endTime+' | '+(b.fullName||b.userName||'-')+'</div></div>' +
           '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;'+(ok?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#b45309;')+'">'+(ok?'อนุมัติแล้ว':'รอพิจารณา')+'</span></div>';
       }).join('');
     }
@@ -483,13 +669,13 @@
           var idx=allBookings.length;
           allBookings.forEach(function(b){
             var ok=b.status==='approved';
-            html+='<tr onclick="viewDate(\''+b.date+'\')">'+
-              '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
-              '<td style="font-weight:700;">'+b.date+'</td>'+
-              '<td style="color:#1d4ed8;font-weight:700;">'+b.room+'</td>'+
-              '<td>'+b.startTime+'-'+b.endTime+'</td>'+
-              '<td style="font-size:11px;">'+(b.userName||'-')+'</td>'+
-              '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
+            html+='<tr onclick="viewDate(\''+b.date+'\')">' +
+              '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>' +
+              '<td style="font-weight:700;">'+b.date+'</td>' +
+              '<td style="color:#1d4ed8;font-weight:700;">'+b.room+'</td>' +
+              '<td>'+b.startTime+'-'+b.endTime+'</td>' +
+              '<td style="font-size:11px;">'+(b.fullName||b.userName||'-')+'</td>' +
+              '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>' +
               '<td style="text-align:center;"><span class="'+(ok?'badge-g':'badge-a')+'">'+(ok?'อนุมัติ':'รอตรวจ')+'</span></td></tr>';
             if(b.date===today) ok?app++:pen++;
           });
@@ -514,20 +700,27 @@
     function submitBooking(e) {
       e.preventDefault();
       var timeRange = getTimeRange();
-      if (!timeRange) { showToast('กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง', 'error'); return; }
+      if (!timeRange) { showToast('กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง','error'); return; }
+      var equipment = getEquipment();
       var btn = document.getElementById('submitBtn');
       btn.disabled=true; btn.textContent='กำลังบันทึก...';
       db.collection('bookings').add({
-        userId:   currentUser.uid,
-        userName: currentUser.displayName,
-        userPhoto:currentUser.photoURL,
-        room:     document.getElementById('roomSelect').value,
-        date:     document.getElementById('bookingDate').value,
-        startTime:timeRange.start,
-        endTime:  timeRange.end,
-        purpose:  document.getElementById('purpose').value,
-        status:   'pending',
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        userId:       currentUser.uid,
+        userName:     currentUser.displayName,
+        userPhoto:    currentUser.photoURL,
+        fullName:     document.getElementById('fullName').value,
+        position:     document.getElementById('position').value,
+        attendees:    parseInt(document.getElementById('attendees').value)||0,
+        room:         document.getElementById('roomSelect').value,
+        date:         document.getElementById('bookingDate').value,
+        startTime:    timeRange.start,
+        endTime:      timeRange.end,
+        purpose:      document.getElementById('purpose').value,
+        equipment:    equipment,
+        hasLayout:    !!selectedFile,
+        layoutName:   selectedFile ? selectedFile.name : null,
+        status:       'pending',
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp()
       }).then(function(){
         toggleModal(); showToast('บันทึกข้อมูลสำเร็จ ✓');
       }).catch(function(err){
