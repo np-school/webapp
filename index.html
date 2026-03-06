@@ -304,9 +304,34 @@
   function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
   function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
 
-  var DASH_COLOR_OVERRIDE={'หอประชุมพุทธรักษา':'#92400e'};
-  var DASH_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d','#0f766e','#c2410c'];
-  function dashGetColor(n){if(DASH_COLOR_OVERRIDE[n])return DASH_COLOR_OVERRIDE[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%DASH_COLORS.length;return DASH_COLORS[h];}
+  
+  /* ── Pastel Room Color System (shared) ── */
+  var ROOM_PASTEL_MAP={
+    'ห้องประชุมชวนชม'  :{bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
+    'หอประชุมพุทธรักษา':{bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
+    'สนามกีฬากลาง'    :{bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
+    'ห้องประชุมราชพฤกษ์':{bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
+    'โดมอเนกประสงค์'  :{bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
+    'ห้องประชุมปาริชาติ':{bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
+    'ห้องประชุมชวนชน'  :{bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'}
+  };
+  var ROOM_PASTEL_FB=[
+    {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
+    {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
+    {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
+    {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
+    {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
+    {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
+    {bg:'#ccfbf1',text:'#134e4a',border:'#5eead4',accent:'#0d9488'},
+    {bg:'#dcfce7',text:'#14532d',border:'#86efac',accent:'#16a34a'},
+    {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'},
+    {bg:'#fdf4ff',text:'#581c87',border:'#e9d5ff',accent:'#9333ea'}
+  ];
+  function getRoomPastel(n){
+    if(ROOM_PASTEL_MAP[n])return ROOM_PASTEL_MAP[n];
+    var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%ROOM_PASTEL_FB.length;
+    return ROOM_PASTEL_FB[h];
+  }
 
   function fetchUserStats(uid){
     // ไม่ใช้ orderBy ร่วมกับ where เพื่อหลีกเลี่ยง Firestore composite index — เรียงฝั่ง client แทน
@@ -337,18 +362,18 @@
       var ok=b.status==='approved',rej=b.status==='rejected';
       var eDate=new Date((b.date||'')+'T'+(b.endTime||'23:59')+':00');
       var isDone=ok&&!isNaN(eDate)&&now>eDate;
-      var color=dashGetColor(b.room||'');
-      var statusTxt=isDone?'✓ เสร็จสิ้น':ok?'✅ อนุมัติแล้ว':rej?'❌ ไม่อนุมัติ':'⏳ รอพิจารณา';
-      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':rej?'#fee2e2;color:#b91c1c':'#fef9c3;color:#b45309';
+      var p=getRoomPastel(b.room||'');var color=p.accent;
+      var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
+      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#d1fae5;color:#065f46':rej?'#fee2e2;color:#991b1b':'#fef9c3;color:#92400e';
       var dateStr='';
       try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
       return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
-        '<div style="width:42px;height:42px;background:'+color+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
+        '<div style="width:42px;height:42px;background:'+p.accent+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
           '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}):'')+'</span>'+
           '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').getDate():'')+'</span>'+
         '</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:800;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
+          '<div style="font-size:13px;font-weight:800;color:'+p.text+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
           '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
@@ -378,9 +403,7 @@
   }
 
   /* ══ Public Calendar (no login required) ══ */
-  var ROOM_COLOR_OVERRIDE={'หอประชุมพุทธรักษา':'#92400e','หอประชุมพุทรักษา':'#92400e'};
-  var PUB_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d','#0f766e','#c2410c'];
-  function pubGetColor(n){if(ROOM_COLOR_OVERRIDE[n])return ROOM_COLOR_OVERRIDE[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%PUB_COLORS.length;return PUB_COLORS[h];}
+  
 
   var pubYear=new Date().getFullYear(),pubMonth=new Date().getMonth();
   var pubSelectedDate=new Date().toISOString().split('T')[0];
@@ -430,19 +453,19 @@
     }
     list.innerHTML=dayBookings.map(function(b){
       var ok=b.status==='approved';
-      var color=pubGetColor(b.room||'');
+      var p=getRoomPastel(b.room||'');var color=p.accent;
       var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
       var isDone=!isNaN(eDate)&&now>eDate;
-      var statusTxt=isDone?'✓ เสร็จสิ้น':ok?'อนุมัติแล้ว':'รอพิจารณา';
+      var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
       var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
-      return '<div style="padding:14px 16px;background:'+color+';border-radius:14px;margin-bottom:10px;box-shadow:0 3px 10px '+color+'55;">'+
+      return '<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:white;margin-bottom:5px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:rgba(255,255,255,.85);margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:rgba(255,255,255,.9);background:rgba(0,0,0,.18);padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
+            '<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:'+p.text+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'18;padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
           '</div>'+
-          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:rgba(255,255,255,.22);color:white;white-space:nowrap;">'+statusTxt+'</span>'+
+          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+p.accent+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -465,7 +488,7 @@
     if(max===0){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';return;}
     wrap.innerHTML=pubRooms.map(function(r){
       var c=counts[r.name]||0;if(!c)return'';
-      var color=pubGetColor(r.name);
+      var p=getRoomPastel(r.name);var color=p.accent;
       var pct=max>0?(c/max*100):0;
       return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;">'+
         '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;color:'+color+';">'+r.name+'</span>'+
