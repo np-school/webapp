@@ -104,7 +104,7 @@
 </head>
 <body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
 
-<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
+<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...<br><small id="dbgMsg" style="font-size:11px;color:#94a3b8;"></small></p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Navbar -->
@@ -380,6 +380,7 @@
 
   /* ── Auth ── */
   auth.onAuthStateChanged(function(user){
+    document.getElementById('dbgMsg').textContent='auth: '+(user?user.email:'null');
     try{
       currentUser=user;
       if(user&&!user.isAnonymous){
@@ -791,6 +792,7 @@
   }
 
   function initData(){
+    document.getElementById('dbgMsg').textContent='initData started...';
     function safeRun(fn,label){try{fn();}catch(e){console.error(label+':',e);}}
     function loadRooms(){
       return db.collection('rooms').get().then(function(snap){
@@ -808,7 +810,9 @@
     }
     Promise.all([loadRooms(),loadBookings()])
       .catch(function(e){console.error('init:',e);})
-      .finally(function(){hideLoading();safeRun(function(){lucide.createIcons();},'lucide');});
+      .finally(function(){
+      document.getElementById('dbgMsg').textContent='finally called';
+      hideLoading();safeRun(function(){lucide.createIcons();},'lucide');});
     setTimeout(function(){
       db.collection('bookings').onSnapshot(function(snap){safeRun(function(){processBookings(snap);},'rt');},function(e){});
       db.collection('rooms').onSnapshot(function(snap){
