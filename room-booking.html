@@ -681,8 +681,8 @@
   }
 
   function updateDayView(dateKey,dayBookings){
-    var list=document.getElementById('dayList');
-    var label=document.getElementById('dayLabel');
+    var list=document.getElementById('todayBookingsList');
+    var label=document.getElementById('selectedDateLabel');
     if(!list)return;
     if(label)label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     if(!dayBookings||!dayBookings.length){
@@ -765,7 +765,7 @@
         var roomPastel=getRoomPastel(b.room||'');var badgeCls=ok?'badge-g':rej?'badge-r':'badge-a';
         var badgeLabel=ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
         var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
-        var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(this.dataset.id)" data-id="'+b.id+' style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
+        var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(this.dataset.id)" data-id="'+b.id+'" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
         tbl+='<tr onclick="viewDate(this.dataset.date)" data-date="'+b.date+'" style="border-left:3px solid '+roomPastel.accent+';">'+
           '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
           '<td style="font-weight:700;">'+b.date+'</td>'+
@@ -775,7 +775,7 @@
           '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
           '<td style="text-align:center;"><span class="'+badgeCls+'">'+badgeLabel+'</span></td>'+
           '<td style="text-align:center;">'+fileBtn+'</td>'+
-          '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(this.dataset.id)" data-id="'+b.id+' style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
+          '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(this.dataset.id)" data-id="'+b.id+'" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
         '</tr>';
         if(b.date===today){if(ok)app++;else if(!rej)pen++;}
       });
@@ -850,10 +850,9 @@
       data.status='pending';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
       p=db.collection('bookings').add(data);
     }
-    p.then(function(docRef){
+    p.then(function(){
       toggleModal();
       showToast(editId?'แก้ไขคำขอแล้ว ✓':'บันทึกข้อมูลสำเร็จ ✓');
-      // แจ้ง admin ผ่าน LINE เมื่อสร้างคำขอใหม่
       if(!editId){ notifyAdminsViaGAS(data); }
     })
      .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
@@ -980,38 +979,26 @@
     });
   }
 
-  /* ── แจ้ง Admin ผ่าน GAS LINE Proxy ── */
   var GAS_LINE_URL = 'https://script.google.com/macros/s/AKfycbxmXjbuTlaYJSVJqxTL8wfAjx_CeRzVUKywf9hIVKwF6gOlISewn132-yMCSo17liQG/exec';
 
-  function notifyAdminsViaGAS(bookingData) {
-    if (!GAS_LINE_URL || GAS_LINE_URL.indexOf('PASTE') !== -1) return;
-    // ดึง admin list
+  function notifyAdminsViaGAS(bk) {
+    if (!GAS_LINE_URL) return;
     db.collection('admins').get().then(function(snap) {
       var emails = [];
       snap.forEach(function(d) { emails.push(d.id); });
-      var promises = emails.map(function(email) {
+      Promise.all(emails.map(function(email) {
         return db.collection('users').where('email','==',email).limit(1).get()
-          .then(function(s) {
-            return (!s.empty && s.docs[0].data().lineUserId) ? s.docs[0].data().lineUserId : null;
-          });
-      });
-      Promise.all(promises).then(function(uids) {
+          .then(function(s) { return (!s.empty&&s.docs[0].data().lineUserId)?s.docs[0].data().lineUserId:null; });
+      })).then(function(uids) {
         uids.filter(Boolean).forEach(function(uid) {
-          fetch(GAS_LINE_URL, {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-              action:'sendLine', lineUserId:uid,
-              message:{
-                type:'text',
-                text:'📋 มีคำขอจองใหม่!\n\n🏫 ห้อง: '+bookingData.room+'\n📅 วันที่: '+bookingData.date+'\n⏰ เวลา: '+bookingData.startTime+' – '+bookingData.endTime+'\n👤 ผู้จอง: '+(bookingData.fullName||'-')+'\n📌 วัตถุประสงค์: '+(bookingData.purpose||'-')+'\n\nกรุณาเข้าระบบ Admin เพื่อพิจารณาคำขอ',
-              },
-            }),
-          }).catch(function(){});
+          fetch(GAS_LINE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'sendLine',lineUserId:uid,message:{type:'text',
+              text:'[LINE] มีคำขอจองใหม่!\nห้อง: '+bk.room+'\nวันที่: '+bk.date+'\nเวลา: '+bk.startTime+' - '+bk.endTime+'\nผู้จอง: '+(bk.fullName||'-')+'\nวัตถุประสงค์: '+(bk.purpose||'-'),
+            }})}).catch(function(){});
         });
       });
     }).catch(function(){});
   }
-
 
   lucide.createIcons();
 </script>
