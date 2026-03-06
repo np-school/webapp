@@ -696,52 +696,76 @@
   }
 
   /* ── Firestore ── */
+  function processBookings(snap){
+    allBookings=[];
+    var today=new Date().toISOString().split('T')[0],app=0,pen=0,tbl='';
+    snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
+    allBookings.sort(function(a,b){
+      var da=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;
+      var db2=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;
+      return db2-da;
+    });
+    var tbody=document.getElementById('mainBookingTableBody');
+    if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';}
+    else{
+      var idx=allBookings.length;
+      allBookings.forEach(function(b){
+        var ok=b.status==='approved',rej=b.status==='rejected';
+        var roomPastel=getRoomPastel(b.room||'');var badgeCls=ok?'badge-g':rej?'badge-r':'badge-a';
+        var badgeLabel=ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
+        var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
+        var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(''+b.id+'')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
+        tbl+='<tr onclick="viewDate(''+b.date+'')" style="border-left:3px solid '+roomPastel.accent+';">'+
+          '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
+          '<td style="font-weight:700;">'+b.date+'</td>'+
+          '<td><span style="display:inline-flex;align-items:center;gap:4px;background:'+roomPastel.bg+';color:'+roomPastel.text+';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid '+roomPastel.border+';">'+b.room+'</span></td>'+
+          '<td>'+(b.startTime||'-')+'-'+(b.endTime||'-')+'</td>'+
+          '<td style="font-size:11px;">'+(b.fullName||b.userName||'-')+'</td>'+
+          '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
+          '<td style="text-align:center;"><span class="'+badgeCls+'">'+badgeLabel+'</span></td>'+
+          '<td style="text-align:center;">'+fileBtn+'</td>'+
+          '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(''+b.id+'')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
+        '</tr>';
+        if(b.date===today){if(ok)app++;else if(!rej)pen++;}
+      });
+      tbody.innerHTML=tbl;
+    }
+    document.getElementById('approvedToday').textContent=app;
+    document.getElementById('pendingToday').textContent=pen;
+    renderCalendar();
+    updateDayView(selectedDate,getFilteredBookings(selectedDate));
+    renderRoomStats();
+    lucide.createIcons();
+  }
+
   function initData(){
-    db.collection('rooms').onSnapshot(function(snap){
+    // ใช้ get() + Promise.all เพื่อให้ hideLoading() เรียกแน่นอน ไม่ขึ้นกับ Security Rules
+    var roomsP=db.collection('rooms').get().then(function(snap){
       allRooms=[];
       snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
       allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
       renderRoomTabs();
       renderRoomBanner();
     });
-
-    db.collection('bookings').onSnapshot(function(snap){
-      allBookings=[];
-      var today=new Date().toISOString().split('T')[0],app=0,pen=0,html='';
-      snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
-      allBookings.sort(function(a,b){var da=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;var db2=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;return db2-da;});
-      var tbody=document.getElementById('mainBookingTableBody');
-      if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';}
-      else{
-        var idx=allBookings.length;
-        allBookings.forEach(function(b){
-          var ok=b.status==='approved',rej=b.status==='rejected';
-          var roomPastel=getRoomPastel(b.room||'');var roomColor=roomPastel.accent;var badgeCls=ok?'badge-g':rej?'badge-r':'badge-a';
-          var badgeLabel=ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
-          var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
-          var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(\''+b.id+'\')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
-          html+='<tr onclick="viewDate(\''+b.date+'\')" style="border-left:3px solid '+roomPastel.accent+';">'+
-            '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
-            '<td style="font-weight:700;">'+b.date+'</td>'+
-            '<td><span style="display:inline-flex;align-items:center;gap:4px;background:'+roomPastel.bg+';color:'+roomPastel.text+';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid '+roomPastel.border+';">'+b.room+'</span></td>'+
-            '<td>'+(b.startTime||'-')+'-'+(b.endTime||'-')+'</td>'+
-            '<td style="font-size:11px;">'+(b.fullName||b.userName||'-')+'</td>'+
-            '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
-            '<td style="text-align:center;"><span class="'+badgeCls+'">'+badgeLabel+'</span></td>'+
-            '<td style="text-align:center;">'+fileBtn+'</td>'+
-            '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(\''+b.id+'\')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
-          '</tr>';
-          if(b.date===today){if(ok)app++;else if(!rej)pen++;}
-        });
-        tbody.innerHTML=html;
-      }
-      document.getElementById('approvedToday').textContent=app;
-      document.getElementById('pendingToday').textContent=pen;
-      renderCalendar();
-      updateDayView(selectedDate,getFilteredBookings(selectedDate));
-      renderRoomStats();
-      hideLoading();lucide.createIcons();
-    },function(err){console.error(err);hideLoading();});
+    var bookingsP=db.collection('bookings').get().then(function(snap){
+      processBookings(snap);
+    });
+    Promise.all([roomsP,bookingsP]).then(function(){
+      hideLoading();
+    }).catch(function(err){
+      console.error('initData error:',err);
+      hideLoading();
+      showToast('โหลดข้อมูลไม่สำเร็จ: '+err.message,'error');
+    });
+    // เปิด realtime listener หลังโหลดครั้งแรกเสร็จ
+    setTimeout(function(){
+      db.collection('bookings').onSnapshot(function(snap){processBookings(snap);},function(e){console.warn('bookings listener:',e.message);});
+      db.collection('rooms').onSnapshot(function(snap){
+        allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+        allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+        renderRoomTabs();renderRoomBanner();
+      },function(e){console.warn('rooms listener:',e.message);});
+    },1500);
   }
 
   function viewDate(d){var p=d.split('-');viewYear=+p[0];viewMonth=+p[1]-1;selectedDate=d;renderCalendar();updateDayView(d,getFilteredBookings(d));}
