@@ -412,27 +412,39 @@
   function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;}
   function handleRoomImage(input){
     var file=input.files[0];if(!file)return;
-    if(file.size>10*1024*1024){showToast('ไฟล์ใหญ่เกิน 10MB','warn');input.value='';return;}
+    if(file.size>15*1024*1024){showToast('ไฟล์ใหญ่เกิน 15MB','warn');input.value='';return;}
     var reader=new FileReader();
     reader.onload=function(ev){
       var img=new Image();
       img.onload=function(){
-        // Compress: max 800px wide, JPEG quality 0.72 → ≈ 200-400KB base64 (~280KB raw)
-        var MAX=800,q=0.72;
-        var w=img.width,h=img.height;
-        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-        var canvas=document.createElement('canvas');
-        canvas.width=w;canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        var dataUrl=canvas.toDataURL('image/jpeg',q);
-        // Safety: if still >700KB base64 (~525KB binary), lower quality further
-        var attempts=0;
-        while(dataUrl.length>700000&&attempts<4){q-=0.1;dataUrl=canvas.toDataURL('image/jpeg',q);attempts++;}
+        // Target: base64 string must be < 680,000 chars (~500KB binary) to fit Firestore 1MB doc limit safely
+        var TARGET=680000;
+        // Step 1: scale down — start at max 800px, step down if needed
+        var scales=[800,640,480,360];
+        var dataUrl='',finalW=img.width,finalH=img.height;
+        for(var si=0;si<scales.length;si++){
+          var MAX=scales[si];
+          var w=img.width,h=img.height;
+          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+          // Step 2: try quality from 0.75 down
+          var canvas=document.createElement('canvas');
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          var q=0.75,found=false;
+          while(q>=0.3){
+            dataUrl=canvas.toDataURL('image/jpeg',q);
+            if(dataUrl.length<=TARGET){finalW=w;finalH=h;found=true;break;}
+            q=Math.round((q-0.05)*100)/100;
+          }
+          if(found)break;
+        }
+        // Fallback: use last result even if still slightly over (better than nothing)
+        if(!dataUrl)dataUrl=canvas.toDataURL('image/jpeg',0.3);
         roomImageDataURL=dataUrl;
         var kb=(dataUrl.length*0.75/1024).toFixed(0);
         document.getElementById('roomPreviewImg').src=dataUrl;
-        document.getElementById('roomFileName').textContent=file.name+' (บีบอัดแล้ว)';
-        document.getElementById('roomFileSize').textContent=kb+' KB · '+w+'×'+h+'px';
+        document.getElementById('roomFileName').textContent=file.name;
+        document.getElementById('roomFileSize').textContent='✓ บีบอัดแล้ว '+kb+' KB · '+finalW+'×'+finalH+'px';
         document.getElementById('roomUploadDefault').style.display='none';
         document.getElementById('roomUploadPreview').style.display='block';
         document.getElementById('roomUploadArea').classList.add('has-file');
