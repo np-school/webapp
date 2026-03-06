@@ -309,10 +309,17 @@
   function dashGetColor(n){if(DASH_COLOR_OVERRIDE[n])return DASH_COLOR_OVERRIDE[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%DASH_COLORS.length;return DASH_COLORS[h];}
 
   function fetchUserStats(uid){
-    db.collection('bookings').where('userId','==',uid).orderBy('date','desc').onSnapshot(function(snap){
+    // ไม่ใช้ orderBy ร่วมกับ where เพื่อหลีกเลี่ยง Firestore composite index — เรียงฝั่ง client แทน
+    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
       document.getElementById('bookingCount').textContent=snap.size+' รายการ';
-      var bookings=[];snap.forEach(function(d){bookings.push(Object.assign({id:d.id},d.data()));});
+      var bookings=[];
+      snap.forEach(function(d){bookings.push(Object.assign({id:d.id},d.data()));});
+      bookings.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
       renderMyBookings(bookings);
+    },function(err){
+      console.error('fetchUserStats error:',err);
+      var empty=document.getElementById('myBookingsEmpty');
+      if(empty){empty.style.display='block';empty.textContent='ไม่สามารถโหลดข้อมูลได้: '+err.message;}
     });
   }
 
