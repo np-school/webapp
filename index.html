@@ -219,22 +219,19 @@
           <h3 id="welcomeText" style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;">ยินดีต้อนรับ</h3>
           <p style="color:#64748b;font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
         </div>
-        <!-- LINE Connect Card -->
-        <div id="lineConnectCard" style="margin-bottom:20px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:20px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 8px 20px rgba(6,199,85,.25);">
+        <!-- LINE card -->
+        <div id="lineCard" style="margin-bottom:20px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:20px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 8px 20px rgba(6,199,85,.25);">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="28" height="28" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            <div style="width:46px;height:46px;background:rgba(255,255,255,.2);border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="26" height="26" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
             </div>
             <div>
-              <div id="lineStatusText" style="font-size:15px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
-              <div id="lineStatusSub" style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
+              <div id="lineTxt" style="font-size:15px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
+              <div id="lineSub" style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
             </div>
           </div>
-          <button id="lineActionBtn" onclick="handleLineConnect()" style="padding:10px 22px;background:white;color:#06C755;font-weight:800;border-radius:12px;border:none;cursor:pointer;font-size:14px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);white-space:nowrap;">
-            เชื่อมต่อ LINE
-          </button>
+          <button id="lineBtn" onclick="lineConnect()" style="padding:10px 22px;background:white;color:#06C755;font-weight:800;border-radius:12px;border:none;cursor:pointer;font-size:13px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);">เชื่อมต่อ LINE</button>
         </div>
-
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
           <div style="background:#eff6ff;padding:24px;border-radius:24px;border:1px solid #dbeafe;display:flex;align-items:center;gap:16px;">
             <div style="width:46px;height:46px;background:#1d4ed8;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -290,11 +287,9 @@
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   var auth=firebase.auth(),db=firebase.firestore();
-
-  /* LINE Config */
-  var LINE_LOGIN_CHANNEL_ID = '2009342857';
-  var LINE_CALLBACK_URL     = 'https://np-school.github.io/webapp/index.html';
-  var LINE_PROXY_URL        = 'https://script.google.com/macros/s/AKfycbxmXjbuTlaYJSVJqxTL8wfAjx_CeRzVUKywf9hIVKwF6gOlISewn132-yMCSo17liQG/exec';
+  var LINE_CH  = '2009342857';
+  var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
+  var GAS_URL  = 'https://script.google.com/macros/s/AKfycbw2ajfPJQhPGadsQ8g1QK8PARDgqPR4C8NdKsuPP0CaKOZ351xvUS7dWgpBIvFPonvi/exec';
 
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -305,7 +300,7 @@
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
-      fetchUserStats(user.uid);checkAdminAccess(user.email);loadLineStatus(user.uid);listenMyBookingStatus(user.uid);
+      fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
     }else{
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
@@ -537,189 +532,134 @@
   }
   initPublicCalendar();
 
-  /* ════════════ LINE Functions ════════════ */
+  /* ════ LINE ════ */
+  function gasGet(params, cb) {
+    var qs = Object.keys(params).map(function(k){
+      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+    }).join('&');
+    fetch(GAS_URL + '?' + qs)
+      .then(function(r){ return r.json(); })
+      .then(cb)
+      .catch(function(e){ cb({ error: e.message }); });
+  }
 
-  function loadLineStatus(uid) {
+  function lineLoadStatus(uid) {
     db.collection('users').doc(uid).get().then(function(doc) {
-      if (doc.exists && doc.data().lineUserId) {
-        renderLineCard(true, doc.data().lineName || '');
-      } else {
-        renderLineCard(false, '');
-      }
-    }).catch(function() { renderLineCard(false, ''); });
+      lineRender(doc.exists && !!doc.data().lineUserId, doc.exists ? (doc.data().lineName||'') : '');
+    }).catch(function(){ lineRender(false,''); });
   }
 
-  function renderLineCard(connected, lineName) {
-    var txt = document.getElementById('lineStatusText');
-    var sub = document.getElementById('lineStatusSub');
-    var btn = document.getElementById('lineActionBtn');
+  function lineRender(ok, name) {
+    var txt = document.getElementById('lineTxt');
+    var sub = document.getElementById('lineSub');
+    var btn = document.getElementById('lineBtn');
     if (!txt) return;
-    if (connected) {
-      txt.textContent = '✅ เชื่อมต่อ LINE แล้ว' + (lineName ? ' · ' + lineName : '');
-      sub.textContent = 'คุณจะได้รับแจ้งเตือนผ่าน LINE อัตโนมัติ';
-      btn.textContent = 'ยกเลิกการเชื่อมต่อ';
+    if (ok) {
+      txt.textContent = '\u2705 \u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e41\u0e25\u0e49\u0e27' + (name?' \u00b7 '+name:'');
+      sub.textContent = '\u0e04\u0e38\u0e13\u0e08\u0e30\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e1c\u0e48\u0e32\u0e19 LINE \u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34';
+      btn.textContent = '\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d';
       btn.style.color = '#dc2626';
-      btn.onclick = handleLineDisconnect;
+      btn.onclick = lineDisconnect;
     } else {
-      txt.textContent = 'เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน';
-      sub.textContent = 'รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที';
-      btn.textContent = 'เชื่อมต่อ LINE';
+      txt.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19';
+      sub.textContent = '\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e1c\u0e25\u0e04\u0e33\u0e02\u0e2d \u0e41\u0e25\u0e30\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e16\u0e36\u0e07\u0e40\u0e27\u0e25\u0e32\u0e08\u0e2d\u0e07 15 \u0e19\u0e32\u0e17\u0e35';
+      btn.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE';
       btn.style.color = '#06C755';
-      btn.onclick = handleLineConnect;
+      btn.onclick = lineConnect;
     }
   }
 
-  function handleLineConnect() {
-    var state = Math.random().toString(36).substring(2);
-    sessionStorage.setItem('line_state', state);
-    localStorage.setItem('line_state', state);
-    var p = new URLSearchParams({
-      response_type: 'code',
-      client_id: LINE_LOGIN_CHANNEL_ID,
-      redirect_uri: LINE_CALLBACK_URL,
-      state: state,
-      scope: 'profile openid',
-      nonce: Math.random().toString(36).substring(2),
-    });
-    window.location.href = 'https://access.line.me/oauth2/v2.1/authorize?' + p.toString();
+  function lineConnect() {
+    var state = Math.random().toString(36).slice(2);
+    localStorage.setItem('ls', state);
+    location.href = 'https://access.line.me/oauth2/v2.1/authorize?' +
+      'response_type=code&client_id=' + LINE_CH +
+      '&redirect_uri=' + encodeURIComponent(LINE_CB) +
+      '&state=' + state + '&scope=profile%20openid&nonce=' + Math.random().toString(36).slice(2);
   }
 
-  function handleLineDisconnect() {
-    if (!confirm('ต้องการยกเลิกการเชื่อมต่อ LINE ใช่หรือไม่?')) return;
-    var user = auth.currentUser; if (!user) return;
-    db.collection('users').doc(user.uid).update({
+  function lineDisconnect() {
+    if (!confirm('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e43\u0e0a\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48?')) return;
+    var u = auth.currentUser; if (!u) return;
+    db.collection('users').doc(u.uid).update({
       lineUserId: firebase.firestore.FieldValue.delete(),
-      lineName: firebase.firestore.FieldValue.delete(),
-    }).then(function() { renderLineCard(false, ''); showLineToast('ยกเลิกการเชื่อมต่อ LINE แล้ว', 'warn'); });
+      lineName:   firebase.firestore.FieldValue.delete(),
+    }).then(function(){ lineRender(false,''); lineToast('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e41\u0e25\u0e49\u0e27','w'); });
   }
 
-  function handleLineCallback() {
-    var params = new URLSearchParams(window.location.search);
-    var code  = params.get('code');
-    var state = params.get('state');
-    var error = params.get('error');
-
-    // ไม่มี code = ไม่ใช่ LINE callback
-    if (!code) return;
-
-    // ถ้า error (user กด cancel)
-    if (error) {
-      window.history.replaceState({}, '', window.location.pathname);
-      showLineToast('ยกเลิกการเชื่อมต่อ LINE', 'warn');
-      return;
-    }
-
-    // ตรวจ state (เก็บทั้งใน sessionStorage และ localStorage)
-    var savedState = sessionStorage.getItem('line_state') || localStorage.getItem('line_state');
-    if (state && savedState && state !== savedState) {
-      window.history.replaceState({}, '', window.location.pathname);
-      showLineToast('เชื่อมต่อไม่สำเร็จ: state mismatch', 'error');
-      return;
-    }
-
-    // ล้าง URL และ state
-    window.history.replaceState({}, '', window.location.pathname);
-    sessionStorage.removeItem('line_state');
-    localStorage.removeItem('line_state');
-
-    // รอ auth พร้อม แล้วแลก code
-    var waited = 0;
-    var wait = setInterval(function() {
-      waited += 300;
-      if (waited > 15000) {
-        clearInterval(wait);
-        showLineToast('เชื่อมต่อไม่สำเร็จ: timeout กรุณาลองใหม่', 'error');
-        return;
-      }
-      var user = auth.currentUser;
-      if (!user) return;
-      clearInterval(wait);
-      exchangeLineCode(code, user);
-    }, 300);
-  }
-
-  function exchangeLineCode(code, user) {
-    var btn = document.getElementById('lineActionBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'กำลังเชื่อมต่อ...'; }
-    fetch(LINE_PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+  /* LINE callback handler */
+  function lineHandleCb() {
+    var p     = new URLSearchParams(location.search);
+    var code  = p.get('code');
+    var state = p.get('state');
+    var err   = p.get('error');
+    if (!code && !err) return;
+    history.replaceState({}, '', location.pathname);
+    if (err) { lineToast('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE','w'); return; }
+    if (state !== localStorage.getItem('ls')) { lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: state \u0e44\u0e21\u0e48\u0e15\u0e23\u0e07\u0e01\u0e31\u0e19','e'); return; }
+    localStorage.removeItem('ls');
+    /* รอ auth พร้อม */
+    var t = 0, iv = setInterval(function(){
+      t += 400;
+      if (t > 15000) { clearInterval(iv); lineToast('Timeout \u0e01\u0e23\u0e38\u0e13\u0e32\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48','e'); return; }
+      var u = auth.currentUser; if (!u) return;
+      clearInterval(iv);
+      /* แลก code ผ่าน GAS GET */
+      var btn = document.getElementById('lineBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d...'; }
+      gasGet({
         action: 'exchangeCode',
         code: code,
-        redirectUri: LINE_CALLBACK_URL,
-        firebaseUid: user.uid,
-        userEmail: user.email,
-        userName: user.displayName,
-      }),
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.lineUserId) {
-        renderLineCard(true, data.lineName || '');
-        showLineToast('เชื่อมต่อ LINE สำเร็จ ✓', 'ok');
-      } else {
-        renderLineCard(false, '');
-        showLineToast('เชื่อมต่อไม่สำเร็จ: ' + (data.error || '-'), 'error');
-        if (btn) { btn.disabled = false; btn.textContent = 'เชื่อมต่อ LINE'; }
-      }
-    })
-    .catch(function() {
-      renderLineCard(false, '');
-      showLineToast('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'เชื่อมต่อ LINE'; }
-    });
+        redirectUri: LINE_CB,
+        firebaseUid: u.uid,
+        userEmail: u.email,
+        userName: u.displayName,
+      }, function(data) {
+        if (data.lineUserId) {
+          lineRender(true, data.lineName||'');
+          lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE'; }
+          lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: '+(data.error||'-'),'e');
+        }
+      });
+    }, 400);
   }
 
-  function showLineToast(msg, type) {
-    var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;font-family:Sarabun,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;';
-    t.style.background = type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#06C755';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(function(){ t.remove(); }, 4000);
-  }
-
-  /* Listen booking status change -> notify owner via LINE */
-  var _notifiedCache = {};
-  function listenMyBookingStatus(uid) {
-    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap) {
-      snap.docChanges().forEach(function(change) {
-        if (change.type !== 'modified') return;
-        var b = Object.assign({ id: change.doc.id }, change.doc.data());
-        if (b.status !== 'approved' && b.status !== 'rejected') return;
-        var key = b.id + '_' + b.status;
-        if (_notifiedCache[key]) return;
-        _notifiedCache[key] = true;
-        db.collection('users').doc(uid).get().then(function(doc) {
-          if (!doc.exists || !doc.data().lineUserId) return;
-          var isOk = b.status === 'approved';
-          var txt = isOk
-            ? '✅ คำขออนุมัติแล้ว! ห้อง: ' + b.room + ' วันที่: ' + b.date + ' เวลา: ' + (b.startTime||'-') + ' – ' + (b.endTime||'-')
-            : '❌ คำขอไม่อนุมัติ ห้อง: ' + b.room + ' วันที่: ' + b.date + (b.rejectReason ? ' เหตุผล: ' + b.rejectReason : '');
-          fetch(LINE_PROXY_URL, {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ action:'sendLine', lineUserId:doc.data().lineUserId, message:{ type:'text', text:txt } }),
-          }).catch(function(){});
+  /* ส่ง LINE แจ้งเจ้าของเมื่อสถานะเปลี่ยน */
+  var _lnCache = {};
+  function lineListenBookings(uid) {
+    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
+      snap.docChanges().forEach(function(ch){
+        if (ch.type !== 'modified') return;
+        var b = Object.assign({id:ch.doc.id}, ch.doc.data());
+        if (b.status!=='approved' && b.status!=='rejected') return;
+        var k = b.id+'_'+b.status;
+        if (_lnCache[k]) return;
+        _lnCache[k] = true;
+        db.collection('users').doc(uid).get().then(function(doc){
+          if (!doc.exists||!doc.data().lineUserId) return;
+          var ok = b.status==='approved';
+          var msg = (ok?'\u2705 \u0e04\u0e33\u0e02\u0e2d\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34\u0e41\u0e25\u0e49\u0e27!':'\u274c \u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34')+
+            ' \u0e2b\u0e49\u0e2d\u0e07:'+b.room+' \u0e27\u0e31\u0e19:'+b.date+
+            ((!ok&&b.rejectReason)?' \u0e40\u0e2b\u0e15\u0e38\u0e1c\u0e25:'+b.rejectReason:'');
+          gasGet({ action:'sendLine', lineUserId:doc.data().lineUserId, msg:msg }, function(){});
         });
       });
     });
   }
 
-  /* เรียก callback check ทันทีที่โหลดหน้า */
-  // ถ้า URL มี ?code= (LINE callback) ซ่อน loading ทันที ไม่ให้ค้าง
-  (function() {
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('code') || urlParams.get('error')) {
-      // ซ่อน loading หลังจาก auth ready (max 3 วิ)
-      setTimeout(function() {
-        var ov = document.getElementById('loadingOverlay');
-        if (ov) ov.style.display = 'none';
-      }, 3000);
-    }
-  })();
-  handleLineCallback();
+  function lineToast(msg, type) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;font-family:Sarabun,sans-serif;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15);';
+    t.style.background = type==='e'?'#ef4444':type==='w'?'#f59e0b':'#06C755';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 4000);
+  }
 
+  /* เรียก callback ทันทีที่โหลด */
+  lineHandleCb();
 
   lucide.createIcons();
 </script>
