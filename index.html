@@ -239,6 +239,17 @@
             </div>
           </div>
         </div>
+
+        <!-- My bookings list -->
+        <div style="margin-top:24px;background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
+          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;"><i data-lucide="list" style="width:16px;height:16px;color:#1d4ed8;"></i> รายการจองของฉัน</span>
+            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:4px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
+          </div>
+          <div id="myBookingsList" style="padding:12px 16px;max-height:420px;overflow-y:auto;">
+            <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
+          </div>
+        </div>
       </div>
 
       <!-- CCTV tab -->
@@ -293,10 +304,50 @@
   function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
   function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
 
+  var DASH_COLOR_OVERRIDE={'หอประชุมพุทธรักษา':'#92400e'};
+  var DASH_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d','#0f766e','#c2410c'];
+  function dashGetColor(n){if(DASH_COLOR_OVERRIDE[n])return DASH_COLOR_OVERRIDE[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%DASH_COLORS.length;return DASH_COLORS[h];}
+
   function fetchUserStats(uid){
-    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
+    db.collection('bookings').where('userId','==',uid).orderBy('date','desc').onSnapshot(function(snap){
       document.getElementById('bookingCount').textContent=snap.size+' รายการ';
+      var bookings=[];snap.forEach(function(d){bookings.push(Object.assign({id:d.id},d.data()));});
+      renderMyBookings(bookings);
     });
+  }
+
+  function renderMyBookings(bookings){
+    var wrap=document.getElementById('myBookingsList');
+    var empty=document.getElementById('myBookingsEmpty');
+    if(!wrap)return;
+    if(!bookings.length){
+      if(empty)empty.textContent='ยังไม่มีรายการจอง';
+      return;
+    }
+    if(empty)empty.style.display='none';
+    var now=new Date();
+    wrap.innerHTML=bookings.slice(0,20).map(function(b){
+      var ok=b.status==='approved',rej=b.status==='rejected';
+      var eDate=new Date((b.date||'')+'T'+(b.endTime||'23:59')+':00');
+      var isDone=ok&&!isNaN(eDate)&&now>eDate;
+      var color=dashGetColor(b.room||'');
+      var statusTxt=isDone?'✓ เสร็จสิ้น':ok?'✅ อนุมัติแล้ว':rej?'❌ ไม่อนุมัติ':'⏳ รอพิจารณา';
+      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':rej?'#fee2e2;color:#b91c1c':'#fef9c3;color:#b45309';
+      var dateStr='';
+      try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
+        '<div style="width:42px;height:42px;background:'+color+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}):'')+'</span>'+
+          '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').getDate():'')+'</span>'+
+        '</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:13px;font-weight:800;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
+          '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
+        '</div>'+
+        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
+      '</div>';
+    }).join('');
+    lucide.createIcons();
   }
 
   function updateNavUser(user){
@@ -320,8 +371,9 @@
   }
 
   /* ══ Public Calendar (no login required) ══ */
-  var PUB_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d'];
-  function pubGetColor(n){var i=0;for(var c=0;c<n.length;c++)i=(i+n.charCodeAt(c))%PUB_COLORS.length;return PUB_COLORS[i];}
+  var ROOM_COLOR_OVERRIDE={'หอประชุมพุทธรักษา':'#92400e','หอประชุมพุทรักษา':'#92400e'};
+  var PUB_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d','#0f766e','#c2410c'];
+  function pubGetColor(n){if(ROOM_COLOR_OVERRIDE[n])return ROOM_COLOR_OVERRIDE[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%PUB_COLORS.length;return PUB_COLORS[h];}
 
   var pubYear=new Date().getFullYear(),pubMonth=new Date().getMonth();
   var pubSelectedDate=new Date().toISOString().split('T')[0];
@@ -376,14 +428,14 @@
       var isDone=!isNaN(eDate)&&now>eDate;
       var statusTxt=isDone?'✓ เสร็จสิ้น':ok?'อนุมัติแล้ว':'รอพิจารณา';
       var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
-      return '<div style="padding:13px 15px;background:'+color+'0d;border-radius:12px;margin-bottom:10px;border-left:4px solid '+color+';">'+
+      return '<div style="padding:14px 16px;background:'+color+';border-radius:14px;margin-bottom:10px;box-shadow:0 3px 10px '+color+'55;">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:'+color+';margin-bottom:3px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:#64748b;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:#475569;background:#eff6ff;padding:4px 8px;border-radius:6px;margin-top:5px;"><b style="color:#1d4ed8;">วัตถุประสงค์:</b> '+(b.purpose||'-')+'</div>'+
+            '<div style="font-weight:800;font-size:14px;color:white;margin-bottom:5px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:rgba(255,255,255,.85);margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:rgba(255,255,255,.9);background:rgba(0,0,0,.18);padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
           '</div>'+
-          '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
+          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:rgba(255,255,255,.22);color:white;white-space:nowrap;">'+statusTxt+'</span>'+
         '</div>'+
       '</div>';
     }).join('');
