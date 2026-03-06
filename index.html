@@ -295,7 +295,7 @@
   /* ══ LINE Config ══ */
   var LINE_LOGIN_CHANNEL_ID = '2009342857';
   var LINE_CALLBACK_URL     = 'https://np-school.github.io/webapp/index.html';
-  var LINE_PROXY_URL        = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
+  var LINE_PROXY_URL        = 'https://script.google.com/macros/s/AKfycbxmXjbuTlaYJSVJqxTL8wfAjx_CeRzVUKywf9hIVKwF6gOlISewn132-yMCSo17liQG/exec';
 
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -306,7 +306,7 @@
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
-      fetchUserStats(user.uid);checkAdminAccess(user.email);loadLineStatus(user.uid);
+      fetchUserStats(user.uid);checkAdminAccess(user.email);loadLineStatus(user.uid);listenMyBookingStatus(user.uid);
     }else{
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
@@ -638,10 +638,11 @@
     var btn  = document.getElementById('lineActionBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'กำลังเชื่อมต่อ...'; }
 
-    fetch(LINE_PROXY_URL + '/exchangeCode', {
+    fetch(LINE_PROXY_URL, {
       method  : 'POST',
       headers : { 'Content-Type': 'application/json' },
       body    : JSON.stringify({
+        action      : 'exchangeCode',
         code        : code,
         redirectUri : LINE_CALLBACK_URL,
         firebaseUid : user.uid,
@@ -682,6 +683,82 @@
     s.textContent = '@keyframes toastIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes toastOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}';
     document.head.appendChild(s);
   })();
+
+
+  /* ══════════════════════════════════════════════════════
+     LINE Notification Helpers (เรียกจาก room-booking.html ไม่ได้
+     เพราะ LINE_PROXY_URL อยู่ที่นี่ — ใช้ postMessage แทน)
+     ══════════════════════════════════════════════════════ */
+
+  /* แจ้ง admin ทุกคนเมื่อมีคำขอใหม่ */
+  function notifyAdminsNewBooking(bookingData) {
+    if (!LINE_PROXY_URL || LINE_PROXY_URL.indexOf('PASTE') !== -1) return;
+    // ดึง lineUserId ของ admin ทุกคน
+    db.collection('admins').get().then(function(snap) {
+      var emails = [];
+      snap.forEach(function(d) { emails.push(d.id); });
+      if (!emails.length) return;
+      // ดึง lineUserId แต่ละคน
+      var promises = emails.map(function(email) {
+        return db.collection('users').where('email','==',email).limit(1).get()
+          .then(function(s) {
+            if (!s.empty && s.docs[0].data().lineUserId) return s.docs[0].data().lineUserId;
+            return null;
+          });
+      });
+      Promise.all(promises).then(function(uids) {
+        var adminLineUids = uids.filter(Boolean);
+        if (!adminLineUids.length) return;
+        adminLineUids.forEach(function(uid) {
+          callGAS({ action:'sendLine', lineUserId:uid, message:{
+            type:'text',
+            text:'📋 มีคำขอจองใหม่!\n\n🏫 ห้อง: '+bookingData.room+'\n📅 วันที่: '+bookingData.date+'\n⏰ เวลา: '+bookingData.startTime+' – '+bookingData.endTime+'\n👤 ผู้จอง: '+(bookingData.fullName||bookingData.userName||'-')+'\n📌 วัตถุประสงค์: '+bookingData.purpose+'\n\nกรุณาเข้าระบบ Admin เพื่อพิจารณาคำขอ',
+          }});
+        });
+      });
+    });
+  }
+
+  /* แจ้งผู้จองเมื่อสถานะเปลี่ยน (เรียกจากหน้านี้ผ่าน realtime listener) */
+  function notifyBookingOwner(booking, newStatus) {
+    if (!LINE_PROXY_URL || LINE_PROXY_URL.indexOf('PASTE') !== -1) return;
+    if (!booking.userId) return;
+    db.collection('users').doc(booking.userId).get().then(function(doc) {
+      if (!doc.exists || !doc.data().lineUserId) return;
+      var lineUid = doc.data().lineUserId;
+      var isOk = newStatus === 'approved';
+      var txt = isOk
+        ? '✅ คำขอของคุณได้รับการอนุมัติ!\n\n🏫 ห้อง: '+booking.room+'\n📅 วันที่: '+booking.date+'\n⏰ เวลา: '+booking.startTime+' – '+booking.endTime+(booking.approveNote?'\n💬 '+booking.approveNote:'')
+        : '❌ คำขอของคุณไม่ได้รับการอนุมัติ\n\n🏫 ห้อง: '+booking.room+'\n📅 วันที่: '+booking.date+(booking.rejectReason?'\n📝 เหตุผล: '+booking.rejectReason:'')+'\n\nหากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่';
+      callGAS({ action:'sendLine', lineUserId:lineUid, message:{ type:'text', text:txt } });
+    });
+  }
+
+  /* Helper เรียก GAS */
+  function callGAS(payload) {
+    fetch(LINE_PROXY_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    }).catch(function(e){ console.log('GAS notify error:', e.message); });
+  }
+
+  /* Listen สถานะ booking เปลี่ยน (เฉพาะของผู้ใช้ที่ login) */
+  var _bookingListenerCache = {};
+  function listenMyBookingStatus(uid) {
+    db.collection('bookings').where('userId','==',uid)
+      .where('status','in',['approved','rejected'])
+      .onSnapshot(function(snap) {
+        snap.docChanges().forEach(function(change) {
+          if (change.type !== 'modified') return;
+          var b = Object.assign({ id: change.doc.id }, change.doc.data());
+          var cacheKey = b.id + '_' + b.status;
+          if (_bookingListenerCache[cacheKey]) return; // แจ้งไปแล้ว
+          _bookingListenerCache[cacheKey] = true;
+          notifyBookingOwner(b, b.status);
+        });
+      });
+  }
 
   /* --- เรียก callback check ทันทีที่โหลดหน้า --- */
   handleLineCallback();
