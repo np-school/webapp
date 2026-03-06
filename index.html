@@ -301,8 +301,6 @@
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
-      // บันทึก user profile ลง Firestore ทุกครั้งที่ login
-      db.collection('users').doc(user.uid).set({email:user.email,name:user.displayName,photoURL:user.photoURL||'',lastLogin:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(function(){});
     }else{
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
@@ -618,6 +616,13 @@
         userName: u.displayName,
       }, function(data) {
         if (data.lineUserId) {
+          // บันทึก lineUserId ลง Firestore โดยตรงจากฝั่ง client
+          db.collection('users').doc(u.uid).set({
+            lineUserId: data.lineUserId,
+            lineName: data.lineName||'',
+            email: u.email, name: u.displayName,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true}).catch(function(e){console.log('save lineUserId error:',e);});
           lineRender(true, data.lineName||'');
           lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
         } else {
