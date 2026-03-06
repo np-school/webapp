@@ -92,7 +92,7 @@
           <i data-lucide="bell" style="width:14px;height:14px;"></i> ระบบสารสนเทศและบริการออนไลน์
         </div>
         <h2 style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:16px;">
-          NP NEXT<br><span style="color:#1d4ed8;font-style:italic;">Empowering Our School through</span>
+          ยกระดับบริการ<br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
         </h2>
         <p style="font-size:16px;color:#475569;line-height:1.75;margin-bottom:24px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
         <button onclick="handleLogin()" style="padding:14px 28px;background:#1d4ed8;color:white;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 16px 24px -4px rgba(29,78,216,.35);">
@@ -111,7 +111,7 @@
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
       <div style="width:4px;height:28px;background:#1d4ed8;border-radius:4px;"></div>
       <h3 style="font-size:20px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h3>
-      <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">อัพเดตล่าสุด</span>
+      <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">ดูได้โดยไม่ต้องล็อกอิน</span>
     </div>
 
     <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
@@ -219,6 +219,23 @@
           <h3 id="welcomeText" style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;">ยินดีต้อนรับ</h3>
           <p style="color:#64748b;font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
         </div>
+        <!-- LINE Connect Card -->
+        <div id="lineConnectCard" style="margin-bottom:20px;background:linear-gradient(135deg,#06C755 0%,#00a541 100%);border-radius:20px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 8px 20px rgba(6,199,85,.25);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="28" height="28" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            </div>
+            <div>
+              <div id="lineStatusText" style="font-size:15px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
+              <div id="lineStatusSub" style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
+            </div>
+          </div>
+          <button id="lineActionBtn" onclick="handleLineConnect()" style="padding:10px 22px;background:white;color:#06C755;font-weight:800;border-radius:12px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:7px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);white-space:nowrap;">
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            เชื่อมต่อ LINE
+          </button>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
           <div style="background:#eff6ff;padding:24px;border-radius:24px;border:1px solid #dbeafe;display:flex;align-items:center;gap:16px;">
             <div style="width:46px;height:46px;background:#1d4ed8;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -275,6 +292,11 @@
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   var auth=firebase.auth(),db=firebase.firestore();
 
+  /* ══ LINE Config ══ */
+  var LINE_LOGIN_CHANNEL_ID = '2009342857';
+  var LINE_CALLBACK_URL     = 'https://np-school.github.io/webapp/index.html';
+  var LINE_PROXY_URL        = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
+
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
 
@@ -284,7 +306,7 @@
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
-      fetchUserStats(user.uid);checkAdminAccess(user.email);
+      fetchUserStats(user.uid);checkAdminAccess(user.email);loadLineStatus(user.uid);
     }else{
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
@@ -515,6 +537,154 @@
     });
   }
   initPublicCalendar();
+
+  /* ══════════════════════════════════════════
+     LINE Login & Connection Logic
+     ══════════════════════════════════════════ */
+
+  var _lineUid = null; // lineUserId ที่โหลดจาก Firestore
+
+  /* --- หลัง login Google โหลดสถานะ LINE --- */
+  function loadLineStatus(uid) {
+    db.collection('users').doc(uid).get().then(function(doc) {
+      if (doc.exists && doc.data().lineUserId) {
+        _lineUid = doc.data().lineUserId;
+        renderLineCard(true, doc.data().lineName || '');
+      } else {
+        _lineUid = null;
+        renderLineCard(false, '');
+      }
+    }).catch(function() { renderLineCard(false, ''); });
+  }
+
+  /* --- แสดงสถานะการเชื่อมต่อ LINE --- */
+  function renderLineCard(connected, lineName) {
+    var card  = document.getElementById('lineConnectCard');
+    var txt   = document.getElementById('lineStatusText');
+    var sub   = document.getElementById('lineStatusSub');
+    var btn   = document.getElementById('lineActionBtn');
+    if (!card) return;
+    if (connected) {
+      card.style.background = 'linear-gradient(135deg,#06C755 0%,#00a541 100%)';
+      txt.textContent  = '✅ เชื่อมต่อ LINE แล้ว' + (lineName ? ' · ' + lineName : '');
+      sub.textContent  = 'คุณจะได้รับแจ้งเตือนผ่าน LINE อัตโนมัติ';
+      btn.textContent  = 'ยกเลิกการเชื่อมต่อ';
+      btn.onclick      = handleLineDisconnect;
+      btn.style.color  = '#dc2626';
+    } else {
+      card.style.background = 'linear-gradient(135deg,#06C755 0%,#00a541 100%)';
+      txt.textContent  = 'เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน';
+      sub.textContent  = 'รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที';
+      btn.innerHTML    = '<svg width="16" height="16" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg> เชื่อมต่อ LINE';
+      btn.onclick      = handleLineConnect;
+      btn.style.color  = '#06C755';
+    }
+  }
+
+  /* --- กดปุ่ม "เชื่อมต่อ LINE" → redirect LINE Login --- */
+  function handleLineConnect() {
+    var state = Math.random().toString(36).substring(2);
+    sessionStorage.setItem('line_state', state);
+    var params = new URLSearchParams({
+      response_type : 'code',
+      client_id     : LINE_LOGIN_CHANNEL_ID,
+      redirect_uri  : LINE_CALLBACK_URL,
+      state         : state,
+      scope         : 'profile openid',
+      nonce         : Math.random().toString(36).substring(2),
+    });
+    window.location.href = 'https://access.line.me/oauth2/v2.1/authorize?' + params.toString();
+  }
+
+  /* --- ยกเลิกการเชื่อมต่อ LINE --- */
+  function handleLineDisconnect() {
+    if (!confirm('ต้องการยกเลิกการเชื่อมต่อ LINE ใช่หรือไม่?')) return;
+    var user = auth.currentUser;
+    if (!user) return;
+    db.collection('users').doc(user.uid).update({
+      lineUserId : firebase.firestore.FieldValue.delete(),
+      lineName   : firebase.firestore.FieldValue.delete(),
+    }).then(function() {
+      _lineUid = null;
+      renderLineCard(false, '');
+      showToastLine('ยกเลิกการเชื่อมต่อ LINE แล้ว', 'warn');
+    });
+  }
+
+  /* --- จัดการ LINE Callback (รับ code จาก URL) --- */
+  function handleLineCallback() {
+    var params = new URLSearchParams(window.location.search);
+    var code   = params.get('code');
+    var state  = params.get('state');
+    var saved  = sessionStorage.getItem('line_state');
+    if (!code || !state || state !== saved) return;
+
+    // ลบ query string ออกจาก URL
+    window.history.replaceState({}, '', window.location.pathname);
+    sessionStorage.removeItem('line_state');
+
+    // รอให้ auth พร้อมก่อน
+    var waitAuth = setInterval(function() {
+      var user = auth.currentUser;
+      if (!user) return;
+      clearInterval(waitAuth);
+      exchangeLineCode(code, user);
+    }, 300);
+  }
+
+  /* --- แลก code → lineUserId ผ่าน Cloud Function --- */
+  function exchangeLineCode(code, user) {
+    var card = document.getElementById('lineConnectCard');
+    var btn  = document.getElementById('lineActionBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'กำลังเชื่อมต่อ...'; }
+
+    fetch(LINE_PROXY_URL + '/exchangeCode', {
+      method  : 'POST',
+      headers : { 'Content-Type': 'application/json' },
+      body    : JSON.stringify({
+        code        : code,
+        redirectUri : LINE_CALLBACK_URL,
+        firebaseUid : user.uid,
+        userEmail   : user.email,
+        userName    : user.displayName,
+      }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.lineUserId) {
+        _lineUid = data.lineUserId;
+        renderLineCard(true, data.lineName || '');
+        showToastLine('เชื่อมต่อ LINE สำเร็จ ✓', 'ok');
+      } else {
+        renderLineCard(false, '');
+        showToastLine('เชื่อมต่อไม่สำเร็จ: ' + (data.error || 'ไม่ทราบสาเหตุ'), 'error');
+      }
+    })
+    .catch(function(err) {
+      renderLineCard(false, '');
+      showToastLine('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่', 'error');
+    });
+  }
+
+  /* --- Toast สำหรับ LINE --- */
+  function showToastLine(msg, type) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;font-family:Sarabun,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;';
+    t.style.background = type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#06C755';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.animation='toastOut .3s ease forwards'; setTimeout(function(){ t.remove(); }, 300); }, 3500);
+  }
+
+  /* เพิ่ม keyframe สำหรับ toast LINE */
+  (function(){
+    var s = document.createElement('style');
+    s.textContent = '@keyframes toastIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes toastOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}';
+    document.head.appendChild(s);
+  })();
+
+  /* --- เรียก callback check ทันทีที่โหลดหน้า --- */
+  handleLineCallback();
 
   lucide.createIcons();
 </script>

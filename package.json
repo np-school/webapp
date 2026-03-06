@@ -1,0 +1,15 @@
+{
+  "name": "np-webapp-functions",
+  "description": "LINE Notification Cloud Functions - โรงเรียนหนองกี่พิทยาคม",
+  "scripts": {
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": { "node": "18" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5"
+  }
+}
