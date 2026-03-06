@@ -609,10 +609,10 @@
     list.innerHTML=dayBookings.map(function(b){
       var ok=b.status==='approved';
       var now=new Date();var eDate=new Date(dateKey+'T'+b.endTime+':00');var isDone=!isNaN(eDate)&&now>eDate;var fileBtn=b.hasLayout?'<button onclick="openFileView(\''+b.id+'\')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;"><span style="font-size:11px;">📎</span> ดูไฟล์แนบ</button>':'';
-      return'<div style="padding:13px 15px;background:#f8fafc;border-radius:12px;margin-bottom:10px;border-left:4px solid '+(isDone?'#94a3b8':ok?'#22c55e':'#f59e0b')+';">'+
+      var bColor=getRoomColor(b.room||'');return'<div style="padding:13px 15px;background:'+bColor+'0d;border-radius:12px;margin-bottom:10px;border-left:4px solid '+bColor+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:#1e3a8a;margin-bottom:3px;">'+b.room+'</div>'+
+            '<div style="font-weight:800;font-size:14px;color:'+bColor+';margin-bottom:3px;">'+b.room+'</div>'+
             '<div style="font-size:11px;color:#64748b;margin-bottom:2px;">⏰ '+b.startTime+' – '+b.endTime+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
             '<div style="font-size:11px;color:#475569;background:#eff6ff;padding:4px 8px;border-radius:6px;margin-top:5px;"><b style="color:#1d4ed8;">วัตถุประสงค์:</b> '+b.purpose+'</div>'+
             (b.attendees?'<div style="font-size:10px;color:#94a3b8;margin-top:3px;">ผู้เข้าร่วม '+b.attendees+' คน</div>':'')+
@@ -647,10 +647,10 @@
           var badgeLabel=ok?'อนุมัติ':rej?'ไม่อนุมัติ':'รอตรวจ';
           var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
           var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(\''+b.id+'\')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
-          html+='<tr onclick="viewDate(\''+b.date+'\')">'+
+          html+='<tr onclick="viewDate(\''+b.date+'\')" style="border-left:3px solid '+roomColor+';">'+
             '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
             '<td style="font-weight:700;">'+b.date+'</td>'+
-            '<td style="color:'+roomColor+';font-weight:700;">'+b.room+'</td>'+
+            '<td><span style="display:inline-flex;align-items:center;gap:4px;background:'+roomColor+'18;color:'+roomColor+';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;">'+b.room+'</span></td>'+
             '<td>'+(b.startTime||'-')+'-'+(b.endTime||'-')+'</td>'+
             '<td style="font-size:11px;">'+(b.fullName||b.userName||'-')+'</td>'+
             '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+

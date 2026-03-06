@@ -412,16 +412,32 @@
   function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;}
   function handleRoomImage(input){
     var file=input.files[0];if(!file)return;
-    if(file.size>5*1024*1024){showToast('ไฟล์ใหญ่เกิน 5MB','warn');input.value='';return;}
+    if(file.size>10*1024*1024){showToast('ไฟล์ใหญ่เกิน 10MB','warn');input.value='';return;}
     var reader=new FileReader();
     reader.onload=function(ev){
-      roomImageDataURL=ev.target.result;
-      document.getElementById('roomPreviewImg').src=ev.target.result;
-      document.getElementById('roomFileName').textContent=file.name;
-      document.getElementById('roomFileSize').textContent=(file.size/1024).toFixed(1)+' KB';
-      document.getElementById('roomUploadDefault').style.display='none';
-      document.getElementById('roomUploadPreview').style.display='block';
-      document.getElementById('roomUploadArea').classList.add('has-file');
+      var img=new Image();
+      img.onload=function(){
+        // Compress: max 800px wide, JPEG quality 0.72 → ≈ 200-400KB base64 (~280KB raw)
+        var MAX=800,q=0.72;
+        var w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        var canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=canvas.toDataURL('image/jpeg',q);
+        // Safety: if still >700KB base64 (~525KB binary), lower quality further
+        var attempts=0;
+        while(dataUrl.length>700000&&attempts<4){q-=0.1;dataUrl=canvas.toDataURL('image/jpeg',q);attempts++;}
+        roomImageDataURL=dataUrl;
+        var kb=(dataUrl.length*0.75/1024).toFixed(0);
+        document.getElementById('roomPreviewImg').src=dataUrl;
+        document.getElementById('roomFileName').textContent=file.name+' (บีบอัดแล้ว)';
+        document.getElementById('roomFileSize').textContent=kb+' KB · '+w+'×'+h+'px';
+        document.getElementById('roomUploadDefault').style.display='none';
+        document.getElementById('roomUploadPreview').style.display='block';
+        document.getElementById('roomUploadArea').classList.add('has-file');
+      };
+      img.src=ev.target.result;
     };
     reader.readAsDataURL(file);
   }
