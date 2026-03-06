@@ -830,7 +830,7 @@
     btn.disabled=true;btn.textContent='กำลังบันทึก...';
     var editId=document.getElementById('editBookingId').value;
     var data={
-      userId:currentUser.uid,userName:currentUser.displayName,userPhoto:currentUser.photoURL,
+      userId:currentUser.uid,userName:currentUser.displayName,userPhoto:currentUser.photoURL,userLineId:currentUser._lineUserId||null,
       fullName:document.getElementById('fullName').value,position:document.getElementById('position').value,
       attendees:parseInt(document.getElementById('attendees').value)||0,
       room:document.getElementById('roomSelect').value,date:document.getElementById('bookingDate').value,
@@ -983,18 +983,18 @@
 
   function notifyAdminsViaGAS(bk) {
     if (!GAS_LINE_URL) return;
-    // ดึง lineUserId จาก admins collection โดยตรง
     db.collection('admins').get().then(function(snap) {
       snap.forEach(function(doc) {
         var lineUid = doc.data().lineUserId;
         if (!lineUid) return;
-        var msg = 'มีคำขอจองใหม่! ห้อง:'+bk.room+' วัน:'+bk.date+' เวลา:'+bk.startTime+'-'+bk.endTime+' ผู้จอง:'+(bk.fullName||'-');
+        var msg = 'มีคำขอจองใหม่!'
+          +'\nห้อง: '+bk.room
+          +'\nวันที่: '+bk.date
+          +'\nเวลา: '+bk.startTime+' - '+bk.endTime
+          +'\nผู้จอง: '+(bk.fullName||'-')
+          +'\nวัตถุประสงค์: '+(bk.purpose||'-')
+          +'\nกรุณาเข้าระบบ Admin เพื่อพิจารณา';
         fetch(GAS_LINE_URL+'?action=sendLine&lineUserId='+encodeURIComponent(lineUid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
       });
     }).catch(function(){});
   }
-
-  lucide.createIcons();
-</script>
-</body>
-</html>
