@@ -983,17 +983,13 @@
 
   function notifyAdminsViaGAS(bk) {
     if (!GAS_LINE_URL) return;
+    // ดึง lineUserId จาก admins collection โดยตรง
     db.collection('admins').get().then(function(snap) {
-      var emails = [];
-      snap.forEach(function(d) { emails.push(d.id); });
-      Promise.all(emails.map(function(email) {
-        return db.collection('users').where('email','==',email).limit(1).get()
-          .then(function(s) { return (!s.empty&&s.docs[0].data().lineUserId)?s.docs[0].data().lineUserId:null; });
-      })).then(function(uids) {
-        uids.filter(Boolean).forEach(function(uid) {
-          var msg='มีคำขอจองใหม่! ห้อง:'+bk.room+' วัน:'+bk.date+' เวลา:'+bk.startTime+'-'+bk.endTime+' ผู้จอง:'+(bk.fullName||'-');
-          fetch(GAS_LINE_URL+'?action=sendLine&lineUserId='+encodeURIComponent(uid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
-        });
+      snap.forEach(function(doc) {
+        var lineUid = doc.data().lineUserId;
+        if (!lineUid) return;
+        var msg = 'มีคำขอจองใหม่! ห้อง:'+bk.room+' วัน:'+bk.date+' เวลา:'+bk.startTime+'-'+bk.endTime+' ผู้จอง:'+(bk.fullName||'-');
+        fetch(GAS_LINE_URL+'?action=sendLine&lineUserId='+encodeURIComponent(lineUid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
       });
     }).catch(function(){});
   }

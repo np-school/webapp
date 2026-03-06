@@ -617,12 +617,20 @@
       }, function(data) {
         if (data.lineUserId) {
           // บันทึก lineUserId ลง Firestore โดยตรงจากฝั่ง client
-          db.collection('users').doc(u.uid).set({
-            lineUserId: data.lineUserId,
-            lineName: data.lineName||'',
+          var lineData = { lineUserId: data.lineUserId, lineName: data.lineName||'',
             email: u.email, name: u.displayName,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true}).catch(function(e){console.log('save lineUserId error:',e);});
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+          // บันทึกลง users
+          db.collection('users').doc(u.uid).set(lineData,{merge:true})
+            .catch(function(e){console.log('save users error:',e);});
+          // ถ้าเป็น admin ให้บันทึก lineUserId ลง admins ด้วย
+          db.collection('admins').doc(u.email.toLowerCase()).get().then(function(ad){
+            if(ad.exists){
+              db.collection('admins').doc(u.email.toLowerCase())
+                .set({lineUserId:data.lineUserId,lineName:data.lineName||''},
+                     {merge:true}).catch(function(){});
+            }
+          });
           lineRender(true, data.lineName||'');
           lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
         } else {
