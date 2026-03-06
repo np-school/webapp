@@ -104,7 +104,7 @@
 </head>
 <body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
 
-<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
+<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...<br><small id="dbgMsg" style="font-size:11px;color:#94a3b8;"></small></p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Navbar -->
@@ -362,7 +362,7 @@
   var auth=firebase.auth(),db=firebase.firestore();
   if(!Promise.prototype.finally){Promise.prototype.finally=function(fn){return this.then(function(v){return Promise.resolve(fn()).then(function(){return v;});},function(e){return Promise.resolve(fn()).then(function(){throw e;});});};}
 
-  var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false,currentUserLineId=null;
+  var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false;
   var viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth();
   var selectedDate=new Date().toISOString().split('T')[0];
   var selectedFile=null,selectedFileDataURL=null;
@@ -380,20 +380,14 @@
 
   /* ── Auth ── */
   auth.onAuthStateChanged(function(user){
+    document.getElementById('dbgMsg').textContent='auth: '+(user?user.email:'null');
     try{
       currentUser=user;
       if(user&&!user.isAnonymous){
         try{updateNavUser(user);}catch(e){console.warn('updateNavUser:',e);}
         try{updateSidebarProfile(user);}catch(e){console.warn('updateSidebarProfile:',e);}
         try{checkAdminAccess(user.email);}catch(e){console.warn('checkAdminAccess:',e);}
-        if(!listenerStarted){
-        listenerStarted=true;
-        // ดึง lineUserId ของ user ปัจจุบัน
-        db.collection('users').doc(user.uid).get().then(function(doc){
-          if(doc.exists&&doc.data().lineUserId){currentUserLineId=doc.data().lineUserId;}
-        }).catch(function(){});
-        initData();
-      }
+        if(!listenerStarted){listenerStarted=true;initData();}
         else{hideLoading();}
       }else{
         window.location.href='index.html';
@@ -798,6 +792,7 @@
   }
 
   function initData(){
+    document.getElementById('dbgMsg').textContent='initData started...';
     function safeRun(fn,label){try{fn();}catch(e){console.error(label+':',e);}}
     function loadRooms(){
       return db.collection('rooms').get().then(function(snap){
@@ -815,7 +810,9 @@
     }
     Promise.all([loadRooms(),loadBookings()])
       .catch(function(e){console.error('init:',e);})
-      .finally(function(){hideLoading();safeRun(function(){lucide.createIcons();},'lucide');});
+      .finally(function(){
+      document.getElementById('dbgMsg').textContent='finally called';
+      hideLoading();safeRun(function(){lucide.createIcons();},'lucide');});
     setTimeout(function(){
       db.collection('bookings').onSnapshot(function(snap){safeRun(function(){processBookings(snap);},'rt');},function(e){});
       db.collection('rooms').onSnapshot(function(snap){
@@ -837,7 +834,7 @@
     btn.disabled=true;btn.textContent='กำลังบันทึก...';
     var editId=document.getElementById('editBookingId').value;
     var data={
-      userId:currentUser.uid,userName:currentUser.displayName,userPhoto:currentUser.photoURL||null,userLineId:currentUserLineId,
+      userId:currentUser.uid,userName:currentUser.displayName,userPhoto:currentUser.photoURL,userLineId:currentUser._lineUserId||null,
       fullName:document.getElementById('fullName').value,position:document.getElementById('position').value,
       attendees:parseInt(document.getElementById('attendees').value)||0,
       room:document.getElementById('roomSelect').value,date:document.getElementById('bookingDate').value,
