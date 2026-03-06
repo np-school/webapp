@@ -681,24 +681,36 @@
   }
 
   function updateDayView(dateKey,dayBookings){
-    var list=document.getElementById('todayBookingsList');
-    document.getElementById('selectedDateLabel').textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
-    if(!dayBookings||!dayBookings.length){list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';return;}
+    var list=document.getElementById('dayList');
+    var label=document.getElementById('dayLabel');
+    if(!list)return;
+    if(label)label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    if(!dayBookings||!dayBookings.length){
+      list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
+      return;
+    }
+    var now=new Date();
     list.innerHTML=dayBookings.map(function(b){
       var ok=b.status==='approved';
-      var now=new Date();var eDate=new Date(dateKey+'T'+b.endTime+':00');var isDone=!isNaN(eDate)&&now>eDate;var fileBtn=b.hasLayout?'<button onclick="openFileView(\''+b.id+'\')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;"><span style="font-size:11px;">📎</span> ดูไฟล์แนบ</button>':'';
-      var bPastel=getRoomPastel(b.room||'');var bColor=bPastel.accent;return'<div style="padding:14px 16px;background:'+bPastel.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+bPastel.border+';">'++
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
-          '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:'+bPastel.text+';margin-bottom:5px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:'+bPastel.text+'99;margin-bottom:2px;">⏰ '+b.startTime+' – '+b.endTime+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:'+bPastel.text+';background:'+bPastel.accent+'22;padding:4px 8px;border-radius:6px;margin-top:5px;"><b style="color:rgba(255,255,255,.9);">วัตถุประสงค์:</b> '+b.purpose+'</div>'+
-            (b.attendees?'<div style="font-size:10px;color:'+bPastel.text+'99;margin-top:3px;">ผู้เข้าร่วม '+b.attendees+' คน</div>':'')+
-            fileBtn+
-          '</div>'+
-          '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;'+'background:'+bPastel.accent+';color:white;'+'">'+(isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ')+'</span>'+
-        '</div>'+
-      '</div>';
+      var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
+      var isDone=!isNaN(eDate)&&now>eDate;
+      var p=getRoomPastel(b.room||'');
+      var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
+      var fileBtn='';
+      if(b.hasLayout){fileBtn='<button onclick="openFileView(''+b.id+'')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>';}
+      var parts=[];
+      parts.push('<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">');
+      parts.push('<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">');
+      parts.push('<div style="flex:1;min-width:0;">');
+      parts.push('<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>');
+      parts.push('<div style="font-size:11px;color:'+p.text+';opacity:.75;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' · 👤 '+(b.fullName||b.userName||'-')+'</div>');
+      parts.push('<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'22;padding:4px 8px;border-radius:6px;margin-top:5px;">📌 '+(b.purpose||'-')+'</div>');
+      if(b.attendees)parts.push('<div style="font-size:10px;color:'+p.text+';opacity:.7;margin-top:3px;">👥 '+b.attendees+' คน</div>');
+      if(fileBtn)parts.push(fileBtn);
+      parts.push('</div>');
+      parts.push('<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+p.accent+';color:white;">'+statusTxt+'</span>');
+      parts.push('</div></div>');
+      return parts.join('');
     }).join('');
   }
 
@@ -752,8 +764,8 @@
         var roomPastel=getRoomPastel(b.room||'');var badgeCls=ok?'badge-g':rej?'badge-r':'badge-a';
         var badgeLabel=ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
         var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
-        var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(\''+b.id+'\')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
-        tbl+='<tr onclick="viewDate(\''+b.date+'\')" style="border-left:3px solid '+roomPastel.accent+';">'+
+        var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(''+b.id+'')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
+        tbl+='<tr onclick="viewDate(''+b.date+'')" style="border-left:3px solid '+roomPastel.accent+';">'+
           '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
           '<td style="font-weight:700;">'+b.date+'</td>'+
           '<td><span style="display:inline-flex;align-items:center;gap:4px;background:'+roomPastel.bg+';color:'+roomPastel.text+';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid '+roomPastel.border+';">'+b.room+'</span></td>'+
@@ -762,7 +774,7 @@
           '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
           '<td style="text-align:center;"><span class="'+badgeCls+'">'+badgeLabel+'</span></td>'+
           '<td style="text-align:center;">'+fileBtn+'</td>'+
-          '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(\''+b.id+'\')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
+          '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(''+b.id+'')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
         '</tr>';
         if(b.date===today){if(ok)app++;else if(!rej)pen++;}
       });
@@ -784,30 +796,25 @@
         allRooms=[];
         snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
         allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
-        safeRun(renderRoomTabs,'renderRoomTabs');
-        safeRun(renderRoomBanner,'renderRoomBanner');
-      }).catch(function(e){console.error('loadRooms:',e);});
+        safeRun(renderRoomTabs,'tabs');
+        safeRun(renderRoomBanner,'banner');
+      }).catch(function(e){console.error('rooms:',e);});
     }
     function loadBookings(){
       return db.collection('bookings').get().then(function(snap){
-        safeRun(function(){processBookings(snap);},'processBookings');
-      }).catch(function(e){console.error('loadBookings:',e);});
+        safeRun(function(){processBookings(snap);},'bookings');
+      }).catch(function(e){console.error('bookings:',e);});
     }
     Promise.all([loadRooms(),loadBookings()])
-      .catch(function(e){console.error('Promise.all:',e);})
+      .catch(function(e){console.error('init:',e);})
       .finally(function(){hideLoading();safeRun(function(){lucide.createIcons();},'lucide');});
     setTimeout(function(){
-      db.collection('bookings').onSnapshot(
-        function(snap){safeRun(function(){processBookings(snap);},'rt-bookings');},
-        function(e){console.warn('bookings-rt:',e.message);}
-      );
-      db.collection('rooms').onSnapshot(
-        function(snap){
-          allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
-          allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
-          safeRun(renderRoomTabs,'rt-tabs');safeRun(renderRoomBanner,'rt-banner');
-        },function(e){console.warn('rooms-rt:',e.message);}
-      );
+      db.collection('bookings').onSnapshot(function(snap){safeRun(function(){processBookings(snap);},'rt');},function(e){});
+      db.collection('rooms').onSnapshot(function(snap){
+        allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+        allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+        safeRun(renderRoomTabs,'rt-tabs');safeRun(renderRoomBanner,'rt-banner');
+      },function(e){});
     },2000);
   }
 
