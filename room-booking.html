@@ -360,6 +360,9 @@
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   var auth=firebase.auth(),db=firebase.firestore();
+  // finally polyfill for older browsers
+  if(!Promise.prototype.finally){Promise.prototype.finally=function(fn){return this.then(function(v){return Promise.resolve(fn()).then(function(){return v;});},function(e){return Promise.resolve(fn()).then(function(){throw e;});});};}
+
 
   var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false;
   var viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth();
@@ -777,33 +780,49 @@
   }
 
   function initData(){
-    // ใช้ get() + Promise.all เพื่อให้ hideLoading() เรียกแน่นอน ไม่ขึ้นกับ Security Rules
-    var roomsP=db.collection('rooms').get().then(function(snap){
-      allRooms=[];
-      snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
-      allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
-      renderRoomTabs();
-      renderRoomBanner();
-    });
-    var bookingsP=db.collection('bookings').get().then(function(snap){
-      processBookings(snap);
-    });
-    Promise.all([roomsP,bookingsP]).then(function(){
-      hideLoading();
-    }).catch(function(err){
-      console.error('initData error:',err);
-      hideLoading();
-      showToast('โหลดข้อมูลไม่สำเร็จ: '+err.message,'error');
-    });
-    // เปิด realtime listener หลังโหลดครั้งแรกเสร็จ
-    setTimeout(function(){
-      db.collection('bookings').onSnapshot(function(snap){processBookings(snap);},function(e){console.warn('bookings listener:',e.message);});
-      db.collection('rooms').onSnapshot(function(snap){
-        allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+    // ทุก step ครอบด้วย try-catch เพื่อให้ hideLoading() ถูกเรียกเสมอ
+    function safeRun(fn,label){try{fn();}catch(e){console.error(label+':',e);}}
+
+    function loadRooms(){
+      return db.collection('rooms').get().then(function(snap){
+        allRooms=[];
+        snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
         allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
-        renderRoomTabs();renderRoomBanner();
-      },function(e){console.warn('rooms listener:',e.message);});
-    },1500);
+        safeRun(renderRoomTabs,'renderRoomTabs');
+        safeRun(renderRoomBanner,'renderRoomBanner');
+      }).catch(function(e){console.error('loadRooms:',e);});
+    }
+
+    function loadBookings(){
+      return db.collection('bookings').get().then(function(snap){
+        safeRun(function(){processBookings(snap);},'processBookings');
+      }).catch(function(e){console.error('loadBookings:',e);});
+    }
+
+    Promise.all([loadRooms(), loadBookings()])
+      .catch(function(e){console.error('Promise.all:',e);})
+      .finally(function(){
+        hideLoading();
+        safeRun(function(){lucide.createIcons();},'lucide');
+      });
+
+    // realtime updates หลังโหลดเสร็จ
+    setTimeout(function(){
+      db.collection('bookings').onSnapshot(
+        function(snap){safeRun(function(){processBookings(snap);},'rt-bookings');},
+        function(e){console.warn('bookings-rt:',e.message);}
+      );
+      db.collection('rooms').onSnapshot(
+        function(snap){
+          allRooms=[];
+          snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+          allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+          safeRun(renderRoomTabs,'rt-tabs');
+          safeRun(renderRoomBanner,'rt-banner');
+        },
+        function(e){console.warn('rooms-rt:',e.message);}
+      );
+    },2000);
   }
 
   function viewDate(d){var p=d.split('-');viewYear=+p[0];viewMonth=+p[1]-1;selectedDate=d;renderCalendar();updateDayView(d,getFilteredBookings(d));}
