@@ -12,7 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;}
+    #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     /* Sidebar */
@@ -104,7 +104,7 @@
 </head>
 <body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
 
-<div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
+<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Navbar -->
@@ -124,7 +124,7 @@
   </div>
 </nav>
 
-<div id="mainContent" style="display:none;display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
+<div id="mainContent" style="display:none;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
 
   <!-- Sidebar -->
   <div class="sidebar-wrap" id="sidebar">
@@ -374,7 +374,12 @@
 
   /* ── Toast ── */
   function showToast(msg,type){var t=document.createElement('div');t.className='toast';t.style.background=type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('hide');setTimeout(function(){t.remove();},300);},3500);}
-  function hideLoading(){document.getElementById('loadingOverlay').style.display='none';document.getElementById('mainContent').style.display='flex';}
+  function hideLoading(){
+    var ov=document.getElementById('loadingOverlay');
+    var mc=document.getElementById('mainContent');
+    if(ov){ov.style.setProperty('display','none','important');}
+    if(mc){mc.style.setProperty('display','flex','important');}
+  }
   // Safety: force-hide loading after 8s in case of Firestore error
   setTimeout(function(){var ov=document.getElementById('loadingOverlay');if(ov&&ov.style.display!=='none'){hideLoading();showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ','warn');}},8000);
 
