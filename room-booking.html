@@ -360,9 +360,7 @@
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   var auth=firebase.auth(),db=firebase.firestore();
-  // finally polyfill for older browsers
   if(!Promise.prototype.finally){Promise.prototype.finally=function(fn){return this.then(function(v){return Promise.resolve(fn()).then(function(){return v;});},function(e){return Promise.resolve(fn()).then(function(){throw e;});});};}
-
 
   var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false;
   var viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth();
@@ -689,7 +687,7 @@
     list.innerHTML=dayBookings.map(function(b){
       var ok=b.status==='approved';
       var now=new Date();var eDate=new Date(dateKey+'T'+b.endTime+':00');var isDone=!isNaN(eDate)&&now>eDate;var fileBtn=b.hasLayout?'<button onclick="openFileView(\''+b.id+'\')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;"><span style="font-size:11px;">📎</span> ดูไฟล์แนบ</button>':'';
-      var bPastel=getRoomPastel(b.room||'');var bColor=bPastel.accent;return'<div style="padding:14px 16px;background:'+bPastel.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+bPastel.border+';">'++
+      var bPastel=getRoomPastel(b.room||'');var bColor=bPastel.accent;return'<div style="padding:14px 16px;background:'+bPastel.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+bPastel.border+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
             '<div style="font-weight:800;font-size:14px;color:'+bPastel.text+';margin-bottom:5px;">'+b.room+'</div>'+
@@ -780,7 +778,6 @@
   }
 
   function initData(){
-    // ทุก step ครอบด้วย try-catch เพื่อให้ hideLoading() ถูกเรียกเสมอ
     function safeRun(fn,label){try{fn();}catch(e){console.error(label+':',e);}}
 
     function loadRooms(){
@@ -806,7 +803,6 @@
         safeRun(function(){lucide.createIcons();},'lucide');
       });
 
-    // realtime updates หลังโหลดเสร็จ
     setTimeout(function(){
       db.collection('bookings').onSnapshot(
         function(snap){safeRun(function(){processBookings(snap);},'rt-bookings');},
