@@ -381,14 +381,14 @@
           +'\nวันที่: '+(b.date||'-')
           +'\nเวลา: '+(b.startTime||'-')+' - '+(b.endTime||'-')
           +(note?'\nหมายเหตุ: '+note:'')
-          +'\nโรงเรียนหนองกี่พิทยาคม';notifyLine(b.userId,msg);});}).catch(function(e){showToast(e.message,'error');});}
+          +'\nโรงเรียนหนองกี่พิทยาคม';notifyLine(b.userLineId||null,msg);});}).catch(function(e){showToast(e.message,'error');});}
 
   function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
   function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();var msg='❌ คำขอของคุณไม่ได้รับอนุมัติ'
           +'\nห้อง: '+(b.room||'-')
           +'\nวันที่: '+(b.date||'-')
           +'\nเหตุผล: '+r
-          +'\nหากมีข้อสงสัยติดต่อเจ้าหน้าที่';notifyLine(b.userId,msg);});}).catch(function(e){showToast(e.message,'error');});}
+          +'\nหากมีข้อสงสัยติดต่อเจ้าหน้าที่';notifyLine(b.userLineId||null,msg);});}).catch(function(e){showToast(e.message,'error');});}
 
   function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
   function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
@@ -500,14 +500,10 @@
     closeSidebar();
   }
 
-  function notifyLine(userId,msg){
-    // ดึง lineUserId จาก users collection
-    if(!GAS||!userId)return;
-    db.collection('users').doc(userId).get().then(function(doc){
-      var lineUid = doc.exists?doc.data().lineUserId:null;
-      if(!lineUid)return;
-      fetch(GAS+'?action=sendLine&lineUserId='+encodeURIComponent(lineUid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
-    }).catch(function(){});
+  function notifyLine(lineUserId,msg){
+    // ส่ง LINE โดยตรงด้วย lineUserId ที่เก็บไว้ใน booking
+    if(!GAS||!lineUserId)return;
+    fetch(GAS+'?action=sendLine&lineUserId='+encodeURIComponent(lineUserId)+'&msg='+encodeURIComponent(msg)).catch(function(){});
   }
 
   lucide.createIcons();

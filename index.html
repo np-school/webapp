@@ -652,14 +652,14 @@
         var k = b.id+'_'+b.status;
         if (_lnCache[k]) return;
         _lnCache[k] = true;
-        db.collection('users').doc(uid).get().then(function(doc){
-          if (!doc.exists||!doc.data().lineUserId) return;
-          var ok = b.status==='approved';
-          var msg = (ok?'\u2705 \u0e04\u0e33\u0e02\u0e2d\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34\u0e41\u0e25\u0e49\u0e27!':'\u274c \u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34')+
-            ' \u0e2b\u0e49\u0e2d\u0e07:'+b.room+' \u0e27\u0e31\u0e19:'+b.date+
-            ((!ok&&b.rejectReason)?' \u0e40\u0e2b\u0e15\u0e38\u0e1c\u0e25:'+b.rejectReason:'');
-          gasGet({ action:'sendLine', lineUserId:doc.data().lineUserId, msg:msg }, function(){});
-        });
+        // ดึง lineUserId จาก booking โดยตรง (บันทึกไว้ตอนจอง)
+        var lineUid = b.userLineId || null;
+        if (!lineUid) return;
+        var ok = b.status==='approved';
+        var msg = (ok?'✅ คำขออนุมัติแล้ว!':'❌ คำขอไม่อนุมัติ')+
+          '\nห้อง: '+b.room+' วันที่: '+b.date+
+          ((!ok&&b.rejectReason)?'\nเหตุผล: '+b.rejectReason:'');
+        gasGet({ action:'sendLine', lineUserId:lineUid, msg:msg }, function(){});
       });
     });
   }
