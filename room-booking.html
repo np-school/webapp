@@ -979,7 +979,7 @@
     });
   }
 
-  var GAS_LINE_URL = 'https://script.google.com/macros/s/AKfycbxmXjbuTlaYJSVJqxTL8wfAjx_CeRzVUKywf9hIVKwF6gOlISewn132-yMCSo17liQG/exec';
+  var GAS_LINE_URL = 'https://script.google.com/macros/s/AKfycbwBdIK6l0Iy2AbAygBA99KxZgIHxKW02_eNcLBmfHQDkijq2tSDAvnmodUs5GJfnwa_/exec';
 
   function notifyAdminsViaGAS(bk) {
     if (!GAS_LINE_URL) return;
@@ -991,10 +991,8 @@
           .then(function(s) { return (!s.empty&&s.docs[0].data().lineUserId)?s.docs[0].data().lineUserId:null; });
       })).then(function(uids) {
         uids.filter(Boolean).forEach(function(uid) {
-          fetch(GAS_LINE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({action:'sendLine',lineUserId:uid,message:{type:'text',
-              text:'[LINE] มีคำขอจองใหม่!\nห้อง: '+bk.room+'\nวันที่: '+bk.date+'\nเวลา: '+bk.startTime+' - '+bk.endTime+'\nผู้จอง: '+(bk.fullName||'-')+'\nวัตถุประสงค์: '+(bk.purpose||'-'),
-            }})}).catch(function(){});
+          var msg='มีคำขอจองใหม่! ห้อง:'+bk.room+' วัน:'+bk.date+' เวลา:'+bk.startTime+'-'+bk.endTime+' ผู้จอง:'+(bk.fullName||'-');
+          fetch(GAS_LINE_URL+'?action=sendLine&lineUserId='+encodeURIComponent(uid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
         });
       });
     }).catch(function(){});
