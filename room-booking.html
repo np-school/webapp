@@ -681,8 +681,8 @@
   }
 
   function updateDayView(dateKey,dayBookings){
-    var list=document.getElementById('dayList');
-    var label=document.getElementById('dayLabel');
+    var list=document.getElementById('todayBookingsList');
+    var label=document.getElementById('selectedDateLabel');
     if(!list)return;
     if(label)label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     if(!dayBookings||!dayBookings.length){
