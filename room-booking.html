@@ -84,8 +84,22 @@
     .badge-g{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
     .badge-a{background:#fef9c3;color:#b45309;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
     .badge-r{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
-    .cal-content-grid{display:grid;grid-template-columns:248px 1fr;gap:20px;}
+    .cal-content-grid{display:grid;grid-template-columns:268px 1fr;gap:20px;}
     @media(max-width:768px){.cal-content-grid{grid-template-columns:1fr;}}
+    /* Room tabs */
+    .room-tab{padding:7px 13px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;white-space:nowrap;}
+    .room-tab:hover{border-color:#93c5fd;color:#1d4ed8;}
+    .room-tab.active{background:#1d4ed8;border-color:#1d4ed8;color:white;}
+    /* Room image */
+    .room-img-wrap{width:100%;height:110px;border-radius:12px 12px 0 0;overflow:hidden;position:relative;}
+    .room-img-wrap img{width:100%;height:100%;object-fit:cover;}
+    .room-img-placeholder{width:100%;height:110px;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px 12px 0 0;}
+    /* Stat bar */
+    .stat-bar-bg{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
+    .stat-bar-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s ease;}
+    /* File viewer modal */
+    #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+    #fileViewModal.open{display:flex;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
@@ -141,6 +155,17 @@
 
   <!-- Content -->
   <div style="flex:1;min-width:0;padding:28px 20px;display:flex;flex-direction:column;gap:20px;">
+    <!-- Room image banner -->
+    <div id="roomBanner" class="card" style="overflow:hidden;"></div>
+
+    <!-- Room tabs -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>
+      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="room-tab active" onclick="selectRoomFilter('all',this)">ทุกห้อง</button>
+      </div>
+    </div>
+
     <div class="cal-content-grid">
       <!-- Calendar -->
       <div style="display:flex;flex-direction:column;gap:18px;">
@@ -170,6 +195,12 @@
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;"><div style="width:36px;height:36px;background:#dcfce7;color:#16a34a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check" style="width:18px;height:18px;"></i></div><div><div style="font-size:10px;color:#64748b;">อนุมัติ</div><div style="font-size:18px;font-weight:800;" id="approvedToday">0</div></div></div>
           <div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:#fef9c3;color:#d97706;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:18px;height:18px;"></i></div><div><div style="font-size:10px;color:#64748b;">รอตรวจ</div><div style="font-size:18px;font-weight:800;" id="pendingToday">0</div></div></div>
         </div>
+        <!-- Monthly stats per room -->
+        <div class="card" style="padding:18px;">
+          <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:13px;height:13px;color:#1d4ed8;"></i> สถิติการจองรายเดือน</div>
+          <div style="font-size:11px;color:#1d4ed8;font-weight:700;margin-bottom:10px;" id="statsMonthLabel"></div>
+          <div id="roomStatsWrap" style="display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
       </div>
       <!-- Day Detail -->
       <div class="card" style="display:flex;flex-direction:column;min-height:280px;">
@@ -177,7 +208,7 @@
           <span style="display:flex;align-items:center;gap:7px;color:#1d4ed8;font-weight:700;font-size:13px;"><i data-lucide="info" style="width:15px;height:15px;"></i> รายละเอียดการจองในวันที่เลือก</span>
           <span id="selectedDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
         </div>
-        <div id="todayBookingsList" style="flex:1;padding:20px;overflow-y:auto;max-height:360px;"><div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div></div>
+        <div id="todayBookingsList" style="flex:1;padding:20px;overflow-y:auto;max-height:520px;"><div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div></div>
       </div>
     </div>
 
@@ -199,7 +230,8 @@
               <th style="border-right:1px solid rgba(255,255,255,.15);">เวลา</th>
               <th style="border-right:1px solid rgba(255,255,255,.15);">ผู้จอง</th>
               <th style="border-right:1px solid rgba(255,255,255,.15);">วัตถุประสงค์</th>
-              <th style="text-align:center;">สถานะ</th>
+              <th style="border-right:1px solid rgba(255,255,255,.15);">สถานะ</th>
+              <th style="text-align:center;border-right:1px solid rgba(255,255,255,.15);">ไฟล์แนบ</th>
               <th style="text-align:center;border-left:1px solid rgba(255,255,255,.15);">แก้ไข</th>
             </tr>
           </thead>
@@ -289,6 +321,21 @@
   </div>
 </div>
 
+<!-- File View Modal -->
+<div id="fileViewModal">
+  <div style="background:white;border-radius:20px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.3);">
+    <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <span style="font-weight:800;color:#1e293b;font-size:14px;display:flex;align-items:center;gap:7px;"><i data-lucide="image" style="width:16px;height:16px;color:#1d4ed8;"></i> ไฟล์แนบ — ผังการจัดโต๊ะ</span>
+      <button onclick="closeFileView()" style="background:#f1f5f9;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
+    </div>
+    <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:#f8fafc;">
+      <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
+      <div id="fileViewError" style="display:none;padding:40px;color:#94a3b8;">ไม่สามารถแสดงไฟล์ได้</div>
+      <p id="fileViewName" style="font-size:12px;color:#64748b;margin-top:10px;font-weight:600;"></p>
+    </div>
+  </div>
+</div>
+
 <script>
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -297,7 +344,8 @@
   var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false;
   var viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth();
   var selectedDate=new Date().toISOString().split('T')[0];
-  var selectedFile=null;
+  var selectedFile=null,selectedFileDataURL=null;
+  var activeRoomFilter='all'; // 'all' or room name
 
   /* ── Sidebar ── */
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
@@ -455,10 +503,10 @@
     if(!file.type.startsWith('image/')){errEl.textContent='กรุณาเลือกไฟล์รูปภาพเท่านั้น';errEl.style.display='block';input.value='';return;}
     if(file.size>5*1024*1024){errEl.textContent='ไฟล์ขนาดใหญ่เกิน 5MB';errEl.style.display='block';input.value='';return;}
     var reader=new FileReader();
-    reader.onload=function(ev){document.getElementById('previewImg').src=ev.target.result;document.getElementById('fileName').textContent=file.name;document.getElementById('fileSize').textContent=(file.size/1024).toFixed(1)+' KB';document.getElementById('uploadDefault').style.display='none';document.getElementById('uploadPreview').style.display='block';document.getElementById('uploadArea').classList.add('has-file');selectedFile={name:file.name,size:file.size};};
+    reader.onload=function(ev){selectedFileDataURL=ev.target.result;document.getElementById('previewImg').src=ev.target.result;document.getElementById('fileName').textContent=file.name;document.getElementById('fileSize').textContent=(file.size/1024).toFixed(1)+' KB';document.getElementById('uploadDefault').style.display='none';document.getElementById('uploadPreview').style.display='block';document.getElementById('uploadArea').classList.add('has-file');selectedFile={name:file.name,size:file.size};};
     reader.readAsDataURL(file);
   }
-  function clearFile(ev){if(ev)ev.stopPropagation();document.getElementById('layoutFile').value='';document.getElementById('uploadDefault').style.display='block';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadArea').classList.remove('has-file');selectedFile=null;}
+  function clearFile(ev){if(ev)ev.stopPropagation();document.getElementById('layoutFile').value='';document.getElementById('uploadDefault').style.display='block';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadArea').classList.remove('has-file');selectedFile=null;selectedFileDataURL=null;}
 
   /* ── Modal open/close ── */
   function toggleModal(editId){
@@ -502,7 +550,7 @@
   }
 
   /* ── Calendar ── */
-  function changeMonth(d){viewMonth+=d;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();}
+  function changeMonth(d){viewMonth+=d;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();renderRoomStats();}
   function renderCalendar(){
     var grid=document.getElementById('calendarDaysGrid'),label=document.getElementById('currentMonthLabel');
     grid.innerHTML='';
@@ -510,20 +558,34 @@
     var today=new Date().toISOString().split('T')[0];
     label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(viewYear,viewMonth));
     for(var i=0;i<first;i++){var e=document.createElement('div');e.className='cal-day empty';grid.appendChild(e);}
-    var bmap={};allBookings.forEach(function(b){if(b.status!=='rejected'){if(!bmap[b.date])bmap[b.date]=[];bmap[b.date].push(b);}});
+    var bmap={};
+    allBookings.forEach(function(b){
+      if(b.status==='rejected')return;
+      if(activeRoomFilter!=='all'&&b.room!==activeRoomFilter)return;
+      if(!bmap[b.date])bmap[b.date]=[];bmap[b.date].push(b);
+    });
     for(var d=1;d<=days;d++){
       var dk=viewYear+'-'+String(viewMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      var db=bmap[dk]||[];
+      var db2=bmap[dk]||[];
       var el=document.createElement('div');
       var cls='cal-day';
       if(dk===today)cls+=' is-today';
-      if(db.length>0)cls+=' has-booking';
-      if(db.length>=3)cls+=' is-full';
+      if(db2.length>0)cls+=' has-booking';
+      if(db2.length>=3)cls+=' is-full';
       if(dk===selectedDate)cls+=' is-selected';
       el.className=cls;el.textContent=d;
-      (function(k,b){el.onclick=function(){selectedDate=k;renderCalendar();updateDayView(k,b);};})(dk,db);
+      (function(k,b){el.onclick=function(){selectedDate=k;renderCalendar();updateDayView(k,getFilteredBookings(k));};})(dk,db2);
       grid.appendChild(el);
     }
+  }
+
+  function getFilteredBookings(dateKey){
+    return allBookings.filter(function(b){
+      if(b.status==='rejected')return false;
+      if(b.date!==dateKey)return false;
+      if(activeRoomFilter!=='all'&&b.room!==activeRoomFilter)return false;
+      return true;
+    });
   }
 
   function updateDayView(dateKey,dayBookings){
@@ -532,20 +594,37 @@
     if(!dayBookings||!dayBookings.length){list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';return;}
     list.innerHTML=dayBookings.map(function(b){
       var ok=b.status==='approved';
-      return'<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:#f8fafc;border-radius:12px;margin-bottom:10px;border-left:4px solid '+(ok?'#22c55e':'#f59e0b')+';"><div><div style="font-weight:700;font-size:14px;color:#1e3a8a;">'+b.room+'</div><div style="font-size:10px;color:#64748b;">'+b.startTime+' – '+b.endTime+' | '+(b.fullName||b.userName||'-')+'</div></div><span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;'+(ok?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#b45309;')+'">'+(ok?'อนุมัติแล้ว':'รอพิจารณา')+'</span></div>';
+      var fileBtn=b.hasLayout?'<button onclick="openFileView(\''+b.id+'\')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;"><span style="font-size:11px;">📎</span> ดูไฟล์แนบ</button>':'';
+      return'<div style="padding:13px 15px;background:#f8fafc;border-radius:12px;margin-bottom:10px;border-left:4px solid '+(ok?'#22c55e':'#f59e0b')+';">'+
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-weight:800;font-size:14px;color:#1e3a8a;margin-bottom:3px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:#64748b;margin-bottom:2px;">⏰ '+b.startTime+' – '+b.endTime+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:#475569;background:#eff6ff;padding:4px 8px;border-radius:6px;margin-top:5px;"><b style="color:#1d4ed8;">วัตถุประสงค์:</b> '+b.purpose+'</div>'+
+            (b.attendees?'<div style="font-size:10px;color:#94a3b8;margin-top:3px;">ผู้เข้าร่วม '+b.attendees+' คน</div>':'')+
+            fileBtn+
+          '</div>'+
+          '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;flex-shrink:0;'+(ok?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#b45309;')+'">'+(ok?'อนุมัติแล้ว':'รอพิจารณา')+'</span>'+
+        '</div>'+
+      '</div>';
     }).join('');
   }
 
   /* ── Firestore ── */
   function initData(){
-    db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});});
+    db.collection('rooms').orderBy('name').onSnapshot(function(snap){
+      allRooms=[];
+      snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+      renderRoomTabs();
+      renderRoomBanner();
+    });
 
     db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
       allBookings=[];
       var today=new Date().toISOString().split('T')[0],app=0,pen=0,html='';
       snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
       var tbody=document.getElementById('mainBookingTableBody');
-      if(!allBookings.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';}
+      if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';}
       else{
         var idx=allBookings.length;
         allBookings.forEach(function(b){
@@ -553,6 +632,7 @@
           var badgeCls=ok?'badge-g':rej?'badge-r':'badge-a';
           var badgeLabel=ok?'อนุมัติ':rej?'ไม่อนุมัติ':'รอตรวจ';
           var canEdit=b.status==='pending'&&currentUser&&b.userId===currentUser.uid;
+          var fileBtn=b.hasLayout?'<button onclick="event.stopPropagation();openFileView(\''+b.id+'\')" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:#7c3aed;border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>':'—';
           html+='<tr onclick="viewDate(\''+b.date+'\')">'+
             '<td style="text-align:center;color:#94a3b8;font-family:monospace;">'+(idx--)+'</td>'+
             '<td style="font-weight:700;">'+b.date+'</td>'+
@@ -561,6 +641,7 @@
             '<td style="font-size:11px;">'+(b.fullName||b.userName||'-')+'</td>'+
             '<td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.purpose+'</td>'+
             '<td style="text-align:center;"><span class="'+badgeCls+'">'+badgeLabel+'</span></td>'+
+            '<td style="text-align:center;">'+fileBtn+'</td>'+
             '<td style="text-align:center;">'+(canEdit?'<button onclick="event.stopPropagation();toggleModal(\''+b.id+'\')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;">แก้ไข</button>':'-')+'</td>'+
           '</tr>';
           if(b.date===today){if(ok)app++;else if(!rej)pen++;}
@@ -570,12 +651,13 @@
       document.getElementById('approvedToday').textContent=app;
       document.getElementById('pendingToday').textContent=pen;
       renderCalendar();
-      updateDayView(selectedDate,allBookings.filter(function(b){return b.date===selectedDate&&b.status!=='rejected';}));
+      updateDayView(selectedDate,getFilteredBookings(selectedDate));
+      renderRoomStats();
       hideLoading();lucide.createIcons();
     },function(err){console.error(err);hideLoading();});
   }
 
-  function viewDate(d){var p=d.split('-');viewYear=+p[0];viewMonth=+p[1]-1;selectedDate=d;renderCalendar();updateDayView(d,allBookings.filter(function(b){return b.date===d&&b.status!=='rejected';}));}
+  function viewDate(d){var p=d.split('-');viewYear=+p[0];viewMonth=+p[1]-1;selectedDate=d;renderCalendar();updateDayView(d,getFilteredBookings(d));}
 
   /* ── Submit (create or update) ── */
   function submitBooking(e){
@@ -593,6 +675,7 @@
       startTime:tr.start,endTime:tr.end,
       purpose:document.getElementById('purpose').value,
       equipment:getEquipment(),hasLayout:!!selectedFile,layoutName:selectedFile?selectedFile.name:null,
+      layoutDataURL:selectedFileDataURL||null,
     };
     var p;
     if(editId){
@@ -609,6 +692,87 @@
      .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
      .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
   }
+
+  /* ── Room Tabs ── */
+  function renderRoomTabs(){
+    var wrap=document.getElementById('roomTabsWrap');
+    var existing=wrap.querySelectorAll('button[data-room]');
+    existing.forEach(function(b){b.remove();});
+    allRooms.forEach(function(r){
+      var btn=document.createElement('button');
+      btn.className='room-tab';btn.textContent=r.name;btn.dataset.room=r.name;
+      btn.onclick=function(){selectRoomFilter(r.name,btn);};
+      wrap.appendChild(btn);
+    });
+    lucide.createIcons();
+  }
+
+  function selectRoomFilter(name,btn){
+    activeRoomFilter=name;
+    document.querySelectorAll('#roomTabsWrap .room-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    renderCalendar();
+    updateDayView(selectedDate,getFilteredBookings(selectedDate));
+    renderRoomBanner();
+    renderRoomStats();
+  }
+
+  /* ── Room Banner ── */
+  function renderRoomBanner(){
+    var banner=document.getElementById('roomBanner');
+    if(activeRoomFilter==='all'){
+      banner.innerHTML='<div style="padding:14px 18px;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 100%);"><i data-lucide="building-2" style="width:22px;height:22px;color:white;flex-shrink:0;"></i><div><div style="font-weight:800;color:white;font-size:14px;">ทุกห้องและสถานที่</div><div style="font-size:11px;color:#bfdbfe;">แสดงการจองทั้งหมดในระบบ</div></div></div>';
+      lucide.createIcons();return;
+    }
+    var room=allRooms.find(function(r){return r.name===activeRoomFilter;});
+    if(!room){banner.innerHTML='';return;}
+    if(room.imageUrl){
+      banner.innerHTML='<div style="position:relative;"><img src="'+room.imageUrl+'" style="width:100%;height:140px;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<div style=\\\"height:80px;background:linear-gradient(135deg,#eff6ff,#dbeafe);display:flex;align-items:center;justify-content:center;\\\"><span style=\\\"font-size:13px;color:#94a3b8;\\\">ไม่มีรูปภาพ</span></div>\'"><div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px;background:linear-gradient(to top,rgba(15,23,42,.8),transparent);"><div style="font-weight:800;color:white;font-size:15px;">'+room.name+'</div><div style="font-size:11px;color:#bfdbfe;">'+(room.capacity?'ความจุ '+room.capacity+' คน':'')+' '+(room.detail?'· '+room.detail:'')+'</div></div></div>';
+    }else{
+      banner.innerHTML='<div style="padding:14px 18px;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);display:flex;align-items:center;gap:12px;"><div style="width:44px;height:44px;background:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="door-open" style="width:22px;height:22px;color:white;"></i></div><div><div style="font-weight:800;color:#1e293b;font-size:14px;">'+room.name+'</div><div style="font-size:12px;color:#64748b;">'+(room.capacity?'ความจุ '+room.capacity+' คน · ':'')+''+(room.detail||'')+'</div></div></div>';
+    }
+    lucide.createIcons();
+  }
+
+  /* ── Monthly Stats ── */
+  function renderRoomStats(){
+    var label=document.getElementById('statsMonthLabel');
+    var wrap=document.getElementById('roomStatsWrap');
+    label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(viewYear,viewMonth));
+    var prefix=viewYear+'-'+String(viewMonth+1).padStart(2,'0');
+    var counts={};
+    allBookings.forEach(function(b){
+      if(b.status==='rejected')return;
+      if(!b.date||b.date.indexOf(prefix)!==0)return;
+      if(!counts[b.room])counts[b.room]=0;
+      counts[b.room]++;
+    });
+    var rooms=activeRoomFilter==='all'?allRooms:allRooms.filter(function(r){return r.name===activeRoomFilter;});
+    if(!rooms.length){wrap.innerHTML='<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">ยังไม่มีห้อง</div>';return;}
+    var max=0;rooms.forEach(function(r){if((counts[r.name]||0)>max)max=(counts[r.name]||0);});
+    wrap.innerHTML=rooms.map(function(r){
+      var c=counts[r.name]||0;
+      var pct=max>0?(c/max*100):0;
+      return'<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">'+r.name+'</span><span style="color:#1d4ed8;flex-shrink:0;">'+c+' ครั้ง</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:'+pct+'%"></div></div></div>';
+    }).join('');
+  }
+
+  /* ── File View ── */
+  function openFileView(bookingId){
+    var b=allBookings.find(function(x){return x.id===bookingId;});
+    if(!b||!b.hasLayout){showToast('ไม่มีไฟล์แนบ','warn');return;}
+    var modal=document.getElementById('fileViewModal');
+    var img=document.getElementById('fileViewImg');
+    var errEl=document.getElementById('fileViewError');
+    var nameEl=document.getElementById('fileViewName');
+    img.style.display='block';errEl.style.display='none';
+    nameEl.textContent=b.layoutName||'ไฟล์แนบ';
+    if(b.layoutDataURL){img.src=b.layoutDataURL;}
+    else{img.style.display='none';errEl.style.display='block';errEl.innerHTML='<i data-lucide="image-off" style="width:40px;height:40px;margin:0 auto 10px;display:block;color:#cbd5e1;"></i><p style="font-size:13px;">ไฟล์ชื่อ: <b>'+(b.layoutName||'-')+'</b></p><p style="font-size:11px;margin-top:4px;color:#94a3b8;">(ไม่มีข้อมูล URL ของรูป)</p>';lucide.createIcons();}
+    modal.classList.add('open');document.body.style.overflow='hidden';
+    lucide.createIcons();
+  }
+  function closeFileView(){document.getElementById('fileViewModal').classList.remove('open');document.body.style.overflow='';}
 
   lucide.createIcons();
 </script>
