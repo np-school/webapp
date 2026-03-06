@@ -572,6 +572,7 @@
   function handleLineConnect() {
     var state = Math.random().toString(36).substring(2);
     sessionStorage.setItem('line_state', state);
+    localStorage.setItem('line_state', state);
     var p = new URLSearchParams({
       response_type: 'code',
       client_id: LINE_LOGIN_CHANNEL_ID,
@@ -594,15 +595,42 @@
 
   function handleLineCallback() {
     var params = new URLSearchParams(window.location.search);
-    var code = params.get('code');
+    var code  = params.get('code');
     var state = params.get('state');
-    if (!code || !state || state !== sessionStorage.getItem('line_state')) return;
+    var error = params.get('error');
+
+    // ไม่มี code = ไม่ใช่ LINE callback
+    if (!code) return;
+
+    // ถ้า error (user กด cancel)
+    if (error) {
+      window.history.replaceState({}, '', window.location.pathname);
+      showLineToast('ยกเลิกการเชื่อมต่อ LINE', 'warn');
+      return;
+    }
+
+    // ตรวจ state (เก็บทั้งใน sessionStorage และ localStorage)
+    var savedState = sessionStorage.getItem('line_state') || localStorage.getItem('line_state');
+    if (state && savedState && state !== savedState) {
+      window.history.replaceState({}, '', window.location.pathname);
+      showLineToast('เชื่อมต่อไม่สำเร็จ: state mismatch', 'error');
+      return;
+    }
+
+    // ล้าง URL และ state
     window.history.replaceState({}, '', window.location.pathname);
     sessionStorage.removeItem('line_state');
+    localStorage.removeItem('line_state');
+
+    // รอ auth พร้อม แล้วแลก code
     var waited = 0;
     var wait = setInterval(function() {
       waited += 300;
-      if (waited > 10000) { clearInterval(wait); return; }
+      if (waited > 15000) {
+        clearInterval(wait);
+        showLineToast('เชื่อมต่อไม่สำเร็จ: timeout กรุณาลองใหม่', 'error');
+        return;
+      }
       var user = auth.currentUser;
       if (!user) return;
       clearInterval(wait);
@@ -685,6 +713,17 @@
   }
 
   /* เรียก callback check ทันทีที่โหลดหน้า */
+  // ถ้า URL มี ?code= (LINE callback) ซ่อน loading ทันที ไม่ให้ค้าง
+  (function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('code') || urlParams.get('error')) {
+      // ซ่อน loading หลังจาก auth ready (max 3 วิ)
+      setTimeout(function() {
+        var ov = document.getElementById('loadingOverlay');
+        if (ov) ov.style.display = 'none';
+      }, 3000);
+    }
+  })();
   handleLineCallback();
 
 
