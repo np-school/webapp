@@ -374,6 +374,8 @@
   /* ── Toast ── */
   function showToast(msg,type){var t=document.createElement('div');t.className='toast';t.style.background=type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('hide');setTimeout(function(){t.remove();},300);},3500);}
   function hideLoading(){document.getElementById('loadingOverlay').style.display='none';document.getElementById('mainContent').style.display='flex';}
+  // Safety: force-hide loading after 8s in case of Firestore error
+  setTimeout(function(){var ov=document.getElementById('loadingOverlay');if(ov&&ov.style.display!=='none'){hideLoading();showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ','warn');}},8000);
 
   /* ── Auth ── */
   auth.onAuthStateChanged(function(user){
@@ -695,17 +697,19 @@
 
   /* ── Firestore ── */
   function initData(){
-    db.collection('rooms').orderBy('name').onSnapshot(function(snap){
+    db.collection('rooms').onSnapshot(function(snap){
       allRooms=[];
       snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+      allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
       renderRoomTabs();
       renderRoomBanner();
     });
 
-    db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
+    db.collection('bookings').onSnapshot(function(snap){
       allBookings=[];
       var today=new Date().toISOString().split('T')[0],app=0,pen=0,html='';
       snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
+      allBookings.sort(function(a,b){var da=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;var db2=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;return db2-da;});
       var tbody=document.getElementById('mainBookingTableBody');
       if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:40px;">ยังไม่มีประวัติการจอง</td></tr>';}
       else{
