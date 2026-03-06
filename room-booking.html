@@ -155,7 +155,13 @@
 
   <!-- Content -->
   <div style="flex:1;min-width:0;padding:28px 20px;display:flex;flex-direction:column;gap:20px;">
-    <!-- Room image banner -->
+    <!-- Booking button top + Room image banner -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;" id="roomBannerInlineWrap"></div>
+      <button onclick="toggleModal()" style="padding:11px 22px;background:#1d4ed8;color:white;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 6px 18px rgba(29,78,216,.35);flex-shrink:0;white-space:nowrap;">
+        <i data-lucide="plus-circle" style="width:18px;height:18px;"></i> จองห้อง / สถานที่
+      </button>
+    </div>
     <div id="roomBanner" class="card" style="overflow:hidden;"></div>
 
     <!-- Room tabs -->
@@ -321,8 +327,8 @@
       <div class="form-group">
         <input type="file" id="layoutFile" accept="image/*" style="display:none;" onchange="handleFile(this)">
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('layoutFile').click()">
-          <div id="uploadDefault"><i data-lucide="upload-cloud" style="width:30px;height:30px;color:#93c5fd;margin:0 auto 7px;display:block;"></i><p style="font-size:13px;font-weight:700;color:#1d4ed8;">คลิกเพื่อแนบรูปภาพผังการจัดโต๊ะ</p><p style="font-size:11px;color:#94a3b8;margin-top:3px;">JPG, PNG, GIF — ไม่เกิน 5MB</p></div>
-          <div id="uploadPreview" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><img id="previewImg" src="" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;flex-shrink:0;"><div style="text-align:left;"><p id="fileName" style="font-size:13px;font-weight:700;color:#1e293b;word-break:break-all;"></p><p id="fileSize" style="font-size:11px;color:#64748b;"></p></div></div><button type="button" onclick="clearFile(event)" style="background:#fee2e2;border:none;color:#b91c1c;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
+          <div id="uploadDefault"><i data-lucide="upload-cloud" style="width:30px;height:30px;color:#93c5fd;margin:0 auto 7px;display:block;"></i><p style="font-size:13px;font-weight:700;color:#1d4ed8;">คลิกเพื่อแนบรูปภาพ / ถ่ายจากกล้อง</p><p style="font-size:11px;color:#94a3b8;margin-top:3px;">JPG, PNG — รองรับมือถือ ขนาดสูงสุด 15MB (ระบบจะบีบอัดให้อัตโนมัติ)</p></div>
+          <div id="uploadPreview" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><img id="previewImg" src="" onclick="openFileView(null)" title="คลิกเพื่อขยาย" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid #bfdbfe;flex-shrink:0;cursor:zoom-in;"><div style="text-align:left;"><p id="fileName" style="font-size:13px;font-weight:700;color:#1e293b;word-break:break-all;"></p><p id="fileSize" style="font-size:11px;color:#64748b;"></p></div></div><button type="button" onclick="clearFile(event)" style="background:#fee2e2;border:none;color:#b91c1c;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
         </div>
         <p id="fileError" style="display:none;font-size:12px;color:#ef4444;margin-top:5px;font-weight:600;"></p>
       </div>
@@ -402,6 +408,13 @@
   var editingBookingId=null; // id ของคำขอที่กำลังแก้ไข
 
   function setTimeMode(mode){
+    if(mode==='allday'){
+      // ป้องกัน: ถ้ามีช่วงเวลาถูกจองอยู่แล้ว ไม่สามารถเลือกทั้งวันได้
+      if(blockedSlots.length>0){
+        showToast('มีช่วงเวลาถูกจองอยู่แล้ว ไม่สามารถเลือก "ทั้งวัน" ได้','warn');
+        return;
+      }
+    }
     timeMode=mode;
     document.getElementById('modeRange').classList.toggle('active',mode==='range');
     document.getElementById('modeAllDay').classList.toggle('active',mode==='allday');
@@ -481,11 +494,26 @@
 
   function onRoomOrDateChange(){
     computeBlockedSlots();
+    // ถ้าปัจจุบันเลือก allday แต่มี blocked slot ให้ reset กลับ range
+    if(timeMode==='allday'&&blockedSlots.length>0){
+      timeMode='range';
+      document.getElementById('modeRange').classList.add('active');
+      document.getElementById('modeAllDay').classList.remove('active');
+      document.getElementById('timePickerWrap').style.display='block';
+      rangeStart=-1;rangeEnd=-1;updateTimeSummary();
+      showToast('มีการจองในวันนี้แล้ว ไม่สามารถเลือกทั้งวันได้','warn');
+    }
     if(rangeStart!==-1){
-      // reset ถ้า slot ที่เลือกอยู่โดนบล็อก
       for(var x=rangeStart;x<=rangeEnd;x++){
         if(blockedSlots.indexOf(x)!==-1){rangeStart=-1;rangeEnd=-1;updateTimeSummary();break;}
       }
+    }
+    // อัพเดทสถานะปุ่มทั้งวัน
+    var alldayBtn=document.getElementById('modeAllDay');
+    if(blockedSlots.length>0){
+      alldayBtn.disabled=true;alldayBtn.style.opacity='0.45';alldayBtn.title='มีช่วงเวลาถูกจองแล้ว';
+    }else{
+      alldayBtn.disabled=false;alldayBtn.style.opacity='1';alldayBtn.title='';
     }
     buildTimeSlotGrid();
     renderTimeSlots();
@@ -510,14 +538,51 @@
     });
   }
 
-  /* ── File Upload ── */
+  /* ── File Upload (with canvas compression) ── */
   function handleFile(input){
     var file=input.files[0];var errEl=document.getElementById('fileError');errEl.style.display='none';
     if(!file)return;
     if(!file.type.startsWith('image/')){errEl.textContent='กรุณาเลือกไฟล์รูปภาพเท่านั้น';errEl.style.display='block';input.value='';return;}
-    if(file.size>5*1024*1024){errEl.textContent='ไฟล์ขนาดใหญ่เกิน 5MB';errEl.style.display='block';input.value='';return;}
+    if(file.size>15*1024*1024){errEl.textContent='ไฟล์ใหญ่เกิน 15MB';errEl.style.display='block';input.value='';return;}
     var reader=new FileReader();
-    reader.onload=function(ev){selectedFileDataURL=ev.target.result;document.getElementById('previewImg').src=ev.target.result;document.getElementById('fileName').textContent=file.name;document.getElementById('fileSize').textContent=(file.size/1024).toFixed(1)+' KB';document.getElementById('uploadDefault').style.display='none';document.getElementById('uploadPreview').style.display='block';document.getElementById('uploadArea').classList.add('has-file');selectedFile={name:file.name,size:file.size};};
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var TARGET=680000; // base64 chars limit (≈500KB binary, safe for Firestore)
+        var scales=[1200,900,700,500];
+        var dataUrl='',finalW=img.width,finalH=img.height;
+        // If small image, use directly without compress
+        if(file.size<200*1024){
+          dataUrl=ev.target.result;finalW=img.width;finalH=img.height;
+        } else {
+          for(var si=0;si<scales.length;si++){
+            var MAX=scales[si];
+            var w=img.width,h=img.height;
+            if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+            var canvas=document.createElement('canvas');
+            canvas.width=w;canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            var q=0.82,found=false;
+            while(q>=0.3){
+              dataUrl=canvas.toDataURL('image/jpeg',q);
+              if(dataUrl.length<=TARGET){finalW=w;finalH=h;found=true;break;}
+              q=Math.round((q-0.05)*100)/100;
+            }
+            if(found)break;
+          }
+        }
+        selectedFileDataURL=dataUrl;
+        selectedFile={name:file.name,size:file.size};
+        var kb=(dataUrl.length*0.75/1024).toFixed(0);
+        document.getElementById('previewImg').src=dataUrl;
+        document.getElementById('fileName').textContent=file.name;
+        document.getElementById('fileSize').textContent='✓ บีบอัดแล้ว '+kb+' KB · '+finalW+'×'+finalH+'px';
+        document.getElementById('uploadDefault').style.display='none';
+        document.getElementById('uploadPreview').style.display='block';
+        document.getElementById('uploadArea').classList.add('has-file');
+      };
+      img.src=ev.target.result;
+    };
     reader.readAsDataURL(file);
   }
   function clearFile(ev){if(ev)ev.stopPropagation();document.getElementById('layoutFile').value='';document.getElementById('uploadDefault').style.display='block';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadArea').classList.remove('has-file');selectedFile=null;selectedFileDataURL=null;}
@@ -552,6 +617,10 @@
       timeMode='range';rangeStart=-1;rangeEnd=-1;
       setTimeMode('range');
       computeBlockedSlots();
+      // Update allday button state
+      var alldayBtn2=document.getElementById('modeAllDay');
+      if(blockedSlots.length>0){alldayBtn2.disabled=true;alldayBtn2.style.opacity='0.45';alldayBtn2.title='มีช่วงเวลาถูกจองแล้ว';}
+      else{alldayBtn2.disabled=false;alldayBtn2.style.opacity='1';alldayBtn2.title='';}
       buildTimeSlotGrid();
       lucide.createIcons();
     }else{
@@ -780,6 +849,17 @@
 
   /* ── File View ── */
   function openFileView(bookingId){
+    // If null = preview from current form upload
+    if(!bookingId){
+      if(!selectedFileDataURL){showToast('ยังไม่มีรูปที่แนบ','warn');return;}
+      var modal=document.getElementById('fileViewModal');
+      document.getElementById('fileViewImg').src=selectedFileDataURL;
+      document.getElementById('fileViewImg').style.display='block';
+      document.getElementById('fileViewError').style.display='none';
+      document.getElementById('fileViewName').textContent=selectedFile?selectedFile.name:'ไฟล์แนบ';
+      modal.classList.add('open');document.body.style.overflow='hidden';
+      lucide.createIcons();return;
+    }
     var b=allBookings.find(function(x){return x.id===bookingId;});
     if(!b||!b.hasLayout){showToast('ไม่มีไฟล์แนบ','warn');return;}
     var modal=document.getElementById('fileViewModal');

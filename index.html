@@ -44,6 +44,18 @@
     /* ── Public hero ── */
     .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
     @media(max-width:768px){.hero-grid{grid-template-columns:1fr;}.hero-img{display:none;}}
+    /* ── Public calendar ── */
+    .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
+    .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
+    .pub-cal-day.empty{cursor:default;}
+    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
+    .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
+    .pub-cal-day.is-today{background:#1d4ed8!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
+    .pub-cal-day.is-selected{border:2px solid #1d4ed8;background:#eff6ff;}
+    .pub-stat-bar{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
+    .pub-stat-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s;}
+    @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
+    @media(max-width:480px){.pub-cal-day{font-size:10px;}}
   </style>
 </head>
 <body style="background:#f8fafc;overflow-x:hidden;">
@@ -72,16 +84,17 @@
 
 <!-- ── Public View ── -->
 <main id="publicView">
-  <section style="max-width:1200px;margin:0 auto;padding:64px 24px;">
+  <!-- Hero -->
+  <section style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
     <div class="hero-grid">
       <div>
-        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:28px;">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:24px;">
           <i data-lucide="bell" style="width:14px;height:14px;"></i> ระบบสารสนเทศและบริการออนไลน์
         </div>
-        <h2 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:20px;">
+        <h2 style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:16px;">
           ยกระดับบริการ<br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
         </h2>
-        <p style="font-size:17px;color:#475569;line-height:1.75;margin-bottom:28px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+        <p style="font-size:16px;color:#475569;line-height:1.75;margin-bottom:24px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
         <button onclick="handleLogin()" style="padding:14px 28px;background:#1d4ed8;color:white;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 16px 24px -4px rgba(29,78,216,.35);">
           เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
         </button>
@@ -89,6 +102,66 @@
       <div class="hero-img">
         <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
           style="border-radius:36px;width:100%;aspect-ratio:16/9;object-fit:cover;box-shadow:0 24px 48px rgba(0,0,0,.18);">
+      </div>
+    </div>
+  </section>
+
+  <!-- Public Calendar Section -->
+  <section style="max-width:1200px;margin:0 auto;padding:0 24px 56px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:4px;height:28px;background:#1d4ed8;border-radius:4px;"></div>
+      <h3 style="font-size:20px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h3>
+      <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">ดูได้โดยไม่ต้องล็อกอิน</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
+      <!-- Left: Calendar + Stats -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Calendar card -->
+        <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
+            <div style="display:flex;gap:2px;">
+              <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
+              <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+            </div>
+          </div>
+          <div style="padding:12px;">
+            <div id="pubMonthLabel" style="text-align:center;font-weight:700;font-size:13px;color:#334155;margin-bottom:8px;"></div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:5px;text-align:center;">
+              <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="pubCalGrid2"></div>
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:9px;">
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#1d4ed8;border-radius:50%;display:inline-block;"></span>วันนี้</span>
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#eab308;border-radius:50%;display:inline-block;"></span>มีจอง</span>
+              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#fecaca;border:1px solid #fca5a5;border-radius:50%;display:inline-block;"></span>จองเต็ม</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly stats card -->
+        <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:16px;">
+          <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน</div>
+          <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:10px;"></div>
+          <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div></div>
+        </div>
+      </div>
+
+      <!-- Right: Day Detail -->
+      <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;min-height:320px;">
+        <div style="padding:13px 16px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
+          <span id="pubDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
+        </div>
+        <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
+          <div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
+        </div>
+        <div style="padding:14px 16px;border-top:1px solid #f1f5f9;text-align:center;">
+          <button onclick="handleLogin()" style="padding:10px 24px;background:#1d4ed8;color:white;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
+            <i data-lucide="log-in" style="width:15px;height:15px;"></i> เข้าสู่ระบบเพื่อจองห้อง
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -245,6 +318,122 @@
     if(t)t.classList.add('active');if(b)b.classList.add('active');
     closeSidebar();
   }
+
+  /* ══ Public Calendar (no login required) ══ */
+  var PUB_COLORS=['#1d4ed8','#0891b2','#7c3aed','#dc2626','#d97706','#059669','#db2777','#65a30d'];
+  function pubGetColor(n){var i=0;for(var c=0;c<n.length;c++)i=(i+n.charCodeAt(c))%PUB_COLORS.length;return PUB_COLORS[i];}
+
+  var pubYear=new Date().getFullYear(),pubMonth=new Date().getMonth();
+  var pubSelectedDate=new Date().toISOString().split('T')[0];
+  var pubBookings=[],pubRooms=[];
+
+  function pubChangeMonth(d){pubMonth+=d;if(pubMonth>11){pubMonth=0;pubYear++;}if(pubMonth<0){pubMonth=11;pubYear--;}pubRenderCalendar();pubRenderStats();}
+
+  function pubRenderCalendar(){
+    var grid=document.getElementById('pubCalGrid2');
+    var label=document.getElementById('pubMonthLabel');
+    if(!grid||!label)return;
+    grid.innerHTML='';
+    label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(pubYear,pubMonth));
+    var first=new Date(pubYear,pubMonth,1).getDay();
+    var days=new Date(pubYear,pubMonth+1,0).getDate();
+    var today=new Date().toISOString().split('T')[0];
+    var bmap={};
+    pubBookings.forEach(function(b){
+      if(b.status==='rejected')return;
+      if(!bmap[b.date])bmap[b.date]=[];
+      bmap[b.date].push(b);
+    });
+    for(var i=0;i<first;i++){var e=document.createElement('div');e.className='pub-cal-day empty';grid.appendChild(e);}
+    for(var d=1;d<=days;d++){
+      var dk=pubYear+'-'+String(pubMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      var db=bmap[dk]||[];
+      var el=document.createElement('div');
+      var cls='pub-cal-day';
+      if(dk===today)cls+=' is-today';
+      if(db.length>0)cls+=' has-booking';
+      if(db.length>=3)cls+=' is-full';
+      if(dk===pubSelectedDate)cls+=' is-selected';
+      el.className=cls;el.textContent=d;
+      (function(k,bk){el.onclick=function(){pubSelectedDate=k;pubRenderCalendar();pubUpdateDayView(k,bk);};})(dk,db);
+      grid.appendChild(el);
+    }
+  }
+
+  function pubUpdateDayView(dateKey,dayBookings){
+    var list=document.getElementById('pubDayList');
+    var label=document.getElementById('pubDateLabel');
+    if(!list)return;
+    label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
+    if(!dayBookings||!dayBookings.length){
+      list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
+      return;
+    }
+    list.innerHTML=dayBookings.map(function(b){
+      var ok=b.status==='approved';
+      var color=pubGetColor(b.room||'');
+      var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
+      var isDone=!isNaN(eDate)&&now>eDate;
+      var statusTxt=isDone?'✓ เสร็จสิ้น':ok?'อนุมัติแล้ว':'รอพิจารณา';
+      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
+      return '<div style="padding:13px 15px;background:'+color+'0d;border-radius:12px;margin-bottom:10px;border-left:4px solid '+color+';">'+
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-weight:800;font-size:14px;color:'+color+';margin-bottom:3px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:#64748b;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:#475569;background:#eff6ff;padding:4px 8px;border-radius:6px;margin-top:5px;"><b style="color:#1d4ed8;">วัตถุประสงค์:</b> '+(b.purpose||'-')+'</div>'+
+          '</div>'+
+          '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function pubRenderStats(){
+    var label=document.getElementById('pubStatsMonth');
+    var wrap=document.getElementById('pubStatsWrap');
+    if(!label||!wrap)return;
+    label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(pubYear,pubMonth));
+    var prefix=pubYear+'-'+String(pubMonth+1).padStart(2,'0');
+    var counts={};
+    pubBookings.forEach(function(b){
+      if(b.status==='rejected')return;
+      if(!b.date||b.date.indexOf(prefix)!==0)return;
+      if(!counts[b.room])counts[b.room]=0;counts[b.room]++;
+    });
+    if(!pubRooms.length){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">ยังไม่มีข้อมูล</div>';return;}
+    var max=0;pubRooms.forEach(function(r){if((counts[r.name]||0)>max)max=(counts[r.name]||0);});
+    if(max===0){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';return;}
+    wrap.innerHTML=pubRooms.map(function(r){
+      var c=counts[r.name]||0;if(!c)return'';
+      var color=pubGetColor(r.name);
+      var pct=max>0?(c/max*100):0;
+      return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;">'+
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;color:'+color+';">'+r.name+'</span>'+
+        '<span style="color:'+color+';flex-shrink:0;">'+c+' ครั้ง</span></div>'+
+        '<div class="pub-stat-bar"><div class="pub-stat-fill" style="width:'+pct+'%;background:'+color+';"></div></div></div>';
+    }).filter(Boolean).join('');
+    if(!wrap.innerHTML)wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';
+  }
+
+  // Load public data (bookings + rooms) without auth
+  function initPublicCalendar(){
+    db.collection('rooms').orderBy('name').get().then(function(snap){
+      pubRooms=[];snap.forEach(function(d){pubRooms.push(Object.assign({id:d.id},d.data()));});
+    });
+    db.collection('bookings').orderBy('date').get().then(function(snap){
+      pubBookings=[];
+      snap.forEach(function(d){pubBookings.push(Object.assign({id:d.id},d.data()));});
+      pubRenderCalendar();
+      pubRenderStats();
+      // Auto-show today
+      var todayBk=pubBookings.filter(function(b){return b.date===pubSelectedDate&&b.status!=='rejected';});
+      pubUpdateDayView(pubSelectedDate,todayBk);
+      lucide.createIcons();
+    });
+  }
+  initPublicCalendar();
+
   lucide.createIcons();
 </script>
 </body>
