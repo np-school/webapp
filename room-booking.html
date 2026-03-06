@@ -12,7 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     /* Sidebar */
@@ -104,7 +104,7 @@
 </head>
 <body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
 
-<div id="loadingOverlay" style="display:flex;"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
+<div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Navbar -->
@@ -124,7 +124,7 @@
   </div>
 </nav>
 
-<div id="mainContent" style="display:none;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
+<div id="mainContent" style="display:none;display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
 
   <!-- Sidebar -->
   <div class="sidebar-wrap" id="sidebar">
@@ -356,6 +356,16 @@
   </div>
 </div>
 
+<script>
+window.addEventListener('error', function(e){
+  document.body.innerHTML = '<div style="padding:40px;font-family:monospace;font-size:14px;">'
+    + '<h2 style="color:red;">❌ SyntaxError พบแล้ว!</h2>'
+    + '<p><b>File:</b> ' + e.filename + '</p>'
+    + '<p><b>Line:</b> ' + e.lineno + ' Col: ' + e.colno + '</p>'
+    + '<p><b>Error:</b> ' + e.message + '</p>'
+    + '</div>';
+});
+</script>
 <script>
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
