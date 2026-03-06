@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - ระบบขอใช้ห้อง/สถานที่</title>
+  <title>Admin Dashboard - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,147 +11,170 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
-    * { font-family:'Sarabun',sans-serif; box-sizing:border-box; margin:0; padding:0; }
-    #loadingOverlay { display:flex; position:fixed; inset:0; background:rgba(255,255,255,0.96); z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
-    .spinner { border:3px solid #e2e8f0; border-top:3px solid #7c3aed; border-radius:50%; width:44px; height:44px; animation:spin 0.8s linear infinite; }
-    @keyframes spin { to{transform:rotate(360deg);} }
-
-    .card { background:white; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-    .tab-btn { padding:12px 20px; border:none; background:none; font-weight:700; font-size:13px; color:#64748b; cursor:pointer; border-bottom:3px solid transparent; transition:all 0.15s; white-space:nowrap; }
-    .tab-btn.active { color:#7c3aed; border-bottom-color:#7c3aed; }
-    .tab-pane { display:none; }
-    .tab-pane.active { display:block; }
-
-    .badge-pending  { background:#fef9c3; color:#b45309; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; }
-    .badge-approved { background:#dcfce7; color:#15803d; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; }
-    .badge-rejected { background:#fee2e2; color:#b91c1c; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; }
-
-    .booking-card { background:white; border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; transition:border-color 0.15s; }
-    .booking-card:hover { border-color:#c4b5fd; }
-    .booking-card.status-pending  { border-left:4px solid #f59e0b; }
-    .booking-card.status-approved { border-left:4px solid #22c55e; }
-    .booking-card.status-rejected { border-left:4px solid #ef4444; }
-
-    .btn-approve { background:#16a34a; color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px; }
-    .btn-approve:hover { background:#15803d; }
-    .btn-reject  { background:#dc2626; color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px; }
-    .btn-reject:hover  { background:#b91c1c; }
-    .btn-delete  { background:#f1f5f9; color:#64748b; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; align-items:center; }
-    .btn-delete:hover  { background:#fee2e2; color:#b91c1c; }
-    .btn-primary { background:#7c3aed; color:white; border:none; padding:9px 18px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:6px; }
-    .btn-primary:hover { background:#6d28d9; }
-    .btn-secondary { background:#f1f5f9; color:#475569; border:none; padding:9px 18px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; }
-    .btn-secondary:hover { background:#e2e8f0; }
-
-    .modal-bg { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:1000; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
-    .modal-bg.open { display:flex; }
-    .modal-box { background:white; border-radius:20px; width:100%; max-width:480px; padding:28px; box-shadow:0 25px 60px rgba(0,0,0,0.2); }
-
-    input[type=text], textarea {
-      border:1.5px solid #e2e8f0; padding:10px 14px; border-radius:10px; outline:none;
-      font-size:14px; width:100%; color:#1e293b; font-family:'Sarabun',sans-serif;
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    /* Sidebar */
+    .sidebar-wrap{width:260px;flex-shrink:0;transition:transform .3s ease;}
+    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;}
+    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:13px;white-space:nowrap;}
+    .sidebar-btn:hover{background:#f1f5f9;}
+    .sidebar-btn.active{background:#7c3aed;color:white;box-shadow:0 8px 15px -3px rgba(124,58,237,.25);}
+    .sidebar-btn.blue-active{background:#1d4ed8;color:white;box-shadow:0 8px 15px -3px rgba(30,64,175,.25);}
+    .sidebar-btn.admin-btn{color:#7c3aed;}
+    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
+    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
+    #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
+    #sidebarOverlay.open{display:block;}
+    @media(max-width:1023px){
+      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
+      .sidebar-wrap.open{transform:translateX(0);}
     }
-    input:focus, textarea:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
-
-    .toast { position:fixed; bottom:20px; right:20px; padding:14px 20px; border-radius:10px; color:white; font-weight:700; font-size:14px; box-shadow:0 4px 16px rgba(0,0,0,0.15); z-index:9999; animation:toastIn 0.3s ease; }
-    .toast.hide { animation:toastOut 0.3s ease forwards; }
-    @keyframes toastIn  { from{transform:translateX(400px);opacity:0;} to{transform:translateX(0);opacity:1;} }
-    @keyframes toastOut { from{transform:translateX(0);opacity:1;} to{transform:translateX(400px);opacity:0;} }
-
-    .filter-pill { padding:7px 16px; border-radius:20px; border:1.5px solid #e2e8f0; font-size:12px; font-weight:700; color:#64748b; cursor:pointer; background:white; transition:all 0.15s; }
-    .filter-pill.active { background:#7c3aed; border-color:#7c3aed; color:white; }
-
-    .list-item { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1.5px solid #e2e8f0; border-radius:12px; transition:all 0.15s; gap:12px; }
-    .list-item:hover { border-color:#c4b5fd; background:#faf5ff; }
-
-    .stat-card { padding:20px; border-radius:16px; display:flex; align-items:center; gap:14px; background:white; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.04); }
+    @media(min-width:1024px){#hamburgerBtn{display:none!important;}.sidebar-inner{border-right:none;}}
+    /* Cards / UI */
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    .tab-btn{padding:12px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
+    .tab-btn.active{color:#7c3aed;border-bottom-color:#7c3aed;}
+    .tab-pane{display:none;}
+    .tab-pane.active{display:block;}
+    .badge-pending{background:#fef9c3;color:#b45309;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+    .badge-approved{background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+    .badge-rejected{background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+    .booking-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;transition:border-color .15s;}
+    .booking-card:hover{border-color:#c4b5fd;}
+    .booking-card.status-pending{border-left:4px solid #f59e0b;}
+    .booking-card.status-approved{border-left:4px solid #22c55e;}
+    .booking-card.status-rejected{border-left:4px solid #ef4444;}
+    .btn-approve{background:#16a34a;color:white;border:none;padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+    .btn-approve:hover{background:#15803d;}
+    .btn-reject{background:#dc2626;color:white;border:none;padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+    .btn-reject:hover{background:#b91c1c;}
+    .btn-delete{background:#f1f5f9;color:#64748b;border:none;padding:7px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;}
+    .btn-delete:hover{background:#fee2e2;color:#b91c1c;}
+    .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+    .btn-primary:hover{background:#6d28d9;}
+    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
+    .btn-secondary:hover{background:#e2e8f0;}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:480px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);}
+    input[type=text],textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
+    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
+    .filter-pill{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
+    .filter-pill.active{background:#7c3aed;border-color:#7c3aed;color:white;}
+    .list-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:12px;transition:all .15s;gap:12px;}
+    .list-item:hover{border-color:#c4b5fd;background:#faf5ff;}
+    .stat-card{padding:18px;border-radius:16px;display:flex;align-items:center;gap:13px;background:white;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,.04);}
   </style>
 </head>
-<body style="background:#f8fafc; min-height:100vh;">
+<body style="background:#f8fafc;min-height:100vh;">
 
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Access Denied -->
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
+  <div style="text-align:center;"><h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2><p style="color:#64748b;font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาต</p></div>
+  <a href="index.html" style="padding:10px 24px;background:#7c3aed;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
 
-  <!-- Access Denied -->
-  <div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-    <div style="width:80px;height:80px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-      <i data-lucide="shield-off" style="width:38px;height:38px;color:#dc2626;"></i>
-    </div>
-    <div style="text-align:center;">
-      <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
-      <p style="color:#64748b;font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาตให้เข้าหน้านี้<br>กรุณาติดต่อผู้ดูแลระบบ</p>
-    </div>
-    <a href="index.html" style="padding:11px 28px;background:#7c3aed;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
-  </div>
-
-  <!-- Main App -->
-  <div id="adminApp" style="display:none;">
-    <nav style="position:sticky;top:0;z-index:50;background:#7c3aed;padding:12px 24px;box-shadow:0 4px 16px rgba(124,58,237,0.3);">
-      <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:44px;">
-          <div style="border-left:1px solid rgba(255,255,255,0.25);padding-left:14px;">
-            <div style="font-size:15px;font-weight:800;color:white;">Admin Dashboard</div>
-            <div style="font-size:11px;color:#ddd6fe;">ระบบจัดการคำขอใช้ห้อง/สถานที่</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div id="adminUserInfo" style="display:flex;align-items:center;gap:8px;"></div>
-          <a href="index.html" style="padding:7px 14px;background:rgba(255,255,255,0.15);color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,0.2);">← หน้าหลัก</a>
+<!-- Main App -->
+<div id="adminApp" style="display:none;">
+  <!-- Navbar -->
+  <nav style="position:sticky;top:0;z-index:150;background:#7c3aed;padding:12px 20px;box-shadow:0 4px 16px rgba(124,58,237,.3);">
+    <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">
+          <i data-lucide="menu" style="width:20px;height:20px;"></i>
+        </button>
+        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:44px;">
+        <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
+          <div style="font-size:15px;font-weight:800;color:white;">Admin Dashboard</div>
+          <div style="font-size:11px;color:#ddd6fe;">ระบบจัดการคำขอใช้ห้อง/สถานที่</div>
         </div>
       </div>
-    </nav>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="adminUserInfo" style="display:flex;align-items:center;gap:8px;"></div>
+        <a href="index.html" style="padding:7px 13px;background:rgba(255,255,255,.15);color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.2);">← หน้าหลัก</a>
+      </div>
+    </div>
+  </nav>
 
-    <div style="max-width:1280px;margin:0 auto;padding:28px 20px;">
+  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+
+    <!-- Sidebar -->
+    <div class="sidebar-wrap" id="sidebar">
+      <div class="sidebar-inner">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;" id="sidebarCloseWrap">
+          <button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
+            <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+          </button>
+        </div>
+
+        <div class="sec-label">เมนูหลัก</div>
+        <a href="index.html" class="sidebar-btn">
+          <i data-lucide="home" style="width:18px;height:18px;flex-shrink:0;"></i> หน้าแรก
+        </a>
+        <a href="room-booking.html" class="sidebar-btn">
+          <i data-lucide="calendar" style="width:18px;height:18px;flex-shrink:0;"></i> ระบบขอใช้ห้อง
+        </a>
+
+        <div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>
+        <div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>
+        <button onclick="switchTab('bookings',this)" id="sbtn-bookings" class="sidebar-btn admin-btn active" style="color:#7c3aed;">
+          <i data-lucide="layout-list" style="width:18px;height:18px;flex-shrink:0;color:#7c3aed;"></i> คำขอทั้งหมด
+        </button>
+        <button onclick="switchTab('rooms',this)" id="sbtn-rooms" class="sidebar-btn admin-btn">
+          <i data-lucide="door-open" style="width:18px;height:18px;flex-shrink:0;color:#7c3aed;"></i> จัดการห้อง
+        </button>
+        <button onclick="switchTab('admins',this)" id="sbtn-admins" class="sidebar-btn admin-btn">
+          <i data-lucide="shield" style="width:18px;height:18px;flex-shrink:0;color:#7c3aed;"></i> จัดการ Admin
+        </button>
+
+        <div style="flex:1;"></div>
+        <div style="padding:4px 4px 8px;" id="sidebarProfile"></div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div style="flex:1;min-width:0;padding:28px 24px;display:flex;flex-direction:column;gap:24px;">
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
-        <div class="stat-card">
-          <div style="width:44px;height:44px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:22px;height:22px;color:#d97706;"></i></div>
-          <div><p style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:2px;">รอพิจารณา</p><p style="font-size:26px;font-weight:800;color:#1e293b;line-height:1;" id="statPending">0</p></div>
-        </div>
-        <div class="stat-card">
-          <div style="width:44px;height:44px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:22px;height:22px;color:#16a34a;"></i></div>
-          <div><p style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:2px;">อนุมัติแล้ว</p><p style="font-size:26px;font-weight:800;color:#1e293b;line-height:1;" id="statApproved">0</p></div>
-        </div>
-        <div class="stat-card">
-          <div style="width:44px;height:44px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:22px;height:22px;color:#dc2626;"></i></div>
-          <div><p style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:2px;">ไม่อนุมัติ</p><p style="font-size:26px;font-weight:800;color:#1e293b;line-height:1;" id="statRejected">0</p></div>
-        </div>
-        <div class="stat-card">
-          <div style="width:44px;height:44px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="calendar" style="width:22px;height:22px;color:#7c3aed;"></i></div>
-          <div><p style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:2px;">ทั้งหมด</p><p style="font-size:26px;font-weight:800;color:#1e293b;line-height:1;" id="statTotal">0</p></div>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+        <div class="stat-card"><div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:#d97706;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
+        <div class="stat-card"><div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:#16a34a;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">อนุมัติแล้ว</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statApproved">0</p></div></div>
+        <div class="stat-card"><div style="width:42px;height:42px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:20px;height:20px;color:#dc2626;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">ไม่อนุมัติ</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statRejected">0</p></div></div>
+        <div class="stat-card"><div style="width:42px;height:42px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="calendar" style="width:20px;height:20px;color:#7c3aed;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">ทั้งหมด</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statTotal">0</p></div></div>
       </div>
 
-      <!-- Tabs -->
-      <div class="card" style="overflow:hidden;">
-        <div style="border-bottom:1px solid #f1f5f9;padding:0 20px;display:flex;overflow-x:auto;">
-          <button class="tab-btn active" onclick="switchTab('bookings',this)"><i data-lucide="layout-list" style="width:14px;height:14px;display:inline;margin-right:5px;vertical-align:-2px;"></i>คำขอทั้งหมด</button>
-          <button class="tab-btn" onclick="switchTab('rooms',this)"><i data-lucide="door-open" style="width:14px;height:14px;display:inline;margin-right:5px;vertical-align:-2px;"></i>จัดการห้อง</button>
-          <button class="tab-btn" onclick="switchTab('admins',this)"><i data-lucide="shield" style="width:14px;height:14px;display:inline;margin-right:5px;vertical-align:-2px;"></i>จัดการสิทธิ์ Admin</button>
-        </div>
-
+      <!-- Tab content area -->
+      <div class="card" style="overflow:hidden;flex:1;">
         <!-- Tab: Bookings -->
         <div id="tab-bookings" class="tab-pane active" style="padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
               <button class="filter-pill" onclick="setFilter('pending',this)">⏳ รอพิจารณา</button>
               <button class="filter-pill" onclick="setFilter('approved',this)">✅ อนุมัติแล้ว</button>
               <button class="filter-pill" onclick="setFilter('rejected',this)">❌ ไม่อนุมัติ</button>
             </div>
-            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ / สถานที่ / วัตถุประสงค์..." onkeyup="renderBookings()" style="max-width:280px;padding:9px 14px;">
+            <input type="text" id="searchInput" placeholder="ค้นหา..." onkeyup="renderBookings()" style="max-width:240px;padding:8px 13px;border:1.5px solid #e2e8f0;border-radius:10px;outline:none;font-size:13px;">
           </div>
-          <div id="bookingsList" style="display:flex;flex-direction:column;gap:12px;"></div>
+          <div id="bookingsList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
 
         <!-- Tab: Rooms -->
         <div id="tab-rooms" class="tab-pane" style="padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-            <h3 style="font-size:15px;font-weight:800;color:#1e293b;">รายการห้อง/สถานที่ที่ให้จองได้</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <h3 style="font-size:15px;font-weight:800;color:#1e293b;">รายการห้อง/สถานที่</h3>
             <button class="btn-primary" onclick="openRoomModal()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มห้องใหม่</button>
           </div>
           <div id="roomsList" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -159,395 +182,198 @@
 
         <!-- Tab: Admins -->
         <div id="tab-admins" class="tab-pane" style="padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <h3 style="font-size:15px;font-weight:800;color:#1e293b;">ผู้ดูแลระบบ (Admin)</h3>
             <button class="btn-primary" onclick="openAddAdminModal()"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button>
           </div>
-          <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:12px;padding:13px 16px;margin-bottom:16px;font-size:12px;color:#6d28d9;display:flex;align-items:flex-start;gap:8px;">
-            <i data-lucide="info" style="width:15px;height:15px;flex-shrink:0;margin-top:1px;"></i>
-            <div>
-              <b>วิธีการทำงาน:</b> ระบบตรวจสอบ Firestore collection <code style="background:#ede9fe;padding:1px 5px;border-radius:4px;">admins</code>
-              โดยใช้ <b>document ID = email</b> ของผู้ใช้ที่ login ด้วย Google<br>
-              เพิ่ม/ลบ admin ได้ที่นี่ หรือจัดการโดยตรงใน Firebase Console
-            </div>
+          <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#6d28d9;display:flex;align-items:flex-start;gap:8px;">
+            <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;"></i>
+            <span>ระบบตรวจสอบ Firestore collection <b>admins</b> โดย <b>document ID = email</b> ของผู้ใช้</span>
           </div>
           <div id="adminsList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Modal: Approve -->
-  <div id="approveModal" class="modal-bg">
-    <div class="modal-box">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:#16a34a;"></i></div>
-        <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="approveModalSub"></p></div>
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">หมายเหตุถึงผู้ขอ (ไม่บังคับ)</label>
-        <textarea id="approveNote" rows="3" placeholder="เช่น อนุมัติตามที่ขอ / กรุณานำกุญแจที่ห้องธุรการ..."></textarea>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-secondary" style="flex:1;" onclick="closeModal('approveModal')">ยกเลิก</button>
-        <button class="btn-approve" style="flex:2;justify-content:center;padding:11px;" onclick="confirmApprove()"><i data-lucide="check" style="width:14px;height:14px;"></i> ยืนยันอนุมัติ</button>
-      </div>
+<!-- Modal: Approve -->
+<div id="approveModal" class="modal-bg">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:40px;height:40px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:18px;height:18px;color:#16a34a;"></i></div>
+      <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="approveModalSub"></p></div>
     </div>
+    <div style="margin-bottom:18px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">หมายเหตุ (ไม่บังคับ)</label><textarea id="approveNote" rows="3" placeholder="เช่น อนุมัติตามที่ขอ..."></textarea></div>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('approveModal')">ยกเลิก</button><button class="btn-approve" style="flex:2;justify-content:center;padding:11px;" onclick="confirmApprove()"><i data-lucide="check" style="width:14px;height:14px;"></i> ยืนยันอนุมัติ</button></div>
   </div>
+</div>
 
-  <!-- Modal: Reject -->
-  <div id="rejectModal" class="modal-bg">
-    <div class="modal-box">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div style="width:42px;height:42px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:20px;height:20px;color:#dc2626;"></i></div>
-        <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ไม่อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="rejectModalSub"></p></div>
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">เหตุผลที่ไม่อนุมัติ <span style="color:#dc2626;">*</span></label>
-        <textarea id="rejectReason" rows="3" placeholder="ระบุเหตุผล เช่น ห้องถูกจองแล้ว / ข้อมูลไม่ครบ..."></textarea>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-secondary" style="flex:1;" onclick="closeModal('rejectModal')">ยกเลิก</button>
-        <button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmReject()"><i data-lucide="x" style="width:14px;height:14px;"></i> ยืนยันไม่อนุมัติ</button>
-      </div>
+<!-- Modal: Reject -->
+<div id="rejectModal" class="modal-bg">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:18px;height:18px;color:#dc2626;"></i></div>
+      <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ไม่อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="rejectModalSub"></p></div>
     </div>
+    <div style="margin-bottom:18px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">เหตุผล <span style="color:#dc2626;">*</span></label><textarea id="rejectReason" rows="3" placeholder="ระบุเหตุผล..."></textarea></div>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('rejectModal')">ยกเลิก</button><button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmReject()"><i data-lucide="x" style="width:14px;height:14px;"></i> ยืนยันไม่อนุมัติ</button></div>
   </div>
+</div>
 
-  <!-- Modal: Delete -->
-  <div id="deleteModal" class="modal-bg">
-    <div class="modal-box">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="width:42px;height:42px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="trash-2" style="width:20px;height:20px;color:#dc2626;"></i></div>
-        <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ลบคำขอ</h3><p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p></div>
-      </div>
-      <p style="font-size:14px;color:#475569;margin-bottom:22px;padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button>
-        <button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmDelete()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ</button>
-      </div>
+<!-- Modal: Delete -->
+<div id="deleteModal" class="modal-bg">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i></div>
+      <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ลบคำขอ</h3><p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p></div>
     </div>
+    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button><button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmDelete()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ</button></div>
   </div>
+</div>
 
-  <!-- Modal: Room -->
-  <div id="roomModal" class="modal-bg">
-    <div class="modal-box">
-      <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:20px;" id="roomModalTitle">เพิ่มห้องใหม่</h3>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">ชื่อห้อง/สถานที่ <span style="color:#dc2626;">*</span></label>
-        <input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2">
-      </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">ความจุ (คน)</label>
-        <input type="text" id="roomCapacity" placeholder="เช่น 50">
-      </div>
-      <div style="margin-bottom:22px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">รายละเอียดเพิ่มเติม</label>
-        <input type="text" id="roomDetail" placeholder="เช่น มีโปรเจคเตอร์, แอร์">
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-secondary" style="flex:1;" onclick="closeModal('roomModal')">ยกเลิก</button>
-        <button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveRoom()"><i data-lucide="save" style="width:14px;height:14px;"></i> บันทึก</button>
-      </div>
-    </div>
+<!-- Modal: Room -->
+<div id="roomModal" class="modal-bg">
+  <div class="modal-box">
+    <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:18px;" id="roomModalTitle">เพิ่มห้องใหม่</h3>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อห้อง/สถานที่ <span style="color:#dc2626;">*</span></label><input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2"></div>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ความจุ (คน)</label><input type="text" id="roomCapacity" placeholder="เช่น 50"></div>
+    <div style="margin-bottom:20px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">รายละเอียด</label><input type="text" id="roomDetail" placeholder="เช่น มีโปรเจคเตอร์, แอร์"></div>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('roomModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveRoom()"><i data-lucide="save" style="width:14px;height:14px;"></i> บันทึก</button></div>
   </div>
+</div>
 
-  <!-- Modal: Add Admin -->
-  <div id="adminModal" class="modal-bg">
-    <div class="modal-box">
-      <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:6px;">เพิ่ม Admin ใหม่</h3>
-      <p style="font-size:12px;color:#64748b;margin-bottom:20px;">เพิ่ม email ลง Firestore collection <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;">admins</code></p>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">ชื่อ-นามสกุล</label>
-        <input type="text" id="newAdminName" placeholder="เช่น นายสมชาย ใจดี">
-      </div>
-      <div style="margin-bottom:22px;">
-        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">Email (Google) <span style="color:#dc2626;">*</span></label>
-        <input type="text" id="newAdminEmail" placeholder="example@nongki.ac.th">
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button>
-        <button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button>
-      </div>
-    </div>
+<!-- Modal: Add Admin -->
+<div id="adminModal" class="modal-bg">
+  <div class="modal-box">
+    <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:18px;">เพิ่ม Admin ใหม่</h3>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล</label><input type="text" id="newAdminName" placeholder="เช่น นายสมชาย ใจดี"></div>
+    <div style="margin-bottom:20px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">Email (Google) <span style="color:#dc2626;">*</span></label><input type="text" id="newAdminEmail" placeholder="example@nongki.ac.th"></div>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button></div>
   </div>
+</div>
 
-  <script>
-    var firebaseConfig = {
-      apiKey:    'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
-      authDomain:'np-webapp-74616.firebaseapp.com',
-      projectId: 'np-webapp-74616',
-      appId:     '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    var auth = firebase.auth(), db = firebase.firestore();
+<script>
+  var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
+  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  var auth=firebase.auth(),db=firebase.firestore();
+  var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null;
 
-    var currentAdmin  = null;
-    var allBookings   = [];
-    var allRooms      = [];
-    var currentFilter = 'all';
-    var pendingId     = null;
-    var editRoomId    = null;
+  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
+  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
+  function showToast(msg,type){var t=document.createElement('div');t.className='toast';t.style.background=type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('hide');setTimeout(function(){t.remove();},300);},3500);}
+  function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';lucide.createIcons();}
+  function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 
-    // ── Toast ─────────────────────────────────
-    function showToast(msg, type) {
-      var t = document.createElement('div');
-      t.className = 'toast';
-      t.style.background = type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(function(){ t.classList.add('hide'); setTimeout(function(){ t.remove(); },300); },3500);
-    }
-    function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; lucide.createIcons(); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+  auth.onAuthStateChanged(function(user){
+    if(!user){window.location.href='index.html';return;}
+    db.collection('admins').doc(user.email.toLowerCase()).get().then(function(doc){
+      document.getElementById('loadingOverlay').style.display='none';
+      if(!doc.exists){document.getElementById('accessDenied').style.display='flex';lucide.createIcons();return;}
+      currentAdmin=user;
+      document.getElementById('adminApp').style.display='block';
+      document.getElementById('adminUserInfo').innerHTML='<img src="'+user.photoURL+'" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.3);"><span style="color:#ddd6fe;font-size:12px;font-weight:700;display:none;" id="navName">'+user.displayName+'</span>';
+      updateSidebarProfile(user);
+      initListeners();lucide.createIcons();
+    }).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';document.getElementById('accessDenied').style.display='flex';lucide.createIcons();});
+  });
 
-    // ── Auth: ตรวจสอบจาก Firestore 'admins' ──
-    auth.onAuthStateChanged(function(user) {
-      if (!user) { window.location.href='index.html'; return; }
+  function updateSidebarProfile(user){
+    document.getElementById('sidebarProfile').innerHTML='<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;"><div style="display:flex;align-items:center;gap:10px;overflow:hidden;"><img src="'+user.photoURL+'" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"><div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p><p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p></div></div></div>';
+  }
 
-      var email = (user.email || '').toLowerCase();
-
-      // ตรวจว่า email มีใน collection 'admins' (document ID = email)
-      db.collection('admins').doc(email).get()
-        .then(function(doc) {
-          document.getElementById('loadingOverlay').style.display = 'none';
-          if (!doc.exists) {
-            // ไม่พบใน admins — แสดง access denied
-            document.getElementById('accessDenied').style.display = 'flex';
-            lucide.createIcons();
-            return;
-          }
-          // พบใน admins — เข้าถึงได้
-          currentAdmin = user;
-          document.getElementById('adminApp').style.display = 'block';
-          document.getElementById('adminUserInfo').innerHTML =
-            '<img src="'+user.photoURL+'" style="width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);">'+
-            '<span style="color:#ddd6fe;font-size:12px;font-weight:700;">'+user.displayName+'</span>';
-          initListeners();
-          lucide.createIcons();
-        })
-        .catch(function(err) {
-          console.error('Admin check error:', err);
-          document.getElementById('loadingOverlay').style.display = 'none';
-          document.getElementById('accessDenied').style.display = 'flex';
-          lucide.createIcons();
-        });
+  function initListeners(){
+    db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
+      allBookings=[];snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
+      updateStats();renderBookings();
     });
+    db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});renderRooms();});
+    db.collection('admins').onSnapshot(function(snap){var list=[];snap.forEach(function(d){list.push({email:d.id,data:d.data()});});renderAdmins(list);});
+  }
 
-    // ── Realtime listeners ─────────────────────
-    function initListeners() {
-      // Bookings
-      db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap) {
-        allBookings = [];
-        snap.forEach(function(d){ allBookings.push(Object.assign({id:d.id},d.data())); });
-        updateStats(); renderBookings();
-      });
-      // Rooms
-      db.collection('rooms').orderBy('name').onSnapshot(function(snap) {
-        allRooms = [];
-        snap.forEach(function(d){ allRooms.push(Object.assign({id:d.id},d.data())); });
-        renderRooms();
-      });
-      // Admins list
-      db.collection('admins').onSnapshot(function(snap) {
-        var list = [];
-        snap.forEach(function(d){ list.push({email:d.id, data:d.data()}); });
-        renderAdmins(list);
-      });
-    }
+  function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
 
-    // ── Stats ─────────────────────────────────
-    function updateStats() {
-      var p=0,a=0,r=0;
-      allBookings.forEach(function(b){
-        if(b.status==='pending')p++;
-        else if(b.status==='approved')a++;
-        else if(b.status==='rejected')r++;
-      });
-      document.getElementById('statPending').textContent   = p;
-      document.getElementById('statApproved').textContent  = a;
-      document.getElementById('statRejected').textContent  = r;
-      document.getElementById('statTotal').textContent     = allBookings.length;
-    }
+  function setFilter(f,el){currentFilter=f;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
 
-    // ── Filter ────────────────────────────────
-    function setFilter(f,el) {
-      currentFilter = f;
-      document.querySelectorAll('.filter-pill').forEach(function(b){ b.classList.remove('active'); });
-      el.classList.add('active');
-      renderBookings();
-    }
-
-    // ── Render Bookings ───────────────────────
-    function renderBookings() {
-      var search = (document.getElementById('searchInput').value||'').toLowerCase();
-      var list = allBookings.filter(function(b) {
-        if (currentFilter !== 'all' && b.status !== currentFilter) return false;
-        if (search) {
-          var txt = ((b.fullName||b.userName||'')+(b.room||'')+(b.purpose||'')+(b.date||'')).toLowerCase();
-          if (txt.indexOf(search) === -1) return false;
-        }
-        return true;
-      });
-
-      var el = document.getElementById('bookingsList');
-      if (!list.length) { el.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ไม่พบรายการที่ตรงกัน</div>'; return; }
-
-      el.innerHTML = list.map(function(b) {
-        var sLabel = b.status==='approved'?'อนุมัติแล้ว':b.status==='rejected'?'ไม่อนุมัติ':'รอพิจารณา';
-        var sCls   = 'badge-'+(b.status||'pending');
-        var equip  = (b.equipment&&b.equipment.length) ? b.equipment.join(' · ') : null;
-        return '<div class="booking-card status-'+(b.status||'pending')+'">' +
-          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
-            '<div style="flex:1;min-width:0;">' +
-              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">' +
-                '<span style="font-size:15px;font-weight:800;color:#1e293b;">'+b.room+'</span>'+
-                '<span class="'+sCls+'">'+sLabel+'</span>'+
-                (b.hasLayout?'<span style="font-size:10px;font-weight:700;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:20px;">📎 มีผังโต๊ะ</span>':'')+
-              '</div>'+
-              '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:3px 16px;font-size:12px;color:#475569;margin-bottom:8px;">' +
-                '<span><b style="color:#1e293b;">วันที่:</b> '+b.date+'</span>'+
-                '<span><b style="color:#1e293b;">เวลา:</b> '+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span>'+
-                '<span><b style="color:#1e293b;">ผู้จอง:</b> '+(b.fullName||b.userName||'-')+'</span>'+
-                '<span><b style="color:#1e293b;">ตำแหน่ง:</b> '+(b.position||'-')+'</span>'+
-                '<span><b style="color:#1e293b;">ผู้เข้าร่วม:</b> '+(b.attendees||'-')+' คน</span>'+
-                '<span><b style="color:#1e293b;">วัตถุประสงค์:</b> '+b.purpose+'</span>'+
-              '</div>'+
-              (equip?'<div style="font-size:11px;color:#475569;background:#f8fafc;padding:6px 10px;border-radius:8px;margin-bottom:6px;">🔧 '+equip+'</div>':'')+
-              (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:#dcfce7;color:#15803d;padding:7px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
-              (b.rejectReason?'<div style="font-size:12px;background:#fee2e2;color:#b91c1c;padding:7px 12px;border-radius:8px;font-weight:600;margin-top:4px;">❌ เหตุผล: '+b.rejectReason+'</div>':'')+
-            '</div>'+
-            '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
-              (b.status==='pending'?
-                '<button class="btn-approve" onclick="openApprove(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="check" style="width:12px;height:12px;"></i>อนุมัติ</button>'+
-                '<button class="btn-reject"  onclick="openReject(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="x" style="width:12px;height:12px;"></i>ไม่อนุมัติ</button>'
-              :(b.status==='approved'?
-                '<button class="btn-reject" onclick="openReject(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="x" style="width:12px;height:12px;"></i>ยกเลิก</button>'
-              :''))+
-              '<button class="btn-delete" onclick="openDelete(\''+b.id+'\',\''+esc(b.room)+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>'+
-            '</div>'+
-          '</div>'+
-        '</div>';
-      }).join('');
-      lucide.createIcons();
-    }
-
-    function esc(s){ return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-
-    // ── Approve ───────────────────────────────
-    function openApprove(id,room,date){ pendingId=id; document.getElementById('approveModalSub').textContent=room+' · '+date; document.getElementById('approveNote').value=''; openModal('approveModal'); }
-    function confirmApprove(){
-      db.collection('bookings').doc(pendingId).update({
-        status:'approved', approveNote:document.getElementById('approveNote').value,
-        approvedBy:currentAdmin.email, approvedAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ closeModal('approveModal'); showToast('อนุมัติคำขอเรียบร้อย ✓'); })
-        .catch(function(e){ showToast(e.message,'error'); });
-    }
-
-    // ── Reject ────────────────────────────────
-    function openReject(id,room,date){ pendingId=id; document.getElementById('rejectModalSub').textContent=room+' · '+date; document.getElementById('rejectReason').value=''; openModal('rejectModal'); }
-    function confirmReject(){
-      var reason = document.getElementById('rejectReason').value.trim();
-      if (!reason) { showToast('กรุณาระบุเหตุผล','warn'); return; }
-      db.collection('bookings').doc(pendingId).update({
-        status:'rejected', rejectReason:reason,
-        rejectedBy:currentAdmin.email, rejectedAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ closeModal('rejectModal'); showToast('บันทึกการไม่อนุมัติแล้ว'); })
-        .catch(function(e){ showToast(e.message,'error'); });
-    }
-
-    // ── Delete ────────────────────────────────
-    function openDelete(id,room){ pendingId=id; document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?'; openModal('deleteModal'); }
-    function confirmDelete(){
-      db.collection('bookings').doc(pendingId).delete()
-        .then(function(){ closeModal('deleteModal'); showToast('ลบคำขอเรียบร้อยแล้ว'); })
-        .catch(function(e){ showToast(e.message,'error'); });
-    }
-
-    // ── Rooms ─────────────────────────────────
-    function renderRooms(){
-      var c = document.getElementById('roomsList');
-      if (!allRooms.length) { c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ยังไม่มีห้องในระบบ</div>'; return; }
-      c.innerHTML = allRooms.map(function(r){
-        return '<div class="list-item">'+
-          '<div>'+
-            '<p style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px;">'+r.name+'</p>'+
-            '<p style="font-size:12px;color:#64748b;">'+(r.capacity?'ความจุ '+r.capacity+' คน':'')+' '+(r.detail?'· '+r.detail:'')+'</p>'+
-          '</div>'+
-          '<div style="display:flex;gap:8px;flex-shrink:0;">'+
-            '<button class="btn-secondary" style="font-size:12px;padding:7px 12px;" onclick="openRoomEdit(\''+r.id+'\')"><i data-lucide="pencil" style="width:12px;height:12px;display:inline;margin-right:3px;vertical-align:-1px;"></i>แก้ไข</button>'+
-            '<button class="btn-delete" onclick="deleteRoom(\''+r.id+'\',\''+esc(r.name)+'\')"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>'+
-          '</div>'+
-        '</div>';
-      }).join('');
-      lucide.createIcons();
-    }
-    function openRoomModal(){ editRoomId=null; document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่'; document.getElementById('roomName').value=''; document.getElementById('roomCapacity').value=''; document.getElementById('roomDetail').value=''; openModal('roomModal'); }
-    function openRoomEdit(id){
-      var r = allRooms.find(function(x){return x.id===id;});
-      if (!r) return;
-      editRoomId=id;
-      document.getElementById('roomModalTitle').textContent='แก้ไขห้อง';
-      document.getElementById('roomName').value=r.name||'';
-      document.getElementById('roomCapacity').value=r.capacity||'';
-      document.getElementById('roomDetail').value=r.detail||'';
-      openModal('roomModal');
-    }
-    function saveRoom(){
-      var name = document.getElementById('roomName').value.trim();
-      if (!name) { showToast('กรุณาระบุชื่อห้อง','warn'); return; }
-      var data = { name:name, capacity:document.getElementById('roomCapacity').value.trim(), detail:document.getElementById('roomDetail').value.trim(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
-      var p = editRoomId ? db.collection('rooms').doc(editRoomId).update(data) : db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-      p.then(function(){ closeModal('roomModal'); showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓'); }).catch(function(e){ showToast(e.message,'error'); });
-    }
-    function deleteRoom(id,name){
-      if (!confirm('ต้องการลบห้อง "'+name+'" ใช่หรือไม่?')) return;
-      db.collection('rooms').doc(id).delete().then(function(){ showToast('ลบห้องแล้ว'); }).catch(function(e){ showToast(e.message,'error'); });
-    }
-
-    // ── Admins ────────────────────────────────
-    function renderAdmins(list){
-      var c = document.getElementById('adminsList');
-      if (!list.length) { c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;">ยังไม่มีรายการ Admin</div>'; return; }
-      c.innerHTML = list.map(function(a){
-        var isMe = a.email.toLowerCase() === (currentAdmin.email||'').toLowerCase();
-        return '<div class="list-item">'+
-          '<div style="display:flex;align-items:center;gap:12px;">'+
-            '<div style="width:36px;height:36px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="shield" style="width:16px;height:16px;color:#7c3aed;"></i></div>'+
-            '<div>'+
-              '<p style="font-weight:700;font-size:13px;color:#1e293b;">'+a.email+
-                (isMe?' <span style="font-size:10px;background:#ede9fe;color:#7c3aed;padding:1px 7px;border-radius:10px;font-weight:700;">คุณ</span>':'')+
-              '</p>'+
-              (a.data&&a.data.name?'<p style="font-size:11px;color:#64748b;">'+a.data.name+'</p>':'')+
-            '</div>'+
-          '</div>'+
-          (!isMe?'<button class="btn-delete" onclick="deleteAdmin(\''+a.email+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>':'<span></span>')+
-        '</div>';
-      }).join('');
-      lucide.createIcons();
-    }
-    function openAddAdminModal(){ document.getElementById('newAdminName').value=''; document.getElementById('newAdminEmail').value=''; openModal('adminModal'); }
-    function saveAdmin(){
-      var email = (document.getElementById('newAdminEmail').value||'').trim().toLowerCase();
-      var name  = (document.getElementById('newAdminName').value||'').trim();
-      if (!email||!email.includes('@')) { showToast('กรุณาระบุ email ให้ถูกต้อง','warn'); return; }
-      db.collection('admins').doc(email).set({ name:name, addedBy:currentAdmin.email, addedAt:firebase.firestore.FieldValue.serverTimestamp() })
-        .then(function(){ closeModal('adminModal'); showToast('เพิ่ม Admin แล้ว ✓'); })
-        .catch(function(e){ showToast(e.message,'error'); });
-    }
-    function deleteAdmin(email){
-      if (!confirm('ต้องการลบ Admin "'+email+'" ใช่หรือไม่?')) return;
-      db.collection('admins').doc(email).delete().then(function(){ showToast('ลบ Admin แล้ว'); }).catch(function(e){ showToast(e.message,'error'); });
-    }
-
-    // ── Tabs ──────────────────────────────────
-    function switchTab(name,btn){
-      document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
-      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-      document.getElementById('tab-'+name).classList.add('active');
-      btn.classList.add('active');
-    }
-
+  function renderBookings(){
+    var search=(document.getElementById('searchInput').value||'').toLowerCase();
+    var list=allBookings.filter(function(b){
+      if(currentFilter!=='all'&&b.status!==currentFilter)return false;
+      if(search){var txt=((b.fullName||b.userName||'')+(b.room||'')+(b.purpose||'')+(b.date||'')).toLowerCase();if(txt.indexOf(search)===-1)return false;}
+      return true;
+    });
+    var el=document.getElementById('bookingsList');
+    if(!list.length){el.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ไม่พบรายการ</div>';return;}
+    el.innerHTML=list.map(function(b){
+      var sLabel=b.status==='approved'?'อนุมัติแล้ว':b.status==='rejected'?'ไม่อนุมัติ':'รอพิจารณา';
+      var sCls='badge-'+(b.status||'pending');
+      var equip=(b.equipment&&b.equipment.length)?b.equipment.join(' · '):null;
+      return '<div class="booking-card status-'+(b.status||'pending')+'">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap;">' +
+              '<span style="font-size:15px;font-weight:800;color:#1e293b;">'+b.room+'</span><span class="'+sCls+'">'+sLabel+'</span>' +
+              (b.hasLayout?'<span style="font-size:10px;font-weight:700;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:20px;">📎 มีผังโต๊ะ</span>':'')+
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:2px 14px;font-size:12px;color:#475569;margin-bottom:7px;">' +
+              '<span><b style="color:#1e293b;">วันที่:</b> '+b.date+'</span>' +
+              '<span><b style="color:#1e293b;">เวลา:</b> '+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span>' +
+              '<span><b style="color:#1e293b;">ผู้จอง:</b> '+(b.fullName||b.userName||'-')+'</span>' +
+              '<span><b style="color:#1e293b;">ตำแหน่ง:</b> '+(b.position||'-')+'</span>' +
+              '<span><b style="color:#1e293b;">ผู้เข้าร่วม:</b> '+(b.attendees||'-')+' คน</span>' +
+              '<span><b style="color:#1e293b;">วัตถุประสงค์:</b> '+b.purpose+'</span>' +
+            '</div>' +
+            (equip?'<div style="font-size:11px;color:#475569;background:#f8fafc;padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
+            (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:#dcfce7;color:#15803d;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
+            (b.rejectReason?'<div style="font-size:12px;background:#fee2e2;color:#b91c1c;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">❌ เหตุผล: '+b.rejectReason+'</div>':'')+
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">' +
+            (b.status==='pending'?
+              '<button class="btn-approve" onclick="openApprove(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="check" style="width:11px;height:11px;"></i>อนุมัติ</button>' +
+              '<button class="btn-reject" onclick="openReject(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="x" style="width:11px;height:11px;"></i>ไม่อนุมัติ</button>'
+            :(b.status==='approved'?
+              '<button class="btn-reject" onclick="openReject(\''+b.id+'\',\''+esc(b.room)+'\',\''+esc(b.date)+'\')"><i data-lucide="x" style="width:11px;height:11px;"></i>ยกเลิก</button>':''
+            ))+
+            '<button class="btn-delete" onclick="openDelete(\''+b.id+'\',\''+esc(b.room)+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
     lucide.createIcons();
-  </script>
+  }
+
+  function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+  function openApprove(id,room,date){pendingId=id;document.getElementById('approveModalSub').textContent=room+' · '+date;document.getElementById('approveNote').value='';openModal('approveModal');}
+  function confirmApprove(){db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:document.getElementById('approveNote').value,approvedBy:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');}).catch(function(e){showToast(e.message,'error');});}
+
+  function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
+  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+
+  function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
+  function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+
+  function renderRooms(){var c=document.getElementById('roomsList');if(!allRooms.length){c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ยังไม่มีห้อง</div>';return;}c.innerHTML=allRooms.map(function(r){return'<div class="list-item"><div><p style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px;">'+r.name+'</p><p style="font-size:12px;color:#64748b;">'+(r.capacity?'ความจุ '+r.capacity+' คน':'')+' '+(r.detail?'· '+r.detail:'')+'</p></div><div style="display:flex;gap:8px;flex-shrink:0;"><button class="btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openRoomEdit(\''+r.id+'\')"><i data-lucide="pencil" style="width:12px;height:12px;display:inline;margin-right:2px;vertical-align:-1px;"></i>แก้ไข</button><button class="btn-delete" onclick="deleteRoom(\''+r.id+'\',\''+esc(r.name)+'\')"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></div></div>';}).join('');lucide.createIcons();}
+  function openRoomModal(){editRoomId=null;document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่';document.getElementById('roomName').value='';document.getElementById('roomCapacity').value='';document.getElementById('roomDetail').value='';openModal('roomModal');}
+  function openRoomEdit(id){var r=allRooms.find(function(x){return x.id===id;});if(!r)return;editRoomId=id;document.getElementById('roomModalTitle').textContent='แก้ไขห้อง';document.getElementById('roomName').value=r.name||'';document.getElementById('roomCapacity').value=r.capacity||'';document.getElementById('roomDetail').value=r.detail||'';openModal('roomModal');}
+  function saveRoom(){var name=document.getElementById('roomName').value.trim();if(!name){showToast('กรุณาระบุชื่อห้อง','warn');return;}var data={name:name,capacity:document.getElementById('roomCapacity').value.trim(),detail:document.getElementById('roomDetail').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};var p=editRoomId?db.collection('rooms').doc(editRoomId).update(data):db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));p.then(function(){closeModal('roomModal');showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});}
+  function deleteRoom(id,name){if(!confirm('ต้องการลบห้อง "'+name+'" ใช่หรือไม่?'))return;db.collection('rooms').doc(id).delete().then(function(){showToast('ลบห้องแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+
+  function renderAdmins(list){var c=document.getElementById('adminsList');if(!list.length){c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;">ยังไม่มีรายการ</div>';return;}c.innerHTML=list.map(function(a){var isMe=a.email.toLowerCase()===(currentAdmin.email||'').toLowerCase();return'<div class="list-item"><div style="display:flex;align-items:center;gap:12px;"><div style="width:34px;height:34px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="shield" style="width:15px;height:15px;color:#7c3aed;"></i></div><div><p style="font-weight:700;font-size:13px;color:#1e293b;">'+a.email+(isMe?' <span style="font-size:9px;background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:8px;font-weight:700;">คุณ</span>':'')+'</p>'+(a.data&&a.data.name?'<p style="font-size:11px;color:#64748b;">'+a.data.name+'</p>':'')+'</div></div>'+(!isMe?'<button class="btn-delete" onclick="deleteAdmin(\''+a.email+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>':'<span></span>')+'</div>';}).join('');lucide.createIcons();}
+  function openAddAdminModal(){document.getElementById('newAdminName').value='';document.getElementById('newAdminEmail').value='';openModal('adminModal');}
+  function saveAdmin(){var email=(document.getElementById('newAdminEmail').value||'').trim().toLowerCase();var name=(document.getElementById('newAdminName').value||'').trim();if(!email||!email.includes('@')){showToast('กรุณาระบุ email ให้ถูกต้อง','warn');return;}db.collection('admins').doc(email).set({name:name,addedBy:currentAdmin.email,addedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('adminModal');showToast('เพิ่ม Admin แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});}
+  function deleteAdmin(email){if(!confirm('ต้องการลบ Admin "'+email+'" ใช่หรือไม่?'))return;db.collection('admins').doc(email).delete().then(function(){showToast('ลบ Admin แล้ว');}).catch(function(e){showToast(e.message,'error');});}
+
+  function switchTab(name,btn){
+    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.sidebar-btn.admin-btn').forEach(function(b){b.classList.remove('active');b.style.color='#7c3aed';});
+    document.getElementById('tab-'+name).classList.add('active');
+    if(btn){btn.classList.add('active');btn.style.color='white';}
+    closeSidebar();
+  }
+
+  lucide.createIcons();
+</script>
 </body>
 </html>

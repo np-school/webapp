@@ -11,245 +11,241 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: 'Sarabun', sans-serif; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .sidebar-btn { display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:16px; font-weight:700; color:#64748b; width:100%; background:none; border:none; cursor:pointer; text-decoration:none; transition:all 0.2s; font-size:14px; }
-    .sidebar-btn:hover { background:#f1f5f9; }
-    .sidebar-btn.active { background:#1d4ed8; color:white; box-shadow:0 10px 15px -3px rgba(30,64,175,0.2); }
-    #loadingOverlay { display:flex; position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:100; align-items:center; justify-content:center; }
-    .spinner { border:3px solid #e2e8f0; border-top:3px solid #1d4ed8; border-radius:50%; width:48px; height:48px; animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    /* ── Loading ── */
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:9999;align-items:center;justify-content:center;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    /* ── Sidebar shared ── */
+    .sidebar-wrap{width:272px;flex-shrink:0;transition:transform .3s ease;}
+    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:24px 12px;}
+    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:14px;white-space:nowrap;}
+    .sidebar-btn:hover{background:#f1f5f9;}
+    .sidebar-btn.active{background:#1d4ed8;color:white;box-shadow:0 8px 15px -3px rgba(30,64,175,.25);}
+    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
+    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
+    /* ── Sidebar overlay (mobile) ── */
+    #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
+    #sidebarOverlay.open{display:block;}
+    /* ── Mobile drawer ── */
+    @media(max-width:1023px){
+      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
+      .sidebar-wrap.open{transform:translateX(0);}
+      #mainGrid{flex-direction:column;}
+      #contentArea{width:100%;}
+    }
+    @media(min-width:1024px){
+      #hamburgerBtn{display:none!important;}
+      .sidebar-inner{border-right:none;}
+    }
+    /* ── Tab content ── */
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+    /* ── Public hero ── */
+    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+    @media(max-width:768px){.hero-grid{grid-template-columns:1fr;}.hero-img{display:none;}}
   </style>
 </head>
-<body style="background:#f8fafc; color:#0f172a; overflow-x:hidden;">
+<body style="background:#f8fafc;overflow-x:hidden;">
 
-  <div id="loadingOverlay"><div class="spinner"></div></div>
+<div id="loadingOverlay"><div class="spinner"></div></div>
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-  <!-- Navbar -->
-  <nav style="position:sticky; top:0; z-index:50; background:#1d4ed8; padding:12px 24px; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-bottom:1px solid #1e40af;">
-    <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:56px;">
-        <div style="border-left:1px solid rgba(99,149,255,0.5); padding-left:16px;">
-          <div style="font-size:18px; font-weight:700; color:white;">โรงเรียนหนองกี่พิทยาคม</div>
-          <div style="display:flex; align-items:center; gap:4px; color:rgba(191,219,254,0.8); font-size:12px;">
-            <i data-lucide="map-pin" style="width:12px;height:12px;color:#f87171;"></i> จังหวัดบุรีรัมย์
-          </div>
-        </div>
-      </div>
-      <div id="userNavSection">
-        <button onclick="handleLogin()" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:white;color:#1d4ed8;font-weight:700;border-radius:12px;border:none;cursor:pointer;">
-          เข้าสู่ระบบด้วย Google
-        </button>
+<!-- ── Navbar ── -->
+<nav style="position:sticky;top:0;z-index:150;background:#1d4ed8;padding:12px 20px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
+  <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">
+        <i data-lucide="menu" style="width:20px;height:20px;"></i>
+      </button>
+      <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">
+      <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
+        <div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>
+        <div style="font-size:11px;color:#bfdbfe;">ระบบบริการออนไลน์</div>
       </div>
     </div>
-  </nav>
+    <div id="userNavSection">
+      <button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>
+    </div>
+  </div>
+</nav>
 
-  <!-- Public View -->
-  <main id="publicView">
-    <section style="max-width:1200px; margin:0 auto; padding:64px 24px;">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;">
-        <div>
-          <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:14px;font-weight:700;margin-bottom:32px;">
-            <i data-lucide="bell" style="width:16px;height:16px;"></i> ระบบสารสนเทศและบริการออนไลน์
-          </div>
-          <h2 style="font-size:clamp(2rem,5vw,4rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:24px;">
-            ยกระดับบริการ <br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
-          </h2>
-          <p style="font-size:18px;color:#475569;max-width:480px;line-height:1.7;margin-bottom:32px;">
-            ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา
-          </p>
-          <button onclick="handleLogin()" style="padding:16px 32px;background:#1d4ed8;color:white;font-weight:700;border-radius:16px;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;gap:8px;box-shadow:0 20px 25px -5px rgba(29,78,216,0.3);">
-            เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:20px;height:20px;"></i>
+<!-- ── Public View ── -->
+<main id="publicView">
+  <section style="max-width:1200px;margin:0 auto;padding:64px 24px;">
+    <div class="hero-grid">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:28px;">
+          <i data-lucide="bell" style="width:14px;height:14px;"></i> ระบบสารสนเทศและบริการออนไลน์
+        </div>
+        <h2 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:20px;">
+          ยกระดับบริการ<br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
+        </h2>
+        <p style="font-size:17px;color:#475569;line-height:1.75;margin-bottom:28px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+        <button onclick="handleLogin()" style="padding:14px 28px;background:#1d4ed8;color:white;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 16px 24px -4px rgba(29,78,216,.35);">
+          เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+      <div class="hero-img">
+        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
+          style="border-radius:36px;width:100%;aspect-ratio:16/9;object-fit:cover;box-shadow:0 24px 48px rgba(0,0,0,.18);">
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ── Private Dashboard ── -->
+<div id="privateView" style="display:none;">
+  <div id="mainGrid" style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
+
+    <!-- Sidebar -->
+    <div class="sidebar-wrap" id="sidebar">
+      <div class="sidebar-inner" style="display:flex;flex-direction:column;height:100%;">
+        <!-- Close btn (mobile) -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;" id="sidebarCloseWrap">
+          <button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
+            <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
           </button>
         </div>
-        <div>
-          <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
-            style="border-radius:40px;width:100%;aspect-ratio:16/9;object-fit:cover;box-shadow:0 25px 50px rgba(0,0,0,0.2);">
-        </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- Private Dashboard -->
-  <main id="privateView" style="display:none;max-width:1200px;margin:0 auto;padding:40px 24px;">
-    <div style="display:grid;grid-template-columns:288px 1fr;gap:32px;align-items:start;">
-
-      <!-- Sidebar -->
-      <div>
-        <p style="padding:0 20px 12px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;">เมนูหลัก</p>
+        <div class="sec-label">เมนูหลัก</div>
         <button onclick="showTab('dashboard')" id="btn-dashboard" class="sidebar-btn active">
-          <i data-lucide="home" style="width:20px;height:20px;"></i> หน้าแรก
+          <i data-lucide="home" style="width:19px;height:19px;flex-shrink:0;"></i> หน้าแรก
         </button>
 
-        <p style="padding:16px 20px 12px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;">บริการออนไลน์</p>
+        <div class="sec-label" style="margin-top:8px;">บริการออนไลน์</div>
         <a href="room-booking.html" class="sidebar-btn">
-          <i data-lucide="calendar" style="width:20px;height:20px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
+          <i data-lucide="calendar" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
         </a>
         <button onclick="showTab('cctv')" id="btn-cctv" class="sidebar-btn">
-          <i data-lucide="monitor" style="width:20px;height:20px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูลกล้องวงจรปิด
+          <i data-lucide="monitor" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูล CCTV
         </button>
 
-        <!-- Admin section — แสดงเฉพาะ admin -->
+        <!-- Admin — hidden until verified -->
         <div id="adminSidebarSection" style="display:none;">
-          <div style="margin:16px 20px 0;height:1px;background:#e2e8f0;"></div>
-          <p style="padding:16px 20px 12px;font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:2px;">สำหรับเจ้าหน้าที่</p>
-          <a href="admin.html" class="sidebar-btn" style="color:#7c3aed;">
-            <i data-lucide="shield" style="width:20px;height:20px;flex-shrink:0;color:#7c3aed;"></i>
+          <div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>
+          <div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>
+          <a href="admin.html" class="sidebar-btn admin-btn" style="color:#7c3aed;">
+            <i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>
             <span>จัดการระบบจอง</span>
-            <span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0;">ADMIN</span>
+            <span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>
           </a>
         </div>
 
-        <div style="padding:28px 20px 0;" id="sidebarProfile"></div>
-      </div>
-
-      <!-- Content -->
-      <div>
-        <div id="tab-dashboard" class="tab-content active">
-          <div style="background:white;padding:32px;border-radius:32px;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,0.05);margin-bottom:24px;">
-            <h3 id="welcomeText" style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:4px;">ยินดีต้อนรับ</h3>
-            <p style="color:#64748b;font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-            <div style="background:#eff6ff;padding:24px;border-radius:32px;border:1px solid #dbeafe;display:flex;align-items:center;gap:16px;">
-              <div style="width:48px;height:48px;background:#1d4ed8;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                <i data-lucide="calendar"></i>
-              </div>
-              <div>
-                <p style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1px;">การจองของฉัน</p>
-                <p id="bookingCount" style="font-size:20px;font-weight:900;">0 รายการ</p>
-              </div>
-            </div>
-            <div style="background:#fff7ed;padding:24px;border-radius:32px;border:1px solid #fed7aa;display:flex;align-items:center;gap:16px;">
-              <div style="width:48px;height:48px;background:#ea580c;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                <i data-lucide="monitor"></i>
-              </div>
-              <div>
-                <p style="font-size:11px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:1px;">คำขอ CCTV</p>
-                <p style="font-size:20px;font-weight:900;">0 รายการ</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="tab-cctv" class="tab-content">
-          <div style="background:white;padding:80px;border-radius:40px;border:1px solid #f1f5f9;text-align:center;">
-            <i data-lucide="monitor" style="width:64px;height:64px;color:#fdba74;margin:0 auto 24px;display:block;"></i>
-            <h4 style="font-size:24px;font-weight:700;color:#1e293b;margin-bottom:12px;">ระบบขอใช้ข้อมูลกล้องวงจรปิด</h4>
-            <p style="color:#64748b;max-width:320px;margin:0 auto;">ขณะนี้อยู่ระหว่างการปรับปรุงระบบ ข้อมูลจะเปิดให้บริการเร็วๆ นี้</p>
-          </div>
-        </div>
+        <div style="flex:1;"></div>
+        <div style="padding:4px 4px 8px;" id="sidebarProfile"></div>
       </div>
     </div>
-  </main>
 
-  <footer style="padding:48px 24px;border-top:1px solid #e2e8f0;margin-top:80px;text-align:center;">
-    <p style="font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:3px;">NONGKI PITTAYAKOM SCHOOL</p>
-    <p style="font-size:11px;color:#94a3b8;margin-top:4px;">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
-  </footer>
+    <!-- Content -->
+    <div id="contentArea" style="flex:1;min-width:0;padding:32px 24px;">
 
-  <script>
-    var firebaseConfig = {
-      apiKey:    'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
-      authDomain:'np-webapp-74616.firebaseapp.com',
-      projectId: 'np-webapp-74616',
-      appId:     '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    var auth = firebase.auth(), db = firebase.firestore();
+      <!-- Dashboard tab -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div style="background:white;padding:28px 32px;border-radius:24px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:24px;">
+          <h3 id="welcomeText" style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;">ยินดีต้อนรับ</h3>
+          <p style="color:#64748b;font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
+          <div style="background:#eff6ff;padding:24px;border-radius:24px;border:1px solid #dbeafe;display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:#1d4ed8;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="calendar" style="width:22px;height:22px;"></i>
+            </div>
+            <div>
+              <p style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1px;">การจองของฉัน</p>
+              <p id="bookingCount" style="font-size:22px;font-weight:900;color:#1e293b;">0 รายการ</p>
+            </div>
+          </div>
+          <div style="background:#fff7ed;padding:24px;border-radius:24px;border:1px solid #fed7aa;display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:#ea580c;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="monitor" style="width:22px;height:22px;"></i>
+            </div>
+            <div>
+              <p style="font-size:11px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:1px;">คำขอ CCTV</p>
+              <p style="font-size:22px;font-weight:900;color:#1e293b;">0 รายการ</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        document.getElementById('publicView').style.display  = 'none';
-        document.getElementById('privateView').style.display = 'block';
-        document.getElementById('welcomeText').textContent   = 'สวัสดี, ' + user.displayName;
-        updateNavUser(user);
-        updateSidebarProfile(user);
-        fetchUserStats(user.uid);
-        checkAdminAccess(user.email);
-      } else {
-        document.getElementById('publicView').style.display  = 'block';
-        document.getElementById('privateView').style.display = 'none';
-        resetNavUI();
-      }
-      document.getElementById('loadingOverlay').style.display = 'none';
-    });
+      <!-- CCTV tab -->
+      <div id="tab-cctv" class="tab-content">
+        <div style="background:white;padding:80px 40px;border-radius:32px;border:1px solid #e2e8f0;text-align:center;">
+          <i data-lucide="monitor" style="width:56px;height:56px;color:#fdba74;margin:0 auto 20px;display:block;"></i>
+          <h4 style="font-size:22px;font-weight:700;color:#1e293b;margin-bottom:10px;">ระบบขอใช้ข้อมูลกล้องวงจรปิด</h4>
+          <p style="color:#64748b;max-width:300px;margin:0 auto;">ขณะนี้อยู่ระหว่างการปรับปรุงระบบ</p>
+        </div>
+      </div>
 
-    // ตรวจสอบ admin จาก Firestore collection 'admins'
-    // document ID = email ของผู้ใช้
-    function checkAdminAccess(email) {
-      if (!email) return;
-      db.collection('admins').doc(email.toLowerCase()).get()
-        .then(function(doc) {
-          if (doc.exists) {
-            document.getElementById('adminSidebarSection').style.display = 'block';
-            lucide.createIcons();
-          }
-        })
-        .catch(function(err) { console.log('admin check:', err.message); });
+    </div>
+  </div>
+</div>
+
+<footer style="padding:40px 24px;border-top:1px solid #e2e8f0;text-align:center;">
+  <p style="font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:3px;font-size:13px;">NONGKI PITTAYAKOM SCHOOL</p>
+  <p style="font-size:11px;color:#94a3b8;margin-top:4px;">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
+</footer>
+
+<script>
+  var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
+  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  var auth=firebase.auth(),db=firebase.firestore();
+
+  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
+  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
+
+  auth.onAuthStateChanged(function(user){
+    if(user){
+      document.getElementById('publicView').style.display='none';
+      document.getElementById('privateView').style.display='block';
+      document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
+      updateNavUser(user);updateSidebarProfile(user);
+      fetchUserStats(user.uid);checkAdminAccess(user.email);
+    }else{
+      document.getElementById('publicView').style.display='block';
+      document.getElementById('privateView').style.display='none';
+      resetNavUI();
     }
-
-    function handleLogin() {
-      document.getElementById('loadingOverlay').style.display = 'flex';
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(err) {
-        console.error(err);
-        document.getElementById('loadingOverlay').style.display = 'none';
-      });
-    }
-
-    function handleLogout() {
-      document.getElementById('loadingOverlay').style.display = 'flex';
-      auth.signOut();
-    }
-
-    function fetchUserStats(uid) {
-      db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap) {
-        document.getElementById('bookingCount').textContent = snap.size + ' รายการ';
-      });
-    }
-
-    function updateNavUser(user) {
-      document.getElementById('userNavSection').innerHTML =
-        '<div style="display:flex;align-items:center;gap:12px;">' +
-          '<img src="'+user.photoURL+'" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);">' +
-          '<button onclick="handleLogout()" style="padding:8px;background:none;border:none;cursor:pointer;color:rgba(191,219,254,0.8);">' +
-            '<i data-lucide="log-out" style="width:20px;height:20px;"></i>' +
-          '</button>' +
-        '</div>';
-      lucide.createIcons();
-    }
-
-    function resetNavUI() {
-      document.getElementById('userNavSection').innerHTML =
-        '<button onclick="handleLogin()" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:white;color:#1d4ed8;font-weight:700;border-radius:12px;border:none;cursor:pointer;">เข้าสู่ระบบด้วย Google</button>';
-      lucide.createIcons();
-    }
-
-    function updateSidebarProfile(user) {
-      document.getElementById('sidebarProfile').innerHTML =
-        '<div style="background:white;padding:20px;border-radius:24px;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
-          '<div style="display:flex;align-items:center;gap:12px;overflow:hidden;">' +
-            '<img src="'+user.photoURL+'" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
-            '<div style="overflow:hidden;">' +
-              '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p>' +
-              '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-    }
-
-    function showTab(name) {
-      document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
-      document.querySelectorAll('.sidebar-btn').forEach(function(b){ b.classList.remove('active'); });
-      var tab = document.getElementById('tab-'+name);
-      var btn = document.getElementById('btn-'+name);
-      if (tab) tab.classList.add('active');
-      if (btn) btn.classList.add('active');
-    }
-
+    document.getElementById('loadingOverlay').style.display='none';
     lucide.createIcons();
-  </script>
+  });
+
+  function checkAdminAccess(email){
+    if(!email)return;
+    db.collection('admins').doc(email.toLowerCase()).get().then(function(doc){
+      if(doc.exists){document.getElementById('adminSidebarSection').style.display='block';lucide.createIcons();}
+    }).catch(function(){});
+  }
+
+  function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
+  function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
+
+  function fetchUserStats(uid){
+    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
+      document.getElementById('bookingCount').textContent=snap.size+' รายการ';
+    });
+  }
+
+  function updateNavUser(user){
+    document.getElementById('userNavSection').innerHTML='<div style="display:flex;align-items:center;gap:10px;"><img src="'+user.photoURL+'" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);"><button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;"><i data-lucide="log-out" style="width:18px;height:18px;"></i></button></div>';
+    lucide.createIcons();
+  }
+  function resetNavUI(){
+    document.getElementById('userNavSection').innerHTML='<button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>';
+    lucide.createIcons();
+  }
+  function updateSidebarProfile(user){
+    document.getElementById('sidebarProfile').innerHTML='<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;"><div style="display:flex;align-items:center;gap:10px;overflow:hidden;"><img src="'+user.photoURL+'" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"><div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p><p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p></div></div></div>';
+  }
+
+  function showTab(name){
+    document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.sidebar-btn').forEach(function(b){b.classList.remove('active');});
+    var t=document.getElementById('tab-'+name),b=document.getElementById('btn-'+name);
+    if(t)t.classList.add('active');if(b)b.classList.add('active');
+    closeSidebar();
+  }
+  lucide.createIcons();
+</script>
 </body>
 </html>
