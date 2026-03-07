@@ -41,9 +41,6 @@
     /* ── Tab content ── */
     .tab-content{display:none;}
     .tab-content.active{display:block;}
-    /* ── Public hero ── */
-    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
-    @media(max-width:768px){.hero-grid{grid-template-columns:1fr;}.hero-img{display:none;}}
     /* ── Public calendar ── */
     .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
     .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
@@ -56,9 +53,29 @@
     .pub-stat-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s;}
     @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
-    @media(max-width:768px){
-      .dashboard-two-col{grid-template-columns:1fr!important;}
-    }
+    @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
+    /* ── New Public UI ── */
+    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;}
+    .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
+    .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;}
+    .service-card{background:white;border-radius:20px;border:1px solid #e2e8f0;padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
+    .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:#bfdbfe;}
+    .service-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .2s;}
+    .service-card:hover .service-icon{transform:scale(1.08);}
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
+    @media(max-width:640px){.services-grid{grid-template-columns:repeat(2,1fr);gap:12px;}.service-card{padding:18px 14px;}}
+    @media(max-width:360px){.services-grid{grid-template-columns:1fr;}}
+    .pub-section{max-width:1200px;margin:0 auto;padding:0 20px;}
+    @media(max-width:480px){.pub-section{padding:0 14px;}}
+    .login-gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
+    .login-gate.open{display:flex;}
+    .login-gate-box{background:white;border-radius:24px;width:100%;max-width:400px;padding:36px 32px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);animation:popIn .25s cubic-bezier(.4,0,.2,1);}
+    @keyframes popIn{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
+    @media(max-width:480px){.login-gate-box{padding:28px 20px;}}
+    .pub-stat-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;color:white;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    .pub-stats-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;}
+    @media(max-width:480px){.nav-school-name{font-size:13px!important;}.nav-subtitle{display:none;}}
+    @media(max-width:768px){#pubCalGrid{grid-template-columns:1fr!important;}}
   </style>
 </head>
 <body style="background:#f8fafc;overflow-x:hidden;">
@@ -86,88 +103,172 @@
 </nav>
 
 <!-- ── Public View ── -->
+<div id="loginGate" class="login-gate" onclick="if(event.target===this)closeLoginGate()">
+  <div class="login-gate-box">
+    <div id="loginGateIcon" style="width:64px;height:64px;border-radius:20px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <i data-lucide="lock" style="width:28px;height:28px;color:#1d4ed8;"></i>
+    </div>
+    <h3 id="loginGateTitle" style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">เข้าสู่ระบบก่อนใช้งาน</h3>
+    <p id="loginGateDesc" style="font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.6;">กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการนี้</p>
+    <button onclick="handleLogin()" style="width:100%;padding:14px;background:#1d4ed8;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);margin-bottom:12px;">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      เข้าสู่ระบบด้วย Google
+    </button>
+    <button onclick="closeLoginGate()" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
+  </div>
+</div>
+
 <main id="publicView">
-  <!-- Hero -->
-  <section style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
-    <div class="hero-grid">
-      <div>
-        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:24px;">
-          <i data-lucide="bell" style="width:14px;height:14px;"></i> ระบบสารสนเทศและบริการออนไลน์
-        </div>
-        <h2 style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:16px;">
-          ยกระดับบริการ<br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
-        </h2>
-        <p style="font-size:16px;color:#475569;line-height:1.75;margin-bottom:24px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
-        <button onclick="handleLogin()" style="padding:14px 28px;background:#1d4ed8;color:white;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 16px 24px -4px rgba(29,78,216,.35);">
-          เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
-        </button>
-      </div>
-      <div class="hero-img">
-        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
-          style="border-radius:36px;width:100%;aspect-ratio:16/9;object-fit:cover;box-shadow:0 24px 48px rgba(0,0,0,.18);">
-      </div>
-    </div>
-  </section>
 
-  <!-- Public Calendar Section -->
-  <section style="max-width:1200px;margin:0 auto;padding:0 24px 56px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-      <div style="width:4px;height:28px;background:#1d4ed8;border-radius:4px;"></div>
-      <h3 style="font-size:20px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h3>
-      <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">ดูได้โดยไม่ต้องล็อกอิน</span>
-    </div>
-
-    <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
-      <!-- Left: Calendar + Stats -->
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <!-- Calendar card -->
-        <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
-          <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
-            <div style="display:flex;gap:2px;">
-              <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-              <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
-            </div>
+  <!-- ══ HERO ══ -->
+  <section class="pub-hero-bg" style="padding:56px 0 48px;">
+    <div class="pub-hero-dots"></div>
+    <div class="pub-section" style="position:relative;z-index:1;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;">
+        <!-- Text -->
+        <div style="flex:1;min-width:260px;">
+          <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:22px;letter-spacing:.5px;">
+            <i data-lucide="zap" style="width:13px;height:13px;"></i> ระบบสารสนเทศและบริการออนไลน์
           </div>
-          <div style="padding:12px;">
-            <div id="pubMonthLabel" style="text-align:center;font-weight:700;font-size:13px;color:#334155;margin-bottom:8px;"></div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:5px;text-align:center;">
-              <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="pubCalGrid2"></div>
-            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:9px;">
-              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#1d4ed8;border-radius:50%;display:inline-block;"></span>วันนี้</span>
-              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#eab308;border-radius:50%;display:inline-block;"></span>มีจอง</span>
-              <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#fecaca;border:1px solid #fca5a5;border-radius:50%;display:inline-block;"></span>จองเต็ม</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Monthly stats card -->
-        <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:16px;">
-          <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน</div>
-          <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:10px;"></div>
-          <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div></div>
-        </div>
-      </div>
-
-      <!-- Right: Day Detail -->
-      <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;min-height:320px;">
-        <div style="padding:13px 16px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-          <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
-          <span id="pubDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
-        </div>
-        <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
-          <div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
-        </div>
-        <div style="padding:14px 16px;border-top:1px solid #f1f5f9;text-align:center;">
-          <button onclick="handleLogin()" style="padding:10px 24px;background:#1d4ed8;color:white;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
-            <i data-lucide="log-in" style="width:15px;height:15px;"></i> เข้าสู่ระบบเพื่อจองห้อง
+          <h1 style="font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;color:white;line-height:1.15;margin-bottom:14px;">
+            ยกระดับบริการ<br><span style="color:#93c5fd;">เพื่อชาว NP</span>
+          </h1>
+          <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:420px;margin-bottom:28px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+          <button onclick="handleLogin()" style="padding:14px 28px;background:white;color:#1d4ed8;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:9px;box-shadow:0 8px 24px rgba(0,0,0,.2);">
+            <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#1d4ed8" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+            เข้าสู่ระบบด้วย Google
           </button>
+          <div class="pub-stats-row" id="heroStatsRow">
+            <div class="pub-stat-pill"><i data-lucide="building-2" style="width:12px;height:12px;"></i> <span id="heroRoomCount">...</span> ห้อง/สถานที่</div>
+            <div class="pub-stat-pill"><i data-lucide="calendar-check" style="width:12px;height:12px;"></i> <span id="heroBookingCount">...</span> คำขอจองเดือนนี้</div>
+          </div>
+        </div>
+        <!-- Hero image -->
+        <div style="flex:1;min-width:220px;max-width:480px;display:none;" id="heroImgWrap" class="hero-img-block">
+          <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="NP" style="width:100%;max-width:320px;display:block;margin:0 auto;filter:brightness(0) invert(1);opacity:.15;">
         </div>
       </div>
     </div>
   </section>
+
+  <!-- ══ SERVICES ══ -->
+  <section style="background:#f8fafc;padding:48px 0 16px;">
+    <div class="pub-section">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
+        <h2 style="font-size:19px;font-weight:800;color:#0f172a;">บริการออนไลน์</h2>
+      </div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:24px;padding-left:14px;">เข้าสู่ระบบเพื่อใช้บริการด้านล่าง</p>
+      <div class="services-grid">
+        <!-- ระบบจองห้อง -->
+        <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
+          <div class="service-icon" style="background:#eff6ff;">
+            <i data-lucide="calendar" style="width:26px;height:26px;color:#1d4ed8;"></i>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ห้อง/สถานที่</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">จองห้องประชุม สนาม และสถานที่ต่างๆ</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
+          </div>
+        </div>
+        <!-- ระบบ CCTV -->
+        <div class="service-card" onclick="showLoginGate('ระบบขอใช้ข้อมูล CCTV','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนยื่นคำขอดูข้อมูลกล้องวงจรปิด','monitor')">
+          <div class="service-icon" style="background:#fff7ed;">
+            <i data-lucide="monitor" style="width:26px;height:26px;color:#ea580c;"></i>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ข้อมูล CCTV</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">ยื่นคำขอดูข้อมูลกล้องวงจรปิด</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#ea580c;background:#fff7ed;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="clock" style="width:11px;height:11px;"></i> กำลังพัฒนา
+          </div>
+        </div>
+        <!-- รายงาน/เอกสาร placeholder -->
+        <div class="service-card" style="opacity:.6;cursor:default;" title="กำลังพัฒนา">
+          <div class="service-icon" style="background:#f0fdf4;">
+            <i data-lucide="file-text" style="width:26px;height:26px;color:#16a34a;"></i>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">เอกสารและรายงาน</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">ดาวน์โหลดเอกสารและรายงานต่างๆ</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="wrench" style="width:11px;height:11px;"></i> เร็วๆนี้
+          </div>
+        </div>
+        <!-- แจ้งเตือน LINE -->
+        <div class="service-card" onclick="showLoginGate('แจ้งเตือนผ่าน LINE','กรุณาเข้าสู่ระบบก่อนเชื่อมต่อ LINE เพื่อรับการแจ้งเตือน','bell')">
+          <div class="service-icon" style="background:#f0fdf4;">
+            <svg style="width:26px;height:26px;" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">แจ้งเตือนผ่าน LINE</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">รับแจ้งผลคำขอและเตือนก่อนถึงเวลาใช้งาน</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#06C755;background:#f0fdf4;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CALENDAR ══ -->
+  <section style="background:#f8fafc;padding:40px 0 56px;">
+    <div class="pub-section">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
+        <h2 style="font-size:19px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h2>
+        <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">ดูได้โดยไม่ต้องล็อกอิน</span>
+      </div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:20px;padding-left:14px;">ตรวจสอบตารางการจองห้องและสถานที่ล่วงหน้า</p>
+
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
+        <!-- Left: Calendar + Stats -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
+            <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
+              <div style="display:flex;gap:2px;">
+                <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
+                <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+              </div>
+            </div>
+            <div style="padding:12px;">
+              <div id="pubMonthLabel" style="text-align:center;font-weight:700;font-size:13px;color:#334155;margin-bottom:8px;"></div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:5px;text-align:center;">
+                <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="pubCalGrid2"></div>
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:9px;">
+                <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#1d4ed8;border-radius:50%;display:inline-block;"></span>วันนี้</span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#eab308;border-radius:50%;display:inline-block;"></span>มีจอง</span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#fecaca;border:1px solid #fca5a5;border-radius:50%;display:inline-block;"></span>จองเต็ม</span>
+              </div>
+            </div>
+          </div>
+          <!-- Monthly stats -->
+          <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:16px;">
+            <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน</div>
+            <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:10px;"></div>
+            <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div></div>
+          </div>
+        </div>
+
+        <!-- Right: Day Detail -->
+        <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;min-height:320px;">
+          <div style="padding:13px 16px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
+            <span id="pubDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
+          </div>
+          <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
+            <div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
+          </div>
+          <div style="padding:14px 16px;border-top:1px solid #f1f5f9;text-align:center;">
+            <button onclick="handleLogin()" style="padding:10px 24px;background:#1d4ed8;color:white;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
+              <i data-lucide="log-in" style="width:15px;height:15px;"></i> เข้าสู่ระบบเพื่อจองห้อง
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <!-- ── Private Dashboard ── -->
@@ -432,6 +533,19 @@
     }).catch(function(){});
   }
 
+  /* ── Login Gate ── */
+  function showLoginGate(title, desc, icon) {
+    document.getElementById('loginGateTitle').textContent = title || 'เข้าสู่ระบบก่อนใช้งาน';
+    document.getElementById('loginGateDesc').textContent = desc || 'กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการ';
+    var iconEl = document.getElementById('loginGateIcon');
+    if (icon) { iconEl.innerHTML = '<i data-lucide="'+icon+'" style="width:28px;height:28px;color:#1d4ed8;"></i>'; lucide.createIcons(); }
+    document.getElementById('loginGate').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLoginGate() {
+    document.getElementById('loginGate').classList.remove('open');
+    document.body.style.overflow = '';
+  }
   function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
   function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
 
@@ -495,18 +609,16 @@
       var isDone=ok&&!isNaN(eDate)&&now>eDate;
       var p=getRoomPastel(b.room||'');var color=p.accent;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#94a3b8':ok?'#d1fae5;color:#065f46':rej?'#fee2e2;color:#991b1b':'#fef9c3;color:#92400e';
-      var iconBg=isDone?'#cbd5e1':p.accent;
-      var roomColor=isDone?'#94a3b8':p.text;
+      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#d1fae5;color:#065f46':rej?'#fee2e2;color:#991b1b':'#fef9c3;color:#92400e';
       var dateStr='';
       try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
       return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
-        '<div style="width:42px;height:42px;background:'+iconBg+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
+        '<div style="width:42px;height:42px;background:'+p.accent+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
           '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}):'')+'</span>'+
           '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').getDate():'')+'</span>'+
         '</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:800;color:'+roomColor+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
+          '<div style="font-size:13px;font-weight:800;color:'+p.text+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
           '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
@@ -590,20 +702,15 @@
       var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
       var isDone=!isNaN(eDate)&&now>eDate;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#94a3b8':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
-      var cardBg=isDone?'#f1f5f9':p.bg;
-      var cardBorder=isDone?'#cbd5e1':p.border;
-      var cardText=isDone?'#94a3b8':p.text;
-      var purposeBg=isDone?'#94a3b822':p.accent+'18';
-      var badgeBg=isDone?'#94a3b8':p.accent;
-      return '<div style="padding:14px 16px;background:'+cardBg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+cardBorder+';">'+
+      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
+      return '<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:'+cardText+';margin-bottom:5px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:'+cardText+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:'+cardText+';background:'+purposeBg+';padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
+            '<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:'+p.text+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'18;padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
           '</div>'+
-          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+badgeBg+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
+          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+p.accent+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -640,12 +747,17 @@
   function initPublicCalendar(){
     db.collection('rooms').orderBy('name').get().then(function(snap){
       pubRooms=[];snap.forEach(function(d){pubRooms.push(Object.assign({id:d.id},d.data()));});
+      var rc=document.getElementById('heroRoomCount');if(rc)rc.textContent=pubRooms.length;
     });
     db.collection('bookings').orderBy('date').get().then(function(snap){
       pubBookings=[];
       snap.forEach(function(d){pubBookings.push(Object.assign({id:d.id},d.data()));});
       pubRenderCalendar();
       pubRenderStats();
+      // Hero stats: count this month's approved bookings
+      var now=new Date();var ym=now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'));
+      var monthCount=pubBookings.filter(function(b){return b.date&&b.date.indexOf(ym)===0&&b.status!=='rejected';}).length;
+      var bc=document.getElementById('heroBookingCount');if(bc)bc.textContent=monthCount;
       // Auto-show today
       var todayBk=pubBookings.filter(function(b){return b.date===pubSelectedDate&&b.status!=='rejected';});
       pubUpdateDayView(pubSelectedDate,todayBk);
