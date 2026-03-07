@@ -219,20 +219,47 @@
           <h3 id="welcomeText" style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;">ยินดีต้อนรับ</h3>
           <p style="color:#64748b;font-size:14px;">โรงเรียนหนองกี่พิทยาคม ยินดีให้บริการ</p>
         </div>
-        <!-- LINE card -->
-        <div id="lineCard" style="margin-bottom:20px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:20px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 8px 20px rgba(6,199,85,.25);">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:46px;height:46px;background:rgba(255,255,255,.2);border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="26" height="26" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+
+        <!-- ขั้นตอนการใช้งานระบบ -->
+        <div style="background:white;padding:28px;border-radius:20px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.04);">
+          <h3 style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+            <i data-lucide="info" style="width:22px;height:22px;color:#1d4ed8;"></i>
+            ขั้นตอนการใช้งานระบบ
+          </h3>
+          <div style="display:grid;gap:16px;">
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:#eff6ff;color:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">1</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;margin-bottom:4px;">ตรวจสอบห้องว่าง</div>
+                <div style="font-size:13px;color:#64748b;">เลือกวันที่และเวลาที่ต้องการใช้งาน จากนั้นดูรายการห้องที่ว่างในช่วงเวลานั้น</div>
+              </div>
             </div>
-            <div>
-              <div id="lineTxt" style="font-size:15px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
-              <div id="lineSub" style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:#eff6ff;color:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">2</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;margin-bottom:4px;">กรอกข้อมูลและส่งคำขอจอง</div>
+                <div style="font-size:13px;color:#64748b;">ระบุวัตถุประสงค์ จำนวนผู้เข้าร่วม และข้อมูลที่จำเป็น แล้วส่งคำขอ</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:#eff6ff;color:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">3</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;margin-bottom:4px;">รอการพิจารณาอนุมัติ</div>
+                <div style="font-size:13px;color:#64748b;">เจ้าหน้าที่จะตรวจสอบและแจ้งผลกลับภายใน 1-2 วันทำการ (หากเชื่อมต่อ LINE จะได้รับแจ้งเตือนทันที)</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:#dcfce7;color:#15803d;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">✓</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;margin-bottom:4px;">นำเอกสารติดต่อห้องบริหารทั่วไป</div>
+                <div style="font-size:13px;color:#64748b;">เมื่อได้รับการอนุมัติแล้ว กรุณานำเอกสารไปติดต่อที่ห้องบริหารทั่วไปก่อนใช้งาน</div>
+              </div>
             </div>
           </div>
-          <button id="lineBtn" onclick="lineConnect()" style="padding:10px 22px;background:white;color:#06C755;font-weight:800;border-radius:12px;border:none;cursor:pointer;font-size:13px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);">เชื่อมต่อ LINE</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
+
+        <!-- รายการจองของฉัน -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:24px;">
           <div style="background:#eff6ff;padding:24px;border-radius:24px;border:1px solid #dbeafe;display:flex;align-items:center;gap:16px;">
             <div style="width:46px;height:46px;background:#1d4ed8;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="calendar" style="width:22px;height:22px;"></i>
@@ -249,6 +276,69 @@
             <div>
               <p style="font-size:11px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:1px;">คำขอ CCTV</p>
               <p style="font-size:22px;font-weight:900;color:#1e293b;">0 รายการ</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- รับการอัพเดตผ่าน LINE -->
+        <div style="background:white;padding:28px;border-radius:20px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.04);">
+          <h3 style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+            <svg width="24" height="24" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            ขั้นตอนการสมัครรับการอัพเดตผ่าน LINE
+          </h3>
+          
+          <div style="display:grid;gap:20px;">
+            <!-- ขั้นตอนที่ 1 -->
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">1</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;color:#1e293b;margin-bottom:8px;font-size:15px;">เพิ่มเพื่อน LINE Official Account</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:12px;">กดปุ่มด้านล่างเพื่อเพิ่มเพื่อนบัญชี LINE ของระบบ</div>
+                <a href="https://line.me/ti/p/@514vguxz" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,#06C755,#00a541);color:white;font-weight:700;border-radius:12px;text-decoration:none;font-size:14px;box-shadow:0 4px 12px rgba(6,199,85,.3);transition:transform .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                  <svg width="20" height="20" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+                  เพิ่มเพื่อน LINE (@514vguxz)
+                </a>
+              </div>
+            </div>
+
+            <!-- ขั้นตอนที่ 2 -->
+            <div style="display:flex;gap:16px;align-items:start;">
+              <div style="width:36px;height:36px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">2</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;color:#1e293b;margin-bottom:8px;font-size:15px;">เชื่อมต่อบัญชีกับระบบ</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:12px;">กดปุ่ม "เชื่อมต่อ LINE" ด้านล่างเพื่อเชื่อมต่อบัญชี LINE ของคุณกับระบบ</div>
+                <div id="lineCard" style="background:linear-gradient(135deg,#06C755,#00a541);border-radius:16px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 6px 16px rgba(6,199,85,.2);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:42px;height:42px;background:rgba(255,255,255,.2);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <svg width="24" height="24" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+                    </div>
+                    <div>
+                      <div id="lineTxt" style="font-size:14px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
+                      <div id="lineSub" style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
+                    </div>
+                  </div>
+                  <button id="lineBtn" onclick="lineConnect()" style="padding:10px 20px;background:white;color:#06C755;font-weight:800;border-radius:10px;border:none;cursor:pointer;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:transform .2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">เชื่อมต่อ LINE</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- รายการแจ้งเตือนที่จะได้รับ -->
+            <div style="background:#f8fafc;padding:20px;border-radius:12px;border:1px solid #e2e8f0;">
+              <div style="font-weight:700;color:#1e293b;margin-bottom:12px;font-size:14px;">📬 แจ้งเตือนที่คุณจะได้รับ:</div>
+              <div style="display:grid;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#475569;">
+                  <div style="width:6px;height:6px;background:#06C755;border-radius:50%;"></div>
+                  <span>แจ้งผลอนุมัติ/ไม่อนุมัติคำขอจองห้อง</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#475569;">
+                  <div style="width:6px;height:6px;background:#06C755;border-radius:50%;"></div>
+                  <span>เตือนก่อนถึงเวลาใช้งานห้อง 15 นาที</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#475569;">
+                  <div style="width:6px;height:6px;background:#06C755;border-radius:50%;"></div>
+                  <span>ข้อมูลสำคัญเกี่ยวกับการจอง</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -289,8 +379,7 @@
   var auth=firebase.auth(),db=firebase.firestore();
   var LINE_CH  = '2009342857';
   var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
-  // ⚠️ เปลี่ยนจาก Google Apps Script เป็น Firebase Functions
-  var LINE_PROXY_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
+  var GAS_URL  = 'https://script.google.com/macros/s/AKfycbwBdIK6l0Iy2AbAygBA99KxZgIHxKW02_eNcLBmfHQDkijq2tSDAvnmodUs5GJfnwa_/exec';
 
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -534,13 +623,11 @@
   initPublicCalendar();
 
   /* ════ LINE ════ */
-  // เปลี่ยนจาก GET (GAS) เป็น POST (Firebase Functions)
-  function callLineProxy(params, cb) {
-    fetch(LINE_PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    })
+  function gasGet(params, cb) {
+    var qs = Object.keys(params).map(function(k){
+      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+    }).join('&');
+    fetch(GAS_URL + '?' + qs)
       .then(function(r){ return r.json(); })
       .then(cb)
       .catch(function(e){ cb({ error: e.message }); });
@@ -607,10 +694,11 @@
       if (t > 15000) { clearInterval(iv); lineToast('Timeout \u0e01\u0e23\u0e38\u0e13\u0e32\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48','e'); return; }
       var u = auth.currentUser; if (!u) return;
       clearInterval(iv);
-      /* แลก code ผ่าน Firebase Functions */
+      /* แลก code ผ่าน GAS GET */
       var btn = document.getElementById('lineBtn');
       if (btn) { btn.disabled = true; btn.textContent = '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d...'; }
-      callLineProxy({
+      gasGet({
+        action: 'exchangeCode',
         code: code,
         redirectUri: LINE_CB,
         firebaseUid: u.uid,
@@ -618,7 +706,21 @@
         userName: u.displayName,
       }, function(data) {
         if (data.lineUserId) {
-          // Firebase Functions จะบันทึกลง Firestore ให้แล้ว ไม่ต้องบันทึกซ้ำ
+          // บันทึก lineUserId ลง Firestore โดยตรงจากฝั่ง client
+          var lineData = { lineUserId: data.lineUserId, lineName: data.lineName||'',
+            email: u.email, name: u.displayName,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+          // บันทึกลง users
+          db.collection('users').doc(u.uid).set(lineData,{merge:true})
+            .catch(function(e){console.log('save users error:',e);});
+          // ถ้าเป็น admin ให้บันทึก lineUserId ลง admins ด้วย
+          db.collection('admins').doc(u.email.toLowerCase()).get().then(function(ad){
+            if(ad.exists){
+              db.collection('admins').doc(u.email.toLowerCase())
+                .set({lineUserId:data.lineUserId,lineName:data.lineName||''},
+                     {merge:true}).catch(function(){});
+            }
+          });
           lineRender(true, data.lineName||'');
           lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
         } else {
@@ -630,9 +732,26 @@
   }
 
   /* ส่ง LINE แจ้งเจ้าของเมื่อสถานะเปลี่ยน */
-  /* ⚠️ ปิดการใช้งาน - ให้ Firebase Functions (onBookingStatusChanged) จัดการส่ง LINE แจ้งเตือนแทน */
+  var _lnCache = {};
   function lineListenBookings(uid) {
-    // ไม่ต้องทำอะไร - Firebase Functions จะจัดการส่ง LINE ให้อัตโนมัติ
+    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
+      snap.docChanges().forEach(function(ch){
+        if (ch.type !== 'modified') return;
+        var b = Object.assign({id:ch.doc.id}, ch.doc.data());
+        if (b.status!=='approved' && b.status!=='rejected') return;
+        var k = b.id+'_'+b.status;
+        if (_lnCache[k]) return;
+        _lnCache[k] = true;
+        db.collection('users').doc(uid).get().then(function(doc){
+          if (!doc.exists||!doc.data().lineUserId) return;
+          var ok = b.status==='approved';
+          var msg = (ok?'\u2705 \u0e04\u0e33\u0e02\u0e2d\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34\u0e41\u0e25\u0e49\u0e27!':'\u274c \u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34')+
+            ' \u0e2b\u0e49\u0e2d\u0e07:'+b.room+' \u0e27\u0e31\u0e19:'+b.date+
+            ((!ok&&b.rejectReason)?' \u0e40\u0e2b\u0e15\u0e38\u0e1c\u0e25:'+b.rejectReason:'');
+          gasGet({ action:'sendLine', lineUserId:doc.data().lineUserId, msg:msg }, function(){});
+        });
+      });
+    });
   }
 
   function lineToast(msg, type) {
