@@ -853,7 +853,7 @@
     p.then(function(){
       toggleModal();
       showToast(editId?'แก้ไขคำขอแล้ว ✓':'บันทึกข้อมูลสำเร็จ ✓');
-      if(!editId){ notifyAdminsViaGAS(data); }
+      // Cloud Function onBookingCreated handles LINE notification to admins
     })
      .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
      .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
@@ -979,20 +979,7 @@
     });
   }
 
-  var GAS_LINE_URL = 'https://script.google.com/macros/s/AKfycbwBdIK6l0Iy2AbAygBA99KxZgIHxKW02_eNcLBmfHQDkijq2tSDAvnmodUs5GJfnwa_/exec';
-
-  function notifyAdminsViaGAS(bk) {
-    if (!GAS_LINE_URL) return;
-    // ดึง lineUserId จาก admins collection โดยตรง
-    db.collection('admins').get().then(function(snap) {
-      snap.forEach(function(doc) {
-        var lineUid = doc.data().lineUserId;
-        if (!lineUid) return;
-        var msg = 'มีคำขอจองใหม่! ห้อง:'+bk.room+' วัน:'+bk.date+' เวลา:'+bk.startTime+'-'+bk.endTime+' ผู้จอง:'+(bk.fullName||'-');
-        fetch(GAS_LINE_URL+'?action=sendLine&lineUserId='+encodeURIComponent(lineUid)+'&msg='+encodeURIComponent(msg)).catch(function(){});
-      });
-    }).catch(function(){});
-  }
+  // notifyAdminsViaGAS removed - Cloud Function onBookingCreated handles this
 
   lucide.createIcons();
 </script>

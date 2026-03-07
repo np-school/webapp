@@ -287,7 +287,7 @@
   var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
   if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
   var auth=firebase.auth(),db=firebase.firestore();
-  var GAS='https://script.google.com/macros/s/AKfycbwBdIK6l0Iy2AbAygBA99KxZgIHxKW02_eNcLBmfHQDkijq2tSDAvnmodUs5GJfnwa_/exec';
+  // LINE notifications handled by Firebase Cloud Functions
   var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null;
 
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
@@ -376,10 +376,10 @@
   function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
   function openApprove(id,room,date){pendingId=id;document.getElementById('approveModalSub').textContent=room+' · '+date;document.getElementById('approveNote').value='';openModal('approveModal');}
-  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();var msg='✅ คำขออนุมัติแล้ว!\nห้อง: '+(b.room||'-')+'\nวันที่: '+(b.date||'-')+'\nเวลา: '+(b.startTime||'-')+' - '+(b.endTime||'-')+(note?'\nหมายเหตุ: '+note:'');notifyLine(b.userId,msg);});}).catch(function(e){showToast(e.message,'error');});}
+  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();// Cloud Function sends LINE notification automatically});}).catch(function(e){showToast(e.message,'error');});}
 
   function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
-  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();var msg='❌ คำขอไม่ได้รับอนุมัติ\nห้อง: '+(b.room||'-')+'\nวันที่: '+(b.date||'-')+'\nเหตุผล: '+r+'\nหากมีข้อสงสัยติดต่อเจ้าหน้าที่';notifyLine(b.userId,msg);});}).catch(function(e){showToast(e.message,'error');});}
+  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();// Cloud Function sends LINE notification automatically});}).catch(function(e){showToast(e.message,'error');});}
 
   function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
   function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
@@ -491,7 +491,7 @@
     closeSidebar();
   }
 
-  function notifyLine(userId,msg){if(!GAS||!userId)return;db.collection('users').doc(userId).get().then(function(doc){if(!doc.exists||!doc.data().lineUserId)return;fetch(GAS+'?action=sendLine&lineUserId='+encodeURIComponent(doc.data().lineUserId)+'&msg='+encodeURIComponent(msg)).catch(function(){});});}
+  // notifyLine removed - Cloud Function onBookingStatusChanged handles LINE notifications
 
   lucide.createIcons();
 </script>
