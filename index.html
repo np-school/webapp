@@ -93,7 +93,7 @@
       <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">
       <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
         <div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>
-        <div style="font-size:11px;color:#bfdbfe;">ระบบบริการออนไลน์</div>
+        <div style="font-size:11px;color:#bfdbfe;">NP Origins</div>
       </div>
     </div>
     <div id="userNavSection">
@@ -128,16 +128,13 @@
         <!-- Text -->
         <div style="flex:1;min-width:260px;">
           <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:22px;letter-spacing:.5px;">
-            <i data-lucide="zap" style="width:13px;height:13px;"></i> ระบบสารสนเทศและบริการออนไลน์
+            <i data-lucide="zap" style="width:13px;height:13px;"></i> NP Origins
           </div>
           <h1 style="font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;color:white;line-height:1.15;margin-bottom:14px;">
-            ยกระดับบริการ<br><span style="color:#93c5fd;">เพื่อชาว NP</span>
+            NP <span style="color:#93c5fd;">Origins</span>
           </h1>
           <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:420px;margin-bottom:28px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
-          <button onclick="handleLogin()" style="padding:14px 28px;background:white;color:#1d4ed8;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:9px;box-shadow:0 8px 24px rgba(0,0,0,.2);">
-            <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#1d4ed8" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
-            เข้าสู่ระบบด้วย Google
-          </button>
+
           <div class="pub-stats-row" id="heroStatsRow">
             <div class="pub-stat-pill"><i data-lucide="building-2" style="width:12px;height:12px;"></i> <span id="heroRoomCount">...</span> ห้อง/สถานที่</div>
             <div class="pub-stat-pill"><i data-lucide="calendar-check" style="width:12px;height:12px;"></i> <span id="heroBookingCount">...</span> คำขอจองเดือนนี้</div>
@@ -214,7 +211,7 @@
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
         <h2 style="font-size:19px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h2>
-        <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-weight:700;">ดูได้โดยไม่ต้องล็อกอิน</span>
+
       </div>
       <p style="font-size:13px;color:#64748b;margin-bottom:20px;padding-left:14px;">ตรวจสอบตารางการจองห้องและสถานที่ล่วงหน้า</p>
 
@@ -259,11 +256,7 @@
           <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
             <div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div>
           </div>
-          <div style="padding:14px 16px;border-top:1px solid #f1f5f9;text-align:center;">
-            <button onclick="handleLogin()" style="padding:10px 24px;background:#1d4ed8;color:white;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
-              <i data-lucide="log-in" style="width:15px;height:15px;"></i> เข้าสู่ระบบเพื่อจองห้อง
-            </button>
-          </div>
+
         </div>
       </div>
     </div>
@@ -702,15 +695,19 @@
       var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
       var isDone=!isNaN(eDate)&&now>eDate;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
-      return '<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">'+
+      var cardBg=isDone?'#f1f5f9':p.bg;
+      var cardBorder=isDone?'#cbd5e1':p.border;
+      var cardText=isDone?'#94a3b8':p.text;
+      var purposeBg=isDone?'#94a3b822':p.accent+'18';
+      var badgeBg=isDone?'#94a3b8':p.accent;
+      return '<div style="padding:14px 16px;background:'+cardBg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+cardBorder+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:'+p.text+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'18;padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
+            '<div style="font-weight:800;font-size:14px;color:'+cardText+';margin-bottom:5px;">'+b.room+'</div>'+
+            '<div style="font-size:11px;color:'+cardText+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
+            '<div style="font-size:11px;color:'+cardText+';background:'+purposeBg+';padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
           '</div>'+
-          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+p.accent+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
+          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+badgeBg+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
         '</div>'+
       '</div>';
     }).join('');
