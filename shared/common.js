@@ -103,6 +103,7 @@ function handleLogout() {
 
 /* ════════════════════════════════
    Admin Access Check
+   (หน้า index/room-booking ใช้เพื่อแสดงเมนู admin)
    ════════════════════════════════ */
 function checkAdminAccess(email) {
   if (!email) return;
@@ -119,8 +120,6 @@ function checkAdminAccess(email) {
 /* ════════════════════════════════
    Navbar Builder
    buildNavbar(subtitle, isPurple)
-   — เรียกหลัง DOM พร้อม
-   — ต้องมี <nav id="navbar"> ในหน้า
    ════════════════════════════════ */
 function buildNavbar(subtitle, isPurple) {
   var nav = document.getElementById('navbar');
@@ -187,29 +186,28 @@ function updateSidebarProfile(user) {
     '</div>';
 }
 
-/* ════════════════════════════════
+/* ════════════════════════════════════════════════
    Sidebar Builder
    buildSidebar(activePage)
-   activePage: 'home' | 'room-booking' | 'admin'
 
-   ══ วิธีเพิ่ม/แก้เมนู ══
-   แก้ที่นี่ที่เดียว ทุกหน้าอัปเดตอัตโนมัติ
+   activePage:
+     'index'        → หน้าแรก (logged in)
+     'room-booking' → หน้าจองห้อง
+     'admin'        → หน้า admin (แสดง sub-tabs แทน adminSidebarSection)
 
-   — เมนูหลัก (MAIN_MENU) ────────────────────
-   { label, icon, href }           → ลิงก์ปกติ
-   { label, icon, onclick }        → ปุ่ม JS
+   ══ วิธีเพิ่ม/แก้เมนู แก้ที่นี่ที่เดียว ══
 
-   — บริการออนไลน์ (SERVICE_MENU) ────────────
-   เหมือนกัน
+   MAIN_MENU / SERVICE_MENU
+     { label, icon, href }      → ลิงก์
+     { label, icon, onclick }   → ปุ่ม JS
 
-   — เมนู Admin (ADMIN_MENU) ─────────────────
-   ซ่อนอยู่ แสดงเมื่อ checkAdminAccess() พบสิทธิ์
-   { label, icon, href|onclick, isAdminPage }
-     isAdminPage = true → ใช้ active state สีม่วง
-   ════════════════════════════════ */
+   ADMIN_TABS (เฉพาะหน้า admin)
+     { id, label, icon }
+     id ตรงกับ switchTab(id) ใน admin.html
+   ════════════════════════════════════════════════ */
 
 var MAIN_MENU = [
-  { label: 'หน้าแรก',      icon: 'home',     href: 'index.html' },
+  { label: 'หน้าแรก', icon: 'home', href: 'index.html' },
 ];
 
 var SERVICE_MENU = [
@@ -217,35 +215,19 @@ var SERVICE_MENU = [
   { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'monitor',  onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
 ];
 
-var ADMIN_MENU = [
-  { label: 'จัดการระบบจอง', icon: 'shield', href: 'admin.html', isAdminPage: true },
+var ADMIN_TABS = [
+  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
+  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
+  { id: 'admins',   label: 'จัดการ Admin',  icon: 'shield'      },
 ];
 
 function buildSidebar(activePage) {
   var el = document.getElementById('sidebarInner');
   if (!el) return;
 
-  function makeBtn(item, isActive, isAdmin) {
-    var cls = 'sidebar-btn';
-    if (isAdmin) cls += ' admin-btn';
-    if (isActive) cls += isAdmin ? ' active' : ' active';
+  var isAdminPage = activePage === 'admin';
 
-    var inner =
-      '<i data-lucide="' + item.icon + '" style="width:19px;height:19px;flex-shrink:0;' +
-      (isAdmin && !isActive ? 'color:#7c3aed;' : '') + '"></i>' +
-      '<span>' + item.label + '</span>';
-
-    if (isAdmin && item.isAdminPage) {
-      inner += '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>';
-    }
-
-    if (item.href) {
-      return '<a href="' + item.href + '" class="' + cls + '">' + inner + '</a>';
-    } else {
-      return '<button onclick="' + item.onclick + '" class="' + cls + '">' + inner + '</button>';
-    }
-  }
-
+  /* ── close button ── */
   var html =
     '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
       '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
@@ -253,95 +235,68 @@ function buildSidebar(activePage) {
       '</button>' +
     '</div>';
 
-  // เมนูหลัก
+  /* ── เมนูหลัก ── */
   html += '<div class="sec-label">เมนูหลัก</div>';
   MAIN_MENU.forEach(function(item) {
-    var pageKey = item.href ? item.href.replace('.html', '') : '';
-    html += makeBtn(item, activePage === pageKey, false);
+    var key = item.href ? item.href.replace('.html', '') : '';
+    var active = activePage === key || (activePage === 'index' && key === 'index');
+    html += _sidebarBtn(item, active, false);
   });
 
-  // บริการออนไลน์
+  /* ── บริการออนไลน์ ── */
   html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
   SERVICE_MENU.forEach(function(item) {
-    var pageKey = item.href ? item.href.replace('.html', '') : '';
-    html += makeBtn(item, activePage === pageKey, false);
+    var key = item.href ? item.href.replace('.html', '') : '';
+    html += _sidebarBtn(item, activePage === key, false);
   });
 
-  // Admin section (ซ่อนไว้ก่อน)
-  html +=
-    '<div id="adminSidebarSection" style="display:none;">' +
-      '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
-      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
-  ADMIN_MENU.forEach(function(item) {
-    var pageKey = item.href ? item.href.replace('.html', '') : '';
-    html += makeBtn(item, activePage === pageKey, true);
-  });
-  html += '</div>';
+  /* ── Admin section ── */
+  if (isAdminPage) {
+    /* หน้า admin: แสดง sub-tabs โดยตรง ไม่ต้องซ่อน */
+    html += '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>';
+    html += '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
+    ADMIN_TABS.forEach(function(tab) {
+      var active = tab.id === 'bookings'; /* default active = bookings */
+      var cls = 'sidebar-btn admin-btn' + (active ? ' active' : '');
+      html +=
+        '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '">' +
+          '<i data-lucide="' + tab.icon + '" style="width:19px;height:19px;flex-shrink:0;' + (active ? '' : 'color:#7c3aed;') + '"></i>' +
+          '<span>' + tab.label + '</span>' +
+          (tab.id === 'bookings'
+            ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>'
+            : '') +
+        '</button>';
+    });
+  } else {
+    /* หน้าอื่น: แสดงลิงก์ไป admin.html ซ่อนไว้ก่อน (checkAdminAccess จะเปิด) */
+    html +=
+      '<div id="adminSidebarSection" style="display:none;">' +
+        '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+        '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
+        '<a href="admin.html" class="sidebar-btn admin-btn">' +
+          '<i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>จัดการระบบจอง</span>' +
+          '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+        '</a>' +
+      '</div>';
+  }
 
-  // Profile slot
+  /* ── profile slot ── */
   html += '<div style="flex:1;"></div><div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
 
   el.innerHTML = html;
   lucide.createIcons();
 }
 
-/* ════════════════════════════════
-   Admin Sidebar Extra
-   buildAdminSidebar(activeTab)
-   activeTab: 'bookings' | 'rooms' | 'admins'
-   — เรียกหลัง buildSidebar('admin')
-   — แทรก sub-tabs ของ admin เข้าไปก่อน profile
-
-   ══ วิธีเพิ่ม/แก้ sub-tab admin ══
-   แก้ ADMIN_TABS ด้านล่างที่เดียว
-   ════════════════════════════════ */
-
-var ADMIN_TABS = [
-  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
-  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
-  { id: 'admins',   label: 'จัดการ Admin',  icon: 'shield'      },
-];
-
-function buildAdminSidebar(activeTab) {
-  var inner = document.getElementById('sidebarInner');
-  if (!inner) return;
-
-  // Remove placeholder comment if exists
-  var adminSection = document.getElementById('adminSubTabs');
-  if (adminSection) adminSection.remove();
-
-  // Find the profile slot and insert before it
-  var profileSlot = document.getElementById('sidebarProfile');
-  var filler = profileSlot ? profileSlot.previousElementSibling : null;
-
-  var wrap = document.createElement('div');
-  wrap.id = 'adminSubTabs';
-
-  var html =
-    '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
-    '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
-
-  ADMIN_TABS.forEach(function(tab) {
-    var isActive = activeTab === tab.id;
-    var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
-    html +=
-      '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '">' +
-        '<i data-lucide="' + tab.icon + '" style="width:19px;height:19px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
-        '<span>' + tab.label + '</span>' +
-        (tab.id === 'bookings' ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' : '') +
-      '</button>';
-  });
-
-  wrap.innerHTML = html;
-
-  // Insert before the flex-spacer (which is before sidebarProfile)
-  if (filler && filler.style && filler.style.flex === '1') {
-    inner.insertBefore(wrap, filler);
-  } else if (profileSlot) {
-    inner.insertBefore(wrap, profileSlot);
+/* ── internal helper ── */
+function _sidebarBtn(item, isActive, isAdmin) {
+  var cls = 'sidebar-btn' + (isAdmin ? ' admin-btn' : '') + (isActive ? ' active' : '');
+  var inner =
+    '<i data-lucide="' + item.icon + '" style="width:19px;height:19px;flex-shrink:0;"></i>' +
+    '<span>' + item.label + '</span>';
+  if (item.href) {
+    return '<a href="' + item.href + '" class="' + cls + '">' + inner + '</a>';
   } else {
-    inner.appendChild(wrap);
+    return '<button onclick="' + item.onclick + '" class="' + cls + '">' + inner + '</button>';
   }
-
-  lucide.createIcons();
 }
