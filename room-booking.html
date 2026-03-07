@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="shared/common.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -108,49 +109,13 @@
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Navbar -->
-<nav style="position:sticky;top:0;z-index:150;background:#1d4ed8;padding:12px 20px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
-  <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">
-        <i data-lucide="menu" style="width:20px;height:20px;"></i>
-      </button>
-      <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">
-      <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
-        <div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>
-        <div style="font-size:11px;color:#bfdbfe;">ระบบขอใช้ห้อง/สถานที่</div>
-      </div>
-    </div>
-    <div id="userNavSection"></div>
-  </div>
-</nav>
+<nav id="navbar" class="navbar"></nav>
 
 <div id="mainContent" style="display:none;display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
 
   <!-- Sidebar -->
   <div class="sidebar-wrap" id="sidebar">
-    <div class="sidebar-inner">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-        <button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
-          <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-        </button>
-      </div>
-      <div class="sec-label">เมนูหลัก</div>
-      <a href="index.html" class="sidebar-btn"><i data-lucide="home" style="width:19px;height:19px;flex-shrink:0;"></i> หน้าแรก</a>
-      <div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>
-      <a href="room-booking.html" class="sidebar-btn active"><i data-lucide="calendar" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่</a>
-      <button onclick="showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" class="sidebar-btn"><i data-lucide="monitor" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูล CCTV</button>
-      <div id="adminSidebarSection" style="display:none;">
-        <div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>
-        <div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>
-        <a href="admin.html" class="sidebar-btn admin-btn" style="color:#7c3aed;">
-          <i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>
-          <span>จัดการระบบจอง</span>
-          <span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>
-        </a>
-      </div>
-      <div style="flex:1;"></div>
-      <div style="padding:4px 4px 8px;" id="sidebarProfile"></div>
-    </div>
+    <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
   </div>
 
   <!-- Content -->
@@ -369,16 +334,15 @@
   var activeRoomFilter='all'; // 'all' or room name
 
   /* ── Sidebar ── */
-  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
-  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
 
-  /* ── Toast ── */
-  function showToast(msg,type){var t=document.createElement('div');t.className='toast';t.style.background=type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('hide');setTimeout(function(){t.remove();},300);},3500);}
+  /* ── Toast (from common.js) ── */
   function hideLoading(){document.getElementById('loadingOverlay').style.display='none';document.getElementById('mainContent').style.display='flex';}
   // Safety: force-hide loading after 8s in case of Firestore error
   setTimeout(function(){var ov=document.getElementById('loadingOverlay');if(ov&&ov.style.display!=='none'){hideLoading();showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ','warn');}},8000);
 
   /* ── Auth ── */
+  buildNavbar('NP Origins · ระบบขอใช้ห้อง/สถานที่', false);
+  buildSidebar('room-booking');
   auth.onAuthStateChanged(function(user){
     try{
       currentUser=user;
@@ -394,10 +358,6 @@
     }catch(e){console.error('onAuthStateChanged error:',e);hideLoading();}
   });
 
-  function checkAdminAccess(email){if(!email)return;db.collection('admins').doc(email.toLowerCase()).get().then(function(doc){if(doc.exists){document.getElementById('adminSidebarSection').style.display='block';lucide.createIcons();}}).catch(function(){});}
-  function handleLogout(){auth.signOut().then(function(){window.location.href='index.html';});}
-  function updateNavUser(user){var ph=user.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(user.displayName||'U')+'&background=1d4ed8&color=fff';document.getElementById('userNavSection').innerHTML='<div style="display:flex;align-items:center;gap:10px;"><img src="'+ph+'" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.25);"><button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;"><i data-lucide="log-out" style="width:18px;height:18px;"></i></button></div>';lucide.createIcons();}
-  function updateSidebarProfile(user){var ph=user.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(user.displayName||'U')+'&background=1d4ed8&color=fff';document.getElementById('sidebarProfile').innerHTML='<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;"><div style="display:flex;align-items:center;gap:10px;overflow:hidden;"><img src="'+ph+'" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"><div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p><p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p></div></div></div>';}
 
   /* ── Rooms dropdown ── */
   function populateRooms(){
@@ -696,24 +656,20 @@
       var isDone=!isNaN(eDate)&&now>eDate;
       var p=getRoomPastel(b.room||'');
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
-      var cardBg=isDone?'#f1f5f9':p.bg;
-      var cardBorder=isDone?'#cbd5e1':p.border;
-      var cardText=isDone?'#64748b':p.text;
-      var statusBg=isDone?'#94a3b8':p.accent;
       var fileBtn='';
       if(b.hasLayout){fileBtn='<button onclick="openFileView(this.dataset.id)" data-id="'+b.id+'" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>';}
 
       var parts=[];
-      parts.push('<div style="padding:14px 16px;background:'+cardBg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+cardBorder+';">');
+      parts.push('<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">');
       parts.push('<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">');
       parts.push('<div style="flex:1;min-width:0;">');
-      parts.push('<div style="font-weight:800;font-size:14px;color:'+cardText+';margin-bottom:5px;">'+b.room+'</div>');
-      parts.push('<div style="font-size:11px;color:'+cardText+';opacity:.75;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' · 👤 '+(b.fullName||b.userName||'-')+'</div>');
-      parts.push('<div style="font-size:11px;color:'+cardText+';background:'+(isDone?'#94a3b822':p.accent+'22')+';padding:4px 8px;border-radius:6px;margin-top:5px;">📌 '+(b.purpose||'-')+'</div>');
-      if(b.attendees)parts.push('<div style="font-size:10px;color:'+cardText+';opacity:.7;margin-top:3px;">👥 '+b.attendees+' คน</div>');
+      parts.push('<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>');
+      parts.push('<div style="font-size:11px;color:'+p.text+';opacity:.75;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' · 👤 '+(b.fullName||b.userName||'-')+'</div>');
+      parts.push('<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'22;padding:4px 8px;border-radius:6px;margin-top:5px;">📌 '+(b.purpose||'-')+'</div>');
+      if(b.attendees)parts.push('<div style="font-size:10px;color:'+p.text+';opacity:.7;margin-top:3px;">👥 '+b.attendees+' คน</div>');
       if(fileBtn)parts.push(fileBtn);
       parts.push('</div>');
-      parts.push('<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+statusBg+';color:white;">'+statusTxt+'</span>');
+      parts.push('<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+p.accent+';color:white;">'+statusTxt+'</span>');
       parts.push('</div></div>');
       return parts.join('');
     }).join('');

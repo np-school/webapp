@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════
    shared/common.js
-   Shared Functions – Sidebar, Auth UI, Room Colors,
-   Toast, Admin Check, Profile UI
+   Shared Functions – Navbar, Sidebar, Auth UI,
+   Room Colors, Toast, Admin Check, Profile UI
    ═══════════════════════════════════════════════ */
 
 /* ── Promise.finally polyfill ── */
@@ -15,7 +15,7 @@ if (!Promise.prototype.finally) {
 }
 
 /* ════════════════════════════════
-   Sidebar
+   Sidebar open/close
    ════════════════════════════════ */
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -81,11 +81,76 @@ function getRoomPastel(name) {
 }
 
 /* ════════════════════════════════
-   Navbar UI helpers
+   Auth Handlers
+   ════════════════════════════════ */
+function handleLogin() {
+  var ov = document.getElementById('loadingOverlay');
+  if (ov) ov.style.display = 'flex';
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(function(e) {
+      console.error(e);
+      if (ov) ov.style.display = 'none';
+    });
+}
+
+function handleLogout() {
+  var ov = document.getElementById('loadingOverlay');
+  if (ov) ov.style.display = 'flex';
+  auth.signOut().then(function() {
+    window.location.href = 'index.html';
+  });
+}
+
+/* ════════════════════════════════
+   Admin Access Check
+   ════════════════════════════════ */
+function checkAdminAccess(email) {
+  if (!email) return;
+  db.collection('admins').doc(email.toLowerCase()).get()
+    .then(function(doc) {
+      if (doc.exists) {
+        var sec = document.getElementById('adminSidebarSection');
+        if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
+      }
+    })
+    .catch(function() {});
+}
+
+/* ════════════════════════════════
+   Navbar Builder
+   buildNavbar(subtitle, isPurple)
+   — เรียกหลัง DOM พร้อม
+   — ต้องมี <nav id="navbar"> ในหน้า
+   ════════════════════════════════ */
+function buildNavbar(subtitle, isPurple) {
+  var nav = document.getElementById('navbar');
+  if (!nav) return;
+  nav.className = 'navbar' + (isPurple ? ' purple' : '');
+  nav.innerHTML =
+    '<div class="navbar-inner">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
+          '<i data-lucide="menu" style="width:20px;height:20px;"></i>' +
+        '</button>' +
+        '<img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">' +
+        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">' +
+          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>' +
+          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';">' + subtitle + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div id="userNavSection"></div>' +
+    '</div>';
+  lucide.createIcons();
+}
+
+/* ════════════════════════════════
+   Navbar User UI
    ════════════════════════════════ */
 function updateNavUser(user) {
+  var el = document.getElementById('userNavSection');
+  if (!el) return;
   var ph = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'U') + '&background=1d4ed8&color=fff';
-  document.getElementById('userNavSection').innerHTML =
+  el.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;">' +
       '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);">' +
       '<button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
@@ -96,7 +161,9 @@ function updateNavUser(user) {
 }
 
 function resetNavUI() {
-  document.getElementById('userNavSection').innerHTML =
+  var el = document.getElementById('userNavSection');
+  if (!el) return;
+  el.innerHTML =
     '<button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>';
   lucide.createIcons();
 }
@@ -121,108 +188,160 @@ function updateSidebarProfile(user) {
 }
 
 /* ════════════════════════════════
-   Admin Access Check
-   ════════════════════════════════ */
-function checkAdminAccess(email) {
-  if (!email) return;
-  db.collection('admins').doc(email.toLowerCase()).get()
-    .then(function(doc) {
-      if (doc.exists) {
-        var sec = document.getElementById('adminSidebarSection');
-        if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
-      }
-    })
-    .catch(function() {});
-}
+   Sidebar Builder
+   buildSidebar(activePage)
+   activePage: 'home' | 'room-booking' | 'admin'
 
-/* ════════════════════════════════
-   Auth Handlers (used on index)
-   ════════════════════════════════ */
-function handleLogin() {
-  var ov = document.getElementById('loadingOverlay');
-  if (ov) ov.style.display = 'flex';
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-    .catch(function(e) {
-      console.error(e);
-      if (ov) ov.style.display = 'none';
-    });
-}
+   ══ วิธีเพิ่ม/แก้เมนู ══
+   แก้ที่นี่ที่เดียว ทุกหน้าอัปเดตอัตโนมัติ
 
-function handleLogout() {
-  var ov = document.getElementById('loadingOverlay');
-  if (ov) ov.style.display = 'flex';
-  auth.signOut().then(function() {
-    window.location.href = 'index.html';
-  });
-}
+   — เมนูหลัก (MAIN_MENU) ────────────────────
+   { label, icon, href }           → ลิงก์ปกติ
+   { label, icon, onclick }        → ปุ่ม JS
 
-/* ════════════════════════════════
-   Navbar Template Builder
-   ════════════════════════════════ */
-function buildNavbar(subtitle, isPurple) {
-  var nav = document.getElementById('navbar');
-  if (!nav) return;
-  if (isPurple) nav.classList.add('purple');
-  nav.innerHTML =
-    '<div class="navbar-inner">' +
-      '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
-          '<i data-lucide="menu" style="width:20px;height:20px;"></i>' +
-        '</button>' +
-        '<img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">' +
-        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">' +
-          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>' +
-          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';">' + subtitle + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div id="userNavSection"></div>' +
-    '</div>';
-  lucide.createIcons();
-}
+   — บริการออนไลน์ (SERVICE_MENU) ────────────
+   เหมือนกัน
 
-/* ════════════════════════════════
-   Sidebar Template Builder
+   — เมนู Admin (ADMIN_MENU) ─────────────────
+   ซ่อนอยู่ แสดงเมื่อ checkAdminAccess() พบสิทธิ์
+   { label, icon, href|onclick, isAdminPage }
+     isAdminPage = true → ใช้ active state สีม่วง
    ════════════════════════════════ */
+
+var MAIN_MENU = [
+  { label: 'หน้าแรก',      icon: 'home',     href: 'index.html' },
+];
+
+var SERVICE_MENU = [
+  { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
+  { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'monitor',  onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
+];
+
+var ADMIN_MENU = [
+  { label: 'จัดการระบบจอง', icon: 'shield', href: 'admin.html', isAdminPage: true },
+];
+
 function buildSidebar(activePage) {
-  // activePage: 'home' | 'room-booking' | 'admin'
-  var el = document.getElementById('sidebarContent');
+  var el = document.getElementById('sidebarInner');
   if (!el) return;
 
-  var home    = activePage === 'home'         ? ' active' : '';
-  var booking = activePage === 'room-booking' ? ' active' : '';
+  function makeBtn(item, isActive, isAdmin) {
+    var cls = 'sidebar-btn';
+    if (isAdmin) cls += ' admin-btn';
+    if (isActive) cls += isAdmin ? ' active' : ' active';
 
-  el.innerHTML =
+    var inner =
+      '<i data-lucide="' + item.icon + '" style="width:19px;height:19px;flex-shrink:0;' +
+      (isAdmin && !isActive ? 'color:#7c3aed;' : '') + '"></i>' +
+      '<span>' + item.label + '</span>';
+
+    if (isAdmin && item.isAdminPage) {
+      inner += '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>';
+    }
+
+    if (item.href) {
+      return '<a href="' + item.href + '" class="' + cls + '">' + inner + '</a>';
+    } else {
+      return '<button onclick="' + item.onclick + '" class="' + cls + '">' + inner + '</button>';
+    }
+  }
+
+  var html =
     '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
       '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
         '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>' +
       '</button>' +
-    '</div>' +
+    '</div>';
 
-    '<div class="sec-label">เมนูหลัก</div>' +
-    '<a href="index.html" class="sidebar-btn' + home + '">' +
-      '<i data-lucide="home" style="width:19px;height:19px;flex-shrink:0;"></i> หน้าแรก' +
-    '</a>' +
+  // เมนูหลัก
+  html += '<div class="sec-label">เมนูหลัก</div>';
+  MAIN_MENU.forEach(function(item) {
+    var pageKey = item.href ? item.href.replace('.html', '') : '';
+    html += makeBtn(item, activePage === pageKey, false);
+  });
 
-    '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>' +
-    '<a href="room-booking.html" class="sidebar-btn' + booking + '">' +
-      '<i data-lucide="calendar" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่' +
-    '</a>' +
-    '<button onclick="showToast(\'ระบบนี้อยู่ระหว่างพัฒนา\',\'warn\')" class="sidebar-btn">' +
-      '<i data-lucide="monitor" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูล CCTV' +
-    '</button>' +
+  // บริการออนไลน์
+  html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
+  SERVICE_MENU.forEach(function(item) {
+    var pageKey = item.href ? item.href.replace('.html', '') : '';
+    html += makeBtn(item, activePage === pageKey, false);
+  });
 
+  // Admin section (ซ่อนไว้ก่อน)
+  html +=
     '<div id="adminSidebarSection" style="display:none;">' +
       '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
-      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
-      '<a href="admin.html" class="sidebar-btn admin-btn" style="color:#7c3aed;">' +
-        '<i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-        '<span>จัดการระบบจอง</span>' +
-        '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
-      '</a>' +
-    '</div>' +
+      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
+  ADMIN_MENU.forEach(function(item) {
+    var pageKey = item.href ? item.href.replace('.html', '') : '';
+    html += makeBtn(item, activePage === pageKey, true);
+  });
+  html += '</div>';
 
-    '<div style="flex:1;"></div>' +
-    '<div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
+  // Profile slot
+  html += '<div style="flex:1;"></div><div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
+
+  el.innerHTML = html;
+  lucide.createIcons();
+}
+
+/* ════════════════════════════════
+   Admin Sidebar Extra
+   buildAdminSidebar(activeTab)
+   activeTab: 'bookings' | 'rooms' | 'admins'
+   — เรียกหลัง buildSidebar('admin')
+   — แทรก sub-tabs ของ admin เข้าไปก่อน profile
+
+   ══ วิธีเพิ่ม/แก้ sub-tab admin ══
+   แก้ ADMIN_TABS ด้านล่างที่เดียว
+   ════════════════════════════════ */
+
+var ADMIN_TABS = [
+  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
+  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
+  { id: 'admins',   label: 'จัดการ Admin',  icon: 'shield'      },
+];
+
+function buildAdminSidebar(activeTab) {
+  var inner = document.getElementById('sidebarInner');
+  if (!inner) return;
+
+  // Remove placeholder comment if exists
+  var adminSection = document.getElementById('adminSubTabs');
+  if (adminSection) adminSection.remove();
+
+  // Find the profile slot and insert before it
+  var profileSlot = document.getElementById('sidebarProfile');
+  var filler = profileSlot ? profileSlot.previousElementSibling : null;
+
+  var wrap = document.createElement('div');
+  wrap.id = 'adminSubTabs';
+
+  var html =
+    '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+    '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
+
+  ADMIN_TABS.forEach(function(tab) {
+    var isActive = activeTab === tab.id;
+    var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
+    html +=
+      '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '">' +
+        '<i data-lucide="' + tab.icon + '" style="width:19px;height:19px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<span>' + tab.label + '</span>' +
+        (tab.id === 'bookings' ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' : '') +
+      '</button>';
+  });
+
+  wrap.innerHTML = html;
+
+  // Insert before the flex-spacer (which is before sidebarProfile)
+  if (filler && filler.style && filler.style.flex === '1') {
+    inner.insertBefore(wrap, filler);
+  } else if (profileSlot) {
+    inner.insertBefore(wrap, profileSlot);
+  } else {
+    inner.appendChild(wrap);
+  }
 
   lucide.createIcons();
 }

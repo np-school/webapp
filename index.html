@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="shared/common.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -84,23 +85,7 @@
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- ── Navbar ── -->
-<nav style="position:sticky;top:0;z-index:150;background:#1d4ed8;padding:12px 20px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
-  <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">
-        <i data-lucide="menu" style="width:20px;height:20px;"></i>
-      </button>
-      <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">
-      <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
-        <div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>
-        <div style="font-size:11px;color:#bfdbfe;">NP Origins</div>
-      </div>
-    </div>
-    <div id="userNavSection">
-      <button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>
-    </div>
-  </div>
-</nav>
+<nav id="navbar" class="navbar"></nav>
 
 <!-- ── Public View ── -->
 <div id="loginGate" class="login-gate" onclick="if(event.target===this)closeLoginGate()">
@@ -270,41 +255,7 @@
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" style="display:flex;flex-direction:column;height:100%;">
-        <!-- Close btn (mobile) -->
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;" id="sidebarCloseWrap">
-          <button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
-            <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-          </button>
-        </div>
-
-        <div class="sec-label">เมนูหลัก</div>
-        <button onclick="showTab('dashboard')" id="btn-dashboard" class="sidebar-btn active">
-          <i data-lucide="home" style="width:19px;height:19px;flex-shrink:0;"></i> หน้าแรก
-        </button>
-
-        <div class="sec-label" style="margin-top:8px;">บริการออนไลน์</div>
-        <a href="room-booking.html" class="sidebar-btn">
-          <i data-lucide="calendar" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
-        </a>
-        <button onclick="showTab('cctv')" id="btn-cctv" class="sidebar-btn">
-          <i data-lucide="monitor" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูล CCTV
-        </button>
-
-        <!-- Admin — hidden until verified -->
-        <div id="adminSidebarSection" style="display:none;">
-          <div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>
-          <div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>
-          <a href="admin.html" class="sidebar-btn admin-btn" style="color:#7c3aed;">
-            <i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>
-            <span>จัดการระบบจอง</span>
-            <span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>
-          </a>
-        </div>
-
-        <div style="flex:1;"></div>
-        <div style="padding:4px 4px 8px;" id="sidebarProfile"></div>
-      </div>
+      <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
     </div>
 
     <!-- Content -->
@@ -500,14 +451,13 @@
   var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
   var LINE_PROXY_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
 
-  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
-  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
-
+  buildNavbar('NP Origins', false);
   auth.onAuthStateChanged(function(user){
     if(user){
       document.getElementById('publicView').style.display='none';
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
+      buildSidebar('index');
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
     }else{
@@ -518,13 +468,6 @@
     document.getElementById('loadingOverlay').style.display='none';
     lucide.createIcons();
   });
-
-  function checkAdminAccess(email){
-    if(!email)return;
-    db.collection('admins').doc(email.toLowerCase()).get().then(function(doc){
-      if(doc.exists){document.getElementById('adminSidebarSection').style.display='block';lucide.createIcons();}
-    }).catch(function(){});
-  }
 
   /* ── Login Gate ── */
   function showLoginGate(title, desc, icon) {
@@ -539,10 +482,6 @@
     document.getElementById('loginGate').classList.remove('open');
     document.body.style.overflow = '';
   }
-  function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
-  function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
-
-  
   /* ── Pastel Room Color System (shared) ── */
   var ROOM_PASTEL_MAP={
     'ห้องประชุมชวนชม'  :{bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
@@ -618,18 +557,6 @@
       '</div>';
     }).join('');
     lucide.createIcons();
-  }
-
-  function updateNavUser(user){
-    document.getElementById('userNavSection').innerHTML='<div style="display:flex;align-items:center;gap:10px;"><img src="'+user.photoURL+'" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);"><button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;"><i data-lucide="log-out" style="width:18px;height:18px;"></i></button></div>';
-    lucide.createIcons();
-  }
-  function resetNavUI(){
-    document.getElementById('userNavSection').innerHTML='<button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>';
-    lucide.createIcons();
-  }
-  function updateSidebarProfile(user){
-    document.getElementById('sidebarProfile').innerHTML='<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;"><div style="display:flex;align-items:center;gap:10px;overflow:hidden;"><img src="'+user.photoURL+'" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"><div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p><p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p></div></div></div>';
   }
 
   function showTab(name){
