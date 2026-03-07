@@ -6,59 +6,36 @@
   <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
   <style>
-    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    /* ── Loading ── */
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:9999;align-items:center;justify-content:center;}
-    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    /* ── Sidebar shared ── */
-    .sidebar-wrap{width:272px;flex-shrink:0;transition:transform .3s ease;}
-    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:24px 12px;}
-    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:14px;white-space:nowrap;}
-    .sidebar-btn:hover{background:#f1f5f9;}
-    .sidebar-btn.active{background:#1d4ed8;color:white;box-shadow:0 8px 15px -3px rgba(30,64,175,.25);}
-    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
-    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
-    /* ── Sidebar overlay (mobile) ── */
-    #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
-    #sidebarOverlay.open{display:block;}
-    /* ── Mobile drawer ── */
-    @media(max-width:1023px){
-      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
-      .sidebar-wrap.open{transform:translateX(0);}
-      #mainGrid{flex-direction:column;}
-      #contentArea{width:100%;}
-    }
-    @media(min-width:1024px){
-      #hamburgerBtn{display:none!important;}
-      .sidebar-inner{border-right:none;}
-    }
-    /* ── Tab content ── */
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
-    /* ── Public hero ── */
-    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
-    @media(max-width:768px){.hero-grid{grid-template-columns:1fr;}.hero-img{display:none;}}
+    /* ── Page-specific: Public hero ── */
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    @media (max-width: 768px) { .hero-grid { grid-template-columns: 1fr; } .hero-img { display: none; } }
+
     /* ── Public calendar ── */
-    .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
-    .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
-    .pub-cal-day.empty{cursor:default;}
-    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
-    .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
-    .pub-cal-day.is-today{background:#1d4ed8!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
-    .pub-cal-day.is-selected{border:2px solid #1d4ed8;background:#eff6ff;}
-    .pub-stat-bar{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
-    .pub-stat-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s;}
-    @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
-    @media(max-width:480px){.pub-cal-day{font-size:10px;}}
-    @media(max-width:768px){
-      .dashboard-two-col{grid-template-columns:1fr!important;}
+    .pub-cal-day {
+      aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+      border-radius: 7px; cursor: pointer; font-size: 11px; font-weight: 600;
+      border: 1px solid transparent; transition: all .15s; position: relative;
     }
+    .pub-cal-day:hover:not(.empty) { background: #f1f5f9; }
+    .pub-cal-day.empty { cursor: default; }
+    .pub-cal-day.has-booking::after { content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px; background: #eab308; border-radius: 50%; }
+    .pub-cal-day.is-full     { background: #fee2e2 !important; color: #b91c1c !important; }
+    .pub-cal-day.is-today    { background: #1d4ed8 !important; color: white !important; box-shadow: 0 3px 8px rgba(29,78,216,.35); }
+    .pub-cal-day.is-selected { border: 2px solid #1d4ed8; background: #eff6ff; }
+    .pub-stat-bar  { background: #e2e8f0; border-radius: 4px; height: 6px; overflow: hidden; }
+    .pub-stat-fill { height: 100%; border-radius: 4px; background: #1d4ed8; transition: width .4s; }
+
+    @media (max-width: 700px) { #pubCalGrid { grid-template-columns: 1fr !important; } }
+    @media (max-width: 480px) { .pub-cal-day { font-size: 10px; } }
+    @media (max-width: 768px) { .dashboard-two-col { grid-template-columns: 1fr !important; } }
   </style>
 </head>
 <body style="background:#f8fafc;overflow-x:hidden;">
@@ -67,26 +44,13 @@
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- ── Navbar ── -->
-<nav style="position:sticky;top:0;z-index:150;background:#1d4ed8;padding:12px 20px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
-  <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">
-        <i data-lucide="menu" style="width:20px;height:20px;"></i>
-      </button>
-      <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="Logo" style="height:48px;">
-      <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">
-        <div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>
-        <div style="font-size:11px;color:#bfdbfe;">ระบบบริการออนไลน์</div>
-      </div>
-    </div>
-    <div id="userNavSection">
-      <button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>
-    </div>
-  </div>
-</nav>
+<nav id="navbar" class="navbar"></nav>
 
-<!-- ── Public View ── -->
+<!-- ══════════════════════════════════════════════
+     PUBLIC VIEW (not logged in)
+     ══════════════════════════════════════════════ -->
 <main id="publicView">
+
   <!-- Hero -->
   <section style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
     <div class="hero-grid">
@@ -97,7 +61,9 @@
         <h2 style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:16px;">
           ยกระดับบริการ<br><span style="color:#1d4ed8;font-style:italic;">เพื่อชาว NP</span>
         </h2>
-        <p style="font-size:16px;color:#475569;line-height:1.75;margin-bottom:24px;max-width:440px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+        <p style="font-size:16px;color:#475569;line-height:1.75;margin-bottom:24px;max-width:440px;">
+          ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา
+        </p>
         <button onclick="handleLogin()" style="padding:14px 28px;background:#1d4ed8;color:white;font-weight:700;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 16px 24px -4px rgba(29,78,216,.35);">
           เริ่มใช้งานระบบ <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
         </button>
@@ -109,7 +75,7 @@
     </div>
   </section>
 
-  <!-- Public Calendar Section -->
+  <!-- Public Calendar -->
   <section style="max-width:1200px;margin:0 auto;padding:0 24px 56px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
       <div style="width:4px;height:28px;background:#1d4ed8;border-radius:4px;"></div>
@@ -120,13 +86,12 @@
     <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
       <!-- Left: Calendar + Stats -->
       <div style="display:flex;flex-direction:column;gap:16px;">
-        <!-- Calendar card -->
         <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
           <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
             <div style="display:flex;gap:2px;">
               <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-              <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+              <button onclick="pubChangeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
             </div>
           </div>
           <div style="padding:12px;">
@@ -143,18 +108,24 @@
           </div>
         </div>
 
-        <!-- Monthly stats card -->
+        <!-- Monthly stats -->
         <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:16px;">
-          <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน</div>
+          <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน
+          </div>
           <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:10px;"></div>
-          <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div></div>
+          <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div>
+          </div>
         </div>
       </div>
 
       <!-- Right: Day Detail -->
       <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;min-height:320px;">
         <div style="padding:13px 16px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-          <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
+          <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;">
+            <i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก
+          </span>
           <span id="pubDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
         </div>
         <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
@@ -170,47 +141,15 @@
   </section>
 </main>
 
-<!-- ── Private Dashboard ── -->
+<!-- ══════════════════════════════════════════════
+     PRIVATE DASHBOARD (logged in)
+     ══════════════════════════════════════════════ -->
 <div id="privateView" style="display:none;">
   <div id="mainGrid" style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" style="display:flex;flex-direction:column;height:100%;">
-        <!-- Close btn (mobile) -->
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;" id="sidebarCloseWrap">
-          <button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
-            <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-          </button>
-        </div>
-
-        <div class="sec-label">เมนูหลัก</div>
-        <button onclick="showTab('dashboard')" id="btn-dashboard" class="sidebar-btn active">
-          <i data-lucide="home" style="width:19px;height:19px;flex-shrink:0;"></i> หน้าแรก
-        </button>
-
-        <div class="sec-label" style="margin-top:8px;">บริการออนไลน์</div>
-        <a href="room-booking.html" class="sidebar-btn">
-          <i data-lucide="calendar" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ห้อง/สถานที่
-        </a>
-        <button onclick="showTab('cctv')" id="btn-cctv" class="sidebar-btn">
-          <i data-lucide="monitor" style="width:19px;height:19px;flex-shrink:0;"></i> ระบบขอใช้ข้อมูล CCTV
-        </button>
-
-        <!-- Admin — hidden until verified -->
-        <div id="adminSidebarSection" style="display:none;">
-          <div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>
-          <div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>
-          <a href="admin.html" class="sidebar-btn admin-btn" style="color:#7c3aed;">
-            <i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>
-            <span>จัดการระบบจอง</span>
-            <span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>
-          </a>
-        </div>
-
-        <div style="flex:1;"></div>
-        <div style="padding:4px 4px 8px;" id="sidebarProfile"></div>
-      </div>
+      <div class="sidebar-inner" id="sidebarContent"></div>
     </div>
 
     <!-- Content -->
@@ -252,7 +191,7 @@
           </div>
         </div>
 
-        <!-- Two-column layout: Steps + LINE -->
+        <!-- Two-column: Steps + LINE -->
         <div class="dashboard-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
 
           <!-- ขั้นตอนการใช้งาน -->
@@ -266,31 +205,19 @@
             <div style="display:flex;flex-direction:column;gap:14px;">
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:#eff6ff;color:#1d4ed8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">1</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">ตรวจสอบห้องว่าง</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">เลือกวันที่และเวลาที่ต้องการใช้งาน จากนั้นดูรายการห้องที่ว่าง</div>
-                </div>
+                <div><div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">ตรวจสอบห้องว่าง</div><div style="font-size:12px;color:#64748b;line-height:1.5;">เลือกวันที่และเวลาที่ต้องการใช้งาน จากนั้นดูรายการห้องที่ว่าง</div></div>
               </div>
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:#eff6ff;color:#1d4ed8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">2</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">กรอกข้อมูลและส่งคำขอจอง</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">ระบุวัตถุประสงค์ จำนวนผู้เข้าร่วม และข้อมูลที่จำเป็น</div>
-                </div>
+                <div><div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">กรอกข้อมูลและส่งคำขอจอง</div><div style="font-size:12px;color:#64748b;line-height:1.5;">ระบุวัตถุประสงค์ จำนวนผู้เข้าร่วม และข้อมูลที่จำเป็น</div></div>
               </div>
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:#eff6ff;color:#1d4ed8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">3</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">รอการพิจารณาอนุมัติ</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">เจ้าหน้าที่จะแจ้งผลภายใน 1-2 วันทำการ</div>
-                </div>
+                <div><div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">รอการพิจารณาอนุมัติ</div><div style="font-size:12px;color:#64748b;line-height:1.5;">เจ้าหน้าที่จะแจ้งผลภายใน 1-2 วันทำการ</div></div>
               </div>
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:#dcfce7;color:#15803d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">✓</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">นำเอกสารติดต่อห้องบริหารทั่วไป</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">เมื่อได้รับการอนุมัติ นำเอกสารไปติดต่อก่อนใช้งาน</div>
-                </div>
+                <div><div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">นำเอกสารติดต่อห้องบริหารทั่วไป</div><div style="font-size:12px;color:#64748b;line-height:1.5;">เมื่อได้รับการอนุมัติ นำเอกสารไปติดต่อก่อนใช้งาน</div></div>
               </div>
             </div>
             <div style="margin-top:18px;padding-top:16px;border-top:1px solid #f1f5f9;">
@@ -300,7 +227,7 @@
             </div>
           </div>
 
-          <!-- LINE Section -->
+          <!-- LINE Notification -->
           <div style="background:white;padding:24px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);">
             <h4 style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
               <div style="width:28px;height:28px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -308,8 +235,6 @@
               </div>
               สมัครรับแจ้งเตือนผ่าน LINE
             </h4>
-
-            <!-- LINE Card -->
             <div id="lineCard" style="background:linear-gradient(135deg,#06C755,#00a541);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(6,199,85,.25);margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -322,8 +247,6 @@
               </div>
               <button id="lineBtn" onclick="lineConnect()" style="padding:9px 16px;background:white;color:#06C755;font-weight:800;border-radius:9px;border:none;cursor:pointer;font-size:12px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1);">เชื่อมต่อ LINE</button>
             </div>
-
-            <!-- Steps -->
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">1</div>
@@ -337,37 +260,23 @@
               </div>
               <div style="display:flex;gap:12px;align-items:start;">
                 <div style="width:28px;height:28px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">2</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">เชื่อมต่อบัญชีกับระบบ</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">กดปุ่ม "เชื่อมต่อ LINE" ด้านบนเพื่อเชื่อมต่อ</div>
-                </div>
+                <div><div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">เชื่อมต่อบัญชีกับระบบ</div><div style="font-size:12px;color:#64748b;line-height:1.5;">กดปุ่ม "เชื่อมต่อ LINE" ด้านบนเพื่อเชื่อมต่อ</div></div>
               </div>
             </div>
-
-            <!-- Notification list -->
             <div style="background:#f8fafc;padding:14px 16px;border-radius:12px;border:1px solid #e2e8f0;">
               <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:6px;">
                 <i data-lucide="bell" style="width:13px;height:13px;color:#06C755;"></i> แจ้งเตือนที่จะได้รับ
               </div>
               <div style="display:flex;flex-direction:column;gap:7px;">
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  แจ้งผลอนุมัติ/ไม่อนุมัติคำขอจองห้อง
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  เตือนก่อนถึงเวลาใช้งานห้อง 15 นาที
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  ข้อมูลสำคัญเกี่ยวกับการจอง
-                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;"><div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>แจ้งผลอนุมัติ/ไม่อนุมัติคำขอจองห้อง</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;"><div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>เตือนก่อนถึงเวลาใช้งานห้อง 15 นาที</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;"><div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>ข้อมูลสำคัญเกี่ยวกับการจอง</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- My bookings list -->
+        <!-- My Bookings list -->
         <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
           <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;"><i data-lucide="list" style="width:16px;height:16px;color:#1d4ed8;"></i> รายการจองของฉัน</span>
@@ -377,7 +286,6 @@
             <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
           </div>
         </div>
-
       </div>
 
       <!-- CCTV tab -->
@@ -399,270 +307,215 @@
 </footer>
 
 <script>
-  var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
-  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-  var auth=firebase.auth(),db=firebase.firestore();
-  var LINE_CH  = '2009342857';
-  var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
-  var LINE_PROXY_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
+  /* ── Init ── */
+  buildNavbar('ระบบบริการออนไลน์', false);
 
-  function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
-  function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
+  /* ── Tab switcher (dashboard / cctv) ── */
+  function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.sidebar-btn').forEach(function(b) { b.classList.remove('active'); });
+    var t = document.getElementById('tab-' + name);
+    var b = document.getElementById('btn-' + name);
+    if (t) t.classList.add('active');
+    if (b) b.classList.add('active');
+    closeSidebar();
+  }
 
-  auth.onAuthStateChanged(function(user){
-    if(user){
-      document.getElementById('publicView').style.display='none';
-      document.getElementById('privateView').style.display='block';
-      document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
-      updateNavUser(user);updateSidebarProfile(user);
-      fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
-    }else{
-      document.getElementById('publicView').style.display='block';
-      document.getElementById('privateView').style.display='none';
+  /* ── Auth State ── */
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      document.getElementById('publicView').style.display  = 'none';
+      document.getElementById('privateView').style.display = 'block';
+      document.getElementById('welcomeText').textContent   = 'สวัสดี, ' + user.displayName;
+      updateNavUser(user);
+      buildSidebar('home');
+      updateSidebarProfile(user);
+      fetchUserStats(user.uid);
+      checkAdminAccess(user.email);
+      lineLoadStatus(user.uid);
+      // rebuild sidebar btn active states after buildSidebar
+      var btnHome = document.getElementById('btn-dashboard');
+      if (btnHome) btnHome.classList.add('active');
+    } else {
+      document.getElementById('publicView').style.display  = 'block';
+      document.getElementById('privateView').style.display = 'none';
       resetNavUI();
     }
-    document.getElementById('loadingOverlay').style.display='none';
+    document.getElementById('loadingOverlay').style.display = 'none';
     lucide.createIcons();
   });
 
-  function checkAdminAccess(email){
-    if(!email)return;
-    db.collection('admins').doc(email.toLowerCase()).get().then(function(doc){
-      if(doc.exists){document.getElementById('adminSidebarSection').style.display='block';lucide.createIcons();}
-    }).catch(function(){});
-  }
-
-  function handleLogin(){document.getElementById('loadingOverlay').style.display='flex';auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
-  function handleLogout(){document.getElementById('loadingOverlay').style.display='flex';auth.signOut();}
-
-  
-  /* ── Pastel Room Color System (shared) ── */
-  var ROOM_PASTEL_MAP={
-    'ห้องประชุมชวนชม'  :{bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
-    'หอประชุมพุทธรักษา':{bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
-    'สนามกีฬากลาง'    :{bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
-    'ห้องประชุมราชพฤกษ์':{bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
-    'โดมอเนกประสงค์'  :{bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
-    'ห้องประชุมปาริชาติ':{bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
-    'ห้องประชุมชวนชน'  :{bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'}
-  };
-  var ROOM_PASTEL_FB=[
-    {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
-    {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
-    {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
-    {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
-    {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
-    {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
-    {bg:'#ccfbf1',text:'#134e4a',border:'#5eead4',accent:'#0d9488'},
-    {bg:'#dcfce7',text:'#14532d',border:'#86efac',accent:'#16a34a'},
-    {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'},
-    {bg:'#fdf4ff',text:'#581c87',border:'#e9d5ff',accent:'#9333ea'}
-  ];
-  function getRoomPastel(n){
-    if(ROOM_PASTEL_MAP[n])return ROOM_PASTEL_MAP[n];
-    var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%ROOM_PASTEL_FB.length;
-    return ROOM_PASTEL_FB[h];
-  }
-
-  function fetchUserStats(uid){
-    // ไม่ใช้ orderBy ร่วมกับ where เพื่อหลีกเลี่ยง Firestore composite index — เรียงฝั่ง client แทน
-    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
-      document.getElementById('bookingCount').textContent=snap.size+' รายการ';
-      var bookings=[];
-      snap.forEach(function(d){bookings.push(Object.assign({id:d.id},d.data()));});
-      bookings.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  /* ── User Stats ── */
+  function fetchUserStats(uid) {
+    db.collection('bookings').where('userId', '==', uid).onSnapshot(function(snap) {
+      document.getElementById('bookingCount').textContent = snap.size + ' รายการ';
+      var bookings = [];
+      snap.forEach(function(d) { bookings.push(Object.assign({ id: d.id }, d.data())); });
+      bookings.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
       renderMyBookings(bookings);
-    },function(err){
-      console.error('fetchUserStats error:',err);
-      var empty=document.getElementById('myBookingsEmpty');
-      if(empty){empty.style.display='block';empty.textContent='ไม่สามารถโหลดข้อมูลได้: '+err.message;}
+    }, function(err) {
+      console.error('fetchUserStats error:', err);
+      var el = document.getElementById('myBookingsEmpty');
+      if (el) { el.style.display = 'block'; el.textContent = 'ไม่สามารถโหลดข้อมูลได้: ' + err.message; }
     });
   }
 
-  function renderMyBookings(bookings){
-    var wrap=document.getElementById('myBookingsList');
-    var empty=document.getElementById('myBookingsEmpty');
-    if(!wrap)return;
-    if(!bookings.length){
-      if(empty)empty.textContent='ยังไม่มีรายการจอง';
-      return;
-    }
-    if(empty)empty.style.display='none';
-    var now=new Date();
-    wrap.innerHTML=bookings.slice(0,20).map(function(b){
-      var ok=b.status==='approved',rej=b.status==='rejected';
-      var eDate=new Date((b.date||'')+'T'+(b.endTime||'23:59')+':00');
-      var isDone=ok&&!isNaN(eDate)&&now>eDate;
-      var p=getRoomPastel(b.room||'');var color=p.accent;
-      var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#d1fae5;color:#065f46':rej?'#fee2e2;color:#991b1b':'#fef9c3;color:#92400e';
-      var dateStr='';
-      try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
-        '<div style="width:42px;height:42px;background:'+p.accent+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
-          '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}):'')+'</span>'+
-          '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').getDate():'')+'</span>'+
-        '</div>'+
-        '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:800;color:'+p.text+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
-          '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
-        '</div>'+
-        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
+  function renderMyBookings(bookings) {
+    var wrap  = document.getElementById('myBookingsList');
+    var empty = document.getElementById('myBookingsEmpty');
+    if (!wrap) return;
+    if (!bookings.length) { if (empty) empty.textContent = 'ยังไม่มีรายการจอง'; return; }
+    if (empty) empty.style.display = 'none';
+    var now = new Date();
+    wrap.innerHTML = bookings.slice(0, 20).map(function(b) {
+      var ok = b.status === 'approved', rej = b.status === 'rejected';
+      var eDate = new Date((b.date || '') + 'T' + (b.endTime || '23:59') + ':00');
+      var isDone = ok && !isNaN(eDate) && now > eDate;
+      var p = getRoomPastel(b.room || '');
+      var statusTxt = isDone ? '✅ เสร็จสิ้น' : ok ? '✅ อนุมัติ' : rej ? '❌ ปฏิเสธ' : '⏳ รอตรวจ';
+      var statusBg  = isDone ? '#f1f5f9;color:#64748b' : ok ? '#d1fae5;color:#065f46' : rej ? '#fee2e2;color:#991b1b' : '#fef9c3;color:#92400e';
+      var dateStr = '';
+      try { dateStr = new Date(b.date + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }); } catch(e) { dateStr = b.date || ''; }
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">' +
+        '<div style="width:42px;height:42px;background:' + p.accent + ';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">' + (b.date ? new Date(b.date + 'T00:00:00').toLocaleDateString('th-TH', { month:'short' }) : '') + '</span>' +
+          '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">' + (b.date ? new Date(b.date + 'T00:00:00').getDate() : '') + '</span>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:800;color:' + p.text + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + b.room + '</div>' +
+          '<div style="font-size:11px;color:#64748b;">' + (b.startTime || '?') + ' – ' + (b.endTime || '?') + ' &nbsp;·&nbsp; ' + (b.purpose || '-') + '</div>' +
+        '</div>' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:' + statusBg + ';">' + statusTxt + '</span>' +
       '</div>';
     }).join('');
     lucide.createIcons();
   }
 
-  function updateNavUser(user){
-    document.getElementById('userNavSection').innerHTML='<div style="display:flex;align-items:center;gap:10px;"><img src="'+user.photoURL+'" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);"><button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;"><i data-lucide="log-out" style="width:18px;height:18px;"></i></button></div>';
-    lucide.createIcons();
-  }
-  function resetNavUI(){
-    document.getElementById('userNavSection').innerHTML='<button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>';
-    lucide.createIcons();
-  }
-  function updateSidebarProfile(user){
-    document.getElementById('sidebarProfile').innerHTML='<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;"><div style="display:flex;align-items:center;gap:10px;overflow:hidden;"><img src="'+user.photoURL+'" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"><div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.displayName+'</p><p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+user.email+'</p></div></div></div>';
-  }
+  /* ══ Public Calendar ══ */
+  var pubYear = new Date().getFullYear(), pubMonth = new Date().getMonth();
+  var pubSelectedDate = new Date().toISOString().split('T')[0];
+  var pubBookings = [], pubRooms = [];
 
-  function showTab(name){
-    document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-    document.querySelectorAll('.sidebar-btn').forEach(function(b){b.classList.remove('active');});
-    var t=document.getElementById('tab-'+name),b=document.getElementById('btn-'+name);
-    if(t)t.classList.add('active');if(b)b.classList.add('active');
-    closeSidebar();
+  function pubChangeMonth(d) {
+    pubMonth += d;
+    if (pubMonth > 11) { pubMonth = 0; pubYear++; }
+    if (pubMonth < 0)  { pubMonth = 11; pubYear--; }
+    pubRenderCalendar(); pubRenderStats();
   }
 
-  /* ══ Public Calendar (no login required) ══ */
-  
-
-  var pubYear=new Date().getFullYear(),pubMonth=new Date().getMonth();
-  var pubSelectedDate=new Date().toISOString().split('T')[0];
-  var pubBookings=[],pubRooms=[];
-
-  function pubChangeMonth(d){pubMonth+=d;if(pubMonth>11){pubMonth=0;pubYear++;}if(pubMonth<0){pubMonth=11;pubYear--;}pubRenderCalendar();pubRenderStats();}
-
-  function pubRenderCalendar(){
-    var grid=document.getElementById('pubCalGrid2');
-    var label=document.getElementById('pubMonthLabel');
-    if(!grid||!label)return;
-    grid.innerHTML='';
-    label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(pubYear,pubMonth));
-    var first=new Date(pubYear,pubMonth,1).getDay();
-    var days=new Date(pubYear,pubMonth+1,0).getDate();
-    var today=new Date().toISOString().split('T')[0];
-    var bmap={};
-    pubBookings.forEach(function(b){
-      if(b.status==='rejected')return;
-      if(!bmap[b.date])bmap[b.date]=[];
+  function pubRenderCalendar() {
+    var grid  = document.getElementById('pubCalGrid2');
+    var label = document.getElementById('pubMonthLabel');
+    if (!grid || !label) return;
+    grid.innerHTML = '';
+    label.textContent = new Intl.DateTimeFormat('th-TH', { month:'long', year:'numeric' }).format(new Date(pubYear, pubMonth));
+    var first = new Date(pubYear, pubMonth, 1).getDay();
+    var days  = new Date(pubYear, pubMonth + 1, 0).getDate();
+    var today = new Date().toISOString().split('T')[0];
+    var bmap = {};
+    pubBookings.forEach(function(b) {
+      if (b.status === 'rejected') return;
+      if (!bmap[b.date]) bmap[b.date] = [];
       bmap[b.date].push(b);
     });
-    for(var i=0;i<first;i++){var e=document.createElement('div');e.className='pub-cal-day empty';grid.appendChild(e);}
-    for(var d=1;d<=days;d++){
-      var dk=pubYear+'-'+String(pubMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      var db=bmap[dk]||[];
-      var el=document.createElement('div');
-      var cls='pub-cal-day';
-      if(dk===today)cls+=' is-today';
-      if(db.length>0)cls+=' has-booking';
-      if(db.length>=3)cls+=' is-full';
-      if(dk===pubSelectedDate)cls+=' is-selected';
-      el.className=cls;el.textContent=d;
-      (function(k,bk){el.onclick=function(){pubSelectedDate=k;pubRenderCalendar();pubUpdateDayView(k,bk);};})(dk,db);
+    for (var i = 0; i < first; i++) { var e = document.createElement('div'); e.className = 'pub-cal-day empty'; grid.appendChild(e); }
+    for (var d = 1; d <= days; d++) {
+      var dk = pubYear + '-' + String(pubMonth + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      var db = bmap[dk] || [];
+      var el = document.createElement('div');
+      var cls = 'pub-cal-day';
+      if (dk === today)           cls += ' is-today';
+      if (db.length > 0)          cls += ' has-booking';
+      if (db.length >= 3)         cls += ' is-full';
+      if (dk === pubSelectedDate) cls += ' is-selected';
+      el.className = cls; el.textContent = d;
+      (function(k, bk) { el.onclick = function() { pubSelectedDate = k; pubRenderCalendar(); pubUpdateDayView(k, bk); }; })(dk, db);
       grid.appendChild(el);
     }
   }
 
-  function pubUpdateDayView(dateKey,dayBookings){
-    var list=document.getElementById('pubDayList');
-    var label=document.getElementById('pubDateLabel');
-    if(!list)return;
-    label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
-    if(!dayBookings||!dayBookings.length){
-      list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
+  function pubUpdateDayView(dateKey, dayBookings) {
+    var list  = document.getElementById('pubDayList');
+    var label = document.getElementById('pubDateLabel');
+    if (!list) return;
+    label.textContent = new Date(dateKey + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
+    if (!dayBookings || !dayBookings.length) {
+      list.innerHTML = '<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
       return;
     }
-    list.innerHTML=dayBookings.map(function(b){
-      var ok=b.status==='approved';
-      var p=getRoomPastel(b.room||'');var color=p.accent;
-      var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
-      var isDone=!isNaN(eDate)&&now>eDate;
-      var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#dcfce7;color:#15803d':'#fef9c3;color:#b45309';
-      return '<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">'+
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
-          '<div style="flex:1;min-width:0;">'+
-            '<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>'+
-            '<div style="font-size:11px;color:'+p.text+'99;margin-bottom:4px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; 👤 '+(b.fullName||b.userName||'-')+'</div>'+
-            '<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'18;padding:4px 9px;border-radius:6px;margin-top:6px;">📌 '+(b.purpose||'-')+'</div>'+
-          '</div>'+
-          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+p.accent+';color:white;white-space:nowrap;">'+statusTxt+'</span>'+
-        '</div>'+
+    list.innerHTML = dayBookings.map(function(b) {
+      var ok = b.status === 'approved';
+      var p  = getRoomPastel(b.room || '');
+      var now = new Date(); var eDate = new Date(dateKey + 'T' + (b.endTime || '23:59') + ':00');
+      var isDone   = !isNaN(eDate) && now > eDate;
+      var statusTxt = isDone ? '✅ เสร็จสิ้น' : ok ? '✅ อนุมัติ' : '⏳ รอตรวจ';
+      var statusBg  = isDone ? '#f1f5f9;color:#64748b' : ok ? '#dcfce7;color:#15803d' : '#fef9c3;color:#b45309';
+      return '<div style="padding:14px 16px;background:' + p.bg + ';border-radius:14px;margin-bottom:10px;border:1.5px solid ' + p.border + ';">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:800;font-size:14px;color:' + p.text + ';margin-bottom:5px;">' + b.room + '</div>' +
+            '<div style="font-size:11px;color:' + p.text + '99;margin-bottom:4px;">⏰ ' + (b.startTime||'?') + ' – ' + (b.endTime||'?') + ' &nbsp;·&nbsp; 👤 ' + (b.fullName||b.userName||'-') + '</div>' +
+            '<div style="font-size:11px;color:' + p.text + ';background:' + p.accent + '18;padding:4px 9px;border-radius:6px;margin-top:6px;">📌 ' + (b.purpose||'-') + '</div>' +
+          '</div>' +
+          '<span style="font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;flex-shrink:0;background:' + p.accent + ';color:white;white-space:nowrap;">' + statusTxt + '</span>' +
+        '</div>' +
       '</div>';
     }).join('');
   }
 
-  function pubRenderStats(){
-    var label=document.getElementById('pubStatsMonth');
-    var wrap=document.getElementById('pubStatsWrap');
-    if(!label||!wrap)return;
-    label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(pubYear,pubMonth));
-    var prefix=pubYear+'-'+String(pubMonth+1).padStart(2,'0');
-    var counts={};
-    pubBookings.forEach(function(b){
-      if(b.status==='rejected')return;
-      if(!b.date||b.date.indexOf(prefix)!==0)return;
-      if(!counts[b.room])counts[b.room]=0;counts[b.room]++;
+  function pubRenderStats() {
+    var label = document.getElementById('pubStatsMonth');
+    var wrap  = document.getElementById('pubStatsWrap');
+    if (!label || !wrap) return;
+    label.textContent = new Intl.DateTimeFormat('th-TH', { month:'long', year:'numeric' }).format(new Date(pubYear, pubMonth));
+    var prefix = pubYear + '-' + String(pubMonth + 1).padStart(2, '0');
+    var counts = {};
+    pubBookings.forEach(function(b) {
+      if (b.status === 'rejected') return;
+      if (!b.date || b.date.indexOf(prefix) !== 0) return;
+      if (!counts[b.room]) counts[b.room] = 0; counts[b.room]++;
     });
-    if(!pubRooms.length){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">ยังไม่มีข้อมูล</div>';return;}
-    var max=0;pubRooms.forEach(function(r){if((counts[r.name]||0)>max)max=(counts[r.name]||0);});
-    if(max===0){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';return;}
-    wrap.innerHTML=pubRooms.map(function(r){
-      var c=counts[r.name]||0;if(!c)return'';
-      var p=getRoomPastel(r.name);var color=p.accent;
-      var pct=max>0?(c/max*100):0;
-      return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;">'+
-        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;color:'+color+';">'+r.name+'</span>'+
-        '<span style="color:'+color+';flex-shrink:0;">'+c+' ครั้ง</span></div>'+
-        '<div class="pub-stat-bar"><div class="pub-stat-fill" style="width:'+pct+'%;background:'+color+';"></div></div></div>';
+    if (!pubRooms.length) { wrap.innerHTML = '<div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">ยังไม่มีข้อมูล</div>'; return; }
+    var max = 0;
+    pubRooms.forEach(function(r) { if ((counts[r.name] || 0) > max) max = (counts[r.name] || 0); });
+    if (max === 0) { wrap.innerHTML = '<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>'; return; }
+    wrap.innerHTML = pubRooms.map(function(r) {
+      var c = counts[r.name] || 0; if (!c) return '';
+      var p = getRoomPastel(r.name);
+      var pct = max > 0 ? (c / max * 100) : 0;
+      return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;">' +
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;color:' + p.accent + ';">' + r.name + '</span>' +
+        '<span style="color:' + p.accent + ';flex-shrink:0;">' + c + ' ครั้ง</span></div>' +
+        '<div class="pub-stat-bar"><div class="pub-stat-fill" style="width:' + pct + '%;background:' + p.accent + ';"></div></div></div>';
     }).filter(Boolean).join('');
-    if(!wrap.innerHTML)wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';
+    if (!wrap.innerHTML) wrap.innerHTML = '<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';
   }
 
-  // Load public data (bookings + rooms) without auth
-  function initPublicCalendar(){
-    db.collection('rooms').orderBy('name').get().then(function(snap){
-      pubRooms=[];snap.forEach(function(d){pubRooms.push(Object.assign({id:d.id},d.data()));});
+  function initPublicCalendar() {
+    db.collection('rooms').orderBy('name').get().then(function(snap) {
+      pubRooms = []; snap.forEach(function(d) { pubRooms.push(Object.assign({ id: d.id }, d.data())); });
     });
-    db.collection('bookings').orderBy('date').get().then(function(snap){
-      pubBookings=[];
-      snap.forEach(function(d){pubBookings.push(Object.assign({id:d.id},d.data()));});
-      pubRenderCalendar();
-      pubRenderStats();
-      // Auto-show today
-      var todayBk=pubBookings.filter(function(b){return b.date===pubSelectedDate&&b.status!=='rejected';});
-      pubUpdateDayView(pubSelectedDate,todayBk);
+    db.collection('bookings').orderBy('date').get().then(function(snap) {
+      pubBookings = [];
+      snap.forEach(function(d) { pubBookings.push(Object.assign({ id: d.id }, d.data())); });
+      pubRenderCalendar(); pubRenderStats();
+      var todayBk = pubBookings.filter(function(b) { return b.date === pubSelectedDate && b.status !== 'rejected'; });
+      pubUpdateDayView(pubSelectedDate, todayBk);
       lucide.createIcons();
     });
   }
   initPublicCalendar();
 
-  /* ════ LINE ════ */
+  /* ══ LINE ══ */
   function callLineProxy(params, cb) {
-    fetch(LINE_PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    })
-      .then(function(r){ return r.json(); })
-      .then(cb)
-      .catch(function(e){ cb({ error: e.message }); });
+    fetch(LINE_PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(params) })
+      .then(function(r) { return r.json(); }).then(cb).catch(function(e) { cb({ error: e.message }); });
   }
 
   function lineLoadStatus(uid) {
     db.collection('users').doc(uid).get().then(function(doc) {
-      lineRender(doc.exists && !!doc.data().lineUserId, doc.exists ? (doc.data().lineName||'') : '');
-    }).catch(function(){ lineRender(false,''); });
+      lineRender(doc.exists && !!doc.data().lineUserId, doc.exists ? (doc.data().lineName || '') : '');
+    }).catch(function() { lineRender(false, ''); });
   }
 
   function lineRender(ok, name) {
@@ -671,17 +524,13 @@
     var btn = document.getElementById('lineBtn');
     if (!txt) return;
     if (ok) {
-      txt.textContent = '\u2705 \u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e41\u0e25\u0e49\u0e27' + (name?' \u00b7 '+name:'');
-      sub.textContent = '\u0e04\u0e38\u0e13\u0e08\u0e30\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e1c\u0e48\u0e32\u0e19 LINE \u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34';
-      btn.textContent = '\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d';
-      btn.style.color = '#dc2626';
-      btn.onclick = lineDisconnect;
+      txt.textContent = '✅ เชื่อมต่อ LINE แล้ว' + (name ? ' · ' + name : '');
+      sub.textContent = 'คุณจะได้รับแจ้งเตือนผ่าน LINE อัตโนมัติ';
+      btn.textContent = 'ยกเลิกการเชื่อมต่อ'; btn.style.color = '#dc2626'; btn.onclick = lineDisconnect;
     } else {
-      txt.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19';
-      sub.textContent = '\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e1c\u0e25\u0e04\u0e33\u0e02\u0e2d \u0e41\u0e25\u0e30\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e16\u0e36\u0e07\u0e40\u0e27\u0e25\u0e32\u0e08\u0e2d\u0e07 15 \u0e19\u0e32\u0e17\u0e35';
-      btn.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE';
-      btn.style.color = '#06C755';
-      btn.onclick = lineConnect;
+      txt.textContent = 'เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน';
+      sub.textContent = 'รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที';
+      btn.textContent = 'เชื่อมต่อ LINE'; btn.style.color = '#06C755'; btn.onclick = lineConnect;
     }
   }
 
@@ -695,70 +544,39 @@
   }
 
   function lineDisconnect() {
-    if (!confirm('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e43\u0e0a\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48?')) return;
+    if (!confirm('ยกเลิกการเชื่อมต่อ LINE ใช่หรือไม่?')) return;
     var u = auth.currentUser; if (!u) return;
     db.collection('users').doc(u.uid).update({
       lineUserId: firebase.firestore.FieldValue.delete(),
-      lineName:   firebase.firestore.FieldValue.delete(),
-    }).then(function(){ lineRender(false,''); lineToast('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e41\u0e25\u0e49\u0e27','w'); });
+      lineName:   firebase.firestore.FieldValue.delete()
+    }).then(function() { lineRender(false, ''); showToast('ยกเลิกแล้ว', 'warn'); });
   }
 
-  /* LINE callback handler */
   function lineHandleCb() {
-    var p     = new URLSearchParams(location.search);
-    var code  = p.get('code');
-    var state = p.get('state');
-    var err   = p.get('error');
+    var p = new URLSearchParams(location.search);
+    var code = p.get('code'), state = p.get('state'), err = p.get('error');
     if (!code && !err) return;
     history.replaceState({}, '', location.pathname);
-    if (err) { lineToast('\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE','w'); return; }
-    if (state !== localStorage.getItem('ls')) { lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: state \u0e44\u0e21\u0e48\u0e15\u0e23\u0e07\u0e01\u0e31\u0e19','e'); return; }
+    if (err) { showToast('ยกเลิกการเชื่อมต่อ LINE', 'warn'); return; }
+    if (state !== localStorage.getItem('ls')) { showToast('เชื่อมต่อไม่สำเร็จ: state ไม่ตรงกัน', 'error'); return; }
     localStorage.removeItem('ls');
-    /* รอ auth พร้อม */
-    var t = 0, iv = setInterval(function(){
+    var t = 0, iv = setInterval(function() {
       t += 400;
-      if (t > 15000) { clearInterval(iv); lineToast('Timeout \u0e01\u0e23\u0e38\u0e13\u0e32\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48','e'); return; }
+      if (t > 15000) { clearInterval(iv); showToast('Timeout กรุณาลองใหม่', 'error'); return; }
       var u = auth.currentUser; if (!u) return;
       clearInterval(iv);
-      /* แลก code ผ่าน Firebase Function */
       var btn = document.getElementById('lineBtn');
-      if (btn) { btn.disabled = true; btn.textContent = '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d...'; }
-      callLineProxy({
-        code: code,
-        redirectUri: LINE_CB,
-        firebaseUid: u.uid,
-        userEmail: u.email,
-        userName: u.displayName,
-      }, function(data) {
+      if (btn) { btn.disabled = true; btn.textContent = 'กำลังเชื่อมต่อ...'; }
+      callLineProxy({ code:code, redirectUri:LINE_CB, firebaseUid:u.uid, userEmail:u.email, userName:u.displayName }, function(data) {
         if (data.lineUserId) {
-          // Firebase Function บันทึก Firestore และส่ง LINE ต้อนรับให้แล้ว
-          lineRender(true, data.lineName||'');
-          lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
+          lineRender(true, data.lineName || ''); showToast('เชื่อมต่อ LINE สำเร็จ ✓');
         } else {
-          if (btn) { btn.disabled = false; btn.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE'; }
-          lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: '+(data.error||'-'),'e');
+          if (btn) { btn.disabled = false; btn.textContent = 'เชื่อมต่อ LINE'; }
+          showToast('เชื่อมต่อไม่สำเร็จ: ' + (data.error || '-'), 'error');
         }
       });
     }, 400);
   }
-
-  /* ส่ง LINE แจ้งเจ้าของเมื่อสถานะเปลี่ยน */
-  var _lnCache = {};
-  function lineListenBookings(uid) {
-    // ปิดการส่ง LINE จาก client แล้ว
-    // Firebase Cloud Function (onBookingStatusChanged) จัดการส่ง LINE ให้อัตโนมัติ
-  }
-
-  function lineToast(msg, type) {
-    var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;font-family:Sarabun,sans-serif;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15);';
-    t.style.background = type==='e'?'#ef4444':type==='w'?'#f59e0b':'#06C755';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(function(){ t.remove(); }, 4000);
-  }
-
-  /* เรียก callback ทันทีที่โหลด */
   lineHandleCb();
 
   lucide.createIcons();
