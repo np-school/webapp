@@ -696,18 +696,21 @@
       var isDone=!isNaN(eDate)&&now>eDate;
       var p=getRoomPastel(b.room||'');
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
+      var cardBg=isDone?'#f1f5f9':p.bg;
+      var cardBorder=isDone?'#cbd5e1':p.border;
+      var cardText=isDone?'#64748b':p.text;
       var statusBg=isDone?'#94a3b8':p.accent;
       var fileBtn='';
       if(b.hasLayout){fileBtn='<button onclick="openFileView(this.dataset.id)" data-id="'+b.id+'" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:#7c3aed;border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>';}
 
       var parts=[];
-      parts.push('<div style="padding:14px 16px;background:'+p.bg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+p.border+';">');
+      parts.push('<div style="padding:14px 16px;background:'+cardBg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+cardBorder+';">');
       parts.push('<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">');
       parts.push('<div style="flex:1;min-width:0;">');
-      parts.push('<div style="font-weight:800;font-size:14px;color:'+p.text+';margin-bottom:5px;">'+b.room+'</div>');
-      parts.push('<div style="font-size:11px;color:'+p.text+';opacity:.75;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' · 👤 '+(b.fullName||b.userName||'-')+'</div>');
-      parts.push('<div style="font-size:11px;color:'+p.text+';background:'+p.accent+'22;padding:4px 8px;border-radius:6px;margin-top:5px;">📌 '+(b.purpose||'-')+'</div>');
-      if(b.attendees)parts.push('<div style="font-size:10px;color:'+p.text+';opacity:.7;margin-top:3px;">👥 '+b.attendees+' คน</div>');
+      parts.push('<div style="font-weight:800;font-size:14px;color:'+cardText+';margin-bottom:5px;">'+b.room+'</div>');
+      parts.push('<div style="font-size:11px;color:'+cardText+';opacity:.75;margin-bottom:2px;">⏰ '+(b.startTime||'?')+' – '+(b.endTime||'?')+' · 👤 '+(b.fullName||b.userName||'-')+'</div>');
+      parts.push('<div style="font-size:11px;color:'+cardText+';background:'+(isDone?'#94a3b822':p.accent+'22')+';padding:4px 8px;border-radius:6px;margin-top:5px;">📌 '+(b.purpose||'-')+'</div>');
+      if(b.attendees)parts.push('<div style="font-size:10px;color:'+cardText+';opacity:.7;margin-top:3px;">👥 '+b.attendees+' คน</div>');
       if(fileBtn)parts.push(fileBtn);
       parts.push('</div>');
       parts.push('<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+statusBg+';color:white;">'+statusTxt+'</span>');
