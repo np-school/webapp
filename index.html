@@ -289,7 +289,8 @@
   var auth=firebase.auth(),db=firebase.firestore();
   var LINE_CH  = '2009342857';
   var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
-  var GAS_URL  = 'https://script.google.com/macros/s/AKfycbwBdIK6l0Iy2AbAygBA99KxZgIHxKW02_eNcLBmfHQDkijq2tSDAvnmodUs5GJfnwa_/exec';
+  // ⚠️ เปลี่ยนจาก Google Apps Script เป็น Firebase Functions
+  var LINE_PROXY_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
 
   function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');document.body.style.overflow='hidden';}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');document.body.style.overflow='';}
@@ -533,11 +534,13 @@
   initPublicCalendar();
 
   /* ════ LINE ════ */
-  function gasGet(params, cb) {
-    var qs = Object.keys(params).map(function(k){
-      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
-    }).join('&');
-    fetch(GAS_URL + '?' + qs)
+  // เปลี่ยนจาก GET (GAS) เป็น POST (Firebase Functions)
+  function callLineProxy(params, cb) {
+    fetch(LINE_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    })
       .then(function(r){ return r.json(); })
       .then(cb)
       .catch(function(e){ cb({ error: e.message }); });
@@ -604,11 +607,10 @@
       if (t > 15000) { clearInterval(iv); lineToast('Timeout \u0e01\u0e23\u0e38\u0e13\u0e32\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48','e'); return; }
       var u = auth.currentUser; if (!u) return;
       clearInterval(iv);
-      /* แลก code ผ่าน GAS GET */
+      /* แลก code ผ่าน Firebase Functions */
       var btn = document.getElementById('lineBtn');
       if (btn) { btn.disabled = true; btn.textContent = '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d...'; }
-      gasGet({
-        action: 'exchangeCode',
+      callLineProxy({
         code: code,
         redirectUri: LINE_CB,
         firebaseUid: u.uid,
@@ -616,21 +618,7 @@
         userName: u.displayName,
       }, function(data) {
         if (data.lineUserId) {
-          // บันทึก lineUserId ลง Firestore โดยตรงจากฝั่ง client
-          var lineData = { lineUserId: data.lineUserId, lineName: data.lineName||'',
-            email: u.email, name: u.displayName,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-          // บันทึกลง users
-          db.collection('users').doc(u.uid).set(lineData,{merge:true})
-            .catch(function(e){console.log('save users error:',e);});
-          // ถ้าเป็น admin ให้บันทึก lineUserId ลง admins ด้วย
-          db.collection('admins').doc(u.email.toLowerCase()).get().then(function(ad){
-            if(ad.exists){
-              db.collection('admins').doc(u.email.toLowerCase())
-                .set({lineUserId:data.lineUserId,lineName:data.lineName||''},
-                     {merge:true}).catch(function(){});
-            }
-          });
+          // Firebase Functions จะบันทึกลง Firestore ให้แล้ว ไม่ต้องบันทึกซ้ำ
           lineRender(true, data.lineName||'');
           lineToast('\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713','ok');
         } else {
@@ -642,26 +630,9 @@
   }
 
   /* ส่ง LINE แจ้งเจ้าของเมื่อสถานะเปลี่ยน */
-  var _lnCache = {};
+  /* ⚠️ ปิดการใช้งาน - ให้ Firebase Functions (onBookingStatusChanged) จัดการส่ง LINE แจ้งเตือนแทน */
   function lineListenBookings(uid) {
-    db.collection('bookings').where('userId','==',uid).onSnapshot(function(snap){
-      snap.docChanges().forEach(function(ch){
-        if (ch.type !== 'modified') return;
-        var b = Object.assign({id:ch.doc.id}, ch.doc.data());
-        if (b.status!=='approved' && b.status!=='rejected') return;
-        var k = b.id+'_'+b.status;
-        if (_lnCache[k]) return;
-        _lnCache[k] = true;
-        db.collection('users').doc(uid).get().then(function(doc){
-          if (!doc.exists||!doc.data().lineUserId) return;
-          var ok = b.status==='approved';
-          var msg = (ok?'\u2705 \u0e04\u0e33\u0e02\u0e2d\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34\u0e41\u0e25\u0e49\u0e27!':'\u274c \u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2d\u0e19\u0e38\u0e21\u0e31\u0e15\u0e34')+
-            ' \u0e2b\u0e49\u0e2d\u0e07:'+b.room+' \u0e27\u0e31\u0e19:'+b.date+
-            ((!ok&&b.rejectReason)?' \u0e40\u0e2b\u0e15\u0e38\u0e1c\u0e25:'+b.rejectReason:'');
-          gasGet({ action:'sendLine', lineUserId:doc.data().lineUserId, msg:msg }, function(){});
-        });
-      });
-    });
+    // ไม่ต้องทำอะไร - Firebase Functions จะจัดการส่ง LINE ให้อัตโนมัติ
   }
 
   function lineToast(msg, type) {
