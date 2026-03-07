@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════
+   shared/styles.css
+   โรงเรียนหนองกี่พิทยาคม – Shared Stylesheet
+   ═══════════════════════════════════════════════ */
+
+* { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Loading Overlay ── */
+#loadingOverlay {
+  display: flex; position: fixed; inset: 0;
+  background: rgba(255,255,255,.92); z-index: 9999;
+  flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+.spinner {
+  border: 3px solid #e2e8f0; border-top: 3px solid #1d4ed8;
+  border-radius: 50%; width: 48px; height: 48px;
+  animation: spin .8s linear infinite;
+}
+.spinner.purple { border-top-color: #7c3aed; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sidebar ── */
+.sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
+.sidebar-inner {
+  background: #f8fafc; border-right: 1px solid #e2e8f0;
+  min-height: 100vh; padding: 20px 12px;
+  display: flex; flex-direction: column;
+}
+.sidebar-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 14px; font-weight: 700;
+  color: #64748b; width: 100%; background: none; border: none;
+  cursor: pointer; text-decoration: none; transition: all .2s;
+  font-size: 14px; white-space: nowrap;
+}
+.sidebar-btn:hover { background: #f1f5f9; }
+.sidebar-btn.active { background: #1d4ed8; color: white; box-shadow: 0 8px 15px -3px rgba(30,64,175,.25); }
+.sidebar-btn.admin-btn { color: #7c3aed; }
+.sidebar-btn.admin-btn:hover { background: #faf5ff; }
+.sidebar-btn.admin-btn.active { background: #7c3aed; color: white; box-shadow: 0 8px 15px -3px rgba(124,58,237,.25); }
+.sec-label {
+  padding: 14px 16px 8px; font-size: 10px; font-weight: 800;
+  color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;
+}
+
+/* ── Sidebar Overlay (mobile) ── */
+#sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 199; }
+#sidebarOverlay.open { display: block; }
+
+/* ── Mobile Drawer ── */
+@media (max-width: 1023px) {
+  .sidebar-wrap {
+    position: fixed; top: 0; left: 0; height: 100vh; z-index: 200;
+    transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,.12);
+  }
+  .sidebar-wrap.open { transform: translateX(0); }
+  #mainGrid { flex-direction: column; }
+  #contentArea { width: 100%; }
+}
+@media (min-width: 1024px) {
+  #hamburgerBtn { display: none !important; }
+  .sidebar-inner { border-right: none; }
+}
+
+/* ── Card ── */
+.card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+
+/* ── Tab content ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  padding: 13px 20px; border-radius: 10px; color: white;
+  font-weight: 700; font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15); z-index: 9999;
+  animation: toastIn .3s ease;
+}
+.toast.hide { animation: toastOut .3s ease forwards; }
+@keyframes toastIn  { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+
+/* ── Modal ── */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.65); z-index: 1000;
+  align-items: center; justify-content: center;
+  padding: 16px; backdrop-filter: blur(4px);
+}
+.modal-bg.open { display: flex; }
+.modal-box {
+  background: white; border-radius: 20px; width: 100%;
+  max-width: 480px; padding: 26px;
+  box-shadow: 0 25px 60px rgba(0,0,0,.2);
+}
+
+/* ── Form Inputs ── */
+input[type=text], input[type=number], input[type=date], select, textarea {
+  border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 10px;
+  outline: none; font-size: 14px; width: 100%; color: #1e293b;
+  transition: border-color .15s; font-family: 'Sarabun', sans-serif;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.1);
+}
+
+/* ── Badges ── */
+.badge-g { background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+.badge-a { background: #fef9c3; color: #b45309;  padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+.badge-r { background: #fee2e2; color: #b91c1c;  padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+
+/* ── Calendar (shared) ── */
+.cal-day {
+  aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer; transition: all .15s;
+  position: relative; font-size: 11px; font-weight: 600; border: 1px solid transparent;
+}
+.cal-day:hover:not(.empty) { background: #f1f5f9; }
+.cal-day.has-booking::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: #eab308; border-radius: 50%; }
+.cal-day.is-full   { background: #fee2e2 !important; color: #b91c1c !important; border-color: #fecaca; }
+.cal-day.is-today  { background: #1d4ed8 !important; color: white !important; box-shadow: 0 4px 10px rgba(29,78,216,.35); }
+.cal-day.is-today::after { background: white !important; }
+.cal-day.is-selected { border: 2px solid #1d4ed8; background: #eff6ff; }
+.cal-day.empty { cursor: default; }
+
+/* ── Stat bar ── */
+.stat-bar-bg  { background: #e2e8f0; border-radius: 4px; height: 6px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 4px; background: #1d4ed8; transition: width .4s ease; }
+
+/* ── Upload area ── */
+.upload-area {
+  border: 2px dashed #bfdbfe; border-radius: 12px; padding: 20px 16px;
+  text-align: center; cursor: pointer; transition: all .2s; background: #f8faff;
+}
+.upload-area:hover { border-color: #1d4ed8; background: #eff6ff; }
+.upload-area.has-file { border-color: #22c55e; background: #f0fdf4; border-style: solid; }
+
+/* ── File View Modal ── */
+#fileViewModal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.75); z-index: 2000;
+  align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(6px);
+}
+#fileViewModal.open { display: flex; }
+
+/* ── Navbar ── */
+.navbar {
+  position: sticky; top: 0; z-index: 150;
+  background: #1d4ed8; padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+.navbar.purple { background: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
+.navbar-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
