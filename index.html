@@ -6,11 +6,13 @@
   <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="shared/common.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
     /* ── Loading ── */
@@ -444,12 +446,8 @@
 </footer>
 
 <script>
-  var firebaseConfig={apiKey:'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',authDomain:'np-webapp-74616.firebaseapp.com',projectId:'np-webapp-74616',appId:'1:275537025660:web:4fdc11e0fe22e679f6c7f9'};
-  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-  var auth=firebase.auth(),db=firebase.firestore();
-  var LINE_CH  = '2009342857';
-  var LINE_CB  = 'https://np-school.github.io/webapp/index.html';
-  var LINE_PROXY_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/lineProxy';
+
+
 
   buildNavbar('NP Origins', false);
   auth.onAuthStateChanged(function(user){
