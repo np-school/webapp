@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คู่มือการใช้งาน – NP Origins</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+  <style>
+    body { background: #f8fafc; }
+
+    .guide-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+      padding: 48px 20px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .guide-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .guide-hero-inner {
+      max-width: 800px; margin: 0 auto; position: relative; z-index: 1; text-align: center;
+    }
+
+    .section-card {
+      background: white; border-radius: 20px; border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 12px rgba(0,0,0,.05); padding: 28px 32px; margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 17px; font-weight: 800; color: #1e293b;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* Steps */
+    .step-row { display: flex; gap: 16px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid #f1f5f9; }
+    .step-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px; flex-shrink: 0;
+    }
+    .step-title { font-weight: 700; color: #1e293b; font-size: 14px; margin-bottom: 5px; }
+    .step-desc  { font-size: 13px; color: #64748b; line-height: 1.7; }
+
+    /* Tips */
+    .tip-box {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+      padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; color: #92400e; line-height: 1.6;
+    }
+    .tip-box.blue {
+      background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a;
+    }
+    .tip-box.green {
+      background: #f0fdf4; border-color: #bbf7d0; color: #14532d;
+    }
+    .tip-box.red {
+      background: #fff1f2; border-color: #fecdd3; color: #9f1239;
+    }
+
+    /* FAQ */
+    .faq-item { border-bottom: 1px solid #f1f5f9; }
+    .faq-q {
+      width: 100%; text-align: left; padding: 16px 0; background: none; border: none;
+      font-weight: 700; font-size: 14px; color: #1e293b; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .faq-a {
+      font-size: 13px; color: #64748b; line-height: 1.7;
+      padding-bottom: 16px; display: none;
+    }
+    .faq-a.open { display: block; }
+
+    /* Status badges */
+    .s-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .s-pending  { background: #fef3c7; color: #b45309; }
+    .s-approved { background: #dcfce7; color: #15803d; }
+    .s-rejected { background: #fee2e2; color: #b91c1c; }
+    .s-done     { background: #f1f5f9; color: #64748b; }
+
+    .content-wrap { max-width: 800px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* TOC */
+    .toc { background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px 24px; margin-bottom: 24px; }
+    .toc a { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 13px; font-weight: 600; color: #3b82f6; text-decoration: none; border-bottom: 1px solid #f8fafc; }
+    .toc a:last-child { border-bottom: none; }
+    .toc a:hover { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav id="navbar" class="navbar"></nav>
+
+<div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
+  <div class="sidebar-wrap" id="sidebar">
+    <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
+  </div>
+
+  <div style="flex:1;min-width:0;">
+
+    <!-- Hero -->
+    <div class="guide-hero">
+      <div class="guide-hero-inner">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;margin-bottom:16px;">
+          <i data-lucide="book-open" style="width:14px;height:14px;color:#93c5fd;"></i>
+          <span style="font-size:12px;font-weight:700;color:#93c5fd;">คู่มือการใช้งาน</span>
+        </div>
+        <h1 style="font-size:28px;font-weight:800;color:white;margin-bottom:10px;line-height:1.3;">ระบบบริการออนไลน์<br>โรงเรียนหนองกี่พิทยาคม</h1>
+        <p style="font-size:14px;color:#bfdbfe;max-width:480px;margin:0 auto;">NP Origins · อ่านทำความเข้าใจก่อนใช้งาน เพื่อให้การขอใช้บริการเป็นไปอย่างราบรื่น</p>
+      </div>
+    </div>
+
+    <div class="content-wrap">
+
+      <!-- สารบัญ -->
+      <div class="toc">
+        <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">สารบัญ</div>
+        <a href="#sec-intro"><i data-lucide="layout-dashboard" style="width:15px;height:15px;color:#3b82f6;flex-shrink:0;"></i> ภาพรวมระบบ</a>
+        <a href="#sec-room"><i data-lucide="calendar" style="width:15px;height:15px;color:#3b82f6;flex-shrink:0;"></i> การขอใช้ห้อง/สถานที่</a>
+        <a href="#sec-status"><i data-lucide="clock" style="width:15px;height:15px;color:#3b82f6;flex-shrink:0;"></i> สถานะคำขอ</a>
+        <a href="#sec-line"><i data-lucide="bell" style="width:15px;height:15px;color:#3b82f6;flex-shrink:0;"></i> การแจ้งเตือนผ่าน LINE</a>
+        <a href="#sec-faq"><i data-lucide="help-circle" style="width:15px;height:15px;color:#3b82f6;flex-shrink:0;"></i> คำถามที่พบบ่อย</a>
+      </div>
+
+      <!-- ภาพรวม -->
+      <div class="section-card" id="sec-intro">
+        <div class="section-title">
+          <div class="section-icon" style="background:#eff6ff;">
+            <i data-lucide="layout-dashboard" style="width:18px;height:18px;color:#1d4ed8;"></i>
+          </div>
+          ภาพรวมระบบ
+        </div>
+        <p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:18px;">
+          NP Origins คือระบบบริการออนไลน์ของโรงเรียนหนองกี่พิทยาคม ที่รวบรวมบริการต่างๆ ไว้ในที่เดียว ปัจจุบันเปิดให้บริการ <strong>ระบบขอใช้ห้อง/สถานที่</strong> โดยสามารถเข้าใช้งานได้ผ่าน Google Account ของโรงเรียน
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">
+            <div style="font-size:22px;margin-bottom:6px;">🏫</div>
+            <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:4px;">ขอใช้ห้อง/สถานที่</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5;">จองห้องประชุม สนามกีฬา โดม และสถานที่ต่างๆ ภายในโรงเรียน</div>
+          </div>
+          <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;opacity:.5;">
+            <div style="font-size:22px;margin-bottom:6px;">📹</div>
+            <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:4px;">ขอใช้ข้อมูล CCTV</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5;">กำลังพัฒนา — จะเปิดให้บริการเร็วๆ นี้</div>
+          </div>
+        </div>
+        <div class="tip-box blue" style="margin-top:16px;">
+          <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>
+          <div>ต้องเข้าสู่ระบบด้วย <strong>Google Account (@nongki.ac.th)</strong> จึงจะสามารถส่งคำขอได้ การดูปฏิทินการจองสามารถทำได้โดยไม่ต้องล็อกอิน</div>
+        </div>
+      </div>
+
+      <!-- ขอใช้ห้อง -->
+      <div class="section-card" id="sec-room">
+        <div class="section-title">
+          <div class="section-icon" style="background:#eff6ff;">
+            <i data-lucide="calendar" style="width:18px;height:18px;color:#1d4ed8;"></i>
+          </div>
+          ขั้นตอนการขอใช้ห้อง/สถานที่
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#eff6ff;color:#1d4ed8;">1</div>
+          <div>
+            <div class="step-title">เข้าสู่ระบบด้วย Google Account</div>
+            <div class="step-desc">คลิก "เข้าสู่ระบบด้วย Google" แล้วเลือกบัญชีของโรงเรียน (@nongki.ac.th) หากใช้บัญชีส่วนตัวจะไม่สามารถส่งคำขอได้</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#eff6ff;color:#1d4ed8;">2</div>
+          <div>
+            <div class="step-title">ตรวจสอบปฏิทินการจอง</div>
+            <div class="step-desc">เลือกวันที่ในปฏิทิน เพื่อดูว่าห้องที่ต้องการมีการจองแล้วหรือยัง วันที่แสดงจุดสีเหลืองหมายถึงมีการจองในวันนั้น</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#eff6ff;color:#1d4ed8;">3</div>
+          <div>
+            <div class="step-title">กดปุ่ม "จองห้อง / สถานที่"</div>
+            <div class="step-desc">คลิกปุ่มสีน้ำเงินมุมขวาบน จากนั้นกรอกข้อมูลให้ครบถ้วน ได้แก่ ชื่อ-สกุล ตำแหน่ง วัตถุประสงค์ วันที่ เวลา จำนวนผู้เข้าร่วม และอุปกรณ์ที่ต้องการ</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#eff6ff;color:#1d4ed8;">4</div>
+          <div>
+            <div class="step-title">แนบไฟล์ผังที่นั่ง (ถ้ามี)</div>
+            <div class="step-desc">หากมีการจัดผังที่นั่งหรือแผนผังการใช้งาน สามารถแนบไฟล์ภาพได้ เพื่อให้เจ้าหน้าที่พิจารณาได้สะดวกขึ้น</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#dcfce7;color:#15803d;">5</div>
+          <div>
+            <div class="step-title">รอการพิจารณาและรับแจ้งผล</div>
+            <div class="step-desc">เจ้าหน้าที่จะพิจารณาคำขอภายใน 1-2 วันทำการ ผลการพิจารณาจะแสดงในหน้า "การจองของฉัน" และแจ้งผ่าน LINE (ถ้าเชื่อมต่อไว้)</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#dcfce7;color:#15803d;">✓</div>
+          <div>
+            <div class="step-title">นำเอกสารติดต่อห้องบริหารทั่วไป</div>
+            <div class="step-desc">เมื่อได้รับการอนุมัติแล้ว ให้นำหลักฐานการอนุมัติ (สามารถแคปหน้าจอจากระบบ) ไปแสดงที่ห้องบริหารทั่วไปก่อนใช้งานสถานที่</div>
+          </div>
+        </div>
+
+        <div class="tip-box" style="margin-top:18px;">
+          <i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;color:#d97706;"></i>
+          <div>กรุณาส่งคำขอล่วงหน้าอย่างน้อย <strong>1 วันทำการ</strong> เพื่อให้มีเวลาพิจารณาเพียงพอ คำขอที่ส่งในวันเดียวกันหรือช่วงวันหยุดอาจไม่ทันการใช้งาน</div>
+        </div>
+      </div>
+
+      <!-- สถานะ -->
+      <div class="section-card" id="sec-status">
+        <div class="section-title">
+          <div class="section-icon" style="background:#fef9c3;">
+            <i data-lucide="clock" style="width:18px;height:18px;color:#b45309;"></i>
+          </div>
+          ความหมายของสถานะคำขอ
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f8fafc;border-radius:12px;">
+            <span class="s-badge s-pending">⏳ รอตรวจ</span>
+            <div style="font-size:13px;color:#475569;line-height:1.6;">คำขอถูกส่งเรียบร้อยแล้ว กำลังรอเจ้าหน้าที่พิจารณา ยังไม่มีการตัดสินใจ</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f8fafc;border-radius:12px;">
+            <span class="s-badge s-approved">✅ อนุมัติ</span>
+            <div style="font-size:13px;color:#475569;line-height:1.6;">คำขอได้รับการอนุมัติแล้ว สามารถใช้งานสถานที่ได้ตามวันเวลาที่ขอ อย่าลืมนำเอกสารไปแสดงที่ห้องบริหารทั่วไปด้วย</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f8fafc;border-radius:12px;">
+            <span class="s-badge s-rejected">✗ ไม่อนุมัติ</span>
+            <div style="font-size:13px;color:#475569;line-height:1.6;">คำขอไม่ผ่านการอนุมัติ อาจเนื่องจากสถานที่ถูกจองแล้ว หรือข้อมูลไม่ครบถ้วน สามารถดูเหตุผลได้ในรายละเอียดคำขอ แล้วส่งใหม่อีกครั้ง</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f8fafc;border-radius:12px;">
+            <span class="s-badge s-done">✅ เสร็จสิ้น</span>
+            <div style="font-size:13px;color:#475569;line-height:1.6;">การจองผ่านพ้นเวลาที่ระบุไปแล้ว ระบบเปลี่ยนสถานะให้อัตโนมัติ แสดงด้วยสีเทาเพื่อให้แยกแยะจากการจองที่ยังใช้งานอยู่</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE -->
+      <div class="section-card" id="sec-line">
+        <div class="section-title">
+          <div class="section-icon" style="background:#f0fdf4;">
+            <i data-lucide="bell" style="width:18px;height:18px;color:#15803d;"></i>
+          </div>
+          การเชื่อมต่อ LINE เพื่อรับแจ้งเตือน
+        </div>
+        <p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:18px;">
+          เชื่อมต่อ LINE กับระบบเพื่อรับการแจ้งเตือนอัตโนมัติ โดยไม่ต้องคอยตรวจสอบในระบบเอง
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
+          <div class="step-row" style="padding:12px 0;">
+            <div class="step-num" style="background:linear-gradient(135deg,#06C755,#00a541);color:white;font-size:12px;">1</div>
+            <div>
+              <div class="step-title">เพิ่มเพื่อน LINE Official Account</div>
+              <div class="step-desc">ค้นหา ID <strong>@514vguxz</strong> หรือสแกน QR Code ในหน้าแรกหลังล็อกอิน</div>
+            </div>
+          </div>
+          <div class="step-row" style="padding:12px 0;">
+            <div class="step-num" style="background:linear-gradient(135deg,#06C755,#00a541);color:white;font-size:12px;">2</div>
+            <div>
+              <div class="step-title">กดปุ่ม "เชื่อมต่อ LINE" ในระบบ</div>
+              <div class="step-desc">ไปที่หน้าแรกหลังล็อกอิน กดปุ่มสีเขียว "เชื่อมต่อ LINE" ระบบจะพาไปยืนยันตัวตนผ่าน LINE</div>
+            </div>
+          </div>
+          <div class="step-row" style="padding:12px 0;border-bottom:none;">
+            <div class="step-num" style="background:linear-gradient(135deg,#06C755,#00a541);color:white;font-size:12px;">3</div>
+            <div>
+              <div class="step-title">รับแจ้งเตือนอัตโนมัติ</div>
+              <div class="step-desc">เมื่อเจ้าหน้าที่อนุมัติหรือไม่อนุมัติคำขอ และก่อนถึงเวลาจอง 15 นาที จะได้รับข้อความแจ้งเตือนทาง LINE ทันที</div>
+            </div>
+          </div>
+        </div>
+        <div class="tip-box green">
+          <i data-lucide="check-circle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;color:#15803d;"></i>
+          <div>การเชื่อมต่อ LINE ช่วยให้ไม่พลาดผลการพิจารณา และเตือนให้เตรียมตัวก่อนใช้งานสถานที่</div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="section-card" id="sec-faq">
+        <div class="section-title">
+          <div class="section-icon" style="background:#fdf4ff;">
+            <i data-lucide="help-circle" style="width:18px;height:18px;color:#7c3aed;"></i>
+          </div>
+          คำถามที่พบบ่อย
+        </div>
+        <div id="faqList">
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>ต้องใช้อีเมลอะไรในการเข้าสู่ระบบ?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">ต้องใช้ <strong>Google Account ของโรงเรียน (@nongki.ac.th)</strong> เท่านั้น ไม่สามารถใช้อีเมลส่วนตัว Gmail หรืออีเมลอื่นในการส่งคำขอได้</div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>ส่งคำขอแล้วแต่ยังไม่เห็นในรายการ ทำอย่างไร?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">ลองรีเฟรชหน้าเว็บก่อน หากยังไม่แสดง อาจเกิดจากการเชื่อมต่ออินเทอร์เน็ต ให้ลองออกจากระบบแล้วเข้าใหม่ หรือติดต่อเจ้าหน้าที่เพื่อตรวจสอบ</div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>สามารถแก้ไขหรือยกเลิกคำขอได้ไหม?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">ปัจจุบันยังไม่มีฟังก์ชันแก้ไขหรือยกเลิกในระบบ หากต้องการเปลี่ยนแปลง กรุณาติดต่อเจ้าหน้าที่ห้องบริหารทั่วไปโดยตรง</div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>ห้องที่ต้องการไม่อยู่ในรายการ ทำอย่างไร?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">รายการห้องในระบบอัปเดตโดยผู้ดูแลระบบ หากสถานที่ที่ต้องการไม่มีในรายการ กรุณาติดต่อเจ้าหน้าที่เพื่อขอเพิ่มห้องในระบบ</div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>จองห้องซ้ำกับคนอื่นในเวลาเดียวกันได้ไหม?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">ระบบไม่ได้ล็อกอัตโนมัติ แต่เจ้าหน้าที่จะตรวจสอบก่อนอนุมัติ หากมีการจองซ้อนกัน คำขอที่ส่งทีหลังจะถูกพิจารณาตามความเหมาะสม แนะนำให้ตรวจสอบปฏิทินก่อนส่งคำขอ</div>
+          </div>
+
+          <div class="faq-item" style="border-bottom:none;">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              <span>ติดต่อสอบถามได้ที่ไหน?</span>
+              <i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+            </button>
+            <div class="faq-a">ติดต่อ <strong>ห้องบริหารทั่วไป</strong> โรงเรียนหนองกี่พิทยาคม หรือติดต่อผู้ดูแลระบบผ่านช่องทางภายในโรงเรียน</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="text-align:center;padding:8px 0 16px;">
+        <a href="room-booking.html" style="display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:#1d4ed8;color:white;font-weight:800;border-radius:14px;text-decoration:none;font-size:15px;box-shadow:0 6px 20px rgba(29,78,216,.3);">
+          <i data-lucide="calendar-plus" style="width:18px;height:18px;"></i>
+          เริ่มใช้งานระบบจองห้องเลย
+        </a>
+      </div>
+
+    </div><!-- end content-wrap -->
+  </div><!-- end flex-1 -->
+</div>
+
+<script>
+  buildNavbar('NP Origins · คู่มือการใช้งาน', false);
+  buildSidebar('guide');
+
+  /* auth state — แสดง profile ถ้าล็อกอิน แต่ไม่บังคับ */
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      updateNavUser(user);
+      updateSidebarProfile(user);
+      checkAdminAccess(user.email);
+    } else {
+      resetNavUI();
+    }
+    lucide.createIcons();
+  });
+
+  function toggleFaq(btn) {
+    var answer = btn.nextElementSibling;
+    var icon   = btn.querySelector('[data-lucide="chevron-down"]');
+    var isOpen = answer.classList.contains('open');
+    /* ปิดทุกอัน */
+    document.querySelectorAll('.faq-a').forEach(function(a) { a.classList.remove('open'); });
+    document.querySelectorAll('.faq-q [data-lucide="chevron-down"]').forEach(function(i) {
+      i.style.transform = '';
+    });
+    if (!isOpen) {
+      answer.classList.add('open');
+      icon.style.transform = 'rotate(180deg)';
+    }
+  }
+</script>
+</body>
+</html>

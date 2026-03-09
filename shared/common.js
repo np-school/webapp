@@ -212,7 +212,8 @@ function updateSidebarProfile(user) {
    ════════════════════════════════════════════════ */
 
 var MAIN_MENU = [
-  { label: 'หน้าแรก', icon: 'home', href: 'index.html' },
+  { label: 'หน้าแรก',          icon: 'home',      href: 'index.html'  },
+  { label: 'คู่มือการใช้งาน',   icon: 'book-open', href: 'guide.html'  },
 ];
 
 var SERVICE_MENU = [
