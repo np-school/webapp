@@ -144,6 +144,17 @@
       </div>
       <p style="font-size:13px;color:#64748b;margin-bottom:24px;padding-left:14px;">เข้าสู่ระบบเพื่อใช้บริการด้านล่าง</p>
       <div class="services-grid">
+        <!-- คู่มือการใช้งาน -->
+        <a href="guide.html" class="service-card" style="text-decoration:none;color:inherit;">
+          <div class="service-icon" style="background:#f0fdf4;">
+            <i data-lucide="book-open" style="width:26px;height:26px;color:#16a34a;"></i>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">คู่มือการใช้งาน</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">วิธีใช้งานระบบและคำถามที่พบบ่อย</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#16a34a;background:#f0fdf4;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="arrow-right" style="width:11px;height:11px;"></i> อ่านได้เลย
+          </div>
+        </a>
         <!-- ระบบจองห้อง -->
         <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
           <div class="service-icon" style="background:#eff6ff;">
@@ -403,12 +414,12 @@
 
 
   buildNavbar('NP Origins', false);
+  buildSidebar('index');
   auth.onAuthStateChanged(function(user){
     if(user){
       document.getElementById('publicView').style.display='none';
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
-      buildSidebar('index');
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
     }else{
