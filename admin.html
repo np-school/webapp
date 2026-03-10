@@ -315,7 +315,9 @@
             '</div>' +
             (equip?'<div style="font-size:11px;color:#475569;background:#f8fafc;padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
             (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:#dcfce7;color:#15803d;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
+            (b.approvedBy&&b.status==='approved'?'<div style="font-size:11px;color:#15803d;margin-top:3px;opacity:.8;">✅ อนุมัติโดย: '+b.approvedBy+'</div>':'')+
             (b.rejectReason?'<div style="font-size:12px;background:#fee2e2;color:#b91c1c;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">❌ เหตุผล: '+b.rejectReason+'</div>':'')+
+            (b.rejectedBy&&b.status==='rejected'?'<div style="font-size:11px;color:#b91c1c;margin-top:3px;opacity:.8;">❌ ไม่อนุมัติโดย: '+b.rejectedBy+'</div>':'')+
           '</div>' +
           '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">' +
             (b.status==='pending'?
@@ -335,10 +337,10 @@
   function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
   function openApprove(id,room,date){pendingId=id;document.getElementById('approveModalSub').textContent=room+' · '+date;document.getElementById('approveNote').value='';openModal('approveModal');}
-  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
+  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.displayName||currentAdmin.email,approvedByEmail:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
 
   function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
-  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
+  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.displayName||currentAdmin.email,rejectedByEmail:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
 
   function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
   function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
