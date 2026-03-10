@@ -509,8 +509,8 @@
       var actions='';
       if(isSuperAdmin()&&!isSA){
         actions='<div style="display:flex;gap:6px;align-items:center;">'+
-          '<button onclick="editAdminPerms(''+a.email+'')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;"><i data-lucide=\"settings-2\" style=\"width:12px;height:12px;\"></i> สิทธิ์</button>'+
-          '<button class="btn-delete" onclick="deleteAdmin(''+a.email+'')" title="ลบ"><i data-lucide=\"trash-2\" style=\"width:12px;height:12px;\"></i></button>'+
+          '<button onclick="editAdminPerms(\'' + a.email + '\')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;"><i data-lucide=\"settings-2\" style=\"width:12px;height:12px;\"></i> สิทธิ์</button>'+
+          '<button class="btn-delete" onclick="deleteAdmin(\'' + a.email + '\')" title="ลบ"><i data-lucide=\"trash-2\" style=\"width:12px;height:12px;\"></i></button>'+
           '</div>';
       }
       return '<div class="list-item" style="flex-direction:column;align-items:stretch;gap:10px;">'+
