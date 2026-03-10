@@ -148,11 +148,11 @@
         <div id="tab-admins" class="tab-pane" style="padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <h3 style="font-size:15px;font-weight:800;color:#1e293b;">ผู้ดูแลระบบ (Admin)</h3>
-            <button class="btn-primary" onclick="openAddAdminModal()"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button>
+            <button class="btn-primary" id="btnAddAdmin" onclick="openAddAdminModal()" style="display:none;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button>
           </div>
           <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#6d28d9;display:flex;align-items:flex-start;gap:8px;">
             <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;"></i>
-            <span>ระบบตรวจสอบ Firestore collection <b>admins</b> โดย <b>document ID = email</b> ของผู้ใช้</span>
+            <span>แต่ละ Admin สามารถกำหนดสิทธิ์การเข้าถึงได้แยกตามระบบ — <b>SuperAdmin</b> มีสิทธิ์ทุกอย่างและแก้ไข permissions ของ Admin คนอื่นได้</span>
           </div>
           <div id="adminsList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
@@ -220,10 +220,40 @@
 <!-- Modal: Add Admin -->
 <div id="adminModal" class="modal-bg">
   <div class="modal-box">
-    <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:18px;">เพิ่ม Admin ใหม่</h3>
+    <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:18px;" id="adminModalTitle">เพิ่ม Admin ใหม่</h3>
     <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล</label><input type="text" id="newAdminName" placeholder="เช่น นายสมชาย ใจดี"></div>
-    <div style="margin-bottom:20px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">Email (Google) <span style="color:#dc2626;">*</span></label><input type="text" id="newAdminEmail" placeholder="example@nongki.ac.th"></div>
-    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่ม Admin</button></div>
+    <div style="margin-bottom:16px;" id="adminEmailWrap"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">Email (Google) <span style="color:#dc2626;">*</span></label><input type="text" id="newAdminEmail" placeholder="example@nongki.ac.th"></div>
+    <!-- Permissions -->
+    <div style="margin-bottom:20px;">
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:10px;">สิทธิ์การเข้าถึงระบบ</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;" id="perm-bookings-wrap">
+          <input type="checkbox" id="perm-bookings" style="width:16px;height:16px;accent-color:#1d4ed8;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">ระบบขอใช้ห้อง/สถานที่</div>
+            <div style="font-size:11px;color:#64748b;">อนุมัติ/ปฏิเสธคำขอจองห้อง</div>
+          </div>
+          <i data-lucide="calendar" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;" id="perm-rooms-wrap">
+          <input type="checkbox" id="perm-rooms" style="width:16px;height:16px;accent-color:#1d4ed8;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการห้อง/สถานที่</div>
+            <div style="font-size:11px;color:#64748b;">เพิ่ม แก้ไข ลบห้องในระบบ</div>
+          </div>
+          <i data-lucide="door-open" style="width:16px;height:16px;color:#10b981;flex-shrink:0;"></i>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e9d5ff;border-radius:10px;background:#faf5ff;cursor:not-allowed;user-select:none;opacity:.6;" id="perm-admins-wrap">
+          <input type="checkbox" id="perm-admins" style="width:16px;height:16px;accent-color:#7c3aed;" disabled>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการ Admin</div>
+            <div style="font-size:11px;color:#64748b;">เฉพาะ SuperAdmin เท่านั้น</div>
+          </div>
+          <i data-lucide="shield" style="width:16px;height:16px;color:#7c3aed;flex-shrink:0;"></i>
+        </label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()" id="adminModalSaveBtn"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> <span id="adminModalSaveLbl">เพิ่ม Admin</span></button></div>
   </div>
 </div>
 
@@ -260,6 +290,13 @@
       document.getElementById('loadingOverlay').style.display='none';
       if(!doc.exists){document.getElementById('accessDenied').style.display='flex';lucide.createIcons();return;}
       currentAdmin=user;
+      /* load permissions from Firestore doc */
+      var d=doc.data()||{};
+      currentAdmin._perms=d.permissions||{};
+      /* superAdmin gets all perms */
+      if(user.email.toLowerCase()==='nattapol@nongki.ac.th'){
+        currentAdmin._perms={bookings:true,rooms:true,admins:true};
+      }
       document.getElementById('adminApp').style.display='block';
       updateNavUser(user);
       updateSidebarProfile(user);
@@ -439,10 +476,109 @@
   }
   function closeFileView(){document.getElementById('fileViewModal').classList.remove('open');document.body.style.overflow='';}
 
-  function renderAdmins(list){var c=document.getElementById('adminsList');if(!list.length){c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;">ยังไม่มีรายการ</div>';return;}c.innerHTML=list.map(function(a){var isMe=a.email.toLowerCase()===(currentAdmin.email||'').toLowerCase();return'<div class="list-item"><div style="display:flex;align-items:center;gap:12px;"><div style="width:34px;height:34px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="shield" style="width:15px;height:15px;color:#7c3aed;"></i></div><div><p style="font-weight:700;font-size:13px;color:#1e293b;">'+a.email+(isMe?' <span style="font-size:9px;background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:8px;font-weight:700;">คุณ</span>':'')+'</p>'+(a.data&&a.data.name?'<p style="font-size:11px;color:#64748b;">'+a.data.name+'</p>':'')+'</div></div>'+(!isMe?'<button class="btn-delete" onclick="deleteAdmin(\''+a.email+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>':'<span></span>')+'</div>';}).join('');lucide.createIcons();}
-  function openAddAdminModal(){document.getElementById('newAdminName').value='';document.getElementById('newAdminEmail').value='';openModal('adminModal');}
-  function saveAdmin(){var email=(document.getElementById('newAdminEmail').value||'').trim().toLowerCase();var name=(document.getElementById('newAdminName').value||'').trim();if(!email||!email.includes('@')){showToast('กรุณาระบุ email ให้ถูกต้อง','warn');return;}db.collection('admins').doc(email).set({name:name,addedBy:currentAdmin.email,addedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('adminModal');showToast('เพิ่ม Admin แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});}
-  function deleteAdmin(email){if(!confirm('ต้องการลบ Admin "'+email+'" ใช่หรือไม่?'))return;db.collection('admins').doc(email).delete().then(function(){showToast('ลบ Admin แล้ว');}).catch(function(e){showToast(e.message,'error');});}
+  var SUPER_ADMIN='nattapol@nongki.ac.th';
+  function isSuperAdmin(){return currentAdmin&&currentAdmin.email.toLowerCase()===SUPER_ADMIN;}
+  function canManage(system){
+    if(isSuperAdmin())return true;
+    if(!currentAdmin||!currentAdmin._perms)return false;
+    return !!currentAdmin._perms[system];
+  }
+
+  function renderAdmins(list){
+    var btnAdd=document.getElementById('btnAddAdmin');
+    if(btnAdd)btnAdd.style.display=isSuperAdmin()?'':'none';
+    var c=document.getElementById('adminsList');
+    if(!list.length){c.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;">ยังไม่มีรายการ</div>';return;}
+    var SYSTEM_LABELS={
+      bookings:{label:'ระบบจองห้อง',icon:'calendar',color:'#3b82f6',bg:'#eff6ff'},
+      rooms:   {label:'จัดการห้อง', icon:'door-open',color:'#10b981',bg:'#f0fdf4'},
+      admins:  {label:'จัดการ Admin',icon:'shield',   color:'#7c3aed',bg:'#faf5ff'},
+    };
+    c.innerHTML=list.map(function(a){
+      var isMe=a.email.toLowerCase()===(currentAdmin.email||'').toLowerCase();
+      var isSA=a.email.toLowerCase()===SUPER_ADMIN;
+      var perms=a.data&&a.data.permissions?a.data.permissions:{};
+      if(isSA)perms={bookings:true,rooms:true,admins:true};
+      var badges=Object.keys(SYSTEM_LABELS).filter(function(k){return perms[k];}).map(function(k){
+        var s=SYSTEM_LABELS[k];
+        return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+s.bg+';color:'+s.color+';border:1px solid '+s.color+'33;">'+s.label+'</span>';
+      }).join('');
+      if(!badges&&!isSA)badges='<span style="font-size:10px;color:#94a3b8;font-style:italic;">ไม่มีสิทธิ์</span>';
+      var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;padding:2px 8px;border-radius:8px;font-weight:800;margin-left:4px;">⭐ SuperAdmin</span>':'';
+      var meBadge=isMe?'<span style="font-size:9px;background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px;">คุณ</span>':'';
+      var actions='';
+      if(isSuperAdmin()&&!isSA){
+        actions='<div style="display:flex;gap:6px;align-items:center;">'+
+          '<button onclick="editAdminPerms(''+a.email+'')" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;"><i data-lucide=\"settings-2\" style=\"width:12px;height:12px;\"></i> สิทธิ์</button>'+
+          '<button class="btn-delete" onclick="deleteAdmin(''+a.email+'')" title="ลบ"><i data-lucide=\"trash-2\" style=\"width:12px;height:12px;\"></i></button>'+
+          '</div>';
+      }
+      return '<div class="list-item" style="flex-direction:column;align-items:stretch;gap:10px;">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:36px;height:36px;background:'+(isSA?'linear-gradient(135deg,#7c3aed,#a855f7)':'#ede9fe')+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+            '<i data-lucide="'+(isSA?'shield-check':'shield')+'" style="width:16px;height:16px;color:'+(isSA?'white':'#7c3aed')+';"></i>'+
+          '</div>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<p style="font-weight:700;font-size:13px;color:#1e293b;display:flex;align-items:center;flex-wrap:wrap;gap:2px;">'+a.email+meBadge+superBadge+'</p>'+
+            (a.data&&a.data.name?'<p style="font-size:11px;color:#64748b;">'+a.data.name+'</p>':'')+
+          '</div>'+
+          actions+
+        '</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:5px;padding-left:48px;">'+badges+'</div>'+
+      '</div>';
+    }).join('');
+    lucide.createIcons();
+  }
+
+  var editingAdminEmail=null;
+  function openAddAdminModal(){
+    if(!isSuperAdmin()){showToast('เฉพาะ SuperAdmin เท่านั้น','warn');return;}
+    editingAdminEmail=null;
+    document.getElementById('adminModalTitle').textContent='เพิ่ม Admin ใหม่';
+    document.getElementById('adminModalSaveLbl').textContent='เพิ่ม Admin';
+    document.getElementById('newAdminName').value='';
+    document.getElementById('newAdminEmail').value='';
+    document.getElementById('adminEmailWrap').style.display='';
+    document.getElementById('perm-bookings').checked=false;
+    document.getElementById('perm-rooms').checked=false;
+    openModal('adminModal');
+  }
+  function editAdminPerms(email){
+    if(!isSuperAdmin()){showToast('เฉพาะ SuperAdmin เท่านั้น','warn');return;}
+    editingAdminEmail=email;
+    document.getElementById('adminModalTitle').textContent='แก้ไขสิทธิ์ Admin';
+    document.getElementById('adminModalSaveLbl').textContent='บันทึก';
+    document.getElementById('adminEmailWrap').style.display='none';
+    db.collection('admins').doc(email).get().then(function(doc){
+      var d=doc.data()||{};
+      document.getElementById('newAdminName').value=d.name||'';
+      var p=d.permissions||{};
+      document.getElementById('perm-bookings').checked=!!p.bookings;
+      document.getElementById('perm-rooms').checked=!!p.rooms;
+      openModal('adminModal');
+    });
+  }
+  function saveAdmin(){
+    if(!isSuperAdmin()){showToast('เฉพาะ SuperAdmin เท่านั้น','warn');return;}
+    var name=(document.getElementById('newAdminName').value||'').trim();
+    var perms={bookings:document.getElementById('perm-bookings').checked,rooms:document.getElementById('perm-rooms').checked,admins:false};
+    if(editingAdminEmail){
+      db.collection('admins').doc(editingAdminEmail).update({name:name,permissions:perms,updatedBy:currentAdmin.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})
+        .then(function(){closeModal('adminModal');showToast('อัปเดตสิทธิ์แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
+    }else{
+      var email=(document.getElementById('newAdminEmail').value||'').trim().toLowerCase();
+      if(!email||!email.includes('@')){showToast('กรุณาระบุ email ให้ถูกต้อง','warn');return;}
+      if(email===SUPER_ADMIN){showToast('email นี้เป็น SuperAdmin อยู่แล้ว','warn');return;}
+      db.collection('admins').doc(email).set({name:name,permissions:perms,addedBy:currentAdmin.email,addedAt:firebase.firestore.FieldValue.serverTimestamp()})
+        .then(function(){closeModal('adminModal');showToast('เพิ่ม Admin แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
+    }
+  }
+  function deleteAdmin(email){
+    if(!isSuperAdmin()){showToast('เฉพาะ SuperAdmin เท่านั้น','warn');return;}
+    if(email.toLowerCase()===SUPER_ADMIN){showToast('ไม่สามารถลบ SuperAdmin ได้','warn');return;}
+    if(!confirm('ต้องการลบ Admin "'+email+'" ใช่หรือไม่?'))return;
+    db.collection('admins').doc(email).delete().then(function(){showToast('ลบ Admin แล้ว');}).catch(function(e){showToast(e.message,'error');});
+  }
 
   function switchTab(name,btn){
     document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
