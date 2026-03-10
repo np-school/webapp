@@ -295,7 +295,7 @@
       </div>
       <div id="timePickerWrap">
         <p style="font-size:11px;color:#64748b;margin-bottom:9px;">คลิกเลือกชั่วโมงเริ่มต้น แล้วคลิกชั่วโมงสิ้นสุด — <span style="color:#ef4444;font-weight:700;">สีแดง = ถูกจองแล้ว</span></p>
-        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;" id="timeSlotGrid"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;" id="timeSlotGrid"></div>
       </div>
       <div id="timeSummary" style="display:none;margin-top:11px;padding:10px 14px;background:#eff6ff;border-radius:10px;border:1.5px solid #bfdbfe;text-align:center;font-size:13px;font-weight:700;color:#1d4ed8;"></div>
 
@@ -534,8 +534,11 @@
 
   function buildTimeSlotGrid(){
     var grid=document.getElementById('timeSlotGrid');grid.innerHTML='';
-    TIME_SLOTS.forEach(function(t,i){
-      var btn=document.createElement('button');btn.type='button';btn.className='time-slot-btn';btn.textContent=t;btn.dataset.index=i;
+    /* แสดงเฉพาะ slot ที่เป็นช่วงได้ คือ index 0–15 (06:00–21:00 → สิ้นสุด 22:00) */
+    TIME_SLOTS.slice(0,-1).forEach(function(t,i){
+      var startH=parseInt(t);
+      var label=startH+'.'+'00'+'-'+(startH+1)+'.'+'00';
+      var btn=document.createElement('button');btn.type='button';btn.className='time-slot-btn';btn.textContent=label;btn.dataset.index=i;
       if(blockedSlots.indexOf(i)!==-1)btn.classList.add('ts-blocked');
       btn.onclick=function(){if(blockedSlots.indexOf(i)!==-1){showToast('ช่วงเวลานี้ถูกจองแล้ว','warn');return;}clickSlot(i);};
       grid.appendChild(btn);
