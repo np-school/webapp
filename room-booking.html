@@ -75,7 +75,25 @@
     .equip-cb{width:16px;height:16px;accent-color:#1d4ed8;flex-shrink:0;cursor:pointer;}
     .equip-label{font-size:13px;font-weight:600;color:#374151;flex:1;}
     .equip-qty{width:76px!important;padding:5px 8px!important;font-size:12px!important;border-radius:7px!important;}
-    /* Upload */
+    /* Multi-date picker */
+    .mdp-wrap{border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;background:white;}
+    .mdp-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;}
+    .mdp-nav{background:none;border:none;cursor:pointer;color:#1d4ed8;padding:4px 8px;border-radius:6px;font-size:14px;font-weight:700;}
+    .mdp-nav:hover{background:#eff6ff;}
+    .mdp-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:8px;}
+    .mdp-dow{text-align:center;font-size:9px;font-weight:800;color:#94a3b8;padding:3px 0 5px;}
+    .mdp-dow:first-child{color:#f87171;}.mdp-dow:last-child{color:#60a5fa;}
+    .mdp-day{text-align:center;font-size:12px;font-weight:600;padding:5px 2px;border-radius:7px;cursor:pointer;color:#1e293b;transition:all .12s;user-select:none;}
+    .mdp-day:hover:not(.mdp-other):not(.mdp-past){background:#eff6ff;color:#1d4ed8;}
+    .mdp-day.mdp-other{color:#cbd5e1;cursor:default;}
+    .mdp-day.mdp-past{color:#cbd5e1;cursor:not-allowed;}
+    .mdp-day.mdp-selected{background:#1d4ed8;color:white;font-weight:800;}
+    .mdp-day.mdp-has-booking{position:relative;}
+    .mdp-day.mdp-has-booking::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#f59e0b;}
+    .mdp-day.mdp-selected.mdp-has-booking::after{background:white;}
+    .mdp-tags{display:flex;flex-wrap:wrap;gap:5px;padding:6px 10px 8px;border-top:1px solid #f1f5f9;min-height:32px;}
+    .mdp-tag{display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid #bfdbfe;}
+    .mdp-tag button{background:none;border:none;cursor:pointer;color:#1d4ed8;font-size:13px;line-height:1;padding:0;margin:0;}
     .upload-area{border:2px dashed #bfdbfe;border-radius:12px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
     .upload-area:hover{border-color:#1d4ed8;background:#eff6ff;}
     .upload-area.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
@@ -246,13 +264,27 @@
 
       <!-- 1. สถานที่+วันที่ -->
       <div class="section-divider"><i data-lucide="map-pin" style="width:14px;height:14px;"></i> สถานที่และวันที่</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
-        <div><label class="form-label">ห้องที่ต้องการจอง</label>
-          <select id="roomSelect" required onchange="onRoomOrDateChange()">
-            <option value="">เลือกห้อง...</option>
-          </select>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">ห้องที่ต้องการจอง</label>
+        <select id="roomSelect" required onchange="onRoomOrDateChange()">
+          <option value="">เลือกห้อง...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันที่ใช้งาน <span style="color:#ef4444;">*</span> <span style="font-size:11px;font-weight:400;color:#64748b;">คลิกเลือกได้หลายวัน</span></label>
+        <div class="mdp-wrap" id="mdpWrap">
+          <div class="mdp-header">
+            <button type="button" class="mdp-nav" onclick="mdpChangeMonth(-1)">‹</button>
+            <span id="mdpMonthLabel" style="font-size:13px;font-weight:700;color:#1e293b;"></span>
+            <button type="button" class="mdp-nav" onclick="mdpChangeMonth(1)">›</button>
+          </div>
+          <div class="mdp-grid">
+            <div class="mdp-dow">อา</div><div class="mdp-dow">จ</div><div class="mdp-dow">อ</div>
+            <div class="mdp-dow">พ</div><div class="mdp-dow">พฤ</div><div class="mdp-dow">ศ</div><div class="mdp-dow">ส</div>
+            <div id="mdpDays" style="display:contents;"></div>
+          </div>
+          <div class="mdp-tags" id="mdpTags"><span style="font-size:11px;color:#94a3b8;font-style:italic;padding:2px 0;">ยังไม่ได้เลือกวันที่</span></div>
         </div>
-        <div><label class="form-label">วันที่ใช้งาน</label><input type="date" id="bookingDate" required onchange="onRoomOrDateChange()"></div>
       </div>
 
       <!-- 2. เวลา -->
@@ -381,6 +413,92 @@
   });
 
 
+  /* ── Multi-Date Picker ── */
+  var mdpYear=new Date().getFullYear(), mdpMonth=new Date().getMonth();
+  var selectedDates=[]; // array of 'YYYY-MM-DD' strings, sorted
+
+  function mdpDateStr(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+  function mdpToday(){return new Date().toISOString().split('T')[0];}
+
+  function mdpRender(){
+    var today=mdpToday();
+    var months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    document.getElementById('mdpMonthLabel').textContent=months[mdpMonth]+' '+( mdpYear+543);
+    var first=new Date(mdpYear,mdpMonth,1).getDay(); // 0=Sun
+    var daysInMonth=new Date(mdpYear,mdpMonth+1,0).getDate();
+    var daysInPrev=new Date(mdpYear,mdpMonth,0).getDate();
+    var room=document.getElementById('roomSelect').value;
+    /* collect dates with bookings for this room+month */
+    var bookedDates={};
+    if(room){
+      allBookings.forEach(function(b){
+        if(b.status==='rejected')return;
+        if(b.room!==room)return;
+        if(!b.date)return;
+        var p=b.date.split('-');
+        if(parseInt(p[0])===mdpYear&&parseInt(p[1])-1===mdpMonth)bookedDates[b.date]=true;
+      });
+    }
+    var html='';
+    /* prev month filler */
+    for(var i=0;i<first;i++){
+      html+='<div class="mdp-day mdp-other">'+(daysInPrev-first+i+1)+'</div>';
+    }
+    /* current month days */
+    for(var d=1;d<=daysInMonth;d++){
+      var ds=mdpDateStr(mdpYear,mdpMonth,d);
+      var isPast=ds<today;
+      var isSel=selectedDates.indexOf(ds)!==-1;
+      var hasBk=bookedDates[ds]?true:false;
+      var cls='mdp-day';
+      if(isPast)cls+=' mdp-past';
+      if(isSel)cls+=' mdp-selected';
+      if(hasBk)cls+=' mdp-has-booking';
+      html+='<div class="'+cls+'" onclick="mdpToggleDay(\''+ds+'\','+isPast+')">'+d+'</div>';
+    }
+    /* next month filler */
+    var total=first+daysInMonth;
+    var rows=Math.ceil(total/7);
+    for(var j=1;j<=rows*7-total;j++){
+      html+='<div class="mdp-day mdp-other">'+j+'</div>';
+    }
+    document.getElementById('mdpDays').innerHTML=html;
+    /* tags */
+    var tagWrap=document.getElementById('mdpTags');
+    if(!selectedDates.length){
+      tagWrap.innerHTML='<span style="font-size:11px;color:#94a3b8;font-style:italic;padding:2px 0;">ยังไม่ได้เลือกวันที่</span>';
+      return;
+    }
+    tagWrap.innerHTML=selectedDates.map(function(ds){
+      var p=ds.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);
+      var days=['อา','จ','อ','พ','พฤ','ศ','ส'];
+      var label=days[d.getDay()]+' '+p[2]+'/'+p[1]+'/'+( +p[0]+543);
+      return '<span class="mdp-tag">'+label+'<button type="button" onclick="mdpRemoveDay(\''+ds+'\')">×</button></span>';
+    }).join('');
+  }
+
+  function mdpToggleDay(ds,isPast){
+    if(isPast)return;
+    var idx=selectedDates.indexOf(ds);
+    if(idx===-1)selectedDates.push(ds);
+    else selectedDates.splice(idx,1);
+    selectedDates.sort();
+    mdpRender();
+    onRoomOrDateChange();
+  }
+  function mdpRemoveDay(ds){
+    selectedDates=selectedDates.filter(function(d){return d!==ds;});
+    mdpRender();
+    onRoomOrDateChange();
+  }
+  function mdpChangeMonth(dir){
+    mdpMonth+=dir;
+    if(mdpMonth<0){mdpMonth=11;mdpYear--;}
+    if(mdpMonth>11){mdpMonth=0;mdpYear++;}
+    mdpRender();
+  }
+
   /* ── Rooms dropdown ── */
   function populateRooms(){
     var sel=document.getElementById('roomSelect');
@@ -400,7 +518,6 @@
 
   function setTimeMode(mode){
     if(mode==='allday'){
-      // ป้องกัน: ถ้ามีช่วงเวลาถูกจองอยู่แล้ว ไม่สามารถเลือกทั้งวันได้
       if(blockedSlots.length>0){
         showToast('มีช่วงเวลาถูกจองอยู่แล้ว ไม่สามารถเลือก "ทั้งวัน" ได้','warn');
         return;
@@ -429,7 +546,6 @@
     if(rangeStart===-1){rangeStart=i;rangeEnd=i;}
     else if(i===rangeStart&&rangeEnd===rangeStart){rangeStart=-1;rangeEnd=-1;}
     else{if(i<rangeStart)rangeStart=i;else rangeEnd=i;}
-    // ถ้า range ครอบ blocked slot ให้ตัด
     var hasBlock=false;
     for(var x=rangeStart;x<=rangeEnd;x++){if(blockedSlots.indexOf(x)!==-1){hasBlock=true;break;}}
     if(hasBlock){showToast('มีช่วงเวลาที่ถูกจองอยู่ในช่วงที่เลือก กรุณาเลือกใหม่','warn');rangeStart=i;rangeEnd=i;}
@@ -463,18 +579,17 @@
     return{start:s,end:String(endHr).padStart(2,'0')+':00'};
   }
 
-  /* คำนวณ blocked slots จาก bookings ของห้อง+วันที่ที่เลือก */
+  /* คำนวณ blocked slots จาก bookings ของห้อง+วันแรกที่เลือก (preview) */
   function computeBlockedSlots(){
     blockedSlots=[];
     var room=document.getElementById('roomSelect').value;
-    var date=document.getElementById('bookingDate').value;
+    /* ใช้วันแรกที่เลือกเป็น reference สำหรับ time picker */
+    var date=selectedDates.length?selectedDates[0]:null;
     if(!room||!date)return;
     allBookings.forEach(function(b){
-      // ข้ามคำขอที่ rejected หรือคำขอที่กำลังแก้ไขอยู่
       if(b.status==='rejected')return;
       if(editingBookingId&&b.id===editingBookingId)return;
       if(b.room!==room||b.date!==date)return;
-      // parse start/end เป็น index
       var si=TIME_SLOTS.indexOf(b.startTime);
       var endHr=parseInt(b.endTime)-1;
       var ei=TIME_SLOTS.indexOf(String(endHr).padStart(2,'0')+':00');
@@ -484,15 +599,16 @@
   }
 
   function onRoomOrDateChange(){
+    /* re-render calendar dots when room changes */
+    mdpRender();
     computeBlockedSlots();
-    // ถ้าปัจจุบันเลือก allday แต่มี blocked slot ให้ reset กลับ range
     if(timeMode==='allday'&&blockedSlots.length>0){
       timeMode='range';
       document.getElementById('modeRange').classList.add('active');
       document.getElementById('modeAllDay').classList.remove('active');
       document.getElementById('timePickerWrap').style.display='block';
       rangeStart=-1;rangeEnd=-1;updateTimeSummary();
-      showToast('มีการจองในวันนี้แล้ว ไม่สามารถเลือกทั้งวันได้','warn');
+      showToast('มีการจองในวันแรกที่เลือกแล้ว ไม่สามารถเลือกทั้งวันได้','warn');
     }
     if(rangeStart!==-1){
       for(var x=rangeStart;x<=rangeEnd;x++){
@@ -586,16 +702,16 @@
       editingBookingId=editId||null;
       m.classList.add('open');document.body.style.overflow='hidden';
       populateRooms();
-      // reset terms
       document.getElementById('termsCheck').checked=false;
-      // fill form if edit
       if(editId){
         var b=allBookings.find(function(x){return x.id===editId;});
         if(b){
           document.getElementById('modalTitle').innerHTML='<i data-lucide="pencil" style="width:19px;height:19px;"></i> แก้ไขคำขอจอง';
           document.getElementById('editBookingId').value=editId;
           document.getElementById('roomSelect').value=b.room||'';
-          document.getElementById('bookingDate').value=b.date||'';
+          /* restore selected date */
+          selectedDates=b.date?[b.date]:[];
+          if(b.date){var p=b.date.split('-');mdpYear=+p[0];mdpMonth=+p[1]-1;}
           document.getElementById('personType').value=b.personType||'';
           document.getElementById('fullName').value=b.fullName||'';
           document.getElementById('position').value=b.position||'';
@@ -607,14 +723,17 @@
       }else{
         document.getElementById('modalTitle').innerHTML='<i data-lucide="calendar" style="width:19px;height:19px;"></i> แบบฟอร์มการจอง';
         document.getElementById('editBookingId').value='';
+        selectedDates=[];
+        /* reset picker to current month */
+        mdpYear=new Date().getFullYear();mdpMonth=new Date().getMonth();
         document.getElementById('personType').value='';
         document.getElementById('phone').value='';
         document.getElementById('submitBtn').textContent='ยืนยันข้อมูลการจอง';
       }
+      mdpRender();
       timeMode='range';rangeStart=-1;rangeEnd=-1;
       setTimeMode('range');
       computeBlockedSlots();
-      // Update allday button state
       var alldayBtn2=document.getElementById('modeAllDay');
       if(blockedSlots.length>0){alldayBtn2.disabled=true;alldayBtn2.style.opacity='0.45';alldayBtn2.title='มีช่วงเวลาถูกจองแล้ว';}
       else{alldayBtn2.disabled=false;alldayBtn2.style.opacity='1';alldayBtn2.title='';}
@@ -625,6 +744,7 @@
       m.classList.remove('open');document.body.style.overflow='';
       document.getElementById('bookingForm').reset();
       resetEquipment();clearFile(null);
+      selectedDates=[];
       rangeStart=-1;rangeEnd=-1;editingBookingId=null;blockedSlots=[];
     }
   }
@@ -762,6 +882,8 @@
     renderCalendar();
     updateDayView(selectedDate,getFilteredBookings(selectedDate));
     renderRoomStats();
+    /* update booking dots on multi-date picker if modal is open */
+    if(document.getElementById('bookingModal').classList.contains('open'))mdpRender();
     lucide.createIcons();
     }catch(e){console.error('processBookings error:',e);}
   }
@@ -873,40 +995,60 @@
     e.preventDefault();
     var tr=getTimeRange();
     if(!tr){showToast('กรุณาเลือกช่วงเวลาอย่างน้อย 1 ชั่วโมง','warn');return;}
+    if(!selectedDates.length){showToast('กรุณาเลือกวันที่อย่างน้อย 1 วัน','warn');return;}
     if(!document.getElementById('termsCheck').checked){
       showToast('กรุณายอมรับข้อกำหนดก่อนส่งคำขอ','warn');return;
     }
     var btn=document.getElementById('submitBtn');
     btn.disabled=true;btn.textContent='กำลังบันทึก...';
     var editId=document.getElementById('editBookingId').value;
-    var data={
+
+    var baseData={
       userId:currentUser.uid,userName:currentUser.displayName,userPhoto:currentUser.photoURL,
       personType:document.getElementById('personType').value,
       fullName:document.getElementById('fullName').value,
       position:document.getElementById('position').value,
       phone:document.getElementById('phone').value,
       attendees:parseInt(document.getElementById('attendees').value)||0,
-      room:document.getElementById('roomSelect').value,date:document.getElementById('bookingDate').value,
+      room:document.getElementById('roomSelect').value,
       startTime:tr.start,endTime:tr.end,
       purpose:document.getElementById('purpose').value,
-      equipment:getEquipment(),hasLayout:!!selectedFile,layoutName:selectedFile?selectedFile.name:null,
+      equipment:getEquipment(),hasLayout:!!selectedFile,
+      layoutName:selectedFile?selectedFile.name:null,
       layoutDataURL:selectedFileDataURL||null,
     };
+
     var p;
     if(editId){
-      data.status='pending';data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
-      data.approveNote='';data.approvedBy='';data.rejectReason='';data.rejectedBy='';
+      /* edit = update single doc, use first selected date */
+      var data=Object.assign({},baseData,{
+        date:selectedDates[0],
+        status:'pending',
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        approveNote:'',approvedBy:'',rejectReason:'',rejectedBy:'',
+      });
       p=db.collection('bookings').doc(editId).update(data);
     }else{
-      data.status='pending';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-      p=db.collection('bookings').add(data);
+      /* create = one doc per date via batch */
+      var batch=db.batch();
+      selectedDates.forEach(function(ds){
+        var ref=db.collection('bookings').doc();
+        batch.set(ref,Object.assign({},baseData,{
+          date:ds,
+          status:'pending',
+          createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        }));
+      });
+      p=batch.commit();
     }
     p.then(function(){
       toggleModal();
-      showToast(editId?'แก้ไขคำขอแล้ว ✓':'บันทึกข้อมูลสำเร็จ ✓');
+      var n=selectedDates.length;
+      showToast(editId?'แก้ไขคำขอแล้ว ✓':(n>1?'บันทึก '+n+' วันสำเร็จ ✓':'บันทึกข้อมูลสำเร็จ ✓'));
     })
-     .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
-     .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
+    .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
+    .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
+  }
   }
 
   /* ── Room Tabs ── */
