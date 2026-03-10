@@ -69,7 +69,7 @@
     .time-slot-btn.in-range{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;}
     .time-slot-btn.ts-blocked{background:#fee2e2;border-color:#fecaca;color:#fca5a5;cursor:not-allowed;text-decoration:line-through;}
     /* Equipment */
-    .equip-row{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+    .equip-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
     .equip-row:hover{border-color:#93c5fd;background:#f8faff;}
     .equip-row.checked{border-color:#1d4ed8;background:#eff6ff;}
     .equip-cb{width:16px;height:16px;accent-color:#1d4ed8;flex-shrink:0;cursor:pointer;}
@@ -282,7 +282,7 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
         <div><label class="form-label">ตำแหน่ง</label><input type="text" id="position" placeholder="เช่น ครู, นักเรียน"></div>
-        <div><label class="form-label">เบอร์โทรศัพท์ <span style="color:#ef4444;">*</span></label><input type="tel" id="phone" placeholder="เช่น 0812345678" required pattern="[0-9]{9,10}"></div>
+        <div><label class="form-label">เบอร์โทรศัพท์ <span style="color:#ef4444;">*</span></label><input type="text" id="phone" placeholder="เช่น 0812345678" required inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
         <div><label class="form-label">จำนวนผู้เข้าร่วม</label><input type="number" id="attendees" placeholder="ระบุจำนวน" min="1" required style="max-width:100%;"></div>
@@ -291,16 +291,16 @@
 
       <!-- 4. อุปกรณ์ -->
       <div class="section-divider"><i data-lucide="package" style="width:14px;height:14px;"></i> อุปกรณ์ที่ต้องใช้</div>
-      <div style="display:flex;flex-direction:column;gap:7px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;" class="form-group">
         <div class="equip-row" id="eq-sound" onclick="toggleEquip('sound',this)"><input type="checkbox" id="cb-sound" class="equip-cb" onclick="event.stopPropagation();toggleEquip('sound',document.getElementById('eq-sound'))"><span class="equip-label">ชุดเครื่องเสียง</span></div>
         <div class="equip-row" id="eq-projector" onclick="toggleEquip('projector',this)"><input type="checkbox" id="cb-projector" class="equip-cb" onclick="event.stopPropagation();toggleEquip('projector',document.getElementById('eq-projector'))"><span class="equip-label">เครื่องฉายโปรเจคเตอร์</span></div>
         <div class="equip-row" id="eq-signal" onclick="toggleEquip('signal',this)"><input type="checkbox" id="cb-signal" class="equip-cb" onclick="event.stopPropagation();toggleEquip('signal',document.getElementById('eq-signal'))"><span class="equip-label">สัญญาณเสียงเพื่อต่อพ่วงกับอุปกรณ์</span></div>
         <div class="equip-row" id="eq-appletv" onclick="toggleEquip('appletv',this)"><input type="checkbox" id="cb-appletv" class="equip-cb" onclick="event.stopPropagation();toggleEquip('appletv',document.getElementById('eq-appletv'))"><span class="equip-label">Apple TV</span></div>
+        <div class="equip-row" id="eq-photo" onclick="toggleEquip('photo',this)"><input type="checkbox" id="cb-photo" class="equip-cb" onclick="event.stopPropagation();toggleEquip('photo',document.getElementById('eq-photo'))"><span class="equip-label">ถ่ายภาพ</span></div>
+        <div class="equip-row" id="eq-sofa" onclick="toggleEquip('sofa',this)"><input type="checkbox" id="cb-sofa" class="equip-cb" onclick="event.stopPropagation();toggleEquip('sofa',document.getElementById('eq-sofa'))"><span class="equip-label">ชุดโซฟารับแขกและโต๊ะกลาง</span><div id="wrap-sofa" style="display:none;align-items:center;gap:6px;"><input type="number" id="qty-sofa" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()"><span style="font-size:12px;color:#64748b;">ชุด</span></div></div>
         <div class="equip-row" id="eq-table" onclick="toggleEquip('table',this)"><input type="checkbox" id="cb-table" class="equip-cb" onclick="event.stopPropagation();toggleEquip('table',document.getElementById('eq-table'))"><span class="equip-label">โต๊ะ (ระบุจำนวน)</span><div id="wrap-table" style="display:none;align-items:center;gap:6px;"><input type="number" id="qty-table" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()"><span style="font-size:12px;color:#64748b;">ตัว</span></div></div>
         <div class="equip-row" id="eq-chair" onclick="toggleEquip('chair',this)"><input type="checkbox" id="cb-chair" class="equip-cb" onclick="event.stopPropagation();toggleEquip('chair',document.getElementById('eq-chair'))"><span class="equip-label">เก้าอี้ (ระบุจำนวน)</span><div id="wrap-chair" style="display:none;align-items:center;gap:6px;"><input type="number" id="qty-chair" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()"><span style="font-size:12px;color:#64748b;">ตัว</span></div></div>
-        <div class="equip-row" id="eq-sofa" onclick="toggleEquip('sofa',this)"><input type="checkbox" id="cb-sofa" class="equip-cb" onclick="event.stopPropagation();toggleEquip('sofa',document.getElementById('eq-sofa'))"><span class="equip-label">ชุดโซฟารับแขกและโต๊ะกลาง</span><div id="wrap-sofa" style="display:none;align-items:center;gap:6px;"><input type="number" id="qty-sofa" class="equip-qty" placeholder="จำนวน" min="1" onclick="event.stopPropagation()"><span style="font-size:12px;color:#64748b;">ชุด</span></div></div>
-        <div class="equip-row" id="eq-photo" onclick="toggleEquip('photo',this)"><input type="checkbox" id="cb-photo" class="equip-cb" onclick="event.stopPropagation();toggleEquip('photo',document.getElementById('eq-photo'))"><span class="equip-label">ถ่ายภาพ</span></div>
-        <div class="equip-row" id="eq-other" onclick="toggleEquip('other',this)"><input type="checkbox" id="cb-other" class="equip-cb" onclick="event.stopPropagation();toggleEquip('other',document.getElementById('eq-other'))"><span class="equip-label" style="flex-shrink:0;">อื่นๆ</span><div id="wrap-other" style="display:none;flex:1;"><input type="text" id="qty-other" placeholder="โปรดระบุ" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 10px;border-radius:7px;"></div></div>
+        <div class="equip-row" id="eq-other" onclick="toggleEquip('other',this)" style="grid-column:span 2;"><input type="checkbox" id="cb-other" class="equip-cb" onclick="event.stopPropagation();toggleEquip('other',document.getElementById('eq-other'))"><span class="equip-label" style="flex-shrink:0;">อื่นๆ</span><div id="wrap-other" style="display:none;flex:1;"><input type="text" id="qty-other" placeholder="โปรดระบุ" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 10px;border-radius:7px;"></div></div>
       </div>
 
       <!-- 5. ผังโต๊ะ -->
