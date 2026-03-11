@@ -1,13 +1,13 @@
 var CACHE_NAME = 'np-origins-v1';
 var STATIC_FILES = [
-  '/index.html',
-  '/room-booking.html',
-  '/admin.html',
-  '/guide.html',
-  '/shared/common.js',
-  '/shared/styles.css',
-  '/shared/firebase.js',
-  '/manifest.json'
+  '/webapp/index.html',
+  '/webapp/room-booking.html',
+  '/webapp/admin.html',
+  '/webapp/guide.html',
+  '/webapp/shared/common.js',
+  '/webapp/shared/styles.css',
+  '/webapp/shared/firebase.js',
+  '/webapp/manifest.json'
 ];
 
 /* Install — cache static files */
