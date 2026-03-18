@@ -216,9 +216,31 @@ var MAIN_MENU = [
   { label: 'คู่มือการใช้งาน',   icon: 'book-open', href: 'guide.html'  },
 ];
 
-var SERVICE_MENU = [
-  { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
-  { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'monitor',  onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
+var GROUP_MENU = [
+  {
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'banknote',
+    items: [],
+  },
+  {
+    group: 'กลุ่มบริหารงานบุคคล',
+    icon: 'users',
+    items: [
+      { label: 'ระบบขอใช้ข้อมูล CCTV', icon: 'cctv', onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
+    ],
+  },
+  {
+    group: 'กลุ่มวิชาการ',
+    icon: 'graduation-cap',
+    items: [],
+  },
+  {
+    group: 'กลุ่มบริหารทั่วไป',
+    icon: 'building-2',
+    items: [
+      { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
+    ],
+  },
 ];
 
 var ADMIN_TABS = [
@@ -249,20 +271,32 @@ function buildSidebar(activePage) {
     html += _sidebarBtn(item, active, false);
   });
 
-  /* ── บริการออนไลน์ ── */
+  /* ── บริการออนไลน์ แยกกลุ่ม ── */
   html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
-  SERVICE_MENU.forEach(function(item) {
-    var key = item.href ? item.href.replace('.html', '') : '';
-    html += _sidebarBtn(item, activePage === key, false);
+  GROUP_MENU.forEach(function(g) {
+    /* group header */
+    html +=
+      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+      '</div>';
+    if (!g.items.length) {
+      /* ยังไม่มีระบบ */
+      html += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
+    } else {
+      g.items.forEach(function(item) {
+        var key = item.href ? item.href.replace('.html', '') : '';
+        html += _sidebarBtn(item, activePage === key, false, true);
+      });
+    }
   });
 
   /* ── Admin section ── */
   if (isAdminPage) {
-    /* หน้า admin: แสดง sub-tabs โดยตรง ไม่ต้องซ่อน */
     html += '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>';
     html += '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
     ADMIN_TABS.forEach(function(tab) {
-      var active = tab.id === 'bookings'; /* default active = bookings */
+      var active = tab.id === 'bookings';
       var cls = 'sidebar-btn admin-btn' + (active ? ' active' : '');
       html +=
         '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '">' +
@@ -274,7 +308,6 @@ function buildSidebar(activePage) {
         '</button>';
     });
   } else {
-    /* หน้าอื่น: แสดงลิงก์ไป admin.html ซ่อนไว้ก่อน (checkAdminAccess จะเปิด) */
     html +=
       '<div id="adminSidebarSection" style="display:none;">' +
         '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
@@ -295,14 +328,15 @@ function buildSidebar(activePage) {
 }
 
 /* ── internal helper ── */
-function _sidebarBtn(item, isActive, isAdmin) {
+function _sidebarBtn(item, isActive, isAdmin, isSubItem) {
   var cls = 'sidebar-btn' + (isAdmin ? ' admin-btn' : '') + (isActive ? ' active' : '');
+  var indent = isSubItem ? 'padding-left:28px;' : '';
   var inner =
-    '<i data-lucide="' + item.icon + '" style="width:19px;height:19px;flex-shrink:0;"></i>' +
+    '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;"></i>' +
     '<span>' + item.label + '</span>';
   if (item.href) {
-    return '<a href="' + item.href + '" class="' + cls + '">' + inner + '</a>';
+    return '<a href="' + item.href + '" class="' + cls + '" style="' + indent + '">' + inner + '</a>';
   } else {
-    return '<button onclick="' + item.onclick + '" class="' + cls + '">' + inner + '</button>';
+    return '<button onclick="' + item.onclick + '" class="' + cls + '" style="' + indent + '">' + inner + '</button>';
   }
 }
