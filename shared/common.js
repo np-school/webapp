@@ -372,9 +372,13 @@ function buildSidebar(activePage) {
         '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
         '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
         '<a href="admin.html" class="sidebar-btn admin-btn">' +
-          '<i data-lucide="settings" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-          '<span>จัดการ Admin</span>' +
+          '<i data-lucide="layout-dashboard" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>Admin Dashboard</span>' +
           '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+        '</a>' +
+        '<a href="admin-role.html" class="sidebar-btn admin-btn">' +
+          '<i data-lucide="shield-check" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>จัดการสิทธิ์ Admin</span>' +
         '</a>' +
         '<a href="staff.html" class="sidebar-btn admin-btn">' +
           '<i data-lucide="user-cog" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
