@@ -347,36 +347,86 @@ function selectSem(s) {
 }
 
 /* ─── LOAD ─── */
+/* กลุ่มสาระใน staff → map ให้ตรงกับ subjectGroup ใน portfolio_submissions */
+var STAFF_GROUP_MAP = {
+  'วิทยาศาสตร์':    'วิทยาศาสตร์และเทคโนโลยี',
+  'เทคโนโลยี':      'วิทยาศาสตร์และเทคโนโลยี',
+  'คณิตศาสตร์':     'คณิตศาสตร์',
+  'ภาษาไทย':        'ภาษาไทย',
+  'สังคมศึกษา':     'สังคมศึกษา ศาสนาและวัฒนธรรม',
+  'สุขศึกษา':       'สุขศึกษาและพลศึกษา',
+  'ภาษาต่างประเทศ': 'ภาษาต่างประเทศ',
+  'ศิลปะ':          'ศิลปะ',
+  'แนะแนว':         'แนะแนว',
+};
+var TEACHER_GROUPS = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','แนะแนว'];
+
 function loadAllSubmissions() {
   var main = document.getElementById('mainContent');
   main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i><p style="margin-top:12px;">กำลังโหลดข้อมูล...</p></div>';
   lucide.createIcons();
 
   var key = currentYear + '_' + currentSem;
-  db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
+
+  /* ── ดึง staff ก่อน แล้ว join กับ submissions ด้วย email ── */
+  db.collection('staff').orderBy('name').get().then(function(staffSnap) {
     allSubs = [];
     teacherMap = {};
-    snap.forEach(function(d) {
-      var data = Object.assign({ id: d.id }, d.data());
-      allSubs.push(data);
-      if (!teacherMap[data.uid]) {
-        teacherMap[data.uid] = { uid: data.uid, displayName: data.displayName||data.email, email: data.email, subs: {} };
-      }
-      teacherMap[data.uid].subs[data.docTypeId] = data;
+
+    staffSnap.forEach(function(d) {
+      var s = Object.assign({ id: d.id }, d.data());
+      if (!s.email) return;
+      var subjectGroup = STAFF_GROUP_MAP[s.group] || s.group || '';
+      teacherMap[s.email] = {
+        uid: s.email,
+        email: s.email,
+        displayName: s.name || s.email,
+        position: s.position || '',
+        staffGroup: s.group || '',
+        subjectGroup: subjectGroup,
+        isTeacher: TEACHER_GROUPS.indexOf(s.group) >= 0,
+        subs: {}
+      };
     });
-    updateStats();
-    renderView();
+
+    return db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
+      snap.forEach(function(d) {
+        var data = Object.assign({ id: d.id }, d.data());
+        allSubs.push(data);
+        var eKey = data.email || '';
+        if (!eKey) return;
+        if (teacherMap[eKey]) {
+          teacherMap[eKey].subs[data.docTypeId] = data;
+        } else {
+          /* ครูส่งงานแต่ไม่มีใน staff → เพิ่มจาก submission */
+          teacherMap[eKey] = {
+            uid: data.uid || eKey,
+            email: eKey,
+            displayName: data.displayName || eKey,
+            position: '',
+            staffGroup: data.subjectGroup || '',
+            subjectGroup: data.subjectGroup || '',
+            isTeacher: true,
+            subs: {}
+          };
+          teacherMap[eKey].subs[data.docTypeId] = data;
+        }
+      });
+      updateStats();
+      renderView();
+    });
   }).catch(function(e) {
     main.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
   });
 }
 
 function updateStats() {
-  var teachers = Object.keys(teacherMap).length;
+  var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
+  var teachers  = teacherList.length;
   var submitted = allSubs.filter(function(s){ return s.status && s.status !== 'none'; }).length;
   var reviewed  = allSubs.filter(function(s){ return s.status === 'reviewed'; }).length;
   var totalPossible = teachers * DOCUMENT_TYPES.length;
-  var pending = totalPossible - submitted;
+  var pending   = totalPossible - submitted;
 
   document.getElementById('statTeachers').textContent = teachers;
   document.getElementById('statSubmitted').textContent = submitted;
@@ -415,16 +465,19 @@ function setGroup(g) {
 function getFilteredTeachers() {
   var q = (document.getElementById('searchInput').value||'').toLowerCase();
   return Object.values(teacherMap).filter(function(t) {
+    /* แสดงเฉพาะครู (กลุ่มสาระ) */
+    if (!t.isTeacher) return false;
+    /* search */
     if (q && !(t.displayName.toLowerCase().includes(q) || t.email.toLowerCase().includes(q))) return false;
-    /* group filter — teacher must have at least one sub matching the group */
+    /* group filter — ใช้ staffGroup เทียบกับ SUBJECT_GROUPS */
     if (currentGroup !== 'all') {
-      var groupSubs = Object.values(t.subs).filter(function(s){ return s.subjectGroup === currentGroup; });
-      if (!groupSubs.length) return false;
+      var mapped = STAFF_GROUP_MAP[t.staffGroup] || t.staffGroup;
+      if (mapped !== currentGroup) return false;
     }
     var count = Object.keys(t.subs).length;
-    if (currentFilter === 'complete') return count === DOCUMENT_TYPES.length;
+    if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
-    if (currentFilter === 'pending') return Object.values(t.subs).some(function(s){ return s.status==='submitted'; });
+    if (currentFilter === 'pending')    return Object.values(t.subs).some(function(s){ return s.status==='submitted'; });
     return true;
   });
 }
