@@ -2,7 +2,7 @@ var CACHE_NAME = 'np-origins-v2';
 var STATIC_FILES = [
   '/webapp/index.html',
   '/webapp/room-booking.html',
-  '/webapp/admin.html',
+  '/webapp/booking-admin.html',
   '/webapp/guide.html',
   '/webapp/teacher-portfolio.html',
   '/webapp/portfolio-admin.html',

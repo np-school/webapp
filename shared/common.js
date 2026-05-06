@@ -208,7 +208,7 @@ function updateSidebarProfile(user) {
 
    ADMIN_TABS (เฉพาะหน้า admin)
      { id, label, icon }
-     id ตรงกับ switchTab(id) ใน admin.html
+     id ตรงกับ switchTab(id) ใน booking-admin.html
    ════════════════════════════════════════════════ */
 
 var MAIN_MENU = [
