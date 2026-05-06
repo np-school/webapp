@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+  <title>จัดการสิทธิ์ Admin – โรงเรียนหนองกี่พิทยาคม</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+  <style>
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+
+    /* ── Loading ── */
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.97);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ── Sidebar ── */
+    .sidebar-wrap{width:260px;flex-shrink:0;transition:transform .3s ease;}
+    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;}
+    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:13px;white-space:nowrap;}
+    .sidebar-btn:hover{background:#f1f5f9;}
+    .sidebar-btn.active{background:#7c3aed;color:white;box-shadow:0 8px 15px -3px rgba(124,58,237,.25);}
+    .sidebar-btn.admin-btn{color:#7c3aed;}
+    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
+    .sidebar-btn.admin-btn.active{background:#7c3aed;color:white;}
+    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
+    #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
+    #sidebarOverlay.open{display:block;}
+    @media(max-width:1023px){
+      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
+      .sidebar-wrap.open{transform:translateX(0);}
+    }
+    @media(min-width:1024px){#hamburgerBtn{display:none!important;}.sidebar-inner{border-right:none;}}
+
+    /* ── Cards ── */
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+
+    /* ── View tabs ── */
+    .view-tab{padding:9px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
+    .view-tab.active{color:#7c3aed;border-bottom-color:#7c3aed;}
+
+    /* ── Admin card ── */
+    .admin-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;transition:all .2s;position:relative;}
+    .admin-card:hover{border-color:#c4b5fd;box-shadow:0 4px 12px rgba(124,58,237,.08);}
+    .admin-card.superadmin{border-color:#c4b5fd;background:linear-gradient(135deg,#faf5ff,#f5f3ff);}
+
+    /* ── Permission badge ── */
+    .perm-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+
+    /* ── Group header card ── */
+    .group-header{border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:13px;}
+
+    /* ── Buttons ── */
+    .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+    .btn-primary:hover{background:#6d28d9;}
+    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
+    .btn-secondary:hover{background:#e2e8f0;}
+    .btn-icon{background:#f1f5f9;border:none;border-radius:8px;padding:6px 9px;cursor:pointer;display:inline-flex;align-items:center;color:#64748b;transition:all .15s;}
+    .btn-icon:hover{background:#e2e8f0;}
+    .btn-icon.danger:hover{background:#fee2e2;color:#b91c1c;}
+
+    /* ── Modal ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:500px;padding:28px;box-shadow:0 25px 60px rgba(0,0,0,.2);}
+
+    /* ── Inputs ── */
+    input[type=text],textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;transition:border-color .15s;}
+    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+
+    /* ── Perm row ── */
+    .perm-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;transition:border-color .15s;}
+    .perm-row:hover{border-color:#c4b5fd;background:#faf5ff;}
+    .perm-row.active{border-color:#c4b5fd;background:#faf5ff;}
+    .perm-row.disabled{opacity:.5;cursor:not-allowed;}
+
+    /* ── Toast ── */
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
+
+    /* ── Search ── */
+    .search-box{border:1.5px solid #e2e8f0;padding:9px 14px;border-radius:10px;outline:none;font-size:13px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
+    .search-box:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+
+    /* ── Empty state ── */
+    .empty-state{text-align:center;padding:52px 20px;color:#94a3b8;}
+
+    /* ── Group view grid ── */
+    .group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;}
+
+    /* ── Responsive ── */
+    @media(max-width:640px){
+      .group-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body style="background:#f8fafc;min-height:100vh;">
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Access Denied -->
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:#64748b;font-size:14px;">เฉพาะ SuperAdmin เท่านั้นที่สามารถเข้าหน้านี้ได้</p>
+  </div>
+  <a href="admin.html" style="padding:10px 24px;background:#7c3aed;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้า Admin</a>
+</div>
+
+<!-- Main App -->
+<div id="adminRoleApp" style="display:none;">
+
+  <!-- Navbar -->
+  <nav id="navbar" class="navbar"></nav>
+
+  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+
+    <!-- Sidebar -->
+    <div class="sidebar-wrap" id="sidebar">
+      <div class="sidebar-inner" id="sidebarInner"></div>
+    </div>
+
+    <!-- Content -->
+    <div style="flex:1;min-width:0;padding:28px 24px;">
+
+      <!-- Page header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="shield-check" style="width:20px;height:20px;color:white;"></i>
+            </div>
+            <h1 style="font-size:22px;font-weight:800;color:#1e293b;">จัดการสิทธิ์ Admin</h1>
+          </div>
+          <p style="font-size:13px;color:#64748b;padding-left:50px;">กำหนดสิทธิ์การเข้าถึงระบบแต่ละกลุ่มงานให้ Admin แต่ละคน</p>
+        </div>
+        <button class="btn-primary" onclick="openAddModal()">
+          <i data-lucide="user-plus" style="width:15px;height:15px;"></i>
+          เพิ่ม Admin ใหม่
+        </button>
+      </div>
+
+      <!-- Stats row -->
+      <div id="statsRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+      <!-- Main card -->
+      <div class="card" style="overflow:hidden;">
+
+        <!-- Toolbar -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <!-- View tabs -->
+          <div style="display:flex;border-bottom:none;gap:0;">
+            <button class="view-tab active" id="vbtn-group" onclick="switchView('group',this)">
+              <i data-lucide="layout-grid" style="width:13px;height:13px;display:inline;vertical-align:-1px;margin-right:5px;"></i>มุมมองกลุ่มงาน
+            </button>
+            <button class="view-tab" id="vbtn-list" onclick="switchView('list',this)">
+              <i data-lucide="list" style="width:13px;height:13px;display:inline;vertical-align:-1px;margin-right:5px;"></i>รายชื่อทั้งหมด
+            </button>
+            <button class="view-tab" id="vbtn-matrix" onclick="switchView('matrix',this)">
+              <i data-lucide="table-2" style="width:13px;height:13px;display:inline;vertical-align:-1px;margin-right:5px;"></i>ตาราง Permissions
+            </button>
+          </div>
+          <div style="flex:1;min-width:160px;max-width:280px;margin-left:auto;">
+            <input class="search-box" id="searchBox" placeholder="🔍 ค้นหา email หรือชื่อ..." oninput="applySearch()">
+          </div>
+        </div>
+
+        <!-- View: Group -->
+        <div id="view-group" style="padding:20px;">
+          <div class="group-grid" id="groupGrid"></div>
+        </div>
+
+        <!-- View: List -->
+        <div id="view-list" style="display:none;padding:20px;">
+          <div id="adminListEl" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+
+        <!-- View: Matrix -->
+        <div id="view-matrix" style="display:none;overflow-x:auto;">
+          <table id="matrixTable" style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
+            <thead>
+              <tr style="border-bottom:2px solid #e2e8f0;background:#f8fafc;">
+                <th style="text-align:left;padding:12px 16px;font-weight:800;color:#374151;">Admin</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#3b82f6;">📅 ระบบจองห้อง</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#10b981;">🚪 จัดการห้อง</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#0369a1;">👥 บุคลากร</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7c3aed;">🛡️ Admin</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#64748b;">ดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody"></tbody>
+          </table>
+        </div>
+
+      </div><!-- /card -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ Modal: Add/Edit Admin ══════════════ -->
+<div id="adminModal" class="modal-bg">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+      <div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i data-lucide="user-cog" style="width:18px;height:18px;color:#7c3aed;"></i>
+      </div>
+      <h3 style="font-size:17px;font-weight:800;color:#1e293b;" id="modalTitle">เพิ่ม Admin ใหม่</h3>
+    </div>
+
+    <!-- Name -->
+    <div style="margin-bottom:13px;">
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล</label>
+      <input type="text" id="fName" placeholder="เช่น นายสมชาย ใจดี">
+    </div>
+
+    <!-- Email (add only) -->
+    <div style="margin-bottom:16px;" id="emailWrap">
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">Email (Google) <span style="color:#dc2626;">*</span></label>
+      <input type="text" id="fEmail" placeholder="example@nongki.ac.th">
+    </div>
+
+    <!-- Permissions -->
+    <div style="margin-bottom:20px;">
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:10px;">สิทธิ์ตามกลุ่มงาน</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+
+        <label class="perm-row" id="wrap-bookings">
+          <input type="checkbox" id="perm-bookings" style="width:16px;height:16px;accent-color:#3b82f6;flex-shrink:0;" onchange="onPermChange('bookings')">
+          <div style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="calendar" style="width:14px;height:14px;color:#3b82f6;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">ระบบขอใช้ห้อง/สถานที่</div>
+            <div style="font-size:11px;color:#64748b;">กลุ่มบริหารทั่วไป · อนุมัติ/ปฏิเสธคำขอจองห้อง</div>
+          </div>
+        </label>
+
+        <label class="perm-row" id="wrap-rooms">
+          <input type="checkbox" id="perm-rooms" style="width:16px;height:16px;accent-color:#10b981;flex-shrink:0;" onchange="onPermChange('rooms')">
+          <div style="width:32px;height:32px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="door-open" style="width:14px;height:14px;color:#10b981;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการห้อง/สถานที่</div>
+            <div style="font-size:11px;color:#64748b;">กลุ่มบริหารทั่วไป · เพิ่ม แก้ไข ลบห้อง</div>
+          </div>
+        </label>
+
+        <label class="perm-row" id="wrap-staff">
+          <input type="checkbox" id="perm-staff" style="width:16px;height:16px;accent-color:#0369a1;flex-shrink:0;" onchange="onPermChange('staff')">
+          <div style="width:32px;height:32px;background:#e0f2fe;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="users" style="width:14px;height:14px;color:#0369a1;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการข้อมูลบุคลากร</div>
+            <div style="font-size:11px;color:#64748b;">กลุ่มบริหารงานบุคคล · เพิ่ม แก้ไข นำเข้า CSV</div>
+          </div>
+        </label>
+
+        <label class="perm-row disabled">
+          <input type="checkbox" id="perm-admins" style="width:16px;height:16px;accent-color:#7c3aed;flex-shrink:0;" disabled>
+          <div style="width:32px;height:32px;background:#ede9fe;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="shield" style="width:14px;height:14px;color:#7c3aed;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการ Admin & สิทธิ์</div>
+            <div style="font-size:11px;color:#64748b;">เฉพาะ SuperAdmin · ไม่สามารถมอบสิทธิ์นี้ได้</div>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button>
+      <button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()">
+        <i data-lucide="save" style="width:14px;height:14px;"></i>
+        <span id="modalSaveLbl">เพิ่ม Admin</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ Modal: Confirm Delete ══════════════ -->
+<div id="deleteModal" class="modal-bg">
+  <div class="modal-box" style="max-width:420px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i>
+      </div>
+      <div>
+        <h3 style="font-size:16px;font-weight:800;color:#1e293b;">ลบ Admin</h3>
+        <p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p>
+      </div>
+    </div>
+    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button>
+      <button style="flex:2;background:#dc2626;color:white;border:none;padding:11px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="confirmDelete()">
+        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ Modal: Quick Permission Toggle ══════════════ -->
+<div id="quickPermModal" class="modal-bg">
+  <div class="modal-box" style="max-width:420px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i data-lucide="toggle-right" style="width:18px;height:18px;color:#7c3aed;"></i>
+      </div>
+      <div>
+        <h3 style="font-size:16px;font-weight:800;color:#1e293b;">เปลี่ยนสิทธิ์</h3>
+        <p style="font-size:12px;color:#64748b;" id="quickPermSub"></p>
+      </div>
+    </div>
+    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="quickPermText"></p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeModal('quickPermModal')">ยกเลิก</button>
+      <button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="confirmQuickPerm()">
+        <i data-lucide="check" style="width:14px;height:14px;"></i> ยืนยัน
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ SCRIPT ══════════════════════════════════════════════ -->
+<script>
+
+var SUPER_ADMIN = 'nattapol@nongki.ac.th';
+var currentUser = null;
+var allAdmins   = [];  // [{email, data:{name,permissions,...}}]
+var editingEmail = null;
+var deletingEmail = null;
+var currentView = 'group';
+var quickPerm = null; // {email, permKey, newVal}
+
+/* ── Permission definitions ── */
+var PERM_DEFS = [
+  {
+    key: 'bookings',
+    label: 'ระบบจองห้อง',
+    desc: 'อนุมัติ/ปฏิเสธคำขอจองห้อง',
+    group: 'กลุ่มบริหารทั่วไป',
+    icon: 'calendar',
+    color: '#3b82f6',
+    bg: '#eff6ff',
+    border: '#bfdbfe'
+  },
+  {
+    key: 'rooms',
+    label: 'จัดการห้อง',
+    desc: 'เพิ่ม แก้ไข ลบห้อง',
+    group: 'กลุ่มบริหารทั่วไป',
+    icon: 'door-open',
+    color: '#10b981',
+    bg: '#f0fdf4',
+    border: '#bbf7d0'
+  },
+  {
+    key: 'staff',
+    label: 'บุคลากร',
+    desc: 'เพิ่ม แก้ไข นำเข้า CSV',
+    group: 'กลุ่มบริหารงานบุคคล',
+    icon: 'users',
+    color: '#0369a1',
+    bg: '#e0f2fe',
+    border: '#7dd3fc'
+  },
+  {
+    key: 'admins',
+    label: 'จัดการ Admin',
+    desc: 'SuperAdmin เท่านั้น',
+    group: 'SuperAdmin',
+    icon: 'shield',
+    color: '#7c3aed',
+    bg: '#ede9fe',
+    border: '#c4b5fd'
+  },
+];
+
+/* ── Group definitions ── */
+var GROUP_DEFS = [
+  {
+    key: 'super',
+    label: 'SuperAdmin',
+    subtitle: 'มีสิทธิ์ครบทุกระบบ — ไม่สามารถลบหรือแก้ไขสิทธิ์ได้',
+    icon: 'crown',
+    color: '#7c3aed',
+    bg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
+    border: '#c4b5fd',
+    filter: function(a){ return a.email.toLowerCase()===SUPER_ADMIN; }
+  },
+  {
+    key: 'general',
+    label: 'กลุ่มบริหารทั่วไป',
+    subtitle: 'ดูแลระบบจองห้อง / จัดการห้องและสถานที่',
+    icon: 'building-2',
+    color: '#2563eb',
+    bg: '#eff6ff',
+    border: '#bfdbfe',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return p.bookings||p.rooms;
+    }
+  },
+  {
+    key: 'hr',
+    label: 'กลุ่มบริหารงานบุคคล',
+    subtitle: 'ดูแลระบบข้อมูลบุคลากร',
+    icon: 'users',
+    color: '#0369a1',
+    bg: '#e0f2fe',
+    border: '#7dd3fc',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return p.staff&&!p.bookings&&!p.rooms;
+    }
+  },
+  {
+    key: 'multi',
+    label: 'สิทธิ์หลายกลุ่มงาน',
+    subtitle: 'ได้รับสิทธิ์ดูแลมากกว่า 1 กลุ่มงาน',
+    icon: 'layers',
+    color: '#d97706',
+    bg: '#fffbeb',
+    border: '#fde68a',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      var cnt=(p.bookings?1:0)+(p.rooms?1:0)+(p.staff?1:0);
+      return cnt>=2;
+    }
+  },
+  {
+    key: 'none',
+    label: 'ยังไม่มีสิทธิ์',
+    subtitle: 'บัญชีที่ยังไม่ได้รับสิทธิ์ใดเลย',
+    icon: 'user-x',
+    color: '#94a3b8',
+    bg: '#f8fafc',
+    border: '#e2e8f0',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !p.bookings&&!p.rooms&&!p.staff;
+    }
+  }
+];
+
+/* ══════════════════════ INIT ══════════════════════ */
+buildNavbar('NP Origins · จัดการสิทธิ์ Admin', true);
+buildSidebarCustom();
+
+auth.onAuthStateChanged(function(user){
+  if(!user){ window.location.href='index.html'; return; }
+  db.collection('admins').doc(user.email.toLowerCase()).get().then(function(doc){
+    document.getElementById('loadingOverlay').style.display='none';
+    if(!doc.exists||user.email.toLowerCase()!==SUPER_ADMIN){
+      document.getElementById('accessDenied').style.display='flex';
+      lucide.createIcons(); return;
+    }
+    currentUser = user;
+    document.getElementById('adminRoleApp').style.display='block';
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    subscribeAdmins();
+    lucide.createIcons();
+  }).catch(function(){
+    document.getElementById('loadingOverlay').style.display='none';
+    document.getElementById('accessDenied').style.display='flex';
+    lucide.createIcons();
+  });
+});
+
+/* ══════════════════════ DATA ══════════════════════ */
+function subscribeAdmins(){
+  db.collection('admins').onSnapshot(function(snap){
+    allAdmins=[];
+    snap.forEach(function(d){ allAdmins.push({email:d.id, data:d.data()||{}}); });
+    allAdmins.sort(function(a,b){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return -1;
+      if(b.email.toLowerCase()===SUPER_ADMIN) return 1;
+      return (a.data.name||a.email).localeCompare(b.data.name||b.email, 'th');
+    });
+    renderStats();
+    renderCurrentView();
+    lucide.createIcons();
+  });
+}
+
+/* ══════════════════════ STATS ══════════════════════ */
+function renderStats(){
+  var total=allAdmins.length;
+  var noPerms=allAdmins.filter(function(a){
+    if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+    var p=a.data.permissions||{};
+    return !p.bookings&&!p.rooms&&!p.staff;
+  }).length;
+  var withPerms=total-1-noPerms; // exclude super
+  var statData=[
+    {label:'Admin ทั้งหมด', val:total, icon:'users', color:'#7c3aed', bg:'#ede9fe'},
+    {label:'มีสิทธิ์แล้ว',  val:withPerms, icon:'shield-check', color:'#16a34a', bg:'#dcfce7'},
+    {label:'ยังไม่มีสิทธิ์', val:noPerms, icon:'shield-off', color:'#d97706', bg:'#fef9c3'},
+    {label:'ระบบทั้งหมด',   val:3, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
+  ];
+  document.getElementById('statsRow').innerHTML=statData.map(function(s){
+    return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
+      '<div style="width:38px;height:38px;background:'+s.bg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+        '<i data-lucide="'+s.icon+'" style="width:17px;height:17px;color:'+s.color+';"></i>' +
+      '</div>' +
+      '<div>' +
+        '<p style="font-size:10px;color:#64748b;font-weight:700;">'+s.label+'</p>' +
+        '<p style="font-size:22px;font-weight:800;line-height:1.1;color:#1e293b;">'+s.val+'</p>' +
+      '</div></div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ══════════════════════ VIEW SWITCH ══════════════════════ */
+function switchView(v, btn){
+  currentView=v;
+  ['group','list','matrix'].forEach(function(k){
+    document.getElementById('view-'+k).style.display=(k===v)?'block':'none';
+    var b=document.getElementById('vbtn-'+k);
+    if(b) b.className='view-tab'+(k===v?' active':'');
+  });
+  renderCurrentView();
+}
+
+function renderCurrentView(){
+  if(currentView==='group') renderGroupView();
+  else if(currentView==='list') renderListView();
+  else renderMatrix();
+}
+
+/* ══════════════════════ SEARCH ══════════════════════ */
+var searchQuery='';
+function applySearch(){
+  searchQuery=(document.getElementById('searchBox').value||'').toLowerCase().trim();
+  renderCurrentView();
+}
+
+function filterAdmins(list){
+  if(!searchQuery) return list;
+  return list.filter(function(a){
+    return a.email.toLowerCase().indexOf(searchQuery)!==-1 ||
+      (a.data.name||'').toLowerCase().indexOf(searchQuery)!==-1;
+  });
+}
+
+/* ══════════════════════ GROUP VIEW ══════════════════════ */
+function renderGroupView(){
+  var grid=document.getElementById('groupGrid');
+  var html='';
+  GROUP_DEFS.forEach(function(g){
+    var members=filterAdmins(allAdmins.filter(g.filter));
+    /* For 'multi' group: override with combined (avoid double-counting general+hr) */
+    if(g.key==='general'||g.key==='hr'){
+      /* Exclude those that appear in 'multi' group */
+      members=members.filter(function(a){
+        var p=a.data.permissions||{};
+        var cnt=(p.bookings?1:0)+(p.rooms?1:0)+(p.staff?1:0);
+        return cnt<2;
+      });
+    }
+    var isEmpty=members.length===0;
+    html+='<div style="border:1.5px solid '+g.border+';border-radius:14px;overflow:hidden;">';
+    /* Group header */
+    html+='<div style="background:'+g.bg+';padding:14px 18px;border-bottom:1px solid '+g.border+';display:flex;align-items:center;gap:10px;">';
+    html+='<div style="width:34px;height:34px;background:'+g.color+'22;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+    html+='<i data-lucide="'+g.icon+'" style="width:16px;height:16px;color:'+g.color+';"></i></div>';
+    html+='<div style="flex:1;min-width:0;">';
+    html+='<p style="font-weight:800;font-size:14px;color:'+g.color+';">'+g.label+'</p>';
+    html+='<p style="font-size:11px;color:#64748b;">'+g.subtitle+'</p></div>';
+    html+='<span style="font-size:11px;font-weight:800;background:'+g.color+';color:white;padding:2px 9px;border-radius:20px;flex-shrink:0;">'+members.length+' คน</span>';
+    html+='</div>';
+    /* Members */
+    html+='<div style="padding:12px;display:flex;flex-direction:column;gap:8px;">';
+    if(isEmpty){
+      html+='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-style:italic;">ไม่มี Admin ในกลุ่มนี้</div>';
+    } else {
+      members.forEach(function(a){
+        html+=renderAdminMiniCard(a, g.key==='super');
+      });
+    }
+    html+='</div></div>';
+  });
+  grid.innerHTML=html;
+  lucide.createIcons();
+}
+
+function renderAdminMiniCard(a, isSuperCard){
+  var isSA=a.email.toLowerCase()===SUPER_ADMIN;
+  var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
+  var perms=a.data.permissions||{};
+  if(isSA) perms={bookings:true,rooms:true,staff:true,admins:true};
+
+  var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
+    return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
+      '<i data-lucide="'+p.icon+'" style="width:9px;height:9px;"></i>'+p.label+'</span>';
+  }).join('');
+  if(!permBadges) permBadges='<span style="font-size:10px;color:#94a3b8;font-style:italic;">ยังไม่มีสิทธิ์</span>';
+
+  var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;padding:1px 7px;border-radius:7px;font-weight:800;">⭐ SuperAdmin</span>':'';
+
+  var actions='';
+  if(!isSA){
+    actions='<div style="display:flex;gap:5px;flex-shrink:0;">' +
+      '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" title="แก้ไขสิทธิ์"><i data-lucide="settings-2" style="width:13px;height:13px;"></i></button>' +
+      '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" title="ลบ Admin"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
+      '</div>';
+  }
+
+  return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#c4b5fd\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
+    '<img src="'+ph+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px;">' +
+        '<p style="font-size:13px;font-weight:700;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>' +
+        superBadge +
+      '</div>' +
+      '<p style="font-size:11px;color:#94a3b8;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc2(a.email)+'</p>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+permBadges+'</div>' +
+    '</div>' +
+    actions +
+  '</div>';
+}
+
+/* ══════════════════════ LIST VIEW ══════════════════════ */
+function renderListView(){
+  var el=document.getElementById('adminListEl');
+  var list=filterAdmins(allAdmins);
+  if(!list.length){el.innerHTML='<div class="empty-state"><i data-lucide="search-x" style="width:40px;height:40px;margin:0 auto 10px;display:block;color:#cbd5e1;"></i>ไม่พบผลลัพธ์</div>';lucide.createIcons();return;}
+  el.innerHTML=list.map(function(a){
+    var isSA=a.email.toLowerCase()===SUPER_ADMIN;
+    var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
+    var perms=a.data.permissions||{};
+    if(isSA) perms={bookings:true,rooms:true,staff:true,admins:true};
+
+    var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
+      return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
+        '<i data-lucide="'+p.icon+'" style="width:9px;height:9px;"></i>'+p.label+'</span>';
+    }).join('');
+    if(!permBadges) permBadges='<span style="font-size:11px;color:#94a3b8;font-style:italic;">ยังไม่มีสิทธิ์</span>';
+
+    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;padding:2px 8px;border-radius:8px;font-weight:800;">⭐ SuperAdmin</span>':'';
+    var actions=isSA?'':
+      '<div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">' +
+        '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" style="background:#eff6ff;color:#1d4ed8;"><i data-lucide="settings-2" style="width:13px;height:13px;"></i><span style="font-size:11px;font-weight:700;margin-left:3px;">แก้ไขสิทธิ์</span></button>' +
+        '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
+      '</div>';
+
+    return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid '+(isSA?'#c4b5fd':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#faf5ff':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#c4b5fd\'" onmouseleave="this.style.borderColor=\''+(isSA?'#c4b5fd':'#e2e8f0')+'\'">'+
+      '<img src="'+ph+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#c4b5fd':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+
+          '<p style="font-weight:700;font-size:14px;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
+        '</div>'+
+        '<p style="font-size:11px;color:#94a3b8;margin-bottom:6px;">'+esc2(a.email)+'</p>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:5px;">'+permBadges+'</div>'+
+      '</div>'+
+      actions+
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ══════════════════════ MATRIX VIEW ══════════════════════ */
+function renderMatrix(){
+  var tbody=document.getElementById('matrixBody');
+  var list=filterAdmins(allAdmins);
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+
+  tbody.innerHTML=list.map(function(a){
+    var isSA=a.email.toLowerCase()===SUPER_ADMIN;
+    var perms=a.data.permissions||{};
+    if(isSA) perms={bookings:true,rooms:true,staff:true,admins:true};
+
+    var permKeys=['bookings','rooms','staff','admins'];
+    var cells=permKeys.map(function(pk){
+      var has=!!perms[pk];
+      var pd=PERM_DEFS.find(function(x){return x.key===pk;});
+      var canToggle=!isSA&&pk!=='admins';
+      if(canToggle){
+        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+          '<button onclick="openQuickPerm(\''+esc(a.email)+'\',\''+pk+'\','+has+')" title="คลิกเพื่อเปลี่ยน" style="background:none;border:none;cursor:pointer;padding:0;">' +
+            (has
+              ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:'+pd.bg+';border-radius:8px;border:1.5px solid '+pd.border+';">' +
+                  '<i data-lucide="check" style="width:13px;height:13px;color:'+pd.color+';"></i></span>'
+              : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f8fafc;border-radius:8px;border:1.5px solid #e2e8f0;">' +
+                  '<i data-lucide="minus" style="width:11px;height:11px;color:#cbd5e1;"></i></span>'
+            ) +
+          '</button></td>';
+      } else {
+        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+          (has
+            ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:'+pd.bg+';border-radius:8px;border:1.5px solid '+pd.border+';margin:0 auto;">' +
+                '<i data-lucide="check" style="width:13px;height:13px;color:'+pd.color+';"></i></span>'
+            : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f8fafc;border-radius:8px;border:1.5px solid #e2e8f0;margin:0 auto;">' +
+                '<i data-lucide="minus" style="width:11px;height:11px;color:#cbd5e1;"></i></span>'
+          ) +
+        '</td>';
+      }
+    }).join('');
+
+    var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=48';
+    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;padding:1px 6px;border-radius:6px;font-weight:800;margin-left:4px;">SA</span>':'';
+
+    var actionCell=isSA
+      ? '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">–</td>'
+      : '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+          '<div style="display:flex;align-items:center;justify-content:center;gap:5px;">' +
+            '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" title="แก้ไข"><i data-lucide="settings-2" style="width:12px;height:12px;"></i></button>' +
+            '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>' +
+          '</div></td>';
+
+    return '<tr style="background:'+(isSA?'#faf5ff':'white')+';">' +
+      '<td style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">' +
+        '<div style="display:flex;align-items:center;gap:9px;">' +
+          '<img src="'+ph+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +
+          '<div>' +
+            '<p style="font-size:12px;font-weight:700;color:#1e293b;display:inline;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
+            '<p style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">'+esc2(a.email)+'</p>' +
+          '</div>' +
+        '</div></td>' +
+      cells +
+      actionCell +
+    '</tr>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ══════════════════════ MODAL: ADD/EDIT ══════════════════════ */
+function onPermChange(key){
+  var row=document.getElementById('wrap-'+key);
+  if(row) row.className='perm-row'+(document.getElementById('perm-'+key).checked?' active':'');
+}
+
+function openAddModal(){
+  editingEmail=null;
+  document.getElementById('modalTitle').textContent='เพิ่ม Admin ใหม่';
+  document.getElementById('modalSaveLbl').textContent='เพิ่ม Admin';
+  document.getElementById('fName').value='';
+  document.getElementById('fEmail').value='';
+  document.getElementById('emailWrap').style.display='';
+  ['bookings','rooms','staff'].forEach(function(k){
+    var el=document.getElementById('perm-'+k);
+    if(el){el.checked=false; onPermChange(k);}
+  });
+  openModal('adminModal');
+  lucide.createIcons();
+}
+
+function openEditModal(email){
+  editingEmail=email;
+  var admin=allAdmins.find(function(a){return a.email===email;});
+  if(!admin) return;
+  document.getElementById('modalTitle').textContent='แก้ไขสิทธิ์ — '+admin.email;
+  document.getElementById('modalSaveLbl').textContent='บันทึก';
+  document.getElementById('fName').value=admin.data.name||'';
+  document.getElementById('emailWrap').style.display='none';
+  var p=admin.data.permissions||{};
+  ['bookings','rooms','staff'].forEach(function(k){
+    var el=document.getElementById('perm-'+k);
+    if(el){el.checked=!!p[k]; onPermChange(k);}
+  });
+  openModal('adminModal');
+  lucide.createIcons();
+}
+
+function saveAdmin(){
+  var name=(document.getElementById('fName').value||'').trim();
+  var perms={
+    bookings: document.getElementById('perm-bookings').checked,
+    rooms:    document.getElementById('perm-rooms').checked,
+    staff:    document.getElementById('perm-staff').checked,
+    admins:   false
+  };
+  if(editingEmail){
+    db.collection('admins').doc(editingEmail).update({
+      name: name, permissions: perms,
+      updatedBy: currentUser.email,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){ closeModal('adminModal'); showToast('อัปเดตสิทธิ์แล้ว ✓'); })
+    .catch(function(e){ showToast(e.message,'error'); });
+  } else {
+    var email=(document.getElementById('fEmail').value||'').trim().toLowerCase();
+    if(!email||!email.includes('@')){ showToast('กรุณาระบุ email ให้ถูกต้อง','warn'); return; }
+    if(email===SUPER_ADMIN){ showToast('email นี้เป็น SuperAdmin อยู่แล้ว','warn'); return; }
+    db.collection('admins').doc(email).set({
+      name: name, permissions: perms,
+      addedBy: currentUser.email,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){ closeModal('adminModal'); showToast('เพิ่ม Admin แล้ว ✓'); })
+    .catch(function(e){ showToast(e.message,'error'); });
+  }
+}
+
+/* ══════════════════════ MODAL: DELETE ══════════════════════ */
+function openDeleteModal(email){
+  deletingEmail=email;
+  var admin=allAdmins.find(function(a){return a.email===email;});
+  document.getElementById('deleteModalText').textContent='ต้องการลบ Admin "' + (admin&&admin.data.name?admin.data.name+' ('+email+')':email) + '" ใช่หรือไม่?';
+  openModal('deleteModal');
+  lucide.createIcons();
+}
+
+function confirmDelete(){
+  if(!deletingEmail) return;
+  if(deletingEmail===SUPER_ADMIN){ showToast('ไม่สามารถลบ SuperAdmin ได้','warn'); return; }
+  db.collection('admins').doc(deletingEmail).delete()
+    .then(function(){ closeModal('deleteModal'); showToast('ลบ Admin แล้ว'); deletingEmail=null; })
+    .catch(function(e){ showToast(e.message,'error'); });
+}
+
+/* ══════════════════════ MODAL: QUICK PERM ══════════════════════ */
+function openQuickPerm(email, permKey, currentVal){
+  var admin=allAdmins.find(function(a){return a.email===email;});
+  var pd=PERM_DEFS.find(function(x){return x.key===permKey;});
+  var newVal=!currentVal;
+  quickPerm={email:email, permKey:permKey, newVal:newVal};
+  document.getElementById('quickPermSub').textContent=(admin&&admin.data.name?admin.data.name+' · ':'')+email;
+  document.getElementById('quickPermText').textContent=(newVal?'✅ มอบสิทธิ์':'❌ ถอดสิทธิ์')+' "'+pd.label+'" ให้กับ Admin คนนี้';
+  openModal('quickPermModal');
+  lucide.createIcons();
+}
+
+function confirmQuickPerm(){
+  if(!quickPerm) return;
+  var admin=allAdmins.find(function(a){return a.email===quickPerm.email;});
+  if(!admin) return;
+  var perms=Object.assign({}, admin.data.permissions||{});
+  perms[quickPerm.permKey]=quickPerm.newVal;
+  db.collection('admins').doc(quickPerm.email).update({
+    permissions: perms,
+    updatedBy: currentUser.email,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    closeModal('quickPermModal');
+    showToast((quickPerm.newVal?'มอบ':'ถอด')+'สิทธิ์แล้ว ✓');
+    quickPerm=null;
+  }).catch(function(e){ showToast(e.message,'error'); });
+}
+
+/* ══════════════════════ SIDEBAR ══════════════════════ */
+function buildSidebarCustom(){
+  var el=document.getElementById('sidebarInner');
+  if(!el) return;
+  var html=
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+      '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
+        '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i></button></div>' +
+    '<div class="sec-label">เมนูหลัก</div>' +
+    '<a href="index.html" class="sidebar-btn"><i data-lucide="home" style="width:16px;height:16px;flex-shrink:0;"></i><span>หน้าแรก</span></a>' +
+    '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+    '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
+    '<a href="admin.html" class="sidebar-btn admin-btn"><i data-lucide="layout-dashboard" style="width:16px;height:16px;flex-shrink:0;color:#7c3aed;"></i><span>Admin Dashboard</span></a>' +
+    '<a href="admin-role.html" class="sidebar-btn admin-btn active"><i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;"></i><span>จัดการสิทธิ์ Admin</span></a>' +
+    '<a href="staff.html" class="sidebar-btn admin-btn"><i data-lucide="user-cog" style="width:16px;height:16px;flex-shrink:0;color:#7c3aed;"></i><span>จัดการบุคลากร</span></a>' +
+    '<a href="portfolio-admin.html" class="sidebar-btn admin-btn"><i data-lucide="folder-check" style="width:16px;height:16px;flex-shrink:0;color:#7c3aed;"></i><span>ติดตามส่งงานครู</span></a>' +
+    '<div style="flex:1;"></div>' +
+    '<div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
+  el.innerHTML=html;
+  lucide.createIcons();
+}
+
+/* ══════════════════════ HELPERS ══════════════════════ */
+function esc(s){ return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+
+function showToast(msg, type){
+  var t=document.createElement('div');
+  t.className='toast';
+  t.style.background=type==='error'?'#ef4444':type==='warn'?'#f59e0b':'#22c55e';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.classList.add('hide');setTimeout(function(){t.remove();},300);},3500);
+}
+
+lucide.createIcons();
+</script>
+</body>
+</html>
