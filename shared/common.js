@@ -231,7 +231,7 @@ var GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+      { label: 'ระบบติดตามส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
     ],
   },
   {
@@ -254,7 +254,7 @@ var ADMIN_LINKS = [
   { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
 ];
 
-/* ── Admin Top Links (แสดงบนสุด ไม่อยู่ในกลุ่มงาน) ── */
+/* ── Admin Top Links (บนสุด ไม่อยู่ในกลุ่มงาน) ── */
 var ADMIN_TOP_LINKS = [
   { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
   { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
@@ -276,7 +276,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+      { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html' },
     ],
   },
   {
@@ -348,7 +348,6 @@ function buildSidebar(activePage) {
     });
   } else {
     var adminGroupHtml = '';
-    /* top links — ไม่อยู่ในกลุ่มงาน */
     ADMIN_TOP_LINKS.forEach(function(item) {
       var key = item.href ? item.href.replace('.html', '') : '';
       var isActive = activePage === key;
