@@ -231,7 +231,7 @@ var GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ระบบติดตามส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
     ],
   },
   {
@@ -251,7 +251,13 @@ var ADMIN_TABS = [
 
 /* ── Admin Quick Links (non-tab pages) ── */
 var ADMIN_LINKS = [
-  { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html' },
+  { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+];
+
+/* ── Admin Top Links (แสดงบนสุด ไม่อยู่ในกลุ่มงาน) ── */
+var ADMIN_TOP_LINKS = [
+  { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
+  { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
 ];
 
 /* ── Admin Group Menu (for non-admin pages) ── */
@@ -264,16 +270,13 @@ var ADMIN_GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
-    items: [
-      { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
-      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
-    ],
+    items: [],
   },
   {
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html' },
+      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
     ],
   },
   {
@@ -345,6 +348,17 @@ function buildSidebar(activePage) {
     });
   } else {
     var adminGroupHtml = '';
+    /* top links — ไม่อยู่ในกลุ่มงาน */
+    ADMIN_TOP_LINKS.forEach(function(item) {
+      var key = item.href ? item.href.replace('.html', '') : '';
+      var isActive = activePage === key;
+      var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
+      var inner =
+        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<span>' + item.label + '</span>' +
+        (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
+      adminGroupHtml += '<a href="' + item.href + '" class="' + cls + '">' + inner + '</a>';
+    });
     ADMIN_GROUP_MENU.forEach(function(g) {
       adminGroupHtml +=
         '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
