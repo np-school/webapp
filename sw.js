@@ -1,9 +1,11 @@
-var CACHE_NAME = 'np-origins-v1';
+var CACHE_NAME = 'np-origins-v2';
 var STATIC_FILES = [
   '/webapp/index.html',
   '/webapp/room-booking.html',
   '/webapp/admin.html',
   '/webapp/guide.html',
+  '/webapp/teacher-portfolio.html',
+  '/webapp/portfolio-admin.html',
   '/webapp/shared/common.js',
   '/webapp/shared/styles.css',
   '/webapp/shared/firebase.js',

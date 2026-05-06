@@ -241,12 +241,24 @@ var GROUP_MENU = [
       { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
     ],
   },
+  {
+    group: 'กลุ่มนิเทศ ติดตาม และประเมินผล',
+    icon: 'clipboard-check',
+    items: [
+      { label: 'ส่งงานประจำภาคเรียน', icon: 'folder-open', href: 'teacher-portfolio.html' },
+    ],
+  },
 ];
 
 var ADMIN_TABS = [
   { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
   { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
   { id: 'admins',   label: 'จัดการ Admin',  icon: 'shield'      },
+];
+
+/* ── Admin Quick Links (non-tab pages) ── */
+var ADMIN_LINKS = [
+  { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
 ];
 
 function buildSidebar(activePage) {
@@ -316,6 +328,10 @@ function buildSidebar(activePage) {
           '<i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
           '<span>จัดการระบบจอง</span>' +
           '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+        '</a>' +
+        '<a href="portfolio-admin.html" class="sidebar-btn admin-btn">' +
+          '<i data-lucide="folder-check" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>ติดตามส่งงานครู</span>' +
         '</a>' +
       '</div>';
   }
