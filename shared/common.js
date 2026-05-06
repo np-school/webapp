@@ -245,8 +245,7 @@ var GROUP_MENU = [
 ];
 
 var ADMIN_TABS = [
-  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
-  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
+  { id: 'bookings', label: 'จัดการระบบจองห้อง', icon: 'calendar-cog' },
 ];
 
 /* ── Admin Quick Links (non-tab pages) ── */
