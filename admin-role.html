@@ -27,24 +27,6 @@
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* ── Sidebar ── */
-    .sidebar-wrap{width:260px;flex-shrink:0;transition:transform .3s ease;}
-    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;}
-    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:13px;white-space:nowrap;}
-    .sidebar-btn:hover{background:#f1f5f9;}
-    .sidebar-btn.active{background:#7c3aed;color:white;box-shadow:0 8px 15px -3px rgba(124,58,237,.25);}
-    .sidebar-btn.admin-btn{color:#7c3aed;}
-    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
-    .sidebar-btn.admin-btn.active{background:#7c3aed;color:white;}
-    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
-    #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
-    #sidebarOverlay.open{display:block;}
-    @media(max-width:1023px){
-      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
-      .sidebar-wrap.open{transform:translateX(0);}
-    }
-    @media(min-width:1024px){#hamburgerBtn{display:none!important;}.sidebar-inner{border-right:none;}}
-
     /* ── Cards ── */
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 
@@ -477,7 +459,6 @@ var GROUP_DEFS = [
 
 /* ══════════════════════ INIT ══════════════════════ */
 buildNavbar('NP Origins · จัดการสิทธิ์ Admin', true);
-buildSidebarCustom();
 
 auth.onAuthStateChanged(function(user){
   if(!user){ window.location.href='index.html'; return; }
@@ -490,6 +471,7 @@ auth.onAuthStateChanged(function(user){
     currentUser = user;
     document.getElementById('adminRoleApp').style.display='block';
     updateNavUser(user);
+    buildSidebar('admin-role');
     updateSidebarProfile(user);
     subscribeAdmins();
     lucide.createIcons();

@@ -264,7 +264,10 @@ var ADMIN_GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
-    items: [],
+    items: [
+      { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
+      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
+    ],
   },
   {
     group: 'กลุ่มวิชาการ',
@@ -357,7 +360,8 @@ function buildSidebar(activePage) {
           var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
           var inner =
             '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
-            '<span>' + item.label + '</span>';
+            '<span>' + item.label + '</span>' +
+            (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
           if (item.href) {
             adminGroupHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</a>';
           } else {
@@ -371,15 +375,6 @@ function buildSidebar(activePage) {
       '<div id="adminSidebarSection" style="display:none;">' +
         '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
         '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
-        '<a href="admin-role.html" class="sidebar-btn admin-btn">' +
-          '<i data-lucide="shield-check" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-          '<span>จัดการสิทธิ์ Admin</span>' +
-          '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
-        '</a>' +
-        '<a href="staff.html" class="sidebar-btn admin-btn">' +
-          '<i data-lucide="user-cog" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-          '<span>จัดการข้อมูลบุคลากร</span>' +
-        '</a>' +
         adminGroupHtml +
       '</div>';
   }
