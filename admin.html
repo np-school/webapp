@@ -250,6 +250,14 @@
           </div>
           <i data-lucide="door-open" style="width:16px;height:16px;color:#10b981;flex-shrink:0;"></i>
         </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;" id="perm-staff-wrap">
+          <input type="checkbox" id="perm-staff" style="width:16px;height:16px;accent-color:#1d4ed8;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">จัดการข้อมูลบุคลากร</div>
+            <div style="font-size:11px;color:#64748b;">เพิ่ม แก้ไข ลบข้อมูลบุคลากร / นำเข้า CSV</div>
+          </div>
+          <i data-lucide="users" style="width:16px;height:16px;color:#0369a1;flex-shrink:0;"></i>
+        </label>
         <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e9d5ff;border-radius:10px;background:#faf5ff;cursor:not-allowed;user-select:none;opacity:.6;" id="perm-admins-wrap">
           <input type="checkbox" id="perm-admins" style="width:16px;height:16px;accent-color:#7c3aed;" disabled>
           <div style="flex:1;">
@@ -302,7 +310,7 @@
       currentAdmin._perms=d.permissions||{};
       /* superAdmin gets all perms */
       if(user.email.toLowerCase()==='nattapol@nongki.ac.th'){
-        currentAdmin._perms={bookings:true,rooms:true,admins:true};
+        currentAdmin._perms={bookings:true,rooms:true,admins:true,staff:true};
       }
       document.getElementById('adminApp').style.display='block';
       updateNavUser(user);
@@ -500,6 +508,7 @@
     var SYSTEM_LABELS={
       bookings:{label:'ระบบจองห้อง',icon:'calendar',color:'#3b82f6',bg:'#eff6ff'},
       rooms:   {label:'จัดการห้อง', icon:'door-open',color:'#10b981',bg:'#f0fdf4'},
+      staff:   {label:'จัดการบุคลากร',icon:'users',  color:'#0369a1',bg:'#e0f2fe'},
       admins:  {label:'จัดการ Admin',icon:'shield',   color:'#7c3aed',bg:'#faf5ff'},
     };
     c.innerHTML=list.map(function(a){
@@ -549,6 +558,7 @@
     document.getElementById('adminEmailWrap').style.display='';
     document.getElementById('perm-bookings').checked=false;
     document.getElementById('perm-rooms').checked=false;
+    document.getElementById('perm-staff').checked=false;
     openModal('adminModal');
   }
   function editAdminPerms(email){
@@ -563,13 +573,14 @@
       var p=d.permissions||{};
       document.getElementById('perm-bookings').checked=!!p.bookings;
       document.getElementById('perm-rooms').checked=!!p.rooms;
+      document.getElementById('perm-staff').checked=!!p.staff;
       openModal('adminModal');
     });
   }
   function saveAdmin(){
     if(!isSuperAdmin()){showToast('เฉพาะ SuperAdmin เท่านั้น','warn');return;}
     var name=(document.getElementById('newAdminName').value||'').trim();
-    var perms={bookings:document.getElementById('perm-bookings').checked,rooms:document.getElementById('perm-rooms').checked,admins:false};
+    var perms={bookings:document.getElementById('perm-bookings').checked,rooms:document.getElementById('perm-rooms').checked,staff:document.getElementById('perm-staff').checked,admins:false};
     if(editingAdminEmail){
       db.collection('admins').doc(editingAdminEmail).update({name:name,permissions:perms,updatedBy:currentAdmin.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})
         .then(function(){closeModal('adminModal');showToast('อัปเดตสิทธิ์แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});

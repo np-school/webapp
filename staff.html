@@ -169,13 +169,13 @@
           <p style="font-size:13px;color:#64748b;margin-top:3px;">รายชื่อครูและบุคลากรโรงเรียนหนองกี่พิทยาคม</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn-secondary" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:6px;" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV">
+          <button class="btn-secondary write-gated" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:6px;" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV">
             <i data-lucide="file-down" style="width:14px;height:14px;"></i> <span class="hide-mobile">Template</span> CSV
           </button>
-          <button class="btn-secondary" onclick="openImportModal()" style="display:flex;align-items:center;gap:6px;">
+          <button class="btn-secondary write-gated" onclick="openImportModal()" style="display:flex;align-items:center;gap:6px;">
             <i data-lucide="upload" style="width:14px;height:14px;"></i> นำเข้าจาก CSV
           </button>
-          <button class="btn-primary" onclick="openAddModal()">
+          <button class="btn-primary write-gated" onclick="openAddModal()">
             <i data-lucide="user-plus" style="width:14px;height:14px;"></i> เพิ่มบุคลากร
           </button>
         </div>
@@ -453,6 +453,9 @@ var allStaff = [], currentFilter = 'all', editingId = null, deleteId = null, par
 buildNavbar('NP Origins · จัดการบุคลากร', false);
 buildSidebar('staff');
 
+var canWrite = false; /* set after auth */
+var SUPER_ADMIN_EMAIL = 'nattapol@nongki.ac.th';
+
 auth.onAuthStateChanged(function(user) {
   if (!user) { window.location.href = 'index.html'; return; }
   db.collection('admins').doc(user.email.toLowerCase()).get().then(function(doc) {
@@ -461,9 +464,20 @@ auth.onAuthStateChanged(function(user) {
       document.getElementById('accessDenied').style.display = 'flex';
       lucide.createIcons(); return;
     }
+    /* ── ตรวจสิทธิ์ staff ── */
+    var isSA = user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
+    var perms = (doc.data() && doc.data().permissions) ? doc.data().permissions : {};
+    canWrite = isSA || !!perms.staff;
+
     document.getElementById('staffApp').style.display = 'block';
     updateNavUser(user);
     updateSidebarProfile(user);
+
+    /* ซ่อนปุ่ม write ถ้าไม่มีสิทธิ์ */
+    if (!canWrite) {
+      document.querySelectorAll('.write-gated').forEach(function(el){ el.style.display='none'; });
+    }
+
     initStaffListener();
     lucide.createIcons();
   }).catch(function(e) {
@@ -559,8 +573,8 @@ function renderStaff() {
       '</td>' +
       '<td>' +
         '<div style="display:flex;gap:5px;justify-content:center;">' +
-          '<button class="btn-icon" onclick="openEditModal(\'' + s.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>' +
-          '<button class="btn-icon red" onclick="openDeleteModal(\'' + s.id + '\',\'' + esc(s.name) + '\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
+          (canWrite ? '<button class="btn-icon" onclick="openEditModal(\'' + s.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>' : '') +
+          (canWrite ? '<button class="btn-icon red" onclick="openDeleteModal(\'' + s.id + '\',\'' + esc(s.name) + '\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' : '<span style="font-size:11px;color:#cbd5e1;">-</span>') +
         '</div>' +
       '</td>' +
     '</tr>';
@@ -607,6 +621,7 @@ function openEditModal(id) {
 }
 
 function saveStaff() {
+  if (!canWrite) { showToast('คุณไม่มีสิทธิ์จัดการข้อมูลบุคลากร', 'warn'); return; }
   var name = document.getElementById('fName').value.trim();
   var position = document.getElementById('fPosition').value.trim();
   var group = document.getElementById('fGroup').value;
@@ -642,6 +657,7 @@ function openDeleteModal(id, name) {
   openModal('deleteModal');
 }
 function confirmDelete() {
+  if (!canWrite) { showToast('คุณไม่มีสิทธิ์ลบข้อมูลบุคลากร', 'warn'); return; }
   if (!deleteId) return;
   db.collection('staff').doc(deleteId).delete().then(function() {
     closeModal('deleteModal');
@@ -870,6 +886,7 @@ function clearImport() {
 }
 
 function confirmImport() {
+  if (!canWrite) { showToast('คุณไม่มีสิทธิ์นำเข้าข้อมูลบุคลากร', 'warn'); return; }
   if (!parsedCSV.length) return;
   var btn = document.getElementById('importConfirmBtn');
   btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
