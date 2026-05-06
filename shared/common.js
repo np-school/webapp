@@ -231,7 +231,7 @@ var GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+      { label: 'ระบบติดตามส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
     ],
   },
   {
@@ -245,12 +245,13 @@ var GROUP_MENU = [
 ];
 
 var ADMIN_TABS = [
-  { id: 'bookings', label: 'จัดการระบบจองห้อง', icon: 'calendar-cog' },
+  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
+  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
 ];
 
 /* ── Admin Quick Links (non-tab pages) ── */
 var ADMIN_LINKS = [
-  { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+  { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html' },
 ];
 
 /* ── Admin Group Menu (for non-admin pages) ── */
@@ -272,7 +273,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+      { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html' },
     ],
   },
   {
