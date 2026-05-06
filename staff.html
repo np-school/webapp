@@ -85,12 +85,17 @@
 
     /* ── Group badge ── */
     .group-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
-    .group-badge.งบประมาณ{background:#fef9c3;color:#b45309;}
-    .group-badge.บุคคล{background:#e0f2fe;color:#0369a1;}
-    .group-badge.วิชาการ{background:#dcfce7;color:#15803d;}
-    .group-badge.ทั่วไป{background:#f3e8ff;color:#7c3aed;}
-    .group-badge.ผู้บริหาร{background:#fce7f3;color:#be185d;}
-    .group-badge.อื่น{background:#f1f5f9;color:#475569;}
+    .group-badge.วิทยาศาสตร์{background:#dbeafe;color:#1e40af;}
+    .group-badge.คณิตศาสตร์{background:#fef9c3;color:#b45309;}
+    .group-badge.ภาษาไทย{background:#fee2e2;color:#b91c1c;}
+    .group-badge.สังคมศึกษา{background:#dcfce7;color:#15803d;}
+    .group-badge.สุขศึกษา{background:#d1fae5;color:#065f46;}
+    .group-badge.ภาษาต่างประเทศ{background:#ede9fe;color:#5b21b6;}
+    .group-badge.ศิลปะ{background:#fce7f3;color:#be185d;}
+    .group-badge.เทคโนโลยี{background:#f0fdf4;color:#166534;}
+    .group-badge.แนะแนว{background:#fff7ed;color:#c2410c;}
+    .group-badge.ผู้บริหาร{background:#fdf4ff;color:#7e22ce;}
+    .group-badge.เจ้าหน้าที่{background:#f1f5f9;color:#475569;}
 
     /* ── Position tag ── */
     .pos-tag{background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;}
@@ -164,6 +169,9 @@
           <p style="font-size:13px;color:#64748b;margin-top:3px;">รายชื่อครูและบุคลากรโรงเรียนหนองกี่พิทยาคม</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:6px;" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV">
+            <i data-lucide="file-down" style="width:14px;height:14px;"></i> <span class="hide-mobile">Template</span> CSV
+          </button>
           <button class="btn-secondary" onclick="openImportModal()" style="display:flex;align-items:center;gap:6px;">
             <i data-lucide="upload" style="width:14px;height:14px;"></i> นำเข้าจาก CSV
           </button>
@@ -185,13 +193,13 @@
           <div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i data-lucide="graduation-cap" style="width:20px;height:20px;color:#15803d;"></i>
           </div>
-          <div><p style="font-size:10px;color:#64748b;font-weight:700;">กลุ่มวิชาการ</p><p id="statAcademic" style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">0</p></div>
+          <div><p style="font-size:10px;color:#64748b;font-weight:700;">กลุ่มสาระฯ</p><p id="statAcademic" style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">0</p></div>
         </div>
         <div class="stat-card">
           <div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i data-lucide="banknote" style="width:20px;height:20px;color:#d97706;"></i>
           </div>
-          <div><p style="font-size:10px;color:#64748b;font-weight:700;">กลุ่มงบประมาณ</p><p id="statBudget" style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">0</p></div>
+          <div><p style="font-size:10px;color:#64748b;font-weight:700;">เจ้าหน้าที่</p><p id="statBudget" style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">0</p></div>
         </div>
         <div class="stat-card">
           <div style="width:42px;height:42px;background:#fce7f3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -205,11 +213,17 @@
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
+          <button class="filter-pill" onclick="setFilter('วิทยาศาสตร์',this)">วิทยาศาสตร์</button>
+          <button class="filter-pill" onclick="setFilter('คณิตศาสตร์',this)">คณิตศาสตร์</button>
+          <button class="filter-pill" onclick="setFilter('ภาษาไทย',this)">ภาษาไทย</button>
+          <button class="filter-pill" onclick="setFilter('สังคมศึกษา',this)">สังคมศึกษา</button>
+          <button class="filter-pill" onclick="setFilter('สุขศึกษา',this)">สุขศึกษา</button>
+          <button class="filter-pill" onclick="setFilter('ภาษาต่างประเทศ',this)">ภาษาต่างประเทศ</button>
+          <button class="filter-pill" onclick="setFilter('ศิลปะ',this)">ศิลปะ</button>
+          <button class="filter-pill" onclick="setFilter('เทคโนโลยี',this)">เทคโนโลยี</button>
+          <button class="filter-pill" onclick="setFilter('แนะแนว',this)">แนะแนว</button>
           <button class="filter-pill" onclick="setFilter('ผู้บริหาร',this)">ผู้บริหาร</button>
-          <button class="filter-pill" onclick="setFilter('วิชาการ',this)">กลุ่มวิชาการ</button>
-          <button class="filter-pill" onclick="setFilter('งบประมาณ',this)">กลุ่มงบประมาณ</button>
-          <button class="filter-pill" onclick="setFilter('บุคคล',this)">กลุ่มบุคคล</button>
-          <button class="filter-pill" onclick="setFilter('ทั่วไป',this)">กลุ่มทั่วไป</button>
+          <button class="filter-pill" onclick="setFilter('เจ้าหน้าที่',this)">เจ้าหน้าที่</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div style="position:relative;">
@@ -233,7 +247,7 @@
                 <th style="width:40px;">#</th>
                 <th>ชื่อ-นามสกุล</th>
                 <th>ตำแหน่ง / วิทยฐานะ</th>
-                <th>กลุ่มงาน</th>
+                <th>กลุ่มสาระ / กลุ่มงาน</th>
                 <th class="hide-mobile">อีเมล</th>
                 <th class="hide-mobile">เบอร์โทร</th>
                 <th style="width:90px;text-align:center;">จัดการ</th>
@@ -280,15 +294,20 @@
         <input type="text" id="fPosition" placeholder="เช่น ครู, ครูชำนาญการ, ครูชำนาญการพิเศษ">
       </div>
       <div>
-        <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">กลุ่มงาน <span style="color:#dc2626;">*</span></label>
+        <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">กลุ่มสาระ / กลุ่มงาน <span style="color:#dc2626;">*</span></label>
         <select id="fGroup">
-          <option value="">-- เลือกกลุ่มงาน --</option>
+          <option value="">-- เลือกกลุ่มสาระ / กลุ่มงาน --</option>
+          <option value="วิทยาศาสตร์">กลุ่มสาระวิทยาศาสตร์</option>
+          <option value="คณิตศาสตร์">กลุ่มสาระคณิตศาสตร์</option>
+          <option value="ภาษาไทย">กลุ่มสาระภาษาไทย</option>
+          <option value="สังคมศึกษา">กลุ่มสาระสังคมศึกษา ศาสนาและวัฒนธรรม</option>
+          <option value="สุขศึกษา">กลุ่มสาระสุขศึกษาและพลศึกษา</option>
+          <option value="ภาษาต่างประเทศ">กลุ่มสาระภาษาต่างประเทศ</option>
+          <option value="ศิลปะ">กลุ่มสาระศิลปะ</option>
+          <option value="เทคโนโลยี">กลุ่มสาระเทคโนโลยี</option>
+          <option value="แนะแนว">แนะแนว</option>
           <option value="ผู้บริหาร">ผู้บริหาร</option>
-          <option value="วิชาการ">กลุ่มบริหารงานวิชาการ</option>
-          <option value="งบประมาณ">กลุ่มบริหารงบประมาณ</option>
-          <option value="บุคคล">กลุ่มบริหารงานบุคคล</option>
-          <option value="ทั่วไป">กลุ่มบริหารทั่วไป</option>
-          <option value="อื่น">อื่น ๆ</option>
+          <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
         </select>
       </div>
       <div>
@@ -338,9 +357,9 @@
           <i data-lucide="info" style="width:13px;height:13px;"></i> รูปแบบคอลัมน์ที่รองรับ
         </p>
         <p style="font-size:12px;color:#1e40af;line-height:1.8;">
-          คอลัมน์ที่จำเป็น: <b>ชื่อ-นามสกุล</b>, <b>ตำแหน่ง</b>, <b>กลุ่มงาน</b><br>
+          คอลัมน์ที่จำเป็น: <b>ชื่อ-นามสกุล</b>, <b>ตำแหน่ง</b>, <b>กลุ่มสาระ</b><br>
           คอลัมน์เสริม: อีเมล, เบอร์โทร, วิชาที่สอน, หมายเหตุ<br>
-          <span style="opacity:.8;">ชื่อคอลัมน์รองรับทั้งภาษาไทยและอังกฤษ เช่น name/ชื่อ, position/ตำแหน่ง, group/กลุ่มงาน, email, phone/เบอร์</span>
+          <span style="opacity:.8;">ชื่อคอลัมน์รองรับทั้งภาษาไทยและอังกฤษ เช่น name/ชื่อ, position/ตำแหน่ง, group/กลุ่มสาระ, email, phone/เบอร์</span>
         </p>
       </div>
 
@@ -372,7 +391,7 @@
 
       <!-- Paste panel -->
       <div id="importPastePanel" style="display:none;">
-        <textarea id="csvPasteArea" rows="8" placeholder="วางข้อมูลจาก Google Sheets ที่นี่ (Copy แล้ว Ctrl+V)&#10;ตัวอย่าง:&#10;ชื่อ-นามสกุล&#9;ตำแหน่ง&#9;กลุ่มงาน&#9;อีเมล&#10;นายสมชาย ใจดี&#9;ครูชำนาญการ&#9;วิชาการ&#9;somchai@nongki.ac.th"
+        <textarea id="csvPasteArea" rows="8" placeholder="วางข้อมูลจาก Google Sheets ที่นี่ (Copy แล้ว Ctrl+V)&#10;ตัวอย่าง:&#10;ชื่อ-นามสกุล&#9;ตำแหน่ง&#9;กลุ่มสาระ&#9;อีเมล&#10;นายสมชาย ใจดี&#9;ครูชำนาญการ&#9;คณิตศาสตร์&#9;somchai@nongki.ac.th"
           style="font-size:12px;font-family:monospace;" oninput="parsePasteData()"></textarea>
         <p style="font-size:11px;color:#94a3b8;margin-top:6px;">💡 เลือกข้อมูลใน Google Sheets (รวมหัวคอลัมน์) แล้ว Ctrl+C จากนั้นวางในช่องนี้</p>
       </div>
@@ -465,14 +484,15 @@ function initStaffListener() {
 }
 
 function updateStats() {
+  var subs = ['วิทยาศาสตร์','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','เทคโนโลยี','แนะแนว'];
   document.getElementById('statTotal').textContent = allStaff.length;
-  document.getElementById('statAcademic').textContent = allStaff.filter(function(s) { return s.group === 'วิชาการ'; }).length;
-  document.getElementById('statBudget').textContent = allStaff.filter(function(s) { return s.group === 'งบประมาณ'; }).length;
+  document.getElementById('statAcademic').textContent = allStaff.filter(function(s) { return subs.indexOf(s.group) >= 0; }).length;
+  document.getElementById('statBudget').textContent = allStaff.filter(function(s) { return s.group === 'เจ้าหน้าที่'; }).length;
   document.getElementById('statAdmin').textContent = allStaff.filter(function(s) { return s.group === 'ผู้บริหาร'; }).length;
 }
 
 /* ════ Render Table ════ */
-var GROUP_COLORS = { 'ผู้บริหาร': 'ผู้บริหาร', 'วิชาการ': 'วิชาการ', 'งบประมาณ': 'งบประมาณ', 'บุคคล': 'บุคคล', 'ทั่วไป': 'ทั่วไป', 'อื่น': 'อื่น' };
+var GROUP_COLORS = { 'วิทยาศาสตร์':'วิทยาศาสตร์','คณิตศาสตร์':'คณิตศาสตร์','ภาษาไทย':'ภาษาไทย','สังคมศึกษา':'สังคมศึกษา','สุขศึกษา':'สุขศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ศิลปะ':'ศิลปะ','เทคโนโลยี':'เทคโนโลยี','แนะแนว':'แนะแนว','ผู้บริหาร':'ผู้บริหาร','เจ้าหน้าที่':'เจ้าหน้าที่' };
 var AVATAR_COLORS = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
 
 function getInitials(name) {
@@ -515,11 +535,8 @@ function renderStaff() {
     var initials = getInitials(s.name);
     var avatarColor = getAvatarColor(s.name);
     var groupKey = GROUP_COLORS[s.group] || 'อื่น';
-    var groupLabel = s.group === 'วิชาการ' ? 'กลุ่มวิชาการ'
-      : s.group === 'งบประมาณ' ? 'กลุ่มงบประมาณ'
-      : s.group === 'บุคคล' ? 'กลุ่มบุคคล'
-      : s.group === 'ทั่วไป' ? 'กลุ่มทั่วไป'
-      : (s.group || '-');
+    var groupLabelMap = {'วิทยาศาสตร์':'กลุ่มสาระวิทยาศาสตร์','คณิตศาสตร์':'กลุ่มสาระคณิตศาสตร์','ภาษาไทย':'กลุ่มสาระภาษาไทย','สังคมศึกษา':'กลุ่มสาระสังคมศึกษาฯ','สุขศึกษา':'กลุ่มสาระสุขศึกษาฯ','ภาษาต่างประเทศ':'กลุ่มสาระภาษาต่างประเทศ','ศิลปะ':'กลุ่มสาระศิลปะ','เทคโนโลยี':'กลุ่มสาระเทคโนโลยี','แนะแนว':'แนะแนว','ผู้บริหาร':'ผู้บริหาร','เจ้าหน้าที่':'เจ้าหน้าที่'};
+    var groupLabel = groupLabelMap[s.group] || (s.group || '-');
 
     return '<tr>' +
       '<td style="color:#94a3b8;font-size:12px;">' + (idx + 1) + '</td>' +
@@ -595,7 +612,7 @@ function saveStaff() {
   var group = document.getElementById('fGroup').value;
   if (!name) { showToast('กรุณากรอกชื่อ-นามสกุล', 'warn'); return; }
   if (!position) { showToast('กรุณากรอกตำแหน่ง', 'warn'); return; }
-  if (!group) { showToast('กรุณาเลือกกลุ่มงาน', 'warn'); return; }
+  if (!group) { showToast('กรุณาเลือกกลุ่มสาระ / กลุ่มงาน', 'warn'); return; }
 
   var data = {
     name: name,
@@ -737,7 +754,7 @@ function parseCSVText(text, delim) {
 
   var rows = [];
   var warnings = [];
-  var validGroups = ['ผู้บริหาร','วิชาการ','งบประมาณ','บุคคล','ทั่วไป','อื่น'];
+  var validGroups = ['วิทยาศาสตร์','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','เทคโนโลยี','แนะแนว','ผู้บริหาร','เจ้าหน้าที่'];
 
   for (var i = 1; i < lines.length; i++) {
     var cells = parseCSVLine(lines[i], delim);
@@ -746,12 +763,19 @@ function parseCSVText(text, delim) {
 
     var group = cells[colMap.group] || '';
     // normalize group
-    if (group.includes('วิชาการ')) group = 'วิชาการ';
-    else if (group.includes('งบประมาณ')) group = 'งบประมาณ';
-    else if (group.includes('บุคคล')) group = 'บุคคล';
-    else if (group.includes('ทั่วไป')) group = 'ทั่วไป';
-    else if (group.includes('บริหาร') && !group.includes('งบ') && !group.includes('บุคคล') && !group.includes('วิชา') && !group.includes('ทั่ว')) group = 'ผู้บริหาร';
-    else if (!validGroups.includes(group)) { warnings.push('แถวที่ '+(i+1)+': กลุ่มงาน "'+group+'" ไม่รู้จัก → ใช้ "อื่น"'); group = 'อื่น'; }
+    var g = group;
+    if (g.includes('วิทยาศาสตร์')) group = 'วิทยาศาสตร์';
+    else if (g.includes('คณิตศาสตร์')) group = 'คณิตศาสตร์';
+    else if (g.includes('ภาษาไทย')) group = 'ภาษาไทย';
+    else if (g.includes('สังคม')) group = 'สังคมศึกษา';
+    else if (g.includes('สุขศึกษา') || g.includes('พลศึกษา')) group = 'สุขศึกษา';
+    else if (g.includes('ต่างประเทศ') || g.includes('ภาษาอังกฤษ')) group = 'ภาษาต่างประเทศ';
+    else if (g.includes('ศิลปะ')) group = 'ศิลปะ';
+    else if (g.includes('เทคโนโลยี')) group = 'เทคโนโลยี';
+    else if (g.includes('แนะแนว')) group = 'แนะแนว';
+    else if (g.includes('บริหาร') && !g.includes('งาน')) group = 'ผู้บริหาร';
+    else if (g.includes('เจ้าหน้าที่') || g.includes('ธุรการ')) group = 'เจ้าหน้าที่';
+    else if (!validGroups.includes(group)) { warnings.push('แถวที่ '+(i+1)+': กลุ่ม "'+group+'" ไม่รู้จัก → ใช้ "เจ้าหน้าที่"'); group = 'เจ้าหน้าที่'; }
 
     rows.push({
       name:     name.trim(),
@@ -866,6 +890,39 @@ function confirmImport() {
     btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> นำเข้าข้อมูล (' + parsedCSV.length + ' รายการ)';
     lucide.createIcons();
   });
+}
+
+/* ════ Download Template CSV ════ */
+function downloadTemplate() {
+  var headers = ['ชื่อ-นามสกุล','ตำแหน่ง','กลุ่มสาระ','อีเมล','เบอร์โทร','วิชาที่สอน','หมายเหตุ'];
+  var examples = [
+    ['นายสมชาย ใจดี','ครูชำนาญการ','คณิตศาสตร์','somchai@nongki.ac.th','081-234-5678','คณิตศาสตร์',''],
+    ['นางสาวสมหญิง รักเรียน','ครูชำนาญการพิเศษ','วิทยาศาสตร์','somying@nongki.ac.th','082-345-6789','ฟิสิกส์, เคมี',''],
+    ['นายวิชัย มานะดี','ครู','ภาษาไทย','wichai@nongki.ac.th','083-456-7890','ภาษาไทย',''],
+    ['นางสมศรี สอนดี','ครูชำนาญการ','ภาษาต่างประเทศ','somsri@nongki.ac.th','084-567-8901','ภาษาอังกฤษ',''],
+    ['นายประเสริฐ ก้าวไกล','ครู','เทคโนโลยี','prasert@nongki.ac.th','085-678-9012','วิทยาการคำนวณ',''],
+    ['นายวิทยา นำทาง','ครู','แนะแนว','wittaya@nongki.ac.th','086-789-0123','แนะแนว',''],
+    ['นายอำนาจ บริหารดี','รองผู้อำนวยการ','ผู้บริหาร','amnart@nongki.ac.th','087-890-1234','','ฝ่ายวิชาการ'],
+    ['นางสาวพิมพ์ใจ ขยันงาน','เจ้าหน้าที่ธุรการ','เจ้าหน้าที่','pimjai@nongki.ac.th','088-901-2345','','งานธุรการ'],
+  ];
+  var note = [
+    '# กลุ่มสาระที่รองรับ: วิทยาศาสตร์ / คณิตศาสตร์ / ภาษาไทย / สังคมศึกษา / สุขศึกษา / ภาษาต่างประเทศ / ศิลปะ / เทคโนโลยี / แนะแนว / ผู้บริหาร / เจ้าหน้าที่',
+    '# กรุณาลบแถว # และแถวตัวอย่างออกก่อนนำเข้าระบบ'
+  ];
+  var rows = examples.map(function(r) {
+    return r.map(function(v) {
+      var s = String(v || '');
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) s = '"' + s.replace(/"/g,'""') + '"';
+      return s;
+    }).join(',');
+  });
+  var csv = '\uFEFF' + note.join('\n') + '\n' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'template_staff_np.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('ดาวน์โหลด Template CSV แล้ว ✓');
 }
 
 lucide.createIcons();
