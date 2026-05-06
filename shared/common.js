@@ -377,7 +377,7 @@ function buildSidebar(activePage) {
           '<span>จัดการ Admin</span>' +
           '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
         '</a>' +
-        '<a href="index.html" class="sidebar-btn admin-btn">' +
+        '<a href="staff.html" class="sidebar-btn admin-btn">' +
           '<i data-lucide="user-cog" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
           '<span>จัดการข้อมูลบุคลากร</span>' +
         '</a>' +
