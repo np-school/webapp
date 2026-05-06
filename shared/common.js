@@ -232,7 +232,9 @@ var GROUP_MENU = [
   {
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
-    items: [],
+    items: [
+      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+    ],
   },
   {
     group: 'กลุ่มบริหารทั่วไป',

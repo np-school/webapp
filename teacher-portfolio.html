@@ -208,6 +208,34 @@
         </button>
       </div>
 
+      <!-- Subject Group + Course Info -->
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">กลุ่มสาระการเรียนรู้ <span style="color:#ef4444;">*</span></label>
+          <select id="subjectGroup" style="font-family:'Sarabun',sans-serif;">
+            <option value="">-- เลือกกลุ่มสาระ --</option>
+            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="สังคมศึกษา ศาสนาและวัฒนธรรม">สังคมศึกษา ศาสนาและวัฒนธรรม</option>
+            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+            <option value="ศิลปะ">ศิลปะ</option>
+            <option value="แนะแนว">แนะแนว</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;">
+          <div>
+            <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">รหัสวิชา <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="courseCode" placeholder="เช่น ว31101" maxlength="20">
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อวิชา <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="courseName" placeholder="เช่น ฟิสิกส์ 1">
+          </div>
+        </div>
+      </div>
+
       <!-- URL input -->
       <div id="urlSection">
         <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ลิงก์เอกสาร (Google Drive, OneDrive, ฯลฯ)</label>
@@ -387,6 +415,11 @@ function renderDocList() {
           '</div>' +
           (sub
             ? '<div style="margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                (sub.subjectGroup ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border-radius:10px;">' + sub.subjectGroup + '</span>' : '') +
+                (sub.courseCode ? '<span style="font-size:11px;color:#475569;font-weight:700;">' + sub.courseCode + '</span>' : '') +
+                (sub.courseName ? '<span style="font-size:11px;color:#64748b;">· ' + sub.courseName + '</span>' : '') +
+              '</div>' +
+              '<div style="margin-top:3px;display:flex;align-items:center;gap:6px;">' +
                 '<span style="font-size:11px;color:#64748b;">' +
                   '<i data-lucide="calendar" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i> ' +
                   formatDate(sub.submittedAt) +
@@ -434,6 +467,9 @@ function openUploadModal(docTypeId) {
   document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
   document.getElementById('fileUrl').value = sub ? (sub.fileUrl||'') : '';
   document.getElementById('submitNote').value = sub ? (sub.note||'') : '';
+  document.getElementById('subjectGroup').value = sub ? (sub.subjectGroup||'') : '';
+  document.getElementById('courseCode').value = sub ? (sub.courseCode||'') : '';
+  document.getElementById('courseName').value = sub ? (sub.courseName||'') : '';
   document.getElementById('fileInfo').style.display = 'none';
   document.getElementById('uploadProgress').style.display = 'none';
   selectedFile = null;
@@ -498,8 +534,16 @@ function setSelectedFile(f) {
 function submitDoc() {
   if (!currentUser || !currentDocId) return;
 
+  var subjectGroup = document.getElementById('subjectGroup').value.trim();
+  var courseCode   = document.getElementById('courseCode').value.trim();
+  var courseName   = document.getElementById('courseName').value.trim();
   var note  = document.getElementById('submitNote').value.trim();
   var btn   = document.getElementById('submitBtn');
+
+  if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
+  if (!courseCode)   { showToast('กรุณากรอกรหัสวิชา', 'error'); return; }
+  if (!courseName)   { showToast('กรุณากรอกชื่อวิชา', 'error'); return; }
+
   btn.disabled = true;
   btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังส่ง...';
   lucide.createIcons();
@@ -507,14 +551,14 @@ function submitDoc() {
   if (uploadMethod === 'url') {
     var url = document.getElementById('fileUrl').value.trim();
     if (!url) { showToast('กรุณาใส่ลิงก์เอกสาร', 'error'); resetBtn(btn); return; }
-    saveSubmission(url, note, btn);
+    saveSubmission(url, note, subjectGroup, courseCode, courseName, btn);
   } else {
     if (!selectedFile) { showToast('กรุณาเลือกไฟล์', 'error'); resetBtn(btn); return; }
-    uploadFileToStorage(selectedFile, note, btn);
+    uploadFileToStorage(selectedFile, note, subjectGroup, courseCode, courseName, btn);
   }
 }
 
-function uploadFileToStorage(file, note, btn) {
+function uploadFileToStorage(file, note, subjectGroup, courseCode, courseName, btn) {
   var path = 'portfolio/' + currentUser.uid + '/' + currentYear + '_' + currentSem + '/' + currentDocId + '_' + Date.now() + '_' + file.name;
   var ref  = firebase.storage().ref(path);
   var task = ref.put(file);
@@ -529,13 +573,13 @@ function uploadFileToStorage(file, note, btn) {
     function(e) { showToast('อัปโหลดไม่สำเร็จ: ' + e.message, 'error'); resetBtn(btn); },
     function() {
       task.snapshot.ref.getDownloadURL().then(function(url) {
-        saveSubmission(url, note, btn);
+        saveSubmission(url, note, subjectGroup, courseCode, courseName, btn);
       });
     }
   );
 }
 
-function saveSubmission(fileUrl, note, btn) {
+function saveSubmission(fileUrl, note, subjectGroup, courseCode, courseName, btn) {
   var key  = currentYear + '_' + currentSem;
   var data = {
     uid: currentUser.uid,
@@ -547,6 +591,9 @@ function saveSubmission(fileUrl, note, btn) {
     docTypeId: currentDocId,
     fileUrl: fileUrl,
     note: note,
+    subjectGroup: subjectGroup,
+    courseCode: courseCode,
+    courseName: courseName,
     status: 'submitted',
     submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
