@@ -277,7 +277,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
     items: [
-      { label: 'จัดการสิทธิ์ Admin', icon: 'shield-check', href: 'admin-role.html' },
+      { label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html' },
     ],
   },
 ];
