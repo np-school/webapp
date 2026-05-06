@@ -225,9 +225,7 @@ var GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
-    items: [
-      { label: 'ระบบขอใช้ข้อมูล CCTV', icon: 'cctv', onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
-    ],
+    items: [],
   },
   {
     group: 'กลุ่มวิชาการ',
@@ -241,6 +239,7 @@ var GROUP_MENU = [
     icon: 'building-2',
     items: [
       { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
+      { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'cctv',     onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
     ],
   },
 ];
@@ -254,6 +253,34 @@ var ADMIN_TABS = [
 /* ── Admin Quick Links (non-tab pages) ── */
 var ADMIN_LINKS = [
   { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+];
+
+/* ── Admin Group Menu (for non-admin pages) ── */
+var ADMIN_GROUP_MENU = [
+  {
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'banknote',
+    items: [],
+  },
+  {
+    group: 'กลุ่มบริหารงานบุคคล',
+    icon: 'users',
+    items: [],
+  },
+  {
+    group: 'กลุ่มวิชาการ',
+    icon: 'graduation-cap',
+    items: [
+      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+    ],
+  },
+  {
+    group: 'กลุ่มบริหารทั่วไป',
+    icon: 'building-2',
+    items: [
+      { label: 'จัดการระบบจอง', icon: 'shield', href: 'admin.html' },
+    ],
+  },
 ];
 
 function buildSidebar(activePage) {
@@ -315,19 +342,46 @@ function buildSidebar(activePage) {
         '</button>';
     });
   } else {
+    var adminGroupHtml = '';
+    ADMIN_GROUP_MENU.forEach(function(g) {
+      adminGroupHtml +=
+        '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+          '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
+          '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+        '</div>';
+      if (!g.items.length) {
+        adminGroupHtml += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
+      } else {
+        g.items.forEach(function(item) {
+          var key = item.href ? item.href.replace('.html', '') : '';
+          var isActive = activePage === key;
+          var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
+          var inner =
+            '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+            '<span>' + item.label + '</span>';
+          if (item.href) {
+            adminGroupHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</a>';
+          } else {
+            adminGroupHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</button>';
+          }
+        });
+      }
+    });
+
     html +=
       '<div id="adminSidebarSection" style="display:none;">' +
         '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
         '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
         '<a href="admin.html" class="sidebar-btn admin-btn">' +
-          '<i data-lucide="shield" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-          '<span>จัดการระบบจอง</span>' +
+          '<i data-lucide="settings" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>จัดการ Admin</span>' +
           '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
         '</a>' +
-        '<a href="portfolio-admin.html" class="sidebar-btn admin-btn">' +
-          '<i data-lucide="folder-check" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
-          '<span>ติดตามส่งงานครู</span>' +
+        '<a href="index.html" class="sidebar-btn admin-btn">' +
+          '<i data-lucide="user-cog" style="width:19px;height:19px;flex-shrink:0;color:#7c3aed;"></i>' +
+          '<span>จัดการข้อมูลบุคลากร</span>' +
         '</a>' +
+        adminGroupHtml +
       '</div>';
   }
 
