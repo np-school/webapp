@@ -243,13 +243,6 @@ var GROUP_MENU = [
       { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
     ],
   },
-  {
-    group: 'กลุ่มนิเทศ ติดตาม และประเมินผล',
-    icon: 'clipboard-check',
-    items: [
-      { label: 'ส่งงานประจำภาคเรียน', icon: 'folder-open', href: 'teacher-portfolio.html' },
-    ],
-  },
 ];
 
 var ADMIN_TABS = [
