@@ -62,26 +62,14 @@
     .doc-item:hover{border-color:#bfdbfe;box-shadow:0 4px 12px rgba(29,78,216,.06);}
     .doc-item.submitted{border-left:4px solid #22c55e;}
     .doc-item.pending{border-left:4px solid #e2e8f0;}
-    .doc-item.reviewed      {border-left:4px solid #3b82f6;}
-    .doc-item.head_reviewed {border-left:4px solid #0ea5e9;}
-    .doc-item.final_approved{border-left:4px solid #7c3aed;}
-    .doc-item.revision      {border-left:4px solid #f59e0b;}
+    .doc-item.reviewed{border-left:4px solid #3b82f6;}
+    .doc-item.revision{border-left:4px solid #f59e0b;}
     .doc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-    .dot-none          {background:#d1d5db;}
-    .dot-submitted     {background:#22c55e;}
-    .dot-head_reviewed {background:#0ea5e9;}
-    .dot-reviewed      {background:#3b82f6;}
-    .dot-final_approved{background:#7c3aed;}
-    .dot-revision      {background:#f59e0b;}
-    /* ── Status badge (inline pill) ── */
-    .status-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
-    .status-badge.none          {background:#f1f5f9;color:#94a3b8;}
-    .status-badge.submitted     {background:#dcfce7;color:#15803d;}
-    .status-badge.head_reviewed {background:#e0f2fe;color:#0369a1;}
-    .status-badge.reviewed      {background:#dbeafe;color:#1e40af;}
-    .status-badge.final_approved{background:#f5f3ff;color:#6d28d9;}
-    .status-badge.revision      {background:#fef9c3;color:#92400e;}
+    .dot-none{background:#d1d5db;}
+    .dot-submitted{background:#22c55e;}
+    .dot-reviewed{background:#3b82f6;}
+    .dot-revision{background:#f59e0b;}
 
     /* ── Semester Selector ── */
     .sem-pill{padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .2s;}
@@ -570,9 +558,11 @@ function renderDocList() {
     var files  = (sub && sub.files) ? sub.files : [];
     if (sub) submittedCount++;
 
-    var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', head_reviewed:'ผ่านหัวหน้ากลุ่มสาระ', reviewed:'ตรวจแล้ว', final_approved:'ผ่านฝ่ายวิชาการ', revision:'แก้ไข' }[status] || status;
-    var dotCls      = { none:'dot-none', submitted:'dot-submitted', head_reviewed:'dot-head_reviewed', reviewed:'dot-reviewed', final_approved:'dot-final_approved', revision:'dot-revision' }[status] || 'dot-none';
+    var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', revision:'แก้ไข' }[status];
+    var dotCls      = { none:'dot-none', submitted:'dot-submitted', reviewed:'dot-reviewed', revision:'dot-revision' }[status];
     var itemCls     = 'doc-item ' + (status==='none'?'pending':status);
+    var badgeBg     = { none:'#f1f5f9', submitted:'#dcfce7', reviewed:'#dbeafe', revision:'#fef9c3' }[status];
+    var badgeColor  = { none:'#94a3b8', submitted:'#15803d', reviewed:'#1e40af', revision:'#92400e' }[status];
 
     html +=
       '<div class="' + itemCls + '">' +
@@ -582,7 +572,7 @@ function renderDocList() {
         '<div style="flex:1;min-width:0;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
             '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
-            '<span class="status-badge ' + status + '">' + statusLabel + '</span>' +
+            '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + badgeBg + ';color:' + badgeColor + ';">' + statusLabel + '</span>' +
             (sub ? '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' : '') +
           '</div>' +
           (sub
@@ -917,9 +907,14 @@ function confirmDelete() {
   var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
 
   function updateFirestore() {
-    var updateData = { files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-    if (newFiles.length === 0) updateData.status = 'none';
-    return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
+    if (newFiles.length === 0) {
+      /* ลบไฟล์หมดแล้ว → ลบ document ทิ้งเลย เหมือนยังไม่เคยส่งงาน */
+      return db.collection('portfolio_submissions').doc(sub.id).delete();
+    }
+    return db.collection('portfolio_submissions').doc(sub.id).update({
+      files:     newFiles,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
   var driveDeletePromise = Promise.resolve();
@@ -933,12 +928,16 @@ function confirmDelete() {
   driveDeletePromise.then(updateFirestore).then(function() {
     showToast('ลบไฟล์สำเร็จ', 'success');
     closeDeleteModal();
-    /* อัปเดต local cache แล้ว re-render modal ทันที ไม่ต้องปิด */
-    var updatedSub = Object.assign({}, sub, { files: newFiles });
-    if (newFiles.length === 0) updatedSub.status = 'none';
-    submissions[docTypeId] = updatedSub;
+    if (newFiles.length === 0) {
+      /* ไม่มีไฟล์เหลือ → ลบออกจาก local cache ด้วย แล้วปิด modal */
+      delete submissions[docTypeId];
+      closeUploadModal();
+    } else {
+      var updatedSub = Object.assign({}, sub, { files: newFiles });
+      submissions[docTypeId] = updatedSub;
+      openUploadModal(docTypeId);
+    }
     renderDocList();
-    openUploadModal(docTypeId);
   }).catch(function(e) {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
     btn.disabled    = false;
