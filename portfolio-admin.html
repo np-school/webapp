@@ -164,7 +164,7 @@
           </div>
           <div>
             <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statSubmitted">-</p>
-            <p style="font-size:11px;color:#64748b;font-weight:600;">ส่งแล้ว (รายการ)</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ส่งงานแล้ว</p>
           </div>
         </div>
         <div class="stat-card">
@@ -173,7 +173,7 @@
           </div>
           <div>
             <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statReviewed">-</p>
-            <p style="font-size:11px;color:#64748b;font-weight:600;">หัวหน้าตรวจแล้ว</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ผ่านการตรวจโดยหัวหน้าฯ</p>
           </div>
         </div>
         <div class="stat-card">
@@ -182,7 +182,7 @@
           </div>
           <div>
             <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statFinalApproved">-</p>
-            <p style="font-size:11px;color:#64748b;font-weight:600;">ผ่านการตรวจสุดท้าย</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ผ่านการตรวจโดยฝ่ายวิชาการ</p>
           </div>
         </div>
         <div class="stat-card">
@@ -655,10 +655,10 @@ function renderListView() {
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
               '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.staffName || t.displayName) + '</p>' +
               (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
-              (pendingCount ? '<span style="background:#fef9c3;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">รอตรวจ ' + pendingCount + '</span>' : '') +
-              (headRevCount ? '<span style="background:#e0f2fe;color:#0369a1;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">รอ admin ' + headRevCount + '</span>' : '') +
-              (revisionCount ? '<span style="background:#ffedd5;color:#9a3412;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">แก้ไข ' + revisionCount + '</span>' : '') +
-              (finalCount ? '<span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ผ่าน ✓ ' + finalCount + '</span>' : '') +
+              (pendingCount ? '<span style="background:#fef9c3;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ส่งงานแล้ว ' + pendingCount + '</span>' : '') +
+              (headRevCount ? '<span style="background:#e0f2fe;color:#0369a1;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ผ่านหัวหน้าฯ ' + headRevCount + '</span>' : '') +
+              (revisionCount ? '<span style="background:#ffedd5;color:#9a3412;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ให้แก้ไข ' + revisionCount + '</span>' : '') +
+              (finalCount ? '<span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ผ่านวิชาการ ✓ ' + finalCount + '</span>' : '') +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">' +
               (t.staffGroup ? '<span style="font-size:9px;font-weight:800;padding:2px 8px;background:#ede9fe;color:#5b21b6;border-radius:8px;">' + esc(t.staffGroup) + '</span>' : '') +
@@ -714,9 +714,9 @@ function toggleTeacher(uid) {
 /* ─── WORKFLOW BAR HELPER ─── */
 function buildWorkflowBar(status) {
   var steps = [
-    { key: 'submitted',      label: 'ส่งงาน',    icon: '📤' },
-    { key: 'head_reviewed',  label: 'หัวหน้า ✓', icon: '👤' },
-    { key: 'final_approved', label: 'วิชาการ ✓', icon: '🛡️' },
+    { key: 'submitted',      label: 'ส่งงานแล้ว',                    icon: '📤' },
+    { key: 'head_reviewed',  label: 'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ', icon: '👤' },
+    { key: 'final_approved', label: 'ผ่านการตรวจโดยฝ่ายวิชาการ',      icon: '🛡️' },
   ];
   var ORDER = { submitted:0, head_reviewed:1, reviewed:1, final_approved:2, revision:-1 };
   var cur = ORDER[status] !== undefined ? ORDER[status] : -1;
@@ -769,7 +769,7 @@ function renderMatrixView() {
           '</div>' +
         '</th>';
       }).join('') +
-      '<th>ส่งแล้ว</th>' +
+      '<th>ส่งงานแล้ว</th>' +
     '</tr></thead><tbody>';
 
   teachers.forEach(function(t) {
@@ -821,7 +821,7 @@ function openReview(subId, uid, docTypeId) {
   document.getElementById('reviewFileName').textContent = sub.fileUrl ? sub.fileUrl.slice(0,60) + '...' : '-';
   document.getElementById('reviewFileLink').href = sub.fileUrl || '#';
 
-  var statusLabels = { submitted:'รอตรวจ (หัวหน้ากลุ่มสาระ)', head_reviewed:'หัวหน้าตรวจผ่าน รอ admin วิชาการ', reviewed:'ผ่านการตรวจ', final_approved:'ผ่านการตรวจสุดท้าย ✓', revision:'ส่งคืนเพื่อแก้ไข' };
+  var statusLabels = { submitted:'ส่งงานแล้ว', head_reviewed:'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ', reviewed:'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ', final_approved:'ผ่านการตรวจโดยฝ่ายวิชาการ ✓', revision:'ส่งคืนเพื่อแก้ไข' };
   document.getElementById('reviewFileMeta').textContent = 'ส่งเมื่อ: ' + formatDate(sub.submittedAt) + ' · สถานะ: ' + (statusLabels[sub.status||'submitted'] || sub.status);
   document.getElementById('adminNote').value = sub.adminNote || '';
 
@@ -862,18 +862,18 @@ function openReview(subId, uid, docTypeId) {
       btnBox.innerHTML =
         revisionBtn +
         '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (ส่งต่อ admin)' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ' +
         '</button>';
     } else if (curStatus === 'head_reviewed') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#0369a1;padding:10px;background:#e0f2fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ คุณตรวจผ่านแล้ว รอ admin วิชาการตรวจรอบสุดท้าย</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#0369a1;padding:10px;background:#e0f2fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่านการตรวจโดยหัวหน้ากลุ่มสาระแล้ว รอฝ่ายวิชาการตรวจ</p>';
     } else if (curStatus === 'final_approved') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผ่านการตรวจสุดท้ายแล้ว</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผ่านการตรวจโดยฝ่ายวิชาการแล้ว</p>';
     } else {
       /* revision หรืออื่น ๆ */
       btnBox.innerHTML =
         revisionBtn +
         '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (ส่งต่อ admin)' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ' +
         '</button>';
     }
   } else {
@@ -882,11 +882,11 @@ function openReview(subId, uid, docTypeId) {
       btnBox.innerHTML =
         revisionBtn +
         '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#7c3aed;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านการตรวจสุดท้าย ✓' +
+          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านการตรวจโดยฝ่ายวิชาการ ✓' +
         '</button>';
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML =
-        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;flex:1;text-align:center;font-weight:700;">✅ ผ่านการตรวจสุดท้ายแล้ว</p>' +
+        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;flex:1;text-align:center;font-weight:700;">✅ ผ่านการตรวจโดยฝ่ายวิชาการแล้ว</p>' +
         '<button onclick="setReviewStatus(\'revision\')" style="padding:11px 16px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">' +
           '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
         '</button>';
@@ -895,10 +895,10 @@ function openReview(subId, uid, docTypeId) {
       btnBox.innerHTML =
         revisionBtn +
         '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านขั้น 1' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านโดยหัวหน้ากลุ่มสาระ' +
         '</button>' +
         '<button onclick="setReviewStatus(\'final_approved\')" style="flex:1;padding:11px;background:#059669;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านสุดท้าย' +
+          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านโดยฝ่ายวิชาการ' +
         '</button>';
     }
   }
@@ -912,9 +912,9 @@ function setReviewStatus(status) {
   if (!reviewingSubId) return;
   var note = document.getElementById('adminNote').value.trim();
   var toastMsgs = {
-    head_reviewed: 'หัวหน้าตรวจผ่าน ✓ ส่งต่อ admin วิชาการ',
-    final_approved: 'ผ่านการตรวจสุดท้าย ✅',
-    reviewed: 'ผ่านการตรวจ ✓',
+    head_reviewed: 'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
+    final_approved: 'ผ่านการตรวจโดยฝ่ายวิชาการ ✅',
+    reviewed: 'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
     revision: 'ส่งคืนเพื่อแก้ไข'
   };
   var toastType = (status === 'revision') ? 'warn' : 'success';
