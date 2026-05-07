@@ -112,6 +112,11 @@ function checkAdminAccess(email) {
       if (doc.exists) {
         var sec = document.getElementById('adminSidebarSection');
         if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
+        /* แสดง SuperAdmin slot เฉพาะ email ที่ตรงกัน */
+        if (email.toLowerCase() === SUPERADMIN_EMAIL) {
+          var slot = document.getElementById('superadminSidebarSlot');
+          if (slot) { slot.style.display = 'block'; lucide.createIcons(); }
+        }
       }
     })
     .catch(function() {});
@@ -293,7 +298,9 @@ var ADMIN_LINKS = [
   { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
 ];
 
-/* ── Admin Group Menu (for non-admin pages) ── */
+/* ── Admin Group Menu (for non-admin pages) ──
+   หมายเหตุ: จัดการสิทธิ์ Admin แสดงเฉพาะ SuperAdmin เท่านั้น
+── */
 var ADMIN_GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงบประมาณ',
@@ -304,8 +311,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
     items: [
-      { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
-      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
+      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog', href: 'staff.html' },
     ],
   },
   {
@@ -323,6 +329,9 @@ var ADMIN_GROUP_MENU = [
     ],
   },
 ];
+
+/* ── SuperAdmin-only (แสดงเฉพาะ email นี้เท่านั้น) ── */
+var SUPERADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
 function buildSidebar(activePage) {
   var el = document.getElementById('sidebarInner');
@@ -415,6 +424,18 @@ function buildSidebar(activePage) {
         '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
         '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
         adminGroupHtml +
+        /* SuperAdmin-only slot — ซ่อนไว้ก่อน checkAdminAccess จะ toggle */
+        '<div id="superadminSidebarSlot" style="display:none;">' +
+          '<div style="margin:8px 16px 4px;display:flex;align-items:center;gap:6px;">' +
+            '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
+            '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
+          '</div>' +
+          '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:28px;">' +
+            '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
+            '<span>จัดการสิทธิ์ Admin</span>' +
+            '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+          '</a>' +
+        '</div>' +
       '</div>';
   }
 
