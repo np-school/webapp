@@ -51,8 +51,8 @@
     .teacher-docs.open{display:block;}
 
     /* ── mini doc grid ── */
-    .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px;}
-    .doc-chip{padding:8px 10px;border-radius:10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;border:1.5px solid;cursor:pointer;transition:all .15s;}
+    .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:12px;}
+    .doc-chip{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;border:1.5px solid;cursor:pointer;transition:all .15s;}
     .doc-chip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.08);}
     .chip-none{background:#f8fafc;border-color:#e2e8f0;color:#94a3b8;}
     .chip-submitted{background:#f0fdf4;border-color:#86efac;color:#15803d;}
@@ -83,7 +83,7 @@
 
     @media(max-width:768px){
       .stat-cards-grid{grid-template-columns:1fr 1fr!important;}
-      .doc-grid{grid-template-columns:repeat(3,1fr)!important;}
+      .doc-grid{grid-template-columns:repeat(2,1fr)!important;}
     }
     @media(max-width:480px){
       .stat-cards-grid{grid-template-columns:1fr!important;}
@@ -198,6 +198,12 @@
           <button class="filter-pill active" id="grpAll" onclick="setGroup('all')">ทั้งหมด</button>
           <!-- กลุ่มสาระอื่น ๆ จะถูกสร้างโดย buildGroupFilterBar() หลัง load staff -->
         </div>
+        <!-- Doc Type Filter -->
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="docFilterBar">
+          <span style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-right:4px;">รายการงาน:</span>
+          <button class="filter-pill active" id="docAll" onclick="setDocFilter('all')">ทั้งหมด</button>
+          <!-- doc type buttons จะถูกสร้างโดย buildDocFilterBar() -->
+        </div>
         <div style="margin-top:10px;">
           <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อครู หรืออีเมล..." style="max-width:360px;" oninput="renderView()">
         </div>
@@ -289,6 +295,7 @@ var teacherMap  = {}; /* email → {displayName, staffName, email, position, sta
 var currentFilter = 'all';
 var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
+var currentDocFilter = 'all'; /* doc type filter */
 var reviewingSubId = null;
 var availableGroups = []; /* กลุ่มสาระที่มีอยู่จริงใน staff (สร้าง dynamic) */
 
@@ -346,6 +353,10 @@ function loadAllSubmissions() {
 
   var key = currentYear + '_' + currentSem;
 
+  /* reset doc filter เมื่อ reload */
+  currentDocFilter = 'all';
+  buildDocFilterBar();
+
   /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
   db.collection('staff').orderBy('name').get().then(function(staffSnap) {
     allSubs = [];
@@ -380,6 +391,7 @@ function loadAllSubmissions() {
 
     /* สร้าง group filter bar ตามกลุ่มที่มีจริงใน staff */
     buildGroupFilterBar();
+    buildDocFilterBar();
 
     /* ── 2. ดึง submissions แล้ว join กับ teacherMap ── */
     return db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
@@ -427,33 +439,50 @@ function buildGroupFilterBar() {
     if (el.id !== 'grpAll' && el.tagName !== 'SPAN') bar.removeChild(el);
   });
 
-  /* label ย่อสำหรับแต่ละกลุ่ม */
-  var SHORT_LABEL = {
-    'วิทยาศาสตร์ และเทคโนโลยี':              'วิทย์ฯ',
-    'วิทยาศาสตร์และเทคโนโลยี':               'วิทย์ฯ',
-    'คณิตศาสตร์':                             'คณิตฯ',
-    'ภาษาไทย':                                'ภาษาไทย',
-    'สังคมศึกษา ศาสนา และวัฒนธรรม':          'สังคมฯ',
-    'สังคมศึกษา ศาสนาและวัฒนธรรม':           'สังคมฯ',
-    'สุขศึกษา และพลศึกษา':                    'สุขฯ/พละ',
-    'สุขศึกษาและพลศึกษา':                     'สุขฯ/พละ',
-    'ภาษาต่างประเทศ':                         'ภาษาต่าง',
-    'ศิลปะ':                                  'ศิลปะ',
-    'แนะแนว':                                 'แนะแนว',
-    'การงานอาชีพ':                            'การงานฯ',
-  };
-
   availableGroups.forEach(function(grp) {
     var btn = document.createElement('button');
     btn.className = 'filter-pill' + (currentGroup === grp ? ' active' : '');
     btn.id = 'grp_' + grp;
-    btn.textContent = SHORT_LABEL[grp] || grp;
+    btn.textContent = grp;
     btn.onclick = function() { setGroup(grp); };
     bar.appendChild(btn);
   });
 
   /* reset active state บนปุ่ม "ทั้งหมด" */
   document.getElementById('grpAll').className = 'filter-pill' + (currentGroup === 'all' ? ' active' : '');
+}
+
+/* ── สร้าง doc type filter buttons ── */
+function buildDocFilterBar() {
+  var bar = document.getElementById('docFilterBar');
+  if (!bar) return;
+
+  /* ลบปุ่มเก่าทิ้งหมด (ยกเว้น label span และปุ่ม "ทั้งหมด") */
+  var children = Array.prototype.slice.call(bar.children);
+  children.forEach(function(el) {
+    if (el.id !== 'docAll' && el.tagName !== 'SPAN') bar.removeChild(el);
+  });
+
+  DOCUMENT_TYPES.forEach(function(dt) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-pill' + (currentDocFilter === dt.id ? ' active' : '');
+    btn.id = 'doc_' + dt.id;
+    btn.textContent = dt.label;
+    btn.onclick = function() { setDocFilter(dt.id); };
+    bar.appendChild(btn);
+  });
+
+  document.getElementById('docAll').className = 'filter-pill' + (currentDocFilter === 'all' ? ' active' : '');
+}
+
+function setDocFilter(d) {
+  currentDocFilter = d;
+  document.getElementById('docAll').className = 'filter-pill' + (d === 'all' ? ' active' : '');
+  DOCUMENT_TYPES.forEach(function(dt) {
+    var el = document.getElementById('doc_' + dt.id);
+    if (el) el.className = 'filter-pill' + (d === dt.id ? ' active' : '');
+  });
+  renderView();
 }
 
 function updateStats() {
@@ -517,6 +546,8 @@ function getFilteredTeachers() {
     if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
     if (currentFilter === 'pending')    return Object.values(t.subs).some(function(s){ return s.status==='submitted'; });
+    /* doc type filter — กรองเฉพาะครูที่มีงานชนิดนั้น */
+    if (currentDocFilter !== 'all') return t.subs.hasOwnProperty(currentDocFilter);
     return true;
   });
 }
@@ -577,7 +608,7 @@ function renderListView() {
               var icon = { none:'circle', submitted:'upload', reviewed:'check-circle', revision:'alert-circle' }[status];
               return '<button class="' + chipCls + '" onclick="openReview(\'' + (sub?sub.id:'') + '\',\'' + t.uid + '\',\'' + dt.id + '\')" ' + (!sub?'disabled style="cursor:default;opacity:.6;"':'') + '>' +
                 '<i data-lucide="' + icon + '" style="width:12px;height:12px;flex-shrink:0;"></i>' +
-                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + dt.short + '</span>' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + dt.label + '</span>' +
               '</button>';
             }).join('') +
           '</div>' +
