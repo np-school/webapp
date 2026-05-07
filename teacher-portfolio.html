@@ -352,7 +352,8 @@
    ════════════════════════════════════════════ */
 
 /* ─── CONFIG ─── */
-var DRIVE_FOLDER_ID = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* Shared Drive root folder */
+var DRIVE_FOLDER_ID  = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* Shared Drive ID (root) */
+var SHARED_DRIVE_ID  = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* same ID – used in driveId param */
 var MAX_FILES_PER_TOPIC = 5;
 /* IMPORTANT: Set your Google OAuth Client ID below */
 var GOOGLE_CLIENT_ID = '275537025660-49nigfmsb17jf4ha8a2rmopv7qnpk2ej.apps.googleusercontent.com';
@@ -978,7 +979,7 @@ function submitDoc() {
               └── ไฟล์รายบุคคล (กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf)
 */
 function ensureDriveFolder(parentId, folderName) {
-  /* ค้นหาโฟลเดอร์ที่มีอยู่แล้วใน Shared Drive */
+  /* ค้นหาโฟลเดอร์ใน Shared Drive — ต้องระบุ driveId ด้วยทุก request */
   var query = "mimeType='application/vnd.google-apps.folder'" +
     " and name='" + folderName.replace(/'/g,"\\'") + "'" +
     " and '" + parentId + "' in parents" +
@@ -986,13 +987,15 @@ function ensureDriveFolder(parentId, folderName) {
   var listUrl = 'https://www.googleapis.com/drive/v3/files' +
     '?q=' + encodeURIComponent(query) +
     '&fields=files(id,name)' +
+    '&driveId=' + SHARED_DRIVE_ID +
+    '&corpora=drive' +
     '&' + SD_PARAMS;
 
   return fetch(listUrl, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.files && data.files.length > 0) return data.files[0].id;
-      /* ไม่พบ → สร้างใหม่ใน Shared Drive */
+      /* ไม่พบ → สร้างใหม่ใน Shared Drive (ต้องใส่ driveId ใน body ด้วย) */
       var createUrl = 'https://www.googleapis.com/drive/v3/files?' + SD_PARAMS;
       return fetch(createUrl, {
         method: 'POST',
@@ -1000,7 +1003,8 @@ function ensureDriveFolder(parentId, folderName) {
         body: JSON.stringify({
           name: folderName,
           mimeType: 'application/vnd.google-apps.folder',
-          parents: [parentId]
+          parents: [parentId],
+          driveId: SHARED_DRIVE_ID   /* <-- บังคับให้สร้างใน Shared Drive */
         })
       })
       .then(function(r) { return r.json(); })
