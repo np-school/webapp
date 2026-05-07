@@ -316,14 +316,16 @@ auth.onAuthStateChanged(function(u) {
 
   db.collection('admins').doc(u.email.toLowerCase()).get().then(function(doc) {
     if (ov) ov.style.display = 'none';
-    if (!doc.exists) {
-      document.getElementById('accessDenied').style.display = 'flex';
-      return;
-    }
+    if (!doc.exists) { document.getElementById('accessDenied').style.display='flex'; return; }
+    var p = doc.data().permissions || {};
+    var isSA = u.email.toLowerCase() === 'nattapol@nongki.ac.th';
+    if (!isSA && !p.portfolio) { document.getElementById('accessDenied').style.display='flex'; return; }
     document.getElementById('adminApp').style.display = 'block';
-    buildNavbar('Admin – ติดตามส่งงานครู', true);
+    buildNavbar('Admin – ติดตามส่งงานประจำภาคเรียน', true);
     updateNavUser(u);
     buildSidebar('portfolio-admin');
+    var sec = document.getElementById('adminSidebarSection');
+    if (sec) { sec.style.display='block'; lucide.createIcons(); }
     updateSidebarProfile(u);
     loadAllSubmissions();
     lucide.createIcons();

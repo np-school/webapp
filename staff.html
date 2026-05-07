@@ -467,11 +467,18 @@ auth.onAuthStateChanged(function(user) {
     /* ── ตรวจสิทธิ์ staff ── */
     var isSA = user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
     var perms = (doc.data() && doc.data().permissions) ? doc.data().permissions : {};
+    if (!isSA && !perms.staff) {
+      document.getElementById('accessDenied').style.display = 'flex';
+      lucide.createIcons(); return;
+    }
     canWrite = isSA || !!perms.staff;
 
     document.getElementById('staffApp').style.display = 'block';
+    buildSidebar('staff');
     updateNavUser(user);
     updateSidebarProfile(user);
+    var sec = document.getElementById('adminSidebarSection');
+    if (sec) { sec.style.display='block'; lucide.createIcons(); }
 
     /* ซ่อนปุ่ม write ถ้าไม่มีสิทธิ์ */
     if (!canWrite) {
