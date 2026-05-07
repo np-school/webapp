@@ -851,46 +851,54 @@ function openReview(subId, uid, docTypeId) {
   var curStatus = sub.status || 'submitted';
   btnBox.innerHTML = '';
 
+  var revisionBtn =
+    '<button onclick="setReviewStatus(\'revision\')" style="flex:1;padding:11px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+      '<i data-lucide="pencil" style="width:14px;height:14px;"></i> ให้แก้ไข' +
+    '</button>';
+
   if (isHeadOfGroupOnly) {
     /* หัวหน้ากลุ่มสาระ: ตรวจได้เฉพาะงานที่ส่งมาใหม่ (submitted / revision) */
     if (curStatus === 'submitted' || curStatus === 'revision') {
       btnBox.innerHTML =
-        '<button onclick="setReviewStatus(\'revision\')" style="flex:1;padding:11px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="pencil" style="width:14px;height:14px;"></i> ให้แก้ไข' +
-        '</button>' +
-        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+        revisionBtn +
+        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
           '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (ส่งต่อ admin)' +
         '</button>';
+    } else if (curStatus === 'head_reviewed') {
+      btnBox.innerHTML = '<p style="font-size:12px;color:#0369a1;padding:10px;background:#e0f2fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ คุณตรวจผ่านแล้ว รอ admin วิชาการตรวจรอบสุดท้าย</p>';
+    } else if (curStatus === 'final_approved') {
+      btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผ่านการตรวจสุดท้ายแล้ว</p>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f8fafc;border-radius:10px;width:100%;text-align:center;">งานนี้อยู่ในขั้นตอนถัดไปแล้ว (สถานะ: ' + (statusLabels[curStatus]||curStatus) + ')</p>';
+      /* revision หรืออื่น ๆ */
+      btnBox.innerHTML =
+        revisionBtn +
+        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (ส่งต่อ admin)' +
+        '</button>';
     }
   } else {
-    /* Admin วิชาการ (portfolio): ตรวจรอบสุดท้ายได้เฉพาะ head_reviewed / reviewed */
-    if (curStatus === 'submitted' || curStatus === 'revision') {
-      /* admin ยังสามารถตรวจข้ามขั้นได้ กรณีไม่มีหัวหน้ากลุ่มสาระ */
+    /* Admin วิชาการ (portfolio) */
+    if (curStatus === 'head_reviewed' || curStatus === 'reviewed') {
       btnBox.innerHTML =
-        '<button onclick="setReviewStatus(\'revision\')" style="flex:1;padding:11px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="pencil" style="width:14px;height:14px;"></i> ให้แก้ไข' +
-        '</button>' +
-        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านขั้น 1 (หัวหน้า)' +
-        '</button>' +
-        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:1;padding:11px;background:#059669;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านสุดท้าย' +
-        '</button>';
-    } else if (curStatus === 'head_reviewed' || curStatus === 'reviewed') {
-      btnBox.innerHTML =
-        '<button onclick="setReviewStatus(\'revision\')" style="flex:1;padding:11px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="pencil" style="width:14px;height:14px;"></i> ให้แก้ไข' +
-        '</button>' +
+        revisionBtn +
         '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#7c3aed;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
           '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านการตรวจสุดท้าย ✓' +
         '</button>';
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML =
-        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่านการตรวจสุดท้ายแล้ว</p>' +
+        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;flex:1;text-align:center;font-weight:700;">✅ ผ่านการตรวจสุดท้ายแล้ว</p>' +
         '<button onclick="setReviewStatus(\'revision\')" style="padding:11px 16px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">' +
           '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
+        '</button>';
+    } else {
+      /* submitted / revision — admin ข้ามขั้นได้ กรณีไม่มีหัวหน้ากลุ่มสาระ */
+      btnBox.innerHTML =
+        revisionBtn +
+        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านขั้น 1' +
+        '</button>' +
+        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:1;padding:11px;background:#059669;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+          '<i data-lucide="shield-check" style="width:14px;height:14px;"></i> ผ่านสุดท้าย' +
         '</button>';
     }
   }
