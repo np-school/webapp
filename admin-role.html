@@ -466,34 +466,31 @@ function loadStaffList() {
 }
 
 /* ── Staff Picker: toggle dropdown ── */
+var _staffFilteredCache = [];
+
 function toggleStaffDropdown() {
   var dd = document.getElementById('staffDropdown');
-  staffPickerOpen = !staffPickerOpen;
-  if (staffPickerOpen) {
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('open');
+    staffPickerOpen = false;
+  } else {
     dd.classList.add('open');
+    staffPickerOpen = true;
     document.getElementById('staffSearchInput').value = '';
     renderStaffPickerList('');
-    document.getElementById('staffSearchInput').focus();
-    // close on outside click
-    setTimeout(function() {
-      document.addEventListener('click', closeStaffDropdownOutside, { once: true });
-    }, 0);
-  } else {
-    dd.classList.remove('open');
+    setTimeout(function(){ document.getElementById('staffSearchInput').focus(); }, 50);
   }
 }
 
-function closeStaffDropdownOutside(e) {
+/* ปิด dropdown เมื่อคลิกนอก — ใช้ focusout แทน document click เพื่อไม่ขัด item click */
+document.addEventListener('mousedown', function(e) {
+  if (!staffPickerOpen) return;
   var wrap = document.getElementById('staffPickerWrap2');
   if (wrap && !wrap.contains(e.target)) {
     document.getElementById('staffDropdown').classList.remove('open');
     staffPickerOpen = false;
-  } else if (staffPickerOpen) {
-    setTimeout(function() {
-      document.addEventListener('click', closeStaffDropdownOutside, { once: true });
-    }, 0);
   }
-}
+});
 
 function filterStaffPicker() {
   var q = document.getElementById('staffSearchInput').value;
@@ -501,48 +498,61 @@ function filterStaffPicker() {
 }
 
 function renderStaffPickerList(query) {
-  var list = document.getElementById('staffPickerList');
+  var listEl = document.getElementById('staffPickerList');
   if (!allStaffList.length) {
-    list.innerHTML = '<div class="staff-picker-loading">กำลังโหลดรายชื่อ...</div>';
+    listEl.innerHTML = '<div class="staff-picker-loading">กำลังโหลดรายชื่อ...</div>';
     return;
   }
   var q = (query || '').toLowerCase();
   var filtered = allStaffList.filter(function(s) {
     return !q || (s.name + s.email + s.group).toLowerCase().indexOf(q) >= 0;
   });
+  _staffFilteredCache = filtered;
   if (!filtered.length) {
-    list.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
+    listEl.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
     return;
   }
   var curEmail = (document.getElementById('fEmail').value || '').trim().toLowerCase();
-  list.innerHTML = filtered.map(function(s) {
+  var colors = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
+  listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);
-    var colors = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
     var ci = 0; for (var i=0;i<s.name.length;i++) ci=(ci*31+s.name.charCodeAt(i))%colors.length;
-    var sel = s.email && s.email.toLowerCase() === curEmail ? ' selected' : '';
-    return '<div class="staff-picker-item' + sel + '" onclick="selectStaffPicker(' + JSON.stringify(s.name) + ',' + JSON.stringify(s.email) + ')">' +
-      '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">' + initials + '</div>' +
-      '<div style="min-width:0;">' +
+    var isSel = s.email && s.email.toLowerCase() === curEmail;
+    var isHead = s.role === 'หัวหน้ากลุ่มสาระ';
+    return '<div class="staff-picker-item' + (isSel?' selected':'') + '" data-idx="' + idx + '">' +
+      '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;pointer-events:none;">' + initials + '</div>' +
+      '<div style="min-width:0;pointer-events:none;">' +
         '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
         '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
           (s.group ? esc2(s.group) : '') +
-          (s.role === 'หัวหน้ากลุ่มสาระ' ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
+          (isHead ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
           (s.email ? ' · ' + esc2(s.email) : '') +
         '</p>' +
       '</div>' +
     '</div>';
   }).join('');
+
+  /* ผูก event ผ่าน event delegation บน listEl แทน inline onclick */
+  listEl.onclick = function(e) {
+    var item = e.target.closest('[data-idx]');
+    if (!item) return;
+    var idx = parseInt(item.getAttribute('data-idx'), 10);
+    var s = _staffFilteredCache[idx];
+    if (s) selectStaffPicker(s.name, s.email);
+  };
 }
 
 function selectStaffPicker(name, email) {
   document.getElementById('fName').value = name || '';
-  if (email && document.getElementById('emailWrap').style.display !== 'none') {
-    document.getElementById('fEmail').value = email;
+  if (email) {
+    var emailWrap = document.getElementById('emailWrap');
+    if (emailWrap && emailWrap.style.display !== 'none') {
+      document.getElementById('fEmail').value = email;
+    }
   }
   document.getElementById('staffPickerDisplay').value = name + (email ? '  ·  ' + email : '');
   document.getElementById('staffDropdown').classList.remove('open');
   staffPickerOpen = false;
-  lucide.createIcons();
 }
 
 function getInitialsSP(name) {
@@ -556,18 +566,43 @@ function getInitialsSP(name) {
 function populateHeadOfGroupSelect(selectedEmail) {
   var sel = document.getElementById('headOfGroupSelect');
   if (!sel) return;
-  var heads = allStaffList.filter(function(s) { return s.role === 'หัวหน้ากลุ่มสาระ'; });
-  if (!heads.length) {
-    sel.innerHTML = '<option value="">-- ยังไม่มีหัวหน้ากลุ่มสาระในระบบ (กรุณาเพิ่มใน staff.html) --</option>';
-    return;
+
+  function fillSelect(list) {
+    var heads = list.filter(function(s) { return s.role === 'หัวหน้ากลุ่มสาระ'; });
+    if (!heads.length) {
+      sel.innerHTML = '<option value="">-- ยังไม่มีหัวหน้ากลุ่มสาระในระบบ (กรุณาเพิ่มสถานะใน staff.html) --</option>';
+      document.getElementById('headOfGroupInfo').textContent = '⚠️ ไม่พบบุคลากรที่มีสถานะ "หัวหน้ากลุ่มสาระ"';
+      return;
+    }
+    sel.innerHTML = '<option value="">-- เลือกหัวหน้ากลุ่มสาระ --</option>' +
+      heads.map(function(s) {
+        var val = s.email || s.name;
+        var isSelected = selectedEmail && (s.email === selectedEmail || s.name === selectedEmail);
+        return '<option value="' + esc2(val) + '"' + (isSelected ? ' selected' : '') + '>' +
+          esc2(s.name) + ' · ' + esc2(s.group) + (s.email ? ' (' + esc2(s.email) + ')' : '') +
+        '</option>';
+      }).join('');
+    document.getElementById('headOfGroupInfo').textContent = '✅ พบ ' + heads.length + ' คนที่มีสถานะหัวหน้ากลุ่มสาระ';
+    if (selectedEmail) onHeadOfGroupSelect();
   }
-  sel.innerHTML = '<option value="">-- เลือกหัวหน้ากลุ่มสาระ --</option>' +
-    heads.map(function(s) {
-      var val = s.email || s.name;
-      var optSelected = selectedEmail && (s.email === selectedEmail || s.name === selectedEmail) ? ' selected' : '';
-      return '<option value="' + esc2(val) + '"' + optSelected + '>' + esc2(s.name) + ' · ' + esc2(s.group) + (s.email ? '  (' + esc2(s.email) + ')' : '') + '</option>';
-    }).join('');
-  if (selectedEmail) onHeadOfGroupSelect();
+
+  if (allStaffList.length) {
+    fillSelect(allStaffList);
+  } else {
+    sel.innerHTML = '<option value="">-- กำลังโหลดรายชื่อ... --</option>';
+    document.getElementById('headOfGroupInfo').textContent = '';
+    db.collection('staff').get().then(function(snap) {
+      var tmp = [];
+      snap.forEach(function(d) {
+        var dat = d.data();
+        tmp.push({ id: d.id, name: dat.name||'', email: dat.email||'', group: dat.group||'', role: dat.role||'' });
+      });
+      allStaffList = tmp;
+      fillSelect(allStaffList);
+    }).catch(function(e) {
+      sel.innerHTML = '<option value="">-- โหลดไม่สำเร็จ --</option>';
+    });
+  }
 }
 
 function onHeadOfGroupSelect() {
