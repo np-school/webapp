@@ -100,6 +100,11 @@
     .file-entry-link{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#1d4ed8;flex-shrink:0;display:flex;align-items:center;text-decoration:none;}
     .file-entry-link:hover{background:#eff6ff;}
     .file-slot-badge{font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;border-radius:6px;padding:2px 8px;flex-shrink:0;}
+    .file-entry-replace{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#f59e0b;flex-shrink:0;display:flex;align-items:center;}
+    .file-entry-replace:hover{background:#fffbeb;}
+    .file-entry.replacing{border-color:#f59e0b;background:#fffbeb;}
+    .replace-zone{border:2px dashed #fbbf24;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#fffbeb;margin-top:6px;transition:all .2s;}
+    .replace-zone:hover{border-color:#f59e0b;background:#fef3c7;}
 
     @media(max-width:640px){
       .doc-item{flex-direction:column;align-items:flex-start;gap:10px;}
@@ -336,6 +341,9 @@
     </div>
   </div>
 </div>
+
+<!-- hidden input for replace -->
+<input type="file" id="replaceFileInput" style="display:none;" accept=".pdf,application/pdf" onchange="onReplaceFileSelected(this)">
 
 <script>
 /* ════════════════════════════════════════════
@@ -632,8 +640,8 @@ function openUploadModal(docTypeId) {
 }
 
 function renderExistingFiles(files, docTypeId) {
-  var sec  = document.getElementById('existingFilesSection');
-  var list = document.getElementById('existingFilesList');
+  var sec   = document.getElementById('existingFilesSection');
+  var list  = document.getElementById('existingFilesList');
   var badge = document.getElementById('fileCountBadge');
   if (!files || files.length === 0) {
     sec.style.display = 'none';
@@ -651,13 +659,143 @@ function renderExistingFiles(files, docTypeId) {
         '<a href="' + esc(f.fileUrl) + '" target="_blank" class="file-entry-link" title="เปิดไฟล์">' +
           '<i data-lucide="external-link" style="width:14px;height:14px;"></i>' +
         '</a>' +
+        '<button class="file-entry-replace" onclick="toggleReplaceZone(\'' + esc(docTypeId) + '\',' + i + ')" title="แทนที่ไฟล์">' +
+          '<i data-lucide="pencil" style="width:14px;height:14px;"></i>' +
+        '</button>' +
         '<button class="file-entry-del" onclick="promptDeleteFile(\'' + esc(docTypeId) + '\',' + i + ',\'' + esc(f.fileName) + '\')" title="ลบไฟล์">' +
           '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>' +
         '</button>' +
+      '</div>' +
+      /* zone แทนที่ไฟล์ – ซ่อนไว้ก่อน */
+      '<div id="replaceZone_' + i + '" style="display:none;margin-bottom:6px;">' +
+        '<div class="replace-zone" onclick="triggerReplaceInput(' + i + ')">' +
+          '<i data-lucide="upload-cloud" style="width:20px;height:20px;color:#f59e0b;margin-bottom:4px;"></i>' +
+          '<p style="font-size:12px;font-weight:700;color:#b45309;">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (i+1) + '</p>' +
+          '<p style="font-size:10px;color:#92400e;margin-top:2px;">ไฟล์เดิมใน Drive จะถูกลบ แล้วอัปโหลดไฟล์ใหม่แทน</p>' +
+        '</div>' +
+        '<div id="replaceProgress_' + i + '" style="display:none;margin-top:6px;">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+            '<span style="font-size:11px;font-weight:700;color:#64748b;">กำลังแทนที่...</span>' +
+            '<span id="replacePct_' + i + '" style="font-size:11px;font-weight:700;color:#f59e0b;">0%</span>' +
+          '</div>' +
+          '<div class="pbar-bg"><div id="replaceBar_' + i + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>' +
+        '</div>' +
       '</div>';
   });
   list.innerHTML = html;
   lucide.createIcons();
+}
+
+var pendingReplaceIndex = null; /* index ของไฟล์ที่กำลังจะแทนที่ */
+
+function triggerReplaceInput(fileIndex) {
+  pendingReplaceIndex = fileIndex;
+  document.getElementById('replaceFileInput').value = '';
+  document.getElementById('replaceFileInput').click();
+}
+
+function toggleReplaceZone(docTypeId, fileIndex) {
+  /* ปิด zone อื่นทั้งหมดก่อน */
+  var sub   = submissions[docTypeId];
+  var files = (sub && sub.files) ? sub.files : [];
+  files.forEach(function(_, i) {
+    var z  = document.getElementById('replaceZone_' + i);
+    var fe = document.getElementById('existingFile_' + i);
+    if (i !== fileIndex) {
+      if (z)  z.style.display  = 'none';
+      if (fe) fe.classList.remove('replacing');
+    }
+  });
+  var zone     = document.getElementById('replaceZone_' + fileIndex);
+  var fileEntry = document.getElementById('existingFile_' + fileIndex);
+  if (!zone) return;
+  var isOpen = zone.style.display !== 'none';
+  zone.style.display = isOpen ? 'none' : 'block';
+  if (fileEntry) fileEntry.classList.toggle('replacing', !isOpen);
+  lucide.createIcons();
+}
+
+function onReplaceFileSelected(input) {
+  if (!input.files[0] || pendingReplaceIndex === null) return;
+  var file = input.files[0];
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    showToast('รองรับเฉพาะไฟล์ PDF', 'error'); return;
+  }
+  if (file.size > 20*1024*1024) {
+    showToast('ขนาดไฟล์เกิน 20MB', 'error'); return;
+  }
+  doReplaceFile(pendingReplaceIndex, file);
+  pendingReplaceIndex = null;
+}
+
+function doReplaceFile(fileIndex, newFile) {
+  var sub = submissions[currentDocId];
+  if (!sub || !sub.files || !sub.files[fileIndex]) return;
+
+  var oldFile   = sub.files[fileIndex];
+  var dt        = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
+  var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
+  var subjectGroup = document.getElementById('subjectGroup').value.trim() || (sub.subjectGroup || '');
+  var newName   = sanitizeForFilename(subjectGroup) + '_' +
+                  sanitizeForFilename(staffName)    + '_' +
+                  sanitizeForFilename(dt.label)     + '_' +
+                  (fileIndex + 1) + '.pdf';
+
+  var progEl  = document.getElementById('replaceProgress_' + fileIndex);
+  var progBar = document.getElementById('replaceBar_'      + fileIndex);
+  var progPct = document.getElementById('replacePct_'      + fileIndex);
+  if (progEl) progEl.style.display = 'block';
+
+  function doUpload(folderId) {
+    return uploadFileToDrive(newFile, newName, folderId, function(pct) {
+      if (progBar) progBar.style.width  = pct + '%';
+      if (progPct) progPct.textContent  = pct + '%';
+    });
+  }
+
+  /* หาโฟลเดอร์ปลายทาง */
+  var yearFolderName = 'ปีการศึกษา ' + currentYear;
+  var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
+  var docFolderName  = dt.label;
+
+  function proceed() {
+    ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
+    .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
+    .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
+    .then(doUpload)
+    .then(function(result) {
+      /* ลบไฟล์เก่าใน Drive */
+      if (oldFile.fileId && driveAccessToken) {
+        fetch('https://www.googleapis.com/drive/v3/files/' + oldFile.fileId,
+          { method:'DELETE', headers:{ 'Authorization':'Bearer ' + driveAccessToken } }
+        ).catch(function(e){ console.warn('Drive old file delete failed:', e); });
+      }
+      /* อัปเดต Firestore */
+      var updatedFiles = sub.files.slice();
+      updatedFiles[fileIndex] = { fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' };
+      return db.collection('portfolio_submissions').doc(sub.id).update({
+        files: updatedFiles,
+        fileUrl: updatedFiles[0] ? updatedFiles[0].fileUrl : '',
+        resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    })
+    .then(function() {
+      showToast('แทนที่ไฟล์สำเร็จ ✓', 'success');
+      closeUploadModal();
+      loadSubmissions();
+    })
+    .catch(function(e) {
+      showToast('แทนที่ไฟล์ไม่สำเร็จ: ' + (e.message||e), 'error');
+      if (progEl) progEl.style.display = 'none';
+    });
+  }
+
+  if (!driveAccessToken) {
+    authorizeDrive(proceed);
+  } else {
+    proceed();
+  }
 }
 
 function closeUploadModal() {
@@ -745,13 +883,12 @@ function confirmDelete() {
   if (!sub || !sub.files) { closeDeleteModal(); return; }
 
   var btn = document.getElementById('confirmDeleteBtn');
-  btn.disabled   = true;
+  btn.disabled    = true;
   btn.textContent = 'กำลังลบ...';
 
   var fileToDelete = sub.files[fileIndex];
   var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
 
-  /* ลบไฟล์ใน Google Drive ถ้ามี fileId */
   function updateFirestore() {
     var updateData = { files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
     if (newFiles.length === 0) updateData.status = 'none';
@@ -769,11 +906,15 @@ function confirmDelete() {
   driveDeletePromise.then(updateFirestore).then(function() {
     showToast('ลบไฟล์สำเร็จ', 'success');
     closeDeleteModal();
-    closeUploadModal();
-    loadSubmissions();
+    /* อัปเดต local cache แล้ว re-render modal ทันที ไม่ต้องปิด */
+    var updatedSub = Object.assign({}, sub, { files: newFiles });
+    if (newFiles.length === 0) updatedSub.status = 'none';
+    submissions[docTypeId] = updatedSub;
+    renderDocList();
+    openUploadModal(docTypeId);
   }).catch(function(e) {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-    btn.disabled   = false;
+    btn.disabled    = false;
     btn.textContent = 'ลบไฟล์';
   });
 }
@@ -791,11 +932,24 @@ function submitDoc() {
   if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
   if (!courseCode)   { showToast('กรุณากรอกรหัสวิชา', 'error'); return; }
   if (!courseName)   { showToast('กรุณากรอกชื่อวิชา', 'error'); return; }
-  if (selectedFiles.length === 0) { showToast('กรุณาเลือกไฟล์ PDF อย่างน้อย 1 ไฟล์', 'error'); return; }
 
-  btn.disabled   = true;
-  btn.innerHTML  = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังอัปโหลด...';
+  var sub = submissions[currentDocId];
+  var existingFiles = (sub && sub.files) ? sub.files : [];
+
+  /* ถ้าไม่มีไฟล์ใหม่และไม่มีไฟล์เก่าอยู่ → ต้องอัปโหลด */
+  if (selectedFiles.length === 0 && existingFiles.length === 0) {
+    showToast('กรุณาเลือกไฟล์ PDF อย่างน้อย 1 ไฟล์', 'error'); return;
+  }
+
+  btn.disabled  = true;
+  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
   lucide.createIcons();
+
+  /* ถ้าไม่มีไฟล์ใหม่ → บันทึกแค่ meta */
+  if (selectedFiles.length === 0) {
+    saveSubmission(existingFiles, note, subjectGroup, courseCode, courseName, btn);
+    return;
+  }
 
   /* ตรวจสอบ token Drive */
   if (!driveAccessToken) {
@@ -803,8 +957,8 @@ function submitDoc() {
     authorizeDrive(function() {
       uploadAllFiles(subjectGroup, courseCode, courseName, note, btn);
     });
-    btn.disabled   = false;
-    btn.innerHTML  = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+    btn.disabled  = false;
+    btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
     lucide.createIcons();
     return;
   }
