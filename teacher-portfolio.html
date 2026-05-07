@@ -99,7 +99,27 @@
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Login Gate -->
+<!-- Staff Not Found Gate -->
+<div id="staffDenied" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:2000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);">
+  <div style="background:white;border-radius:24px;width:100%;max-width:380px;padding:36px 28px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);">
+    <div style="width:64px;height:64px;border-radius:20px;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i data-lucide="shield-off" style="width:28px;height:28px;color:#dc2626;"></i>
+    </div>
+    <h3 style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">ไม่พบข้อมูลบุคลากร</h3>
+    <p style="font-size:14px;color:#64748b;margin-bottom:8px;">อีเมลของคุณไม่ได้อยู่ในระบบบุคลากร</p>
+    <p id="staffDeniedEmail" style="font-size:13px;font-weight:700;color:#dc2626;background:#fee2e2;padding:6px 14px;border-radius:8px;display:inline-block;margin-bottom:24px;word-break:break-all;"></p>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:20px;">กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มข้อมูลของคุณในระบบก่อนใช้งาน</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="auth.signOut().then(function(){window.location.reload();})" style="width:100%;padding:13px;background:#dc2626;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;">
+        ออกจากระบบ
+      </button>
+      <a href="index.html" style="display:block;padding:13px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:14px;text-decoration:none;font-size:14px;">
+        ← กลับหน้าแรก
+      </a>
+    </div>
+  </div>
+</div>
+
 <div id="loginGate" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:2000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);">
   <div style="background:white;border-radius:24px;width:100%;max-width:380px;padding:36px 28px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);">
     <div style="width:64px;height:64px;border-radius:20px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
@@ -162,10 +182,11 @@
               <div id="progressBar" class="pbar-fill" style="background:linear-gradient(90deg,#34d399,#10b981);width:0%;"></div>
             </div>
           </div>
+          <!-- Staff Info Badge -->
+          <div id="staffInfoBadge" style="margin-top:14px;"></div>
         </div>
       </div>
 
-      <!-- ── DOCUMENT LIST ── -->
       <div class="card" style="padding:20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
           <h2 style="font-size:16px;font-weight:800;color:#0f172a;">รายการงานที่ต้องส่ง</h2>
@@ -312,6 +333,11 @@
    TEACHER PORTFOLIO – teacher-portfolio.html
    ════════════════════════════════════════════ */
 
+/* ─── HELPERS ─── */
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 var DOCUMENT_TYPES = [
   { id:'syllabus',       label:'Course Syllabus',                icon:'file-text',    color:'#3b82f6', bg:'#eff6ff' },
   { id:'lesson_plan',    label:'แผนการจัดการเรียนรู้',           icon:'book-open',    color:'#8b5cf6', bg:'#f5f3ff' },
@@ -325,6 +351,7 @@ var DOCUMENT_TYPES = [
 ];
 
 var currentUser = null;
+var currentStaffData = null; /* { name, position, group } from staff collection */
 var currentYear = 2568;
 var currentSem  = 1;
 var submissions  = {}; /* key: docId */
@@ -340,17 +367,87 @@ auth.onAuthStateChanged(function(u) {
     document.getElementById('loginGate').style.display = 'flex';
     return;
   }
-  currentUser = u;
-  document.getElementById('loginGate').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  if (ov) ov.style.display = 'none';
-  buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
-  updateNavUser(u);
-  buildSidebar('teacher-portfolio');
-  checkAdminAccess(u.email);
-  loadSubmissions();
-  lucide.createIcons();
+  /* ── ตรวจสอบอีเมลจาก staff collection ── */
+  db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
+    .then(function(snap) {
+      if (ov) ov.style.display = 'none';
+      if (snap.empty) {
+        /* ไม่พบอีเมลใน staff → ปฏิเสธการเข้าใช้ */
+        showStaffDenied(u.email);
+        return;
+      }
+      /* พบข้อมูลบุคลากร */
+      currentUser = u;
+      currentStaffData = snap.docs[0].data();
+      document.getElementById('loginGate').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
+      updateNavUser(u);
+      buildSidebar('teacher-portfolio');
+      checkAdminAccess(u.email);
+      renderStaffInfoBadge();
+      loadSubmissions();
+      lucide.createIcons();
+    })
+    .catch(function(e) {
+      if (ov) ov.style.display = 'none';
+      showStaffDenied(u.email);
+    });
 });
+
+/* ─── แสดงข้อความปฏิเสธ (ไม่ใช่บุคลากรในระบบ) ─── */
+function showStaffDenied(email) {
+  document.getElementById('loginGate').style.display = 'none';
+  var denied = document.getElementById('staffDenied');
+  if (denied) {
+    document.getElementById('staffDeniedEmail').textContent = email || '';
+    denied.style.display = 'flex';
+  }
+  lucide.createIcons();
+}
+
+/* ─── แสดงชื่อ ตำแหน่ง กลุ่มสาระใน year-hero ─── */
+function renderStaffInfoBadge() {
+  if (!currentStaffData) return;
+  var el = document.getElementById('staffInfoBadge');
+  if (!el) return;
+  var name     = currentStaffData.name     || '';
+  var position = currentStaffData.position || '';
+  var group    = currentStaffData.group    || '';
+  el.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+      '<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,255,255,.35);">' +
+        '<i data-lucide="user" style="width:18px;height:18px;color:white;"></i>' +
+      '</div>' +
+      '<div>' +
+        '<p style="font-size:14px;font-weight:800;color:white;line-height:1.3;">' + esc(name) + '</p>' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;">' +
+          (position ? '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);">' + esc(position) + '</span>' : '') +
+          (group    ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:rgba(255,255,255,.2);color:white;border-radius:20px;border:1px solid rgba(255,255,255,.3);">' + esc(group) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  lucide.createIcons();
+  /* auto-fill กลุ่มสาระ select ถ้าตรงกัน */
+  autoFillSubjectGroup(group);
+}
+
+/* map ชื่อกลุ่มจาก staff → ค่าใน select ของ subjectGroup */
+function autoFillSubjectGroup(group) {
+  var MAP = {
+    'วิทยาศาสตร์ และเทคโนโลยี': 'วิทยาศาสตร์และเทคโนโลยี',
+    'วิทยาศาสตร์และเทคโนโลยี':   'วิทยาศาสตร์และเทคโนโลยี',
+    'คณิตศาสตร์':                 'คณิตศาสตร์',
+    'ภาษาไทย':                    'ภาษาไทย',
+    'สังคมศึกษา ศาสนา และวัฒนธรรม': 'สังคมศึกษา ศาสนาและวัฒนธรรม',
+    'สุขศึกษา และพลศึกษา':        'สุขศึกษาและพลศึกษา',
+    'ภาษาต่างประเทศ':             'ภาษาต่างประเทศ',
+    'ศิลปะ':                      'ศิลปะ',
+    'แนะแนว':                     'แนะแนว',
+    'การงานอาชีพ':                 'การงานอาชีพ',
+  };
+  window._defaultSubjectGroup = MAP[group] || '';
+}
 
 /* ─── YEAR / SEM ─── */
 function changeYear(d) {
@@ -419,11 +516,17 @@ function renderDocList() {
                 (sub.courseCode ? '<span style="font-size:11px;color:#475569;font-weight:700;">' + sub.courseCode + '</span>' : '') +
                 (sub.courseName ? '<span style="font-size:11px;color:#64748b;">· ' + sub.courseName + '</span>' : '') +
               '</div>' +
-              '<div style="margin-top:3px;display:flex;align-items:center;gap:6px;">' +
-                '<span style="font-size:11px;color:#64748b;">' +
-                  '<i data-lucide="calendar" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i> ' +
-                  formatDate(sub.submittedAt) +
+              '<div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+                '<span style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;">' +
+                  '<i data-lucide="calendar" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i>' +
+                  ' ส่งครั้งแรก: <b>' + formatDate(sub.submittedAt) + '</b>' +
                 '</span>' +
+                (sub.resubmittedAt
+                  ? '<span style="font-size:11px;color:#f59e0b;display:flex;align-items:center;gap:4px;">' +
+                      '· <i data-lucide="refresh-cw" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i>' +
+                      ' ส่งล่าสุด: <b>' + formatDate(sub.resubmittedAt) + '</b>' +
+                    '</span>'
+                  : '') +
                 (sub.note ? '<span style="font-size:11px;color:#94a3b8;">· ' + sub.note + '</span>' : '') +
               '</div>'
             : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
@@ -474,10 +577,17 @@ function openUploadModal(docTypeId) {
   document.getElementById('uploadProgress').style.display = 'none';
   selectedFile = null;
 
+  /* auto-fill กลุ่มสาระจากข้อมูลบุคลากร ถ้ายังไม่มีข้อมูลส่ง */
+  if (!sub && window._defaultSubjectGroup) {
+    document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
+  }
+
   /* existing info */
   if (sub) {
     document.getElementById('existingInfo').style.display = 'block';
-    document.getElementById('existingDate').textContent = 'ส่งเมื่อ: ' + formatDate(sub.submittedAt);
+    var dateText = 'ส่งครั้งแรก: ' + formatDate(sub.submittedAt);
+    if (sub.resubmittedAt) dateText += ' · ส่งล่าสุด: ' + formatDate(sub.resubmittedAt);
+    document.getElementById('existingDate').textContent = dateText;
     document.getElementById('existingLink').href = sub.fileUrl || '#';
   } else {
     document.getElementById('existingInfo').style.display = 'none';
@@ -581,10 +691,16 @@ function uploadFileToStorage(file, note, subjectGroup, courseCode, courseName, b
 
 function saveSubmission(fileUrl, note, subjectGroup, courseCode, courseName, btn) {
   var key  = currentYear + '_' + currentSem;
+  var now  = firebase.firestore.FieldValue.serverTimestamp();
+  var existing = submissions[currentDocId];
   var data = {
     uid: currentUser.uid,
     email: currentUser.email,
     displayName: currentUser.displayName || '',
+    /* ── ข้อมูลจาก staff collection ── */
+    staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
+    staffPosition: (currentStaffData && currentStaffData.position) || '',
+    staffGroup:    (currentStaffData && currentStaffData.group)    || '',
     yearSem: key,
     year: currentYear,
     semester: currentSem,
@@ -595,13 +711,22 @@ function saveSubmission(fileUrl, note, subjectGroup, courseCode, courseName, btn
     courseCode: courseCode,
     courseName: courseName,
     status: 'submitted',
-    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: now,
   };
 
-  var existing = submissions[currentDocId];
-  var promise  = existing
-    ? db.collection('portfolio_submissions').doc(existing.id).update(Object.assign(data, { status: existing.status === 'reviewed' ? 'submitted' : existing.status }))
+  /* บันทึก submittedAt เฉพาะครั้งแรก, resubmittedAt ทุกครั้งที่ส่งใหม่ */
+  if (!existing) {
+    data.submittedAt = now;
+    data.resubmittedAt = null;
+  } else {
+    /* ถ้าเคยส่งแล้ว → บันทึกเวลาส่งใหม่แยกออกมา */
+    data.resubmittedAt = now;
+    if (!existing.submittedAt) data.submittedAt = now;
+    data.status = existing.status === 'reviewed' ? 'submitted' : existing.status;
+  }
+
+  var promise = existing
+    ? db.collection('portfolio_submissions').doc(existing.id).update(data)
     : db.collection('portfolio_submissions').add(data);
 
   promise.then(function() {
