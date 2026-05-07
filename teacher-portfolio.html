@@ -352,15 +352,28 @@
    ════════════════════════════════════════════ */
 
 /* ─── CONFIG ─── */
-var DRIVE_FOLDER_ID  = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* Shared Drive ID (root) */
-var SHARED_DRIVE_ID  = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* same ID – used in driveId param */
+var DRIVE_FOLDER_ID = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* NP-Portfolios folder ใน Shared Drive */
 var MAX_FILES_PER_TOPIC = 5;
-/* IMPORTANT: Set your Google OAuth Client ID below */
 var GOOGLE_CLIENT_ID = '275537025660-49nigfmsb17jf4ha8a2rmopv7qnpk2ej.apps.googleusercontent.com';
-/* drive scope required for Shared Drive access */
 var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
-/* Shared Drive params appended to every Drive API request */
-var SD_PARAMS = 'supportsAllDrives=true&includeItemsFromAllDrives=true';
+
+var _sharedDriveId = null; /* จะถูก set อัตโนมัติจาก folder metadata ครั้งแรกที่ใช้งาน */
+
+/* ดึง driveId ของ Shared Drive จาก folder ID — cache ไว้ใช้ซ้ำ */
+function getSharedDriveId() {
+  if (_sharedDriveId) return Promise.resolve(_sharedDriveId);
+  return fetch(
+    'https://www.googleapis.com/drive/v3/files/' + DRIVE_FOLDER_ID +
+    '?fields=driveId,name&supportsAllDrives=true',
+    { headers: driveHeaders() }
+  )
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.driveId) { _sharedDriveId = d.driveId; return d.driveId; }
+    /* ไม่ใช่ Shared Drive — คืน null แล้วใช้โหมด regular folder */
+    return null;
+  });
+}
 
 /* ─── HELPERS ─── */
 function esc(str) {
@@ -972,47 +985,60 @@ function submitDoc() {
 
 /* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
 /*
-  Shared Drive root (DRIVE_FOLDER_ID)
+  NP-Portfolios (DRIVE_FOLDER_ID) ใน Shared Drive NP-Webapp > กลุ่มวิชาการ
   └── ปีการศึกษา YYYY
       └── ภาคเรียนที่ N
           └── docType.label
-              └── ไฟล์รายบุคคล (กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf)
+              └── กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf
 */
-function ensureDriveFolder(parentId, folderName) {
-  /* ค้นหาโฟลเดอร์ใน Shared Drive — ต้องระบุ driveId ด้วยทุก request */
-  var query = "mimeType='application/vnd.google-apps.folder'" +
-    " and name='" + folderName.replace(/'/g,"\\'") + "'" +
-    " and '" + parentId + "' in parents" +
-    " and trashed=false";
-  var listUrl = 'https://www.googleapis.com/drive/v3/files' +
-    '?q=' + encodeURIComponent(query) +
-    '&fields=files(id,name)' +
-    '&driveId=' + SHARED_DRIVE_ID +
-    '&corpora=drive' +
-    '&' + SD_PARAMS;
 
-  return fetch(listUrl, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.files && data.files.length > 0) return data.files[0].id;
-      /* ไม่พบ → สร้างใหม่ใน Shared Drive (ต้องใส่ driveId ใน body ด้วย) */
-      var createUrl = 'https://www.googleapis.com/drive/v3/files?' + SD_PARAMS;
-      return fetch(createUrl, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+function driveHeaders() {
+  return { 'Authorization': 'Bearer ' + driveAccessToken };
+}
+function driveJsonHeaders() {
+  return { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' };
+}
+
+function ensureDriveFolder(parentId, folderName) {
+  return getSharedDriveId().then(function(driveId) {
+    var query = "mimeType='application/vnd.google-apps.folder'" +
+      " and name='" + folderName.replace(/'/g,"\\'") + "'" +
+      " and '" + parentId + "' in parents" +
+      " and trashed=false";
+
+    /* สร้าง URL สำหรับ list — ถ้าเป็น Shared Drive ต้องใส่ driveId + corpora=drive */
+    var listUrl = 'https://www.googleapis.com/drive/v3/files' +
+      '?q=' + encodeURIComponent(query) +
+      '&fields=files(id,name)' +
+      '&supportsAllDrives=true&includeItemsFromAllDrives=true' +
+      (driveId ? '&driveId=' + driveId + '&corpora=drive' : '');
+
+    return fetch(listUrl, { headers: driveHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.files && data.files.length > 0) return data.files[0].id;
+
+        /* สร้างโฟลเดอร์ใหม่ */
+        var body = {
           name: folderName,
           mimeType: 'application/vnd.google-apps.folder',
-          parents: [parentId],
-          driveId: SHARED_DRIVE_ID   /* <-- บังคับให้สร้างใน Shared Drive */
+          parents: [parentId]
+        };
+        /* Shared Drive ต้องการ driveId ใน body ด้วย */
+        if (driveId) body.driveId = driveId;
+
+        return fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
+          method: 'POST',
+          headers: driveJsonHeaders(),
+          body: JSON.stringify(body)
         })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (!d.id) throw new Error('สร้างโฟลเดอร์ไม่สำเร็จ: ' + JSON.stringify(d));
-        return d.id;
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.id) throw new Error('สร้างโฟลเดอร์ไม่สำเร็จ: ' + JSON.stringify(d));
+          return d.id;
+        });
       });
-    });
+  });
 }
 
 function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
@@ -1083,10 +1109,9 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
     form.append('file', file);
 
     var xhr = new XMLHttpRequest();
-    /* ต้องใส่ supportsAllDrives=true ทุกครั้งสำหรับ Shared Drive */
     xhr.open('POST',
       'https://www.googleapis.com/upload/drive/v3/files' +
-      '?uploadType=multipart&fields=id,name&' + SD_PARAMS,
+      '?uploadType=multipart&fields=id,name&supportsAllDrives=true',
       true
     );
     xhr.setRequestHeader('Authorization', 'Bearer ' + driveAccessToken);
