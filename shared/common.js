@@ -109,23 +109,10 @@ function checkAdminAccess(email) {
   if (!email) return;
   db.collection('admins').doc(email.toLowerCase()).get()
     .then(function(doc) {
-      if (!doc.exists) return;
-      var p = doc.data().permissions || {};
-      /* SuperAdmin มีสิทธิ์ทุกอย่าง */
-      if (email.toLowerCase() === 'nattapol@nongki.ac.th') {
-        p = { bookings:true, rooms:true, portfolio:true, staff:true, admins:true };
+      if (doc.exists) {
+        var sec = document.getElementById('adminSidebarSection');
+        if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
       }
-      var sec = document.getElementById('adminSidebarSection');
-      if (!sec) return;
-      /* ซ่อนทุก item ก่อน แล้วแสดงเฉพาะที่มีสิทธิ์ */
-      var items = sec.querySelectorAll('[data-perm]');
-      items.forEach(function(el) {
-        var perms = el.getAttribute('data-perm').split(',');
-        var show = perms.some(function(pk) { return !!p[pk.trim()]; });
-        el.style.display = show ? '' : 'none';
-      });
-      sec.style.display = 'block';
-      lucide.createIcons();
     })
     .catch(function() {});
 }
@@ -192,16 +179,55 @@ function updateSidebarProfile(user) {
   var ph = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'U') + '&background=1d4ed8&color=fff';
   var el = document.getElementById('sidebarProfile');
   if (!el) return;
-  el.innerHTML =
-    '<div style="background:white;padding:14px 16px;border-radius:16px;border:1px solid #e2e8f0;">' +
-      '<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">' +
-        '<img src="' + ph + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">' +
-        '<div style="overflow:hidden;">' +
-          '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.displayName || '') + '</p>' +
-          '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>' +
+
+  function _renderProfile(name, position, group) {
+    var sub1 = position || '';
+    var sub2 = group ? (
+      ['ผู้บริหาร','เจ้าหน้าที่','แนะแนว'].indexOf(group) !== -1
+        ? group
+        : 'กลุ่มสาระ' + group
+    ) : '';
+    var subHtml = '';
+    if (sub1 && sub2) {
+      subHtml =
+        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub1 + '</p>' +
+        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub2 + '</p>';
+    } else if (sub1 || sub2) {
+      subHtml =
+        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + (sub1 || sub2) + '</p>';
+    } else {
+      subHtml =
+        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>';
+    }
+    el.innerHTML =
+      '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;">' +
+        '<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">' +
+          '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid #e2e8f0;">' +
+          '<div style="overflow:hidden;min-width:0;">' +
+            '<p style="font-size:12px;font-weight:800;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
+            subHtml +
+          '</div>' +
         '</div>' +
-      '</div>' +
-    '</div>';
+      '</div>';
+  }
+
+  /* ดึงข้อมูลจาก staff collection ตาม email */
+  if (typeof db !== 'undefined' && user.email) {
+    db.collection('staff').where('email', '==', user.email.toLowerCase()).limit(1).get()
+      .then(function(snap) {
+        if (!snap.empty) {
+          var s = snap.docs[0].data();
+          _renderProfile(s.name || user.displayName || user.email, s.position || '', s.group || '');
+        } else {
+          _renderProfile(user.displayName || user.email, '', '');
+        }
+      })
+      .catch(function() {
+        _renderProfile(user.displayName || user.email, '', '');
+      });
+  } else {
+    _renderProfile(user.displayName || user.email, '', '');
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -244,7 +270,7 @@ var GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ระบบติดตามส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
     ],
   },
   {
@@ -267,40 +293,33 @@ var ADMIN_LINKS = [
   { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
 ];
 
-/* ── Admin Top Links (บนสุด ไม่อยู่ในกลุ่มงาน) ── */
-var ADMIN_TOP_LINKS = [
-  { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN', perm: 'admins' },
-  { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html',                      perm: 'staff'  },
-];
-
 /* ── Admin Group Menu (for non-admin pages) ── */
 var ADMIN_GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'banknote',
-    perm: null,
     items: [],
   },
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
-    perm: null,
-    items: [],
+    items: [
+      { label: 'จัดการสิทธิ์ Admin',  icon: 'shield-check', href: 'admin-role.html', badge: 'ADMIN' },
+      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog',     href: 'staff.html'                      },
+    ],
   },
   {
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
-    perm: 'portfolio',
     items: [
-      { label: 'จัดการระบบติดตามส่งงานประจำภาคเรียน', icon: 'folder-check', href: 'portfolio-admin.html', perm: 'portfolio' },
+      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
     ],
   },
   {
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
-    perm: 'bookings',
     items: [
-      { label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html', perm: 'bookings' },
+      { label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html' },
     ],
   },
 ];
@@ -365,34 +384,15 @@ function buildSidebar(activePage) {
     });
   } else {
     var adminGroupHtml = '';
-
-    /* top links */
-    ADMIN_TOP_LINKS.forEach(function(item) {
-      var key = item.href ? item.href.replace('.html', '') : '';
-      var isActive = activePage === key;
-      var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
-      var inner =
-        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
-        '<span>' + item.label + '</span>' +
-        (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
-      var el = item.href
-        ? '<a href="' + item.href + '" class="' + cls + '" data-perm="' + item.perm + '">' + inner + '</a>'
-        : '<button onclick="' + item.onclick + '" class="' + cls + '" data-perm="' + item.perm + '">' + inner + '</button>';
-      adminGroupHtml += el;
-    });
-
-    /* group items */
     ADMIN_GROUP_MENU.forEach(function(g) {
-      var groupPerm = g.perm;
-      var groupHeader =
-        '<div data-perm="' + (groupPerm || '__none__') + '" style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+      adminGroupHtml +=
+        '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
           '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
           '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
         '</div>';
       if (!g.items.length) {
-        /* ไม่แสดงกลุ่มที่ยังไม่มีระบบเลย */
+        adminGroupHtml += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
       } else {
-        adminGroupHtml += groupHeader;
         g.items.forEach(function(item) {
           var key = item.href ? item.href.replace('.html', '') : '';
           var isActive = activePage === key;
@@ -401,10 +401,11 @@ function buildSidebar(activePage) {
             '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
             '<span>' + item.label + '</span>' +
             (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
-          var el = item.href
-            ? '<a href="' + item.href + '" class="' + cls + '" data-perm="' + (item.perm||'') + '" style="padding-left:28px;">' + inner + '</a>'
-            : '<button onclick="' + item.onclick + '" class="' + cls + '" data-perm="' + (item.perm||'') + '" style="padding-left:28px;">' + inner + '</button>';
-          adminGroupHtml += el;
+          if (item.href) {
+            adminGroupHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</a>';
+          } else {
+            adminGroupHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</button>';
+          }
         });
       }
     });
