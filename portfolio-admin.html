@@ -192,18 +192,11 @@
             </button>
           </div>
         </div>
-        <!-- Group Filter -->
-        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        <!-- Group Filter (สร้าง dynamic จาก staff collection) -->
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="groupFilterBar">
           <span style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-right:4px;">กลุ่มสาระ:</span>
           <button class="filter-pill active" id="grpAll" onclick="setGroup('all')">ทั้งหมด</button>
-          <button class="filter-pill" id="grpวิทยาศาสตร์และเทคโนโลยี" onclick="setGroup('วิทยาศาสตร์และเทคโนโลยี')">วิทย์ฯ</button>
-          <button class="filter-pill" id="grpคณิตศาสตร์" onclick="setGroup('คณิตศาสตร์')">คณิตฯ</button>
-          <button class="filter-pill" id="grpภาษาไทย" onclick="setGroup('ภาษาไทย')">ภาษาไทย</button>
-          <button class="filter-pill" id="grpสังคมศึกษา ศาสนาและวัฒนธรรม" onclick="setGroup('สังคมศึกษา ศาสนาและวัฒนธรรม')">สังคมฯ</button>
-          <button class="filter-pill" id="grpสุขศึกษาและพลศึกษา" onclick="setGroup('สุขศึกษาและพลศึกษา')">สุขฯ/พละ</button>
-          <button class="filter-pill" id="grpภาษาต่างประเทศ" onclick="setGroup('ภาษาต่างประเทศ')">ภาษาต่าง</button>
-          <button class="filter-pill" id="grpศิลปะ" onclick="setGroup('ศิลปะ')">ศิลปะ</button>
-          <button class="filter-pill" id="grpแนะแนว" onclick="setGroup('แนะแนว')">แนะแนว</button>
+          <!-- กลุ่มสาระอื่น ๆ จะถูกสร้างโดย buildGroupFilterBar() หลัง load staff -->
         </div>
         <div style="margin-top:10px;">
           <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อครู หรืออีเมล..." style="max-width:360px;" oninput="renderView()">
@@ -292,22 +285,20 @@ var DOCUMENT_TYPES = [
 var currentYear = 2568;
 var currentSem  = 1;
 var allSubs     = []; /* all submissions for year+sem */
-var teacherMap  = {}; /* uid → {displayName, email, subs:{docTypeId→sub}} */
+var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
 var currentFilter = 'all';
 var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
 var reviewingSubId = null;
+var availableGroups = []; /* กลุ่มสาระที่มีอยู่จริงใน staff (สร้าง dynamic) */
 
-var SUBJECT_GROUPS = [
-  'วิทยาศาสตร์และเทคโนโลยี',
-  'คณิตศาสตร์',
-  'ภาษาไทย',
-  'สังคมศึกษา ศาสนาและวัฒนธรรม',
-  'สุขศึกษาและพลศึกษา',
-  'ภาษาต่างประเทศ',
-  'ศิลปะ',
-  'แนะแนว',
-];
+/* กลุ่มสาระที่นับเป็น "ครู" (ไม่รวมผู้บริหาร/เจ้าหน้าที่) */
+var NON_TEACHER_GROUPS = ['ผู้บริหาร', 'เจ้าหน้าที่'];
+
+/* normalise ชื่อกลุ่มสาระ ให้ใช้เปรียบเทียบได้ (ตัดช่องว่างพิเศษ) */
+function normaliseGroup(g) {
+  return (g || '').replace(/\s+/g, ' ').trim();
+}
 
 /* ─── AUTH + ADMIN CHECK ─── */
 auth.onAuthStateChanged(function(u) {
@@ -348,21 +339,6 @@ function selectSem(s) {
   loadAllSubmissions();
 }
 
-/* ─── LOAD ─── */
-/* กลุ่มสาระใน staff → map ให้ตรงกับ subjectGroup ใน portfolio_submissions */
-var STAFF_GROUP_MAP = {
-  'วิทยาศาสตร์':    'วิทยาศาสตร์และเทคโนโลยี',
-  'เทคโนโลยี':      'วิทยาศาสตร์และเทคโนโลยี',
-  'คณิตศาสตร์':     'คณิตศาสตร์',
-  'ภาษาไทย':        'ภาษาไทย',
-  'สังคมศึกษา':     'สังคมศึกษา ศาสนาและวัฒนธรรม',
-  'สุขศึกษา':       'สุขศึกษาและพลศึกษา',
-  'ภาษาต่างประเทศ': 'ภาษาต่างประเทศ',
-  'ศิลปะ':          'ศิลปะ',
-  'แนะแนว':         'แนะแนว',
-};
-var TEACHER_GROUPS = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','แนะแนว'];
-
 function loadAllSubmissions() {
   var main = document.getElementById('mainContent');
   main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i><p style="margin-top:12px;">กำลังโหลดข้อมูล...</p></div>';
@@ -370,56 +346,114 @@ function loadAllSubmissions() {
 
   var key = currentYear + '_' + currentSem;
 
-  /* ── ดึง staff ก่อน แล้ว join กับ submissions ด้วย email ── */
+  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
   db.collection('staff').orderBy('name').get().then(function(staffSnap) {
     allSubs = [];
     teacherMap = {};
+    availableGroups = [];
+    var groupSet = {};
 
     staffSnap.forEach(function(d) {
       var s = Object.assign({ id: d.id }, d.data());
       if (!s.email) return;
-      var subjectGroup = STAFF_GROUP_MAP[s.group] || s.group || '';
-      teacherMap[s.email] = {
-        uid: s.email,
-        email: s.email,
-        displayName: s.name || s.email,
-        position: s.position || '',
-        staffGroup: s.group || '',
-        subjectGroup: subjectGroup,
-        isTeacher: TEACHER_GROUPS.indexOf(s.group) >= 0,
-        subs: {}
+      var eKey = s.email.toLowerCase();
+      var grp  = normaliseGroup(s.group);
+      var isTeacher = NON_TEACHER_GROUPS.indexOf(grp) === -1;
+
+      /* เก็บกลุ่มสาระที่เป็นครูจริง ๆ */
+      if (isTeacher && grp && !groupSet[grp]) {
+        groupSet[grp] = true;
+        availableGroups.push(grp);
+      }
+
+      teacherMap[eKey] = {
+        uid:          eKey,          /* ใช้ email เป็น key เหมือนเดิม */
+        email:        eKey,
+        staffName:    s.name  || '', /* ชื่อจริงจาก staff */
+        displayName:  s.name  || eKey,
+        position:     s.position || '',
+        staffGroup:   grp,
+        isTeacher:    isTeacher,
+        subs:         {}
       };
     });
 
+    /* สร้าง group filter bar ตามกลุ่มที่มีจริงใน staff */
+    buildGroupFilterBar();
+
+    /* ── 2. ดึง submissions แล้ว join กับ teacherMap ── */
     return db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
       snap.forEach(function(d) {
         var data = Object.assign({ id: d.id }, d.data());
         allSubs.push(data);
-        var eKey = data.email || '';
+        var eKey = (data.email || '').toLowerCase();
         if (!eKey) return;
+
         if (teacherMap[eKey]) {
+          /* พบใน staff → ใช้ชื่อจาก staff แทน displayName ของ Google */
           teacherMap[eKey].subs[data.docTypeId] = data;
         } else {
-          /* ครูส่งงานแต่ไม่มีใน staff → เพิ่มจาก submission */
+          /* ครูส่งงานแต่ไม่มีใน staff → fallback จาก submission */
           teacherMap[eKey] = {
-            uid: data.uid || eKey,
-            email: eKey,
-            displayName: data.displayName || eKey,
-            position: '',
-            staffGroup: data.subjectGroup || '',
-            subjectGroup: data.subjectGroup || '',
-            isTeacher: true,
-            subs: {}
+            uid:         data.uid || eKey,
+            email:       eKey,
+            staffName:   data.staffName || data.displayName || eKey,
+            displayName: data.staffName || data.displayName || eKey,
+            position:    data.staffPosition || '',
+            staffGroup:  normaliseGroup(data.staffGroup || data.subjectGroup || ''),
+            isTeacher:   true,
+            subs:        {}
           };
           teacherMap[eKey].subs[data.docTypeId] = data;
         }
       });
+
       updateStats();
       renderView();
     });
   }).catch(function(e) {
     main.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
   });
+}
+
+/* ── สร้าง group filter buttons dynamic จาก availableGroups ── */
+function buildGroupFilterBar() {
+  var bar = document.getElementById('groupFilterBar');
+  if (!bar) return;
+
+  /* ลบปุ่มเก่าทิ้งหมด (ยกเว้น label span และปุ่ม "ทั้งหมด") */
+  var children = Array.prototype.slice.call(bar.children);
+  children.forEach(function(el) {
+    if (el.id !== 'grpAll' && el.tagName !== 'SPAN') bar.removeChild(el);
+  });
+
+  /* label ย่อสำหรับแต่ละกลุ่ม */
+  var SHORT_LABEL = {
+    'วิทยาศาสตร์ และเทคโนโลยี':              'วิทย์ฯ',
+    'วิทยาศาสตร์และเทคโนโลยี':               'วิทย์ฯ',
+    'คณิตศาสตร์':                             'คณิตฯ',
+    'ภาษาไทย':                                'ภาษาไทย',
+    'สังคมศึกษา ศาสนา และวัฒนธรรม':          'สังคมฯ',
+    'สังคมศึกษา ศาสนาและวัฒนธรรม':           'สังคมฯ',
+    'สุขศึกษา และพลศึกษา':                    'สุขฯ/พละ',
+    'สุขศึกษาและพลศึกษา':                     'สุขฯ/พละ',
+    'ภาษาต่างประเทศ':                         'ภาษาต่าง',
+    'ศิลปะ':                                  'ศิลปะ',
+    'แนะแนว':                                 'แนะแนว',
+    'การงานอาชีพ':                            'การงานฯ',
+  };
+
+  availableGroups.forEach(function(grp) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-pill' + (currentGroup === grp ? ' active' : '');
+    btn.id = 'grp_' + grp;
+    btn.textContent = SHORT_LABEL[grp] || grp;
+    btn.onclick = function() { setGroup(grp); };
+    bar.appendChild(btn);
+  });
+
+  /* reset active state บนปุ่ม "ทั้งหมด" */
+  document.getElementById('grpAll').className = 'filter-pill' + (currentGroup === 'all' ? ' active' : '');
 }
 
 function updateStats() {
@@ -455,10 +489,11 @@ function setView(v) {
 
 function setGroup(g) {
   currentGroup = g;
-  /* update button styles */
+  /* update "ทั้งหมด" button */
   document.getElementById('grpAll').className = 'filter-pill' + (g === 'all' ? ' active' : '');
-  ['วิทยาศาสตร์และเทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา ศาสนาและวัฒนธรรม','สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ','ศิลปะ','แนะแนว'].forEach(function(grp) {
-    var el = document.getElementById('grp' + grp);
+  /* update group buttons (dynamic) */
+  availableGroups.forEach(function(grp) {
+    var el = document.getElementById('grp_' + grp);
     if (el) el.className = 'filter-pill' + (g === grp ? ' active' : '');
   });
   renderView();
@@ -467,14 +502,16 @@ function setGroup(g) {
 function getFilteredTeachers() {
   var q = (document.getElementById('searchInput').value||'').toLowerCase();
   return Object.values(teacherMap).filter(function(t) {
-    /* แสดงเฉพาะครู (กลุ่มสาระ) */
     if (!t.isTeacher) return false;
-    /* search */
-    if (q && !(t.displayName.toLowerCase().includes(q) || t.email.toLowerCase().includes(q))) return false;
-    /* group filter — ใช้ staffGroup เทียบกับ SUBJECT_GROUPS */
+    /* search ชื่อจริง (staffName) และอีเมล */
+    if (q && !(
+      (t.staffName  || '').toLowerCase().includes(q) ||
+      (t.email      || '').toLowerCase().includes(q) ||
+      (t.staffGroup || '').toLowerCase().includes(q)
+    )) return false;
+    /* group filter — เทียบ staffGroup ที่ normalise แล้วตรง ๆ */
     if (currentGroup !== 'all') {
-      var mapped = STAFF_GROUP_MAP[t.staffGroup] || t.staffGroup;
-      if (mapped !== currentGroup) return false;
+      if (normaliseGroup(t.staffGroup) !== normaliseGroup(currentGroup)) return false;
     }
     var count = Object.keys(t.subs).length;
     if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
@@ -510,24 +547,19 @@ function renderListView() {
     html +=
       '<div class="teacher-row">' +
         '<div class="teacher-header" onclick="toggleTeacher(\'' + t.uid + '\')">' +
-          '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.displayName) + '&background=7c3aed&color=fff&size=40" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
+          '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=40" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.displayName) + '</p>' +
+              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.staffName || t.displayName) + '</p>' +
+              (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
               (pendingCount ? '<span style="background:#fef9c3;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">รอตรวจ ' + pendingCount + '</span>' : '') +
               (revisionCount ? '<span style="background:#ffedd5;color:#9a3412;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">แก้ไข ' + revisionCount + '</span>' : '') +
             '</div>' +
-            '<p style="font-size:11px;color:#94a3b8;">' + esc(t.email) + '</p>' +
-            /* subject groups this teacher has submitted */
-            (function() {
-              var grps = {};
-              Object.values(t.subs).forEach(function(s){ if(s.subjectGroup) grps[s.subjectGroup]=1; });
-              var keys = Object.keys(grps);
-              if (!keys.length) return '';
-              return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">' +
-                keys.map(function(g){ return '<span style="font-size:9px;font-weight:800;padding:2px 7px;background:#eff6ff;color:#1d4ed8;border-radius:8px;">' + g + '</span>'; }).join('') +
-              '</div>';
-            })() +
+            /* กลุ่มสาระจาก staff + อีเมล */
+            '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">' +
+              (t.staffGroup ? '<span style="font-size:9px;font-weight:800;padding:2px 8px;background:#ede9fe;color:#5b21b6;border-radius:8px;">' + esc(t.staffGroup) + '</span>' : '') +
+              '<p style="font-size:11px;color:#94a3b8;">' + esc(t.email) + '</p>' +
+            '</div>' +
             '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
               '<div class="pbar-bg" style="flex:1;max-width:200px;"><div class="pbar-fill" style="width:' + pct + '%;"></div></div>' +
               '<span style="font-size:11px;font-weight:700;color:#7c3aed;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
@@ -593,8 +625,11 @@ function renderMatrixView() {
   teachers.forEach(function(t) {
     var count = Object.keys(t.subs).length;
     html += '<tr><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:8px;">' +
-      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
-      '<div style="overflow:hidden;"><p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.displayName) + '</p></div>' +
+      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
+      '<div style="overflow:hidden;">' +
+        '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.staffName || t.displayName) + '</p>' +
+        (t.staffGroup ? '<p style="font-size:9px;color:#7c3aed;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.staffGroup) + '</p>' : '') +
+      '</div>' +
     '</div></td>';
 
     DOCUMENT_TYPES.forEach(function(dt) {
@@ -628,7 +663,11 @@ function openReview(subId, uid, docTypeId) {
   reviewingSubId = subId;
 
   document.getElementById('reviewModalTitle').textContent = dt.label;
-  document.getElementById('reviewModalSub').textContent = t.displayName + ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
+  document.getElementById('reviewModalSub').textContent =
+    (t.staffName || t.displayName) +
+    (t.position  ? ' · ' + t.position  : '') +
+    (t.staffGroup ? ' · ' + t.staffGroup : '') +
+    ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
   document.getElementById('reviewFileName').textContent = sub.fileUrl ? sub.fileUrl.slice(0,60) + '...' : '-';
   document.getElementById('reviewFileLink').href = sub.fileUrl || '#';
   document.getElementById('reviewFileMeta').textContent = 'ส่งเมื่อ: ' + formatDate(sub.submittedAt) + ' · สถานะ: ' + { submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', revision:'ให้แก้ไข' }[sub.status||'submitted'];
