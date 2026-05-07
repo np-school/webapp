@@ -352,11 +352,14 @@
    ════════════════════════════════════════════ */
 
 /* ─── CONFIG ─── */
-var DRIVE_FOLDER_ID = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG';
+var DRIVE_FOLDER_ID = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG'; /* Shared Drive root folder */
 var MAX_FILES_PER_TOPIC = 5;
 /* IMPORTANT: Set your Google OAuth Client ID below */
 var GOOGLE_CLIENT_ID = '275537025660-49nigfmsb17jf4ha8a2rmopv7qnpk2ej.apps.googleusercontent.com';
-var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+/* drive scope required for Shared Drive access */
+var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
+/* Shared Drive params appended to every Drive API request */
+var SD_PARAMS = 'supportsAllDrives=true&includeItemsFromAllDrives=true';
 
 /* ─── HELPERS ─── */
 function esc(str) {
@@ -968,30 +971,44 @@ function submitDoc() {
 
 /* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
 /*
-  root (DRIVE_FOLDER_ID)
+  Shared Drive root (DRIVE_FOLDER_ID)
   └── ปีการศึกษา YYYY
       └── ภาคเรียนที่ N
           └── docType.label
-              └── ไฟล์รายบุคคล (ชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf)
+              └── ไฟล์รายบุคคล (กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf)
 */
 function ensureDriveFolder(parentId, folderName) {
-  var query = "mimeType='application/vnd.google-apps.folder' and name='" +
-    folderName.replace(/'/g,"\\'") + "' and '" + parentId + "' in parents and trashed=false";
-  return fetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(query) + '&fields=files(id,name)', {
-    headers: { 'Authorization': 'Bearer ' + driveAccessToken }
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data.files && data.files.length > 0) return data.files[0].id;
-    /* สร้างโฟลเดอร์ใหม่ */
-    return fetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(d){ return d.id; });
-  });
+  /* ค้นหาโฟลเดอร์ที่มีอยู่แล้วใน Shared Drive */
+  var query = "mimeType='application/vnd.google-apps.folder'" +
+    " and name='" + folderName.replace(/'/g,"\\'") + "'" +
+    " and '" + parentId + "' in parents" +
+    " and trashed=false";
+  var listUrl = 'https://www.googleapis.com/drive/v3/files' +
+    '?q=' + encodeURIComponent(query) +
+    '&fields=files(id,name)' +
+    '&' + SD_PARAMS;
+
+  return fetch(listUrl, { headers: { 'Authorization': 'Bearer ' + driveAccessToken } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.files && data.files.length > 0) return data.files[0].id;
+      /* ไม่พบ → สร้างใหม่ใน Shared Drive */
+      var createUrl = 'https://www.googleapis.com/drive/v3/files?' + SD_PARAMS;
+      return fetch(createUrl, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: folderName,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [parentId]
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.id) throw new Error('สร้างโฟลเดอร์ไม่สำเร็จ: ' + JSON.stringify(d));
+        return d.id;
+      });
+    });
 }
 
 function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
@@ -999,9 +1016,9 @@ function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
   var sub    = submissions[currentDocId];
   var existingFiles = (sub && sub.files) ? sub.files : [];
   var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
-  var startIndex = existingFiles.length; /* ลำดับเริ่มต้นของไฟล์ใหม่ */
+  var startIndex = existingFiles.length;
 
-  /* สร้างโครงสร้างโฟลเดอร์ */
+  /* โครงสร้างโฟลเดอร์: ปีการศึกษา / ภาคเรียน / รายการงาน */
   var yearFolderName = 'ปีการศึกษา ' + currentYear;
   var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
   var docFolderName  = dt.label;
@@ -1014,16 +1031,15 @@ function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
   progressBar.style.width  = '0%';
 
   ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
-  .then(function(yearId)   { return ensureDriveFolder(yearId, semFolderName).then(function(semId){ return semId; }); })
-  .then(function(semId)    { return ensureDriveFolder(semId, docFolderName); })
+  .then(function(yearId)  { return ensureDriveFolder(yearId, semFolderName); })
+  .then(function(semId)   { return ensureDriveFolder(semId,  docFolderName); })
   .then(function(docFolderId) {
-    /* อัปโหลดทีละไฟล์ */
     var uploadedFiles = [];
     function uploadNext(idx) {
       if (idx >= selectedFiles.length) return Promise.resolve(uploadedFiles);
-      var file     = selectedFiles[idx];
-      var fileIdx  = startIndex + idx + 1; /* ลำดับ 1-based */
-      /* สร้างชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf */
+      var file    = selectedFiles[idx];
+      var fileIdx = startIndex + idx + 1;
+      /* ชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf */
       var newName = sanitizeForFilename(subjectGroup) + '_' +
                     sanitizeForFilename(staffName)    + '_' +
                     sanitizeForFilename(dt.label)     + '_' +
@@ -1033,7 +1049,7 @@ function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
 
       return uploadFileToDrive(file, newName, docFolderId, function(pct) {
         var overall = Math.round(((idx / selectedFiles.length) + (pct / 100 / selectedFiles.length)) * 100);
-        progressBar.style.width = overall + '%';
+        progressBar.style.width  = overall + '%';
         progressPct.textContent  = overall + '%';
       })
       .then(function(result) {
@@ -1063,9 +1079,16 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
     form.append('file', file);
 
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name', true);
+    /* ต้องใส่ supportsAllDrives=true ทุกครั้งสำหรับ Shared Drive */
+    xhr.open('POST',
+      'https://www.googleapis.com/upload/drive/v3/files' +
+      '?uploadType=multipart&fields=id,name&' + SD_PARAMS,
+      true
+    );
     xhr.setRequestHeader('Authorization', 'Bearer ' + driveAccessToken);
-    xhr.upload.onprogress = function(e) { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
+    };
     xhr.onload = function() {
       if (xhr.status === 200 || xhr.status === 201) {
         resolve(JSON.parse(xhr.responseText));
@@ -1073,7 +1096,7 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
         reject(new Error('HTTP ' + xhr.status + ': ' + xhr.responseText));
       }
     };
-    xhr.onerror = function(){ reject(new Error('Network error')); };
+    xhr.onerror = function() { reject(new Error('Network error')); };
     xhr.send(form);
   });
 }
