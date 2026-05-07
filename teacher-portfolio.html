@@ -17,9 +17,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
+  <!-- Google API -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
@@ -47,7 +49,7 @@
     @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
     .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
     .modal-bg.open{display:flex;}
-    .modal-box{background:white;border-radius:20px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2);}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2);}
     input[type=text],input[type=url],select,textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;transition:border-color .15s;font-family:'Sarabun',sans-serif;}
     input:focus,select:focus,textarea:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
 
@@ -87,6 +89,17 @@
     .year-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%);border-radius:20px;padding:28px 28px 24px;position:relative;overflow:hidden;}
     .year-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(96,165,250,.15) 0%,transparent 70%);}
     .year-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px;}
+
+    /* ── File list in modal ── */
+    .file-entry{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:6px;}
+    .file-entry:last-child{margin-bottom:0;}
+    .file-entry-name{flex:1;font-size:13px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .file-entry-status{font-size:11px;font-weight:700;color:#64748b;flex-shrink:0;}
+    .file-entry-del{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#94a3b8;flex-shrink:0;display:flex;align-items:center;}
+    .file-entry-del:hover{background:#fee2e2;color:#dc2626;}
+    .file-entry-link{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#1d4ed8;flex-shrink:0;display:flex;align-items:center;text-decoration:none;}
+    .file-entry-link:hover{background:#eff6ff;}
+    .file-slot-badge{font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;border-radius:6px;padding:2px 8px;flex-shrink:0;}
 
     @media(max-width:640px){
       .doc-item{flex-direction:column;align-items:flex-start;gap:10px;}
@@ -209,23 +222,13 @@
 <div id="uploadModal" class="modal-bg" onclick="if(event.target===this)closeUploadModal()">
   <div class="modal-box">
     <div style="padding:24px 24px 0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div>
           <h3 id="modalTitle" style="font-size:17px;font-weight:800;color:#0f172a;">ส่งงาน</h3>
           <p id="modalSemLabel" style="font-size:12px;color:#64748b;margin-top:2px;"></p>
         </div>
         <button onclick="closeUploadModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
           <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-        </button>
-      </div>
-
-      <!-- Upload method tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:18px;">
-        <button class="method-btn active" id="methodUrl" onclick="setMethod('url')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:2px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <i data-lucide="link" style="width:14px;height:14px;"></i> ลิงก์ URL
-        </button>
-        <button class="method-btn" id="methodFile" onclick="setMethod('file')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <i data-lucide="upload" style="width:14px;height:14px;"></i> อัปโหลดไฟล์
         </button>
       </div>
 
@@ -259,35 +262,39 @@
         </div>
       </div>
 
-      <!-- URL input -->
-      <div id="urlSection">
-        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ลิงก์เอกสาร (Google Drive, OneDrive, ฯลฯ)</label>
-        <input type="url" id="fileUrl" placeholder="https://drive.google.com/..." style="margin-bottom:4px;">
-        <p style="font-size:11px;color:#94a3b8;margin-bottom:14px;">แนะนำให้ใช้ Google Drive และตั้งค่าการเข้าถึงเป็น "ทุกคนที่มีลิงก์"</p>
+      <!-- ── Existing uploaded files ── -->
+      <div id="existingFilesSection" style="display:none;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;">ไฟล์ที่อัปโหลดแล้ว</label>
+          <span id="fileCountBadge" style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 10px;border-radius:20px;"></span>
+        </div>
+        <div id="existingFilesList"></div>
       </div>
 
-      <!-- File upload -->
-      <div id="fileSection" style="display:none;">
+      <!-- ── New file upload zone ── -->
+      <div id="newFileSection" style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
+          เพิ่มไฟล์ PDF <span style="color:#ef4444;">*</span>
+          <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-left:4px;">(สูงสุด 5 ไฟล์ต่อหัวข้อ, PDF เท่านั้น, สูงสุด 20MB ต่อไฟล์)</span>
+        </label>
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-          <i data-lucide="upload-cloud" style="width:32px;height:32px;color:#93c5fd;margin-bottom:8px;"></i>
-          <p style="font-size:13px;font-weight:700;color:#1d4ed8;">คลิกหรือลากไฟล์มาวาง</p>
-          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">PDF, Word, Excel, PowerPoint (สูงสุด 20MB)</p>
+          <i data-lucide="file-up" style="width:32px;height:32px;color:#93c5fd;margin-bottom:8px;"></i>
+          <p style="font-size:13px;font-weight:700;color:#1d4ed8;">คลิกหรือลากไฟล์ PDF มาวาง</p>
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">รองรับเฉพาะไฟล์ PDF สูงสุด 20MB ต่อไฟล์</p>
         </div>
-        <input type="file" id="fileInput" style="display:none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="onFileSelected(this)">
-        <div id="fileInfo" style="display:none;margin-top:10px;padding:10px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <i data-lucide="file-check" style="width:16px;height:16px;color:#22c55e;"></i>
-            <span id="fileName" style="font-size:13px;font-weight:700;color:#15803d;"></span>
-          </div>
+        <input type="file" id="fileInput" style="display:none;" accept=".pdf,application/pdf" multiple onchange="onFileSelected(this)">
+
+        <!-- Queued files to upload -->
+        <div id="queuedFiles" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <!-- Upload Progress -->
+      <div id="uploadProgress" style="display:none;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span id="uploadProgressLabel" style="font-size:12px;font-weight:700;color:#64748b;">กำลังอัปโหลด...</span>
+          <span id="uploadPct" style="font-size:12px;font-weight:700;color:#1d4ed8;">0%</span>
         </div>
-        <!-- Upload progress -->
-        <div id="uploadProgress" style="display:none;margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:12px;font-weight:700;color:#64748b;">กำลังอัปโหลด...</span>
-            <span id="uploadPct" style="font-size:12px;font-weight:700;color:#1d4ed8;">0%</span>
-          </div>
-          <div class="pbar-bg"><div id="uploadBar" class="pbar-fill" style="width:0%;"></div></div>
-        </div>
+        <div class="pbar-bg"><div id="uploadBar" class="pbar-fill" style="width:0%;"></div></div>
       </div>
 
       <!-- Note -->
@@ -296,13 +303,13 @@
         <textarea id="submitNote" rows="2" placeholder="หมายเหตุเพิ่มเติม..." style="resize:none;"></textarea>
       </div>
 
-      <!-- Existing submission info -->
-      <div id="existingInfo" style="display:none;margin-bottom:16px;padding:12px 14px;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;">
-        <p style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">📋 ส่งงานไว้แล้ว</p>
-        <p id="existingDate" style="font-size:11px;color:#b45309;"></p>
-        <a id="existingLink" href="#" target="_blank" style="font-size:11px;color:#1d4ed8;font-weight:700;display:inline-flex;align-items:center;gap:4px;margin-top:4px;">
-          ดูไฟล์เดิม <i data-lucide="external-link" style="width:11px;height:11px;"></i>
-        </a>
+      <!-- Google Drive auth notice -->
+      <div id="driveAuthNotice" style="display:none;margin-bottom:14px;padding:10px 14px;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;">
+        <p style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">⚠️ ต้องการสิทธิ์ Google Drive</p>
+        <p style="font-size:11px;color:#b45309;">กรุณาอนุญาตให้แอปเข้าถึง Google Drive เพื่ออัปโหลดไฟล์</p>
+        <button onclick="authorizeDrive()" style="margin-top:8px;padding:7px 14px;background:#fbbf24;color:#78350f;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:12px;">
+          อนุญาต Google Drive
+        </button>
       </div>
 
       <div style="display:flex;gap:10px;padding-bottom:24px;">
@@ -315,17 +322,17 @@
   </div>
 </div>
 
-<!-- ── Detail / History Modal ── -->
-<div id="detailModal" class="modal-bg" onclick="if(event.target===this)closeModal('detailModal')">
-  <div class="modal-box" style="max-width:500px;">
-    <div style="padding:24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <h3 id="detailTitle" style="font-size:17px;font-weight:800;color:#0f172a;"></h3>
-        <button onclick="closeModal('detailModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
-          <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-        </button>
-      </div>
-      <div id="detailContent"></div>
+<!-- ── Confirm Delete Modal ── -->
+<div id="confirmDeleteModal" class="modal-bg" onclick="if(event.target===this)closeDeleteModal()">
+  <div style="background:white;border-radius:20px;width:100%;max-width:380px;padding:28px 24px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.2);">
+    <div style="width:56px;height:56px;border-radius:16px;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <i data-lucide="trash-2" style="width:24px;height:24px;color:#dc2626;"></i>
+    </div>
+    <h3 style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:8px;">ลบไฟล์นี้?</h3>
+    <p id="deleteFileName" style="font-size:13px;color:#64748b;margin-bottom:20px;word-break:break-all;"></p>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeDeleteModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
+      <button id="confirmDeleteBtn" onclick="confirmDelete()" style="flex:1;padding:11px;background:#dc2626;color:white;font-weight:800;border-radius:12px;border:none;cursor:pointer;">ลบไฟล์</button>
     </div>
   </div>
 </div>
@@ -333,33 +340,76 @@
 <script>
 /* ════════════════════════════════════════════
    TEACHER PORTFOLIO – teacher-portfolio.html
+   Google Drive upload edition
    ════════════════════════════════════════════ */
+
+/* ─── CONFIG ─── */
+var DRIVE_FOLDER_ID = '1w_4UHb7dfGk-qNHzrle73d6FQnUBAtwG';
+var MAX_FILES_PER_TOPIC = 5;
+/* IMPORTANT: Set your Google OAuth Client ID below */
+var GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 /* ─── HELPERS ─── */
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function sanitizeForFilename(str) {
+  return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
+}
 
 var DOCUMENT_TYPES = [
-  { id:'syllabus',       label:'Course Syllabus',                icon:'file-text',    color:'#3b82f6', bg:'#eff6ff' },
-  { id:'lesson_plan',    label:'แผนการจัดการเรียนรู้',           icon:'book-open',    color:'#8b5cf6', bg:'#f5f3ff' },
-  { id:'sufficiency',    label:'แผนเศรษฐกิจพอเพียง',            icon:'leaf',         color:'#22c55e', bg:'#f0fdf4' },
-  { id:'royal_policy',   label:'แผนพระบรมราโชบาย',              icon:'crown',        color:'#f59e0b', bg:'#fffbeb' },
-  { id:'competency',     label:'แผนสมรรถนะ',                    icon:'zap',          color:'#ec4899', bg:'#fdf2f8' },
-  { id:'research',       label:'รายงานวิจัยในชั้นเรียน',         icon:'microscope',   color:'#06b6d4', bg:'#ecfeff' },
-  { id:'student_analysis',label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล',icon:'users',       color:'#f97316', bg:'#fff7ed' },
-  { id:'media_register', label:'ทะเบียนสื่อ',                   icon:'library',      color:'#6366f1', bg:'#eef2ff' },
-  { id:'student_work',   label:'ผลงานนักเรียน',                  icon:'star',         color:'#eab308', bg:'#fefce8' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
+  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
+  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
 ];
 
-var currentUser = null;
-var currentStaffData = null; /* { name, position, group } from staff collection */
-var currentYear = 2568;
-var currentSem  = 1;
-var submissions  = {}; /* key: docId */
-var currentDocId = null;
-var uploadMethod = 'url';
-var selectedFile = null;
+var currentUser      = null;
+var currentStaffData = null;
+var currentYear      = 2568;
+var currentSem       = 1;
+var submissions      = {};   /* key: docId → { id, files:[{fileId,fileName,fileUrl}], ...meta } */
+var currentDocId     = null;
+var selectedFiles    = [];   /* File objects queued for upload */
+var driveAccessToken = null; /* Google OAuth access token */
+var pendingDeleteInfo = null; /* { docId, fileIndex } */
+var tokenClient      = null;
+
+/* ─── GOOGLE IDENTITY / DRIVE AUTH ─── */
+function initGoogleAuth() {
+  if (typeof google === 'undefined' || !google.accounts) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: function(response) {
+      if (response.error) {
+        showToast('ไม่สามารถเข้าถึง Google Drive ได้', 'error');
+        return;
+      }
+      driveAccessToken = response.access_token;
+      document.getElementById('driveAuthNotice').style.display = 'none';
+      /* ถ้ามีไฟล์รอ ส่งต่อ */
+      if (pendingUploadCallback) { pendingUploadCallback(); pendingUploadCallback = null; }
+    }
+  });
+}
+
+var pendingUploadCallback = null;
+function authorizeDrive(callback) {
+  pendingUploadCallback = callback || null;
+  if (!tokenClient) { showToast('Google API ยังไม่พร้อม', 'error'); return; }
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
+window.onload = function() {
+  if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
+};
 
 /* ─── AUTH ─── */
 auth.onAuthStateChanged(function(u) {
@@ -369,20 +419,14 @@ auth.onAuthStateChanged(function(u) {
     document.getElementById('loginGate').style.display = 'flex';
     return;
   }
-  /* ── ตรวจสอบอีเมลจาก staff collection ── */
   db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
     .then(function(snap) {
       if (ov) ov.style.display = 'none';
-      if (snap.empty) {
-        /* ไม่พบอีเมลใน staff → ปฏิเสธการเข้าใช้ */
-        showStaffDenied(u.email);
-        return;
-      }
-      /* พบข้อมูลบุคลากร */
-      currentUser = u;
+      if (snap.empty) { showStaffDenied(u.email); return; }
+      currentUser      = u;
       currentStaffData = snap.docs[0].data();
       document.getElementById('loginGate').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('mainApp').style.display   = 'block';
       buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
       updateNavUser(u);
       buildSidebar('teacher-portfolio');
@@ -390,6 +434,8 @@ auth.onAuthStateChanged(function(u) {
       renderStaffInfoBadge();
       loadSubmissions();
       lucide.createIcons();
+      /* init Google auth after user confirmed */
+      setTimeout(initGoogleAuth, 500);
     })
     .catch(function(e) {
       if (ov) ov.style.display = 'none';
@@ -397,7 +443,6 @@ auth.onAuthStateChanged(function(u) {
     });
 });
 
-/* ─── แสดงข้อความปฏิเสธ (ไม่ใช่บุคลากรในระบบ) ─── */
 function showStaffDenied(email) {
   document.getElementById('loginGate').style.display = 'none';
   var denied = document.getElementById('staffDenied');
@@ -408,7 +453,6 @@ function showStaffDenied(email) {
   lucide.createIcons();
 }
 
-/* ─── แสดงชื่อ ตำแหน่ง กลุ่มสาระใน year-hero ─── */
 function renderStaffInfoBadge() {
   if (!currentStaffData) return;
   var el = document.getElementById('staffInfoBadge');
@@ -430,38 +474,31 @@ function renderStaffInfoBadge() {
       '</div>' +
     '</div>';
   lucide.createIcons();
-  /* auto-fill กลุ่มสาระ select ถ้าตรงกัน */
   autoFillSubjectGroup(group);
 }
 
-/* map ชื่อกลุ่มจาก staff → ค่าใน select ของ subjectGroup */
 function autoFillSubjectGroup(group) {
   var MAP = {
-    'วิทยาศาสตร์':                        'วิทยาศาสตร์',
-    'เทคโนโลยี':                           'เทคโนโลยี',
-    'คณิตศาสตร์':                          'คณิตศาสตร์',
-    'ภาษาไทย':                             'ภาษาไทย',
-    'สังคมศึกษา ศาสนา และวัฒนธรรม':      'สังคมศึกษา ศาสนา และวัฒนธรรม',
-    'สุขศึกษาและพลศึกษา':                 'สุขศึกษาและพลศึกษา',
-    'ภาษาต่างประเทศ':                      'ภาษาต่างประเทศ',
-    'ศิลปะ':                               'ศิลปะ',
-    'การงานอาชีพ':                         'การงานอาชีพ',
-    'แนะแนว':                              'แนะแนว',
+    'วิทยาศาสตร์':'วิทยาศาสตร์','เทคโนโลยี':'เทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์',
+    'ภาษาไทย':'ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม',
+    'สุขศึกษาและพลศึกษา':'สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ',
+    'ศิลปะ':'ศิลปะ','การงานอาชีพ':'การงานอาชีพ','แนะแนว':'แนะแนว',
+  };
   window._defaultSubjectGroup = MAP[group] || '';
 }
 
 /* ─── YEAR / SEM ─── */
 function changeYear(d) {
   currentYear += d;
-  document.getElementById('yearLabel').textContent = currentYear;
-  document.getElementById('displayYear').textContent = currentYear;
+  document.getElementById('yearLabel').textContent    = currentYear;
+  document.getElementById('displayYear').textContent  = currentYear;
   loadSubmissions();
 }
 function selectSem(s) {
   currentSem = s;
   document.getElementById('semPill1').className = 'sem-pill' + (s===1?' active':'');
   document.getElementById('semPill2').className = 'sem-pill' + (s===2?' active':'');
-  document.getElementById('displaySem').textContent = 'ภาคเรียนที่ ' + s;
+  document.getElementById('displaySem').textContent   = 'ภาคเรียนที่ ' + s;
   loadSubmissions();
 }
 
@@ -491,15 +528,16 @@ function renderDocList() {
   var html = '';
 
   DOCUMENT_TYPES.forEach(function(dt, idx) {
-    var sub = submissions[dt.id];
+    var sub    = submissions[dt.id];
     var status = sub ? (sub.status || 'submitted') : 'none';
+    var files  = (sub && sub.files) ? sub.files : [];
     if (sub) submittedCount++;
 
     var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', revision:'แก้ไข' }[status];
-    var dotCls = { none:'dot-none', submitted:'dot-submitted', reviewed:'dot-reviewed', revision:'dot-revision' }[status];
-    var itemCls = 'doc-item ' + (status==='none'?'pending':status);
-    var badgeBg = { none:'#f1f5f9', submitted:'#dcfce7', reviewed:'#dbeafe', revision:'#fef9c3' }[status];
-    var badgeColor = { none:'#94a3b8', submitted:'#15803d', reviewed:'#1e40af', revision:'#92400e' }[status];
+    var dotCls      = { none:'dot-none', submitted:'dot-submitted', reviewed:'dot-reviewed', revision:'dot-revision' }[status];
+    var itemCls     = 'doc-item ' + (status==='none'?'pending':status);
+    var badgeBg     = { none:'#f1f5f9', submitted:'#dcfce7', reviewed:'#dbeafe', revision:'#fef9c3' }[status];
+    var badgeColor  = { none:'#94a3b8', submitted:'#15803d', reviewed:'#1e40af', revision:'#92400e' }[status];
 
     html +=
       '<div class="' + itemCls + '">' +
@@ -510,12 +548,13 @@ function renderDocList() {
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
             '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
             '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + badgeBg + ';color:' + badgeColor + ';">' + statusLabel + '</span>' +
+            (sub ? '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' : '') +
           '</div>' +
           (sub
             ? '<div style="margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
-                (sub.subjectGroup ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border-radius:10px;">' + sub.subjectGroup + '</span>' : '') +
-                (sub.courseCode ? '<span style="font-size:11px;color:#475569;font-weight:700;">' + sub.courseCode + '</span>' : '') +
-                (sub.courseName ? '<span style="font-size:11px;color:#64748b;">· ' + sub.courseName + '</span>' : '') +
+                (sub.subjectGroup ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border-radius:10px;">' + esc(sub.subjectGroup) + '</span>' : '') +
+                (sub.courseCode   ? '<span style="font-size:11px;color:#475569;font-weight:700;">' + esc(sub.courseCode) + '</span>' : '') +
+                (sub.courseName   ? '<span style="font-size:11px;color:#64748b;">· ' + esc(sub.courseName) + '</span>' : '') +
               '</div>' +
               '<div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
                 '<span style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;">' +
@@ -528,25 +567,20 @@ function renderDocList() {
                       ' ส่งล่าสุด: <b>' + formatDate(sub.resubmittedAt) + '</b>' +
                     '</span>'
                   : '') +
-                (sub.note ? '<span style="font-size:11px;color:#94a3b8;">· ' + sub.note + '</span>' : '') +
+                (sub.note ? '<span style="font-size:11px;color:#94a3b8;">· ' + esc(sub.note) + '</span>' : '') +
               '</div>'
             : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
           ) +
           (sub && sub.status === 'revision' && sub.adminNote
             ? '<div style="margin-top:6px;padding:6px 10px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;">' +
-                '<p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + sub.adminNote + '</p>' +
+                '<p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p>' +
               '</div>'
             : '') +
         '</div>' +
         '<div class="doc-item-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-          (sub
-            ? '<a href="' + (sub.fileUrl||'#') + '" target="_blank" style="padding:7px 12px;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;border:1px solid #bfdbfe;">' +
-                '<i data-lucide="external-link" style="width:12px;height:12px;"></i> เปิด' +
-              '</a>'
-            : '') +
           '<button onclick="openUploadModal(\'' + dt.id + '\')" style="padding:7px 14px;background:' + (sub?'#f8fafc':'#1d4ed8') + ';color:' + (sub?'#475569':'white') + ';border-radius:8px;font-size:12px;font-weight:700;border:1px solid ' + (sub?'#e2e8f0':'#1d4ed8') + ';cursor:pointer;display:flex;align-items:center;gap:5px;">' +
             '<i data-lucide="' + (sub?'pencil':'upload') + '" style="width:12px;height:12px;"></i>' +
-            (sub ? 'แก้ไข' : 'ส่งงาน') +
+            (sub ? 'จัดการ' : 'ส่งงาน') +
           '</button>' +
         '</div>' +
       '</div>';
@@ -554,70 +588,82 @@ function renderDocList() {
 
   list.innerHTML = html;
 
-  /* progress */
-  var pct = Math.round((submittedCount / DOCUMENT_TYPES.length) * 100);
-  document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('progressText').textContent = submittedCount + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
+  var pct = DOCUMENT_TYPES.length ? Math.round((submittedCount / DOCUMENT_TYPES.length) * 100) : 0;
+  document.getElementById('progressBar').style.width    = pct + '%';
+  document.getElementById('progressText').textContent   = submittedCount + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
   lucide.createIcons();
 }
 
 /* ─── UPLOAD MODAL ─── */
 function openUploadModal(docTypeId) {
-  currentDocId = docTypeId;
-  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+  currentDocId  = docTypeId;
+  selectedFiles = [];
+  var dt  = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
   var sub = submissions[docTypeId];
+  var files = (sub && sub.files) ? sub.files : [];
 
-  document.getElementById('modalTitle').textContent = (sub ? 'แก้ไขงาน: ' : 'ส่งงาน: ') + dt.label;
+  document.getElementById('modalTitle').textContent    = (sub ? 'จัดการงาน: ' : 'ส่งงาน: ') + dt.label;
   document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
-  document.getElementById('fileUrl').value = sub ? (sub.fileUrl||'') : '';
-  document.getElementById('submitNote').value = sub ? (sub.note||'') : '';
-  document.getElementById('subjectGroup').value = sub ? (sub.subjectGroup||'') : '';
-  document.getElementById('courseCode').value = sub ? (sub.courseCode||'') : '';
-  document.getElementById('courseName').value = sub ? (sub.courseName||'') : '';
-  document.getElementById('fileInfo').style.display = 'none';
+  document.getElementById('submitNote').value          = sub ? (sub.note||'') : '';
+  document.getElementById('subjectGroup').value        = sub ? (sub.subjectGroup||'') : '';
+  document.getElementById('courseCode').value          = sub ? (sub.courseCode||'') : '';
+  document.getElementById('courseName').value          = sub ? (sub.courseName||'') : '';
   document.getElementById('uploadProgress').style.display = 'none';
-  selectedFile = null;
+  document.getElementById('queuedFiles').innerHTML     = '';
 
-  /* auto-fill กลุ่มสาระจากข้อมูลบุคลากร ถ้ายังไม่มีข้อมูลส่ง */
+  /* auto-fill กลุ่มสาระจากข้อมูลบุคลากร */
   if (!sub && window._defaultSubjectGroup) {
     document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
   }
 
-  /* existing info */
-  if (sub) {
-    document.getElementById('existingInfo').style.display = 'block';
-    var dateText = 'ส่งครั้งแรก: ' + formatDate(sub.submittedAt);
-    if (sub.resubmittedAt) dateText += ' · ส่งล่าสุด: ' + formatDate(sub.resubmittedAt);
-    document.getElementById('existingDate').textContent = dateText;
-    document.getElementById('existingLink').href = sub.fileUrl || '#';
-  } else {
-    document.getElementById('existingInfo').style.display = 'none';
+  /* show existing files */
+  renderExistingFiles(files, docTypeId);
+
+  /* toggle new file section visibility */
+  var canAddMore = files.length < MAX_FILES_PER_TOPIC;
+  document.getElementById('newFileSection').style.display = canAddMore ? 'block' : 'none';
+  if (!canAddMore) {
+    showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว ลบไฟล์เก่าก่อนเพิ่มใหม่', 'error');
   }
 
-  setMethod('url');
   document.getElementById('uploadModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+}
+
+function renderExistingFiles(files, docTypeId) {
+  var sec  = document.getElementById('existingFilesSection');
+  var list = document.getElementById('existingFilesList');
+  var badge = document.getElementById('fileCountBadge');
+  if (!files || files.length === 0) {
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  badge.textContent = files.length + ' / ' + MAX_FILES_PER_TOPIC + ' ไฟล์';
+  var html = '';
+  files.forEach(function(f, i) {
+    html +=
+      '<div class="file-entry" id="existingFile_' + i + '">' +
+        '<i data-lucide="file-text" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>' +
+        '<span class="file-slot-badge">' + (i+1) + '</span>' +
+        '<span class="file-entry-name" title="' + esc(f.fileName) + '">' + esc(f.fileName) + '</span>' +
+        '<a href="' + esc(f.fileUrl) + '" target="_blank" class="file-entry-link" title="เปิดไฟล์">' +
+          '<i data-lucide="external-link" style="width:14px;height:14px;"></i>' +
+        '</a>' +
+        '<button class="file-entry-del" onclick="promptDeleteFile(\'' + esc(docTypeId) + '\',' + i + ',\'' + esc(f.fileName) + '\')" title="ลบไฟล์">' +
+          '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>' +
+        '</button>' +
+      '</div>';
+  });
+  list.innerHTML = html;
   lucide.createIcons();
 }
 
 function closeUploadModal() {
   document.getElementById('uploadModal').classList.remove('open');
   document.body.style.overflow = '';
-  selectedFile = null;
-}
-
-function setMethod(m) {
-  uploadMethod = m;
-  document.getElementById('urlSection').style.display = m==='url' ? 'block' : 'none';
-  document.getElementById('fileSection').style.display = m==='file' ? 'block' : 'none';
-  var mb = ['methodUrl','methodFile'];
-  mb.forEach(function(id){
-    var el = document.getElementById(id);
-    var isActive = (id==='methodUrl' && m==='url') || (id==='methodFile' && m==='file');
-    el.style.border = isActive ? '2px solid #1d4ed8' : '2px solid #e2e8f0';
-    el.style.background = isActive ? '#eff6ff' : 'white';
-    el.style.color = isActive ? '#1d4ed8' : '#64748b';
-  });
+  selectedFiles = [];
 }
 
 /* ─── FILE DRAG & DROP ─── */
@@ -626,19 +672,110 @@ function onDragLeave(e) { document.getElementById('uploadZone').classList.remove
 function onDrop(e) {
   e.preventDefault();
   document.getElementById('uploadZone').classList.remove('dragging');
-  var f = e.dataTransfer.files[0];
-  if (f) setSelectedFile(f);
+  addFilesToQueue(Array.from(e.dataTransfer.files));
 }
 function onFileSelected(input) {
-  if (input.files[0]) setSelectedFile(input.files[0]);
+  addFilesToQueue(Array.from(input.files));
+  input.value = ''; /* reset so same file can be re-selected */
 }
-function setSelectedFile(f) {
-  if (f.size > 20*1024*1024) { showToast('ไฟล์ใหญ่เกิน 20MB', 'error'); return; }
-  selectedFile = f;
-  document.getElementById('fileName').textContent = f.name + ' (' + (f.size/1024/1024).toFixed(1) + ' MB)';
-  document.getElementById('fileInfo').style.display = 'block';
-  document.getElementById('uploadZone').classList.add('has-file');
+
+function addFilesToQueue(newFiles) {
+  var sub = submissions[currentDocId];
+  var existingCount = (sub && sub.files) ? sub.files.length : 0;
+  var total = existingCount + selectedFiles.length;
+
+  newFiles.forEach(function(f) {
+    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+      showToast(f.name + ' – รองรับเฉพาะไฟล์ PDF', 'error'); return;
+    }
+    if (f.size > 20*1024*1024) {
+      showToast(f.name + ' – ขนาดเกิน 20MB', 'error'); return;
+    }
+    if (total >= MAX_FILES_PER_TOPIC) {
+      showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว', 'error'); return;
+    }
+    selectedFiles.push(f);
+    total++;
+  });
+  renderQueuedFiles();
+}
+
+function renderQueuedFiles() {
+  var container = document.getElementById('queuedFiles');
+  if (selectedFiles.length === 0) { container.innerHTML = ''; return; }
+  var html = '';
+  selectedFiles.forEach(function(f, i) {
+    html +=
+      '<div class="file-entry">' +
+        '<i data-lucide="file-text" style="width:16px;height:16px;color:#22c55e;flex-shrink:0;"></i>' +
+        '<span class="file-entry-name" title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
+        '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + ' MB</span>' +
+        '<button class="file-entry-del" onclick="removeQueuedFile(' + i + ')" title="ยกเลิก">' +
+          '<i data-lucide="x" style="width:14px;height:14px;"></i>' +
+        '</button>' +
+      '</div>';
+  });
+  container.innerHTML = html;
   lucide.createIcons();
+
+  document.getElementById('uploadZone').classList.toggle('has-file', selectedFiles.length > 0);
+}
+
+function removeQueuedFile(idx) {
+  selectedFiles.splice(idx, 1);
+  renderQueuedFiles();
+}
+
+/* ─── DELETE FILE ─── */
+function promptDeleteFile(docTypeId, fileIndex, fileName) {
+  pendingDeleteInfo = { docTypeId: docTypeId, fileIndex: fileIndex };
+  document.getElementById('deleteFileName').textContent = fileName;
+  document.getElementById('confirmDeleteModal').classList.add('open');
+  lucide.createIcons();
+}
+function closeDeleteModal() {
+  document.getElementById('confirmDeleteModal').classList.remove('open');
+  pendingDeleteInfo = null;
+}
+function confirmDelete() {
+  if (!pendingDeleteInfo) return;
+  var docTypeId  = pendingDeleteInfo.docTypeId;
+  var fileIndex  = pendingDeleteInfo.fileIndex;
+  var sub = submissions[docTypeId];
+  if (!sub || !sub.files) { closeDeleteModal(); return; }
+
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled   = true;
+  btn.textContent = 'กำลังลบ...';
+
+  var fileToDelete = sub.files[fileIndex];
+  var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
+
+  /* ลบไฟล์ใน Google Drive ถ้ามี fileId */
+  function updateFirestore() {
+    var updateData = { files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (newFiles.length === 0) updateData.status = 'none';
+    return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
+  }
+
+  var driveDeletePromise = Promise.resolve();
+  if (fileToDelete && fileToDelete.fileId && driveAccessToken) {
+    driveDeletePromise = fetch(
+      'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId,
+      { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
+    ).catch(function(e){ console.warn('Drive delete failed:', e); });
+  }
+
+  driveDeletePromise.then(updateFirestore).then(function() {
+    showToast('ลบไฟล์สำเร็จ', 'success');
+    closeDeleteModal();
+    closeUploadModal();
+    loadSubmissions();
+  }).catch(function(e) {
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    btn.disabled   = false;
+    btn.textContent = 'ลบไฟล์';
+  });
 }
 
 /* ─── SUBMIT ─── */
@@ -648,79 +785,174 @@ function submitDoc() {
   var subjectGroup = document.getElementById('subjectGroup').value.trim();
   var courseCode   = document.getElementById('courseCode').value.trim();
   var courseName   = document.getElementById('courseName').value.trim();
-  var note  = document.getElementById('submitNote').value.trim();
-  var btn   = document.getElementById('submitBtn');
+  var note         = document.getElementById('submitNote').value.trim();
+  var btn          = document.getElementById('submitBtn');
 
   if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
   if (!courseCode)   { showToast('กรุณากรอกรหัสวิชา', 'error'); return; }
   if (!courseName)   { showToast('กรุณากรอกชื่อวิชา', 'error'); return; }
+  if (selectedFiles.length === 0) { showToast('กรุณาเลือกไฟล์ PDF อย่างน้อย 1 ไฟล์', 'error'); return; }
 
-  btn.disabled = true;
-  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังส่ง...';
+  btn.disabled   = true;
+  btn.innerHTML  = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังอัปโหลด...';
   lucide.createIcons();
 
-  if (uploadMethod === 'url') {
-    var url = document.getElementById('fileUrl').value.trim();
-    if (!url) { showToast('กรุณาใส่ลิงก์เอกสาร', 'error'); resetBtn(btn); return; }
-    saveSubmission(url, note, subjectGroup, courseCode, courseName, btn);
-  } else {
-    if (!selectedFile) { showToast('กรุณาเลือกไฟล์', 'error'); resetBtn(btn); return; }
-    uploadFileToStorage(selectedFile, note, subjectGroup, courseCode, courseName, btn);
+  /* ตรวจสอบ token Drive */
+  if (!driveAccessToken) {
+    document.getElementById('driveAuthNotice').style.display = 'block';
+    authorizeDrive(function() {
+      uploadAllFiles(subjectGroup, courseCode, courseName, note, btn);
+    });
+    btn.disabled   = false;
+    btn.innerHTML  = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+    lucide.createIcons();
+    return;
   }
+
+  uploadAllFiles(subjectGroup, courseCode, courseName, note, btn);
 }
 
-function uploadFileToStorage(file, note, subjectGroup, courseCode, courseName, btn) {
-  var path = 'portfolio/' + currentUser.uid + '/' + currentYear + '_' + currentSem + '/' + currentDocId + '_' + Date.now() + '_' + file.name;
-  var ref  = firebase.storage().ref(path);
-  var task = ref.put(file);
+/* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
+/*
+  root (DRIVE_FOLDER_ID)
+  └── ปีการศึกษา YYYY
+      └── ภาคเรียนที่ N
+          └── docType.label
+              └── ไฟล์รายบุคคล (ชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf)
+*/
+function ensureDriveFolder(parentId, folderName) {
+  var query = "mimeType='application/vnd.google-apps.folder' and name='" +
+    folderName.replace(/'/g,"\\'") + "' and '" + parentId + "' in parents and trashed=false";
+  return fetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(query) + '&fields=files(id,name)', {
+    headers: { 'Authorization': 'Bearer ' + driveAccessToken }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.files && data.files.length > 0) return data.files[0].id;
+    /* สร้างโฟลเดอร์ใหม่ */
+    return fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ return d.id; });
+  });
+}
 
-  document.getElementById('uploadProgress').style.display = 'block';
-  task.on('state_changed',
-    function(snap) {
-      var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-      document.getElementById('uploadBar').style.width = pct + '%';
-      document.getElementById('uploadPct').textContent = pct + '%';
-    },
-    function(e) { showToast('อัปโหลดไม่สำเร็จ: ' + e.message, 'error'); resetBtn(btn); },
-    function() {
-      task.snapshot.ref.getDownloadURL().then(function(url) {
-        saveSubmission(url, note, subjectGroup, courseCode, courseName, btn);
+function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
+  var dt     = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
+  var sub    = submissions[currentDocId];
+  var existingFiles = (sub && sub.files) ? sub.files : [];
+  var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
+  var startIndex = existingFiles.length; /* ลำดับเริ่มต้นของไฟล์ใหม่ */
+
+  /* สร้างโครงสร้างโฟลเดอร์ */
+  var yearFolderName = 'ปีการศึกษา ' + currentYear;
+  var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
+  var docFolderName  = dt.label;
+
+  var progressEl  = document.getElementById('uploadProgress');
+  var progressBar = document.getElementById('uploadBar');
+  var progressPct = document.getElementById('uploadPct');
+  var progressLbl = document.getElementById('uploadProgressLabel');
+  progressEl.style.display = 'block';
+  progressBar.style.width  = '0%';
+
+  ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
+  .then(function(yearId)   { return ensureDriveFolder(yearId, semFolderName).then(function(semId){ return semId; }); })
+  .then(function(semId)    { return ensureDriveFolder(semId, docFolderName); })
+  .then(function(docFolderId) {
+    /* อัปโหลดทีละไฟล์ */
+    var uploadedFiles = [];
+    function uploadNext(idx) {
+      if (idx >= selectedFiles.length) return Promise.resolve(uploadedFiles);
+      var file     = selectedFiles[idx];
+      var fileIdx  = startIndex + idx + 1; /* ลำดับ 1-based */
+      /* สร้างชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf */
+      var newName = sanitizeForFilename(subjectGroup) + '_' +
+                    sanitizeForFilename(staffName)    + '_' +
+                    sanitizeForFilename(dt.label)     + '_' +
+                    fileIdx + '.pdf';
+
+      progressLbl.textContent = 'กำลังอัปโหลด ' + (idx+1) + '/' + selectedFiles.length + ' – ' + newName;
+
+      return uploadFileToDrive(file, newName, docFolderId, function(pct) {
+        var overall = Math.round(((idx / selectedFiles.length) + (pct / 100 / selectedFiles.length)) * 100);
+        progressBar.style.width = overall + '%';
+        progressPct.textContent  = overall + '%';
+      })
+      .then(function(result) {
+        uploadedFiles.push({ fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' });
+        return uploadNext(idx + 1);
       });
     }
-  );
+    return uploadNext(0);
+  })
+  .then(function(newFiles) {
+    var allFiles = existingFiles.concat(newFiles);
+    saveSubmission(allFiles, note, subjectGroup, courseCode, courseName, btn);
+  })
+  .catch(function(e) {
+    console.error(e);
+    showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || e), 'error');
+    resetBtn(btn);
+    progressEl.style.display = 'none';
+  });
 }
 
-function saveSubmission(fileUrl, note, subjectGroup, courseCode, courseName, btn) {
-  var key  = currentYear + '_' + currentSem;
-  var now  = firebase.firestore.FieldValue.serverTimestamp();
+function uploadFileToDrive(file, fileName, folderId, onProgress) {
+  return new Promise(function(resolve, reject) {
+    var metadata = { name: fileName, parents: [folderId] };
+    var form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', file);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name', true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + driveAccessToken);
+    xhr.upload.onprogress = function(e) { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = function() {
+      if (xhr.status === 200 || xhr.status === 201) {
+        resolve(JSON.parse(xhr.responseText));
+      } else {
+        reject(new Error('HTTP ' + xhr.status + ': ' + xhr.responseText));
+      }
+    };
+    xhr.onerror = function(){ reject(new Error('Network error')); };
+    xhr.send(form);
+  });
+}
+
+function saveSubmission(allFiles, note, subjectGroup, courseCode, courseName, btn) {
+  var key = currentYear + '_' + currentSem;
+  var now = firebase.firestore.FieldValue.serverTimestamp();
   var existing = submissions[currentDocId];
   var data = {
-    uid: currentUser.uid,
-    email: currentUser.email,
-    displayName: currentUser.displayName || '',
-    /* ── ข้อมูลจาก staff collection ── */
+    uid:           currentUser.uid,
+    email:         currentUser.email,
+    displayName:   currentUser.displayName || '',
     staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
     staffPosition: (currentStaffData && currentStaffData.position) || '',
     staffGroup:    (currentStaffData && currentStaffData.group)    || '',
-    yearSem: key,
-    year: currentYear,
-    semester: currentSem,
-    docTypeId: currentDocId,
-    fileUrl: fileUrl,
-    note: note,
-    subjectGroup: subjectGroup,
-    courseCode: courseCode,
-    courseName: courseName,
-    status: 'submitted',
-    updatedAt: now,
+    yearSem:       key,
+    year:          currentYear,
+    semester:      currentSem,
+    docTypeId:     currentDocId,
+    files:         allFiles,             /* array ของ {fileId, fileName, fileUrl} */
+    fileUrl:       allFiles.length > 0 ? allFiles[0].fileUrl : '',  /* backward compat */
+    note:          note,
+    subjectGroup:  subjectGroup,
+    courseCode:    courseCode,
+    courseName:    courseName,
+    status:        'submitted',
+    updatedAt:     now,
   };
 
-  /* บันทึก submittedAt เฉพาะครั้งแรก, resubmittedAt ทุกครั้งที่ส่งใหม่ */
   if (!existing) {
-    data.submittedAt = now;
+    data.submittedAt   = now;
     data.resubmittedAt = null;
   } else {
-    /* ถ้าเคยส่งแล้ว → บันทึกเวลาส่งใหม่แยกออกมา */
     data.resubmittedAt = now;
     if (!existing.submittedAt) data.submittedAt = now;
     data.status = existing.status === 'reviewed' ? 'submitted' : existing.status;
@@ -736,11 +968,14 @@ function saveSubmission(fileUrl, note, subjectGroup, courseCode, courseName, btn
     loadSubmissions();
   }).catch(function(e) {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-  }).finally(function() { resetBtn(btn); });
+  }).finally(function() {
+    resetBtn(btn);
+    document.getElementById('uploadProgress').style.display = 'none';
+  });
 }
 
 function resetBtn(btn) {
-  btn.disabled = false;
+  btn.disabled  = false;
   btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
   lucide.createIcons();
 }
@@ -750,6 +985,9 @@ function formatDate(ts) {
   if (!ts) return '-';
   var d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
 }
 </script>
 </body>
