@@ -85,17 +85,17 @@
 
     /* ── Group badge ── */
     .group-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
-    .group-badge.วิทยาศาสตร์{background:#dbeafe;color:#1e40af;}
-    .group-badge.คณิตศาสตร์{background:#fef9c3;color:#b45309;}
-    .group-badge.ภาษาไทย{background:#fee2e2;color:#b91c1c;}
-    .group-badge.สังคมศึกษา{background:#dcfce7;color:#15803d;}
-    .group-badge.สุขศึกษา{background:#d1fae5;color:#065f46;}
-    .group-badge.ภาษาต่างประเทศ{background:#ede9fe;color:#5b21b6;}
-    .group-badge.ศิลปะ{background:#fce7f3;color:#be185d;}
-    .group-badge.เทคโนโลยี{background:#f0fdf4;color:#166534;}
-    .group-badge.แนะแนว{background:#fff7ed;color:#c2410c;}
-    .group-badge.ผู้บริหาร{background:#fdf4ff;color:#7e22ce;}
-    .group-badge.เจ้าหน้าที่{background:#f1f5f9;color:#475569;}
+    .group-badge[data-group="การงานอาชีพ"]{background:#fef3c7;color:#92400e;}
+    .group-badge[data-group="วิทยาศาสตร์ และเทคโนโลยี"]{background:#dbeafe;color:#1e40af;}
+    .group-badge[data-group="คณิตศาสตร์"]{background:#fef9c3;color:#b45309;}
+    .group-badge[data-group="ภาษาต่างประเทศ"]{background:#ede9fe;color:#5b21b6;}
+    .group-badge[data-group="ภาษาไทย"]{background:#fee2e2;color:#b91c1c;}
+    .group-badge[data-group="ศิลปะ"]{background:#fce7f3;color:#be185d;}
+    .group-badge[data-group="สังคมศึกษา ศาสนา และวัฒนธรรม"]{background:#dcfce7;color:#15803d;}
+    .group-badge[data-group="สุขศึกษา และพลศึกษา"]{background:#d1fae5;color:#065f46;}
+    .group-badge[data-group="แนะแนว"]{background:#fff7ed;color:#c2410c;}
+    .group-badge[data-group="เจ้าหน้าที่"]{background:#f1f5f9;color:#475569;}
+    .group-badge[data-group="ผู้บริหาร"]{background:#fdf4ff;color:#7e22ce;}
 
     /* ── Position tag ── */
     .pos-tag{background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;}
@@ -213,14 +213,15 @@
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
-          <button class="filter-pill" onclick="setFilter('วิทยาศาสตร์',this)">วิทยาศาสตร์</button>
+          <button class="filter-pill" onclick="setFilter('วิทยาศาสตร์ และเทคโนโลยี',this)">วิทยาศาสตร์และเทคโนโลยี</button>
           <button class="filter-pill" onclick="setFilter('คณิตศาสตร์',this)">คณิตศาสตร์</button>
           <button class="filter-pill" onclick="setFilter('ภาษาไทย',this)">ภาษาไทย</button>
-          <button class="filter-pill" onclick="setFilter('สังคมศึกษา',this)">สังคมศึกษา</button>
-          <button class="filter-pill" onclick="setFilter('สุขศึกษา',this)">สุขศึกษา</button>
+          <button class="filter-pill" onclick="setFilter('สังคมศึกษา ศาสนา และวัฒนธรรม',this)">สังคมศึกษาฯ</button>
+          <button class="filter-pill" onclick="setFilter('สุขศึกษา และพลศึกษา',this)">สุขศึกษาฯ</button>
           <button class="filter-pill" onclick="setFilter('ภาษาต่างประเทศ',this)">ภาษาต่างประเทศ</button>
           <button class="filter-pill" onclick="setFilter('ศิลปะ',this)">ศิลปะ</button>
-          <button class="filter-pill" onclick="setFilter('เทคโนโลยี',this)">เทคโนโลยี</button>
+          <button class="filter-pill" onclick="</button>
+          <button class="filter-pill" onclick="setFilter('การงานอาชีพ',this)">การงานอาชีพ</button>
           <button class="filter-pill" onclick="setFilter('แนะแนว',this)">แนะแนว</button>
           <button class="filter-pill" onclick="setFilter('ผู้บริหาร',this)">ผู้บริหาร</button>
           <button class="filter-pill" onclick="setFilter('เจ้าหน้าที่',this)">เจ้าหน้าที่</button>
@@ -297,17 +298,17 @@
         <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">กลุ่มสาระ / กลุ่มงาน <span style="color:#dc2626;">*</span></label>
         <select id="fGroup">
           <option value="">-- เลือกกลุ่มสาระ / กลุ่มงาน --</option>
-          <option value="วิทยาศาสตร์">กลุ่มสาระวิทยาศาสตร์</option>
-          <option value="คณิตศาสตร์">กลุ่มสาระคณิตศาสตร์</option>
-          <option value="ภาษาไทย">กลุ่มสาระภาษาไทย</option>
-          <option value="สังคมศึกษา">กลุ่มสาระสังคมศึกษา ศาสนาและวัฒนธรรม</option>
-          <option value="สุขศึกษา">กลุ่มสาระสุขศึกษาและพลศึกษา</option>
-          <option value="ภาษาต่างประเทศ">กลุ่มสาระภาษาต่างประเทศ</option>
-          <option value="ศิลปะ">กลุ่มสาระศิลปะ</option>
-          <option value="เทคโนโลยี">กลุ่มสาระเทคโนโลยี</option>
+          <option value="การงานอาชีพ">การงานอาชีพ</option>
+          <option value="วิทยาศาสตร์ และเทคโนโลยี">วิทยาศาสตร์ และเทคโนโลยี</option>
+          <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+          <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+          <option value="ภาษาไทย">ภาษาไทย</option>
+          <option value="ศิลปะ">ศิลปะ</option>
+          <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+          <option value="สุขศึกษา และพลศึกษา">สุขศึกษา และพลศึกษา</option>
           <option value="แนะแนว">แนะแนว</option>
-          <option value="ผู้บริหาร">ผู้บริหาร</option>
           <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+          <option value="ผู้บริหาร">ผู้บริหาร</option>
         </select>
       </div>
       <div>
@@ -467,18 +468,11 @@ auth.onAuthStateChanged(function(user) {
     /* ── ตรวจสิทธิ์ staff ── */
     var isSA = user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
     var perms = (doc.data() && doc.data().permissions) ? doc.data().permissions : {};
-    if (!isSA && !perms.staff) {
-      document.getElementById('accessDenied').style.display = 'flex';
-      lucide.createIcons(); return;
-    }
     canWrite = isSA || !!perms.staff;
 
     document.getElementById('staffApp').style.display = 'block';
-    buildSidebar('staff');
     updateNavUser(user);
     updateSidebarProfile(user);
-    var sec = document.getElementById('adminSidebarSection');
-    if (sec) { sec.style.display='block'; lucide.createIcons(); }
 
     /* ซ่อนปุ่ม write ถ้าไม่มีสิทธิ์ */
     if (!canWrite) {
@@ -505,7 +499,7 @@ function initStaffListener() {
 }
 
 function updateStats() {
-  var subs = ['วิทยาศาสตร์','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','เทคโนโลยี','แนะแนว'];
+  var subs = ['การงานอาชีพ','วิทยาศาสตร์ และเทคโนโลยี','คณิตศาสตร์','ภาษาต่างประเทศ','ภาษาไทย','ศิลปะ','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษา และพลศึกษา','แนะแนว'];
   document.getElementById('statTotal').textContent = allStaff.length;
   document.getElementById('statAcademic').textContent = allStaff.filter(function(s) { return subs.indexOf(s.group) >= 0; }).length;
   document.getElementById('statBudget').textContent = allStaff.filter(function(s) { return s.group === 'เจ้าหน้าที่'; }).length;
@@ -513,7 +507,7 @@ function updateStats() {
 }
 
 /* ════ Render Table ════ */
-var GROUP_COLORS = { 'วิทยาศาสตร์':'วิทยาศาสตร์','คณิตศาสตร์':'คณิตศาสตร์','ภาษาไทย':'ภาษาไทย','สังคมศึกษา':'สังคมศึกษา','สุขศึกษา':'สุขศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ศิลปะ':'ศิลปะ','เทคโนโลยี':'เทคโนโลยี','แนะแนว':'แนะแนว','ผู้บริหาร':'ผู้บริหาร','เจ้าหน้าที่':'เจ้าหน้าที่' };
+var GROUP_COLORS = { 'การงานอาชีพ':'การงานอาชีพ','วิทยาศาสตร์ และเทคโนโลยี':'วิทยาศาสตร์ และเทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ภาษาไทย':'ภาษาไทย','ศิลปะ':'ศิลปะ','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษา และพลศึกษา':'สุขศึกษา และพลศึกษา','แนะแนว':'แนะแนว','เจ้าหน้าที่':'เจ้าหน้าที่','ผู้บริหาร':'ผู้บริหาร' };
 var AVATAR_COLORS = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
 
 function getInitials(name) {
@@ -556,7 +550,7 @@ function renderStaff() {
     var initials = getInitials(s.name);
     var avatarColor = getAvatarColor(s.name);
     var groupKey = GROUP_COLORS[s.group] || 'อื่น';
-    var groupLabelMap = {'วิทยาศาสตร์':'กลุ่มสาระวิทยาศาสตร์','คณิตศาสตร์':'กลุ่มสาระคณิตศาสตร์','ภาษาไทย':'กลุ่มสาระภาษาไทย','สังคมศึกษา':'กลุ่มสาระสังคมศึกษาฯ','สุขศึกษา':'กลุ่มสาระสุขศึกษาฯ','ภาษาต่างประเทศ':'กลุ่มสาระภาษาต่างประเทศ','ศิลปะ':'กลุ่มสาระศิลปะ','เทคโนโลยี':'กลุ่มสาระเทคโนโลยี','แนะแนว':'แนะแนว','ผู้บริหาร':'ผู้บริหาร','เจ้าหน้าที่':'เจ้าหน้าที่'};
+    var groupLabelMap = {'การงานอาชีพ':'การงานอาชีพ','วิทยาศาสตร์ และเทคโนโลยี':'วิทยาศาสตร์ และเทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ภาษาไทย':'ภาษาไทย','ศิลปะ':'ศิลปะ','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษา และพลศึกษา':'สุขศึกษา และพลศึกษา','แนะแนว':'แนะแนว','เจ้าหน้าที่':'เจ้าหน้าที่','ผู้บริหาร':'ผู้บริหาร'};
     var groupLabel = groupLabelMap[s.group] || (s.group || '-');
 
     return '<tr>' +
@@ -571,7 +565,7 @@ function renderStaff() {
         '</div>' +
       '</td>' +
       '<td><span class="pos-tag">' + esc(s.position || '-') + '</span></td>' +
-      '<td><span class="group-badge ' + groupKey + '">' + esc(groupLabel) + '</span></td>' +
+      '<td><span class="group-badge" data-group="' + esc(s.group||'') + '">' + esc(groupLabel) + '</span></td>' +
       '<td class="hide-mobile">' +
         (s.email ? '<a href="mailto:' + esc(s.email) + '" style="color:#1d4ed8;font-weight:600;font-size:12px;text-decoration:none;">' + esc(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
       '</td>' +
@@ -777,7 +771,7 @@ function parseCSVText(text, delim) {
 
   var rows = [];
   var warnings = [];
-  var validGroups = ['วิทยาศาสตร์','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา','สุขศึกษา','ภาษาต่างประเทศ','ศิลปะ','เทคโนโลยี','แนะแนว','ผู้บริหาร','เจ้าหน้าที่'];
+  var validGroups = ['การงานอาชีพ','วิทยาศาสตร์ และเทคโนโลยี','คณิตศาสตร์','ภาษาต่างประเทศ','ภาษาไทย','ศิลปะ','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษา และพลศึกษา','แนะแนว','ผู้บริหาร','เจ้าหน้าที่'];
 
   for (var i = 1; i < lines.length; i++) {
     var cells = parseCSVLine(lines[i], delim);
@@ -787,14 +781,14 @@ function parseCSVText(text, delim) {
     var group = cells[colMap.group] || '';
     // normalize group
     var g = group;
-    if (g.includes('วิทยาศาสตร์')) group = 'วิทยาศาสตร์';
+    if (g.includes('การงาน') || g.includes('อาชีพ')) group = 'การงานอาชีพ';
+    else if (g.includes('วิทยาศาสตร์') || g.includes('เทคโนโลยี')) group = 'วิทยาศาสตร์ และเทคโนโลยี';
     else if (g.includes('คณิตศาสตร์')) group = 'คณิตศาสตร์';
-    else if (g.includes('ภาษาไทย')) group = 'ภาษาไทย';
-    else if (g.includes('สังคม')) group = 'สังคมศึกษา';
-    else if (g.includes('สุขศึกษา') || g.includes('พลศึกษา')) group = 'สุขศึกษา';
     else if (g.includes('ต่างประเทศ') || g.includes('ภาษาอังกฤษ')) group = 'ภาษาต่างประเทศ';
+    else if (g.includes('ภาษาไทย')) group = 'ภาษาไทย';
     else if (g.includes('ศิลปะ')) group = 'ศิลปะ';
-    else if (g.includes('เทคโนโลยี')) group = 'เทคโนโลยี';
+    else if (g.includes('สังคม')) group = 'สังคมศึกษา ศาสนา และวัฒนธรรม';
+    else if (g.includes('สุขศึกษา') || g.includes('พลศึกษา')) group = 'สุขศึกษา และพลศึกษา';
     else if (g.includes('แนะแนว')) group = 'แนะแนว';
     else if (g.includes('บริหาร') && !g.includes('งาน')) group = 'ผู้บริหาร';
     else if (g.includes('เจ้าหน้าที่') || g.includes('ธุรการ')) group = 'เจ้าหน้าที่';
@@ -921,16 +915,16 @@ function downloadTemplate() {
   var headers = ['ชื่อ-นามสกุล','ตำแหน่ง','กลุ่มสาระ','อีเมล','เบอร์โทร','วิชาที่สอน','หมายเหตุ'];
   var examples = [
     ['นายสมชาย ใจดี','ครูชำนาญการ','คณิตศาสตร์','somchai@nongki.ac.th','081-234-5678','คณิตศาสตร์',''],
-    ['นางสาวสมหญิง รักเรียน','ครูชำนาญการพิเศษ','วิทยาศาสตร์','somying@nongki.ac.th','082-345-6789','ฟิสิกส์, เคมี',''],
+    ['นางสาวสมหญิง รักเรียน','ครูชำนาญการพิเศษ','วิทยาศาสตร์ และเทคโนโลยี','somying@nongki.ac.th','082-345-6789','ฟิสิกส์, เคมี',''],
     ['นายวิชัย มานะดี','ครู','ภาษาไทย','wichai@nongki.ac.th','083-456-7890','ภาษาไทย',''],
     ['นางสมศรี สอนดี','ครูชำนาญการ','ภาษาต่างประเทศ','somsri@nongki.ac.th','084-567-8901','ภาษาอังกฤษ',''],
-    ['นายประเสริฐ ก้าวไกล','ครู','เทคโนโลยี','prasert@nongki.ac.th','085-678-9012','วิทยาการคำนวณ',''],
+    ['นายประเสริฐ ก้าวไกล','ครู','วิทยาศาสตร์ และเทคโนโลยี','prasert@nongki.ac.th','085-678-9012','วิทยาการคำนวณ',''],
     ['นายวิทยา นำทาง','ครู','แนะแนว','wittaya@nongki.ac.th','086-789-0123','แนะแนว',''],
     ['นายอำนาจ บริหารดี','รองผู้อำนวยการ','ผู้บริหาร','amnart@nongki.ac.th','087-890-1234','','ฝ่ายวิชาการ'],
     ['นางสาวพิมพ์ใจ ขยันงาน','เจ้าหน้าที่ธุรการ','เจ้าหน้าที่','pimjai@nongki.ac.th','088-901-2345','','งานธุรการ'],
   ];
   var note = [
-    '# กลุ่มสาระที่รองรับ: วิทยาศาสตร์ / คณิตศาสตร์ / ภาษาไทย / สังคมศึกษา / สุขศึกษา / ภาษาต่างประเทศ / ศิลปะ / เทคโนโลยี / แนะแนว / ผู้บริหาร / เจ้าหน้าที่',
+    '# กลุ่มสาระที่รองรับ: การงานอาชีพ / วิทยาศาสตร์ และเทคโนโลยี / คณิตศาสตร์ / ภาษาต่างประเทศ / ภาษาไทย / ศิลปะ / สังคมศึกษา ศาสนา และวัฒนธรรม / สุขศึกษา และพลศึกษา / แนะแนว / เจ้าหน้าที่ / ผู้บริหาร',
     '# กรุณาลบแถว # และแถวตัวอย่างออกก่อนนำเข้าระบบ'
   ];
   var rows = examples.map(function(r) {
