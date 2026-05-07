@@ -57,7 +57,31 @@
     .prog-ring{transform:rotate(-90deg);}
     .prog-ring circle{transition:stroke-dashoffset .5s ease;}
 
-    /* doc-item, .doc-item.*, .status-dot, .dot-* → ดู shared/styles.css */
+    /* ── Document Item Card ── */
+    .doc-item{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 18px;transition:all .2s;display:flex;align-items:center;gap:14px;}
+    .doc-item:hover{border-color:#bfdbfe;box-shadow:0 4px 12px rgba(29,78,216,.06);}
+    .doc-item.submitted{border-left:4px solid #22c55e;}
+    .doc-item.pending{border-left:4px solid #e2e8f0;}
+    .doc-item.reviewed      {border-left:4px solid #3b82f6;}
+    .doc-item.head_reviewed {border-left:4px solid #0ea5e9;}
+    .doc-item.final_approved{border-left:4px solid #7c3aed;}
+    .doc-item.revision      {border-left:4px solid #f59e0b;}
+    .doc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .dot-none          {background:#d1d5db;}
+    .dot-submitted     {background:#22c55e;}
+    .dot-head_reviewed {background:#0ea5e9;}
+    .dot-reviewed      {background:#3b82f6;}
+    .dot-final_approved{background:#7c3aed;}
+    .dot-revision      {background:#f59e0b;}
+    /* ── Status badge (inline pill) ── */
+    .status-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+    .status-badge.none          {background:#f1f5f9;color:#94a3b8;}
+    .status-badge.submitted     {background:#dcfce7;color:#15803d;}
+    .status-badge.head_reviewed {background:#e0f2fe;color:#0369a1;}
+    .status-badge.reviewed      {background:#dbeafe;color:#1e40af;}
+    .status-badge.final_approved{background:#f5f3ff;color:#6d28d9;}
+    .status-badge.revision      {background:#fef9c3;color:#92400e;}
 
     /* ── Semester Selector ── */
     .sem-pill{padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .2s;}
@@ -546,10 +570,9 @@ function renderDocList() {
     var files  = (sub && sub.files) ? sub.files : [];
     if (sub) submittedCount++;
 
-    var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', revision:'แก้ไข' }[status];
-    var dotCls      = { none:'dot-none', submitted:'dot-submitted', reviewed:'dot-reviewed', revision:'dot-revision' }[status];
+    var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', head_reviewed:'ผ่านหัวหน้ากลุ่มสาระ', reviewed:'ตรวจแล้ว', final_approved:'ผ่านฝ่ายวิชาการ', revision:'แก้ไข' }[status] || status;
+    var dotCls      = { none:'dot-none', submitted:'dot-submitted', head_reviewed:'dot-head_reviewed', reviewed:'dot-reviewed', final_approved:'dot-final_approved', revision:'dot-revision' }[status] || 'dot-none';
     var itemCls     = 'doc-item ' + (status==='none'?'pending':status);
-
 
     html +=
       '<div class="' + itemCls + '">' +
