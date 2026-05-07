@@ -79,6 +79,25 @@
     .search-box{border:1.5px solid #e2e8f0;padding:9px 14px;border-radius:10px;outline:none;font-size:13px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
     .search-box:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
 
+    /* ── Staff Picker ── */
+    .staff-picker-wrap{position:relative;}
+    .staff-picker-input{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;cursor:pointer;background:white;transition:border-color .15s;}
+    .staff-picker-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+    .staff-picker-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #c4b5fd;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;max-height:220px;overflow-y:auto;display:none;}
+    .staff-picker-dropdown.open{display:block;}
+    .staff-picker-search{padding:10px 12px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:white;}
+    .staff-picker-search input{border:1.5px solid #e2e8f0;padding:7px 12px;border-radius:8px;font-size:13px;width:100%;font-family:'Sarabun',sans-serif;outline:none;}
+    .staff-picker-search input:focus{border-color:#7c3aed;}
+    .staff-picker-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .12s;}
+    .staff-picker-item:hover{background:#faf5ff;}
+    .staff-picker-item.selected{background:#ede9fe;}
+    .staff-picker-empty{padding:16px;text-align:center;font-size:12px;color:#94a3b8;}
+    .staff-picker-loading{padding:16px;text-align:center;font-size:12px;color:#94a3b8;}
+
+    /* ── Head-of-group panel ── */
+    #headOfGroupPanel{background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:14px;margin-top:8px;display:none;}
+    #headOfGroupPanel.show{display:block;}
+
     /* ── Empty state ── */
     .empty-state{text-align:center;padding:52px 20px;color:#94a3b8;}
 
@@ -214,9 +233,29 @@
       <h3 style="font-size:17px;font-weight:800;color:#1e293b;" id="modalTitle">เพิ่ม Admin ใหม่</h3>
     </div>
 
-    <!-- Name -->
+    <!-- Staff Picker (เลือกจากรายชื่อบุคลากร) -->
+    <div style="margin-bottom:13px;" id="staffPickerWrap">
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">เลือกบุคลากร</label>
+      <div class="staff-picker-wrap" id="staffPickerWrap2">
+        <div style="position:relative;">
+          <input type="text" id="staffPickerDisplay" class="staff-picker-input" placeholder="🔍 พิมพ์หรือเลือกชื่อบุคลากร..." readonly onclick="toggleStaffDropdown()" autocomplete="off">
+          <i data-lucide="chevron-down" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;pointer-events:none;"></i>
+        </div>
+        <div class="staff-picker-dropdown" id="staffDropdown">
+          <div class="staff-picker-search">
+            <input type="text" id="staffSearchInput" placeholder="ค้นหาชื่อ..." oninput="filterStaffPicker()" onclick="event.stopPropagation()">
+          </div>
+          <div id="staffPickerList">
+            <div class="staff-picker-loading">กำลังโหลดรายชื่อ...</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:5px;">เลือกจากรายชื่อบุคลากรในระบบ หรือกรอกชื่อเองด้านล่าง</p>
+    </div>
+
+    <!-- Name (manual fallback) -->
     <div style="margin-bottom:13px;">
-      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล</label>
+      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล <span style="color:#94a3b8;font-weight:400;">(หรือกรอกเอง)</span></label>
       <input type="text" id="fName" placeholder="เช่น นายสมชาย ใจดี">
     </div>
 
@@ -308,6 +347,22 @@
               </div>
               <i data-lucide="star" style="width:13px;height:13px;color:#fcd34d;flex-shrink:0;"></i>
             </label>
+
+            <!-- Panel: เลือกหัวหน้ากลุ่มสาระจาก staff -->
+            <div id="headOfGroupPanel">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                <i data-lucide="info" style="width:13px;height:13px;color:#d97706;flex-shrink:0;"></i>
+                <p style="font-size:11px;font-weight:700;color:#92400e;">ระบบจะดึงรายชื่อหัวหน้ากลุ่มสาระจากข้อมูลบุคลากรอัตโนมัติ</p>
+              </div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">หัวหน้ากลุ่มสาระที่ได้รับสิทธิ์</label>
+              <div id="headOfGroupPickerWrap" style="position:relative;">
+                <select id="headOfGroupSelect" style="width:100%;border:1.5px solid #fde68a;padding:9px 12px;border-radius:9px;font-size:13px;background:white;color:#1e293b;outline:none;font-family:'Sarabun',sans-serif;cursor:pointer;" onchange="onHeadOfGroupSelect()">
+                  <option value="">-- กำลังโหลดรายชื่อ... --</option>
+                </select>
+              </div>
+              <p style="font-size:10px;color:#d97706;margin-top:6px;" id="headOfGroupInfo"></p>
+            </div>
+
           </div>
         </div>
 
@@ -392,6 +447,167 @@ var editingEmail = null;
 var deletingEmail = null;
 var currentView = 'group';
 var quickPerm = null; // {email, permKey, newVal}
+
+/* ── Staff data (for picker) ── */
+var allStaffList = []; // [{id, name, email, group, role}]
+var staffPickerOpen = false;
+
+/* ── Load staff collection once ── */
+function loadStaffList() {
+  db.collection('staff').orderBy('name').get().then(function(snap) {
+    allStaffList = [];
+    snap.forEach(function(d) {
+      var dat = d.data();
+      allStaffList.push({ id: d.id, name: dat.name||'', email: dat.email||'', group: dat.group||'', role: dat.role||'' });
+    });
+    renderStaffPickerList('');
+    populateHeadOfGroupSelect();
+  }).catch(function(){});
+}
+
+/* ── Staff Picker: toggle dropdown ── */
+function toggleStaffDropdown() {
+  var dd = document.getElementById('staffDropdown');
+  staffPickerOpen = !staffPickerOpen;
+  if (staffPickerOpen) {
+    dd.classList.add('open');
+    document.getElementById('staffSearchInput').value = '';
+    renderStaffPickerList('');
+    document.getElementById('staffSearchInput').focus();
+    // close on outside click
+    setTimeout(function() {
+      document.addEventListener('click', closeStaffDropdownOutside, { once: true });
+    }, 0);
+  } else {
+    dd.classList.remove('open');
+  }
+}
+
+function closeStaffDropdownOutside(e) {
+  var wrap = document.getElementById('staffPickerWrap2');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('staffDropdown').classList.remove('open');
+    staffPickerOpen = false;
+  } else if (staffPickerOpen) {
+    setTimeout(function() {
+      document.addEventListener('click', closeStaffDropdownOutside, { once: true });
+    }, 0);
+  }
+}
+
+function filterStaffPicker() {
+  var q = document.getElementById('staffSearchInput').value;
+  renderStaffPickerList(q);
+}
+
+function renderStaffPickerList(query) {
+  var list = document.getElementById('staffPickerList');
+  if (!allStaffList.length) {
+    list.innerHTML = '<div class="staff-picker-loading">กำลังโหลดรายชื่อ...</div>';
+    return;
+  }
+  var q = (query || '').toLowerCase();
+  var filtered = allStaffList.filter(function(s) {
+    return !q || (s.name + s.email + s.group).toLowerCase().indexOf(q) >= 0;
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
+    return;
+  }
+  var curEmail = (document.getElementById('fEmail').value || '').trim().toLowerCase();
+  list.innerHTML = filtered.map(function(s) {
+    var initials = getInitialsSP(s.name);
+    var colors = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
+    var ci = 0; for (var i=0;i<s.name.length;i++) ci=(ci*31+s.name.charCodeAt(i))%colors.length;
+    var sel = s.email && s.email.toLowerCase() === curEmail ? ' selected' : '';
+    return '<div class="staff-picker-item' + sel + '" onclick="selectStaffPicker(' + JSON.stringify(s.name) + ',' + JSON.stringify(s.email) + ')">' +
+      '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">' + initials + '</div>' +
+      '<div style="min-width:0;">' +
+        '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+        '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+          (s.group ? esc2(s.group) : '') +
+          (s.role === 'หัวหน้ากลุ่มสาระ' ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
+          (s.email ? ' · ' + esc2(s.email) : '') +
+        '</p>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectStaffPicker(name, email) {
+  document.getElementById('fName').value = name || '';
+  if (email && document.getElementById('emailWrap').style.display !== 'none') {
+    document.getElementById('fEmail').value = email;
+  }
+  document.getElementById('staffPickerDisplay').value = name + (email ? '  ·  ' + email : '');
+  document.getElementById('staffDropdown').classList.remove('open');
+  staffPickerOpen = false;
+  lucide.createIcons();
+}
+
+function getInitialsSP(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(' ');
+  if (parts.length >= 2) return (parts[parts.length-2][0]||'') + (parts[parts.length-1][0]||'');
+  return parts[0][0]||'?';
+}
+
+/* ── Head-of-group select: populate from staff where role=หัวหน้ากลุ่มสาระ ── */
+function populateHeadOfGroupSelect(selectedEmail) {
+  var sel = document.getElementById('headOfGroupSelect');
+  if (!sel) return;
+  var heads = allStaffList.filter(function(s) { return s.role === 'หัวหน้ากลุ่มสาระ'; });
+  if (!heads.length) {
+    sel.innerHTML = '<option value="">-- ยังไม่มีหัวหน้ากลุ่มสาระในระบบ (กรุณาเพิ่มใน staff.html) --</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">-- เลือกหัวหน้ากลุ่มสาระ --</option>' +
+    heads.map(function(s) {
+      var val = s.email || s.name;
+      var optSelected = selectedEmail && (s.email === selectedEmail || s.name === selectedEmail) ? ' selected' : '';
+      return '<option value="' + esc2(val) + '"' + optSelected + '>' + esc2(s.name) + ' · ' + esc2(s.group) + (s.email ? '  (' + esc2(s.email) + ')' : '') + '</option>';
+    }).join('');
+  if (selectedEmail) onHeadOfGroupSelect();
+}
+
+function onHeadOfGroupSelect() {
+  var sel = document.getElementById('headOfGroupSelect');
+  var info = document.getElementById('headOfGroupInfo');
+  if (!sel || !info) return;
+  var val = sel.value;
+  if (!val) { info.textContent = ''; return; }
+  var found = allStaffList.find(function(s) { return s.email === val || s.name === val; });
+  if (found) {
+    info.textContent = '✅ ' + found.name + (found.group ? ' · กลุ่ม' + found.group : '') + (found.email ? ' · ' + found.email : '');
+    // auto-fill name/email from selected head
+    if (document.getElementById('emailWrap').style.display !== 'none' && found.email) {
+      document.getElementById('fEmail').value = found.email;
+    }
+    document.getElementById('fName').value = found.name;
+    document.getElementById('staffPickerDisplay').value = found.name + (found.email ? '  ·  ' + found.email : '');
+  } else {
+    info.textContent = '';
+  }
+}
+
+function onPermChange(key) {
+  var cb = document.getElementById('perm-' + key);
+  var wrap = document.getElementById('wrap-' + key);
+  if (cb && wrap) wrap.classList.toggle('active', cb.checked);
+
+  /* headOfGroup panel */
+  if (key === 'headOfGroup') {
+    var panel = document.getElementById('headOfGroupPanel');
+    if (panel) {
+      if (cb && cb.checked) {
+        panel.classList.add('show');
+        populateHeadOfGroupSelect(document.getElementById('headOfGroupSelect') ? document.getElementById('headOfGroupSelect').value : '');
+      } else {
+        panel.classList.remove('show');
+      }
+    }
+  }
+}
 
 /* ── Permission definitions ── */
 var PERM_DEFS = [
@@ -548,6 +764,7 @@ auth.onAuthStateChanged(function(user){
     buildSidebar('admin-role');
     updateSidebarProfile(user);
     subscribeAdmins();
+    loadStaffList();
     lucide.createIcons();
   }).catch(function(){
     document.getElementById('loadingOverlay').style.display='none';
@@ -805,9 +1022,10 @@ function renderMatrix(){
 }
 
 /* ══════════════════════ MODAL: ADD/EDIT ══════════════════════ */
-function onPermChange(key){
-  var row=document.getElementById('wrap-'+key);
-  if(row) row.className='perm-row'+(document.getElementById('perm-'+key).checked?' active':'');
+function resetStaffPicker() {
+  document.getElementById('staffPickerDisplay').value = '';
+  document.getElementById('staffDropdown').classList.remove('open');
+  staffPickerOpen = false;
 }
 
 function openAddModal(){
@@ -817,6 +1035,9 @@ function openAddModal(){
   document.getElementById('fName').value='';
   document.getElementById('fEmail').value='';
   document.getElementById('emailWrap').style.display='';
+  document.getElementById('staffPickerWrap').style.display='';
+  resetStaffPicker();
+  document.getElementById('headOfGroupPanel').classList.remove('show');
   ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
@@ -833,11 +1054,21 @@ function openEditModal(email){
   document.getElementById('modalSaveLbl').textContent='บันทึก';
   document.getElementById('fName').value=admin.data.name||'';
   document.getElementById('emailWrap').style.display='none';
+  document.getElementById('staffPickerWrap').style.display='';
+  // show picker display with current name
+  document.getElementById('staffPickerDisplay').value = admin.data.name || '';
+  document.getElementById('staffDropdown').classList.remove('open');
   var p=admin.data.permissions||{};
   ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
+  // restore headOfGroup panel & select
+  if (p.headOfGroup) {
+    document.getElementById('headOfGroupPanel').classList.add('show');
+    var savedHead = admin.data.headOfGroupEmail || admin.data.name || '';
+    populateHeadOfGroupSelect(savedHead || email);
+  }
   openModal('adminModal');
   lucide.createIcons();
 }
@@ -845,30 +1076,46 @@ function openEditModal(email){
 function saveAdmin(){
   var name=(document.getElementById('fName').value||'').trim();
   var bookings=document.getElementById('perm-bookings').checked;
+  var isHeadOfGroup = document.getElementById('perm-headOfGroup').checked;
   var perms={
     bookings:    bookings,
     rooms:       bookings,
     portfolio:   document.getElementById('perm-portfolio').checked,
     staff:       document.getElementById('perm-staff').checked,
-    headOfGroup: document.getElementById('perm-headOfGroup').checked,
+    headOfGroup: isHeadOfGroup,
     admins:      false
   };
+
+  // extra: save headOfGroup staff info
+  var extraData = {};
+  if (isHeadOfGroup) {
+    var sel = document.getElementById('headOfGroupSelect');
+    var selVal = sel ? sel.value : '';
+    var foundHead = allStaffList.find(function(s){ return s.email === selVal || s.name === selVal; });
+    if (foundHead) {
+      extraData.headOfGroupEmail = foundHead.email || '';
+      extraData.headOfGroupName  = foundHead.name || '';
+      extraData.headOfGroupSubject = foundHead.group || '';
+      if (!name) name = foundHead.name;
+    }
+  }
+
   if(editingEmail){
-    db.collection('admins').doc(editingEmail).update({
+    db.collection('admins').doc(editingEmail).update(Object.assign({
       name: name, permissions: perms,
       updatedBy: currentUser.email,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function(){ closeModal('adminModal'); showToast('อัปเดตสิทธิ์แล้ว ✓'); })
+    }, extraData)).then(function(){ closeModal('adminModal'); showToast('อัปเดตสิทธิ์แล้ว ✓'); })
     .catch(function(e){ showToast(e.message,'error'); });
   } else {
     var email=(document.getElementById('fEmail').value||'').trim().toLowerCase();
     if(!email||!email.includes('@')){ showToast('กรุณาระบุ email ให้ถูกต้อง','warn'); return; }
     if(email===SUPER_ADMIN){ showToast('email นี้เป็น SuperAdmin อยู่แล้ว','warn'); return; }
-    db.collection('admins').doc(email).set({
+    db.collection('admins').doc(email).set(Object.assign({
       name: name, permissions: perms,
       addedBy: currentUser.email,
       addedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function(){ closeModal('adminModal'); showToast('เพิ่ม Admin แล้ว ✓'); })
+    }, extraData)).then(function(){ closeModal('adminModal'); showToast('เพิ่ม Admin แล้ว ✓'); })
     .catch(function(e){ showToast(e.message,'error'); });
   }
 }
