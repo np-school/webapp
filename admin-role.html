@@ -190,6 +190,7 @@
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#2563eb;">🏫 บริหารทั่วไป</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#16a34a;">📚 วิชาการ</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#0369a1;">👥 บุคลากร</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#d97706;">⭐ หัวหน้ากลุ่มสาระ</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7c3aed;">🛡️ Admin</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#64748b;">ดำเนินการ</th>
               </tr>
@@ -286,6 +287,26 @@
                 <div style="font-size:10px;color:#64748b;">เพิ่ม แก้ไข นำเข้า CSV</div>
               </div>
               <i data-lucide="user-cog" style="width:13px;height:13px;color:#7dd3fc;flex-shrink:0;"></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- หัวหน้ากลุ่มสาระ -->
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+            <div style="width:26px;height:26px;background:#fef3c7;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="star" style="width:13px;height:13px;color:#d97706;"></i>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#374151;">หัวหน้ากลุ่มสาระ</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
+            <label class="perm-row" id="wrap-headOfGroup" style="border-radius:8px;">
+              <input type="checkbox" id="perm-headOfGroup" style="width:15px;height:15px;accent-color:#d97706;flex-shrink:0;" onchange="onPermChange('headOfGroup')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">ติดตามส่งงานครู (เฉพาะกลุ่มสาระตน)</div>
+                <div style="font-size:10px;color:#64748b;">เข้าถึง portfolio-admin.html ได้ — เห็นเฉพาะกลุ่มสาระของตนเอง</div>
+              </div>
+              <i data-lucide="star" style="width:13px;height:13px;color:#fcd34d;flex-shrink:0;"></i>
             </label>
           </div>
         </div>
@@ -405,6 +426,16 @@ var PERM_DEFS = [
     border: '#7dd3fc'
   },
   {
+    key: 'headOfGroup',
+    label: 'หัวหน้ากลุ่มสาระ',
+    desc: 'ดูและตรวจสอบการส่งงานในกลุ่มสาระของตน',
+    group: 'หัวหน้ากลุ่มสาระ',
+    icon: 'star',
+    color: '#d97706',
+    bg: '#fef3c7',
+    border: '#fcd34d'
+  },
+  {
     key: 'admins',
     label: 'จัดการ Admin',
     desc: 'SuperAdmin เท่านั้น',
@@ -471,6 +502,20 @@ var GROUP_DEFS = [
     }
   },
   {
+    key: 'headofgroup',
+    label: 'หัวหน้ากลุ่มสาระ',
+    subtitle: 'ดูและตรวจสอบการส่งงานในกลุ่มสาระของตน',
+    icon: 'star',
+    color: '#d97706',
+    bg: '#fef3c7',
+    border: '#fcd34d',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.headOfGroup && !p.portfolio;
+    }
+  },
+  {
     key: 'none',
     label: 'ยังไม่มีสิทธิ์',
     subtitle: 'บัญชีที่ยังไม่ได้รับสิทธิ์ใดเลย',
@@ -481,7 +526,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.bookings&&!p.portfolio&&!p.staff;
+      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup;
     }
   }
 ];
@@ -533,14 +578,14 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.bookings&&!p.portfolio&&!p.staff;
+    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
     {label:'Admin ทั้งหมด', val:total, icon:'users', color:'#7c3aed', bg:'#ede9fe'},
     {label:'มีสิทธิ์แล้ว',  val:withPerms, icon:'shield-check', color:'#16a34a', bg:'#dcfce7'},
     {label:'ยังไม่มีสิทธิ์', val:noPerms, icon:'shield-off', color:'#d97706', bg:'#fef9c3'},
-    {label:'กลุ่มงาน',      val:3, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
+    {label:'กลุ่มงาน',      val:4, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
     return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
@@ -698,14 +743,14 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var perms=a.data.permissions||{};
     if(isSA) perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true};
 
-    var permKeys=['bookings','portfolio','staff','admins'];
+    var permKeys=['bookings','portfolio','staff','headOfGroup','admins'];
     var cells=permKeys.map(function(pk){
       var has=!!perms[pk];
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
@@ -772,7 +817,7 @@ function openAddModal(){
   document.getElementById('fName').value='';
   document.getElementById('fEmail').value='';
   document.getElementById('emailWrap').style.display='';
-  ['bookings','portfolio','staff'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
   });
@@ -789,7 +834,7 @@ function openEditModal(email){
   document.getElementById('fName').value=admin.data.name||'';
   document.getElementById('emailWrap').style.display='none';
   var p=admin.data.permissions||{};
-  ['bookings','portfolio','staff'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
@@ -801,11 +846,12 @@ function saveAdmin(){
   var name=(document.getElementById('fName').value||'').trim();
   var bookings=document.getElementById('perm-bookings').checked;
   var perms={
-    bookings:  bookings,
-    rooms:     bookings,  /* rooms ติดมากับ bookings เสมอ */
-    portfolio: document.getElementById('perm-portfolio').checked,
-    staff:     document.getElementById('perm-staff').checked,
-    admins:    false
+    bookings:    bookings,
+    rooms:       bookings,
+    portfolio:   document.getElementById('perm-portfolio').checked,
+    staff:       document.getElementById('perm-staff').checked,
+    headOfGroup: document.getElementById('perm-headOfGroup').checked,
+    admins:      false
   };
   if(editingEmail){
     db.collection('admins').doc(editingEmail).update({

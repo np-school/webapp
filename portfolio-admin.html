@@ -308,16 +308,48 @@ function normaliseGroup(g) {
 }
 
 /* ─── AUTH + ADMIN CHECK ─── */
+var currentUserEmail = '';
+var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
+var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
+
 auth.onAuthStateChanged(function(u) {
   var ov = document.getElementById('loadingOverlay');
   if (!u) { window.location.href = 'index.html'; return; }
 
-  db.collection('admins').doc(u.email.toLowerCase()).get().then(function(doc) {
+  currentUserEmail = u.email.toLowerCase();
+
+  db.collection('admins').doc(currentUserEmail).get().then(function(doc) {
     if (ov) ov.style.display = 'none';
     if (!doc.exists) { document.getElementById('accessDenied').style.display='flex'; return; }
     var p = doc.data().permissions || {};
-    var isSA = u.email.toLowerCase() === 'nattapol@nongki.ac.th';
-    if (!isSA && !p.portfolio) { document.getElementById('accessDenied').style.display='flex'; return; }
+    var isSA = currentUserEmail === 'nattapol@nongki.ac.th';
+    var hasPortfolio  = isSA || !!p.portfolio;
+    var hasHeadOfGroup = !!p.headOfGroup;
+
+    if (!hasPortfolio && !hasHeadOfGroup) {
+      document.getElementById('accessDenied').style.display='flex'; return;
+    }
+
+    /* หัวหน้ากลุ่มสาระ: ล็อกมุมมองเฉพาะกลุ่มของตน */
+    if (!hasPortfolio && hasHeadOfGroup) {
+      isHeadOfGroupOnly = true;
+      /* ดึงกลุ่มสาระของตนจาก staff collection */
+      db.collection('staff').where('email','==',currentUserEmail).limit(1).get().then(function(ss) {
+        if (!ss.empty) {
+          headOfGroupName = normaliseGroup(ss.docs[0].data().group || '');
+        }
+        bootApp(u);
+      });
+      return;
+    }
+    bootApp(u);
+  }).catch(function() {
+    if (ov) ov.style.display = 'none';
+    document.getElementById('accessDenied').style.display = 'flex';
+  });
+});
+
+function bootApp(u) {
     document.getElementById('adminApp').style.display = 'block';
     buildNavbar('Admin – ติดตามส่งงานประจำภาคเรียน', true);
     updateNavUser(u);
@@ -325,13 +357,20 @@ auth.onAuthStateChanged(function(u) {
     var sec = document.getElementById('adminSidebarSection');
     if (sec) { sec.style.display='block'; lucide.createIcons(); }
     updateSidebarProfile(u);
+
+    /* แสดง banner สำหรับหัวหน้ากลุ่มสาระ */
+    if (isHeadOfGroupOnly) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 16px;margin:16px 24px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:#92400e;font-weight:700;';
+      banner.innerHTML = '<i data-lucide="star" style="width:16px;height:16px;color:#d97706;flex-shrink:0;"></i> คุณเข้าถึงในฐานะ <b>หัวหน้ากลุ่มสาระ</b> — แสดงเฉพาะกลุ่มสาระ: <span style="background:#d97706;color:white;padding:2px 10px;border-radius:20px;margin-left:4px;">' + (headOfGroupName || '...') + '</span>';
+      var mainGrid = document.querySelector('#adminApp > nav + div') || document.getElementById('adminApp');
+      mainGrid.insertBefore(banner, mainGrid.firstChild.nextSibling || mainGrid.firstChild);
+      lucide.createIcons();
+    }
+
     loadAllSubmissions();
     lucide.createIcons();
-  }).catch(function() {
-    if (ov) ov.style.display = 'none';
-    document.getElementById('accessDenied').style.display = 'flex';
-  });
-});
+}
 
 /* ─── YEAR / SEM ─── */
 function changeYear(d) {
@@ -390,7 +429,16 @@ function loadAllSubmissions() {
     });
 
     /* สร้าง group filter bar ตามกลุ่มที่มีจริงใน staff */
+    /* ถ้าเป็นหัวหน้ากลุ่มสาระ → ล็อก filter เฉพาะกลุ่มของตน */
+    if (isHeadOfGroupOnly && headOfGroupName) {
+      currentGroup = headOfGroupName;
+    }
     buildGroupFilterBar();
+    /* ซ่อน group filter bar ถ้าเป็น headOfGroup (ไม่ให้เปลี่ยนได้) */
+    if (isHeadOfGroupOnly) {
+      var bar = document.getElementById('groupFilterBar');
+      if (bar) bar.style.display = 'none';
+    }
     buildDocFilterBar();
 
     /* ── 2. ดึง submissions แล้ว join กับ teacherMap ── */
