@@ -125,6 +125,11 @@ function checkAdminAccess(email) {
       _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
 
+      /* booking-admin page: sidebar ใช้ sbtn-* แทน adminMenuItem-booking */
+      var canBooking = isSA || !!p.bookings;
+      _toggleAdminItem('sbtn-bookings', canBooking);
+      _toggleAdminItem('sbtn-rooms',    canBooking && (isSA || !!p.rooms));
+
       /* SuperAdmin-only */
       if (isSA) {
         var slot = document.getElementById('superadminSidebarSlot');
