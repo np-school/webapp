@@ -237,61 +237,43 @@
         </button>
       </div>
 
-      <!-- Subject Group + Course Info -->
-      <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px;">
-        <div>
-          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">กลุ่มสาระการเรียนรู้ <span style="color:#ef4444;">*</span></label>
-          <select id="subjectGroup" style="font-family:'Sarabun',sans-serif;">
-            <option value="">-- เลือกกลุ่มสาระ --</option>
-            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
-            <option value="เทคโนโลยี">เทคโนโลยี</option>
-            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
-            <option value="ภาษาไทย">ภาษาไทย</option>
-            <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
-            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
-            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
-            <option value="ศิลปะ">ศิลปะ</option>
-            <option value="การงานอาชีพ">การงานอาชีพ</option>
-            <option value="แนะแนว">แนะแนว</option>
-          </select>
+      <!-- Subject Group -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">กลุ่มสาระการเรียนรู้ <span style="color:#ef4444;">*</span></label>
+        <select id="subjectGroup" style="font-family:'Sarabun',sans-serif;">
+          <option value="">-- เลือกกลุ่มสาระ --</option>
+          <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+          <option value="เทคโนโลยี">เทคโนโลยี</option>
+          <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+          <option value="ภาษาไทย">ภาษาไทย</option>
+          <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+          <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+          <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+          <option value="ศิลปะ">ศิลปะ</option>
+          <option value="การงานอาชีพ">การงานอาชีพ</option>
+          <option value="แนะแนว">แนะแนว</option>
+        </select>
+      </div>
+
+      <!-- ── Multi-course section ── -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;">รายวิชาที่ส่ง <span style="color:#ef4444;">*</span></label>
+          <button onclick="addCourseRow()" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่มรายวิชา
+          </button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;">
-          <div>
-            <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">รหัสวิชา <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="courseCode" placeholder="เช่น ว31101" maxlength="20">
-          </div>
-          <div>
-            <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อวิชา <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="courseName" placeholder="เช่น ฟิสิกส์ 1">
-          </div>
-        </div>
+        <div id="courseRowsContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
 
       <!-- ── Existing uploaded files ── -->
-      <div id="existingFilesSection" style="display:none;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;">ไฟล์ที่อัปโหลดแล้ว</label>
-          <span id="fileCountBadge" style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 10px;border-radius:20px;"></span>
-        </div>
-        <div id="existingFilesList"></div>
-      </div>
+      <!-- ── Per-course file panels (rendered dynamically) ── -->
+      <div id="courseFilePanels" style="margin-bottom:16px;display:flex;flex-direction:column;gap:12px;"></div>
 
-      <!-- ── New file upload zone ── -->
-      <div id="newFileSection" style="margin-bottom:16px;">
-        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
-          เพิ่มไฟล์ PDF <span style="color:#ef4444;">*</span>
-          <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-left:4px;">(สูงสุด 5 ไฟล์ต่อหัวข้อ, PDF เท่านั้น, สูงสุด 20MB ต่อไฟล์)</span>
-        </label>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-          <i data-lucide="file-up" style="width:32px;height:32px;color:#93c5fd;margin-bottom:8px;"></i>
-          <p style="font-size:13px;font-weight:700;color:#1d4ed8;">คลิกหรือลากไฟล์ PDF มาวาง</p>
-          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">รองรับเฉพาะไฟล์ PDF สูงสุด 20MB ต่อไฟล์</p>
-        </div>
-        <input type="file" id="fileInput" style="display:none;" accept=".pdf,application/pdf" multiple onchange="onFileSelected(this)">
-
-        <!-- Queued files to upload -->
-        <div id="queuedFiles" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
-      </div>
+      <!-- hidden inputs still needed for compat -->
+      <input type="hidden" id="courseCode" value="">
+      <input type="hidden" id="courseName" value="">
+      <input type="file" id="fileInput" style="display:none;" accept=".pdf,application/pdf" multiple onchange="onFileSelected(this)">
 
       <!-- Upload Progress -->
       <div id="uploadProgress" style="display:none;margin-bottom:16px;">
@@ -399,12 +381,17 @@ var currentUser      = null;
 var currentStaffData = null;
 var currentYear      = 2568;
 var currentSem       = 1;
-var submissions      = {};   /* key: docId → { id, files:[{fileId,fileName,fileUrl}], ...meta } */
+/* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
+var submissions      = {};
 var currentDocId     = null;
-var selectedFiles    = [];   /* File objects queued for upload */
-var driveAccessToken = null; /* Google OAuth access token */
-var pendingDeleteInfo = null; /* { docId, fileIndex } */
+/* courseRows: array of { code, name, files: File[], activeCourseKey: string|null } */
+var courseRows       = [];
+/* which course panel's file-input is active (for file picker) */
+var activeUploadRowIdx = null;
+var driveAccessToken = null;
+var pendingDeleteInfo = null; /* { subKey, fileIndex } */
 var tokenClient      = null;
+var pendingReplaceInfo = null; /* { subKey, fileIndex } */
 
 /* ─── GOOGLE IDENTITY / DRIVE AUTH ─── */
 function initGoogleAuth() {
@@ -539,7 +526,9 @@ function loadSubmissions() {
       submissions = {};
       snap.forEach(function(d) {
         var data = d.data();
-        submissions[data.docTypeId] = Object.assign({ id: d.id }, data);
+        /* support both old (single course) and new (multi-course) docs */
+        var subKey = data.docTypeId + '_' + (data.courseCode || '');
+        submissions[subKey] = Object.assign({ id: d.id }, data);
       });
       renderDocList();
     })
@@ -549,245 +538,363 @@ function loadSubmissions() {
 /* ─── RENDER ─── */
 function renderDocList() {
   var list = document.getElementById('docList');
-  var submittedCount = 0;
+  var submittedDocIds = new Set();
   var html = '';
 
-  DOCUMENT_TYPES.forEach(function(dt, idx) {
-    var sub    = submissions[dt.id];
-    var status = sub ? (sub.status || 'submitted') : 'none';
-    var files  = (sub && sub.files) ? sub.files : [];
-    if (sub) submittedCount++;
+  /* รวบรวม subKeys ที่ส่งแล้วในแต่ละ docType */
+  var docCourses = {}; /* docTypeId → [ subKey, ... ] */
+  Object.keys(submissions).forEach(function(subKey) {
+    var sub = submissions[subKey];
+    if (!docCourses[sub.docTypeId]) docCourses[sub.docTypeId] = [];
+    docCourses[sub.docTypeId].push(subKey);
+    submittedDocIds.add(sub.docTypeId);
+  });
 
-    var statusLabel = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', revision:'แก้ไข' }[status];
-    var dotCls      = { none:'dot-none', submitted:'dot-submitted', reviewed:'dot-reviewed', revision:'dot-revision' }[status];
-    var itemCls     = 'doc-item ' + (status==='none'?'pending':status);
-    var badgeBg     = { none:'#f1f5f9', submitted:'#dcfce7', reviewed:'#dbeafe', revision:'#fef9c3' }[status];
-    var badgeColor  = { none:'#94a3b8', submitted:'#15803d', reviewed:'#1e40af', revision:'#92400e' }[status];
+  DOCUMENT_TYPES.forEach(function(dt, idx) {
+    var courses = docCourses[dt.id] || [];
+    var hasAny  = courses.length > 0;
+
+    var statusLabel, statusBg, statusColor;
+    if (!hasAny) {
+      statusLabel = 'ยังไม่ส่ง'; statusBg = '#f1f5f9'; statusColor = '#94a3b8';
+    } else {
+      var allReviewed  = courses.every(function(k){ return (submissions[k].status||'submitted') === 'reviewed'; });
+      var anyRevision  = courses.some(function(k){ return (submissions[k].status||'submitted') === 'revision'; });
+      if (anyRevision) {
+        statusLabel = 'มีรายวิชาแก้ไข'; statusBg = '#fef9c3'; statusColor = '#92400e';
+      } else if (allReviewed) {
+        statusLabel = 'ตรวจแล้วทุกวิชา'; statusBg = '#dbeafe'; statusColor = '#1e40af';
+      } else {
+        statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
+      }
+    }
+
+    var borderColor = !hasAny ? '#e2e8f0' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? '#f59e0b' : '#22c55e';
 
     html +=
-      '<div class="' + itemCls + '">' +
-        '<div class="doc-icon" style="background:' + dt.bg + ';">' +
-          '<i data-lucide="' + dt.icon + '" style="width:20px;height:20px;color:' + dt.color + ';"></i>' +
-        '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-            '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
-            '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + badgeBg + ';color:' + badgeColor + ';">' + statusLabel + '</span>' +
-            (sub ? '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' : '') +
+      '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
+        '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+          '<div class="doc-icon" style="background:' + dt.bg + ';flex-shrink:0;">' +
+            '<i data-lucide="' + dt.icon + '" style="width:20px;height:20px;color:' + dt.color + ';"></i>' +
           '</div>' +
-          (sub
-            ? '<div style="margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
-                (sub.subjectGroup ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:#eff6ff;color:#1d4ed8;border-radius:10px;">' + esc(sub.subjectGroup) + '</span>' : '') +
-                (sub.courseCode   ? '<span style="font-size:11px;color:#475569;font-weight:700;">' + esc(sub.courseCode) + '</span>' : '') +
-                (sub.courseName   ? '<span style="font-size:11px;color:#64748b;">· ' + esc(sub.courseName) + '</span>' : '') +
-              '</div>' +
-              '<div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-                '<span style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;">' +
-                  '<i data-lucide="calendar" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i>' +
-                  ' ส่งครั้งแรก: <b>' + formatDate(sub.submittedAt) + '</b>' +
-                '</span>' +
-                (sub.resubmittedAt
-                  ? '<span style="font-size:11px;color:#f59e0b;display:flex;align-items:center;gap:4px;">' +
-                      '· <i data-lucide="refresh-cw" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i>' +
-                      ' ส่งล่าสุด: <b>' + formatDate(sub.resubmittedAt) + '</b>' +
-                    '</span>'
-                  : '') +
-                (sub.note ? '<span style="font-size:11px;color:#94a3b8;">· ' + esc(sub.note) + '</span>' : '') +
-              '</div>'
-            : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
-          ) +
-          (sub && sub.status === 'revision' && sub.adminNote
-            ? '<div style="margin-top:6px;padding:6px 10px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;">' +
-                '<p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p>' +
-              '</div>'
-            : '') +
-        '</div>' +
-        '<div class="doc-item-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-          '<button onclick="openUploadModal(\'' + dt.id + '\')" style="padding:7px 14px;background:' + (sub?'#f8fafc':'#1d4ed8') + ';color:' + (sub?'#475569':'white') + ';border-radius:8px;font-size:12px;font-weight:700;border:1px solid ' + (sub?'#e2e8f0':'#1d4ed8') + ';cursor:pointer;display:flex;align-items:center;gap:5px;">' +
-            '<i data-lucide="' + (sub?'pencil':'upload') + '" style="width:12px;height:12px;"></i>' +
-            (sub ? 'จัดการ' : 'ส่งงาน') +
-          '</button>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
+              '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusColor + ';">' + statusLabel + '</span>' +
+            '</div>' +
+
+            /* รายวิชาย่อย */
+            (hasAny
+              ? '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">' +
+                  courses.map(function(subKey) {
+                    var sub     = submissions[subKey];
+                    var status  = sub.status || 'submitted';
+                    var slabel  = { submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', head_reviewed:'หัวหน้าตรวจ', final_approved:'อนุมัติแล้ว', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
+                    var sbg     = { submitted:'#dcfce7', reviewed:'#dbeafe', head_reviewed:'#e0f2fe', final_approved:'#f5f3ff', revision:'#fef9c3' }[status] || '#dcfce7';
+                    var scol    = { submitted:'#15803d', reviewed:'#1e40af', head_reviewed:'#0369a1', final_approved:'#6d28d9', revision:'#92400e' }[status] || '#15803d';
+                    var files   = sub.files || [];
+                    return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
+                      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                        '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
+                        '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
+                        '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
+                        '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+                      '</div>' +
+                      (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc(sub.note) + '</p>' : '') +
+                      (status === 'revision' && sub.adminNote
+                        ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p></div>'
+                        : '') +
+                      '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">' +
+                        '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
+                          '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
+                        '</button>' +
+                      '</div>' +
+                    '</div>';
+                  }).join('') +
+                '</div>'
+              : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
+            ) +
+          '</div>' +
+          '<div style="flex-shrink:0;">' +
+            '<button onclick="openUploadModal(\'' + dt.id + '\')" style="padding:7px 14px;background:#1d4ed8;color:white;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">' +
+              '<i data-lucide="plus" style="width:12px;height:12px;"></i>' +
+              (hasAny ? 'เพิ่มวิชา' : 'ส่งงาน') +
+            '</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
   });
 
   list.innerHTML = html;
 
-  var pct = DOCUMENT_TYPES.length ? Math.round((submittedCount / DOCUMENT_TYPES.length) * 100) : 0;
+  var total = DOCUMENT_TYPES.length;
+  var submittedCount = submittedDocIds.size;
+  var pct = total ? Math.round((submittedCount / total) * 100) : 0;
   document.getElementById('progressBar').style.width    = pct + '%';
-  document.getElementById('progressText').textContent   = submittedCount + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
+  document.getElementById('progressText').textContent   = submittedCount + ' / ' + total + ' รายการ';
   lucide.createIcons();
 }
 
-/* ─── UPLOAD MODAL ─── */
+/* ─── UPLOAD MODAL (add new course) ─── */
 function openUploadModal(docTypeId) {
   currentDocId  = docTypeId;
-  selectedFiles = [];
-  var dt  = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
-  var sub = submissions[docTypeId];
-  var files = (sub && sub.files) ? sub.files : [];
+  courseRows    = []; /* reset: เริ่มต้นด้วยแถวว่างหนึ่งแถว */
+  activeUploadRowIdx = null;
 
-  document.getElementById('modalTitle').textContent    = (sub ? 'จัดการงาน: ' : 'ส่งงาน: ') + dt.label;
+  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+
+  document.getElementById('modalTitle').textContent    = 'ส่งงาน: ' + dt.label;
   document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
-  document.getElementById('submitNote').value          = sub ? (sub.note||'') : '';
-  document.getElementById('subjectGroup').value        = sub ? (sub.subjectGroup||'') : '';
-  document.getElementById('courseCode').value          = sub ? (sub.courseCode||'') : '';
-  document.getElementById('courseName').value          = sub ? (sub.courseName||'') : '';
   document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('queuedFiles').innerHTML     = '';
+  document.getElementById('submitNote').value = '';
+  document.getElementById('courseFilePanels').innerHTML = '';
+  document.getElementById('courseRowsContainer').innerHTML = '';
 
-  /* auto-fill กลุ่มสาระจากข้อมูลบุคลากร */
-  if (!sub && window._defaultSubjectGroup) {
+  /* auto-fill กลุ่มสาระ */
+  if (window._defaultSubjectGroup) {
     document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
+  } else {
+    document.getElementById('subjectGroup').value = '';
   }
 
-  /* show existing files */
-  renderExistingFiles(files, docTypeId);
-
-  /* toggle new file section visibility */
-  var canAddMore = files.length < MAX_FILES_PER_TOPIC;
-  document.getElementById('newFileSection').style.display = canAddMore ? 'block' : 'none';
-  if (!canAddMore) {
-    showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว ลบไฟล์เก่าก่อนเพิ่มใหม่', 'error');
-  }
+  /* เพิ่มแถวรายวิชาแรก */
+  addCourseRow();
 
   document.getElementById('uploadModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   lucide.createIcons();
 }
 
-function renderExistingFiles(files, docTypeId) {
-  var sec   = document.getElementById('existingFilesSection');
-  var list  = document.getElementById('existingFilesList');
-  var badge = document.getElementById('fileCountBadge');
-  if (!files || files.length === 0) {
-    sec.style.display = 'none';
-    return;
-  }
-  sec.style.display = 'block';
-  badge.textContent = files.length + ' / ' + MAX_FILES_PER_TOPIC + ' ไฟล์';
-  var html = '';
-  files.forEach(function(f, i) {
-    html +=
-      '<div class="file-entry" id="existingFile_' + i + '">' +
-        '<i data-lucide="file-text" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>' +
-        '<span class="file-slot-badge">' + (i+1) + '</span>' +
-        '<span class="file-entry-name" title="' + esc(f.fileName) + '">' + esc(f.fileName) + '</span>' +
-        '<a href="' + esc(f.fileUrl) + '" target="_blank" class="file-entry-link" title="เปิดไฟล์">' +
-          '<i data-lucide="external-link" style="width:14px;height:14px;"></i>' +
-        '</a>' +
-        '<button class="file-entry-replace" onclick="toggleReplaceZone(\'' + esc(docTypeId) + '\',' + i + ')" title="แทนที่ไฟล์">' +
-          '<i data-lucide="pencil" style="width:14px;height:14px;"></i>' +
-        '</button>' +
-        '<button class="file-entry-del" onclick="promptDeleteFile(\'' + esc(docTypeId) + '\',' + i + ',\'' + esc(f.fileName) + '\')" title="ลบไฟล์">' +
-          '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>' +
-        '</button>' +
-      '</div>' +
-      /* zone แทนที่ไฟล์ – ซ่อนไว้ก่อน */
-      '<div id="replaceZone_' + i + '" style="display:none;margin-bottom:6px;">' +
-        '<div class="replace-zone" onclick="triggerReplaceInput(' + i + ')">' +
-          '<i data-lucide="upload-cloud" style="width:20px;height:20px;color:#f59e0b;margin-bottom:4px;"></i>' +
-          '<p style="font-size:12px;font-weight:700;color:#b45309;">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (i+1) + '</p>' +
-          '<p style="font-size:10px;color:#92400e;margin-top:2px;">ไฟล์เดิมใน Drive จะถูกลบ แล้วอัปโหลดไฟล์ใหม่แทน</p>' +
-        '</div>' +
-        '<div id="replaceProgress_' + i + '" style="display:none;margin-top:6px;">' +
-          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-            '<span style="font-size:11px;font-weight:700;color:#64748b;">กำลังแทนที่...</span>' +
-            '<span id="replacePct_' + i + '" style="font-size:11px;font-weight:700;color:#f59e0b;">0%</span>' +
-          '</div>' +
-          '<div class="pbar-bg"><div id="replaceBar_' + i + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>' +
-        '</div>' +
-      '</div>';
-  });
-  list.innerHTML = html;
+/* ─── MANAGE MODAL (จัดการไฟล์ของวิชาที่ส่งแล้ว) ─── */
+function openManageCourseModal(docTypeId, subKey) {
+  currentDocId = docTypeId;
+  var sub = submissions[subKey];
+  if (!sub) return;
+  var dt    = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+  var files = sub.files || [];
+
+  document.getElementById('modalTitle').textContent    = 'จัดการงาน: ' + dt.label;
+  document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('submitNote').value = sub.note || '';
+  document.getElementById('subjectGroup').value = sub.subjectGroup || '';
+  document.getElementById('courseRowsContainer').innerHTML = '';
+  document.getElementById('uploadProgress').style.display = 'none';
+
+  /* แสดง panel ของวิชานี้ */
+  courseRows = [{ code: sub.courseCode, name: sub.courseName, files: [], managingSubKey: subKey }];
+  renderCourseFilePanels();
+
+  document.getElementById('uploadModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
   lucide.createIcons();
 }
 
-var pendingReplaceIndex = null; /* index ของไฟล์ที่กำลังจะแทนที่ */
+/* ─── COURSE ROW MANAGEMENT ─── */
+function addCourseRow() {
+  courseRows.push({ code: '', name: '', files: [], managingSubKey: null });
+  renderCourseRows();
+}
 
-function triggerReplaceInput(fileIndex) {
-  pendingReplaceIndex = fileIndex;
+function removeCourseRow(idx) {
+  courseRows.splice(idx, 1);
+  if (courseRows.length === 0) addCourseRow();
+  else renderCourseRows();
+}
+
+function renderCourseRows() {
+  var container = document.getElementById('courseRowsContainer');
+  var html = '';
+  courseRows.forEach(function(row, idx) {
+    html +=
+      '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+          '<span style="font-size:12px;font-weight:800;color:#64748b;background:#e2e8f0;padding:2px 8px;border-radius:6px;">วิชาที่ ' + (idx+1) + '</span>' +
+          (courseRows.length > 1
+            ? '<button onclick="removeCourseRow(' + idx + ')" style="margin-left:auto;padding:3px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">ลบ</button>'
+            : '') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-bottom:8px;">' +
+          '<input type="text" placeholder="รหัสวิชา เช่น ว31101" maxlength="20" value="' + esc(row.code) + '" onchange="courseRows[' + idx + '].code=this.value.trim()" style="font-size:13px;">' +
+          '<input type="text" placeholder="ชื่อวิชา เช่น ฟิสิกส์ 1" value="' + esc(row.name) + '" onchange="courseRows[' + idx + '].name=this.value.trim()" style="font-size:13px;">' +
+        '</div>' +
+        /* upload zone สำหรับวิชานี้ */
+        '<div style="border:2px dashed #bfdbfe;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
+          '<i data-lucide="file-up" style="width:22px;height:22px;color:#93c5fd;margin-bottom:4px;"></i>' +
+          '<p style="font-size:12px;font-weight:700;color:#1d4ed8;">คลิกเพื่อเพิ่ม PDF</p>' +
+          '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">สูงสุด ' + MAX_FILES_PER_TOPIC + ' ไฟล์, PDF, 20MB</p>' +
+        '</div>' +
+        '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+  lucide.createIcons();
+  /* re-render queued files */
+  courseRows.forEach(function(_, i){ renderCourseQueuedFiles(i); });
+}
+
+function renderCourseFilePanels() {
+  var panels = document.getElementById('courseFilePanels');
+  var html = '';
+  courseRows.forEach(function(row, idx) {
+    var subKey = row.managingSubKey;
+    var sub    = subKey ? submissions[subKey] : null;
+    var files  = sub ? (sub.files || []) : [];
+    var canAdd = files.length < MAX_FILES_PER_TOPIC;
+    html +=
+      '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+          '<span style="font-size:13px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:3px 10px;border-radius:8px;">' + esc(sub ? sub.courseCode : '') + '</span>' +
+          '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc(sub ? sub.courseName : '') + '</span>' +
+          '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+        '</div>' +
+        '<div id="existFileList_' + idx + '">' +
+          files.map(function(f, fi) {
+            return '<div class="file-entry" id="ef_' + idx + '_' + fi + '">' +
+              '<i data-lucide="file-text" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>' +
+              '<span class="file-slot-badge">' + (fi+1) + '</span>' +
+              '<span class="file-entry-name" title="' + esc(f.fileName) + '">' + esc(f.fileName) + '</span>' +
+              '<a href="' + esc(f.fileUrl) + '" target="_blank" class="file-entry-link"><i data-lucide="external-link" style="width:14px;height:14px;"></i></a>' +
+              '<button class="file-entry-replace" onclick="toggleManageReplaceZone(\'' + esc(subKey) + '\',' + fi + ',' + idx + ')" title="แทนที่"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
+              '<button class="file-entry-del" onclick="promptDeleteFile(\'' + esc(subKey) + '\',' + fi + ')" title="ลบ"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+            '</div>' +
+            '<div id="mReplaceZone_' + idx + '_' + fi + '" style="display:none;margin-bottom:6px;">' +
+              '<div class="replace-zone" onclick="triggerManageReplace(\'' + esc(subKey) + '\',' + fi + ')">' +
+                '<i data-lucide="upload-cloud" style="width:18px;height:18px;color:#f59e0b;margin-bottom:3px;"></i>' +
+                '<p style="font-size:12px;font-weight:700;color:#b45309;">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (fi+1) + '</p>' +
+              '</div>' +
+              '<div id="mReplaceProgress_' + idx + '_' + fi + '" style="display:none;margin-top:6px;">' +
+                '<div class="pbar-bg"><div id="mReplaceBar_' + idx + '_' + fi + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>' +
+              '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        (canAdd
+          ? '<div style="border:2px dashed #bfdbfe;border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#f8faff;margin-top:8px;" onclick="triggerFileInput(' + idx + ')">' +
+              '<p style="font-size:12px;font-weight:700;color:#1d4ed8;">+ เพิ่มไฟล์ PDF</p>' +
+            '</div>' +
+            '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>'
+          : '<p style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center;">ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว</p>'
+        ) +
+      '</div>';
+  });
+  panels.innerHTML = html;
+  lucide.createIcons();
+}
+
+/* ─── FILE INPUT TRIGGER ─── */
+function triggerFileInput(rowIdx) {
+  activeUploadRowIdx = rowIdx;
+  var inp = document.getElementById('fileInput');
+  inp.value = '';
+  inp.click();
+}
+
+function onFileSelected(input) {
+  if (activeUploadRowIdx === null) return;
+  var idx = activeUploadRowIdx;
+  addFilesToRow(idx, Array.from(input.files));
+  input.value = '';
+}
+
+function addFilesToRow(rowIdx, newFiles) {
+  var row = courseRows[rowIdx];
+  if (!row) return;
+  var managingFiles = row.managingSubKey ? (submissions[row.managingSubKey] ? submissions[row.managingSubKey].files.length : 0) : 0;
+  var total = managingFiles + row.files.length;
+  newFiles.forEach(function(f) {
+    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+      showToast(f.name + ' – รองรับเฉพาะ PDF', 'error'); return;
+    }
+    if (f.size > 20*1024*1024) { showToast(f.name + ' – เกิน 20MB', 'error'); return; }
+    if (total >= MAX_FILES_PER_TOPIC) { showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว', 'error'); return; }
+    row.files.push(f); total++;
+  });
+  renderCourseQueuedFiles(rowIdx);
+}
+
+function renderCourseQueuedFiles(rowIdx) {
+  var container = document.getElementById('queued_' + rowIdx);
+  if (!container) return;
+  var row = courseRows[rowIdx];
+  if (!row || row.files.length === 0) { container.innerHTML = ''; return; }
+  var html = '';
+  row.files.forEach(function(f, i) {
+    html +=
+      '<div class="file-entry">' +
+        '<i data-lucide="file-text" style="width:15px;height:15px;color:#22c55e;flex-shrink:0;"></i>' +
+        '<span class="file-entry-name">' + esc(f.name) + '</span>' +
+        '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + 'MB</span>' +
+        '<button class="file-entry-del" onclick="removeCourseFile(' + rowIdx + ',' + i + ')"><i data-lucide="x" style="width:13px;height:13px;"></i></button>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+  lucide.createIcons();
+}
+
+function removeCourseFile(rowIdx, fileIdx) {
+  courseRows[rowIdx].files.splice(fileIdx, 1);
+  renderCourseQueuedFiles(rowIdx);
+}
+
+/* ─── MANAGE REPLACE ─── */
+function triggerManageReplace(subKey, fileIndex) {
+  pendingReplaceInfo = { subKey: subKey, fileIndex: fileIndex };
   document.getElementById('replaceFileInput').value = '';
   document.getElementById('replaceFileInput').click();
 }
 
-function toggleReplaceZone(docTypeId, fileIndex) {
-  /* ปิด zone อื่นทั้งหมดก่อน */
-  var sub   = submissions[docTypeId];
-  var files = (sub && sub.files) ? sub.files : [];
-  files.forEach(function(_, i) {
-    var z  = document.getElementById('replaceZone_' + i);
-    var fe = document.getElementById('existingFile_' + i);
-    if (i !== fileIndex) {
-      if (z)  z.style.display  = 'none';
-      if (fe) fe.classList.remove('replacing');
-    }
+function toggleManageReplaceZone(subKey, fileIndex, rowIdx) {
+  var sub = submissions[subKey];
+  if (!sub) return;
+  var files = sub.files || [];
+  files.forEach(function(_, fi) {
+    var z = document.getElementById('mReplaceZone_' + rowIdx + '_' + fi);
+    if (fi !== fileIndex && z) z.style.display = 'none';
   });
-  var zone     = document.getElementById('replaceZone_' + fileIndex);
-  var fileEntry = document.getElementById('existingFile_' + fileIndex);
-  if (!zone) return;
-  var isOpen = zone.style.display !== 'none';
-  zone.style.display = isOpen ? 'none' : 'block';
-  if (fileEntry) fileEntry.classList.toggle('replacing', !isOpen);
+  var zone = document.getElementById('mReplaceZone_' + rowIdx + '_' + fileIndex);
+  if (zone) zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
   lucide.createIcons();
 }
 
 function onReplaceFileSelected(input) {
-  if (!input.files[0] || pendingReplaceIndex === null) return;
+  if (!input.files[0] || !pendingReplaceInfo) return;
   var file = input.files[0];
   if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-    showToast('รองรับเฉพาะไฟล์ PDF', 'error'); return;
+    showToast('รองรับเฉพาะ PDF', 'error'); return;
   }
-  if (file.size > 20*1024*1024) {
-    showToast('ขนาดไฟล์เกิน 20MB', 'error'); return;
-  }
-  doReplaceFile(pendingReplaceIndex, file);
-  pendingReplaceIndex = null;
+  if (file.size > 20*1024*1024) { showToast('เกิน 20MB', 'error'); return; }
+  doReplaceFile(pendingReplaceInfo.subKey, pendingReplaceInfo.fileIndex, file);
+  pendingReplaceInfo = null;
 }
 
-function doReplaceFile(fileIndex, newFile) {
-  var sub = submissions[currentDocId];
+function doReplaceFile(subKey, fileIndex, newFile) {
+  var sub = submissions[subKey];
   if (!sub || !sub.files || !sub.files[fileIndex]) return;
-
-  var oldFile   = sub.files[fileIndex];
-  var dt        = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
+  var oldFile  = sub.files[fileIndex];
+  var dt       = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
   var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
-  var subjectGroup = document.getElementById('subjectGroup').value.trim() || (sub.subjectGroup || '');
-  var newName   = sanitizeForFilename(subjectGroup) + '_' +
-                  sanitizeForFilename(staffName)    + '_' +
-                  sanitizeForFilename(dt.label)     + '_' +
-                  (fileIndex + 1) + '.pdf';
-
-  var progEl  = document.getElementById('replaceProgress_' + fileIndex);
-  var progBar = document.getElementById('replaceBar_'      + fileIndex);
-  var progPct = document.getElementById('replacePct_'      + fileIndex);
-  if (progEl) progEl.style.display = 'block';
-
-  function doUpload(folderId) {
-    return uploadFileToDrive(newFile, newName, folderId, function(pct) {
-      if (progBar) progBar.style.width  = pct + '%';
-      if (progPct) progPct.textContent  = pct + '%';
-    });
-  }
-
-  /* หาโฟลเดอร์ปลายทาง */
-  var yearFolderName = 'ปีการศึกษา ' + currentYear;
-  var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
-  var docFolderName  = dt.label;
+  var subjectGroup = document.getElementById('subjectGroup').value.trim() || sub.subjectGroup || '';
+  var newName  = sanitizeForFilename(subjectGroup) + '_' +
+                 sanitizeForFilename(sub.courseCode || '') + '_' +
+                 sanitizeForFilename(staffName) + '_' +
+                 sanitizeForFilename(dt.label) + '_' +
+                 (fileIndex + 1) + '.pdf';
 
   function proceed() {
+    var yearFolderName = 'ปีการศึกษา ' + currentYear;
+    var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
+    var docFolderName  = dt.label;
     ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
     .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
     .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
-    .then(doUpload)
+    .then(function(fId){ return uploadFileToDrive(newFile, newName, fId, null); })
     .then(function(result) {
-      /* ลบไฟล์เก่าใน Drive */
       if (oldFile.fileId && driveAccessToken) {
         fetch('https://www.googleapis.com/drive/v3/files/' + oldFile.fileId,
           { method:'DELETE', headers:{ 'Authorization':'Bearer ' + driveAccessToken } }
-        ).catch(function(e){ console.warn('Drive old file delete failed:', e); });
+        ).catch(function(){});
       }
-      /* อัปเดต Firestore */
       var updatedFiles = sub.files.slice();
       updatedFiles[fileIndex] = { fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' };
       return db.collection('portfolio_submissions').doc(sub.id).update({
@@ -799,91 +906,19 @@ function doReplaceFile(fileIndex, newFile) {
     })
     .then(function() {
       showToast('แทนที่ไฟล์สำเร็จ ✓', 'success');
-      closeUploadModal();
-      loadSubmissions();
+      closeUploadModal(); loadSubmissions();
     })
-    .catch(function(e) {
-      showToast('แทนที่ไฟล์ไม่สำเร็จ: ' + (e.message||e), 'error');
-      if (progEl) progEl.style.display = 'none';
-    });
+    .catch(function(e){ showToast('แทนที่ไม่สำเร็จ: ' + (e.message||e), 'error'); });
   }
 
-  if (!driveAccessToken) {
-    authorizeDrive(proceed);
-  } else {
-    proceed();
-  }
-}
-
-function closeUploadModal() {
-  document.getElementById('uploadModal').classList.remove('open');
-  document.body.style.overflow = '';
-  selectedFiles = [];
-}
-
-/* ─── FILE DRAG & DROP ─── */
-function onDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragging'); }
-function onDragLeave(e) { document.getElementById('uploadZone').classList.remove('dragging'); }
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById('uploadZone').classList.remove('dragging');
-  addFilesToQueue(Array.from(e.dataTransfer.files));
-}
-function onFileSelected(input) {
-  addFilesToQueue(Array.from(input.files));
-  input.value = ''; /* reset so same file can be re-selected */
-}
-
-function addFilesToQueue(newFiles) {
-  var sub = submissions[currentDocId];
-  var existingCount = (sub && sub.files) ? sub.files.length : 0;
-  var total = existingCount + selectedFiles.length;
-
-  newFiles.forEach(function(f) {
-    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
-      showToast(f.name + ' – รองรับเฉพาะไฟล์ PDF', 'error'); return;
-    }
-    if (f.size > 20*1024*1024) {
-      showToast(f.name + ' – ขนาดเกิน 20MB', 'error'); return;
-    }
-    if (total >= MAX_FILES_PER_TOPIC) {
-      showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว', 'error'); return;
-    }
-    selectedFiles.push(f);
-    total++;
-  });
-  renderQueuedFiles();
-}
-
-function renderQueuedFiles() {
-  var container = document.getElementById('queuedFiles');
-  if (selectedFiles.length === 0) { container.innerHTML = ''; return; }
-  var html = '';
-  selectedFiles.forEach(function(f, i) {
-    html +=
-      '<div class="file-entry">' +
-        '<i data-lucide="file-text" style="width:16px;height:16px;color:#22c55e;flex-shrink:0;"></i>' +
-        '<span class="file-entry-name" title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
-        '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + ' MB</span>' +
-        '<button class="file-entry-del" onclick="removeQueuedFile(' + i + ')" title="ยกเลิก">' +
-          '<i data-lucide="x" style="width:14px;height:14px;"></i>' +
-        '</button>' +
-      '</div>';
-  });
-  container.innerHTML = html;
-  lucide.createIcons();
-
-  document.getElementById('uploadZone').classList.toggle('has-file', selectedFiles.length > 0);
-}
-
-function removeQueuedFile(idx) {
-  selectedFiles.splice(idx, 1);
-  renderQueuedFiles();
+  if (!driveAccessToken) authorizeDrive(proceed); else proceed();
 }
 
 /* ─── DELETE FILE ─── */
-function promptDeleteFile(docTypeId, fileIndex, fileName) {
-  pendingDeleteInfo = { docTypeId: docTypeId, fileIndex: fileIndex };
+function promptDeleteFile(subKey, fileIndex) {
+  var sub = submissions[subKey];
+  var fileName = sub && sub.files && sub.files[fileIndex] ? sub.files[fileIndex].fileName : '';
+  pendingDeleteInfo = { subKey: subKey, fileIndex: fileIndex };
   document.getElementById('deleteFileName').textContent = fileName;
   document.getElementById('confirmDeleteModal').classList.add('open');
   lucide.createIcons();
@@ -894,26 +929,21 @@ function closeDeleteModal() {
 }
 function confirmDelete() {
   if (!pendingDeleteInfo) return;
-  var docTypeId  = pendingDeleteInfo.docTypeId;
-  var fileIndex  = pendingDeleteInfo.fileIndex;
-  var sub = submissions[docTypeId];
+  var subKey    = pendingDeleteInfo.subKey;
+  var fileIndex = pendingDeleteInfo.fileIndex;
+  var sub = submissions[subKey];
   if (!sub || !sub.files) { closeDeleteModal(); return; }
 
   var btn = document.getElementById('confirmDeleteBtn');
-  btn.disabled    = true;
-  btn.textContent = 'กำลังลบ...';
+  btn.disabled = true; btn.textContent = 'กำลังลบ...';
 
   var fileToDelete = sub.files[fileIndex];
   var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
 
   function updateFirestore() {
-    if (newFiles.length === 0) {
-      /* ลบไฟล์หมดแล้ว → ลบ document ทิ้งเลย เหมือนยังไม่เคยส่งงาน */
-      return db.collection('portfolio_submissions').doc(sub.id).delete();
-    }
+    if (newFiles.length === 0) return db.collection('portfolio_submissions').doc(sub.id).delete();
     return db.collection('portfolio_submissions').doc(sub.id).update({
-      files:     newFiles,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
 
@@ -921,75 +951,129 @@ function confirmDelete() {
   if (fileToDelete && fileToDelete.fileId && driveAccessToken) {
     driveDeletePromise = fetch(
       'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId,
-      { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
-    ).catch(function(e){ console.warn('Drive delete failed:', e); });
+      { method:'DELETE', headers:{ 'Authorization':'Bearer ' + driveAccessToken } }
+    ).catch(function(){});
   }
 
   driveDeletePromise.then(updateFirestore).then(function() {
     showToast('ลบไฟล์สำเร็จ', 'success');
     closeDeleteModal();
     if (newFiles.length === 0) {
-      /* ไม่มีไฟล์เหลือ → ลบออกจาก local cache ด้วย แล้วปิด modal */
-      delete submissions[docTypeId];
+      delete submissions[subKey];
       closeUploadModal();
     } else {
-      var updatedSub = Object.assign({}, sub, { files: newFiles });
-      submissions[docTypeId] = updatedSub;
-      openUploadModal(docTypeId);
+      submissions[subKey] = Object.assign({}, sub, { files: newFiles });
+      /* re-render manage panel */
+      var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
+      if (rowIdx >= 0) renderCourseFilePanels();
     }
     renderDocList();
   }).catch(function(e) {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-    btn.disabled    = false;
-    btn.textContent = 'ลบไฟล์';
+    btn.disabled = false; btn.textContent = 'ลบไฟล์';
   });
+}
+
+/* ─── CLOSE MODAL ─── */
+function closeUploadModal() {
+  document.getElementById('uploadModal').classList.remove('open');
+  document.body.style.overflow = '';
+  courseRows = [];
 }
 
 /* ─── SUBMIT ─── */
 function submitDoc() {
   if (!currentUser || !currentDocId) return;
-
   var subjectGroup = document.getElementById('subjectGroup').value.trim();
-  var courseCode   = document.getElementById('courseCode').value.trim();
-  var courseName   = document.getElementById('courseName').value.trim();
   var note         = document.getElementById('submitNote').value.trim();
   var btn          = document.getElementById('submitBtn');
 
   if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
-  if (!courseCode)   { showToast('กรุณากรอกรหัสวิชา', 'error'); return; }
-  if (!courseName)   { showToast('กรุณากรอกชื่อวิชา', 'error'); return; }
 
-  var sub = submissions[currentDocId];
-  var existingFiles = (sub && sub.files) ? sub.files : [];
+  /* ตรวจสอบว่าอยู่ใน manage mode (มี managingSubKey) หรือ add mode */
+  var isManageMode = courseRows.length === 1 && courseRows[0].managingSubKey;
 
-  /* ถ้าไม่มีไฟล์ใหม่และไม่มีไฟล์เก่าอยู่ → ต้องอัปโหลด */
-  if (selectedFiles.length === 0 && existingFiles.length === 0) {
-    showToast('กรุณาเลือกไฟล์ PDF อย่างน้อย 1 ไฟล์', 'error'); return;
-  }
+  if (isManageMode) {
+    /* manage mode: บันทึก meta เท่านั้น (ไฟล์จัดการแยกผ่าน panel) */
+    var subKey = courseRows[0].managingSubKey;
+    var sub    = submissions[subKey];
+    var newFiles = courseRows[0].files; /* ไฟล์ใหม่ที่จะเพิ่ม */
 
-  btn.disabled  = true;
-  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
-  lucide.createIcons();
-
-  /* ถ้าไม่มีไฟล์ใหม่ → บันทึกแค่ meta */
-  if (selectedFiles.length === 0) {
-    saveSubmission(existingFiles, note, subjectGroup, courseCode, courseName, btn);
+    if (newFiles.length > 0) {
+      /* มีไฟล์ใหม่ → อัปโหลดแล้ว save */
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
+      lucide.createIcons();
+      if (!driveAccessToken) {
+        document.getElementById('driveAuthNotice').style.display = 'block';
+        authorizeDrive(function(){ uploadManageFiles(subKey, newFiles, subjectGroup, note, btn); });
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+        lucide.createIcons();
+        return;
+      }
+      uploadManageFiles(subKey, newFiles, subjectGroup, note, btn);
+    } else {
+      /* ไม่มีไฟล์ใหม่ → บันทึก meta เท่านั้น */
+      db.collection('portfolio_submissions').doc(sub.id).update({
+        subjectGroup: subjectGroup,
+        note: note,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).then(function() {
+        showToast('บันทึกสำเร็จ ✓', 'success');
+        closeUploadModal(); loadSubmissions();
+      }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    }
     return;
   }
 
-  /* ตรวจสอบ token Drive */
+  /* ADD MODE: ตรวจสอบแต่ละแถว */
+  var validRows = [];
+  var ok = true;
+  courseRows.forEach(function(row, i) {
+    var code = row.code || document.querySelector('#courseRowsContainer div:nth-child(' + (i+1) + ') input:nth-child(1)')
+                         ? (document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัส"]')[i] || {}).value || row.code
+                         : row.code;
+    /* read from DOM inputs directly */
+    var inputs = document.querySelectorAll('#courseRowsContainer div > div > input');
+    /* inputs arranged as [code0, name0, code1, name1, ...] */
+  });
+
+  /* อ่านค่าจาก DOM โดยตรง */
+  var codeInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัสวิชา"]');
+  var nameInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="ชื่อวิชา"]');
+
+  var hasError = false;
+  var rowsToSubmit = [];
+  courseRows.forEach(function(row, i) {
+    var code = codeInputs[i] ? codeInputs[i].value.trim() : row.code;
+    var name = nameInputs[i] ? nameInputs[i].value.trim() : row.name;
+    row.code = code; row.name = name;
+    if (!code) { showToast('กรุณากรอกรหัสวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
+    if (!name) { showToast('กรุณากรอกชื่อวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
+    if (row.files.length === 0) { showToast('กรุณาเพิ่มไฟล์สำหรับวิชา ' + code, 'error'); hasError = true; return; }
+    /* ตรวจว่า courseCode ซ้ำกับที่ส่งแล้วหรือไม่ */
+    var existSubKey = currentDocId + '_' + code;
+    if (submissions[existSubKey]) {
+      showToast('รหัสวิชา ' + code + ' ส่งแล้ว ใช้ปุ่ม "จัดการไฟล์" แทน', 'error'); hasError = true; return;
+    }
+    rowsToSubmit.push({ code: code, name: name, files: row.files });
+  });
+  if (hasError) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
+  lucide.createIcons();
+
   if (!driveAccessToken) {
     document.getElementById('driveAuthNotice').style.display = 'block';
-    authorizeDrive(function() {
-      uploadAllFiles(subjectGroup, courseCode, courseName, note, btn);
-    });
-    btn.disabled  = false;
+    authorizeDrive(function(){ uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
+    btn.disabled = false;
     btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
     lucide.createIcons();
     return;
   }
-
-  uploadAllFiles(subjectGroup, courseCode, courseName, note, btn);
+  uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn);
 }
 
 /* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
@@ -1050,14 +1134,80 @@ function ensureDriveFolder(parentId, folderName) {
   });
 }
 
-function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
-  var dt     = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
-  var sub    = submissions[currentDocId];
-  var existingFiles = (sub && sub.files) ? sub.files : [];
+/* ─── UPLOAD ALL COURSE ROWS (add mode) ─── */
+function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
+  var dt        = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
   var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
+  var yearFolderName = 'ปีการศึกษา ' + currentYear;
+  var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
+  var docFolderName  = dt.label;
+
+  var progressEl  = document.getElementById('uploadProgress');
+  var progressBar = document.getElementById('uploadBar');
+  var progressPct = document.getElementById('uploadPct');
+  var progressLbl = document.getElementById('uploadProgressLabel');
+  progressEl.style.display = 'block';
+  progressBar.style.width  = '0%';
+
+  /* หาโฟลเดอร์ก่อน แล้วอัปโหลดทีละวิชา */
+  ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
+  .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
+  .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
+  .then(function(docFolderId) {
+    /* อัปโหลดทีละ row */
+    function processRow(rowIdx) {
+      if (rowIdx >= rowsToSubmit.length) return Promise.resolve();
+      var row = rowsToSubmit[rowIdx];
+      var uploadedFiles = [];
+      function uploadNext(fi) {
+        if (fi >= row.files.length) return Promise.resolve(uploadedFiles);
+        var file    = row.files[fi];
+        var fileNum = fi + 1;
+        /* ชื่อไฟล์: กลุ่มสาระ_รหัสวิชา_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf */
+        var newName = sanitizeForFilename(subjectGroup) + '_' +
+                      sanitizeForFilename(row.code)     + '_' +
+                      sanitizeForFilename(staffName)    + '_' +
+                      sanitizeForFilename(dt.label)     + '_' +
+                      fileNum + '.pdf';
+        progressLbl.textContent = '[' + row.code + '] อัปโหลด ' + fileNum + '/' + row.files.length + ' – ' + newName;
+        return uploadFileToDrive(file, newName, docFolderId, function(pct) {
+          var overall = Math.round(((rowIdx / rowsToSubmit.length) + ((fi + pct/100) / row.files.length / rowsToSubmit.length)) * 100);
+          progressBar.style.width = overall + '%';
+          progressPct.textContent = overall + '%';
+        })
+        .then(function(result) {
+          uploadedFiles.push({ fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' });
+          return uploadNext(fi + 1);
+        });
+      }
+      return uploadNext(0).then(function(files) {
+        return saveCourseSubmission(files, note, subjectGroup, row.code, row.name);
+      }).then(function() {
+        return processRow(rowIdx + 1);
+      });
+    }
+    return processRow(0);
+  })
+  .then(function() {
+    showToast('ส่งงานสำเร็จ ✓', 'success');
+    closeUploadModal(); loadSubmissions();
+    resetBtn(btn); progressEl.style.display = 'none';
+  })
+  .catch(function(e) {
+    console.error(e);
+    showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || e), 'error');
+    resetBtn(btn); progressEl.style.display = 'none';
+  });
+}
+
+/* ─── UPLOAD MANAGE FILES (add files to existing course submission) ─── */
+function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
+  var sub       = submissions[subKey];
+  var dt        = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
+  var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
+  var existingFiles = sub ? (sub.files || []) : [];
   var startIndex = existingFiles.length;
 
-  /* โครงสร้างโฟลเดอร์: ปีการศึกษา / ภาคเรียน / รายการงาน */
   var yearFolderName = 'ปีการศึกษา ' + currentYear;
   var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
   var docFolderName  = dt.label;
@@ -1070,26 +1220,23 @@ function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
   progressBar.style.width  = '0%';
 
   ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
-  .then(function(yearId)  { return ensureDriveFolder(yearId, semFolderName); })
-  .then(function(semId)   { return ensureDriveFolder(semId,  docFolderName); })
+  .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
+  .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
   .then(function(docFolderId) {
     var uploadedFiles = [];
     function uploadNext(idx) {
-      if (idx >= selectedFiles.length) return Promise.resolve(uploadedFiles);
-      var file    = selectedFiles[idx];
-      var fileIdx = startIndex + idx + 1;
-      /* ชื่อไฟล์: กลุ่มสาระ_ชื่อคนส่ง_ชื่องาน_ลำดับ.pdf */
+      if (idx >= newFiles.length) return Promise.resolve(uploadedFiles);
+      var file    = newFiles[idx];
+      var fileNum = startIndex + idx + 1;
       var newName = sanitizeForFilename(subjectGroup) + '_' +
-                    sanitizeForFilename(staffName)    + '_' +
-                    sanitizeForFilename(dt.label)     + '_' +
-                    fileIdx + '.pdf';
-
-      progressLbl.textContent = 'กำลังอัปโหลด ' + (idx+1) + '/' + selectedFiles.length + ' – ' + newName;
-
-      return uploadFileToDrive(file, newName, docFolderId, function(pct) {
-        var overall = Math.round(((idx / selectedFiles.length) + (pct / 100 / selectedFiles.length)) * 100);
-        progressBar.style.width  = overall + '%';
-        progressPct.textContent  = overall + '%';
+                    sanitizeForFilename(sub ? sub.courseCode : '') + '_' +
+                    sanitizeForFilename(staffName) + '_' +
+                    sanitizeForFilename(dt.label) + '_' +
+                    fileNum + '.pdf';
+      progressLbl.textContent = 'กำลังอัปโหลด ' + (idx+1) + '/' + newFiles.length;
+      return uploadFileToDrive(file, newName, docFolderId, function(pct){
+        progressBar.style.width = pct + '%';
+        progressPct.textContent = pct + '%';
       })
       .then(function(result) {
         uploadedFiles.push({ fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' });
@@ -1098,16 +1245,56 @@ function uploadAllFiles(subjectGroup, courseCode, courseName, note, btn) {
     }
     return uploadNext(0);
   })
-  .then(function(newFiles) {
-    var allFiles = existingFiles.concat(newFiles);
-    saveSubmission(allFiles, note, subjectGroup, courseCode, courseName, btn);
+  .then(function(uploaded) {
+    var allFiles = existingFiles.concat(uploaded);
+    return db.collection('portfolio_submissions').doc(sub.id).update({
+      files: allFiles,
+      fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
+      subjectGroup: subjectGroup,
+      note: note,
+      resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  })
+  .then(function() {
+    showToast('เพิ่มไฟล์สำเร็จ ✓', 'success');
+    closeUploadModal(); loadSubmissions();
+    resetBtn(btn); progressEl.style.display = 'none';
   })
   .catch(function(e) {
-    console.error(e);
-    showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || e), 'error');
-    resetBtn(btn);
-    progressEl.style.display = 'none';
+    showToast('อัปโหลดไม่สำเร็จ: ' + (e.message||e), 'error');
+    resetBtn(btn); progressEl.style.display = 'none';
   });
+}
+
+function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseName) {
+  var key    = currentYear + '_' + currentSem;
+  var now    = firebase.firestore.FieldValue.serverTimestamp();
+  var subKey = currentDocId + '_' + courseCode;
+  var existing = submissions[subKey];
+  var data = {
+    uid:           currentUser.uid,
+    email:         currentUser.email,
+    displayName:   currentUser.displayName || '',
+    staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
+    staffPosition: (currentStaffData && currentStaffData.position) || '',
+    staffGroup:    (currentStaffData && currentStaffData.group)    || '',
+    yearSem:       key,
+    year:          currentYear,
+    semester:      currentSem,
+    docTypeId:     currentDocId,
+    files:         allFiles,
+    fileUrl:       allFiles.length > 0 ? allFiles[0].fileUrl : '',
+    note:          note,
+    subjectGroup:  subjectGroup,
+    courseCode:    courseCode,
+    courseName:    courseName,
+    status:        'submitted',
+    updatedAt:     now,
+    submittedAt:   now,
+    resubmittedAt: null,
+  };
+  return db.collection('portfolio_submissions').add(data);
 }
 
 function uploadFileToDrive(file, fileName, folderId, onProgress) {
@@ -1136,56 +1323,6 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
     };
     xhr.onerror = function() { reject(new Error('Network error')); };
     xhr.send(form);
-  });
-}
-
-function saveSubmission(allFiles, note, subjectGroup, courseCode, courseName, btn) {
-  var key = currentYear + '_' + currentSem;
-  var now = firebase.firestore.FieldValue.serverTimestamp();
-  var existing = submissions[currentDocId];
-  var data = {
-    uid:           currentUser.uid,
-    email:         currentUser.email,
-    displayName:   currentUser.displayName || '',
-    staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
-    staffPosition: (currentStaffData && currentStaffData.position) || '',
-    staffGroup:    (currentStaffData && currentStaffData.group)    || '',
-    yearSem:       key,
-    year:          currentYear,
-    semester:      currentSem,
-    docTypeId:     currentDocId,
-    files:         allFiles,             /* array ของ {fileId, fileName, fileUrl} */
-    fileUrl:       allFiles.length > 0 ? allFiles[0].fileUrl : '',  /* backward compat */
-    note:          note,
-    subjectGroup:  subjectGroup,
-    courseCode:    courseCode,
-    courseName:    courseName,
-    status:        'submitted',
-    updatedAt:     now,
-  };
-
-  if (!existing) {
-    data.submittedAt   = now;
-    data.resubmittedAt = null;
-  } else {
-    data.resubmittedAt = now;
-    if (!existing.submittedAt) data.submittedAt = now;
-    data.status = existing.status === 'reviewed' ? 'submitted' : existing.status;
-  }
-
-  var promise = existing
-    ? db.collection('portfolio_submissions').doc(existing.id).update(data)
-    : db.collection('portfolio_submissions').add(data);
-
-  promise.then(function() {
-    showToast('ส่งงานสำเร็จ ✓', 'success');
-    closeUploadModal();
-    loadSubmissions();
-  }).catch(function(e) {
-    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-  }).finally(function() {
-    resetBtn(btn);
-    document.getElementById('uploadProgress').style.display = 'none';
   });
 }
 
