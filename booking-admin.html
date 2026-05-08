@@ -266,6 +266,7 @@
       document.getElementById('adminApp').style.display='block';
       updateNavUser(user);
       buildSidebar('booking-admin');
+      checkAdminAccess(user.email);
       updateSidebarProfile(user);
       initListeners();lucide.createIcons();
     }).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';document.getElementById('accessDenied').style.display='flex';lucide.createIcons();});

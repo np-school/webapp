@@ -484,6 +484,7 @@ auth.onAuthStateChanged(function(user) {
 
     document.getElementById('staffApp').style.display = 'block';
     updateNavUser(user);
+    checkAdminAccess(user.email);
     updateSidebarProfile(user);
 
     /* ซ่อนปุ่ม write ถ้าไม่มีสิทธิ์ */

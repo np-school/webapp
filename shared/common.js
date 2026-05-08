@@ -103,23 +103,40 @@ function handleLogout() {
 
 /* ════════════════════════════════
    Admin Access Check
-   (หน้า index/room-booking ใช้เพื่อแสดงเมนู admin)
+   ดึง permissions จริงจาก Firestore แล้วแสดงเฉพาะ
+   เมนูที่ user มีสิทธิ์ — ทำงานบนทุกหน้า
    ════════════════════════════════ */
 function checkAdminAccess(email) {
   if (!email) return;
-  db.collection('admins').doc(email.toLowerCase()).get()
+  var lEmail = email.toLowerCase();
+  var isSA   = lEmail === SUPERADMIN_EMAIL;
+
+  db.collection('admins').doc(lEmail).get()
     .then(function(doc) {
-      if (doc.exists) {
-        var sec = document.getElementById('adminSidebarSection');
-        if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
-        /* แสดง SuperAdmin slot เฉพาะ email ที่ตรงกัน */
-        if (email.toLowerCase() === SUPERADMIN_EMAIL) {
-          var slot = document.getElementById('superadminSidebarSlot');
-          if (slot) { slot.style.display = 'block'; lucide.createIcons(); }
-        }
+      if (!doc.exists) return;
+      var p = doc.data().permissions || {};
+
+      /* แสดง section wrapper */
+      var sec = document.getElementById('adminSidebarSection');
+      if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
+
+      /* ซ่อน/แสดงแต่ละ item ตาม permission */
+      _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
+      _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.booking);
+      _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
+
+      /* SuperAdmin-only */
+      if (isSA) {
+        var slot = document.getElementById('superadminSidebarSlot');
+        if (slot) { slot.style.display = 'block'; lucide.createIcons(); }
       }
     })
     .catch(function() {});
+}
+
+function _toggleAdminItem(id, show) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = show ? '' : 'none';
 }
 
 /* ════════════════════════════════
@@ -240,19 +257,14 @@ function updateSidebarProfile(user) {
    buildSidebar(activePage)
 
    activePage:
-     'index'        → หน้าแรก (logged in)
-     'room-booking' → หน้าจองห้อง
-     'admin'        → หน้า admin (แสดง sub-tabs แทน adminSidebarSection)
+     'index'            → หน้าแรก
+     'room-booking'     → หน้าจองห้อง
+     'booking-admin'    → หน้า admin จองห้อง (แสดง tab)
+     'portfolio-admin'  → หน้า admin ส่งงาน
+     'admin-role'       → หน้าจัดการสิทธิ์
+     'staff'            → หน้าบุคลากร
 
-   ══ วิธีเพิ่ม/แก้เมนู แก้ที่นี่ที่เดียว ══
-
-   MAIN_MENU / SERVICE_MENU
-     { label, icon, href }      → ลิงก์
-     { label, icon, onclick }   → ปุ่ม JS
-
-   ADMIN_TABS (เฉพาะหน้า admin)
-     { id, label, icon }
-     id ตรงกับ switchTab(id) ใน booking-admin.html
+   ── วิธีเพิ่ม/แก้เมนู แก้ที่นี่ที่เดียว ──
    ════════════════════════════════════════════════ */
 
 var MAIN_MENU = [
@@ -293,51 +305,42 @@ var ADMIN_TABS = [
   { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
 ];
 
-/* ── Admin Quick Links (non-tab pages) ── */
-var ADMIN_LINKS = [
-  { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
-];
+/* ── SuperAdmin-only ── */
+var SUPERADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
-/* ── Admin Group Menu (for non-admin pages) ──
-   หมายเหตุ: จัดการสิทธิ์ Admin แสดงเฉพาะ SuperAdmin เท่านั้น
-── */
+/* ════════════════════════════════
+   Admin Group Menu items
+   (แต่ละ item มี id เพื่อให้ checkAdminAccess toggle ได้)
+   ════════════════════════════════ */
 var ADMIN_GROUP_MENU = [
-  {
-    group: 'กลุ่มบริหารงบประมาณ',
-    icon: 'banknote',
-    items: [],
-  },
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
     items: [
-      { label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog', href: 'staff.html' },
+      { id: 'adminMenuItem-staff', label: 'จัดการข้อมูลบุคลากร', icon: 'user-cog', href: 'staff.html' },
     ],
   },
   {
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
+      { id: 'adminMenuItem-portfolio', label: 'ติดตามส่งงานครู', icon: 'folder-check', href: 'portfolio-admin.html' },
     ],
   },
   {
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
     items: [
-      { label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html' },
+      { id: 'adminMenuItem-booking', label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html' },
     ],
   },
 ];
-
-/* ── SuperAdmin-only (แสดงเฉพาะ email นี้เท่านั้น) ── */
-var SUPERADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
 function buildSidebar(activePage) {
   var el = document.getElementById('sidebarInner');
   if (!el) return;
 
-  var isAdminPage = activePage === 'admin';
+  var isBookingAdmin = activePage === 'booking-admin';
 
   /* ── close button ── */
   var html =
@@ -351,21 +354,19 @@ function buildSidebar(activePage) {
   html += '<div class="sec-label">เมนูหลัก</div>';
   MAIN_MENU.forEach(function(item) {
     var key = item.href ? item.href.replace('.html', '') : '';
-    var active = activePage === key || (activePage === 'index' && key === 'index');
+    var active = activePage === key;
     html += _sidebarBtn(item, active, false);
   });
 
   /* ── บริการออนไลน์ แยกกลุ่ม ── */
   html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
   GROUP_MENU.forEach(function(g) {
-    /* group header */
     html +=
       '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
         '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>' +
         '<span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
       '</div>';
     if (!g.items.length) {
-      /* ยังไม่มีระบบ */
       html += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
     } else {
       g.items.forEach(function(item) {
@@ -375,69 +376,75 @@ function buildSidebar(activePage) {
     }
   });
 
-  /* ── Admin section ── */
-  if (isAdminPage) {
-    html += '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>';
-    html += '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>';
-    ADMIN_TABS.forEach(function(tab) {
-      var active = tab.id === 'bookings';
-      var cls = 'sidebar-btn admin-btn' + (active ? ' active' : '');
-      html +=
-        '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '">' +
-          '<i data-lucide="' + tab.icon + '" style="width:19px;height:19px;flex-shrink:0;' + (active ? '' : 'color:#7c3aed;') + '"></i>' +
-          '<span>' + tab.label + '</span>' +
-          (tab.id === 'bookings'
-            ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>'
-            : '') +
-        '</button>';
-    });
-  } else {
-    var adminGroupHtml = '';
-    ADMIN_GROUP_MENU.forEach(function(g) {
-      adminGroupHtml +=
-        '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
-          '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
-          '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
-        '</div>';
-      if (!g.items.length) {
-        adminGroupHtml += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
-      } else {
-        g.items.forEach(function(item) {
-          var key = item.href ? item.href.replace('.html', '') : '';
-          var isActive = activePage === key;
-          var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
-          var inner =
-            '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
-            '<span>' + item.label + '</span>' +
-            (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
-          if (item.href) {
-            adminGroupHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</a>';
-          } else {
-            adminGroupHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:28px;">' + inner + '</button>';
-          }
+  /* ── Admin section (แสดงทุกหน้า แต่ซ่อนไว้ก่อน checkAdminAccess จะ toggle) ── */
+  var adminGroupHtml = '';
+  ADMIN_GROUP_MENU.forEach(function(g) {
+    /* สร้าง rows ของกลุ่มนี้ก่อน ถ้าไม่มี item ที่แสดงได้เลย ข้ามทั้งกลุ่ม */
+    var rowsHtml = '';
+    g.items.forEach(function(item) {
+      var key     = item.href ? item.href.replace('.html', '') : '';
+      var isActive = activePage === key;
+
+      /* booking-admin: แสดง tabs แทน link ปกติ */
+      if (isBookingAdmin && item.href === 'booking-admin.html') {
+        /* แสดง tab switcher */
+        ADMIN_TABS.forEach(function(tab) {
+          var tabActive = tab.id === 'bookings';
+          var cls = 'sidebar-btn admin-btn' + (tabActive ? ' active' : '');
+          rowsHtml +=
+            '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '" style="padding-left:28px;" data-admin-item="' + item.id + '">' +
+              '<i data-lucide="' + tab.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (tabActive ? '' : 'color:#7c3aed;') + '"></i>' +
+              '<span>' + tab.label + '</span>' +
+              (tab.id === 'bookings'
+                ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>'
+                : '') +
+            '</button>';
         });
+        return;
+      }
+
+      var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
+      var inner =
+        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<span>' + item.label + '</span>' +
+        (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
+
+      var wrapId = item.id ? ' id="' + item.id + '"' : '';
+      if (item.href) {
+        rowsHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;"' + wrapId + '>' + inner + '</a>';
+      } else {
+        rowsHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:28px;"' + wrapId + '>' + inner + '</button>';
       }
     });
 
-    html +=
-      '<div id="adminSidebarSection" style="display:none;">' +
-        '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
-        '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
-        adminGroupHtml +
-        /* SuperAdmin-only slot — ซ่อนไว้ก่อน checkAdminAccess จะ toggle */
-        '<div id="superadminSidebarSlot" style="display:none;">' +
-          '<div style="margin:8px 16px 4px;display:flex;align-items:center;gap:6px;">' +
-            '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
-            '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
-          '</div>' +
-          '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:28px;">' +
-            '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
-            '<span>จัดการสิทธิ์ Admin</span>' +
-            '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
-          '</a>' +
+    if (!rowsHtml) return;
+
+    adminGroupHtml +=
+      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+      '</div>' +
+      rowsHtml;
+  });
+
+  html +=
+    '<div id="adminSidebarSection" style="display:none;">' +
+      '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
+      adminGroupHtml +
+      /* SuperAdmin-only slot */
+      '<div id="superadminSidebarSlot" style="display:none;">' +
+        '<div style="margin:8px 16px 4px;display:flex;align-items:center;gap:6px;">' +
+          '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
+          '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
         '</div>' +
-      '</div>';
-  }
+        '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:28px;">' +
+          '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
+          '<span>จัดการสิทธิ์ Admin</span>' +
+          '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+        '</a>' +
+      '</div>' +
+    '</div>';
 
   /* ── profile slot ── */
   html += '<div style="flex:1;"></div><div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
