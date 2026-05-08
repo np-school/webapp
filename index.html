@@ -162,6 +162,17 @@
             <i data-lucide="arrow-right" style="width:11px;height:11px;"></i> อ่านได้เลย
           </div>
         </a>
+        <!-- ระบบส่งงาน -->
+        <div class="service-card" onclick="showLoginGate('ระบบส่งงานประจำภาคเรียน','กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อส่งเอกสารภาระงาน','send')">
+          <div class="service-icon" style="background:#f5f3ff;">
+            <i data-lucide="send" style="width:26px;height:26px;color:#7c3aed;"></i>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ส่งงานประจำภาคเรียน</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5;">ส่งเอกสารภาระงานครู ติดตามสถานะได้ทันที</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:4px 10px;border-radius:999px;">
+            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
+          </div>
+        </div>
         <!-- ระบบจองห้อง -->
         <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
           <div class="service-icon" style="background:#eff6ff;">
@@ -385,14 +396,61 @@
           </div>
         </div>
 
-        <!-- My bookings list -->
-        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
+        <!-- My bookings list (5 latest) -->
+        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;margin-bottom:20px;">
           <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;"><i data-lucide="list" style="width:16px;height:16px;color:#1d4ed8;"></i> รายการจองของฉัน</span>
+            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
+              <i data-lucide="calendar-clock" style="width:16px;height:16px;color:#1d4ed8;"></i>
+              การจองล่าสุด
+              <span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:20px;margin-left:2px;">5 รายการล่าสุด</span>
+            </span>
             <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:4px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
           </div>
-          <div id="myBookingsList" style="padding:12px 16px;max-height:420px;overflow-y:auto;">
+          <div id="myBookingsList" style="padding:12px 16px;">
             <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
+          </div>
+          <div id="myBookingsMore" style="display:none;padding:10px 16px 14px;border-top:1px solid #f1f5f9;text-align:center;">
+            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+              <i data-lucide="list" style="width:13px;height:13px;"></i> ดูรายการทั้งหมด
+            </a>
+          </div>
+        </div>
+
+        <!-- Portfolio Status -->
+        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
+          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
+              <i data-lucide="send" style="width:16px;height:16px;color:#7c3aed;"></i>
+              งานส่งประจำภาคเรียน
+            </span>
+            <a href="teacher-portfolio.html" style="font-size:12px;font-weight:700;color:#7c3aed;text-decoration:none;display:flex;align-items:center;gap:4px;">ไปหน้าส่งงาน <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
+          </div>
+          <!-- Semester selector -->
+          <div style="padding:12px 16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;color:#64748b;">ปีการศึกษา:</span>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <button onclick="pfChangeYear(-1)" style="width:24px;height:24px;background:#f1f5f9;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:13px;height:13px;color:#64748b;"></i></button>
+              <span id="pfYearLabel" style="font-size:12px;font-weight:800;color:#1e293b;min-width:40px;text-align:center;">2568</span>
+              <button onclick="pfChangeYear(1)" style="width:24px;height:24px;background:#f1f5f9;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-right" style="width:13px;height:13px;color:#64748b;"></i></button>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <button id="pfSem1" onclick="pfSelectSem(1)" style="padding:4px 12px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#7c3aed;color:white;">ภาคเรียนที่ 1</button>
+              <button id="pfSem2" onclick="pfSelectSem(2)" style="padding:4px 12px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#f1f5f9;color:#64748b;">ภาคเรียนที่ 2</button>
+            </div>
+          </div>
+          <!-- Progress bar -->
+          <div style="padding:12px 16px 0;" id="pfProgressWrap" style="display:none;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:11px;font-weight:700;color:#64748b;">ความคืบหน้าการส่งงาน</span>
+              <span id="pfProgressText" style="font-size:11px;font-weight:800;color:#7c3aed;">...</span>
+            </div>
+            <div style="background:#e9d5ff;border-radius:4px;height:6px;overflow:hidden;">
+              <div id="pfProgressBar" style="height:100%;border-radius:4px;background:#7c3aed;transition:width .4s ease;width:0%;"></div>
+            </div>
+          </div>
+          <!-- Doc list -->
+          <div id="pfDocList" style="padding:12px 16px 16px;">
+            <div style="text-align:center;padding:32px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="pfEmpty">กำลังโหลด...</div>
           </div>
         </div>
 
@@ -429,6 +487,7 @@
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
+      pfInit(user.uid, user.email);
     }else{
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
@@ -497,14 +556,16 @@
   function renderMyBookings(bookings){
     var wrap=document.getElementById('myBookingsList');
     var empty=document.getElementById('myBookingsEmpty');
+    var moreEl=document.getElementById('myBookingsMore');
     if(!wrap)return;
     if(!bookings.length){
-      if(empty)empty.textContent='ยังไม่มีรายการจอง';
+      if(empty){empty.style.display='block';empty.textContent='ยังไม่มีรายการจอง';}
       return;
     }
     if(empty)empty.style.display='none';
+    if(moreEl)moreEl.style.display=bookings.length>5?'block':'none';
     var now=new Date();
-    wrap.innerHTML=bookings.slice(0,20).map(function(b){
+    wrap.innerHTML=bookings.slice(0,5).map(function(b){
       var ok=b.status==='approved',rej=b.status==='rejected';
       var eDate=new Date((b.date||'')+'T'+(b.endTime||'23:59')+':00');
       var isDone=ok&&!isNaN(eDate)&&now>eDate;
@@ -768,6 +829,145 @@
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); }, 4000);
+  }
+
+  /* ════ Portfolio Dashboard ════ */
+  var PF_DOC_TYPES = [
+    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+    { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
+    { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
+    { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
+    { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
+    { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
+    { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
+    { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
+    { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+  ];
+  var pfYear = 2568;
+  var pfSem  = 1;
+  var pfUid  = null;
+  var pfIsStaff = false; /* ตรวจแล้วว่าเป็นบุคลากร */
+
+  function pfChangeYear(d) {
+    pfYear += d;
+    document.getElementById('pfYearLabel').textContent = pfYear;
+    pfLoad();
+  }
+  function pfSelectSem(s) {
+    pfSem = s;
+    document.getElementById('pfSem1').style.background = s===1?'#7c3aed':'#f1f5f9';
+    document.getElementById('pfSem1').style.color      = s===1?'white':'#64748b';
+    document.getElementById('pfSem2').style.background = s===2?'#7c3aed':'#f1f5f9';
+    document.getElementById('pfSem2').style.color      = s===2?'white':'#64748b';
+    pfLoad();
+  }
+
+  function pfLoad() {
+    if (!pfUid) return;
+    var key = pfYear + '_' + pfSem;
+    var emptyEl = document.getElementById('pfEmpty');
+    if (emptyEl) emptyEl.textContent = 'กำลังโหลด...';
+    db.collection('portfolio_submissions')
+      .where('uid', '==', pfUid)
+      .where('yearSem', '==', key)
+      .get()
+      .then(function(snap) {
+        var subs = {};
+        snap.forEach(function(d) {
+          var data = d.data();
+          subs[data.docTypeId] = data;
+        });
+        pfRender(subs);
+      })
+      .catch(function(e) {
+        /* อาจไม่ใช่บุคลากร — ซ่อน section */
+        var wrap = document.getElementById('pfDocList');
+        if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">ไม่พบข้อมูลบุคลากร — ระบบส่งงานสำหรับครูเท่านั้น</div>';
+        document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
+      });
+  }
+
+  var STATUS_LABEL = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าตรวจแล้ว', reviewed:'ตรวจแล้ว', final_approved:'อนุมัติแล้ว', revision:'ขอแก้ไข' };
+  var STATUS_BG    = { none:'#f1f5f9', submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe', final_approved:'#f5f3ff', revision:'#fef9c3' };
+  var STATUS_COLOR = { none:'#94a3b8', submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af', final_approved:'#6d28d9', revision:'#92400e' };
+  var STATUS_DOT   = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#3b82f6', final_approved:'#7c3aed', revision:'#f59e0b' };
+
+  function pfRender(subs) {
+    var wrap = document.getElementById('pfDocList');
+    var emptyEl = document.getElementById('pfEmpty');
+    var progWrap = document.getElementById('pfProgressWrap');
+    var progBar  = document.getElementById('pfProgressBar');
+    var progTxt  = document.getElementById('pfProgressText');
+    if (!wrap) return;
+
+    var submittedCount = 0;
+    var approvedCount  = 0;
+    PF_DOC_TYPES.forEach(function(dt) {
+      var s = (subs[dt.id] && subs[dt.id].status) || 'none';
+      if (s !== 'none') submittedCount++;
+      if (s === 'final_approved') approvedCount++;
+    });
+
+    /* Progress */
+    if (progWrap) progWrap.style.display = 'block';
+    var pct = Math.round((submittedCount / PF_DOC_TYPES.length) * 100);
+    if (progBar) progBar.style.width = pct + '%';
+    if (progTxt) progTxt.textContent = submittedCount + ' / ' + PF_DOC_TYPES.length + ' รายการ' + (approvedCount ? ' · อนุมัติแล้ว ' + approvedCount : '');
+
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    /* Doc chips grid */
+    wrap.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;">' +
+      PF_DOC_TYPES.map(function(dt) {
+        var sub    = subs[dt.id];
+        var status = sub ? (sub.status || 'submitted') : 'none';
+        var label  = STATUS_LABEL[status] || status;
+        var bg     = STATUS_BG[status]    || '#f1f5f9';
+        var color  = STATUS_COLOR[status] || '#94a3b8';
+        var dot    = STATUS_DOT[status]   || '#d1d5db';
+        var updatedAt = '';
+        if (sub && sub.updatedAt) {
+          try {
+            var d = sub.updatedAt.toDate ? sub.updatedAt.toDate() : new Date(sub.updatedAt);
+            updatedAt = d.toLocaleDateString('th-TH', { day:'numeric', month:'short' });
+          } catch(e) {}
+        }
+        var borderLeft = status === 'none' ? '' : 'border-left:3px solid ' + dot + ';';
+        return '<div style="background:white;border:1.5px solid #e2e8f0;' + borderLeft + 'border-radius:12px;padding:12px 13px;display:flex;align-items:flex-start;gap:9px;">' +
+          '<div style="width:32px;height:32px;border-radius:9px;background:' + dt.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<i data-lucide="' + dt.icon + '" style="width:15px;height:15px;color:' + dt.color + ';"></i>' +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:11px;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + dt.label + '</div>' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
+              '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:' + bg + ';color:' + color + ';white-space:nowrap;">' +
+                '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:' + dot + ';margin-right:3px;vertical-align:middle;"></span>' +
+                label +
+              '</span>' +
+              (updatedAt ? '<span style="font-size:10px;color:#94a3b8;">' + updatedAt + '</span>' : '') +
+            '</div>' +
+            (status === 'revision' && sub && sub.adminNote ? '<div style="font-size:10px;color:#92400e;margin-top:5px;background:#fffbeb;padding:3px 7px;border-radius:6px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (sub.adminNote||'') + '">💬 ' + (sub.adminNote||'') + '</div>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+    lucide.createIcons();
+  }
+
+  /* เรียก pfLoad เมื่อ user ล็อกอินแล้ว — ตรวจก่อนว่าเป็น staff */
+  function pfInit(uid, email) {
+    pfUid = uid;
+    db.collection('staff').where('email', '==', email.toLowerCase()).limit(1).get()
+      .then(function(snap) {
+        if (snap.empty) {
+          /* ไม่ใช่ staff — แสดงข้อความแจ้ง */
+          var wrap = document.getElementById('pfDocList');
+          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">ระบบส่งงานสำหรับครูและบุคลากรโรงเรียนเท่านั้น</div>';
+          return;
+        }
+        pfLoad();
+      })
+      .catch(function() { pfLoad(); });
   }
 
   /* เรียก callback ทันทีที่โหลด */
