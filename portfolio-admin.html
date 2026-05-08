@@ -747,8 +747,22 @@ function getLatestSubmitTime(t) {
 
 function getNeedsReviewPriority(t) {
   /* 0 = ไม่มีงานรอตรวจ, 1 = รอหัวหน้าตรวจ, 2 = รอวิชาการตรวจ */
-  var hasSubmitted    = Object.values(t.subs).some(function(s){ return s.status==='submitted'; });
-  var hasHeadReviewed = Object.values(t.subs).some(function(s){ return s.status==='head_reviewed'; });
+  var hasSubmitted    = false;
+  var hasHeadReviewed = false;
+  Object.values(t.subs).forEach(function(sub) {
+    var courseMap  = buildCourseMapFromSub(sub);
+    var courseKeys = Object.keys(courseMap);
+    if (courseKeys.length > 1) {
+      courseKeys.forEach(function(k) {
+        var cs = getCourseStatus(courseMap[k], sub.status);
+        if (cs === 'head_reviewed') hasHeadReviewed = true;
+        if (cs === 'submitted')     hasSubmitted    = true;
+      });
+    } else {
+      if (sub.status === 'head_reviewed') hasHeadReviewed = true;
+      if (sub.status === 'submitted')     hasSubmitted    = true;
+    }
+  });
   if (hasHeadReviewed) return 2;
   if (hasSubmitted)    return 1;
   return 0;
@@ -835,41 +849,66 @@ function renderListView() {
               var sub = t.subs[dt.id];
               var status = sub ? (sub.status||'submitted') : 'none';
               var needsReview = sub && (status==='submitted' || status==='head_reviewed');
-              var chipCls = 'doc-chip chip-' + status + (needsReview ? ' needs-attention' : '');
+
+              /* ── per-course breakdown ── */
+              var courseMap  = sub ? buildCourseMapFromSub(sub) : {};
+              var courseKeys = Object.keys(courseMap);
+              var isMulti    = courseKeys.length > 1;
+
+              /* ── chip หลัก: ถ้าหลายวิชาใช้สีตาม "มีรอตรวจหรือไม่" ── */
+              var chipStatus = status; /* single course → ใช้ status ตรง */
+              if (isMulti) {
+                /* ถ้ามีบางวิชายังรอตรวจ → แสดง submitted, ถ้าทุกวิชาผ่านแล้ว → final_approved */
+                var hasSubmitted    = courseKeys.some(function(k){ return getCourseStatus(courseMap[k], sub.status) === 'submitted'; });
+                var hasHeadReviewed = courseKeys.some(function(k){ return getCourseStatus(courseMap[k], sub.status) === 'head_reviewed'; });
+                var hasRevision     = courseKeys.some(function(k){ return getCourseStatus(courseMap[k], sub.status) === 'revision'; });
+                var allFinal        = courseKeys.every(function(k){ return getCourseStatus(courseMap[k], sub.status) === 'final_approved'; });
+                chipStatus = allFinal ? 'final_approved' : hasRevision ? 'revision' : hasSubmitted ? 'submitted' : hasHeadReviewed ? 'head_reviewed' : status;
+              }
+              var chipNeedsReview = sub && (chipStatus==='submitted' || chipStatus==='head_reviewed');
+              var chipCls = 'doc-chip chip-' + chipStatus + (chipNeedsReview ? ' needs-attention' : '');
               var icon = {
                 none:'circle', submitted:'upload', head_reviewed:'user-check',
                 reviewed:'check-circle', final_approved:'shield-check', revision:'alert-circle'
-              }[status] || 'circle';
+              }[chipStatus] || 'circle';
 
-              /* ── per-course breakdown ── */
-              var courseMap = sub ? buildCourseMapFromSub(sub) : {};
-              var courseKeys = Object.keys(courseMap);
-              var wfHtml = sub ? buildWorkflowBar(status) : '';
-
+              /* ── per-course rows (แสดงเสมอถ้ามีหลาย course, แสดง wf bar ถ้า single) ── */
               var courseBreakdown = '';
-              if (courseKeys.length > 1) {
-                courseBreakdown = '<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">' +
+              var wfHtml = '';
+
+              if (isMulti) {
+                /* แสดงแถวแยกทุก course พร้อม workflow bar ของแต่ละ course */
+                courseBreakdown = '<div style="margin-top:4px;display:flex;flex-direction:column;gap:4px;">' +
                   courseKeys.map(function(cKey) {
                     var cFiles  = courseMap[cKey];
                     var cStatus = getCourseStatus(cFiles, sub.status);
                     var cCode   = cFiles[0].courseCode || sub.courseCode || cKey;
+                    var cName   = cFiles[0].courseName || '';
                     var cIcon   = { none:'○', submitted:'↑', head_reviewed:'✓', reviewed:'✓', final_approved:'★', revision:'!' }[cStatus] || '·';
                     var cColor  = { none:'#94a3b8', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#3b82f6', final_approved:'#7c3aed', revision:'#f59e0b' }[cStatus] || '#94a3b8';
-                    return '<div style="display:flex;align-items:center;gap:4px;padding:2px 4px;background:#f8fafc;border-radius:5px;border:1px solid #e2e8f0;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + (sub?sub.id:'') + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
-                      '<span style="font-size:9px;font-weight:800;color:' + cColor + ';">' + cIcon + '</span>' +
-                      '<span style="font-size:9px;font-weight:700;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">' + esc(cCode) + '</span>' +
+                    var cBg     = { none:'#f8fafc', submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#eff6ff', final_approved:'#f5f3ff', revision:'#fffbeb' }[cStatus] || '#f8fafc';
+                    var cBorder = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#93c5fd', final_approved:'#c4b5fd', revision:'#fde68a' }[cStatus] || '#e2e8f0';
+                    return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + (sub?sub.id:'') + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
+                      '<div style="display:flex;align-items:center;gap:4px;">' +
+                        '<span style="font-size:10px;font-weight:800;color:' + cColor + ';">' + cIcon + '</span>' +
+                        '<span style="font-size:9px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
+                        (cName ? '<span style="font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc(cName) + '</span>' : '') +
+                      '</div>' +
+                      buildWorkflowBar(cStatus) +
                     '</div>';
                   }).join('') +
                 '</div>';
+              } else if (sub) {
+                /* single course → workflow bar เดียว */
+                wfHtml = buildWorkflowBar(status);
               }
 
-              var fileCount = sub && sub.files ? sub.files.length : (sub ? 1 : 0);
-              var fileCountBadge = fileCount > 1 ? '<span style="background:#ede9fe;color:#6d28d9;border-radius:6px;padding:1px 5px;font-size:9px;font-weight:800;margin-left:2px;">' + fileCount + ' ไฟล์</span>' : '';
+              var courseCountBadge = isMulti ? '<span style="background:#ede9fe;color:#6d28d9;border-radius:6px;padding:1px 5px;font-size:9px;font-weight:800;margin-left:2px;">' + courseKeys.length + ' วิชา</span>' : '';
               return '<div style="display:flex;flex-direction:column;gap:4px;">' +
-                '<button class="' + chipCls + '" onclick="openReview(\'' + (sub?sub.id:'') + '\',\'' + t.uid + '\',\'' + dt.id + '\')" ' + (!sub?'disabled style="cursor:default;opacity:.6;"':'') + (needsReview?' style="box-shadow:0 0 0 2px #f59e0b33;"':'') + '>' +
+                '<button class="' + chipCls + '" onclick="openReview(\'' + (sub?sub.id:'') + '\',\'' + t.uid + '\',\'' + dt.id + '\')" ' + (!sub?'disabled style="cursor:default;opacity:.6;"':'') + (chipNeedsReview?' style="box-shadow:0 0 0 2px #f59e0b33;"':'') + '>' +
                   '<i data-lucide="' + icon + '" style="width:12px;height:12px;flex-shrink:0;"></i>' +
                   '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + dt.label + '</span>' +
-                  fileCountBadge +
+                  courseCountBadge +
                 '</button>' +
                 courseBreakdown +
                 wfHtml +
