@@ -873,45 +873,82 @@ function doReplaceFile(subKey, fileIndex, newFile) {
   if (!sub || !sub.files || !sub.files[fileIndex]) return;
   var oldFile  = sub.files[fileIndex];
   var dt       = DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; });
-  var staffName = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
-  var subjectGroup = document.getElementById('subjectGroup').value.trim() || sub.subjectGroup || '';
-  var newName  = sanitizeForFilename(subjectGroup) + '_' +
-                 sanitizeForFilename(sub.courseCode || '') + '_' +
-                 sanitizeForFilename(staffName) + '_' +
-                 sanitizeForFilename(dt.label) + '_' +
-                 (fileIndex + 1) + '.pdf';
 
   function proceed() {
-    var yearFolderName = 'ปีการศึกษา ' + currentYear;
-    var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
-    var docFolderName  = dt.label;
-    ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
-    .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
-    .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
-    .then(function(fId){ return uploadFileToDrive(newFile, newName, fId, null); })
-    .then(function(result) {
-      if (oldFile.fileId && driveAccessToken) {
-        fetch('https://www.googleapis.com/drive/v3/files/' + oldFile.fileId,
-          { method:'DELETE', headers:{ 'Authorization':'Bearer ' + driveAccessToken } }
-        ).catch(function(){});
-      }
-      var updatedFiles = sub.files.slice();
-      updatedFiles[fileIndex] = { fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' };
-      return db.collection('portfolio_submissions').doc(sub.id).update({
-        files: updatedFiles,
-        fileUrl: updatedFiles[0] ? updatedFiles[0].fileUrl : '',
-        resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-    })
-    .then(function() {
-      showToast('แทนที่ไฟล์สำเร็จ ✓', 'success');
-      closeUploadModal(); loadSubmissions();
-    })
-    .catch(function(e){ showToast('แทนที่ไม่สำเร็จ: ' + (e.message||e), 'error'); });
+    if (oldFile.fileId) {
+      /* ── PATCH: อัปโหลดเนื้อหาใหม่ทับไฟล์เดิมใน Drive (fileId/link ไม่เปลี่ยน) ── */
+      showToast('กำลังบันทึกทับไฟล์เดิม...', 'info');
+      overwriteFileToDrive(oldFile.fileId, newFile)
+      .then(function() {
+        /* Firestore: แค่อัปเดต timestamp (fileId/fileName/fileUrl คงเดิม) */
+        var updatedFiles = sub.files.slice();
+        return db.collection('portfolio_submissions').doc(sub.id).update({
+          files: updatedFiles,
+          resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      })
+      .then(function() {
+        showToast('บันทึกทับไฟล์เดิมสำเร็จ ✓', 'success');
+        closeUploadModal(); loadSubmissions();
+      })
+      .catch(function(e){ showToast('แทนที่ไม่สำเร็จ: ' + (e.message||e), 'error'); });
+    } else {
+      /* fallback: ไฟล์เก่าไม่มี fileId → อัปโหลดใหม่ปกติ */
+      var staffName    = (currentStaffData && currentStaffData.name) || currentUser.displayName || '';
+      var subjectGroup = document.getElementById('subjectGroup').value.trim() || sub.subjectGroup || '';
+      var newName = sanitizeForFilename(subjectGroup) + '_' +
+                    sanitizeForFilename(sub.courseCode || '') + '_' +
+                    sanitizeForFilename(staffName) + '_' +
+                    sanitizeForFilename(dt.label) + '_' +
+                    (fileIndex + 1) + '.pdf';
+      var yearFolderName = 'ปีการศึกษา ' + currentYear;
+      var semFolderName  = 'ภาคเรียนที่ ' + currentSem;
+      var docFolderName  = dt.label;
+      ensureDriveFolder(DRIVE_FOLDER_ID, yearFolderName)
+      .then(function(yId){ return ensureDriveFolder(yId, semFolderName); })
+      .then(function(sId){ return ensureDriveFolder(sId, docFolderName); })
+      .then(function(fId){ return uploadFileToDrive(newFile, newName, fId, null); })
+      .then(function(result) {
+        var updatedFiles = sub.files.slice();
+        updatedFiles[fileIndex] = { fileId: result.id, fileName: newName, fileUrl: 'https://drive.google.com/file/d/' + result.id + '/view' };
+        return db.collection('portfolio_submissions').doc(sub.id).update({
+          files: updatedFiles,
+          fileUrl: updatedFiles[0] ? updatedFiles[0].fileUrl : '',
+          resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      })
+      .then(function() {
+        showToast('แทนที่ไฟล์สำเร็จ ✓', 'success');
+        closeUploadModal(); loadSubmissions();
+      })
+      .catch(function(e){ showToast('แทนที่ไม่สำเร็จ: ' + (e.message||e), 'error'); });
+    }
   }
 
   if (!driveAccessToken) authorizeDrive(proceed); else proceed();
+}
+
+/* ── PATCH: เขียนทับเนื้อหาไฟล์เดิมใน Drive โดยไม่เปลี่ยน fileId ── */
+function overwriteFileToDrive(fileId, file) {
+  return new Promise(function(resolve, reject) {
+    var form = new FormData();
+    form.append('file', file);
+    var xhr = new XMLHttpRequest();
+    xhr.open('PATCH',
+      'https://www.googleapis.com/upload/drive/v3/files/' + fileId +
+      '?uploadType=media&supportsAllDrives=true',
+      true
+    );
+    xhr.setRequestHeader('Authorization', 'Bearer ' + driveAccessToken);
+    xhr.onload = function() {
+      if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error('HTTP ' + xhr.status + ': ' + xhr.responseText));
+    };
+    xhr.onerror = function() { reject(new Error('Network error')); };
+    xhr.send(file); /* ส่ง raw file (ไม่ต้อง FormData สำหรับ media upload) */
+  });
 }
 
 /* ─── DELETE FILE ─── */
@@ -935,8 +972,6 @@ function confirmDelete() {
   if (!sub || !sub.files) { closeDeleteModal(); return; }
 
   var btn = document.getElementById('confirmDeleteBtn');
-  btn.disabled = true; btn.textContent = 'กำลังลบ...';
-
   var fileToDelete = sub.files[fileIndex];
   var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
 
@@ -947,31 +982,48 @@ function confirmDelete() {
     });
   }
 
-  var driveDeletePromise = Promise.resolve();
-  if (fileToDelete && fileToDelete.fileId && driveAccessToken) {
-    driveDeletePromise = fetch(
-      'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId,
-      { method:'DELETE', headers:{ 'Authorization':'Bearer ' + driveAccessToken } }
-    ).catch(function(){});
+  function proceedDelete() {
+    btn.disabled = true; btn.textContent = 'กำลังลบ...';
+
+    var driveDeletePromise = Promise.resolve();
+    if (fileToDelete && fileToDelete.fileId) {
+      /* ลบจาก Drive จริง ๆ (มี token แล้วแน่นอน) */
+      driveDeletePromise = fetch(
+        'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId + '?supportsAllDrives=true',
+        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
+      ).then(function(res) {
+        if (!res.ok && res.status !== 404) throw new Error('Drive delete failed: ' + res.status);
+      });
+    }
+
+    driveDeletePromise.then(updateFirestore).then(function() {
+      showToast('ลบไฟล์สำเร็จ', 'success');
+      closeDeleteModal();
+      if (newFiles.length === 0) {
+        delete submissions[subKey];
+        closeUploadModal();
+      } else {
+        submissions[subKey] = Object.assign({}, sub, { files: newFiles });
+        var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
+        if (rowIdx >= 0) renderCourseFilePanels();
+      }
+      renderDocList();
+    }).catch(function(e) {
+      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+      btn.disabled = false; btn.textContent = 'ลบไฟล์';
+    });
   }
 
-  driveDeletePromise.then(updateFirestore).then(function() {
-    showToast('ลบไฟล์สำเร็จ', 'success');
-    closeDeleteModal();
-    if (newFiles.length === 0) {
-      delete submissions[subKey];
-      closeUploadModal();
-    } else {
-      submissions[subKey] = Object.assign({}, sub, { files: newFiles });
-      /* re-render manage panel */
-      var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
-      if (rowIdx >= 0) renderCourseFilePanels();
-    }
-    renderDocList();
-  }).catch(function(e) {
-    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-    btn.disabled = false; btn.textContent = 'ลบไฟล์';
-  });
+  /* ต้อง auth Drive ก่อนเสมอเพื่อให้ลบได้จริง */
+  if (fileToDelete && fileToDelete.fileId && !driveAccessToken) {
+    btn.disabled = true; btn.textContent = 'รอการอนุญาต Drive...';
+    authorizeDrive(function() {
+      btn.disabled = false; btn.textContent = 'ลบไฟล์';
+      proceedDelete();
+    });
+  } else {
+    proceedDelete();
+  }
 }
 
 /* ─── CLOSE MODAL ─── */
