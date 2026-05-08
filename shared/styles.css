@@ -20,40 +20,30 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Sidebar ── */
-.sidebar-wrap { width: 268px; flex-shrink: 0; transition: transform .3s ease; }
+.sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
 .sidebar-inner {
-  background: white; border-right: 1px solid #f1f5f9;
-  min-height: 100vh; padding: 20px 10px;
+  background: #f8fafc; border-right: 1px solid #e2e8f0;
+  min-height: 100vh; padding: 20px 12px;
   display: flex; flex-direction: column;
-  box-shadow: 2px 0 16px rgba(0,0,0,.04);
 }
 .sidebar-btn {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; border-radius: 12px; font-weight: 600;
-  color: #475569; width: 100%; background: none; border: none;
-  cursor: pointer; text-decoration: none; transition: all .18s;
-  font-size: 13.5px; white-space: nowrap; overflow: hidden; position: relative;
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 14px; font-weight: 700;
+  color: #64748b; width: 100%; background: none; border: none;
+  cursor: pointer; text-decoration: none; transition: all .2s;
+  font-size: 14px; white-space: nowrap; overflow: hidden;
 }
 .sidebar-btn span {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
-.sidebar-btn:hover { background: #f1f5f9; color: #1e293b; }
-.sidebar-btn.active {
-  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-  color: white; font-weight: 700;
-  box-shadow: 0 6px 16px -3px rgba(29,78,216,.3);
-}
-.sidebar-btn.active i { color: white !important; }
+.sidebar-btn:hover { background: #f1f5f9; }
+.sidebar-btn.active { background: #1d4ed8; color: white; box-shadow: 0 8px 15px -3px rgba(30,64,175,.25); }
 .sidebar-btn.admin-btn { color: #7c3aed; }
-.sidebar-btn.admin-btn:hover { background: #faf5ff; color: #6d28d9; }
-.sidebar-btn.admin-btn.active {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  color: white; box-shadow: 0 6px 16px -3px rgba(124,58,237,.3);
-}
-.sidebar-btn.admin-btn.active i { color: white !important; }
+.sidebar-btn.admin-btn:hover { background: #faf5ff; }
+.sidebar-btn.admin-btn.active { background: #7c3aed; color: white; box-shadow: 0 8px 15px -3px rgba(124,58,237,.25); }
 .sec-label {
-  padding: 14px 14px 6px; font-size: 10px; font-weight: 800;
-  color: #94a3b8; text-transform: uppercase; letter-spacing: 1.8px;
+  padding: 14px 16px 8px; font-size: 10px; font-weight: 800;
+  color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;
 }
 
 /* ── Sidebar Overlay (mobile) ── */
@@ -225,20 +215,11 @@ input:focus, select:focus, textarea:focus {
 /* ── Navbar ── */
 .navbar {
   position: sticky; top: 0; z-index: 150;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-  padding: 10px 20px;
-  box-shadow: 0 4px 20px rgba(29,78,216,.25);
+  background: #1d4ed8; padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
 }
-.navbar.purple {
-  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
-  box-shadow: 0 4px 20px rgba(124,58,237,.3);
-}
+.navbar.purple { background: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
 .navbar-inner {
   max-width: 1280px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-@media (max-width: 480px) {
-  .nav-school-name { font-size: 13px !important; }
-  .nav-subtitle { display: none !important; }
-  .nav-user-name { display: none !important; }
 }

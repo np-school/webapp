@@ -149,24 +149,19 @@ function buildNavbar(subtitle, isPurple) {
   nav.className = 'navbar' + (isPurple ? ' purple' : '');
   nav.innerHTML =
     '<div class="navbar-inner">' +
-      '<div style="display:flex;align-items:center;gap:12px;">' +
-        /* hamburger – mobile only */
-        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:9px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);border-radius:10px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;transition:background .2s;" onmouseover="this.style.background=\'rgba(255,255,255,.22)\'" onmouseout="this.style.background=\'rgba(255,255,255,.13)\'">' +
-          '<i data-lucide="menu" style="width:19px;height:19px;"></i>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
+          '<i data-lucide="menu" style="width:20px;height:20px;"></i>' +
         '</button>' +
-        /* logos */
-        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-          '<a href="https://2022.nongki.ac.th/" target="_blank" rel="noopener" style="display:flex;">' +
-            '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="NP" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.2);">' +
-          '</a>' +
-          '<a href="index.html" style="display:flex;">' +
-            '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.2);margin-left:-10px;">' +
-          '</a>' +
-        '</div>' +
-        /* school name */
-        '<div style="border-left:1px solid rgba(255,255,255,.2);padding-left:14px;">' +
-          '<div class="nav-school-name" style="font-size:15px;font-weight:800;color:white;line-height:1.25;letter-spacing:.1px;">โรงเรียนหนองกี่พิทยาคม</div>' +
-          '<div class="nav-subtitle" style="font-size:11px;font-weight:500;color:' + (isPurple ? 'rgba(221,214,254,.8)' : 'rgba(191,219,254,.85)') + ';margin-top:1px;">' + subtitle + '</div>' +
+        '<a href="https://2022.nongki.ac.th/" target="_blank" rel="noopener" style="display:flex;align-items:center;flex-shrink:0;">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="โรงเรียนหนองกี่พิทยาคม" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);">' +
+        '</a>' +
+        '<a href="index.html" style="display:flex;align-items:center;flex-shrink:0;">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);">' +
+        '</a>' +
+        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">' +
+          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>' +
+          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';">' + subtitle + '</div>' +
         '</div>' +
       '</div>' +
       '<div id="userNavSection"></div>' +
@@ -181,15 +176,11 @@ function updateNavUser(user) {
   var el = document.getElementById('userNavSection');
   if (!el) return;
   var ph = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'U') + '&background=1d4ed8&color=fff';
-  var name = (user.displayName || '').split(' ')[0] || '';
   el.innerHTML =
-    '<div style="display:flex;align-items:center;gap:8px;">' +
-      '<div style="display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;">' +
-        '<img src="' + ph + '" style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.4);flex-shrink:0;">' +
-        '<span style="font-size:13px;font-weight:700;color:white;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" class="nav-user-name">' + name + '</span>' +
-      '</div>' +
-      '<button onclick="handleLogout()" title="ออกจากระบบ" style="padding:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:10px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;transition:background .2s;" onmouseover="this.style.background=\'rgba(255,100,100,.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,.12)\'">' +
-        '<i data-lucide="log-out" style="width:17px;height:17px;"></i>' +
+    '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);">' +
+      '<button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
+        '<i data-lucide="log-out" style="width:18px;height:18px;"></i>' +
       '</button>' +
     '</div>';
   lucide.createIcons();
@@ -221,32 +212,25 @@ function updateSidebarProfile(user) {
     var subHtml = '';
     if (sub1 && sub2) {
       subHtml =
-        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;margin-top:1px;">' + sub1 + '</p>' +
+        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub1 + '</p>' +
         '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub2 + '</p>';
     } else if (sub1 || sub2) {
       subHtml =
-        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;margin-top:1px;">' + (sub1 || sub2) + '</p>';
+        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + (sub1 || sub2) + '</p>';
     } else {
       subHtml =
-        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">' + (user.email || '') + '</p>';
+        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>';
     }
     el.innerHTML =
-      '<div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.04);">' +
+      '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;">' +
         '<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">' +
-          '<div style="position:relative;flex-shrink:0;">' +
-            '<img src="' + ph + '" style="width:40px;height:40px;border-radius:50%;border:2px solid #dbeafe;box-shadow:0 2px 6px rgba(29,78,216,.15);">' +
-            '<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;background:#22c55e;border-radius:50%;border:2px solid white;"></div>' +
-          '</div>' +
-          '<div style="overflow:hidden;min-width:0;flex:1;">' +
-            '<p style="font-size:12px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
+          '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid #e2e8f0;">' +
+          '<div style="overflow:hidden;min-width:0;">' +
+            '<p style="font-size:12px;font-weight:800;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
             subHtml +
           '</div>' +
-          '<button onclick="handleLogout()" title="ออกจากระบบ" style="padding:6px;background:#fee2e2;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .2s;" onmouseover="this.style.background=\'#fecaca\'" onmouseout="this.style.background=\'#fee2e2\'">' +
-            '<i data-lucide="log-out" style="width:14px;height:14px;color:#ef4444;"></i>' +
-          '</button>' +
         '</div>' +
       '</div>';
-    lucide.createIcons();
   }
 
   /* ดึงข้อมูลจาก staff collection ตาม email */
@@ -351,33 +335,32 @@ function buildSidebar(activePage) {
   var el = document.getElementById('sidebarInner');
   if (!el) return;
 
-  /* ── Header bar inside sidebar ── */
+  /* ── close button ── */
   var html =
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 4px 16px;">' +
-      '<div style="display:flex;align-items:center;gap:8px;">' +
-        '<div style="width:32px;height:32px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(29,78,216,.3);">' +
-          '<i data-lucide="zap" style="width:15px;height:15px;color:white;"></i>' +
-        '</div>' +
-        '<span style="font-size:14px;font-weight:800;color:#0f172a;letter-spacing:.2px;">NP Origins</span>' +
-      '</div>' +
-      '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;" onmouseover="this.style.background=\'#e2e8f0\'" onmouseout="this.style.background=\'#f1f5f9\'">' +
-        '<i data-lucide="x" style="width:15px;height:15px;color:#64748b;"></i>' +
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+      '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
+        '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>' +
       '</button>' +
     '</div>';
 
   /* ── เมนูหลัก ── */
-  html += _secLabel('เมนูหลัก');
+  html += '<div class="sec-label">เมนูหลัก</div>';
   MAIN_MENU.forEach(function(item) {
     var key = item.href ? item.href.replace('.html', '') : '';
-    html += _sidebarBtn(item, activePage === key, false, false);
+    var active = activePage === key;
+    html += _sidebarBtn(item, active, false);
   });
 
-  /* ── บริการออนไลน์ ── */
-  html += _secLabel('บริการออนไลน์');
+  /* ── บริการออนไลน์ แยกกลุ่ม ── */
+  html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
   GROUP_MENU.forEach(function(g) {
-    html += _groupHeader(g.icon, g.group, '#94a3b8');
+    html +=
+      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+      '</div>';
     if (!g.items.length) {
-      html += '<div style="padding:5px 12px 5px 38px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
+      html += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
     } else {
       g.items.forEach(function(item) {
         var key = item.href ? item.href.replace('.html', '') : '';
@@ -386,60 +369,75 @@ function buildSidebar(activePage) {
     }
   });
 
-  /* ── Admin section ── */
+  /* ── Admin section (แสดงทุกหน้า แต่ซ่อนไว้ก่อน checkAdminAccess จะ toggle) ── */
   var adminGroupHtml = '';
   ADMIN_GROUP_MENU.forEach(function(g) {
+    /* สร้าง rows ของกลุ่มนี้ก่อน ถ้าไม่มี item ที่แสดงได้เลย ข้ามทั้งกลุ่ม */
     var rowsHtml = '';
     g.items.forEach(function(item) {
-      var key      = item.href ? item.href.replace('.html', '') : '';
+      var key     = item.href ? item.href.replace('.html', '') : '';
       var isActive = activePage === key;
-      var cls      = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
+
+      var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
       var inner =
-        '<i data-lucide="' + item.icon + '" style="width:15px;height:15px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
         '<span>' + item.label + '</span>' +
         (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
+
       var wrapId = item.id ? ' id="' + item.id + '"' : '';
       if (item.href) {
-        rowsHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:32px;"' + wrapId + '>' + inner + '</a>';
+        rowsHtml += '<a href="' + item.href + '" class="' + cls + '" style="padding-left:28px;"' + wrapId + '>' + inner + '</a>';
       } else {
-        rowsHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:32px;"' + wrapId + '>' + inner + '</button>';
+        rowsHtml += '<button onclick="' + item.onclick + '" class="' + cls + '" style="padding-left:28px;"' + wrapId + '>' + inner + '</button>';
       }
     });
+
     if (!rowsHtml) return;
-    adminGroupHtml += _groupHeader(g.icon, g.group, '#a78bfa') + rowsHtml;
+
+    adminGroupHtml +=
+      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+      '</div>' +
+      rowsHtml;
   });
 
   html +=
     '<div id="adminSidebarSection" style="display:none;">' +
-      '<div style="margin:14px 10px;height:1px;background:linear-gradient(90deg,transparent,#e9d5ff,transparent);"></div>' +
-      _secLabel('สำหรับเจ้าหน้าที่', '#7c3aed') +
+      '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
       adminGroupHtml +
       /* SuperAdmin-only slot */
       '<div id="superadminSidebarSlot" style="display:none;">' +
-        _groupHeader('shield', 'SuperAdmin', '#a78bfa') +
-        '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:32px;">' +
-          '<i data-lucide="shield-check" style="width:15px;height:15px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<div style="margin:8px 16px 4px;display:flex;align-items:center;gap:6px;">' +
+          '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
+          '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
+        '</div>' +
+        '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:28px;">' +
+          '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
           '<span>จัดการสิทธิ์ Admin</span>' +
-          '<span style="margin-left:auto;font-size:9px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;padding:2px 8px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+          '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
         '</a>' +
       '</div>' +
     '</div>';
 
   /* ── profile slot ── */
-  html += '<div style="flex:1;min-height:16px;"></div><div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
+  html += '<div style="flex:1;"></div><div style="padding:4px 4px 8px;" id="sidebarProfile"></div>';
 
   el.innerHTML = html;
   lucide.createIcons();
 }
 
-/* ── internal helpers ── */
-function _secLabel(text, color) {
-  return '<div style="padding:14px 14px 6px;font-size:10px;font-weight:800;color:' + (color || '#94a3b8') + ';text-transform:uppercase;letter-spacing:1.8px;">' + text + '</div>';
-}
-
-function _groupHeader(icon, label, color) {
-  return '<div style="display:flex;align-items:center;gap:7px;padding:7px 14px 3px;">' +
-    '<i data-lucide="' + icon + '" style="width:11px;height:11px;color:' + color + ';flex-shrink:0;"></i>' +
-    '<span style="font-size:10px;font-weight:700;color:' + color + ';letter-spacing:.3px;">' + label + '</span>' +
-  '</div>';
+/* ── internal helper ── */
+function _sidebarBtn(item, isActive, isAdmin, isSubItem) {
+  var cls = 'sidebar-btn' + (isAdmin ? ' admin-btn' : '') + (isActive ? ' active' : '');
+  var indent = isSubItem ? 'padding-left:28px;' : '';
+  var inner =
+    '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;"></i>' +
+    '<span>' + item.label + '</span>';
+  if (item.href) {
+    return '<a href="' + item.href + '" class="' + cls + '" style="' + indent + '">' + inner + '</a>';
+  } else {
+    return '<button onclick="' + item.onclick + '" class="' + cls + '" style="' + indent + '">' + inner + '</button>';
+  }
 }
