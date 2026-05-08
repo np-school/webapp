@@ -140,12 +140,7 @@
     .docbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
     .docbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
 
-    /* Charts toggle button */
-    .chart-toggle-btn{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;background:white;color:#7c3aed;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
-    .chart-toggle-btn:hover{border-color:#7c3aed;background:#faf5ff;}
-    .chart-toggle-btn.open{background:#7c3aed;color:white;border-color:#7c3aed;}
-    #chartsPanel{display:none;}
-    #chartsPanel.open{display:block;}
+    #chartsPanel{display:block;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -191,15 +186,7 @@
         </div>
       </div>
 
-      <!-- Stat Cards + Chart Toggle -->
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">ภาพรวมภาคเรียน</span>
-        <button class="chart-toggle-btn" id="chartToggleBtn" onclick="toggleCharts()">
-          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> แสดงกราฟสรุป
-        </button>
-      </div>
-
-      <!-- Charts Panel (hidden by default) -->
+      <!-- Charts Panel -->
       <div id="chartsPanel">
         <div class="charts-section">
           <!-- Donut: Status breakdown -->
@@ -653,8 +640,8 @@ function updateStats() {
   document.getElementById('statFinalApproved').textContent = finalApproved;
   document.getElementById('statPending').textContent = Math.max(0, pending);
 
-  /* อัปเดตกราฟ (ถ้าเปิดอยู่) */
-  if (chartsVisible) renderCharts();
+  /* อัปเดตกราฟเสมอ */
+  renderCharts();
 }
 
 /* ─── FILTER / VIEW ─── */
@@ -1034,24 +1021,6 @@ function closeModal(id) {
 /* ══════════════════════════════════════
    CHARTS
    ══════════════════════════════════════ */
-var chartsVisible = false;
-
-function toggleCharts() {
-  chartsVisible = !chartsVisible;
-  var panel = document.getElementById('chartsPanel');
-  var btn   = document.getElementById('chartToggleBtn');
-  if (chartsVisible) {
-    panel.classList.add('open');
-    btn.classList.add('open');
-    btn.innerHTML = '<i data-lucide="x" style="width:14px;height:14px;"></i> ซ่อนกราฟ';
-    renderCharts();
-  } else {
-    panel.classList.remove('open');
-    btn.classList.remove('open');
-    btn.innerHTML = '<i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> แสดงกราฟสรุป';
-  }
-  lucide.createIcons();
-}
 
 function renderCharts() {
   renderDonutChart();
