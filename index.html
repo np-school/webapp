@@ -22,24 +22,26 @@
   <script src="shared/common.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+
     /* ── Loading ── */
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:9999;align-items:center;justify-content:center;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,0.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
+    .loading-text{font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:.5px;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    /* ── Sidebar shared ── */
+
+    /* ── Sidebar ── */
     .sidebar-wrap{width:272px;flex-shrink:0;transition:transform .3s ease;}
-    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;min-height:100vh;padding:24px 12px;}
-    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:14px;white-space:nowrap;}
-    .sidebar-btn:hover{background:#f1f5f9;}
-    .sidebar-btn.active{background:#1d4ed8;color:white;box-shadow:0 8px 15px -3px rgba(30,64,175,.25);}
-    .sidebar-btn.admin-btn:hover{background:#faf5ff;}
-    .sec-label{padding:14px 16px 8px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;}
-    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-inner{background:#ffffff;border-right:1px solid #e2e8f0;min-height:100vh;padding:20px 10px;}
+    .sidebar-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;font-weight:700;color:#64748b;width:100%;background:none;border:none;cursor:pointer;text-decoration:none;transition:all .2s;font-size:14px;white-space:nowrap;}
+    .sidebar-btn:hover{background:#f1f5f9;color:#1e293b;}
+    .sidebar-btn.active{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:white;box-shadow:0 6px 16px rgba(29,78,216,.28);}
+    .sidebar-btn.admin-btn:hover{background:#faf5ff;color:#7c3aed;}
+    .sec-label{padding:16px 16px 6px;font-size:10px;font-weight:800;color:#cbd5e1;text-transform:uppercase;letter-spacing:2.5px;}
     #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;}
     #sidebarOverlay.open{display:block;}
-    /* ── Mobile drawer ── */
+
     @media(max-width:1023px){
-      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);}
+      .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:8px 0 32px rgba(0,0,0,.15);}
       .sidebar-wrap.open{transform:translateX(0);}
       #mainGrid{flex-direction:column;}
       #contentArea{width:100%;}
@@ -48,49 +50,84 @@
       #hamburgerBtn{display:none!important;}
       .sidebar-inner{border-right:none;}
     }
+
     /* ── Tab content ── */
     .tab-content{display:none;}
     .tab-content.active{display:block;}
+
     /* ── Public calendar ── */
-    .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
-    .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
+    .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;border:1.5px solid transparent;transition:all .15s;position:relative;}
+    .pub-cal-day:hover:not(.empty){background:#eff6ff;border-color:#bfdbfe;}
     .pub-cal-day.empty{cursor:default;}
-    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
-    .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
-    .pub-cal-day.is-today{background:#1d4ed8!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
+    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;background:#f59e0b;border-radius:50%;}
+    .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;border-color:#fca5a5!important;}
+    .pub-cal-day.is-today{background:linear-gradient(135deg,#1d4ed8,#3b82f6)!important;color:white!important;box-shadow:0 4px 12px rgba(29,78,216,.35);border-color:transparent!important;}
     .pub-cal-day.is-selected{border:2px solid #1d4ed8;background:#eff6ff;}
-    .pub-stat-bar{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
-    .pub-stat-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s;}
+    .pub-stat-bar{background:#e2e8f0;border-radius:6px;height:7px;overflow:hidden;}
+    .pub-stat-fill{height:100%;border-radius:6px;background:#1d4ed8;transition:width .5s ease;}
+
     @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
     @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
-    /* ── New Public UI ── */
-    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;}
-    .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
-    .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;}
-    .service-card{background:white;border-radius:20px;border:1px solid #e2e8f0;padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
-    .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:#bfdbfe;}
-    .service-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .2s;}
-    .service-card:hover .service-icon{transform:scale(1.08);}
-    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
-    @media(max-width:640px){.services-grid{grid-template-columns:repeat(2,1fr);gap:12px;}.service-card{padding:18px 14px;}}
+
+    /* ── Hero ── */
+    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1d4ed8 100%);position:relative;overflow:hidden;}
+    .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 40%,rgba(96,165,250,.2) 0%,transparent 65%),radial-gradient(ellipse 50% 50% at 15% 85%,rgba(99,102,241,.18) 0%,transparent 60%);}
+    .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:30px 30px;}
+
+    /* ── Service Cards ── */
+    .service-card{background:white;border-radius:20px;border:1.5px solid #e2e8f0;padding:22px 18px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
+    .service-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,.5));pointer-events:none;}
+    .service-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,.1);border-color:#bfdbfe;}
+    .service-icon{width:58px;height:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .25s ease;}
+    .service-card:hover .service-icon{transform:scale(1.1) rotate(-3deg);}
+
+    /* ── Category Sections ── */
+    .cat-section{background:white;border-radius:24px;border:1.5px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:20px;}
+    .cat-header{padding:18px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f1f5f9;}
+    .cat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .cat-body{padding:20px 24px;}
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;}
+    @media(max-width:640px){
+      .services-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+      .service-card{padding:16px 12px;}
+      .service-icon{width:50px;height:50px;border-radius:14px;}
+      .cat-body{padding:16px;}
+    }
     @media(max-width:360px){.services-grid{grid-template-columns:1fr;}}
+
     .pub-section{max-width:1200px;margin:0 auto;padding:0 20px;}
     @media(max-width:480px){.pub-section{padding:0 14px;}}
-    .login-gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
+
+    /* ── Login Gate ── */
+    .login-gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px);}
     .login-gate.open{display:flex;}
-    .login-gate-box{background:white;border-radius:24px;width:100%;max-width:400px;padding:36px 32px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);animation:popIn .25s cubic-bezier(.4,0,.2,1);}
-    @keyframes popIn{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
-    @media(max-width:480px){.login-gate-box{padding:28px 20px;}}
-    .pub-stat-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;color:white;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    .login-gate-box{background:white;border-radius:28px;width:100%;max-width:400px;padding:40px 32px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,.25);animation:popIn .28s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes popIn{from{transform:scale(.88);opacity:0;}to{transform:scale(1);opacity:1;}}
+    @media(max-width:480px){.login-gate-box{padding:30px 22px;}}
+
+    /* ── Stat Pills ── */
+    .pub-stat-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:7px 16px;font-size:12px;font-weight:700;color:white;display:flex;align-items:center;gap:6px;white-space:nowrap;backdrop-filter:blur(8px);}
     .pub-stats-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;}
+
+    /* ── Section Headers ── */
+    .section-eyebrow{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:999px;padding:5px 14px;font-size:11px;font-weight:800;color:#1d4ed8;letter-spacing:.5px;margin-bottom:12px;}
+    .section-title{font-size:22px;font-weight:800;color:#0f172a;margin-bottom:6px;}
+    .section-subtitle{font-size:13px;color:#64748b;line-height:1.6;}
+
+    /* ── Cards (dashboard) ── */
+    .dash-card{background:white;border-radius:20px;border:1.5px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+
     @media(max-width:480px){.nav-school-name{font-size:13px!important;}.nav-subtitle{display:none;}}
     @media(max-width:768px){#pubCalGrid{grid-template-columns:1fr!important;}}
+
+    /* ── Badge status ── */
+    .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px;}
   </style>
 </head>
 <body style="background:#f8fafc;overflow-x:hidden;">
 
-<div id="loadingOverlay"><div class="spinner"></div></div>
+<div id="loadingOverlay"><div class="spinner"></div><div class="loading-text">กำลังโหลด...</div></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- ── Navbar ── -->
@@ -99,137 +136,287 @@
 <!-- ── Public View ── -->
 <div id="loginGate" class="login-gate" onclick="if(event.target===this)closeLoginGate()">
   <div class="login-gate-box">
-    <div id="loginGateIcon" style="width:64px;height:64px;border-radius:20px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-      <i data-lucide="lock" style="width:28px;height:28px;color:#1d4ed8;"></i>
+    <div id="loginGateIcon" style="width:68px;height:68px;border-radius:22px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <i data-lucide="lock" style="width:30px;height:30px;color:#1d4ed8;"></i>
     </div>
-    <h3 id="loginGateTitle" style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">เข้าสู่ระบบก่อนใช้งาน</h3>
-    <p id="loginGateDesc" style="font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.6;">กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการนี้</p>
-    <button onclick="handleLogin()" style="width:100%;padding:14px;background:#1d4ed8;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);margin-bottom:12px;">
+    <h3 id="loginGateTitle" style="font-size:21px;font-weight:900;color:#0f172a;margin-bottom:8px;letter-spacing:-.3px;">เข้าสู่ระบบก่อนใช้งาน</h3>
+    <p id="loginGateDesc" style="font-size:14px;color:#64748b;margin-bottom:28px;line-height:1.7;">กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการนี้</p>
+    <button onclick="handleLogin()" style="width:100%;padding:15px;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:white;font-weight:800;border-radius:16px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(29,78,216,.35);margin-bottom:10px;transition:all .2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       เข้าสู่ระบบด้วย Google
     </button>
-    <button onclick="closeLoginGate()" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
+    <button onclick="closeLoginGate()" style="width:100%;padding:12px;background:#f1f5f9;color:#64748b;font-weight:700;border-radius:12px;border:1px solid #e2e8f0;cursor:pointer;font-size:14px;transition:all .2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">ยกเลิก</button>
   </div>
 </div>
 
 <main id="publicView">
 
   <!-- ══ HERO ══ -->
-  <section class="pub-hero-bg" style="padding:56px 0 48px;">
+  <section class="pub-hero-bg" style="padding:64px 0 56px;">
     <div class="pub-hero-dots"></div>
-    <div class="pub-section" style="position:relative;z-index:1;">
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;">
-        <!-- Text -->
-        <div style="flex:1;min-width:260px;">
-          <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:22px;letter-spacing:.5px;">
-            <i data-lucide="zap" style="width:13px;height:13px;"></i> NP Origins
-          </div>
-          <h1 style="font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;color:white;line-height:1.15;margin-bottom:14px;">
-            NP <span style="color:#93c5fd;">Origins</span>
-          </h1>
-          <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:420px;margin-bottom:28px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+    <!-- Decorative circles -->
+    <div style="position:absolute;top:-80px;right:-60px;width:380px;height:380px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
+    <div style="position:absolute;bottom:-120px;left:10%;width:280px;height:280px;background:rgba(96,165,250,.08);border-radius:50%;pointer-events:none;"></div>
 
+    <div class="pub-section" style="position:relative;z-index:1;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:48px;">
+
+        <!-- Left: Text -->
+        <div style="flex:1;min-width:260px;">
+          <!-- Badge -->
+          <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 16px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:999px;font-size:12px;font-weight:700;color:rgba(255,255,255,.92);margin-bottom:24px;letter-spacing:.5px;backdrop-filter:blur(10px);">
+            <i data-lucide="zap" style="width:13px;height:13px;color:#fbbf24;"></i>
+            โรงเรียนหนองกี่พิทยาคม
+          </div>
+
+          <h1 style="font-size:clamp(2rem,5.5vw,3.4rem);font-weight:900;color:white;line-height:1.12;margin-bottom:12px;letter-spacing:-.5px;">
+            NP <span style="background:linear-gradient(135deg,#93c5fd,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Origins</span>
+          </h1>
+          <p style="font-size:16px;color:rgba(255,255,255,.72);line-height:1.8;max-width:440px;margin-bottom:32px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร<br>สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
+
+          <!-- Stats Pills -->
           <div class="pub-stats-row" id="heroStatsRow">
-            <div class="pub-stat-pill"><i data-lucide="building-2" style="width:12px;height:12px;"></i> <span id="heroRoomCount">...</span> ห้อง/สถานที่</div>
-            <div class="pub-stat-pill"><i data-lucide="calendar-check" style="width:12px;height:12px;"></i> <span id="heroBookingCount">...</span> คำขอจองเดือนนี้</div>
+            <div class="pub-stat-pill">
+              <i data-lucide="building-2" style="width:13px;height:13px;color:#93c5fd;"></i>
+              <span id="heroRoomCount">...</span> ห้อง/สถานที่
+            </div>
+            <div class="pub-stat-pill">
+              <i data-lucide="calendar-check" style="width:13px;height:13px;color:#86efac;"></i>
+              <span id="heroBookingCount">...</span> คำขอจองเดือนนี้
+            </div>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
+            <button onclick="showLoginGate('เข้าสู่ระบบ','กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการ','log-in')" style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;background:white;color:#1d4ed8;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);transition:all .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+              <i data-lucide="log-in" style="width:16px;height:16px;"></i>
+              เข้าสู่ระบบ
+            </button>
+            <a href="#services-section" style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;background:rgba(255,255,255,.12);color:white;font-weight:700;border-radius:14px;text-decoration:none;font-size:14px;border:1px solid rgba(255,255,255,.2);transition:all .2s;backdrop-filter:blur(8px);" onmouseover="this.style.background='rgba(255,255,255,.18)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+              <i data-lucide="grid" style="width:16px;height:16px;"></i>
+              ดูบริการทั้งหมด
+            </a>
           </div>
         </div>
-        <!-- Hero image -->
-        <div style="flex:1;min-width:220px;max-width:480px;display:none;" id="heroImgWrap" class="hero-img-block">
-          <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="NP" style="width:100%;max-width:320px;display:block;margin:0 auto;filter:brightness(0) invert(1);opacity:.15;">
+
+        <!-- Right: Feature cards -->
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:220px;max-width:300px;" id="heroImgWrap">
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(10px);">
+            <div style="width:38px;height:38px;background:rgba(99,102,241,.4);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="calendar" style="width:18px;height:18px;color:white;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:white;">จองห้องประชุม</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;">ตรวจสอบและจองได้ทันที</div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(10px);">
+            <div style="width:38px;height:38px;background:rgba(124,58,237,.4);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="send" style="width:18px;height:18px;color:white;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:white;">ส่งงานครู</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;">ติดตามสถานะเอกสาร</div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(10px);">
+            <div style="width:38px;height:38px;background:rgba(6,199,85,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:white;">แจ้งเตือน LINE</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;">รับแจ้งเตือนอัตโนมัติ</div>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   </section>
 
   <!-- ══ SERVICES ══ -->
-  <section style="background:#f8fafc;padding:48px 0 16px;">
+  <section id="services-section" style="background:#f1f5f9;padding:52px 0 20px;">
     <div class="pub-section">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
-        <h2 style="font-size:19px;font-weight:800;color:#0f172a;">บริการออนไลน์</h2>
+
+      <!-- Section Header -->
+      <div style="margin-bottom:28px;">
+        <div class="section-eyebrow">
+          <i data-lucide="grid" style="width:12px;height:12px;"></i>
+          บริการออนไลน์
+        </div>
+        <h2 class="section-title">ระบบบริการดิจิทัล</h2>
+        <p class="section-subtitle">เลือกบริการที่ต้องการ · บางบริการต้องเข้าสู่ระบบก่อนใช้งาน</p>
       </div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:24px;padding-left:14px;">เข้าสู่ระบบเพื่อใช้บริการด้านล่าง</p>
-      <div class="services-grid">
-        <!-- คู่มือการใช้งาน -->
-        <a href="guide.html" class="service-card" style="text-decoration:none;color:inherit;">
-          <div class="service-icon" style="background:#f0fdf4;">
-            <i data-lucide="book-open" style="width:26px;height:26px;color:#16a34a;"></i>
+
+      <!-- หมวด 1: สำหรับทุกคน -->
+      <div class="cat-section">
+        <div class="cat-header">
+          <div class="cat-icon" style="background:#f0fdf4;">
+            <i data-lucide="globe" style="width:20px;height:20px;color:#16a34a;"></i>
           </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">คู่มือการใช้งาน</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">วิธีใช้งานระบบและคำถามที่พบบ่อย</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#16a34a;background:#f0fdf4;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="arrow-right" style="width:11px;height:11px;"></i> อ่านได้เลย
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">สำหรับทุกคน</div>
+            <div style="font-size:12px;color:#64748b;margin-top:1px;">ไม่ต้องเข้าสู่ระบบ · เข้าถึงได้ทันที</div>
           </div>
-        </a>
-        <!-- ระบบส่งงาน -->
-        <div class="service-card" onclick="showLoginGate('ระบบส่งงานประจำภาคเรียน','กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อส่งเอกสารภาระงาน','send')">
-          <div class="service-icon" style="background:#f5f3ff;">
-            <i data-lucide="send" style="width:26px;height:26px;color:#7c3aed;"></i>
-          </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ส่งงานประจำภาคเรียน</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">ส่งเอกสารภาระงานครู ติดตามสถานะได้ทันที</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
+          <div style="margin-left:auto;">
+            <span style="font-size:10px;font-weight:800;background:#dcfce7;color:#15803d;padding:4px 12px;border-radius:999px;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="unlock" style="width:10px;height:10px;"></i> เปิดให้ใช้งาน
+            </span>
           </div>
         </div>
-        <!-- ระบบจองห้อง -->
-        <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
-          <div class="service-icon" style="background:#eff6ff;">
-            <i data-lucide="calendar" style="width:26px;height:26px;color:#1d4ed8;"></i>
-          </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ห้อง/สถานที่</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">จองห้องประชุม สนาม และสถานที่ต่างๆ</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
-          </div>
-        </div>
-        <!-- ระบบ CCTV -->
-        <div class="service-card" onclick="showLoginGate('ระบบขอใช้ข้อมูล CCTV','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนยื่นคำขอดูข้อมูลกล้องวงจรปิด','monitor')">
-          <div class="service-icon" style="background:#fff7ed;">
-            <i data-lucide="monitor" style="width:26px;height:26px;color:#ea580c;"></i>
-          </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ข้อมูล CCTV</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">ยื่นคำขอดูข้อมูลกล้องวงจรปิด</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#ea580c;background:#fff7ed;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="clock" style="width:11px;height:11px;"></i> กำลังพัฒนา
-          </div>
-        </div>
-        <!-- รายงาน/เอกสาร placeholder -->
-        <div class="service-card" style="opacity:.6;cursor:default;" title="กำลังพัฒนา">
-          <div class="service-icon" style="background:#f0fdf4;">
-            <i data-lucide="file-text" style="width:26px;height:26px;color:#16a34a;"></i>
-          </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">เอกสารและรายงาน</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">ดาวน์โหลดเอกสารและรายงานต่างๆ</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="wrench" style="width:11px;height:11px;"></i> เร็วๆนี้
-          </div>
-        </div>
-        <!-- แจ้งเตือน LINE -->
-        <div class="service-card" onclick="showLoginGate('แจ้งเตือนผ่าน LINE','กรุณาเข้าสู่ระบบก่อนเชื่อมต่อ LINE เพื่อรับการแจ้งเตือน','bell')">
-          <div class="service-icon" style="background:#f0fdf4;">
-            <svg style="width:26px;height:26px;" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
-          </div>
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">แจ้งเตือนผ่าน LINE</div>
-          <div style="font-size:12px;color:#64748b;line-height:1.5;">รับแจ้งผลคำขอและเตือนก่อนถึงเวลาใช้งาน</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#06C755;background:#f0fdf4;padding:4px 10px;border-radius:999px;">
-            <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
+        <div class="cat-body">
+          <div class="services-grid">
+            <!-- คู่มือการใช้งาน -->
+            <a href="guide.html" class="service-card" style="text-decoration:none;color:inherit;">
+              <div class="service-icon" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                <i data-lucide="book-open" style="width:28px;height:28px;color:#16a34a;"></i>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">คู่มือการใช้งาน</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">วิธีใช้งานระบบและคำถามที่พบบ่อย</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#16a34a;background:#f0fdf4;padding:5px 12px;border-radius:999px;border:1px solid #bbf7d0;">
+                <i data-lucide="arrow-right" style="width:11px;height:11px;"></i> อ่านได้เลย
+              </div>
+            </a>
           </div>
         </div>
       </div>
+
+      <!-- หมวด 2: สำหรับครูและบุคลากร -->
+      <div class="cat-section">
+        <div class="cat-header">
+          <div class="cat-icon" style="background:#f5f3ff;">
+            <i data-lucide="users" style="width:20px;height:20px;color:#7c3aed;"></i>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">สำหรับครูและบุคลากร</div>
+            <div style="font-size:12px;color:#64748b;margin-top:1px;">ต้องเข้าสู่ระบบด้วยบัญชี Google</div>
+          </div>
+          <div style="margin-left:auto;">
+            <span style="font-size:10px;font-weight:800;background:#ede9fe;color:#7c3aed;padding:4px 12px;border-radius:999px;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="lock" style="width:10px;height:10px;"></i> ต้องล็อกอิน
+            </span>
+          </div>
+        </div>
+        <div class="cat-body">
+          <div class="services-grid">
+            <!-- ระบบส่งงาน -->
+            <div class="service-card" onclick="showLoginGate('ระบบส่งงานประจำภาคเรียน','กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อส่งเอกสารภาระงาน','send')">
+              <div class="service-icon" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);">
+                <i data-lucide="send" style="width:28px;height:28px;color:#7c3aed;"></i>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ส่งงานประจำภาคเรียน</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">ส่งเอกสารภาระงานครู ติดตามสถานะได้ทันที</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#7c3aed;background:#f5f3ff;padding:5px 12px;border-radius:999px;border:1px solid #ddd6fe;">
+                <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- หมวด 3: สำหรับนักเรียนและบุคลากร -->
+      <div class="cat-section">
+        <div class="cat-header">
+          <div class="cat-icon" style="background:#eff6ff;">
+            <i data-lucide="school" style="width:20px;height:20px;color:#1d4ed8;"></i>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">บริการสำหรับนักเรียนและบุคลากร</div>
+            <div style="font-size:12px;color:#64748b;margin-top:1px;">ต้องเข้าสู่ระบบด้วยบัญชี Google</div>
+          </div>
+          <div style="margin-left:auto;">
+            <span style="font-size:10px;font-weight:800;background:#dbeafe;color:#1d4ed8;padding:4px 12px;border-radius:999px;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="lock" style="width:10px;height:10px;"></i> ต้องล็อกอิน
+            </span>
+          </div>
+        </div>
+        <div class="cat-body">
+          <div class="services-grid">
+            <!-- ระบบจองห้อง -->
+            <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
+              <div class="service-icon" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+                <i data-lucide="calendar" style="width:28px;height:28px;color:#1d4ed8;"></i>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ห้อง/สถานที่</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">จองห้องประชุม สนาม และสถานที่ต่างๆ</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:5px 12px;border-radius:999px;border:1px solid #bfdbfe;">
+                <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้
+              </div>
+            </div>
+            <!-- แจ้งเตือน LINE -->
+            <div class="service-card" onclick="showLoginGate('แจ้งเตือนผ่าน LINE','กรุณาเข้าสู่ระบบก่อนเชื่อมต่อ LINE เพื่อรับการแจ้งเตือน','bell')">
+              <div class="service-icon" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                <svg style="width:28px;height:28px;" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">แจ้งเตือนผ่าน LINE</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">รับแจ้งผลคำขอและเตือนก่อนถึงเวลาใช้งาน</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#06C755;background:#f0fdf4;padding:5px 12px;border-radius:999px;border:1px solid #bbf7d0;">
+                <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- หมวด 4: กำลังพัฒนา -->
+      <div class="cat-section" style="opacity:.75;">
+        <div class="cat-header">
+          <div class="cat-icon" style="background:#fff7ed;">
+            <i data-lucide="wrench" style="width:20px;height:20px;color:#ea580c;"></i>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">กำลังพัฒนา</div>
+            <div style="font-size:12px;color:#64748b;margin-top:1px;">บริการที่กำลังปรับปรุงและเตรียมเปิด</div>
+          </div>
+          <div style="margin-left:auto;">
+            <span style="font-size:10px;font-weight:800;background:#ffedd5;color:#ea580c;padding:4px 12px;border-radius:999px;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="clock" style="width:10px;height:10px;"></i> เร็วๆนี้
+            </span>
+          </div>
+        </div>
+        <div class="cat-body">
+          <div class="services-grid">
+            <!-- ระบบ CCTV -->
+            <div class="service-card" onclick="showLoginGate('ระบบขอใช้ข้อมูล CCTV','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนยื่นคำขอดูข้อมูลกล้องวงจรปิด','monitor')" style="opacity:.85;">
+              <div class="service-icon" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);">
+                <i data-lucide="monitor" style="width:28px;height:28px;color:#ea580c;"></i>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ข้อมูล CCTV</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">ยื่นคำขอดูข้อมูลกล้องวงจรปิด</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#ea580c;background:#fff7ed;padding:5px 12px;border-radius:999px;border:1px solid #fed7aa;">
+                <i data-lucide="clock" style="width:11px;height:11px;"></i> กำลังพัฒนา
+              </div>
+            </div>
+            <!-- เอกสารและรายงาน -->
+            <div class="service-card" style="cursor:default;" title="กำลังพัฒนา">
+              <div class="service-icon" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                <i data-lucide="file-text" style="width:28px;height:28px;color:#16a34a;"></i>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">เอกสารและรายงาน</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px;">ดาวน์โหลดเอกสารและรายงานต่างๆ</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#94a3b8;background:#f1f5f9;padding:5px 12px;border-radius:999px;border:1px solid #e2e8f0;">
+                <i data-lucide="wrench" style="width:11px;height:11px;"></i> เร็วๆนี้
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
   <!-- ══ CALENDAR ══ -->
-  <section style="background:#f8fafc;padding:40px 0 56px;">
+  <section style="background:#f1f5f9;padding:32px 0 64px;">
     <div class="pub-section">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
-        <h2 style="font-size:19px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h2>
-
+      <!-- Section Header -->
+      <div style="margin-bottom:24px;">
+        <div class="section-eyebrow">
+          <i data-lucide="calendar" style="width:12px;height:12px;"></i>
+          ปฏิทินการจอง
+        </div>
+        <h2 class="section-title">ปฏิทินการใช้ห้อง/สถานที่</h2>
+        <p class="section-subtitle">ตรวจสอบตารางการจองห้องและสถานที่ล่วงหน้า</p>
       </div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:20px;padding-left:14px;">ตรวจสอบตารางการจองห้องและสถานที่ล่วงหน้า</p>
 
       <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;" id="pubCalGrid">
         <!-- Left: Calendar + Stats -->
@@ -296,47 +483,61 @@
       <div id="tab-dashboard" class="tab-content active">
 
         <!-- Welcome Banner -->
-        <div style="background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 60%,#60a5fa 100%);padding:28px 32px;border-radius:24px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(29,78,216,.25);">
-          <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
-          <div style="position:absolute;bottom:-50px;right:80px;width:220px;height:220px;background:rgba(255,255,255,.04);border-radius:50%;"></div>
-          <div style="position:relative;z-index:1;">
-            <p style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">ยินดีต้อนรับสู่ระบบ</p>
-            <h3 id="welcomeText" style="font-size:24px;font-weight:800;color:white;margin-bottom:4px;">สวัสดี</h3>
-            <p style="color:rgba(255,255,255,.75);font-size:13px;">โรงเรียนหนองกี่พิทยาคม · ระบบบริการออนไลน์</p>
+        <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);padding:32px 36px;border-radius:28px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 12px 40px rgba(29,78,216,.3);">
+          <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:-60px;right:100px;width:260px;height:260px;background:rgba(96,165,250,.07);border-radius:50%;pointer-events:none;"></div>
+          <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;"></div>
+          <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+            <div>
+              <p style="font-size:11px;font-weight:800;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:8px;">ยินดีต้อนรับสู่ระบบ</p>
+              <h3 id="welcomeText" style="font-size:clamp(1.3rem,3vw,1.7rem);font-weight:900;color:white;margin-bottom:4px;letter-spacing:-.3px;">สวัสดี</h3>
+              <p style="color:rgba(255,255,255,.65);font-size:13px;display:flex;align-items:center;gap:6px;">
+                <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
+                โรงเรียนหนองกี่พิทยาคม · ระบบบริการออนไลน์
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="room-booking.html" style="display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:rgba(255,255,255,.14);color:white;font-weight:700;border-radius:12px;text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.14)'">
+                <i data-lucide="calendar-plus" style="width:14px;height:14px;"></i> จองห้อง
+              </a>
+            </div>
           </div>
         </div>
 
         <!-- Stats Row -->
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-          <div style="background:white;padding:20px 22px;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="calendar" style="width:20px;height:20px;color:#1d4ed8;"></i>
+          <div class="dash-card" style="padding:22px;display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(29,78,216,.12);">
+              <i data-lucide="calendar" style="width:22px;height:22px;color:#1d4ed8;"></i>
             </div>
             <div>
               <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">การจองของฉัน</p>
-              <p id="bookingCount" style="font-size:22px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
+              <p id="bookingCount" style="font-size:24px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
             </div>
           </div>
-          <div style="background:white;padding:20px 22px;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:#fff7ed;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="monitor" style="width:20px;height:20px;color:#ea580c;"></i>
+          <div class="dash-card" style="padding:22px;display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#fff7ed,#ffedd5);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(234,88,12,.1);">
+              <i data-lucide="monitor" style="width:22px;height:22px;color:#ea580c;"></i>
             </div>
             <div>
               <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">คำขอ CCTV</p>
-              <p style="font-size:22px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
+              <p style="font-size:24px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
             </div>
           </div>
         </div>
 
         <!-- LINE Section -->
         <div style="margin-bottom:24px;">
-          <div style="background:white;padding:24px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);">
-            <h4 style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
-              <div style="width:28px;height:28px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+          <div class="dash-card" style="padding:24px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+              <div style="width:36px;height:36px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
               </div>
-              สมัครรับแจ้งเตือนผ่าน LINE
-            </h4>
+              <div>
+                <h4 style="font-size:15px;font-weight:800;color:#1e293b;line-height:1;">สมัครรับแจ้งเตือนผ่าน LINE</h4>
+                <p style="font-size:12px;color:#64748b;margin-top:2px;">เชื่อมต่อ LINE OA เพื่อรับการแจ้งเตือนอัตโนมัติ</p>
+              </div>
+            </div>
 
             <!-- LINE Card -->
             <div id="lineCard" style="background:linear-gradient(135deg,#06C755,#00a541);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(6,199,85,.25);margin-bottom:16px;">
@@ -397,14 +598,16 @@
         </div>
 
         <!-- My bookings list (5 latest) -->
-        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;margin-bottom:20px;">
-          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
-              <i data-lucide="calendar-clock" style="width:16px;height:16px;color:#1d4ed8;"></i>
+        <div class="dash-card" style="overflow:hidden;margin-bottom:20px;">
+          <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fafbff,#f8fafc);">
+            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="calendar-clock" style="width:15px;height:15px;color:#1d4ed8;"></i>
+              </div>
               การจองล่าสุด
-              <span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:20px;margin-left:2px;">5 รายการล่าสุด</span>
+              <span style="font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;padding:3px 9px;border-radius:999px;border:1px solid #bfdbfe;">5 รายการล่าสุด</span>
             </span>
-            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:4px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
+            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 12px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
           </div>
           <div id="myBookingsList" style="padding:12px 16px;">
             <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
@@ -417,13 +620,15 @@
         </div>
 
         <!-- Portfolio Status -->
-        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
-          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
-              <i data-lucide="send" style="width:16px;height:16px;color:#7c3aed;"></i>
+        <div class="dash-card" style="overflow:hidden;">
+          <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fdf4ff,#f5f3ff);">
+            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;background:#f5f3ff;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid #ddd6fe;">
+                <i data-lucide="send" style="width:15px;height:15px;color:#7c3aed;"></i>
+              </div>
               งานส่งประจำภาคเรียน
             </span>
-            <a href="teacher-portfolio.html" style="font-size:12px;font-weight:700;color:#7c3aed;text-decoration:none;display:flex;align-items:center;gap:4px;">ไปหน้าส่งงาน <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
+            <a href="teacher-portfolio.html" style="font-size:12px;font-weight:700;color:#7c3aed;text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 12px;background:#f5f3ff;border-radius:8px;border:1px solid #ddd6fe;">ไปหน้าส่งงาน <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
           </div>
           <!-- Semester selector -->
           <div style="padding:12px 16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -469,9 +674,17 @@
   </div>
 </div>
 
-<footer style="padding:40px 24px;border-top:1px solid #e2e8f0;text-align:center;">
-  <p style="font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:3px;font-size:13px;">NONGKI PITTAYAKOM SCHOOL</p>
-  <p style="font-size:11px;color:#94a3b8;margin-top:4px;">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
+<footer style="background:white;padding:40px 24px;border-top:1px solid #e2e8f0;text-align:center;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:28px;height:28px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="zap" style="width:14px;height:14px;color:white;"></i>
+      </div>
+      <span style="font-weight:900;color:#1e293b;font-size:15px;letter-spacing:1px;">NP Origins</span>
+    </div>
+    <p style="font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:3px;font-size:11px;margin-bottom:4px;">NONGKI PITTAYAKOM SCHOOL</p>
+    <p style="font-size:11px;color:#cbd5e1;">© 2026 ระบบสารสนเทศและบริการออนไลน์</p>
+  </div>
 </footer>
 
 <script>
