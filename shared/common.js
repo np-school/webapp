@@ -122,7 +122,7 @@ function checkAdminAccess(email) {
 
       /* ซ่อน/แสดงแต่ละ item ตาม permission */
       _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
-      _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.booking);
+      _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings || !!p.booking);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
 
       /* SuperAdmin-only */
