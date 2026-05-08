@@ -85,6 +85,41 @@
     .upload-area.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
     #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
     #fileViewModal.open{display:flex;}
+
+    /* ── Charts ── */
+    .charts-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:0;}
+    @media(max-width:1100px){.charts-section{grid-template-columns:1fr 1fr;}}
+    @media(max-width:640px){.charts-section{grid-template-columns:1fr;}}
+    .chart-card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:18px 20px;}
+    .chart-title{font-size:13px;font-weight:800;color:#1e293b;margin-bottom:4px;}
+    .chart-sub{font-size:11px;color:#94a3b8;margin-bottom:14px;}
+    .donut-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+    .donut-center{position:absolute;text-align:center;pointer-events:none;}
+    .donut-big{font-size:26px;font-weight:800;color:#0f172a;line-height:1;}
+    .donut-label{font-size:10px;color:#94a3b8;font-weight:700;margin-top:2px;}
+    .donut-legend{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+    .legend-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .legend-label{font-size:11px;color:#475569;font-weight:600;flex:1;}
+    .legend-val{font-size:12px;font-weight:800;color:#0f172a;}
+    .hbar-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+    .hbar-label{display:flex;justify-content:space-between;align-items:center;}
+    .hbar-name{font-size:11px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
+    .hbar-pct{font-size:11px;font-weight:800;color:#1d4ed8;}
+    .hbar-track{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;}
+    .hbar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
+    .tbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .tbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .tbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .tbar-track{width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
+    .tbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+    .tbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
+
+    /* ── Pagination ── */
+    .page-btn{padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
+    .page-btn:hover{border-color:#a78bfa;color:#7c3aed;}
+    .page-btn.active{background:#7c3aed;border-color:#7c3aed;color:white;}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -116,6 +151,39 @@
     <!-- Main content -->
     <div style="flex:1;min-width:0;padding:28px 24px;display:flex;flex-direction:column;gap:24px;">
 
+      <!-- Charts Panel -->
+      <div id="chartsPanel">
+        <div class="charts-section">
+          <!-- Donut: สถานะคำขอ -->
+          <div class="chart-card">
+            <p class="chart-title">สถานะคำขอจองทั้งหมด</p>
+            <p class="chart-sub">สัดส่วนสถานะคำขอจองห้อง</p>
+            <div class="donut-wrap" style="height:160px;">
+              <canvas id="donutChart" width="160" height="160"></canvas>
+              <div class="donut-center">
+                <div class="donut-big" id="donutTotal">-</div>
+                <div class="donut-label">คำขอ</div>
+              </div>
+            </div>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+
+          <!-- Bar: ห้องที่ถูกจองมากสุด -->
+          <div class="chart-card">
+            <p class="chart-title">ห้องที่ถูกจองมากที่สุด</p>
+            <p class="chart-sub">จำนวนคำขออนุมัติแล้วแต่ละห้อง</p>
+            <div id="roomBars" style="margin-top:4px;max-height:260px;overflow-y:auto;padding-right:4px;"></div>
+          </div>
+
+          <!-- Bar: คำขอรายเดือน -->
+          <div class="chart-card">
+            <p class="chart-title">แนวโน้มคำขอรายเดือน</p>
+            <p class="chart-sub">จำนวนคำขอจองย้อนหลัง 6 เดือน</p>
+            <div id="monthBars" style="margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
         <div class="stat-card"><div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:#d97706;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
@@ -146,9 +214,10 @@
               <button class="filter-pill" onclick="setFilter('approved',this)">✅ อนุมัติแล้ว</button>
               <button class="filter-pill" onclick="setFilter('rejected',this)">❌ ไม่อนุมัติ</button>
             </div>
-            <input type="text" id="searchInput" placeholder="ค้นหา..." onkeyup="renderBookings()" style="max-width:240px;padding:8px 13px;border:1.5px solid #e2e8f0;border-radius:10px;outline:none;font-size:13px;">
+            <input type="text" id="searchInput" placeholder="ค้นหา..." onkeyup="currentPage=1;renderBookings()" style="max-width:240px;padding:8px 13px;border:1.5px solid #e2e8f0;border-radius:10px;outline:none;font-size:13px;">
           </div>
           <div id="bookingsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <div id="paginationBar" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap;"></div>
         </div>
 
         <!-- Sub-tab: Rooms -->
@@ -243,6 +312,7 @@
   // LINE handled by Cloud Functions
   var SUPER_ADMIN = 'nattapol@nongki.ac.th';
   var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null;
+  var currentPage=1,PAGE_SIZE=100;
 
   function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';lucide.createIcons();}
   function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
@@ -289,14 +359,14 @@
   function initListeners(){
     db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
       allBookings=[];snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
-      updateStats();renderBookings();
+      updateStats();renderBookings();renderCharts();
     });
     db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});renderRooms();});
   }
 
   function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
 
-  function setFilter(f,el){currentFilter=f;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
+  function setFilter(f,el){currentFilter=f;currentPage=1;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
 
   function renderBookings(){
     var search=(document.getElementById('searchInput').value||'').toLowerCase();
@@ -306,8 +376,20 @@
       return true;
     });
     var el=document.getElementById('bookingsList');
-    if(!list.length){el.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ไม่พบรายการ</div>';return;}
-    el.innerHTML=list.map(function(b){
+    var pb=document.getElementById('paginationBar');
+
+    if(!list.length){
+      el.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ไม่พบรายการ</div>';
+      if(pb)pb.innerHTML='';
+      return;
+    }
+
+    var totalPages=Math.ceil(list.length/PAGE_SIZE);
+    if(currentPage>totalPages)currentPage=1;
+    var start=(currentPage-1)*PAGE_SIZE;
+    var pageItems=list.slice(start,start+PAGE_SIZE);
+
+    el.innerHTML=pageItems.map(function(b){
       var sLabel=b.status==='approved'?'อนุมัติแล้ว':b.status==='rejected'?'ไม่อนุมัติ':'รอพิจารณา';
       var sCls='badge-'+(b.status||'pending');
       var equip=(b.equipment&&b.equipment.length)?b.equipment.join(' · '):null;
@@ -345,7 +427,34 @@
         '</div>' +
       '</div>';
     }).join('');
+
+    /* Pagination bar */
+    if(pb){
+      if(totalPages<=1){pb.innerHTML='<span style="font-size:12px;color:#94a3b8;font-weight:600;">ทั้งหมด '+list.length+' รายการ</span>';return;}
+      var html='<span style="font-size:12px;color:#94a3b8;font-weight:600;margin-right:6px;">'+list.length+' รายการ</span>';
+      html+='<button class="page-btn" onclick="goPage('+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>‹ ก่อน</button>';
+      var from=Math.max(1,currentPage-2),to=Math.min(totalPages,currentPage+2);
+      if(from>1){html+='<button class="page-btn" onclick="goPage(1)">1</button>';if(from>2)html+='<span style="color:#94a3b8;font-size:12px;padding:0 4px;">…</span>';}
+      for(var p=from;p<=to;p++){html+='<button class="page-btn'+(p===currentPage?' active':'')+'" onclick="goPage('+p+')">'+p+'</button>';}
+      if(to<totalPages){if(to<totalPages-1)html+='<span style="color:#94a3b8;font-size:12px;padding:0 4px;">…</span>';html+='<button class="page-btn" onclick="goPage('+totalPages+')">'+totalPages+'</button>';}
+      html+='<button class="page-btn" onclick="goPage('+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>ถัดไป ›</button>';
+      pb.innerHTML=html;
+    }
     lucide.createIcons();
+  }
+
+  function goPage(p){
+    var search=(document.getElementById('searchInput').value||'').toLowerCase();
+    var list=allBookings.filter(function(b){
+      if(currentFilter!=='all'&&b.status!==currentFilter)return false;
+      if(search){var txt=((b.fullName||b.userName||'')+(b.room||'')+(b.purpose||'')+(b.date||'')).toLowerCase();if(txt.indexOf(search)===-1)return false;}
+      return true;
+    });
+    var totalPages=Math.ceil(list.length/PAGE_SIZE);
+    if(p<1||p>totalPages)return;
+    currentPage=p;
+    renderBookings();
+    document.getElementById('tab-bookings').scrollTop=0;
   }
 
   function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
@@ -461,7 +570,110 @@
     closeSidebar();
   }
 
-  
+  /* ══════════════════════════════════════
+     CHARTS
+     ══════════════════════════════════════ */
+  function renderCharts(){
+    renderDonutChart();
+    renderRoomBars();
+    renderMonthBars();
+  }
+
+  /* ── 1. Donut: สถานะ ── */
+  function renderDonutChart(){
+    var statusConfig=[
+      {key:'approved', label:'อนุมัติแล้ว',   color:'#22c55e'},
+      {key:'pending',  label:'รอพิจารณา',     color:'#f59e0b'},
+      {key:'rejected', label:'ไม่อนุมัติ',    color:'#ef4444'},
+    ];
+    var counts={approved:0,pending:0,rejected:0};
+    allBookings.forEach(function(b){var s=b.status||'pending';if(counts[s]!==undefined)counts[s]++;});
+    var total=allBookings.length;
+
+    var canvas=document.getElementById('donutChart');
+    if(!canvas)return;
+    var ctx=canvas.getContext('2d');
+    var cx=80,cy=80,r=68,thick=22;
+    ctx.clearRect(0,0,160,160);
+    var startAngle=-Math.PI/2,gap=0.025;
+    statusConfig.forEach(function(s){
+      var slice=total>0?(counts[s.key]/total)*(2*Math.PI):0;
+      if(slice<0.001)return;
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,startAngle+gap/2,startAngle+slice-gap/2);
+      ctx.arc(cx,cy,r-thick,startAngle+slice-gap/2,startAngle+gap/2,true);
+      ctx.closePath();ctx.fillStyle=s.color;ctx.fill();
+      startAngle+=slice;
+    });
+    if(total===0){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.arc(cx,cy,r-thick,2*Math.PI,0,true);ctx.closePath();ctx.fillStyle='#e2e8f0';ctx.fill();}
+    document.getElementById('donutTotal').textContent=total;
+    var leg=document.getElementById('donutLegend');
+    leg.innerHTML=statusConfig.map(function(s){
+      var pct=total>0?Math.round((counts[s.key]/total)*100):0;
+      return '<div class="legend-row">'+
+        '<div class="legend-dot" style="background:'+s.color+';"></div>'+
+        '<span class="legend-label">'+s.label+'</span>'+
+        '<span class="legend-val">'+counts[s.key]+' <span style="font-size:10px;color:#94a3b8;font-weight:600;">('+pct+'%)</span></span>'+
+      '</div>';
+    }).join('');
+  }
+
+  /* ── 2. ห้องที่จองมากสุด ── */
+  function renderRoomBars(){
+    var container=document.getElementById('roomBars');
+    if(!container)return;
+    var roomCount={};
+    allBookings.filter(function(b){return b.status==='approved';}).forEach(function(b){
+      var r=b.room||'ไม่ระบุ';
+      roomCount[r]=(roomCount[r]||0)+1;
+    });
+    var sorted=Object.keys(roomCount).sort(function(a,b){return roomCount[b]-roomCount[a];}).slice(0,10);
+    if(!sorted.length){container.innerHTML='<p style="font-size:12px;color:#94a3b8;text-align:center;padding:20px;">ยังไม่มีข้อมูล</p>';return;}
+    var max=roomCount[sorted[0]]||1;
+    container.innerHTML=sorted.map(function(room){
+      var cnt=roomCount[room];
+      var pct=Math.round((cnt/max)*100);
+      var color=pct>=80?'linear-gradient(90deg,#1d4ed8,#60a5fa)':pct>=50?'linear-gradient(90deg,#7c3aed,#a78bfa)':'linear-gradient(90deg,#0ea5e9,#7dd3fc)';
+      return '<div class="hbar-row">'+
+        '<div class="hbar-label">'+
+          '<span class="hbar-name" title="'+room+'">'+room+'</span>'+
+          '<span class="hbar-pct">'+cnt+' ครั้ง</span>'+
+        '</div>'+
+        '<div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%;background:'+color+';"></div></div>'+
+      '</div>';
+    }).join('');
+  }
+
+  /* ── 3. คำขอรายเดือน (6 เดือนล่าสุด) ── */
+  function renderMonthBars(){
+    var container=document.getElementById('monthBars');
+    if(!container)return;
+    var now=new Date(),months=[];
+    for(var i=5;i>=0;i--){
+      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      months.push({year:d.getFullYear(),month:d.getMonth(),label:d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'}),count:0});
+    }
+    allBookings.forEach(function(b){
+      var dateStr=b.date||'';
+      var parsed=null;
+      if(/^\d{4}-\d{2}-\d{2}/.test(dateStr)){parsed=new Date(dateStr);}
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(dateStr)){var p=dateStr.split('/');parsed=new Date(parseInt(p[2])-(p[2]>2500?543:0),parseInt(p[1])-1,parseInt(p[0]));}
+      else if(b.createdAt&&b.createdAt.toDate){parsed=b.createdAt.toDate();}
+      if(!parsed||isNaN(parsed))return;
+      months.forEach(function(m){if(parsed.getFullYear()===m.year&&parsed.getMonth()===m.month)m.count++;});
+    });
+    var max=Math.max.apply(null,months.map(function(m){return m.count;}))||1;
+    container.innerHTML=months.map(function(m){
+      var pct=Math.round((m.count/max)*100);
+      return '<div class="tbar-row" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
+        '<span style="font-size:10px;font-weight:700;color:#64748b;min-width:44px;flex-shrink:0;">'+m.label+'</span>'+
+        '<div style="flex:1;background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">'+
+          '<div style="height:100%;border-radius:4px;width:'+pct+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .5s ease;"></div>'+
+        '</div>'+
+        '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:24px;text-align:right;">'+m.count+'</span>'+
+      '</div>';
+    }).join('');
+  }
 
   lucide.createIcons();
 </script>
