@@ -1153,12 +1153,10 @@ function renderCourseFileList(sub, courseMap, activeCourseKey) {
 
   multiList.innerHTML = html;
 
-  /* แสดงข้อมูลไฟล์แรกของรายวิชาที่เลือก */
-  var selFiles = courseMap[activeCourseKey] || [];
+  /* set selectedCourseKey ก่อน แล้วค่อยเรียก fillSingleFileInfo
+     เพื่อให้ fillSingleFileInfo ดึง courseFiles จาก selectedCourseKey ที่อัปเดตแล้ว */
   selectedFileIdx = 0;
-  if (selFiles.length > 0) {
-    fillSingleFileInfo(buildFileInfoObj(sub, selFiles[0]));
-  }
+  fillSingleFileInfo({});   /* pass object ว่าง — fillSingleFileInfo จะดึงข้อมูลจาก courseMap เอง */
   lucide.createIcons();
 }
 
@@ -1222,61 +1220,86 @@ function getStatusChipStyle(status) {
   return map[status] || map.none;
 }
 
-/* เติมข้อมูลรายวิชาที่เลือก (รองรับทั้ง single-file และ per-course) */
+/* เติมข้อมูลรายวิชาที่เลือก
+   sub = buildFileInfoObj(...) หรือ doc object
+   แต่ข้อมูลที่แสดงดึงจาก courseFiles ของ selectedCourseKey โดยตรง
+   เพื่อให้แน่ใจว่าเปลี่ยนวิชาแล้วข้อมูลเปลี่ยนตามจริง */
 function fillSingleFileInfo(sub) {
-  var curStatus = sub.status || 'submitted';
-
-  /* ถ้ามีการเลือกรายวิชา ให้แสดงไฟล์ทุกไฟล์ในวิชานั้น */
-  var t   = teacherMap[reviewingUid];
+  /* หา courseFiles จาก selectedCourseKey ปัจจุบัน (ถ้ามี) */
+  var t       = teacherMap[reviewingUid];
   var origSub = t && t.subs[reviewingDocTypeId];
-  var courseMap = origSub ? buildCourseMap(origSub) : null;
+  var courseMap   = origSub ? buildCourseMap(origSub) : null;
   var courseFiles = (courseMap && selectedCourseKey) ? (courseMap[selectedCourseKey] || []) : [];
 
+  /* ใช้ข้อมูลจาก courseFiles ถ้ามี ไม่งั้น fallback ไปที่ sub parameter */
+  var displayFile = courseFiles.length > 0 ? courseFiles[0] : sub;
+  var curStatus   = getCourseStatus(courseFiles, sub.status);
+  var displayNote = displayFile.adminNote !== undefined ? displayFile.adminNote : (sub.adminNote || '');
+
+  var statusLabels = {
+    submitted:      'ส่งงานแล้ว',
+    head_reviewed:  'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ',
+    reviewed:       'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ',
+    final_approved: 'ผ่านการตรวจโดยฝ่ายวิชาการ ✓',
+    revision:       'ส่งคืนเพื่อแก้ไข'
+  };
+
   if (courseFiles.length > 1) {
-    /* แสดงไฟล์ทุกไฟล์ในรายวิชา */
+    /* หลายไฟล์ในวิชานี้ — แสดง list ลิงก์เปิดแต่ละไฟล์ */
     var fileListHtml = courseFiles.map(function(f, i) {
-      var fStatus = f.status || origSub.status || 'submitted';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;border-left:3px solid ' + ({submitted:'#22c55e',head_reviewed:'#0ea5e9',reviewed:'#3b82f6',final_approved:'#7c3aed',revision:'#f59e0b'}[fStatus]||'#e2e8f0') + ';">' +
+      var fStatus = f.status || curStatus;
+      var borderColor = {submitted:'#22c55e',head_reviewed:'#0ea5e9',reviewed:'#3b82f6',final_approved:'#7c3aed',revision:'#f59e0b'}[fStatus] || '#e2e8f0';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;border-left:3px solid ' + borderColor + ';">' +
         '<i data-lucide="file-text" style="width:13px;height:13px;color:#64748b;flex-shrink:0;"></i>' +
         '<span style="font-size:11px;font-weight:600;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.fileName || f.name || 'ไฟล์ที่ ' + (i+1)) + '</span>' +
-        '<a href="' + esc(f.url||f.fileUrl||'#') + '" target="_blank" style="font-size:10px;color:#7c3aed;font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 7px;background:#faf5ff;border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
+        '<a href="' + esc(f.url || f.fileUrl || '#') + '" target="_blank" style="font-size:10px;color:#7c3aed;font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 7px;background:#faf5ff;border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
           '<i data-lucide="external-link" style="width:10px;height:10px;"></i> เปิด' +
         '</a>' +
       '</div>';
     }).join('');
-    document.getElementById('reviewFileName').textContent = courseFiles[0].courseCode || sub.courseCode || '-';
-    document.getElementById('reviewFileLink').href = courseFiles[0].url || courseFiles[0].fileUrl || '#';
-    document.getElementById('reviewFileMeta').innerHTML = 'ส่งเมื่อ: ' + formatDate(sub.submittedAt) + ' · <strong>' + courseFiles.length + ' ไฟล์</strong> · สถานะ: ' + ({submitted:'ส่งงานแล้ว',head_reviewed:'ผ่านหัวหน้าฯ',reviewed:'ผ่านหัวหน้าฯ',final_approved:'ผ่านวิชาการ ✓',revision:'ให้แก้ไข'}[curStatus]||curStatus) +
+    document.getElementById('reviewFileName').textContent = displayFile.courseCode || '-';
+    document.getElementById('reviewFileLink').href = displayFile.url || displayFile.fileUrl || '#';
+    document.getElementById('reviewFileMeta').innerHTML =
+      'ส่งเมื่อ: ' + formatDate(displayFile.submittedAt || sub.submittedAt) +
+      ' · <strong>' + courseFiles.length + ' ไฟล์</strong>' +
+      ' · สถานะ: ' + (statusLabels[curStatus] || curStatus) +
       '<div style="margin-top:6px;">' + fileListHtml + '</div>';
   } else {
     /* ไฟล์เดียว */
-    document.getElementById('reviewFileName').textContent = sub.fileUrl ? (sub.fileName || sub.fileUrl.slice(0,60) + '…') : '-';
-    document.getElementById('reviewFileLink').href = sub.fileUrl || '#';
-    var statusLabels = { submitted:'ส่งงานแล้ว', head_reviewed:'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ', reviewed:'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ', final_approved:'ผ่านการตรวจโดยฝ่ายวิชาการ ✓', revision:'ส่งคืนเพื่อแก้ไข' };
-    document.getElementById('reviewFileMeta').textContent = 'ส่งเมื่อ: ' + formatDate(sub.submittedAt) + ' · สถานะ: ' + (statusLabels[curStatus] || curStatus);
+    var fUrl  = displayFile.url || displayFile.fileUrl || sub.fileUrl || '';
+    var fName = displayFile.fileName || displayFile.name || sub.fileName || fUrl.slice(0,60) + '…';
+    document.getElementById('reviewFileName').textContent = fName || '-';
+    document.getElementById('reviewFileLink').href = fUrl || '#';
+    document.getElementById('reviewFileMeta').textContent =
+      'ส่งเมื่อ: ' + formatDate(displayFile.submittedAt || sub.submittedAt) +
+      ' · สถานะ: ' + (statusLabels[curStatus] || curStatus);
   }
 
-  document.getElementById('adminNote').value = sub.adminNote || '';
+  document.getElementById('adminNote').value = displayNote;
 
-  /* Workflow bar */
+  /* Workflow bar — ใช้สถานะของรายวิชาที่เลือก */
   var wfBox = document.getElementById('reviewWorkflowBar');
   if (wfBox) wfBox.innerHTML = buildWorkflowBar(curStatus);
 
-  /* course info */
+  /* course info — ดึงจาก displayFile เสมอ */
   var courseInfoBox = document.getElementById('reviewCourseInfo');
   if (courseInfoBox) {
     var cText = '';
-    if (sub.subjectGroup) cText += '<span style="font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:10px;">' + sub.subjectGroup + '</span> ';
-    if (sub.courseCode)   cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + sub.courseCode + '</span> ';
-    if (sub.courseName)   cText += '<span style="font-size:12px;color:#64748b;">· ' + sub.courseName + '</span>';
+    var cGroup = displayFile.subjectGroup || sub.subjectGroup;
+    var cCode  = displayFile.courseCode   || sub.courseCode;
+    var cName  = displayFile.courseName   || sub.courseName;
+    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
+    if (cCode)  cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + esc(cCode) + '</span> ';
+    if (cName)  cText += '<span style="font-size:12px;color:#64748b;">· ' + esc(cName) + '</span>';
     courseInfoBox.style.display = cText ? 'flex' : 'none';
     courseInfoBox.innerHTML = cText;
   }
 
-  var noteBox = document.getElementById('reviewNoteBox');
-  if (sub.note) {
+  var noteBox  = document.getElementById('reviewNoteBox');
+  var noteText = displayFile.note || sub.note;
+  if (noteText) {
     noteBox.style.display = 'block';
-    document.getElementById('reviewNoteText').textContent = '📝 หมายเหตุจากครู: ' + sub.note;
+    document.getElementById('reviewNoteText').textContent = '📝 หมายเหตุจากครู: ' + noteText;
   } else { noteBox.style.display = 'none'; }
 
   /* ── ปุ่มตามบทบาทและสถานะ ── */
