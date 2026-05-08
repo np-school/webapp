@@ -556,10 +556,7 @@ function loadAllSubmissions() {
         var eKey = (data.email || '').toLowerCase();
         if (!eKey) return;
 
-        if (teacherMap[eKey]) {
-          /* พบใน staff → ใช้ชื่อจาก staff แทน displayName ของ Google */
-          teacherMap[eKey].subs[data.docTypeId] = data;
-        } else {
+        if (!teacherMap[eKey]) {
           /* ครูส่งงานแต่ไม่มีใน staff → fallback จาก submission */
           teacherMap[eKey] = {
             uid:         data.uid || eKey,
@@ -571,7 +568,27 @@ function loadAllSubmissions() {
             isTeacher:   true,
             subs:        {}
           };
+        }
+
+        /* Merge หลาย courseCode ใน docTypeId เดียวกัน
+           ถ้ายังไม่มี → set ตรง
+           ถ้ามีแล้ว (ส่งมาหลายรายวิชา) → รวม files[] เข้าด้วยกัน และเก็บ courses[] แยก */
+        var existing = teacherMap[eKey].subs[data.docTypeId];
+        if (!existing) {
           teacherMap[eKey].subs[data.docTypeId] = data;
+        } else {
+          /* merge: รวม courses array */
+          if (!existing._courses) {
+            /* ครั้งแรกที่ merge: แปลง existing เป็น multi-course container */
+            existing._courses = [ existing ];
+          }
+          existing._courses.push(data);
+          /* status รวม = ต่ำสุด */
+          var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, final_approved:4 };
+          existing.status = existing._courses.reduce(function(acc, c) {
+            var s = c.status || 'submitted';
+            return ORDER[s] < ORDER[acc] ? s : acc;
+          }, 'final_approved');
         }
       });
 
@@ -987,7 +1004,7 @@ function openReview(subId, uid, docTypeId) {
   if (!sub) return;
 
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id===docTypeId; });
-  reviewingSubId     = subId;
+  reviewingSubId     = sub._courses ? sub._courses[0].id : subId;
   reviewingUid       = uid;
   reviewingDocTypeId = docTypeId;
   selectedFileIdx    = 0;
@@ -1038,15 +1055,44 @@ function buildCourseMap(sub) {
 }
 function buildCourseMapFromSub(sub) {
   var map = {};
-  if (!sub.files || !sub.files.length) {
-    var key = sub.courseCode || '__single__';
-    map[key] = [{ url: sub.fileUrl, fileName: sub.fileName || sub.fileUrl, name: sub.fileName || sub.fileUrl, status: sub.status || 'submitted', adminNote: sub.adminNote || '', submittedAt: sub.submittedAt, note: sub.note, courseCode: sub.courseCode, courseName: sub.courseName }];
-    return map;
-  }
-  sub.files.forEach(function(f) {
-    var key = f.courseCode || sub.courseCode || '__single__';
+
+  /* กรณีที่มีหลาย Firestore docs (ส่งหลายรายวิชา = หลาย doc) */
+  var docs = sub._courses || [sub];
+
+  docs.forEach(function(doc) {
+    var key = doc.courseCode || '__single__';
     if (!map[key]) map[key] = [];
-    map[key].push(f);
+
+    if (doc.files && doc.files.length > 0) {
+      doc.files.forEach(function(f) {
+        map[key].push(Object.assign({}, f, {
+          courseCode:  f.courseCode  || doc.courseCode,
+          courseName:  f.courseName  || doc.courseName,
+          subjectGroup: f.subjectGroup || doc.subjectGroup,
+          status:      f.status !== undefined ? f.status : (doc.status || 'submitted'),
+          adminNote:   f.adminNote !== undefined ? f.adminNote : (doc.adminNote || ''),
+          submittedAt: f.submittedAt || doc.submittedAt,
+          note:        f.note || doc.note,
+          _docId:      doc.id, /* เก็บ Firestore doc id ของรายวิชานี้ */
+        }));
+      });
+    } else {
+      /* single-file fallback */
+      map[key].push({
+        url:         doc.fileUrl,
+        fileUrl:     doc.fileUrl,
+        fileName:    doc.fileName || doc.fileUrl,
+        name:        doc.fileName || doc.fileUrl,
+        status:      doc.status || 'submitted',
+        adminNote:   doc.adminNote || '',
+        submittedAt: doc.submittedAt,
+        note:        doc.note,
+        courseCode:  doc.courseCode,
+        courseName:  doc.courseName,
+        subjectGroup: doc.subjectGroup,
+        _docId:      doc.id,
+      });
+    }
   });
   return map;
 }
@@ -1291,33 +1337,43 @@ function setReviewStatus(status) {
   if (!reviewingSubId) return;
   var note = document.getElementById('adminNote').value.trim();
   var toastMsgs = {
-    head_reviewed: 'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
+    head_reviewed:  'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
     final_approved: 'ผ่านการตรวจโดยฝ่ายวิชาการ ✅',
-    reviewed: 'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
-    revision: 'ส่งคืนเพื่อแก้ไข'
+    reviewed:       'ผ่านการตรวจโดยหัวหน้ากลุ่มสาระ ✓',
+    revision:       'ส่งคืนเพื่อแก้ไข'
   };
   var toastType = (status === 'revision') ? 'warn' : 'success';
 
   var t   = teacherMap[reviewingUid];
   var sub = t && t.subs[reviewingDocTypeId];
-  var hasMulti = sub && sub.files && sub.files.length > 1;
+  if (!sub) return;
 
-  if (hasMulti && selectedCourseKey) {
-    /* อัปเดตทุกไฟล์ในรายวิชาที่เลือก */
-    var updatedFiles = sub.files.map(function(f) {
-      var fCourseKey = f.courseCode || sub.courseCode || '__single__';
-      if (fCourseKey !== selectedCourseKey) return f;
+  var courseMap = buildCourseMapFromSub(sub);
+  var targetFiles = selectedCourseKey ? (courseMap[selectedCourseKey] || []) : [];
+
+  /* หา Firestore doc id ที่ต้องอัปเดต */
+  var targetDocId = (targetFiles.length > 0 && targetFiles[0]._docId) ? targetFiles[0]._docId : reviewingSubId;
+  var targetDoc   = null;
+
+  /* หา doc object จาก _courses หรือ sub โดยตรง */
+  if (sub._courses) {
+    targetDoc = sub._courses.find(function(c){ return c.id === targetDocId; }) || sub._courses[0];
+  } else {
+    targetDoc = sub;
+  }
+
+  if (!targetDoc) return;
+
+  var hasFiles = targetDoc.files && targetDoc.files.length > 1;
+
+  if (hasFiles) {
+    /* อัปเดตทุกไฟล์ในรายวิชานั้น */
+    var updatedFiles = targetDoc.files.map(function(f) {
       return Object.assign({}, f, { status: status, adminNote: note, reviewedAt: new Date().toISOString(), reviewedBy: currentUserEmail });
     });
-    /* คำนวณ status รวมของ doc (ใช้สถานะต่ำสุดของทุกรายวิชา) */
-    var statusOrder = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, final_approved:4 };
-    var overallStatus = updatedFiles.reduce(function(acc, f) {
-      var s = f.status || 'submitted';
-      return statusOrder[s] < statusOrder[acc] ? s : acc;
-    }, 'final_approved');
-    db.collection('portfolio_submissions').doc(reviewingSubId).update({
+    db.collection('portfolio_submissions').doc(targetDocId).update({
       files:      updatedFiles,
-      status:     overallStatus,
+      status:     status,
       adminNote:  note,
       reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
       reviewedBy: currentUserEmail,
@@ -1326,33 +1382,9 @@ function setReviewStatus(status) {
       closeModal('reviewModal');
       loadAllSubmissions();
     }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-
-  } else if (hasMulti) {
-    /* fallback: อัปเดตไฟล์ตาม selectedFileIdx */
-    var updatedFiles = sub.files.map(function(f, i) {
-      if (i !== selectedFileIdx) return f;
-      return Object.assign({}, f, { status: status, adminNote: note, reviewedAt: new Date().toISOString(), reviewedBy: currentUserEmail });
-    });
-    var statusOrder = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, final_approved:4 };
-    var overallStatus = updatedFiles.reduce(function(acc, f) {
-      var s = f.status || 'submitted';
-      return statusOrder[s] < statusOrder[acc] ? s : acc;
-    }, 'final_approved');
-    db.collection('portfolio_submissions').doc(reviewingSubId).update({
-      files:      updatedFiles,
-      status:     overallStatus,
-      adminNote:  note,
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      reviewedBy: currentUserEmail,
-    }).then(function() {
-      showToast(toastMsgs[status] || status, toastType);
-      closeModal('reviewModal');
-      loadAllSubmissions();
-    }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-
   } else {
     /* single file */
-    db.collection('portfolio_submissions').doc(reviewingSubId).update({
+    db.collection('portfolio_submissions').doc(targetDocId).update({
       status:     status,
       adminNote:  note,
       reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
