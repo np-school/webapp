@@ -125,11 +125,6 @@ function checkAdminAccess(email) {
       _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
 
-      /* booking-admin page: sidebar ใช้ sbtn-* แทน adminMenuItem-booking */
-      var canBooking = isSA || !!p.bookings;
-      _toggleAdminItem('sbtn-bookings', canBooking);
-      _toggleAdminItem('sbtn-rooms',    canBooking && (isSA || !!p.rooms));
-
       /* SuperAdmin-only */
       if (isSA) {
         var slot = document.getElementById('superadminSidebarSlot');
@@ -305,11 +300,6 @@ var GROUP_MENU = [
   },
 ];
 
-var ADMIN_TABS = [
-  { id: 'bookings', label: 'คำขอทั้งหมด', icon: 'layout-list' },
-  { id: 'rooms',    label: 'จัดการห้อง',   icon: 'door-open'   },
-];
-
 /* ── SuperAdmin-only ── */
 var SUPERADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
@@ -344,8 +334,6 @@ var ADMIN_GROUP_MENU = [
 function buildSidebar(activePage) {
   var el = document.getElementById('sidebarInner');
   if (!el) return;
-
-  var isBookingAdmin = activePage === 'booking-admin';
 
   /* ── close button ── */
   var html =
@@ -389,24 +377,6 @@ function buildSidebar(activePage) {
     g.items.forEach(function(item) {
       var key     = item.href ? item.href.replace('.html', '') : '';
       var isActive = activePage === key;
-
-      /* booking-admin: แสดง tabs แทน link ปกติ */
-      if (isBookingAdmin && item.href === 'booking-admin.html') {
-        /* แสดง tab switcher */
-        ADMIN_TABS.forEach(function(tab) {
-          var tabActive = tab.id === 'bookings';
-          var cls = 'sidebar-btn admin-btn' + (tabActive ? ' active' : '');
-          rowsHtml +=
-            '<button onclick="switchTab(\'' + tab.id + '\',this)" id="sbtn-' + tab.id + '" class="' + cls + '" style="padding-left:28px;" data-admin-item="' + item.id + '">' +
-              '<i data-lucide="' + tab.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (tabActive ? '' : 'color:#7c3aed;') + '"></i>' +
-              '<span>' + tab.label + '</span>' +
-              (tab.id === 'bookings'
-                ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>'
-                : '') +
-            '</button>';
-        });
-        return;
-      }
 
       var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
       var inner =
