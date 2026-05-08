@@ -103,6 +103,49 @@
       .stat-cards-grid{grid-template-columns:repeat(2,1fr)!important;}
       .matrix-table{font-size:10px;}
     }
+
+    /* ── Charts Section ── */
+    .charts-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+    @media(max-width:1100px){.charts-section{grid-template-columns:1fr 1fr;}}
+    @media(max-width:640px){.charts-section{grid-template-columns:1fr;}}
+
+    .chart-card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:18px 20px;}
+    .chart-title{font-size:13px;font-weight:800;color:#1e293b;margin-bottom:4px;}
+    .chart-sub{font-size:11px;color:#94a3b8;margin-bottom:14px;}
+
+    /* Donut */
+    .donut-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+    .donut-center{position:absolute;text-align:center;pointer-events:none;}
+    .donut-big{font-size:26px;font-weight:800;color:#0f172a;line-height:1;}
+    .donut-label{font-size:10px;color:#94a3b8;font-weight:700;margin-top:2px;}
+    .donut-legend{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+    .legend-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .legend-label{font-size:11px;color:#475569;font-weight:600;flex:1;}
+    .legend-val{font-size:12px;font-weight:800;color:#0f172a;}
+
+    /* Horizontal bar (group) */
+    .hbar-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+    .hbar-label{display:flex;justify-content:space-between;align-items:center;}
+    .hbar-name{font-size:11px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
+    .hbar-pct{font-size:11px;font-weight:800;color:#7c3aed;}
+    .hbar-track{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;}
+    .hbar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .5s ease;}
+
+    /* Doc type mini bars */
+    .docbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .docbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .docbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .docbar-track{width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
+    .docbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+    .docbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
+
+    /* Charts toggle button */
+    .chart-toggle-btn{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;background:white;color:#7c3aed;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+    .chart-toggle-btn:hover{border-color:#7c3aed;background:#faf5ff;}
+    .chart-toggle-btn.open{background:#7c3aed;color:white;border-color:#7c3aed;}
+    #chartsPanel{display:none;}
+    #chartsPanel.open{display:block;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -145,6 +188,47 @@
           </div>
           <button class="sem-pill active" id="semPill1" onclick="selectSem(1)">ภาคเรียน 1</button>
           <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียน 2</button>
+        </div>
+      </div>
+
+      <!-- Stat Cards + Chart Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">ภาพรวมภาคเรียน</span>
+        <button class="chart-toggle-btn" id="chartToggleBtn" onclick="toggleCharts()">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> แสดงกราฟสรุป
+        </button>
+      </div>
+
+      <!-- Charts Panel (hidden by default) -->
+      <div id="chartsPanel">
+        <div class="charts-section">
+          <!-- Donut: Status breakdown -->
+          <div class="chart-card">
+            <p class="chart-title">สถานะงานทั้งหมด</p>
+            <p class="chart-sub">สัดส่วนสถานะเอกสารทุกประเภท</p>
+            <div class="donut-wrap" style="height:160px;">
+              <canvas id="donutChart" width="160" height="160"></canvas>
+              <div class="donut-center">
+                <div class="donut-big" id="donutTotal">-</div>
+                <div class="donut-label">รายการ</div>
+              </div>
+            </div>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+
+          <!-- Horizontal bar: Progress per subject group -->
+          <div class="chart-card">
+            <p class="chart-title">ความคืบหน้าแต่ละกลุ่มสาระ</p>
+            <p class="chart-sub">% ผ่านการตรวจโดยฝ่ายวิชาการ</p>
+            <div id="groupBars" style="margin-top:4px;max-height:260px;overflow-y:auto;padding-right:4px;"></div>
+          </div>
+
+          <!-- Doc type completion -->
+          <div class="chart-card">
+            <p class="chart-title">ความครบถ้วนแต่ละประเภทงาน</p>
+            <p class="chart-sub">จำนวนครูที่ส่งงานแต่ละประเภท</p>
+            <div id="docTypeBars" style="margin-top:4px;"></div>
+          </div>
         </div>
       </div>
 
@@ -568,6 +652,9 @@ function updateStats() {
   document.getElementById('statReviewed').textContent = reviewed;
   document.getElementById('statFinalApproved').textContent = finalApproved;
   document.getElementById('statPending').textContent = Math.max(0, pending);
+
+  /* อัปเดตกราฟ (ถ้าเปิดอยู่) */
+  if (chartsVisible) renderCharts();
 }
 
 /* ─── FILTER / VIEW ─── */
@@ -942,6 +1029,178 @@ function esc(s){ var d=document.createElement('div');d.textContent=s||'';return 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════
+   CHARTS
+   ══════════════════════════════════════ */
+var chartsVisible = false;
+
+function toggleCharts() {
+  chartsVisible = !chartsVisible;
+  var panel = document.getElementById('chartsPanel');
+  var btn   = document.getElementById('chartToggleBtn');
+  if (chartsVisible) {
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.innerHTML = '<i data-lucide="x" style="width:14px;height:14px;"></i> ซ่อนกราฟ';
+    renderCharts();
+  } else {
+    panel.classList.remove('open');
+    btn.classList.remove('open');
+    btn.innerHTML = '<i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> แสดงกราฟสรุป';
+  }
+  lucide.createIcons();
+}
+
+function renderCharts() {
+  renderDonutChart();
+  renderGroupBars();
+  renderDocTypeBars();
+}
+
+/* ── 1. Donut Chart (Canvas) ── */
+function renderDonutChart() {
+  var statusConfig = [
+    { key:'final_approved', label:'ผ่านฝ่ายวิชาการ',    color:'#7c3aed' },
+    { key:'head_reviewed',  label:'ผ่านหัวหน้ากลุ่มสาระ', color:'#0ea5e9' },
+    { key:'submitted',      label:'รอตรวจ',              color:'#22c55e' },
+    { key:'revision',       label:'ให้แก้ไข',             color:'#f59e0b' },
+    { key:'none',           label:'ยังไม่ส่ง',            color:'#e2e8f0' },
+  ];
+
+  /* นับจากทุก slot (ครูทุกคน × ทุกประเภท) */
+  var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
+  var total = teacherList.length * DOCUMENT_TYPES.length;
+  var counts = {};
+  statusConfig.forEach(function(s){ counts[s.key] = 0; });
+
+  teacherList.forEach(function(t) {
+    DOCUMENT_TYPES.forEach(function(dt) {
+      var sub = t.subs[dt.id];
+      var st  = sub ? (sub.status || 'submitted') : 'none';
+      if (counts[st] !== undefined) counts[st]++;
+      else counts['none']++;
+    });
+  });
+
+  /* Draw donut */
+  var canvas = document.getElementById('donutChart');
+  if (!canvas) return;
+  var ctx    = canvas.getContext('2d');
+  var cx = 80, cy = 80, r = 68, thick = 22;
+  ctx.clearRect(0, 0, 160, 160);
+
+  var startAngle = -Math.PI / 2;
+  var gap = 0.025;
+
+  statusConfig.forEach(function(s) {
+    var slice = total > 0 ? (counts[s.key] / total) * (2 * Math.PI) : 0;
+    if (slice < 0.001) return;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
+    ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    startAngle += slice;
+  });
+
+  /* Center label */
+  document.getElementById('donutTotal').textContent = total;
+
+  /* Legend */
+  var leg = document.getElementById('donutLegend');
+  leg.innerHTML = statusConfig.map(function(s) {
+    var pct = total > 0 ? Math.round((counts[s.key] / total) * 100) : 0;
+    return '<div class="legend-row">' +
+      '<div class="legend-dot" style="background:' + s.color + ';"></div>' +
+      '<span class="legend-label">' + s.label + '</span>' +
+      '<span class="legend-val">' + counts[s.key] + ' <span style="font-size:10px;color:#94a3b8;font-weight:600;">(' + pct + '%)</span></span>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── 2. Group bars ── */
+function renderGroupBars() {
+  var container = document.getElementById('groupBars');
+  if (!container) return;
+
+  /* คำนวณ % ผ่านวิชาการต่อกลุ่มสาระ */
+  var groupData = {};
+  availableGroups.forEach(function(g) { groupData[g] = { total:0, approved:0 }; });
+
+  Object.values(teacherMap).forEach(function(t) {
+    if (!t.isTeacher) return;
+    var g = normaliseGroup(t.staffGroup);
+    if (!groupData[g]) groupData[g] = { total:0, approved:0 };
+    DOCUMENT_TYPES.forEach(function(dt) {
+      groupData[g].total++;
+      var sub = t.subs[dt.id];
+      if (sub && sub.status === 'final_approved') groupData[g].approved++;
+    });
+  });
+
+  /* เรียงจาก % สูงไปต่ำ */
+  var sorted = Object.keys(groupData).sort(function(a,b){
+    var pa = groupData[a].total > 0 ? groupData[a].approved/groupData[a].total : 0;
+    var pb = groupData[b].total > 0 ? groupData[b].approved/groupData[b].total : 0;
+    return pb - pa;
+  });
+
+  if (!sorted.length) {
+    container.innerHTML = '<p style="font-size:12px;color:#94a3b8;text-align:center;padding:20px;">ไม่มีข้อมูล</p>';
+    return;
+  }
+
+  container.innerHTML = sorted.map(function(g) {
+    var d   = groupData[g];
+    var pct = d.total > 0 ? Math.round((d.approved / d.total) * 100) : 0;
+    var color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    return '<div class="hbar-row">' +
+      '<div class="hbar-label">' +
+        '<span class="hbar-name" title="' + esc(g) + '">' + esc(g) + '</span>' +
+        '<span class="hbar-pct" style="color:' + color + ';">' + pct + '%</span>' +
+      '</div>' +
+      '<div class="hbar-track">' +
+        '<div class="hbar-fill" style="width:' + pct + '%;background:' + (pct >= 80 ? 'linear-gradient(90deg,#22c55e,#86efac)' : pct >= 50 ? 'linear-gradient(90deg,#f59e0b,#fcd34d)' : 'linear-gradient(90deg,#ef4444,#fca5a5)') + ';"></div>' +
+      '</div>' +
+      '<div style="font-size:9px;color:#94a3b8;font-weight:600;margin-top:1px;">' + d.approved + '/' + d.total + ' รายการ</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── 3. Doc type bars ── */
+function renderDocTypeBars() {
+  var container = document.getElementById('docTypeBars');
+  if (!container) return;
+
+  var teacherCount = Object.values(teacherMap).filter(function(t){ return t.isTeacher; }).length;
+  if (!teacherCount) { container.innerHTML = ''; return; }
+
+  container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
+    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status && s.status !== 'none'; }).length;
+    var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
+    var pct = Math.round((submitted / teacherCount) * 100);
+    var pctFinal = Math.round((finalApproved / teacherCount) * 100);
+
+    return '<div class="docbar-row">' +
+      '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
+        '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
+      '</div>' +
+      '<span class="docbar-label" title="' + esc(dt.label) + '">' + esc(dt.short || dt.label) + '</span>' +
+      '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;width:90px;">' +
+        '<div class="docbar-track" style="width:90px;">' +
+          '<div class="docbar-fill" style="width:' + pct + '%;background:' + dt.color + '55;"></div>' +
+        '</div>' +
+        '<div class="docbar-track" style="width:90px;">' +
+          '<div class="docbar-fill" style="width:' + pctFinal + '%;background:' + dt.color + ';"></div>' +
+        '</div>' +
+      '</div>' +
+      '<span class="docbar-num">' + submitted + '/' + teacherCount + '</span>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
 }
 </script>
 </body>
