@@ -64,6 +64,8 @@
     @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
     @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
+    @media(max-width:900px){.dash-two-col{grid-template-columns:1fr!important;}}
+    @media(max-width:640px){#contentArea{padding:20px 14px!important;}}
     /* ── New Public UI ── */
     .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;}
     .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
@@ -295,162 +297,179 @@
       <!-- Dashboard tab -->
       <div id="tab-dashboard" class="tab-content active">
 
-        <!-- Welcome Banner -->
-        <div style="background:linear-gradient(135deg,#1d4ed8 0%,#3b82f6 60%,#60a5fa 100%);padding:28px 32px;border-radius:24px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(29,78,216,.25);">
-          <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
-          <div style="position:absolute;bottom:-50px;right:80px;width:220px;height:220px;background:rgba(255,255,255,.04);border-radius:50%;"></div>
-          <div style="position:relative;z-index:1;">
-            <p style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">ยินดีต้อนรับสู่ระบบ</p>
-            <h3 id="welcomeText" style="font-size:24px;font-weight:800;color:white;margin-bottom:4px;">สวัสดี</h3>
-            <p style="color:rgba(255,255,255,.75);font-size:13px;">โรงเรียนหนองกี่พิทยาคม · ระบบบริการออนไลน์</p>
-          </div>
-        </div>
-
-        <!-- Stats Row -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-          <div style="background:white;padding:20px 22px;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="calendar" style="width:20px;height:20px;color:#1d4ed8;"></i>
-            </div>
+        <!-- ══ Welcome Banner (redesigned) ══ -->
+        <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);padding:32px 36px;border-radius:28px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 12px 40px rgba(15,23,42,.28);">
+          <!-- bg decorations -->
+          <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:-60px;right:60px;width:260px;height:260px;background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;"></div>
+          <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
             <div>
-              <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">การจองของฉัน</p>
-              <p id="bookingCount" style="font-size:22px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
-            </div>
-          </div>
-          <div style="background:white;padding:20px 22px;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:#fff7ed;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="monitor" style="width:20px;height:20px;color:#ea580c;"></i>
-            </div>
-            <div>
-              <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">คำขอ CCTV</p>
-              <p style="font-size:22px;font-weight:900;color:#1e293b;line-height:1;">0 <span style="font-size:13px;font-weight:600;color:#64748b;">รายการ</span></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- LINE Section -->
-        <div style="margin-bottom:24px;">
-          <div style="background:white;padding:24px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);">
-            <h4 style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
-              <div style="width:28px;height:28px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.5px;margin-bottom:14px;">
+                <i data-lucide="zap" style="width:11px;height:11px;"></i> NP Origins · Dashboard
               </div>
-              สมัครรับแจ้งเตือนผ่าน LINE
-            </h4>
+              <h3 id="welcomeText" style="font-size:26px;font-weight:800;color:white;margin-bottom:6px;line-height:1.2;">สวัสดี</h3>
+              <p style="color:rgba(255,255,255,.65);font-size:13px;display:flex;align-items:center;gap:6px;">
+                <i data-lucide="building-2" style="width:13px;height:13px;"></i>
+                โรงเรียนหนองกี่พิทยาคม · ระบบบริการออนไลน์
+              </p>
+            </div>
 
-            <!-- LINE Card -->
-            <div id="lineCard" style="background:linear-gradient(135deg,#06C755,#00a541);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(6,199,85,.25);margin-bottom:16px;">
+          </div>
+        </div>
+
+        <!-- ══ Stats Row ══ -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:28px;">
+          <!-- Booking stat -->
+          <div style="background:white;padding:20px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#eff6ff;border-radius:0 20px 0 70px;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="width:40px;height:40px;background:#eff6ff;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                <i data-lucide="calendar" style="width:19px;height:19px;color:#1d4ed8;"></i>
+              </div>
+              <p id="bookingCount" style="font-size:28px;font-weight:900;color:#0f172a;line-height:1;margin-bottom:4px;">0</p>
+              <p style="font-size:12px;font-weight:600;color:#64748b;">การจองของฉัน</p>
+            </div>
+          </div>
+          <!-- CCTV stat -->
+          <div style="background:white;padding:20px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#fff7ed;border-radius:0 20px 0 70px;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="width:40px;height:40px;background:#fff7ed;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                <i data-lucide="monitor" style="width:19px;height:19px;color:#ea580c;"></i>
+              </div>
+              <p style="font-size:28px;font-weight:900;color:#0f172a;line-height:1;margin-bottom:4px;">0</p>
+              <p style="font-size:12px;font-weight:600;color:#64748b;">คำขอ CCTV</p>
+            </div>
+          </div>
+          <!-- Quick link: Guide -->
+          <a href="guide.html" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);padding:20px;border-radius:20px;border:1px solid #bbf7d0;box-shadow:0 2px 12px rgba(0,0,0,.04);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width:40px;height:40px;background:white;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+              <i data-lucide="book-open" style="width:19px;height:19px;color:#16a34a;"></i>
+            </div>
+            <p style="font-size:13px;font-weight:800;color:#15803d;line-height:1.3;">คู่มือ<br>การใช้งาน</p>
+          </a>
+        </div>
+
+        <!-- ══ Two-column layout: Bookings + Portfolio ══ -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" class="dash-two-col">
+
+          <!-- Left: My Bookings -->
+          <div style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:34px;height:34px;background:#eff6ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i data-lucide="calendar-clock" style="width:16px;height:16px;color:#1d4ed8;"></i>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:800;color:#0f172a;">การจองล่าสุด</div>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:1px;">5 รายการล่าสุด</div>
+                </div>
+              </div>
+              <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:3px;padding:5px 10px;background:#eff6ff;border-radius:8px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:12px;height:12px;"></i></a>
+            </div>
+            <div id="myBookingsList" style="padding:12px 16px;flex:1;">
+              <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
+            </div>
+            <div id="myBookingsMore" style="display:none;padding:10px 16px 14px;border-top:1px solid #f1f5f9;text-align:center;">
+              <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+                <i data-lucide="list" style="width:13px;height:13px;"></i> ดูรายการทั้งหมด
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Portfolio Status -->
+          <div style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:34px;height:34px;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i data-lucide="send" style="width:16px;height:16px;color:#7c3aed;"></i>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:800;color:#0f172a;">งานส่งประจำภาคเรียน</div>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:1px;">ติดตามสถานะได้ทันที</div>
+                </div>
+              </div>
+              <a href="teacher-portfolio.html" style="font-size:12px;font-weight:700;color:#7c3aed;text-decoration:none;display:flex;align-items:center;gap:3px;padding:5px 10px;background:#f5f3ff;border-radius:8px;">ส่งงาน <i data-lucide="chevron-right" style="width:12px;height:12px;"></i></a>
+            </div>
+            <!-- Semester selector -->
+            <div style="padding:14px 16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #faf5ff;">
+              <span style="font-size:11px;font-weight:700;color:#64748b;">ปีการศึกษา</span>
+              <div style="display:flex;gap:3px;align-items:center;background:#f8fafc;border-radius:8px;padding:2px;">
+                <button onclick="pfChangeYear(-1)" style="width:22px;height:22px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='none'"><i data-lucide="chevron-left" style="width:12px;height:12px;color:#64748b;"></i></button>
+                <span id="pfYearLabel" style="font-size:12px;font-weight:800;color:#1e293b;min-width:36px;text-align:center;">2568</span>
+                <button onclick="pfChangeYear(1)" style="width:22px;height:22px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='none'"><i data-lucide="chevron-right" style="width:12px;height:12px;color:#64748b;"></i></button>
+              </div>
+              <div style="display:flex;gap:4px;margin-left:auto;">
+                <button id="pfSem1" onclick="pfSelectSem(1)" style="padding:5px 13px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#7c3aed;color:white;transition:all .2s;">ภาคเรียนที่ 1</button>
+                <button id="pfSem2" onclick="pfSelectSem(2)" style="padding:5px 13px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#f1f5f9;color:#64748b;transition:all .2s;">ภาคเรียนที่ 2</button>
+              </div>
+            </div>
+            <!-- Progress bar -->
+            <div style="padding:12px 16px 0;" id="pfProgressWrap" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:11px;font-weight:700;color:#64748b;">ความคืบหน้า</span>
+                <span id="pfProgressText" style="font-size:11px;font-weight:800;color:#7c3aed;">...</span>
+              </div>
+              <div style="background:#ede9fe;border-radius:6px;height:8px;overflow:hidden;">
+                <div id="pfProgressBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .4s ease;width:0%;"></div>
+              </div>
+            </div>
+            <!-- Doc list -->
+            <div id="pfDocList" style="padding:12px 16px 16px;flex:1;overflow-y:auto;">
+              <div style="text-align:center;padding:32px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="pfEmpty">กำลังโหลด...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ LINE Notification Section (compact) ══ -->
+        <div style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">
+          <!-- Header -->
+          <div style="padding:18px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:9px;">
+            <div style="width:34px;height:34px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="17" height="17" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:800;color:#0f172a;">รับการแจ้งเตือนผ่าน LINE</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:1px;">เชื่อมต่อเพื่อรับแจ้งผลคำขอและเตือนก่อนถึงเวลาจอง</div>
+            </div>
+          </div>
+          <div style="padding:18px 20px;display:flex;align-items:stretch;gap:16px;flex-wrap:wrap;">
+            <!-- LINE Connect Card -->
+            <div id="lineCard" style="flex:1;min-width:240px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(6,199,85,.22);">
               <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                   <svg width="20" height="20" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
                 </div>
                 <div>
                   <div id="lineTxt" style="font-size:13px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>
-                  <div id="lineSub" style="font-size:11px;color:rgba(255,255,255,.85);margin-top:1px;">รับแจ้งผลคำขอ และเตือนก่อนถึงเวลาจอง 15 นาที</div>
+                  <div id="lineSub" style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;">แจ้งผลและเตือนก่อน 15 นาที</div>
                 </div>
               </div>
-              <button id="lineBtn" onclick="lineConnect()" style="padding:9px 16px;background:white;color:#06C755;font-weight:800;border-radius:9px;border:none;cursor:pointer;font-size:12px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1);">เชื่อมต่อ LINE</button>
+              <button id="lineBtn" onclick="lineConnect()" style="padding:9px 18px;background:white;color:#06C755;font-weight:800;border-radius:10px;border:none;cursor:pointer;font-size:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12);">เชื่อมต่อ LINE</button>
             </div>
-
-            <!-- Steps -->
-            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
-              <div style="display:flex;gap:12px;align-items:start;">
-                <div style="width:28px;height:28px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">1</div>
+            <!-- Steps + notifications (side by side) -->
+            <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border-radius:12px;padding:10px 14px;">
+                <div style="width:24px;height:24px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">1</div>
                 <div style="flex:1;">
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:4px;">เพิ่มเพื่อน LINE Official Account</div>
-                  <a href="https://line.me/ti/p/@514vguxz" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,#06C755,#00a541);color:white;font-weight:700;border-radius:9px;text-decoration:none;font-size:12px;box-shadow:0 3px 8px rgba(6,199,85,.25);">
-                    <svg width="14" height="14" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
-                    เพิ่มเพื่อน (@514vguxz)
-                  </a>
+                  <div style="font-size:12px;font-weight:700;color:#1e293b;">เพิ่มเพื่อน LINE OA</div>
+                  <a href="https://line.me/ti/p/@514vguxz" target="_blank" style="font-size:11px;color:#06C755;font-weight:700;text-decoration:none;">@514vguxz →</a>
                 </div>
               </div>
-              <div style="display:flex;gap:12px;align-items:start;">
-                <div style="width:28px;height:28px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">2</div>
-                <div>
-                  <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:3px;">เชื่อมต่อบัญชีกับระบบ</div>
-                  <div style="font-size:12px;color:#64748b;line-height:1.5;">กดปุ่ม "เชื่อมต่อ LINE" ด้านบนเพื่อเชื่อมต่อ</div>
-                </div>
+              <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border-radius:12px;padding:10px 14px;">
+                <div style="width:24px;height:24px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">2</div>
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">กดปุ่ม "เชื่อมต่อ LINE" ด้านซ้าย</div>
               </div>
-            </div>
-
-            <!-- Notification list -->
-            <div style="background:#f8fafc;padding:14px 16px;border-radius:12px;border:1px solid #e2e8f0;">
-              <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:6px;">
-                <i data-lucide="bell" style="width:13px;height:13px;color:#06C755;"></i> แจ้งเตือนที่จะได้รับ
-              </div>
-              <div style="display:flex;flex-direction:column;gap:7px;">
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  แจ้งผลอนุมัติ/ไม่อนุมัติคำขอจองห้อง
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  เตือนก่อนถึงเวลาใช้งานห้อง 15 นาที
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">
-                  <div style="width:5px;height:5px;background:#06C755;border-radius:50%;flex-shrink:0;"></div>
-                  ข้อมูลสำคัญเกี่ยวกับการจอง
+              <div style="background:#f0fdf4;border-radius:12px;padding:10px 14px;border:1px solid #bbf7d0;">
+                <div style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i data-lucide="bell" style="width:12px;height:12px;"></i> แจ้งเตือนที่จะได้รับ</div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:11px;color:#166534;display:flex;align-items:center;gap:5px;"><span style="width:4px;height:4px;background:#06C755;border-radius:50%;flex-shrink:0;display:inline-block;"></span>ผลอนุมัติ/ไม่อนุมัติคำขอจอง</div>
+                  <div style="font-size:11px;color:#166534;display:flex;align-items:center;gap:5px;"><span style="width:4px;height:4px;background:#06C755;border-radius:50%;flex-shrink:0;display:inline-block;"></span>เตือนก่อนถึงเวลาจอง 15 นาที</div>
+                  <div style="font-size:11px;color:#166534;display:flex;align-items:center;gap:5px;"><span style="width:4px;height:4px;background:#06C755;border-radius:50%;flex-shrink:0;display:inline-block;"></span>ข้อมูลสำคัญเกี่ยวกับการจอง</div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- My bookings list (5 latest) -->
-        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;margin-bottom:20px;">
-          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
-              <i data-lucide="calendar-clock" style="width:16px;height:16px;color:#1d4ed8;"></i>
-              การจองล่าสุด
-              <span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:20px;margin-left:2px;">5 รายการล่าสุด</span>
-            </span>
-            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:4px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
-          </div>
-          <div id="myBookingsList" style="padding:12px 16px;">
-            <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
-          </div>
-          <div id="myBookingsMore" style="display:none;padding:10px 16px 14px;border-top:1px solid #f1f5f9;text-align:center;">
-            <a href="room-booking.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
-              <i data-lucide="list" style="width:13px;height:13px;"></i> ดูรายการทั้งหมด
-            </a>
-          </div>
-        </div>
-
-        <!-- Portfolio Status -->
-        <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
-          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
-              <i data-lucide="send" style="width:16px;height:16px;color:#7c3aed;"></i>
-              งานส่งประจำภาคเรียน
-            </span>
-            <a href="teacher-portfolio.html" style="font-size:12px;font-weight:700;color:#7c3aed;text-decoration:none;display:flex;align-items:center;gap:4px;">ไปหน้าส่งงาน <i data-lucide="chevron-right" style="width:13px;height:13px;"></i></a>
-          </div>
-          <!-- Semester selector -->
-          <div style="padding:12px 16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:11px;font-weight:700;color:#64748b;">ปีการศึกษา:</span>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <button onclick="pfChangeYear(-1)" style="width:24px;height:24px;background:#f1f5f9;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:13px;height:13px;color:#64748b;"></i></button>
-              <span id="pfYearLabel" style="font-size:12px;font-weight:800;color:#1e293b;min-width:40px;text-align:center;">2568</span>
-              <button onclick="pfChangeYear(1)" style="width:24px;height:24px;background:#f1f5f9;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-right" style="width:13px;height:13px;color:#64748b;"></i></button>
-            </div>
-            <div style="display:flex;gap:4px;">
-              <button id="pfSem1" onclick="pfSelectSem(1)" style="padding:4px 12px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#7c3aed;color:white;">ภาคเรียนที่ 1</button>
-              <button id="pfSem2" onclick="pfSelectSem(2)" style="padding:4px 12px;font-size:11px;font-weight:700;border-radius:20px;border:none;cursor:pointer;background:#f1f5f9;color:#64748b;">ภาคเรียนที่ 2</button>
-            </div>
-          </div>
-          <!-- Progress bar -->
-          <div style="padding:12px 16px 0;" id="pfProgressWrap" style="display:none;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="font-size:11px;font-weight:700;color:#64748b;">ความคืบหน้าการส่งงาน</span>
-              <span id="pfProgressText" style="font-size:11px;font-weight:800;color:#7c3aed;">...</span>
-            </div>
-            <div style="background:#e9d5ff;border-radius:4px;height:6px;overflow:hidden;">
-              <div id="pfProgressBar" style="height:100%;border-radius:4px;background:#7c3aed;transition:width .4s ease;width:0%;"></div>
-            </div>
-          </div>
-          <!-- Doc list -->
-          <div id="pfDocList" style="padding:12px 16px 16px;">
-            <div style="text-align:center;padding:32px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="pfEmpty">กำลังโหลด...</div>
           </div>
         </div>
 
