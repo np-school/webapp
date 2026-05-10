@@ -1043,12 +1043,25 @@ function openReview(subId, uid, docTypeId) {
   if (!sub) return;
 
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id===docTypeId; });
-  /* reviewingSubId = doc id ของ course แรก (จะถูก override โดย selectedCourseKey เมื่อเลือก course) */
-  reviewingSubId     = sub._courses ? sub._courses[0].id : (sub.id || subId);
   reviewingUid       = uid;
   reviewingDocTypeId = docTypeId;
   selectedFileIdx    = 0;
   selectedCourseKey  = null;
+
+  /* สร้าง courseMap เพื่อกำหนด selectedCourseKey และ reviewingSubId ตั้งแต่แรก */
+  var courseMap  = buildCourseMapFromSub(sub);
+  var courseKeys = Object.keys(courseMap);
+
+  /* ตั้งค่าเริ่มต้น: เลือก course แรกเสมอ */
+  if (courseKeys.length > 0) {
+    selectedCourseKey = courseKeys[0];
+    var firstFiles = courseMap[courseKeys[0]];
+    reviewingSubId = (firstFiles.length > 0 && firstFiles[0]._docId)
+      ? firstFiles[0]._docId
+      : (sub._courses ? sub._courses[0].id : (sub.id || subId));
+  } else {
+    reviewingSubId = sub.id || subId;
+  }
 
   document.getElementById('reviewModalTitle').textContent = dt.label;
   document.getElementById('reviewModalSub').textContent =
@@ -1057,28 +1070,16 @@ function openReview(subId, uid, docTypeId) {
     (t.staffGroup ? ' · ' + t.staffGroup : '') +
     ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
 
-  /* ── กลุ่มไฟล์ตาม courseCode ── */
-  var files = sub.files;
   var multiSection = document.getElementById('multiFileSection');
 
-  /* สร้าง map courseCode → [fileObj,...] */
-  var courseMap = buildCourseMap(sub);
-  var courseKeys = Object.keys(courseMap);
-
-  if (files && files.length > 0 && courseKeys.length > 0) {
-    if (courseKeys.length > 1) {
-      /* หลายวิชา: แสดง course selector */
-      multiSection.style.display = 'block';
-      selectedCourseKey = courseKeys[0];
-      renderCourseFileList(sub, courseMap, courseKeys[0]);
-    } else {
-      /* วิชาเดียว: ซ่อน selector แสดงตรงๆ */
-      multiSection.style.display = 'none';
-      selectedCourseKey = courseKeys[0];
-      var firstFiles = courseMap[courseKeys[0]];
-      selectedFileIdx = 0;
-      fillSingleFileInfo(buildFileInfoObj(sub, firstFiles[0]));
-    }
+  if (courseKeys.length > 1) {
+    /* หลายวิชา (หลาย Firestore doc): แสดง course selector */
+    multiSection.style.display = 'block';
+    renderCourseFileList(sub, courseMap, courseKeys[0]);
+  } else if (courseKeys.length === 1) {
+    /* วิชาเดียว: ซ่อน selector แสดงตรงๆ */
+    multiSection.style.display = 'none';
+    fillSingleFileInfo({});
   } else {
     multiSection.style.display = 'none';
     fillSingleFileInfo(sub);
@@ -1185,8 +1186,11 @@ function renderCourseFileList(sub, courseMap, activeCourseKey) {
 
   var html = Object.keys(courseMap).map(function(cKey) {
     var files    = courseMap[cKey];
-    /* สถานะรวมของรายวิชา = ต่ำสุด */
-    var courseStatus = getCourseStatus(files, sub.status);
+    /* สถานะของรายวิชา = ดึงจาก doc.status โดยตรง (files[0]._docId → _courses) */
+    var _cDocId = files.length > 0 ? files[0]._docId : null;
+    var _cDocs  = sub._courses || [sub];
+    var _cDoc   = _cDocId ? _cDocs.find(function(d){ return d.id === _cDocId; }) : null;
+    var courseStatus = _cDoc ? (_cDoc.status || 'submitted') : getCourseStatus(files, sub.status);
     var isSelected   = cKey === activeCourseKey;
     var courseCode   = files[0].courseCode || sub.courseCode || cKey;
     var courseName   = files[0].courseName || sub.courseName || '';
@@ -1286,20 +1290,19 @@ function fillSingleFileInfo(sub) {
   /* ใช้ข้อมูลจาก courseFiles ถ้ามี ไม่งั้น fallback ไปที่ sub parameter */
   var displayFile = courseFiles.length > 0 ? courseFiles[0] : sub;
 
-  /* ── สถานะเฉพาะของ course ที่เลือก (ไม่ใช่ merged) ── */
-  /* ดึงจาก _docId ของ targetDoc โดยตรง เพื่อให้แน่ใจว่าถูก course */
-  var targetDocStatus = 'submitted';
+  /* ── สถานะเฉพาะของ course ที่เลือก ──
+     อ่านจาก targetDoc.status (ระดับ Firestore doc) เป็นหลัก
+     เพราะ setReviewStatus อัปเดตเฉพาะ doc.status ไม่แตะ files[].status */
+  var curStatus = 'submitted';
   if (courseFiles.length > 0 && courseFiles[0]._docId && origSub) {
-    var docs = origSub._courses || [origSub];
-    var targetDoc = docs.find(function(d){ return d.id === courseFiles[0]._docId; });
-    if (targetDoc) targetDocStatus = targetDoc.status || 'submitted';
+    var _fdocs = origSub._courses || [origSub];
+    var _fdoc  = _fdocs.find(function(d){ return d.id === courseFiles[0]._docId; });
+    curStatus  = _fdoc ? (_fdoc.status || 'submitted') : (courseFiles[0].status || sub.status || 'submitted');
   } else if (courseFiles.length > 0) {
-    targetDocStatus = courseFiles[0].status || sub.status || 'submitted';
+    curStatus = courseFiles[0].status || (origSub ? origSub.status : 'submitted') || 'submitted';
   } else {
-    targetDocStatus = sub.status || 'submitted';
+    curStatus = (origSub ? origSub.status : null) || sub.status || 'submitted';
   }
-  /* getCourseStatus จาก files ของ course นี้ (ใช้ targetDocStatus เป็น fallback) */
-  var curStatus = getCourseStatus(courseFiles, targetDocStatus);
 
   var displayNote = displayFile.adminNote !== undefined ? displayFile.adminNote : (sub.adminNote || '');
 
@@ -1437,71 +1440,57 @@ function setReviewStatus(status) {
   var sub = t && t.subs[reviewingDocTypeId];
   if (!sub) return;
 
-  /* ── หา Firestore doc ที่ตรงกับ course ที่เลือกอยู่ ── */
-  var courseMap   = buildCourseMapFromSub(sub);
-  var targetFiles = selectedCourseKey ? (courseMap[selectedCourseKey] || []) : [];
+  /* ── หา Firestore doc ID ของรายวิชาที่เลือกอยู่ ──
+     แต่ละ courseCode = Firestore doc แยก (_docId เก็บใน buildCourseMapFromSub)
+     selectedCourseKey = courseCode ที่ user คลิกเลือก
+     reviewingSubId    = doc.id ที่ sync ไว้ใน renderCourseFileList / openReview */
+  var targetDocId = reviewingSubId;
 
-  /* targetDocId = _docId ของไฟล์ใน course ที่เลือก (น่าเชื่อถือที่สุด) */
-  var targetDocId = (targetFiles.length > 0 && targetFiles[0]._docId)
-    ? targetFiles[0]._docId
-    : (sub._courses ? sub._courses[0].id : (reviewingSubId || sub.id));
-
-  /* หา doc object จาก _courses หรือ sub โดยตรง */
-  var targetDoc = null;
-  if (sub._courses) {
-    targetDoc = sub._courses.find(function(c){ return c.id === targetDocId; });
-    if (!targetDoc) targetDoc = sub._courses[0];
-  } else {
-    targetDoc = sub;
+  /* ยืนยันจาก courseMap อีกครั้ง (กันกรณี reviewingSubId ยังเก่า) */
+  if (selectedCourseKey) {
+    var cm = buildCourseMapFromSub(sub);
+    var cf = cm[selectedCourseKey] || [];
+    if (cf.length > 0 && cf[0]._docId) {
+      targetDocId = cf[0]._docId;
+    }
   }
 
-  if (!targetDoc || !targetDocId) {
+  if (!targetDocId) {
     showToast('ไม่พบเอกสารที่จะอัปเดต', 'error');
     return;
   }
 
-  /* อัปเดตทุกไฟล์ในรายวิชานั้น (ถ้ามีหลายไฟล์) พร้อม status ระดับ doc */
-  var updateData = {
+  /* หา doc object ใน _courses เพื่ออัปเดต in-memory หลัง save */
+  var docs = sub._courses || [sub];
+  var targetDoc = docs.find(function(d){ return d.id === targetDocId; });
+  if (!targetDoc && docs.length === 1) targetDoc = docs[0];
+
+  /* ── อัปเดตเฉพาะ status/adminNote ระดับ document เท่านั้น
+     ไม่แตะ files[] array → ไม่กระทบไฟล์อื่น หรือวิชาอื่น ── */
+  db.collection('portfolio_submissions').doc(targetDocId).update({
     status:     status,
     adminNote:  note,
     reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
     reviewedBy: currentUserEmail,
-  };
+  }).then(function() {
+    showToast(toastMsgs[status] || status, toastType);
 
-  if (targetDoc.files && targetDoc.files.length > 0) {
-    updateData.files = targetDoc.files.map(function(f) {
-      return Object.assign({}, f, {
-        status:     status,
-        adminNote:  note,
-        reviewedAt: new Date().toISOString(),
-        reviewedBy: currentUserEmail,
-      });
-    });
-  }
-
-  db.collection('portfolio_submissions').doc(targetDocId).update(updateData)
-    .then(function() {
-      showToast(toastMsgs[status] || status, toastType);
-
-      /* ── อัปเดต in-memory ทันทีก่อน reload เพื่อไม่ให้ UI กระพริบ ── */
-      if (targetDoc.files && targetDoc.files.length > 0) {
-        targetDoc.files = updateData.files;
-      }
+    /* อัปเดต in-memory เฉพาะ doc ที่เลือก */
+    if (targetDoc) {
       targetDoc.status    = status;
       targetDoc.adminNote = note;
+    }
 
-      /* คำนวณ merged status ใหม่ทันที */
-      var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, final_approved:4 };
-      var docs  = sub._courses || [sub];
-      sub.status = docs.reduce(function(acc, c) {
-        var s = c.status || 'submitted';
-        return ORDER[s] < ORDER[acc] ? s : acc;
-      }, 'final_approved');
+    /* คำนวณ merged status ของ sub ใหม่ (ต่ำสุดของทุก doc) */
+    var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, final_approved:4 };
+    sub.status = docs.reduce(function(acc, c) {
+      var s = c.status || 'submitted';
+      return ORDER[s] < ORDER[acc] ? s : acc;
+    }, 'final_approved');
 
-      closeModal('reviewModal');
-      loadAllSubmissions();
-    })
-    .catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    closeModal('reviewModal');
+    loadAllSubmissions();
+  }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
 /* ─── HELPERS ─── */
