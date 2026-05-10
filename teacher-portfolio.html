@@ -194,7 +194,7 @@
           <div style="margin-top:20px;background:rgba(255,255,255,.1);border-radius:14px;padding:14px 18px;border:1px solid rgba(255,255,255,.15);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.9);">ความคืบหน้าการส่งงาน</span>
-              <span id="progressText" style="font-size:13px;font-weight:800;color:white;">0 / 9 รายการ</span>
+              <span id="progressText" style="font-size:13px;font-weight:800;color:white;">0 / - รายการ</span>
             </div>
             <div class="pbar-bg" style="background:rgba(255,255,255,.2);">
               <div id="progressBar" class="pbar-fill" style="background:linear-gradient(90deg,#34d399,#10b981);width:0%;"></div>
@@ -365,6 +365,7 @@ function sanitizeForFilename(str) {
   return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
 }
 
+/* DOCUMENT_TYPES โหลดจาก Firestore (portfolio_doc_types) — fallback hardcode ถ้า collection ว่าง */
 var DOCUMENT_TYPES = [
   { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
@@ -376,8 +377,51 @@ var DOCUMENT_TYPES = [
   { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
   { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
 ];
+var _docTypesLoaded = false; /* flag ป้องกัน render ก่อน load เสร็จ */
 
-var currentUser      = null;
+/* สร้าง bg จาก hex color (lighten ~95%) */
+function colorToBg(hex) {
+  return hex + '15'; /* ใช้ opacity 15 ใน hex = ~8% */
+}
+
+function loadDocTypesFromFirestore(callback) {
+  db.collection('portfolio_doc_types')
+    .where('active', '==', true)
+    .orderBy('order')
+    .get()
+    .then(function(snap) {
+      if (!snap.empty) {
+        DOCUMENT_TYPES = [];
+        snap.forEach(function(d) {
+          var data = d.data();
+          DOCUMENT_TYPES.push({
+            id:    data.id    || d.id,
+            label: data.label || '',
+            short: data.short || '',
+            icon:  data.icon  || 'file',
+            color: data.color || '#7c3aed',
+            bg:    colorToBg(data.color || '#7c3aed'),
+          });
+        });
+      }
+      _docTypesLoaded = true;
+      updateProgressTotal();
+      if (callback) callback();
+    })
+    .catch(function() {
+      /* network error → ใช้ hardcode */
+      _docTypesLoaded = true;
+      if (callback) callback();
+    });
+}
+
+function updateProgressTotal() {
+  /* อัปเดตตัวเลข total ใน progress bar ให้ตรงกับ DOCUMENT_TYPES จริง */
+  var el = document.getElementById('progressText');
+  if (!el) return;
+  var current = el.textContent.split('/')[0].trim();
+  el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
+}
 var currentStaffData = null;
 var currentYear      = 2568;
 var currentSem       = 1;
@@ -444,7 +488,10 @@ auth.onAuthStateChanged(function(u) {
       buildSidebar('teacher-portfolio');
       checkAdminAccess(u.email);
       renderStaffInfoBadge();
-      loadSubmissions();
+      /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
+      loadDocTypesFromFirestore(function() {
+        loadSubmissions();
+      });
       lucide.createIcons();
       /* init Google auth after user confirmed */
       setTimeout(initGoogleAuth, 500);
