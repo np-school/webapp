@@ -163,6 +163,24 @@
     .docbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
 
     #chartsPanel{display:block;}
+
+    /* ── Sub Tabs ── */
+    .sub-tab-bar{display:flex;gap:4px;padding:4px;background:#f1f5f9;border-radius:14px;width:fit-content;}
+    .sub-tab{padding:8px 20px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:#64748b;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+    .sub-tab.active{background:white;color:#7c3aed;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .sub-tab:hover:not(.active){background:rgba(255,255,255,.6);color:#334155;}
+
+    /* ── Doc Type Manager ── */
+    .dt-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border:1.5px solid #e2e8f0;border-radius:14px;transition:border-color .15s;}
+    .dt-row:hover{border-color:#c4b5fd;}
+    .dt-icon-preview{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .dt-drag-handle{cursor:grab;color:#cbd5e1;display:flex;align-items:center;padding:4px;border-radius:6px;flex-shrink:0;}
+    .dt-drag-handle:hover{background:#f1f5f9;color:#7c3aed;}
+    .dt-drag-handle:active{cursor:grabbing;}
+    .dt-row.drag-over{border-color:#7c3aed;border-style:dashed;background:#faf5ff;}
+    .dt-row.dragging{opacity:.45;border-style:dashed;}
+    .color-swatch{width:20px;height:20px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
+    .color-swatch.selected{border-color:#0f172a;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -207,6 +225,22 @@
           <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียน 2</button>
         </div>
       </div>
+
+      <!-- Sub Tab Bar -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
+            <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
+          </button>
+          <button class="sub-tab" id="subTabDocTypes" onclick="switchSubTab('doctypes')">
+            <i data-lucide="list-checks" style="width:14px;height:14px;"></i> จัดการหัวข้องาน
+          </button>
+        </div>
+        <span id="subTabBadge" style="font-size:11px;color:#94a3b8;font-weight:600;"></span>
+      </div>
+
+      <!-- ══ SUB TAB: OVERVIEW ══ -->
+      <div id="panelOverview" style="display:flex;flex-direction:column;gap:20px;">
 
       <!-- Charts Panel -->
       <div id="chartsPanel">
@@ -333,6 +367,135 @@
         </div>
       </div>
 
+      </div><!-- end panelOverview -->
+
+      <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
+      <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
+        <div class="card" style="padding:20px 22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+            <div>
+              <h2 style="font-size:17px;font-weight:800;color:#0f172a;">จัดการหัวข้อการส่งงาน</h2>
+              <p style="font-size:12px;color:#64748b;margin-top:2px;">เพิ่ม / แก้ไข / ลบ หัวข้องานที่ครูต้องส่งในแต่ละภาคเรียน · ลากเพื่อเรียงลำดับ</p>
+            </div>
+            <button onclick="openDocTypeModal(null)" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#7c3aed;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,.25);">
+              <i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มหัวข้องาน
+            </button>
+          </div>
+          <div id="docTypeList" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="text-align:center;padding:40px;color:#94a3b8;">
+              <i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;margin-bottom:8px;"></i>
+              <p style="font-size:13px;">กำลังโหลด...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info box -->
+        <div style="padding:14px 16px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;display:flex;gap:10px;">
+          <i data-lucide="info" style="width:16px;height:16px;color:#0369a1;flex-shrink:0;margin-top:1px;"></i>
+          <div>
+            <p style="font-size:13px;font-weight:700;color:#0369a1;">หมายเหตุ</p>
+            <p style="font-size:12px;color:#0369a1;margin-top:2px;line-height:1.6;">การเพิ่มหัวข้องานใหม่จะแสดงในหน้าส่งงานของครูทันที · การลบหัวข้อจะ<strong>ไม่ลบ</strong>งานที่ครูส่งไปแล้ว แต่หัวข้อนั้นจะหายออกจากมุมมองติดตาม</p>
+          </div>
+        </div>
+      </div><!-- end panelDocTypes -->
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Doc Type Add/Edit Modal ── -->
+<div id="docTypeModal" class="modal-bg" onclick="if(event.target===this)closeModal('docTypeModal')">
+  <div class="modal-box" style="max-width:520px;">
+    <div style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h3 id="dtModalTitle" style="font-size:17px;font-weight:800;color:#0f172a;">เพิ่มหัวข้องาน</h3>
+          <p style="font-size:12px;color:#64748b;margin-top:2px;">กรอกรายละเอียดหัวข้องานที่ต้องการ</p>
+        </div>
+        <button onclick="closeModal('docTypeModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+          <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+        </button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <!-- Label -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อหัวข้อ <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="dtLabel" placeholder="เช่น แผนการจัดการเรียนรู้" maxlength="80">
+        </div>
+        <!-- Short name -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อย่อ (สำหรับแสดงในตาราง)</label>
+          <input type="text" id="dtShort" placeholder="เช่น แผนการ" maxlength="20">
+        </div>
+        <!-- ID -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">รหัสหัวข้อ (ภาษาอังกฤษ ไม่มีช่องว่าง) <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="dtId" placeholder="เช่น lesson_plan" maxlength="40" oninput="this.value=this.value.replace(/[^a-z0-9_]/g,'')">
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">ใช้ได้เฉพาะตัวอักษรเล็ก a-z, ตัวเลข, และ _ · ต้องไม่ซ้ำกับหัวข้ออื่น</p>
+        </div>
+        <!-- Icon -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ไอคอน (Lucide icon name)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="dtIcon" placeholder="เช่น file-text, book-open, star" style="flex:1;" oninput="previewDtIcon()">
+            <div id="dtIconPreview" style="width:36px;height:36px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i id="dtIconPreviewIcon" data-lucide="file" style="width:18px;height:18px;color:#7c3aed;"></i>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+            <p style="font-size:11px;color:#94a3b8;width:100%;">ไอคอนที่นิยมใช้:</p>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('file-text')">file-text</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('book-open')">book-open</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('leaf')">leaf</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('crown')">crown</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('zap')">zap</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('microscope')">microscope</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('users')">users</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('library')">library</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('star')">star</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('clipboard')">clipboard</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('folder')">folder</button>
+            <button class="filter-pill" style="font-size:11px;padding:4px 10px;" onclick="setDtIcon('award')">award</button>
+          </div>
+        </div>
+        <!-- Color -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:8px;">สี</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="dtColorPicker">
+            <div class="color-swatch selected" style="background:#3b82f6;" data-color="#3b82f6" onclick="selectDtColor('#3b82f6',this)"></div>
+            <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectDtColor('#8b5cf6',this)"></div>
+            <div class="color-swatch" style="background:#22c55e;" data-color="#22c55e" onclick="selectDtColor('#22c55e',this)"></div>
+            <div class="color-swatch" style="background:#f59e0b;" data-color="#f59e0b" onclick="selectDtColor('#f59e0b',this)"></div>
+            <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectDtColor('#ec4899',this)"></div>
+            <div class="color-swatch" style="background:#06b6d4;" data-color="#06b6d4" onclick="selectDtColor('#06b6d4',this)"></div>
+            <div class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectDtColor('#f97316',this)"></div>
+            <div class="color-swatch" style="background:#6366f1;" data-color="#6366f1" onclick="selectDtColor('#6366f1',this)"></div>
+            <div class="color-swatch" style="background:#eab308;" data-color="#eab308" onclick="selectDtColor('#eab308',this)"></div>
+            <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" onclick="selectDtColor('#ef4444',this)"></div>
+            <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectDtColor('#14b8a6',this)"></div>
+            <div class="color-swatch" style="background:#a855f7;" data-color="#a855f7" onclick="selectDtColor('#a855f7',this)"></div>
+          </div>
+          <input type="text" id="dtColor" value="#3b82f6" maxlength="9" placeholder="#3b82f6" style="margin-top:8px;width:120px;" oninput="syncColorInput()">
+        </div>
+        <!-- Active toggle -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+          <div>
+            <p style="font-size:13px;font-weight:700;color:#1e293b;">เปิดใช้งาน</p>
+            <p style="font-size:11px;color:#94a3b8;margin-top:2px;">ปิดเพื่อซ่อนชั่วคราวโดยไม่ลบ</p>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="dtActive" checked style="opacity:0;width:0;height:0;position:absolute;">
+            <span id="dtActiveToggle" style="position:absolute;cursor:pointer;inset:0;background:#e2e8f0;border-radius:24px;transition:background .2s;"></span>
+            <span id="dtActiveKnob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="closeModal('docTypeModal')" style="flex:1;padding:11px;border:1.5px solid #e2e8f0;background:white;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#64748b;">ยกเลิก</button>
+        <button onclick="saveDocType()" style="flex:2;padding:11px;background:#7c3aed;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">บันทึก</button>
+      </div>
     </div>
   </div>
 </div>
@@ -475,6 +638,7 @@ function bootApp(u) {
     buildSidebar('portfolio-admin');
     checkAdminAccess(u.email);
     updateSidebarProfile(u);
+    loadDocTypesFromFirestore(); /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้ว loadAllSubmissions ตาม */
     loadAllSubmissions();
     lucide.createIcons();
 }
@@ -1693,6 +1857,298 @@ function renderDocTypeBars() {
     '</div>';
   }).join('');
   lucide.createIcons();
+}
+
+/* ════════════════════════════════════════════
+   SUB TAB SWITCHING
+   ════════════════════════════════════════════ */
+var currentSubTab = 'overview';
+
+function switchSubTab(tab) {
+  currentSubTab = tab;
+  document.getElementById('subTabOverview').className = 'sub-tab' + (tab==='overview'?' active':'');
+  document.getElementById('subTabDocTypes').className = 'sub-tab' + (tab==='doctypes'?' active':'');
+  document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
+
+  if (tab === 'doctypes') {
+    loadDocTypeList();
+    lucide.createIcons();
+  }
+}
+
+/* ════════════════════════════════════════════
+   DOC TYPE MANAGER – Firestore collection: portfolio_doc_types
+   ════════════════════════════════════════════ */
+var editingDocTypeId = null; /* null = new, else Firestore doc id */
+var selectedDtColor  = '#3b82f6';
+var dragSrcIndex     = null;
+
+/* ── load & render list ── */
+function loadDocTypeList() {
+  var list = document.getElementById('docTypeList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;"></i></div>';
+  lucide.createIcons();
+
+  db.collection('portfolio_doc_types').orderBy('order').get().then(function(snap) {
+    /* ถ้า collection ว่าง → แสดง default (built-in) แต่ยังไม่บันทึก */
+    var docs = [];
+    snap.forEach(function(d) { docs.push(Object.assign({ _id: d.id }, d.data())); });
+
+    /* ถ้ายังไม่มีเลย → เสนอ seed จาก DOCUMENT_TYPES ที่ hardcode */
+    if (!docs.length) {
+      list.innerHTML =
+        '<div style="text-align:center;padding:40px 20px;">' +
+          '<div style="width:56px;height:56px;background:#ede9fe;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+            '<i data-lucide="list-plus" style="width:28px;height:28px;color:#7c3aed;"></i>' +
+          '</div>' +
+          '<p style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:6px;">ยังไม่มีหัวข้องานใน Firestore</p>' +
+          '<p style="font-size:13px;color:#64748b;margin-bottom:18px;">คลิก "นำเข้าค่าเริ่มต้น" เพื่อเพิ่มหัวข้อที่ใช้อยู่ปัจจุบันทั้งหมด หรือเพิ่มทีละรายการ</p>' +
+          '<button onclick="seedDefaultDocTypes()" style="padding:10px 20px;background:#7c3aed;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-right:8px;">นำเข้าค่าเริ่มต้น (' + DOCUMENT_TYPES.length + ' รายการ)</button>' +
+          '<button onclick="openDocTypeModal(null)" style="padding:10px 20px;background:white;color:#7c3aed;border:1.5px solid #7c3aed;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">+ เพิ่มใหม่</button>' +
+        '</div>';
+      lucide.createIcons();
+      return;
+    }
+
+    renderDocTypeRows(docs);
+  }).catch(function(e) {
+    list.innerHTML = '<p style="color:#ef4444;padding:20px;font-size:13px;">โหลดไม่ได้: ' + e.message + '</p>';
+  });
+}
+
+function renderDocTypeRows(docs) {
+  var list = document.getElementById('docTypeList');
+  if (!docs.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">ยังไม่มีหัวข้องาน · กด "เพิ่มหัวข้องาน" เพื่อเริ่มต้น</div>';
+    return;
+  }
+
+  list.innerHTML = docs.map(function(dt, i) {
+    var activeLabel = dt.active === false
+      ? '<span style="background:#f1f5f9;color:#94a3b8;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ซ่อน</span>'
+      : '<span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ใช้งาน</span>';
+    return '<div class="dt-row" draggable="true" data-index="' + i + '" data-docid="' + esc(dt._id) + '" ' +
+        'ondragstart="dtDragStart(event,' + i + ')" ondragover="dtDragOver(event)" ondrop="dtDrop(event,' + i + ',\'' + esc(dt._id) + '\')" ondragleave="dtDragLeave(event)" ondragend="dtDragEnd()">' +
+      '<div class="dt-drag-handle" title="ลากเพื่อเรียงลำดับ">' +
+        '<i data-lucide="grip-vertical" style="width:16px;height:16px;"></i>' +
+      '</div>' +
+      '<div class="dt-icon-preview" style="background:' + (dt.color||'#7c3aed') + '18;">' +
+        '<i data-lucide="' + (dt.icon||'file') + '" style="width:18px;height:18px;color:' + (dt.color||'#7c3aed') + ';"></i>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+          '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
+          (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
+          activeLabel +
+        '</div>' +
+        '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc(dt.id||dt._id) + ' · ไอคอน: ' + esc(dt.icon||'-') + '</p>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+        '<button onclick="openDocTypeModal(\'' + esc(dt._id) + '\')" style="padding:7px 14px;border:1.5px solid #e2e8f0;background:white;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:#7c3aed;display:flex;align-items:center;gap:5px;">' +
+          '<i data-lucide="pencil" style="width:13px;height:13px;"></i> แก้ไข' +
+        '</button>' +
+        '<button onclick="deleteDocType(\'' + esc(dt._id) + '\',\'' + esc(dt.label) + '\')" style="padding:7px;border:1.5px solid #fee2e2;background:#fff5f5;border-radius:10px;cursor:pointer;color:#dc2626;display:flex;align-items:center;">' +
+          '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ── seed default doc types from hardcoded DOCUMENT_TYPES ── */
+function seedDefaultDocTypes() {
+  var batch = db.batch();
+  DOCUMENT_TYPES.forEach(function(dt, i) {
+    var ref = db.collection('portfolio_doc_types').doc(dt.id);
+    batch.set(ref, { id: dt.id, label: dt.label, short: dt.short||'', icon: dt.icon||'file', color: dt.color||'#7c3aed', order: i, active: true });
+  });
+  batch.commit().then(function() {
+    showToast('นำเข้าหัวข้อเริ่มต้นสำเร็จ', '#22c55e');
+    loadDocTypeList();
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
+}
+
+/* ── drag-to-reorder ── */
+var dragDocs = []; /* snapshot ของ list ขณะ drag */
+
+function dtDragStart(ev, idx) {
+  dragSrcIndex = idx;
+  ev.currentTarget.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+  /* snapshot current docs */
+  dragDocs = Array.prototype.slice.call(document.getElementById('docTypeList').querySelectorAll('.dt-row')).map(function(el){ return el.dataset.docid; });
+}
+function dtDragOver(ev) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+  ev.currentTarget.classList.add('drag-over');
+}
+function dtDragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+function dtDragEnd() {
+  document.querySelectorAll('.dt-row').forEach(function(el){ el.classList.remove('dragging','drag-over'); });
+}
+function dtDrop(ev, targetIdx, targetDocId) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  if (dragSrcIndex === null || dragSrcIndex === targetIdx) return;
+
+  /* reorder dragDocs */
+  var moved = dragDocs.splice(dragSrcIndex, 1)[0];
+  dragDocs.splice(targetIdx, 0, moved);
+
+  /* batch update order */
+  var batch = db.batch();
+  dragDocs.forEach(function(docId, i) {
+    batch.update(db.collection('portfolio_doc_types').doc(docId), { order: i });
+  });
+  batch.commit().then(function() {
+    loadDocTypeList();
+    /* อัปเดต DOCUMENT_TYPES ใน memory ด้วย */
+    loadDocTypesFromFirestore();
+  }).catch(function(e){ showToast('เรียงลำดับไม่ได้: ' + e.message, '#ef4444'); });
+  dragSrcIndex = null;
+}
+
+/* ── open add/edit modal ── */
+function openDocTypeModal(firestoreId) {
+  editingDocTypeId = firestoreId;
+  document.getElementById('dtModalTitle').textContent = firestoreId ? 'แก้ไขหัวข้องาน' : 'เพิ่มหัวข้องาน';
+  document.getElementById('dtLabel').value  = '';
+  document.getElementById('dtShort').value  = '';
+  document.getElementById('dtId').value     = '';
+  document.getElementById('dtIcon').value   = 'file';
+  document.getElementById('dtColor').value  = '#3b82f6';
+  document.getElementById('dtActive').checked = true;
+  selectedDtColor = '#3b82f6';
+  updateColorSwatches('#3b82f6');
+  syncToggleUI();
+  previewDtIcon();
+
+  if (firestoreId) {
+    db.collection('portfolio_doc_types').doc(firestoreId).get().then(function(d) {
+      if (!d.exists) return;
+      var data = d.data();
+      document.getElementById('dtLabel').value  = data.label  || '';
+      document.getElementById('dtShort').value  = data.short  || '';
+      document.getElementById('dtId').value     = data.id     || firestoreId;
+      document.getElementById('dtIcon').value   = data.icon   || 'file';
+      document.getElementById('dtColor').value  = data.color  || '#3b82f6';
+      document.getElementById('dtActive').checked = data.active !== false;
+      selectedDtColor = data.color || '#3b82f6';
+      updateColorSwatches(selectedDtColor);
+      syncToggleUI();
+      previewDtIcon();
+    });
+  }
+
+  /* toggle knob wiring */
+  document.getElementById('dtActive').onchange = syncToggleUI;
+
+  openModal('docTypeModal');
+}
+
+function syncToggleUI() {
+  var on = document.getElementById('dtActive').checked;
+  document.getElementById('dtActiveToggle').style.background = on ? '#7c3aed' : '#e2e8f0';
+  document.getElementById('dtActiveKnob').style.transform    = on ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function previewDtIcon() {
+  var icon = document.getElementById('dtIcon').value.trim() || 'file';
+  var el = document.getElementById('dtIconPreviewIcon');
+  el.setAttribute('data-lucide', icon);
+  lucide.createIcons();
+}
+
+function setDtIcon(icon) {
+  document.getElementById('dtIcon').value = icon;
+  previewDtIcon();
+}
+
+function selectDtColor(color, el) {
+  selectedDtColor = color;
+  document.getElementById('dtColor').value = color;
+  updateColorSwatches(color);
+}
+
+function updateColorSwatches(color) {
+  document.querySelectorAll('#dtColorPicker .color-swatch').forEach(function(sw) {
+    sw.classList.toggle('selected', sw.dataset.color === color);
+  });
+}
+
+function syncColorInput() {
+  var val = document.getElementById('dtColor').value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    selectedDtColor = val;
+    updateColorSwatches(val);
+  }
+}
+
+/* ── save doc type ── */
+function saveDocType() {
+  var label  = document.getElementById('dtLabel').value.trim();
+  var short  = document.getElementById('dtShort').value.trim();
+  var id     = document.getElementById('dtId').value.trim();
+  var icon   = document.getElementById('dtIcon').value.trim() || 'file';
+  var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
+  var active = document.getElementById('dtActive').checked;
+
+  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
+  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
+  if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
+
+  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active };
+
+  var prom;
+  if (editingDocTypeId) {
+    prom = db.collection('portfolio_doc_types').doc(editingDocTypeId).update(saveData);
+  } else {
+    /* กำหนด order ต่อท้าย */
+    prom = db.collection('portfolio_doc_types').orderBy('order','desc').limit(1).get().then(function(snap) {
+      var nextOrder = snap.empty ? 0 : (snap.docs[0].data().order || 0) + 1;
+      saveData.order = nextOrder;
+      /* ใช้ id เป็น Firestore doc id */
+      return db.collection('portfolio_doc_types').doc(id).set(saveData);
+    });
+  }
+
+  prom.then(function() {
+    showToast(editingDocTypeId ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มหัวข้องานใหม่แล้ว', '#22c55e');
+    closeModal('docTypeModal');
+    loadDocTypeList();
+    loadDocTypesFromFirestore(); /* อัปเดต DOCUMENT_TYPES ใน memory */
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
+}
+
+/* ── delete doc type ── */
+function deleteDocType(firestoreId, label) {
+  if (!confirm('ลบหัวข้อ "' + label + '" ออกจากระบบ?\n\nงานที่ครูส่งไปแล้วจะยังอยู่ใน Firestore แต่จะไม่แสดงในมุมมองติดตาม')) return;
+  db.collection('portfolio_doc_types').doc(firestoreId).delete().then(function() {
+    showToast('ลบหัวข้อแล้ว', '#f59e0b');
+    loadDocTypeList();
+    loadDocTypesFromFirestore();
+  }).catch(function(e){ showToast('ลบไม่ได้: ' + e.message, '#ef4444'); });
+}
+
+/* ── load DOCUMENT_TYPES from Firestore into memory (replaces hardcoded array) ── */
+function loadDocTypesFromFirestore() {
+  db.collection('portfolio_doc_types').where('active','==',true).orderBy('order').get().then(function(snap) {
+    if (snap.empty) return; /* ยังใช้ hardcoded ถ้าว่าง */
+    DOCUMENT_TYPES = [];
+    snap.forEach(function(d) {
+      var data = d.data();
+      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed' });
+    });
+    /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่ */
+    if (currentSubTab === 'overview') {
+      buildDocFilterBar();
+      renderCharts();
+    }
+  });
 }
 </script>
 </body>
