@@ -377,19 +377,18 @@ var DOCUMENT_TYPES = [
   { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
   { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
 ];
-var _docTypesLoaded = false; /* flag ป้องกัน render ก่อน load เสร็จ */
+var _docTypesLoaded = false;
+var _docTypesUnsubscribe = null;
 
-/* สร้าง bg จาก hex color (lighten ~95%) */
-function colorToBg(hex) {
-  return hex + '15'; /* ใช้ opacity 15 ใน hex = ~8% */
-}
+function colorToBg(hex) { return hex + '15'; }
 
 function loadDocTypesFromFirestore(callback) {
-  db.collection('portfolio_doc_types')
+  if (_docTypesUnsubscribe) { _docTypesUnsubscribe(); _docTypesUnsubscribe = null; }
+
+  _docTypesUnsubscribe = db.collection('portfolio_doc_types')
     .where('active', '==', true)
     .orderBy('order')
-    .get()
-    .then(function(snap) {
+    .onSnapshot(function(snap) {
       if (!snap.empty) {
         DOCUMENT_TYPES = [];
         snap.forEach(function(d) {
@@ -404,14 +403,18 @@ function loadDocTypesFromFirestore(callback) {
           });
         });
       }
-      _docTypesLoaded = true;
-      updateProgressTotal();
-      if (callback) callback();
-    })
-    .catch(function() {
-      /* network error → ใช้ hardcode */
-      _docTypesLoaded = true;
-      if (callback) callback();
+      if (!_docTypesLoaded) {
+        _docTypesLoaded = true;
+        if (callback) callback();
+      } else {
+        updateProgressTotal();
+        renderDocList();
+      }
+    }, function() {
+      if (!_docTypesLoaded) {
+        _docTypesLoaded = true;
+        if (callback) callback();
+      }
     });
 }
 
