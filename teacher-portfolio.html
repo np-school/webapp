@@ -386,13 +386,14 @@ function loadDocTypesFromFirestore(callback) {
   if (_docTypesUnsubscribe) { _docTypesUnsubscribe(); _docTypesUnsubscribe = null; }
 
   _docTypesUnsubscribe = db.collection('portfolio_doc_types')
-    .where('active', '==', true)
     .orderBy('order')
     .onSnapshot(function(snap) {
       if (!snap.empty) {
         DOCUMENT_TYPES = [];
         snap.forEach(function(d) {
           var data = d.data();
+          /* กรอง active ฝั่ง client เพื่อไม่ต้องใช้ composite index */
+          if (data.active === false) return;
           DOCUMENT_TYPES.push({
             id:    data.id    || d.id,
             label: data.label || '',
@@ -410,7 +411,8 @@ function loadDocTypesFromFirestore(callback) {
         updateProgressTotal();
         renderDocList();
       }
-    }, function() {
+    }, function(err) {
+      console.warn('portfolio_doc_types snapshot error:', err);
       if (!_docTypesLoaded) {
         _docTypesLoaded = true;
         if (callback) callback();
