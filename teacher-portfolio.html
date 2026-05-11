@@ -329,7 +329,7 @@
 
 <script>
 /* ════════════════════════════════════════════
-   TEACHER PORTFOLIO – portfolio-teacher.html
+   TEACHER PORTFOLIO – teacher-portfolio.html
    Google Drive upload edition
    ════════════════════════════════════════════ */
 
@@ -490,7 +490,7 @@ auth.onAuthStateChanged(function(u) {
       document.getElementById('mainApp').style.display   = 'block';
       buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
       updateNavUser(u);
-      buildSidebar('portfolio-teacher');
+      buildSidebar('teacher-portfolio');
       checkAdminAccess(u.email);
       renderStaffInfoBadge();
       /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
