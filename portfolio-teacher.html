@@ -299,21 +299,31 @@
         <div class="pbar-bg"><div id="uploadBar" class="pbar-fill" style="width:0%;"></div></div>
       </div>
 
-      <!-- ── บันทึกข้อความราชการ ── -->
-      <div style="margin-bottom:16px;border:1.5px solid #bfdbfe;border-radius:12px;overflow:hidden;">
-        <div style="background:#eff6ff;padding:10px 14px;border-bottom:1px solid #bfdbfe;display:flex;align-items:center;gap:8px;">
-          <i data-lucide="file-signature" style="width:14px;height:14px;color:#1d4ed8;"></i>
-          <span style="font-size:13px;font-weight:800;color:#1d4ed8;">ข้อมูลบันทึกข้อความราชการ</span>
-          <span style="font-size:10px;color:#64748b;font-weight:600;">(สำหรับออกบันทึกข้อความนำส่ง)</span>
+      <!-- ── บันทึกข้อความราชการ (พร้อม Preview) ── -->
+      <div style="margin-bottom:16px;border:1.5px solid #bfdbfe;border-radius:12px;overflow:hidden;" id="memoSection">
+        <!-- Header + Tab Buttons -->
+        <div style="background:#eff6ff;padding:10px 14px;border-bottom:1px solid #bfdbfe;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <i data-lucide="file-signature" style="width:14px;height:14px;color:#1d4ed8;flex-shrink:0;"></i>
+          <span style="font-size:13px;font-weight:800;color:#1d4ed8;">บันทึกข้อความราชการ</span>
+          <div style="margin-left:auto;display:flex;gap:4px;">
+            <button id="memoTabEdit" onclick="switchMemoTab('edit')" style="padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #1d4ed8;background:#1d4ed8;color:white;transition:all .15s;">✏️ กรอกข้อมูล</button>
+            <button id="memoTabPreview" onclick="switchMemoTab('preview')" style="padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #bfdbfe;background:white;color:#1d4ed8;transition:all .15s;">📄 ดูบันทึกข้อความ</button>
+          </div>
         </div>
-        <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+
+        <!-- TAB: Edit -->
+        <div id="memoEditPane" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ที่ (เลขที่หนังสือ)</label>
+            <input type="text" id="memoRef" placeholder="เช่น นม 02009/..." style="font-size:13px;">
+          </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">วันที่บันทึก</label>
             <input type="text" id="memoDate" placeholder="เช่น 11 พฤษภาคม 2568" style="font-size:13px;">
           </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">เรื่อง <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="memoSubject" placeholder="เช่น ส่งแผนการจัดการเรียนรู้ประจำภาคเรียนที่ 1/2568" style="font-size:13px;">
+            <input type="text" id="memoSubject" placeholder="จะสร้างอัตโนมัติถ้าปล่อยว่าง" style="font-size:13px;">
           </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">เรียน</label>
@@ -321,11 +331,68 @@
           </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ผ่าน</label>
-            <input type="text" id="memoThrough" placeholder="เช่น หัวหน้ากลุ่มสาระการเรียนรู้วิทยาศาสตร์ (ถ้ามี)" style="font-size:13px;">
+            <input type="text" id="memoThrough" placeholder="เช่น หัวหน้ากลุ่มสาระ (ถ้ามี)" style="font-size:13px;">
           </div>
           <div>
-            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียดเพิ่มเติม</label>
-            <textarea id="memoBody" rows="3" placeholder="เช่น ข้าพเจ้าขอส่งแผนการจัดการเรียนรู้ประจำภาคเรียนที่ 1 ปีการศึกษา 2568 จำนวน ... ชั่วโมง ตามเอกสารที่แนบมาพร้อมนี้ จึงเรียนมาเพื่อโปรดทราบ" style="resize:none;font-size:13px;"></textarea>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียด <span style="color:#94a3b8;font-weight:600;">(สร้างอัตโนมัติถ้าปล่อยว่าง)</span></label>
+            <textarea id="memoBody" rows="3" placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ" style="resize:none;font-size:13px;"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB: Preview (กระดาษราชการ) -->
+        <div id="memoPreviewPane" style="display:none;padding:0;">
+          <div style="background:#e2e8f0;padding:8px;text-align:center;">
+            <span style="font-size:11px;color:#64748b;font-weight:600;">ตัวอย่างบันทึกข้อความ (preview) — แก้ไขได้ที่แท็บ "กรอกข้อมูล"</span>
+          </div>
+          <div id="inlineMemoPaper" style="background:white;padding:32px 40px 40px;font-family:'Sarabun',sans-serif;font-size:14px;line-height:2;">
+
+            <div style="text-align:center;margin-bottom:18px;">
+              <p style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:3px;">บันทึกข้อความ</p>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.9;margin-bottom:0;">
+              <tr>
+                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;width:80px;">ส่วนราชการ</td>
+                <td colspan="2" style="color:#0f172a;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</td>
+              </tr>
+              <tr>
+                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">ที่</td>
+                <td style="color:#0f172a;border-bottom:1px solid #0f172a;min-width:180px;" id="prevRef">&nbsp;</td>
+                <td style="white-space:nowrap;padding-left:20px;">
+                  <span style="font-weight:800;color:#0f172a;">วันที่&nbsp;</span>
+                  <span id="prevDate" style="border-bottom:1px solid #0f172a;display:inline-block;min-width:140px;color:#0f172a;">&nbsp;</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">เรื่อง</td>
+                <td colspan="2" style="color:#0f172a;font-weight:700;border-bottom:1px solid #0f172a;" id="prevSubject">&nbsp;</td>
+              </tr>
+            </table>
+
+            <div style="border-top:2px solid #0f172a;border-bottom:1px solid #0f172a;height:4px;margin:8px 0 14px;"></div>
+
+            <p style="font-size:14px;color:#0f172a;margin-bottom:2px;">
+              <span style="font-weight:800;">เรียน</span>&nbsp;&nbsp;<span id="prevTo"></span>
+            </p>
+            <p id="prevThrough" style="font-size:14px;color:#0f172a;margin-bottom:2px;display:none;">
+              <span style="font-weight:800;">ผ่าน</span>&nbsp;&nbsp;<span id="prevThroughText"></span>
+            </p>
+
+            <div style="margin:12px 0 28px;">
+              <p id="prevBody" style="font-size:14px;color:#0f172a;white-space:pre-wrap;line-height:2;padding-left:2.5em;"></p>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;padding-right:16px;">
+              <div style="text-align:center;min-width:220px;">
+                <p style="font-size:14px;color:#0f172a;margin-bottom:4px;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+                <div style="border-bottom:1px solid #0f172a;margin:0 16px 4px;"></div>
+                <p id="prevSignName" style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.8;"></p>
+                <p style="font-size:14px;color:#0f172a;line-height:1.8;">ครู</p>
+                <p id="prevSignPos" style="font-size:13px;color:#475569;line-height:1.6;"></p>
+                <p id="prevSignGroup" style="font-size:12px;color:#64748b;line-height:1.6;"></p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -838,11 +905,13 @@ function openUploadModal(docTypeId) {
   document.getElementById('courseRowsContainer').innerHTML = '';
 
   /* reset memo fields */
+  if(document.getElementById('memoRef')) document.getElementById('memoRef').value = '';
   document.getElementById('memoDate').value = thaiDateToday();
   document.getElementById('memoSubject').value = '';
   document.getElementById('memoTo').value = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
   document.getElementById('memoThrough').value = '';
   document.getElementById('memoBody').value = '';
+  switchMemoTab('edit');
 
   /* auto-fill กลุ่มสาระ */
   if (window._defaultSubjectGroup) {
@@ -876,11 +945,13 @@ function openManageCourseModal(docTypeId, subKey) {
   document.getElementById('uploadProgress').style.display = 'none';
 
   /* restore memo fields */
+  if(document.getElementById('memoRef')) document.getElementById('memoRef').value = sub.memoRef || '';
   document.getElementById('memoDate').value = sub.memoDate || thaiDateToday();
   document.getElementById('memoSubject').value = sub.memoSubject || '';
   document.getElementById('memoTo').value = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
   document.getElementById('memoThrough').value = sub.memoThrough || '';
   document.getElementById('memoBody').value = sub.memoBody || '';
+  switchMemoTab('edit');
 
   /* แสดง panel ของวิชานี้ */
   courseRows = [{ code: sub.courseCode, name: sub.courseName, files: [], managingSubKey: subKey }];
@@ -1549,6 +1620,7 @@ function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseNa
     courseName:    courseName,
     status:        'submitted',
     /* บันทึกข้อความราชการ */
+    memoRef:       document.getElementById('memoRef') ? document.getElementById('memoRef').value.trim() : '',
     memoDate:      document.getElementById('memoDate') ? document.getElementById('memoDate').value.trim() : '',
     memoSubject:   document.getElementById('memoSubject') ? document.getElementById('memoSubject').value.trim() : '',
     memoTo:        document.getElementById('memoTo') ? document.getElementById('memoTo').value.trim() : 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
@@ -1660,6 +1732,102 @@ function formatDate(ts) {
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+}
+
+/* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
+function switchMemoTab(tab) {
+  var editPane    = document.getElementById('memoEditPane');
+  var previewPane = document.getElementById('memoPreviewPane');
+  var tabEdit     = document.getElementById('memoTabEdit');
+  var tabPreview  = document.getElementById('memoTabPreview');
+  if (!editPane || !previewPane) return;
+
+  if (tab === 'preview') {
+    renderInlineMemoPreview();
+    editPane.style.display    = 'none';
+    previewPane.style.display = 'block';
+    tabEdit.style.background    = 'white';
+    tabEdit.style.color         = '#1d4ed8';
+    tabEdit.style.borderColor   = '#bfdbfe';
+    tabPreview.style.background = '#1d4ed8';
+    tabPreview.style.color      = 'white';
+    tabPreview.style.borderColor= '#1d4ed8';
+  } else {
+    editPane.style.display    = 'flex';
+    previewPane.style.display = 'none';
+    tabEdit.style.background    = '#1d4ed8';
+    tabEdit.style.color         = 'white';
+    tabEdit.style.borderColor   = '#1d4ed8';
+    tabPreview.style.background = 'white';
+    tabPreview.style.color      = '#1d4ed8';
+    tabPreview.style.borderColor= '#bfdbfe';
+  }
+}
+
+function renderInlineMemoPreview() {
+  var dt = (typeof DOCUMENT_TYPES !== 'undefined' && DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; })) || {};
+
+  var staffName = (currentStaffData && currentStaffData.name)     || (currentUser && currentUser.displayName) || '';
+  var staffPos  = (currentStaffData && currentStaffData.position) || '';
+  var staffGrp  = (currentStaffData && currentStaffData.group)    || '';
+
+  var sem  = currentSem  || '';
+  var year = currentYear || '';
+
+  var ref     = (document.getElementById('memoRef')     && document.getElementById('memoRef').value.trim())     || '';
+  var date    = (document.getElementById('memoDate')    && document.getElementById('memoDate').value.trim())    || thaiDateToday();
+  var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sem + ' ปีการศึกษา ' + year;
+  var subject = (document.getElementById('memoSubject') && document.getElementById('memoSubject').value.trim()) || autoSubject;
+  var to      = (document.getElementById('memoTo')      && document.getElementById('memoTo').value.trim())      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+  var through = (document.getElementById('memoThrough') && document.getElementById('memoThrough').value.trim()) || '';
+
+  var courseCode = '';
+  var courseName = '';
+  var fileCount  = 0;
+  if (typeof courseRows !== 'undefined' && courseRows && courseRows.length > 0) {
+    var firstRow = courseRows[0];
+    courseCode = firstRow.code || '';
+    courseName = firstRow.name || '';
+    fileCount  = firstRow.files ? firstRow.files.length : 0;
+  }
+  var autoBody =
+    'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
+    (staffPos ? '  ตำแหน่ง ' + staffPos : '') +
+    (staffGrp ? '  กลุ่มสาระการเรียนรู้' + staffGrp : '') +
+    '\nขอส่ง' + (dt.label || 'งาน') +
+    (courseCode || courseName ? '  รายวิชา ' + courseCode + '  ' + courseName : '') +
+    '\nประจำภาคเรียนที่ ' + sem + '  ปีการศึกษา ' + year +
+    (fileCount > 0 ? '  จำนวน ' + fileCount + ' ไฟล์' : '') +
+    '  ตามเอกสารที่แนบมาพร้อมนี้' +
+    '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
+  var body = (document.getElementById('memoBody') && document.getElementById('memoBody').value.trim()) || autoBody;
+
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+  setText('prevRef', ref);
+  setText('prevDate', date);
+  setText('prevSubject', subject);
+  setText('prevTo', to);
+
+  var throughRow  = document.getElementById('prevThrough');
+  var throughText = document.getElementById('prevThroughText');
+  if (throughRow && throughText) {
+    if (through) {
+      throughRow.style.display = 'block';
+      throughText.textContent  = through;
+    } else {
+      throughRow.style.display = 'none';
+    }
+  }
+
+  var bodyEl = document.getElementById('prevBody');
+  if (bodyEl) bodyEl.textContent = body;
+
+  setText('prevSignName', staffName ? '( ' + staffName + ' )' : '');
+  setText('prevSignPos',  staffPos  || '');
+  setText('prevSignGroup', staffGrp ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
 }
 </script>
 </body>
