@@ -512,6 +512,8 @@
       background:white;
       color:#000;
       box-sizing:border-box;
+      text-align:justify;
+      text-justify:inter-character;
     ">
 
       <!-- ตราครุฑ (ซ้าย) + บันทึกข้อความ (กลาง) -->
@@ -520,18 +522,18 @@
              style="position:absolute;left:0;top:0;width:57px;height:57px;object-fit:contain;"
              alt="ตราครุฑ"/>
         <div style="padding-top:6px;">
-          <span style="font-size:16pt;font-weight:800;letter-spacing:2px;">บันทึกข้อความ</span>
+          <span style="font-size:22pt;font-weight:800;letter-spacing:2px;">บันทึกข้อความ</span>
         </div>
       </div>
 
       <!-- ส่วนราชการ -->
-      <div style="margin-top:6px;">
+      <div style="margin-top:6px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">ส่วนราชการ</span>
         <span style="font-size:14pt;margin-left:6px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
       </div>
 
       <!-- ที่ + วันที่ บรรทัดเดียวกัน -->
-      <div style="display:flex;gap:48px;">
+      <div style="display:flex;gap:48px;text-align:left;">
         <div>
           <span style="font-size:16pt;font-weight:800;">ที่</span>
           <span style="font-size:14pt;margin-left:6px;" id="memoPrintRef"></span>
@@ -543,19 +545,19 @@
       </div>
 
       <!-- เรื่อง -->
-      <div>
+      <div style="text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:14pt;margin-left:6px;" id="memoPrintSubject"></span>
       </div>
 
       <!-- ผ่าน (ถ้ามี) -->
-      <div id="memoPrintThroughWrap" style="display:none;">
+      <div id="memoPrintThroughWrap" style="display:none;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
         <span style="font-size:14pt;margin-left:6px;" id="memoPrintThrough"></span>
       </div>
 
       <!-- เรียน -->
-      <div style="margin-top:4px;">
+      <div style="margin-top:4px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรียน</span>
         <span style="font-size:14pt;margin-left:6px;" id="memoPrintTo"></span>
       </div>
@@ -566,11 +568,13 @@
         line-height:1.6;
         white-space:pre-wrap;
         text-indent:2.5em;
+        text-align:justify;
+        text-justify:inter-character;
         margin:4px 0 0;
       "></p>
 
       <!-- ลายมือชื่อ -->
-      <div style="display:flex;justify-content:flex-end;margin-top:48px;">
+      <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
         <div style="text-align:center;min-width:200px;">
           <div style="font-size:14pt;">ลงชื่อ</div>
           <div style="height:48px;"></div>
