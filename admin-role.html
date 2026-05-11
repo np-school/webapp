@@ -210,6 +210,9 @@
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#16a34a;">📚 วิชาการ</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#0369a1;">👥 บุคลากร</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#d97706;">⭐ หัวหน้ากลุ่มสาระ</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#0891b2;">🏅 ผู้ช่วย ผอ.</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7e22ce;">👑 รอง ผอ.</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#b45309;">🎖️ ผู้อำนวยการ</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7c3aed;">🛡️ Admin</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#64748b;">ดำเนินการ</th>
               </tr>
@@ -363,6 +366,66 @@
               <p style="font-size:10px;color:#d97706;margin-top:6px;" id="headOfGroupInfo"></p>
             </div>
 
+          </div>
+        </div>
+
+        <!-- ผู้ช่วยผู้อำนวยการ -->
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+            <div style="width:26px;height:26px;background:#cffafe;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="medal" style="width:13px;height:13px;color:#0891b2;"></i>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#374151;">ผู้ช่วยผู้อำนวยการ</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
+            <label class="perm-row" id="wrap-assistantDirector" style="border-radius:8px;">
+              <input type="checkbox" id="perm-assistantDirector" style="width:15px;height:15px;accent-color:#0891b2;flex-shrink:0;" onchange="onPermChange('assistantDirector')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้ช่วยผู้อำนวยการ</div>
+                <div style="font-size:10px;color:#64748b;">เข้าถึงข้อมูลภาพรวมระบบ ดูรายงานและสถิติทุกกลุ่มงาน</div>
+              </div>
+              <i data-lucide="medal" style="width:13px;height:13px;color:#67e8f9;flex-shrink:0;"></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- รองผู้อำนวยการ -->
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+            <div style="width:26px;height:26px;background:#ede9fe;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="crown" style="width:13px;height:13px;color:#7e22ce;"></i>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#374151;">รองผู้อำนวยการ</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
+            <label class="perm-row" id="wrap-deputyDirector" style="border-radius:8px;">
+              <input type="checkbox" id="perm-deputyDirector" style="width:15px;height:15px;accent-color:#7e22ce;flex-shrink:0;" onchange="onPermChange('deputyDirector')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการ</div>
+                <div style="font-size:10px;color:#64748b;">ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติงานในระดับรอง ผอ.</div>
+              </div>
+              <i data-lucide="crown" style="width:13px;height:13px;color:#c4b5fd;flex-shrink:0;"></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- ผู้อำนวยการ -->
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+            <div style="width:26px;height:26px;background:#fef3c7;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="gem" style="width:13px;height:13px;color:#b45309;"></i>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#374151;">ผู้อำนวยการ</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
+            <label class="perm-row" id="wrap-director" style="border-radius:8px;">
+              <input type="checkbox" id="perm-director" style="width:15px;height:15px;accent-color:#b45309;flex-shrink:0;" onchange="onPermChange('director')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้อำนวยการ</div>
+                <div style="font-size:10px;color:#64748b;">เข้าถึงข้อมูลทุกส่วนของระบบ มีสิทธิ์สูงสุดระดับบริหาร</div>
+              </div>
+              <i data-lucide="gem" style="width:13px;height:13px;color:#fcd34d;flex-shrink:0;"></i>
+            </label>
           </div>
         </div>
 
@@ -696,6 +759,36 @@ var PERM_DEFS = [
     bg: '#ede9fe',
     border: '#c4b5fd'
   },
+  {
+    key: 'assistantDirector',
+    label: 'ผู้ช่วยผู้อำนวยการ',
+    desc: 'เข้าถึงภาพรวมระบบ ดูรายงานทุกกลุ่มงาน',
+    group: 'ผู้ช่วยผู้อำนวยการ',
+    icon: 'medal',
+    color: '#0891b2',
+    bg: '#cffafe',
+    border: '#67e8f9'
+  },
+  {
+    key: 'deputyDirector',
+    label: 'รองผู้อำนวยการ',
+    desc: 'ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติในระดับรอง ผอ.',
+    group: 'รองผู้อำนวยการ',
+    icon: 'crown',
+    color: '#7e22ce',
+    bg: '#ede9fe',
+    border: '#c4b5fd'
+  },
+  {
+    key: 'director',
+    label: 'ผู้อำนวยการ',
+    desc: 'เข้าถึงทุกส่วนของระบบ สิทธิ์สูงสุดระดับบริหาร',
+    group: 'ผู้อำนวยการ',
+    icon: 'gem',
+    color: '#b45309',
+    bg: '#fef3c7',
+    border: '#fcd34d'
+  },
 ];
 
 /* ── Group definitions ── */
@@ -767,6 +860,48 @@ var GROUP_DEFS = [
     }
   },
   {
+    key: 'assistantdirector',
+    label: 'ผู้ช่วยผู้อำนวยการ',
+    subtitle: 'เข้าถึงภาพรวมระบบ ดูรายงานและสถิติทุกกลุ่มงาน',
+    icon: 'medal',
+    color: '#0891b2',
+    bg: '#cffafe',
+    border: '#67e8f9',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.assistantDirector && !p.deputyDirector && !p.director;
+    }
+  },
+  {
+    key: 'deputydirector',
+    label: 'รองผู้อำนวยการ',
+    subtitle: 'ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติงานในระดับรอง ผอ.',
+    icon: 'crown',
+    color: '#7e22ce',
+    bg: '#f5f3ff',
+    border: '#c4b5fd',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.deputyDirector && !p.director;
+    }
+  },
+  {
+    key: 'director',
+    label: 'ผู้อำนวยการ',
+    subtitle: 'เข้าถึงทุกส่วนของระบบ มีสิทธิ์สูงสุดระดับบริหาร',
+    icon: 'gem',
+    color: '#b45309',
+    bg: '#fef9c3',
+    border: '#fcd34d',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.director;
+    }
+  },
+  {
     key: 'none',
     label: 'ยังไม่มีสิทธิ์',
     subtitle: 'บัญชีที่ยังไม่ได้รับสิทธิ์ใดเลย',
@@ -777,7 +912,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup;
+      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirector&&!p.deputyDirector&&!p.director;
     }
   }
 ];
@@ -831,14 +966,14 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup;
+    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirector&&!p.deputyDirector&&!p.director;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
     {label:'Admin ทั้งหมด', val:total, icon:'users', color:'#7c3aed', bg:'#ede9fe'},
     {label:'มีสิทธิ์แล้ว',  val:withPerms, icon:'shield-check', color:'#16a34a', bg:'#dcfce7'},
     {label:'ยังไม่มีสิทธิ์', val:noPerms, icon:'shield-off', color:'#d97706', bg:'#fef9c3'},
-    {label:'กลุ่มงาน',      val:4, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
+    {label:'กลุ่มงาน',      val:7, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
     return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
@@ -996,14 +1131,14 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var perms=a.data.permissions||{};
-    if(isSA) perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true};
+    if(isSA) perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true,assistantDirector:true,deputyDirector:true,director:true};
 
-    var permKeys=['bookings','portfolio','staff','headOfGroup','admins'];
+    var permKeys=['bookings','portfolio','staff','headOfGroup','assistantDirector','deputyDirector','director','admins'];
     var cells=permKeys.map(function(pk){
       var has=!!perms[pk];
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
@@ -1074,7 +1209,7 @@ function openAddModal(){
   document.getElementById('staffPickerWrap').style.display='';
   resetStaffPicker();
   document.getElementById('headOfGroupPanel').classList.remove('show');
-  ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup','assistantDirector','deputyDirector','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
   });
@@ -1095,7 +1230,7 @@ function openEditModal(email){
   document.getElementById('staffPickerDisplay').value = admin.data.name || '';
   document.getElementById('staffDropdown').classList.remove('open');
   var p=admin.data.permissions||{};
-  ['bookings','portfolio','staff','headOfGroup'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup','assistantDirector','deputyDirector','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
@@ -1114,12 +1249,15 @@ function saveAdmin(){
   var bookings=document.getElementById('perm-bookings').checked;
   var isHeadOfGroup = document.getElementById('perm-headOfGroup').checked;
   var perms={
-    bookings:    bookings,
-    rooms:       bookings,
-    portfolio:   document.getElementById('perm-portfolio').checked,
-    staff:       document.getElementById('perm-staff').checked,
-    headOfGroup: isHeadOfGroup,
-    admins:      false
+    bookings:           bookings,
+    rooms:              bookings,
+    portfolio:          document.getElementById('perm-portfolio').checked,
+    staff:              document.getElementById('perm-staff').checked,
+    headOfGroup:        isHeadOfGroup,
+    assistantDirector:  document.getElementById('perm-assistantDirector').checked,
+    deputyDirector:     document.getElementById('perm-deputyDirector').checked,
+    director:           document.getElementById('perm-director').checked,
+    admins:             false
   };
 
   // extra: save headOfGroup staff info
