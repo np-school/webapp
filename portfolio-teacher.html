@@ -120,10 +120,10 @@
     @media print{
       html,body{margin:0!important;padding:0!important;background:white!important;}
       body > *{ display:none!important; }
+      .memo-modal-bg{ display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important; }
       #memoPrintArea{ display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important; }
       .memo-no-print{ display:none!important; }
       #memoContent{ padding:20mm 25mm!important; }
-      textarea#memoBodyInline{ border:none!important;resize:none!important;overflow:hidden!important; }
     }
   </style>
 </head>
@@ -357,15 +357,15 @@
               </tr>
               <tr>
                 <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">ที่</td>
-                <td style="color:#0f172a;border-bottom:1px solid #0f172a;min-width:180px;" id="prevRef">&nbsp;</td>
+                <td style="color:#0f172a;min-width:180px;" id="prevRef">&nbsp;</td>
                 <td style="white-space:nowrap;padding-left:20px;">
                   <span style="font-weight:800;color:#0f172a;">วันที่&nbsp;</span>
-                  <span id="prevDate" style="border-bottom:1px solid #0f172a;display:inline-block;min-width:140px;color:#0f172a;">&nbsp;</span>
+                  <span id="prevDate" style="display:inline-block;min-width:140px;color:#0f172a;">&nbsp;</span>
                 </td>
               </tr>
               <tr>
                 <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">เรื่อง</td>
-                <td colspan="2" style="color:#0f172a;font-weight:700;border-bottom:1px solid #0f172a;" id="prevSubject">&nbsp;</td>
+                <td colspan="2" style="color:#0f172a;font-weight:700;" id="prevSubject">&nbsp;</td>
               </tr>
             </table>
 
@@ -387,9 +387,8 @@
                 <p style="font-size:14px;color:#0f172a;margin-bottom:4px;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
                 <div style="border-bottom:1px solid #0f172a;margin:0 16px 4px;"></div>
                 <p id="prevSignName" style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.8;"></p>
-                <p style="font-size:14px;color:#0f172a;line-height:1.8;">ครู</p>
-                <p id="prevSignPos" style="font-size:13px;color:#475569;line-height:1.6;"></p>
-                <p id="prevSignGroup" style="font-size:12px;color:#64748b;line-height:1.6;"></p>
+                <p id="prevSignPos" style="font-size:13px;color:#1e293b;line-height:1.6;"></p>
+                <p id="prevSignGroup" style="font-size:12px;color:#475569;line-height:1.6;"></p>
               </div>
             </div>
 
@@ -457,19 +456,19 @@
           <td style="vertical-align:top;padding-right:10px;white-space:nowrap;color:#0f172a;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</td>
           <td style="vertical-align:top;white-space:nowrap;padding-left:24px;">
             <span style="font-weight:800;color:#0f172a;">ที่&nbsp;</span>
-            <span id="memoPrintRef" style="border-bottom:1px solid #0f172a;display:inline-block;min-width:120px;padding:0 4px;color:#0f172a;"></span>
+            <span id="memoPrintRef" style="display:inline-block;min-width:120px;padding:0 4px;color:#0f172a;"></span>
           </td>
         </tr>
         <tr>
           <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">วันที่</td>
           <td colspan="2" style="vertical-align:top;">
-            <span id="memoPrintDate" style="border-bottom:1px solid #0f172a;display:inline-block;min-width:220px;padding:0 4px;color:#0f172a;"></span>
+            <span id="memoPrintDate" style="display:inline-block;min-width:220px;padding:0 4px;color:#0f172a;"></span>
           </td>
         </tr>
         <tr>
           <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">เรื่อง</td>
           <td colspan="2" style="vertical-align:top;">
-            <span id="memoPrintSubject" style="border-bottom:1px solid #0f172a;display:inline-block;width:calc(100% - 8px);padding:0 4px;color:#0f172a;font-weight:700;"></span>
+            <span id="memoPrintSubject" style="display:inline-block;width:calc(100% - 8px);padding:0 4px;color:#0f172a;font-weight:700;"></span>
           </td>
         </tr>
       </table>
@@ -483,13 +482,9 @@
         <span id="memoPrintTo"></span>
       </p>
 
-      <!-- เนื้อหา (textarea แบบ inline-edit) -->
+      <!-- เนื้อหา (readonly — แก้ไขที่ฟอร์มก่อนส่ง) -->
       <div style="margin:14px 0 20px;">
-        <textarea id="memoBodyInline"
-          rows="6"
-          style="width:100%;border:none;border-bottom:1px dashed #cbd5e1;outline:none;font-family:'Sarabun',sans-serif;font-size:16px;line-height:2;color:#0f172a;resize:vertical;background:transparent;padding:0 0 4px 2.5em;"
-          placeholder="กรอกเนื้อหาบันทึกข้อความ..."></textarea>
-        <p class="memo-no-print" style="font-size:10px;color:#94a3b8;margin-top:2px;">* แก้ไขข้อความได้โดยตรง</p>
+        <p id="memoBodyInlineText" style="font-family:'Sarabun',sans-serif;font-size:16px;line-height:2;color:#0f172a;white-space:pre-wrap;padding-left:2.5em;"></p>
       </div>
 
       <!-- ลายมือชื่อ -->
@@ -498,9 +493,8 @@
           <p style="font-size:16px;color:#0f172a;margin-bottom:0;line-height:2;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
           <div style="border-bottom:1px solid #0f172a;margin:0 20px 6px;"></div>
           <p id="memoSignName"  style="font-size:16px;font-weight:700;color:#0f172a;line-height:1.8;"></p>
-          <p style="font-size:16px;color:#0f172a;line-height:1.8;">ครู</p>
-          <p id="memoSignPos"   style="font-size:14px;color:#475569;line-height:1.6;"></p>
-          <p id="memoSignGroup" style="font-size:13px;color:#64748b;line-height:1.6;"></p>
+          <p id="memoSignPos"   style="font-size:15px;color:#1e293b;line-height:1.6;"></p>
+          <p id="memoSignGroup" style="font-size:13px;color:#475569;line-height:1.6;"></p>
         </div>
       </div>
 
@@ -1696,7 +1690,7 @@ function openMemoModal(subKey) {
   /* ── เรียน ── */
   document.getElementById('memoPrintTo').textContent = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
 
-  /* ── เนื้อหา (textarea แก้ไขได้) ── */
+  /* ── เนื้อหา (readonly — แสดงเป็น paragraph) ── */
   var autoBody =
     'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
     (staffPos  ? '  ตำแหน่ง ' + staffPos  : '') +
@@ -1707,12 +1701,13 @@ function openMemoModal(subKey) {
     '  จำนวน ' + (sub.files ? sub.files.length : 0) + ' ไฟล์' +
     '  ตามเอกสารที่แนบมาพร้อมนี้' +
     '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
-  document.getElementById('memoBodyInline').value = sub.memoBody || autoBody;
+  var bodyEl = document.getElementById('memoBodyInlineText');
+  if (bodyEl) bodyEl.textContent = sub.memoBody || autoBody;
 
   /* ── ลายมือชื่อ ── */
-  document.getElementById('memoSignName').textContent  = '( ' + staffName + ' )';
-  document.getElementById('memoSignPos').textContent   = staffPos || '';
-  document.getElementById('memoSignGroup').textContent = staffGrp ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '';
+  document.getElementById('memoSignName').textContent  = staffName ? '( ' + staffName + ' )' : '';
+  document.getElementById('memoSignPos').textContent   = staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู';
+  document.getElementById('memoSignGroup').textContent = staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '';
 
   document.getElementById('memoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1826,7 +1821,7 @@ function renderInlineMemoPreview() {
   if (bodyEl) bodyEl.textContent = body;
 
   setText('prevSignName', staffName ? '( ' + staffName + ' )' : '');
-  setText('prevSignPos',  staffPos  || '');
+  setText('prevSignPos',  staffPos  ? 'ตำแหน่ง ' + staffPos : 'ครู');
   setText('prevSignGroup', staffGrp ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
 }
 </script>
