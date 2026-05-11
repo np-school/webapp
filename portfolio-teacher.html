@@ -112,9 +112,15 @@
     }
 
     /* ── Memo (บันทึกข้อความราชการ) ── */
-    .memo-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1100;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);overflow-y:auto;}
+    .memo-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1100;align-items:flex-start;justify-content:center;padding:24px;backdrop-filter:blur(6px);overflow-y:auto;}
     .memo-modal-bg.open{display:flex;}
-    .memo-paper{background:white;border-radius:4px;width:100%;max-width:760px;box-shadow:0 32px 80px rgba(0,0,0,.3);font-family:'Sarabun',sans-serif;margin:auto;}
+    .memo-paper{background:#cbd5e1;border-radius:8px;width:100%;max-width:860px;box-shadow:none;font-family:'Sarabun',sans-serif;margin:auto;padding:20px 20px 32px;}
+    .memo-a4-scaler{display:flex;justify-content:center;align-items:flex-start;overflow:hidden;}
+    #memoContent{
+      transform-origin:top center;
+      box-shadow:0 4px 32px rgba(0,0,0,.22);
+      flex-shrink:0;
+    }
     .memo-print-btn{padding:8px 18px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;}
     .memo-print-btn:hover{background:#1e40af;}
     @media print{
@@ -135,6 +141,40 @@
       }
     }
   </style>
+  <script>
+  /* ── A4 Scaler: ย่อ memoContent ให้พอดีหน้าจอ โดยไม่กระทบขนาดพิมพ์จริง ── */
+  function scaleA4() {
+    var el = document.getElementById('memoContent');
+    if (!el) return;
+    var wrapper = el.parentElement; // .memo-a4-scaler
+    if (!wrapper) return;
+    var available = wrapper.offsetWidth - 48; // padding
+    var a4px = el.offsetWidth; // จริงๆ คือ 210mm ใน px
+    if (a4px <= 0) return;
+    var scale = Math.min(1, available / a4px);
+    el.style.transform = 'scale(' + scale + ')';
+    el.style.transformOrigin = 'top center';
+    // ปรับ height ของ wrapper ให้ตาม scaled height
+    var scaledH = el.offsetHeight * scale;
+    wrapper.style.height = scaledH + 'px';
+  }
+
+  function initA4Scaler() {
+    // Run when memo modal opens
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.target.classList.contains('open')) {
+          setTimeout(scaleA4, 50);
+        }
+      });
+    });
+    var modal = document.getElementById('memoModal');
+    if (modal) observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', scaleA4);
+  }
+
+  document.addEventListener('DOMContentLoaded', initA4Scaler);
+  </script>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
 
@@ -466,7 +506,7 @@
     </div>
 
     <!-- กระดาษ A4 — มาตรฐานราชการ -->
-    <div id="memoContent" style="
+    <div class="memo-a4-scaler"><div id="memoContent" style="
       width:210mm;
       min-height:297mm;
       padding:25mm 20mm 20mm 30mm;
@@ -555,7 +595,7 @@
         </div>
       </div>
 
-    </div><!-- /memoContent -->
+    </div></div><!-- /memoContent -->
   </div><!-- /memo-paper -->
 </div>
 
