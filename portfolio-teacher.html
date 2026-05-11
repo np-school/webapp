@@ -409,31 +409,31 @@
 
             <!-- ส่วนราชการ -->
             <div style="margin-top:4px;">
-              <span style="font-size:14pt;font-weight:800;">ส่วนราชการ</span>
+              <span style="font-size:16pt;font-weight:800;">ส่วนราชการ</span>
               <span style="font-size:12pt;margin-left:4px;">โรงเรียนหนองกี่พิทยาคม&nbsp;อำเภอหนองกี่&nbsp;จังหวัดบุรีรัมย์</span>
             </div>
 
             <!-- ที่ + วันที่ บรรทัดเดียวกัน -->
             <div style="display:flex;">
-              <div style="flex:0 0 50%;"><span style="font-size:14pt;font-weight:800;">ที่</span><span style="font-size:12pt;margin-left:4px;" id="prevRef"></span></div>
-              <div><span style="font-size:14pt;font-weight:800;">วันที่</span><span style="font-size:12pt;margin-left:4px;" id="prevDate"></span></div>
+              <div style="flex:0 0 50%;"><span style="font-size:16pt;font-weight:800;">ที่</span><span style="font-size:12pt;margin-left:4px;" id="prevRef"></span></div>
+              <div><span style="font-size:16pt;font-weight:800;">วันที่</span><span style="font-size:12pt;margin-left:4px;" id="prevDate"></span></div>
             </div>
 
             <!-- เรื่อง -->
             <div>
-              <span style="font-size:14pt;font-weight:800;">เรื่อง</span>
+              <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
               <span style="font-size:12pt;margin-left:4px;" id="prevSubject"></span>
             </div>
 
             <!-- ผ่าน (ถ้ามี) -->
             <div id="prevThrough" style="display:none;">
-              <span style="font-size:14pt;font-weight:800;">ผ่าน</span>
+              <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
               <span style="font-size:12pt;margin-left:4px;" id="prevThroughText"></span>
             </div>
 
             <!-- เรียน -->
             <div style="margin-top:4px;">
-              <span style="font-size:14pt;font-weight:800;">เรียน</span>
+              <span style="font-size:16pt;font-weight:800;">เรียน</span>
               <span style="font-size:12pt;margin-left:4px;" id="prevTo"></span>
             </div>
 
@@ -528,37 +528,37 @@
 
       <!-- ส่วนราชการ -->
       <div style="margin-top:6px;text-align:left;">
-        <span style="font-size:14pt;font-weight:800;">ส่วนราชการ</span>
+        <span style="font-size:16pt;font-weight:800;">ส่วนราชการ</span>
         <span style="font-size:12pt;margin-left:6px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
       </div>
 
       <!-- ที่ + วันที่ บรรทัดเดียวกัน -->
       <div style="display:flex;text-align:left;">
         <div style="flex:0 0 80mm;">
-          <span style="font-size:14pt;font-weight:800;">ที่</span>
+          <span style="font-size:16pt;font-weight:800;">ที่</span>
           <span style="font-size:12pt;margin-left:6px;" id="memoPrintRef"></span>
         </div>
         <div>
-          <span style="font-size:14pt;font-weight:800;">วันที่</span>
+          <span style="font-size:16pt;font-weight:800;">วันที่</span>
           <span style="font-size:12pt;margin-left:6px;" id="memoPrintDate"></span>
         </div>
       </div>
 
       <!-- เรื่อง -->
       <div style="text-align:left;">
-        <span style="font-size:14pt;font-weight:800;">เรื่อง</span>
+        <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintSubject"></span>
       </div>
 
       <!-- ผ่าน (ถ้ามี) -->
       <div id="memoPrintThroughWrap" style="display:none;text-align:left;">
-        <span style="font-size:14pt;font-weight:800;">ผ่าน</span>
+        <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintThrough"></span>
       </div>
 
       <!-- เรียน -->
       <div style="margin-top:4px;text-align:left;">
-        <span style="font-size:14pt;font-weight:800;">เรียน</span>
+        <span style="font-size:16pt;font-weight:800;">เรียน</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintTo"></span>
       </div>
 
@@ -1763,8 +1763,7 @@ function renderMemoBody(container, text) {
   var paragraphs = String(text || '').split('\n');
   paragraphs.forEach(function(para) {
     var p = document.createElement('p');
-    p.style.cssText = 'margin:0;padding-left:1.5cm;text-indent:1cm;line-height:1.6;text-align:justify;text-justify:inter-character;';
-    /* บรรทัดแรก = indent 2.5cm = padding-left(1.5) + text-indent(1) */
+    p.style.cssText = 'margin:0;text-indent:1.5cm;line-height:1.6;text-align:justify;text-justify:inter-character;';
     p.textContent = para;
     container.appendChild(p);
   });
