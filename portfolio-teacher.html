@@ -409,36 +409,36 @@
 
             <!-- ส่วนราชการ -->
             <div style="margin-top:4px;">
-              <span style="font-size:11px;font-weight:800;">ส่วนราชการ</span>
-              <span style="font-size:11px;margin-left:4px;">โรงเรียนหนองกี่พิทยาคม&nbsp;อำเภอหนองกี่&nbsp;จังหวัดบุรีรัมย์</span>
+              <span style="font-size:14pt;font-weight:800;">ส่วนราชการ</span>
+              <span style="font-size:12pt;margin-left:4px;">โรงเรียนหนองกี่พิทยาคม&nbsp;อำเภอหนองกี่&nbsp;จังหวัดบุรีรัมย์</span>
             </div>
 
             <!-- ที่ + วันที่ บรรทัดเดียวกัน -->
             <div style="display:flex;">
-              <div style="flex:0 0 50%;"><span style="font-size:11px;font-weight:800;">ที่</span><span style="font-size:11px;margin-left:4px;" id="prevRef"></span></div>
-              <div><span style="font-size:11px;font-weight:800;">วันที่</span><span style="font-size:11px;margin-left:4px;" id="prevDate"></span></div>
+              <div style="flex:0 0 50%;"><span style="font-size:14pt;font-weight:800;">ที่</span><span style="font-size:12pt;margin-left:4px;" id="prevRef"></span></div>
+              <div><span style="font-size:14pt;font-weight:800;">วันที่</span><span style="font-size:12pt;margin-left:4px;" id="prevDate"></span></div>
             </div>
 
             <!-- เรื่อง -->
             <div>
-              <span style="font-size:11px;font-weight:800;">เรื่อง</span>
-              <span style="font-size:11px;margin-left:4px;" id="prevSubject"></span>
+              <span style="font-size:14pt;font-weight:800;">เรื่อง</span>
+              <span style="font-size:12pt;margin-left:4px;" id="prevSubject"></span>
             </div>
 
             <!-- ผ่าน (ถ้ามี) -->
             <div id="prevThrough" style="display:none;">
-              <span style="font-size:11px;font-weight:800;">ผ่าน</span>
-              <span style="font-size:11px;margin-left:4px;" id="prevThroughText"></span>
+              <span style="font-size:14pt;font-weight:800;">ผ่าน</span>
+              <span style="font-size:12pt;margin-left:4px;" id="prevThroughText"></span>
             </div>
 
             <!-- เรียน -->
             <div style="margin-top:4px;">
-              <span style="font-size:11px;font-weight:800;">เรียน</span>
-              <span style="font-size:11px;margin-left:4px;" id="prevTo"></span>
+              <span style="font-size:14pt;font-weight:800;">เรียน</span>
+              <span style="font-size:12pt;margin-left:4px;" id="prevTo"></span>
             </div>
 
             <!-- เนื้อหา -->
-            <p id="prevBody" style="font-size:11px;line-height:1.6;white-space:pre-wrap;text-indent:2.5cm;margin:4px 0 0;"></p>
+            <div id="prevBody" style="font-size:12pt;line-height:1.6;text-align:justify;text-justify:inter-character;margin:4px 0 0;"></div>
 
             <!-- ลายมือชื่อ -->
             <div style="display:flex;justify-content:flex-end;margin-top:24px;">
@@ -528,50 +528,48 @@
 
       <!-- ส่วนราชการ -->
       <div style="margin-top:6px;text-align:left;">
-        <span style="font-size:12pt;font-weight:800;">ส่วนราชการ</span>
+        <span style="font-size:14pt;font-weight:800;">ส่วนราชการ</span>
         <span style="font-size:12pt;margin-left:6px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
       </div>
 
       <!-- ที่ + วันที่ บรรทัดเดียวกัน -->
       <div style="display:flex;text-align:left;">
         <div style="flex:0 0 80mm;">
-          <span style="font-size:12pt;font-weight:800;">ที่</span>
+          <span style="font-size:14pt;font-weight:800;">ที่</span>
           <span style="font-size:12pt;margin-left:6px;" id="memoPrintRef"></span>
         </div>
         <div>
-          <span style="font-size:12pt;font-weight:800;">วันที่</span>
+          <span style="font-size:14pt;font-weight:800;">วันที่</span>
           <span style="font-size:12pt;margin-left:6px;" id="memoPrintDate"></span>
         </div>
       </div>
 
       <!-- เรื่อง -->
       <div style="text-align:left;">
-        <span style="font-size:12pt;font-weight:800;">เรื่อง</span>
+        <span style="font-size:14pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintSubject"></span>
       </div>
 
       <!-- ผ่าน (ถ้ามี) -->
       <div id="memoPrintThroughWrap" style="display:none;text-align:left;">
-        <span style="font-size:12pt;font-weight:800;">ผ่าน</span>
+        <span style="font-size:14pt;font-weight:800;">ผ่าน</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintThrough"></span>
       </div>
 
       <!-- เรียน -->
       <div style="margin-top:4px;text-align:left;">
-        <span style="font-size:12pt;font-weight:800;">เรียน</span>
+        <span style="font-size:14pt;font-weight:800;">เรียน</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintTo"></span>
       </div>
 
-      <!-- เนื้อหา -->
-      <p id="memoBodyInlineText" style="
+      <!-- เนื้อหา — render แต่ละย่อหน้าแยก <p> -->
+      <div id="memoBodyInlineText" style="
         font-size:12pt;
         line-height:1.6;
-        white-space:pre-wrap;
-        text-indent:2.5cm;
         text-align:justify;
         text-justify:inter-character;
         margin:4px 0 0;
-      "></p>
+      "></div>
 
       <!-- ลายมือชื่อ -->
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
@@ -1756,6 +1754,22 @@ function toThaiNumerals(str) {
   });
 }
 
+/* แปลงข้อความ (แบ่งด้วย \n) เป็น <p> หลายย่อหน้า
+   - ย่อหน้าแรกของแต่ละก้อนข้อความ: indent 2.5cm
+   - บรรทัดต่อไปใน wrap (บรรทัดใหม่จริง): indent 1.5cm  */
+function renderMemoBody(container, text) {
+  if (!container) return;
+  container.innerHTML = '';
+  var paragraphs = String(text || '').split('\n');
+  paragraphs.forEach(function(para) {
+    var p = document.createElement('p');
+    p.style.cssText = 'margin:0;padding-left:1.5cm;text-indent:1cm;line-height:1.6;text-align:justify;text-justify:inter-character;';
+    /* บรรทัดแรก = indent 2.5cm = padding-left(1.5) + text-indent(1) */
+    p.textContent = para;
+    container.appendChild(p);
+  });
+}
+
 function thaiDateToday() {
   var d = new Date();
   var months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
@@ -1803,7 +1817,7 @@ function openMemoModal(subKey) {
     '  ตามเอกสารที่แนบมาพร้อมนี้' +
     '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
   var bodyEl = document.getElementById('memoBodyInlineText');
-  if (bodyEl) bodyEl.textContent = toThaiNumerals(sub.memoBody || autoBody);
+  renderMemoBody(bodyEl, toThaiNumerals(sub.memoBody || autoBody));
 
   /* ── ลายมือชื่อ ── */
   document.getElementById('memoSignName').textContent  = staffName ? '( ' + staffName + ' )' : '';
@@ -1919,7 +1933,7 @@ function renderInlineMemoPreview() {
   }
 
   var bodyEl = document.getElementById('prevBody');
-  if (bodyEl) bodyEl.textContent = toThaiNumerals(body);
+  renderMemoBody(bodyEl, toThaiNumerals(body));
 
   setText('prevSignName', staffName ? '( ' + staffName + ' )' : '');
   setText('prevSignPos',  staffPos  ? 'ตำแหน่ง ' + staffPos : 'ครู');
