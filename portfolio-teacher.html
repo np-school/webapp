@@ -118,12 +118,18 @@
     .memo-print-btn{padding:8px 18px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;}
     .memo-print-btn:hover{background:#1e40af;}
     @media print{
+      @page { size:A4 portrait; margin:0; }
       html,body{margin:0!important;padding:0!important;background:white!important;}
       body > *{ display:none!important; }
       .memo-modal-bg{ display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important; }
       #memoPrintArea{ display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important; }
       .memo-no-print{ display:none!important; }
-      #memoContent{ padding:20mm 25mm!important; }
+      #memoContent{
+        width:210mm!important;
+        min-height:297mm!important;
+        padding:25mm 20mm 20mm 30mm!important;
+        font-size:16pt!important;
+      }
     }
   </style>
 </head>
@@ -344,51 +350,78 @@
           <div style="background:#e2e8f0;padding:8px;text-align:center;">
             <span style="font-size:11px;color:#64748b;font-weight:600;">ตัวอย่างบันทึกข้อความ (preview) — แก้ไขได้ที่แท็บ "กรอกข้อมูล"</span>
           </div>
-          <div id="inlineMemoPaper" style="background:white;padding:32px 40px 40px;font-family:'Sarabun',sans-serif;font-size:14px;line-height:2;">
+          <div id="inlineMemoPaper" style="background:white;padding:20px 18px 24px 22px;font-family:'TH Sarabun New','Sarabun',sans-serif;font-size:13px;line-height:1.8;color:#0f172a;">
 
-            <div style="text-align:center;margin-bottom:18px;">
-              <p style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:3px;">บันทึกข้อความ</p>
+            <!-- บรรทัด 1: ตราครุฑ + บันทึกข้อความ -->
+            <div style="display:flex;align-items:flex-end;position:relative;min-height:44px;margin-bottom:0;">
+              <div style="position:absolute;left:0;top:0;">
+                <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="50" cy="20" rx="12" ry="14" fill="#1a3a6e"/>
+                  <ellipse cx="50" cy="18" rx="7" ry="8" fill="#c8a951"/>
+                  <path d="M50 28 Q20 18 8 40 Q15 35 30 38 Q38 32 50 35" fill="#1a3a6e"/>
+                  <path d="M50 28 Q80 18 92 40 Q85 35 70 38 Q62 32 50 35" fill="#1a3a6e"/>
+                  <ellipse cx="50" cy="44" rx="10" ry="14" fill="#1a3a6e"/>
+                  <path d="M44 55 Q38 62 36 70 L40 70 Q42 64 46 58Z" fill="#1a3a6e"/>
+                  <path d="M56 55 Q62 62 64 70 L60 70 Q58 64 54 58Z" fill="#1a3a6e"/>
+                  <path d="M43 12 L45 7 L50 10 L55 7 L57 12" fill="#c8a951"/>
+                </svg>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="font-size:16px;font-weight:800;letter-spacing:3px;">บันทึกข้อความ</span>
+              </div>
             </div>
 
-            <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.9;margin-bottom:0;">
+            <!-- เส้นคั่นบน -->
+            <div style="border-top:2px solid #0f172a;border-bottom:1px solid #0f172a;height:3px;margin:6px 0 0;"></div>
+
+            <!-- บรรทัด 2: ส่วนราชการ + ที่ -->
+            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;">
               <tr>
-                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;width:80px;">ส่วนราชการ</td>
-                <td colspan="2" style="color:#0f172a;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</td>
-              </tr>
-              <tr>
-                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">ที่</td>
-                <td style="color:#0f172a;min-width:180px;" id="prevRef">&nbsp;</td>
-                <td style="white-space:nowrap;padding-left:20px;">
-                  <span style="font-weight:800;color:#0f172a;">วันที่&nbsp;</span>
-                  <span id="prevDate" style="display:inline-block;min-width:140px;color:#0f172a;">&nbsp;</span>
+                <td style="vertical-align:top;padding:0;white-space:nowrap;">
+                  <span style="font-weight:800;">ส่วนราชการ</span>
+                  <span style="margin-left:6px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
                 </td>
-              </tr>
-              <tr>
-                <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">เรื่อง</td>
-                <td colspan="2" style="color:#0f172a;font-weight:700;" id="prevSubject">&nbsp;</td>
+                <td style="vertical-align:top;text-align:right;white-space:nowrap;padding:0 0 0 8px;min-width:120px;">
+                  <span style="font-weight:800;">ที่</span>
+                  <span id="prevRef" style="margin-left:4px;"></span>
+                </td>
               </tr>
             </table>
 
-            <div style="border-top:2px solid #0f172a;border-bottom:1px solid #0f172a;height:4px;margin:8px 0 14px;"></div>
-
-            <p style="font-size:14px;color:#0f172a;margin-bottom:2px;">
-              <span style="font-weight:800;">เรียน</span>&nbsp;&nbsp;<span id="prevTo"></span>
-            </p>
-            <p id="prevThrough" style="font-size:14px;color:#0f172a;margin-bottom:2px;display:none;">
-              <span style="font-weight:800;">ผ่าน</span>&nbsp;&nbsp;<span id="prevThroughText"></span>
-            </p>
-
-            <div style="margin:12px 0 28px;">
-              <p id="prevBody" style="font-size:14px;color:#0f172a;white-space:pre-wrap;line-height:2;padding-left:2.5em;"></p>
+            <!-- บรรทัด 3: วันที่ -->
+            <div style="margin-top:2px;">
+              <span style="font-weight:800;">วันที่</span>
+              <span id="prevDate" style="margin-left:14px;"></span>
             </div>
 
-            <div style="display:flex;justify-content:flex-end;padding-right:16px;">
-              <div style="text-align:center;min-width:220px;">
-                <p style="font-size:14px;color:#0f172a;margin-bottom:4px;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
-                <div style="border-bottom:1px solid #0f172a;margin:0 16px 4px;"></div>
-                <p id="prevSignName" style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.8;"></p>
-                <p id="prevSignPos" style="font-size:13px;color:#1e293b;line-height:1.6;"></p>
-                <p id="prevSignGroup" style="font-size:12px;color:#475569;line-height:1.6;"></p>
+            <!-- บรรทัด 4: เรื่อง -->
+            <div style="margin-top:2px;">
+              <span style="font-weight:800;">เรื่อง</span>
+              <span id="prevSubject" style="margin-left:14px;font-weight:700;"></span>
+            </div>
+
+            <!-- เส้นคั่นกลาง -->
+            <div style="border-top:2px solid #0f172a;border-bottom:1px solid #0f172a;height:3px;margin:6px 0 10px;"></div>
+
+            <!-- บรรทัด 5: ผ่าน (ถ้ามี) + เรียน -->
+            <p id="prevThrough" style="font-size:13px;margin-bottom:2px;display:none;">
+              <span style="font-weight:800;">ผ่าน</span>&nbsp;&nbsp;<span id="prevThroughText"></span>
+            </p>
+            <p style="font-size:13px;margin-bottom:6px;">
+              <span style="font-weight:800;">เรียน</span>&nbsp;&nbsp;<span id="prevTo"></span>
+            </p>
+
+            <!-- บรรทัด 6+: เนื้อหา -->
+            <p id="prevBody" style="font-size:13px;line-height:1.8;white-space:pre-wrap;text-indent:2em;margin:0 0 20px;"></p>
+
+            <!-- ลายมือชื่อ -->
+            <div style="display:flex;justify-content:flex-end;padding-right:8px;">
+              <div style="text-align:center;min-width:190px;">
+                <p style="font-size:13px;margin-bottom:3px;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+                <div style="border-bottom:1px solid #0f172a;margin:0 12px 4px;"></div>
+                <p id="prevSignName" style="font-size:13px;font-weight:700;line-height:1.6;margin:0;"></p>
+                <p id="prevSignPos"  style="font-size:12px;color:#1e293b;line-height:1.6;margin:0;"></p>
+                <p id="prevSignGroup" style="font-size:11px;color:#475569;line-height:1.6;margin:0;"></p>
               </div>
             </div>
 
@@ -441,60 +474,109 @@
       </div>
     </div>
 
-    <!-- กระดาษ A4 -->
-    <div id="memoContent" style="padding:48px 64px 60px;font-family:'Sarabun',sans-serif;background:white;">
+    <!-- กระดาษ A4 — มาตรฐานราชการ -->
+    <div id="memoContent" style="
+      width:210mm; min-height:297mm;
+      padding:25mm 20mm 20mm 30mm;
+      font-family:'TH Sarabun New','Sarabun',sans-serif;
+      font-size:16pt;
+      line-height:1.8;
+      background:white;
+      color:#0f172a;
+      box-sizing:border-box;
+    ">
 
-      <!-- ══ หัวเรื่อง ══ -->
-      <div style="text-align:center;margin-bottom:24px;">
-        <p style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:3px;line-height:1.4;">บันทึกข้อความ</p>
+      <!-- บรรทัดที่ 1: ตราครุฑ (ซ้าย) + บันทึกข้อความ (กลาง) -->
+      <div style="display:flex;align-items:flex-end;margin-bottom:0;position:relative;min-height:60px;">
+        <!-- ตราครุฑ SVG -->
+        <div style="position:absolute;left:0;top:0;width:60px;height:60px;">
+          <svg viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+            <!-- ตราครุฑแบบง่าย -->
+            <ellipse cx="50" cy="20" rx="12" ry="14" fill="#1a3a6e"/>
+            <ellipse cx="50" cy="18" rx="7" ry="8" fill="#c8a951"/>
+            <!-- ปีก -->
+            <path d="M50 28 Q20 18 8 40 Q15 35 30 38 Q38 32 50 35" fill="#1a3a6e"/>
+            <path d="M50 28 Q80 18 92 40 Q85 35 70 38 Q62 32 50 35" fill="#1a3a6e"/>
+            <!-- ลำตัว -->
+            <ellipse cx="50" cy="44" rx="10" ry="14" fill="#1a3a6e"/>
+            <!-- ขา -->
+            <path d="M44 55 Q38 62 36 70 L40 70 Q42 64 46 58Z" fill="#1a3a6e"/>
+            <path d="M56 55 Q62 62 64 70 L60 70 Q58 64 54 58Z" fill="#1a3a6e"/>
+            <!-- หาง -->
+            <path d="M46 56 Q50 68 54 56" fill="none" stroke="#1a3a6e" stroke-width="2"/>
+            <!-- มงกุฎ -->
+            <path d="M43 12 L45 7 L50 10 L55 7 L57 12" fill="#c8a951"/>
+          </svg>
+        </div>
+        <!-- บันทึกข้อความ — กึ่งกลาง -->
+        <div style="flex:1;text-align:center;">
+          <span style="font-size:20pt;font-weight:800;letter-spacing:4px;">บันทึกข้อความ</span>
+        </div>
       </div>
 
-      <!-- ══ ส่วนหัวกระดาษ (แบบราชการ) ══ -->
-      <table style="width:100%;border-collapse:collapse;font-size:16px;line-height:2;margin-bottom:0;">
+      <!-- เส้นคั่นหัว (2 เส้น มาตรฐาน) -->
+      <div style="border-top:2.5px solid #0f172a;border-bottom:1px solid #0f172a;height:4px;margin:8px 0 0;"></div>
+
+      <!-- บรรทัดที่ 2: ส่วนราชการ (ซ้าย) + ที่ (ขวา) -->
+      <table style="width:100%;border-collapse:collapse;font-size:16pt;margin-top:6px;">
         <tr>
-          <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">ส่วนราชการ</td>
-          <td style="vertical-align:top;padding-right:10px;white-space:nowrap;color:#0f172a;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</td>
-          <td style="vertical-align:top;white-space:nowrap;padding-left:24px;">
-            <span style="font-weight:800;color:#0f172a;">ที่&nbsp;</span>
-            <span id="memoPrintRef" style="display:inline-block;min-width:120px;padding:0 4px;color:#0f172a;"></span>
+          <td style="vertical-align:top;padding:0;white-space:nowrap;">
+            <span style="font-weight:800;">ส่วนราชการ</span>
+            <span style="margin-left:8px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
           </td>
-        </tr>
-        <tr>
-          <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">วันที่</td>
-          <td colspan="2" style="vertical-align:top;">
-            <span id="memoPrintDate" style="display:inline-block;min-width:220px;padding:0 4px;color:#0f172a;"></span>
-          </td>
-        </tr>
-        <tr>
-          <td style="font-weight:800;color:#0f172a;white-space:nowrap;vertical-align:top;padding-right:6px;">เรื่อง</td>
-          <td colspan="2" style="vertical-align:top;">
-            <span id="memoPrintSubject" style="display:inline-block;width:calc(100% - 8px);padding:0 4px;color:#0f172a;font-weight:700;"></span>
+          <td style="vertical-align:top;text-align:right;white-space:nowrap;padding:0 0 0 12px;min-width:160px;">
+            <span style="font-weight:800;">ที่</span>
+            <span id="memoPrintRef" style="margin-left:6px;"></span>
           </td>
         </tr>
       </table>
 
-      <!-- เส้นคั่น -->
-      <div style="border-top:2px solid #0f172a;border-bottom:1px solid #0f172a;height:4px;margin:10px 0 18px;"></div>
+      <!-- บรรทัดที่ 3: วันที่ -->
+      <div style="margin-top:2px;">
+        <span style="font-weight:800;">วันที่</span>
+        <span id="memoPrintDate" style="margin-left:20px;"></span>
+      </div>
 
-      <!-- เรียน -->
-      <p style="font-size:16px;color:#0f172a;line-height:2;margin-bottom:2px;">
-        <span style="font-weight:800;">เรียน</span>&nbsp;&nbsp;
-        <span id="memoPrintTo"></span>
-      </p>
+      <!-- บรรทัดที่ 4: เรื่อง -->
+      <div style="margin-top:2px;">
+        <span style="font-weight:800;">เรื่อง</span>
+        <span id="memoPrintSubject" style="margin-left:20px;font-weight:700;"></span>
+      </div>
 
-      <!-- เนื้อหา (readonly — แก้ไขที่ฟอร์มก่อนส่ง) -->
-      <div style="margin:14px 0 20px;">
-        <p id="memoBodyInlineText" style="font-family:'Sarabun',sans-serif;font-size:16px;line-height:2;color:#0f172a;white-space:pre-wrap;padding-left:2.5em;"></p>
+      <!-- เส้นคั่นหัว-เนื้อหา (2 เส้น มาตรฐาน) -->
+      <div style="border-top:2.5px solid #0f172a;border-bottom:1px solid #0f172a;height:4px;margin:8px 0 12px;"></div>
+
+      <!-- บรรทัดที่ 5: เรียน -->
+      <div id="memoPrintThroughWrap" style="display:none;margin-bottom:2px;">
+        <span style="font-weight:800;">ผ่าน</span>
+        <span id="memoPrintThrough" style="margin-left:20px;"></span>
+      </div>
+      <div style="margin-bottom:8px;">
+        <span style="font-weight:800;">เรียน</span>
+        <span id="memoPrintTo" style="margin-left:20px;"></span>
+      </div>
+
+      <!-- บรรทัดที่ 6+: เนื้อหา -->
+      <div style="margin-top:4px;">
+        <p id="memoBodyInlineText" style="
+          font-family:'TH Sarabun New','Sarabun',sans-serif;
+          font-size:16pt;
+          line-height:1.8;
+          color:#0f172a;
+          white-space:pre-wrap;
+          text-indent:2.5em;
+          margin:0;
+        "></p>
       </div>
 
       <!-- ลายมือชื่อ -->
-      <div style="display:flex;justify-content:flex-end;margin-top:40px;padding-right:24px;">
-        <div style="text-align:center;min-width:240px;">
-          <p style="font-size:16px;color:#0f172a;margin-bottom:0;line-height:2;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
-          <div style="border-bottom:1px solid #0f172a;margin:0 20px 6px;"></div>
-          <p id="memoSignName"  style="font-size:16px;font-weight:700;color:#0f172a;line-height:1.8;"></p>
-          <p id="memoSignPos"   style="font-size:15px;color:#1e293b;line-height:1.6;"></p>
-          <p id="memoSignGroup" style="font-size:13px;color:#475569;line-height:1.6;"></p>
+      <div style="display:flex;justify-content:flex-end;margin-top:48px;padding-right:0;">
+        <div style="text-align:center;min-width:220px;">
+          <p style="font-size:16pt;color:#0f172a;margin-bottom:2px;">ลงชื่อ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+          <div style="border-bottom:1px solid #0f172a;margin:0 10px 6px;"></div>
+          <p id="memoSignName"  style="font-size:16pt;font-weight:700;color:#0f172a;margin:4px 0 0;line-height:1.6;"></p>
+          <p id="memoSignPos"   style="font-size:14pt;color:#1e293b;margin:2px 0 0;line-height:1.6;"></p>
+          <p id="memoSignGroup" style="font-size:13pt;color:#475569;margin:2px 0 0;line-height:1.6;"></p>
         </div>
       </div>
 
@@ -1687,8 +1769,16 @@ function openMemoModal(subKey) {
   var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sub.semester + ' ปีการศึกษา ' + sub.year;
   document.getElementById('memoPrintSubject').textContent = sub.memoSubject || autoSubject;
 
-  /* ── เรียน ── */
+  /* ── เรียน / ผ่าน ── */
   document.getElementById('memoPrintTo').textContent = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+  var throughWrap = document.getElementById('memoPrintThroughWrap');
+  var throughSpan = document.getElementById('memoPrintThrough');
+  if (sub.memoThrough) {
+    if (throughSpan) throughSpan.textContent = sub.memoThrough;
+    if (throughWrap) throughWrap.style.display = 'block';
+  } else {
+    if (throughWrap) throughWrap.style.display = 'none';
+  }
 
   /* ── เนื้อหา (readonly — แสดงเป็น paragraph) ── */
   var autoBody =
