@@ -258,8 +258,8 @@ function updateSidebarProfile(user) {
 
    activePage:
      'index'            → หน้าแรก
-     'room-booking'     → หน้าจองห้อง
-     'booking-admin'    → หน้า admin จองห้อง (แสดง tab)
+     'room-request'     → หน้าจองห้อง
+     'room-admin'    → หน้า admin จองห้อง (แสดง tab)
      'portfolio-admin'  → หน้า admin ส่งงาน
      'admin-role'       → หน้าจัดการสิทธิ์
      'staff'            → หน้าบุคลากร
@@ -287,14 +287,14 @@ var GROUP_MENU = [
     group: 'กลุ่มวิชาการ',
     icon: 'graduation-cap',
     items: [
-      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'teacher-portfolio.html' },
+      { label: 'ส่งงานประจำภาคเรียน', icon: 'send', href: 'portfolio-teacher.html' },
     ],
   },
   {
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
     items: [
-      { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-booking.html' },
+      { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-request.html' },
       { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'cctv',     onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
     ],
   },
@@ -326,7 +326,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
     items: [
-      { id: 'adminMenuItem-booking', label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'booking-admin.html' },
+      { id: 'adminMenuItem-booking', label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'room-admin.html' },
     ],
   },
 ];
