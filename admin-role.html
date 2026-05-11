@@ -180,14 +180,35 @@ var DEPTS = ['กลุ่มสาระวิทยาศาสตร์แล
 var allUsers = [];
 var currentFilter = 'all';
 
+/* ── Superadmin email whitelist (bypass Firestore role check) ── */
+var SUPERADMIN_EMAILS = ['nattapol@nongki.ac.th'];
+
 /* ── Auth guard ── */
 auth.onAuthStateChanged(function(user) {
   if (!user) { window.location.href = 'index.html'; return; }
+
+  var isSuperAdmin = SUPERADMIN_EMAILS.includes((user.email || '').toLowerCase());
+
   db.collection('users').doc(user.uid).get().then(function(d) {
-    var role = d.exists ? d.data().role : '';
-    if (role !== 'admin') { alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้'); window.location.href = 'index.html'; return; }
+    var data = d.exists ? d.data() : {};
+    var role = data.role || '';
+
+    /* อนุญาต: superadmin email, role=admin, role=superadmin */
+    var allowed = isSuperAdmin || role === 'admin' || role === 'superadmin';
+    if (!allowed) {
+      alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้\n(role: "' + role + '")');
+      window.location.href = 'index.html';
+      return;
+    }
+
+    /* ถ้า superadmin email แต่ Firestore ยังไม่มี role → เขียน admin ให้เลย */
+    if (isSuperAdmin && !['admin','superadmin'].includes(role)) {
+      db.collection('users').doc(user.uid).set({ role: 'admin', email: user.email, displayName: user.displayName || '' }, { merge: true });
+    }
+
     document.getElementById('navUser').innerHTML =
       '<span style="color:rgba(255,255,255,.85);font-size:13px;font-weight:600">' + (user.displayName || user.email) + '</span>' +
+      (isSuperAdmin ? '<span style="background:rgba(255,255,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:800;color:white;letter-spacing:.5px">SUPERADMIN</span>' : '') +
       '<button onclick="auth.signOut().then(()=>location.href=\'index.html\')" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;padding:6px 12px;color:white;cursor:pointer;font-size:12px;font-weight:700">ออกจากระบบ</button>';
     loadUsers();
   });
