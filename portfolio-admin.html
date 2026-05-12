@@ -552,8 +552,11 @@
 
       <!-- Review Actions -->
       <div style="margin-bottom:14px;" id="reviewNoteSection">
-        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">หมายเหตุสำหรับครู (ถ้ามี)</label>
-        <textarea id="adminNote" rows="2" placeholder="เช่น โปรดแก้ไขหน้า 3..." style="resize:none;"></textarea>
+        <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
+          ความคิดเห็น / หมายเหตุ
+          <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องกรอกก่อนกดยืนยัน</span>
+        </label>
+        <textarea id="adminNote" rows="2" placeholder="กรอกความคิดเห็นหรือหมายเหตุก่อนกดยืนยัน..." style="resize:none;"></textarea>
       </div>
 
       <div style="display:flex;gap:10px;" id="reviewActionButtons">
@@ -1821,6 +1824,25 @@ function fillSingleFileInfo(sub) {
 
 function setReviewStatus(status) {
   var note = document.getElementById('adminNote').value.trim();
+
+  /* ── บังคับเขียนความคิดเห็นทุกขั้นที่เป็นการ "ผ่าน/อนุมัติ" ── */
+  var approvalStatuses = ['head_reviewed', 'reviewed', 'assistant_reviewed', 'deputy_reviewed', 'final_approved'];
+  if (approvalStatuses.indexOf(status) !== -1 && !note) {
+    /* Highlight textarea */
+    var noteEl = document.getElementById('adminNote');
+    if (noteEl) {
+      noteEl.style.borderColor = '#ef4444';
+      noteEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
+      noteEl.focus();
+      setTimeout(function(){
+        noteEl.style.borderColor = '';
+        noteEl.style.boxShadow = '';
+      }, 2500);
+    }
+    showToast('กรุณาเขียนความคิดเห็นก่อนกดยืนยัน', 'warn');
+    return;
+  }
+
   var toastMsgs = {
     head_reviewed:      'ผ่านการตรวจ (หัวหน้ากลุ่มสาระ) ✓',
     assistant_reviewed: 'ผ่านการตรวจ (ผช.ผอ.วิชาการ) ✓',
