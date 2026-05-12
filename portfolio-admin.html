@@ -2798,7 +2798,6 @@ function renderTeacherSubTable(t) {
     html += '</div>' +
       '<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;background:' + bg + ';color:' + clr + ';flex-shrink:0;">' + lbl + '</span>' +
       (sub ? '<button onclick="event.stopPropagation();openNotesModal(\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" class="notes-btn' + (st==='revision'?' has-revision':((function(){var docs2=(sub._courses||[sub]);var hasN=docs2.some(function(d){return d.note||d.adminNote||d.headNote||d.assistantNote||d.deputyNote||d.directorNote;});return hasN?' has-note':'';})()) ) + '" style="flex-shrink:0;">💬 บันทึก</button>' : '') +
-      (sub ? (function(){ var firstDocId = (sub._courses && sub._courses[0] && sub._courses[0].id) || ''; return '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(firstDocId) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ</button>'; })() : '') +
       '<i data-lucide="chevron-down" id="chev-' + rowId + '" style="width:14px;height:14px;color:#94a3b8;transition:transform .2s;flex-shrink:0;margin-left:4px;"></i>' +
     '</div>';
 
@@ -2829,6 +2828,10 @@ function renderTeacherSubTable(t) {
           html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc(doc.courseName) + '</span>';
         }
         html += '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:' + dBg + ';color:' + dClr + ';margin-left:auto;">' + dLbl + '</span>';
+        /* ปุ่มบันทึกข้อความรายวิชา */
+        if (doc.id) {
+          html += '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(doc.id) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:10px;height:10px;"></i> บันทึกข้อความ</button>';
+        }
 
         /* file link */
         if (doc.fileUrl || (doc.files && doc.files.length)) {
@@ -3385,9 +3388,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       text-justify:inter-character;
     ">
       <!-- ตราครุฑ + บันทึกข้อความ -->
-      <div style="position:relative;text-align:center;min-height:75px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;justify-content:center;margin-bottom:4px;position:relative;">
         <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISERUTExMWFRUXGB8aGBcXGR0dHxkhHxofHSAdGx8eICggICEnHxshIjEhJSktMi4yIiIzPTMsNygtLisBCgoKBQUFDgUFDisZExkrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrK//AABEIAFAAKAMBIgACEQEDEQH/xAAcAAABBQEBAQAAAAAAAAAAAAAAAQIDBAUGBwj/xAA0EAABAwMCBAMGBQUAAAAAAAABAAIDBAURITFBUWEGEhMicYGRoRQjMkJSscHR8PHh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAEC/8QAFhEBAQEAAAAAAAAAAAAAAAAAAAER/9oADAMBAAIRAxEAPwCyOijb7vVPpbfUVNPT+0PDSfD3yDWk7Du52PL5KxV3FkFIXBrnzuGIomjMkju4aOfxOyjIRUV1O+qr6loijBDGgBsb35Ox2JHwCAWmRz3Mc85c0EDI3yN1yVLd5LhTy3CF8zAy4RxiV7nSktaw5bqdtyOfRenX2iqr5TWWxOa6nMccJeQ0FziThzCOufT03WbQWGmq7HFYYpJ4qC3yvZcmRyFrniYBj3u3kYYNt+X0+KAiW2hqr/AG+Y0LqiVtSZhWTGWTfJZtIRxJd0z/jKvwVFTbzbrUyWmDY+VwdK5r2l+QHAhxydjtjJ9FZsdvpaBtRJW0NHVvNJJO2SJsjWx7tbI4hxyCTzHVdXhJoYLXTFxA3YH7OeT9OqAo2lsNfOIy3JbneMeI7kN8oPmBB67YBXZW6Fx3FEH53GVzNkla0l7gxoJJJIAAG5JPRSqr1HVQxOIjghaGhzjlrWjABJ9VVrJIaFrX3CV7nO2ZC3DpX/oGWgeZIHdAWaiiipYGQQMbHFG0NaxowGgbABMoiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiIP/9k=" style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:75px;height:75px;object-fit:contain;" alt="ตราครุฑ"/>
-        <span style="font-size:20pt;font-weight:800;letter-spacing:2px;">บันทึกข้อความ</span>
+        <span style="font-size:20pt;font-weight:800;letter-spacing:2px;line-height:75px;">บันทึกข้อความ</span>
       </div>
 
       <div style="margin-top:6px;text-align:left;">
