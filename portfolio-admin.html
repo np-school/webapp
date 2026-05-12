@@ -600,6 +600,7 @@ var currentUserEmail = '';
 var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
 var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
 var adminPermissions  = {};    /* สิทธิ์ทั้งหมดของผู้ใช้ปัจจุบัน */
+var isSuperAdmin      = false; /* true = superadmin → ตรวจ/เปลี่ยนสถานะได้ทุกขั้น */
 
 auth.onAuthStateChanged(function(u) {
   var ov = document.getElementById('loadingOverlay');
@@ -611,7 +612,8 @@ auth.onAuthStateChanged(function(u) {
     if (ov) ov.style.display = 'none';
     if (!doc.exists) { document.getElementById('accessDenied').style.display='flex'; return; }
     var p = doc.data().permissions || {};
-    var isSA = currentUserEmail === 'nattapol@nongki.ac.th';
+    var isSA = currentUserEmail === 'nattapol@nongki.ac.th' || !!p.superadmin;
+    isSuperAdmin = isSA;
     var hasPortfolio  = isSA || !!p.portfolio;
     var hasHeadOfGroup = !!p.headOfGroup;
 
@@ -1151,13 +1153,22 @@ function toggleTeacher(uid) {
 /* ─── WORKFLOW BAR HELPER ─── */
 function buildWorkflowBar(status) {
   var steps = [
-    { key: 'submitted',          label: 'ครูส่งงาน',                    icon: '📤' },
-    { key: 'head_reviewed',      label: 'หัวหน้ากลุ่มสาระตรวจ',          icon: '👤' },
-    { key: 'assistant_reviewed', label: 'ผช.ผอ.วิชาการตรวจ',             icon: '🏅' },
-    { key: 'deputy_reviewed',    label: 'รอง ผอ.วิชาการตรวจ',            icon: '👑' },
-    { key: 'final_approved',     label: 'ผู้อำนวยการอนุมัติ',            icon: '🎖️' },
+    { key: 'submitted',          label: 'ครูส่งงาน',            icon: '📤' },
+    { key: 'head_reviewed',      label: 'หัวหน้ากลุ่มสาระตรวจ', icon: '👤' },
+    { key: 'assistant_reviewed', label: 'ผช.ผอ.วิชาการตรวจ',    icon: '🏅' },
+    { key: 'deputy_reviewed',    label: 'รอง ผอ.วิชาการตรวจ',   icon: '👑' },
+    { key: 'final_approved',     label: 'ผู้อำนวยการอนุมัติ',   icon: '🎖️' },
   ];
-  var ORDER = { submitted:0, head_reviewed:1, assistant_reviewed:2, deputy_reviewed:3, reviewed:1, final_approved:4, revision:-1 };
+  /*
+   * ORDER แมป "สถานะ" → "ดัชนีขั้นที่ผ่านไปแล้ว (done)"
+   *   submitted        = ครูส่งแล้ว     → step 0 done, step 1 waiting
+   *   head_reviewed    = หัวหน้าตรวจแล้ว → step 0+1 done, step 2 waiting
+   *   assistant_reviewed → step 0+1+2 done, step 3 waiting
+   *   deputy_reviewed  → step 0+1+2+3 done, step 4 waiting
+   *   final_approved   → ทุก step done (4)
+   *   reviewed (legacy)= เทียบเท่า head_reviewed
+   */
+  var ORDER = { submitted:0, reviewed:1, head_reviewed:1, assistant_reviewed:2, deputy_reviewed:3, final_approved:4, revision:-1 };
   var cur = ORDER[status] !== undefined ? ORDER[status] : -1;
   var isRevision = status === 'revision';
 
@@ -1168,12 +1179,18 @@ function buildWorkflowBar(status) {
     if (isRevision) {
       if (i === 0) { cls = 'revision'; label = '⚠ ให้แก้ไข'; }
       else { cls = 'pending'; label = step.label; }
-    } else if (cur > i) {
-      cls = i === 4 ? 'final' : 'done';
+    } else if (i < cur) {
+      /* ขั้นที่ผ่านแล้ว */
+      cls = 'done';
       label = '✓ ' + step.label;
-    } else if (cur === i) {
-      cls = i === 4 ? 'final' : 'active';
-      label = i === 4 ? '✓ ' + step.label : '⏳ ' + step.label;
+    } else if (i === cur) {
+      /* ขั้นล่าสุดที่ผ่าน (หรือ final_approved) */
+      cls = (status === 'final_approved') ? 'final' : 'done';
+      label = '✓ ' + step.label;
+    } else if (i === cur + 1) {
+      /* ขั้นถัดไปที่กำลังรอ */
+      cls = (status === 'final_approved') ? 'final' : 'active';
+      label = (status === 'final_approved') ? '✓ ' + step.label : '⏳ ' + step.label;
     } else {
       cls = 'pending';
       label = step.label;
@@ -1615,20 +1632,52 @@ function fillSingleFileInfo(sub) {
 
   var p = adminPermissions || {};
 
+  /* ── superadmin: ตรวจได้ทุกขั้น ── */
+  if (isSuperAdmin) {
+    if (curStatus === 'final_approved') {
+      btnBox.innerHTML =
+        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;flex:1;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>' +
+        '<button onclick="setReviewStatus(\'revision\')" style="padding:11px 16px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">' +
+          '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
+        '</button>';
+    } else {
+      /* แสดงปุ่มทุกขั้นที่สูงกว่าสถานะปัจจุบัน */
+      var SA_ORDER = { none:-1, revision:-1, submitted:0, reviewed:1, head_reviewed:1, assistant_reviewed:2, deputy_reviewed:3, final_approved:4 };
+      var saIdx = SA_ORDER[curStatus] !== undefined ? SA_ORDER[curStatus] : 0;
+      var saHtml = revisionBtn;
+      if (saIdx < 1) saHtml +=
+        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:10px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;">' +
+          '<i data-lucide="user-check" style="width:13px;height:13px;"></i> หัวหน้าฯ ✓' +
+        '</button>';
+      if (saIdx < 2) saHtml +=
+        '<button onclick="setReviewStatus(\'assistant_reviewed\')" style="flex:1;padding:10px;background:#b45309;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;">' +
+          '<i data-lucide="medal" style="width:13px;height:13px;"></i> ผช.ผอ. ✓' +
+        '</button>';
+      if (saIdx < 3) saHtml +=
+        '<button onclick="setReviewStatus(\'deputy_reviewed\')" style="flex:1;padding:10px;background:#7e22ce;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;">' +
+          '<i data-lucide="crown" style="width:13px;height:13px;"></i> รอง ผอ. ✓' +
+        '</button>';
+      if (saIdx < 4) saHtml +=
+        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:1;padding:10px;background:#16a34a;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;">' +
+          '<i data-lucide="gem" style="width:13px;height:13px;"></i> ผอ.อนุมัติ ✓' +
+        '</button>';
+      btnBox.innerHTML = saHtml;
+    }
+
   /* ── หัวหน้ากลุ่มสาระ ── */
-  if (isHeadOfGroupOnly) {
+  } else if (isHeadOfGroupOnly) {
     if (curStatus === 'submitted' || curStatus === 'revision') {
       btnBox.innerHTML =
         revisionBtn +
         '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
           '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (หัวหน้ากลุ่มสาระ)' +
         '</button>';
-    } else if (curStatus === 'head_reviewed') {
+    } else if (curStatus === 'head_reviewed' || curStatus === 'reviewed') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#0369a1;padding:10px;background:#e0f2fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ตรวจแล้ว — รอ ผช.ผอ.วิชาการตรวจ</p>';
     } else if (curStatus === 'assistant_reviewed') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#92400e;padding:10px;background:#fef3c7;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ ผ่าน ผช.ผอ.วิชาการแล้ว — รอรอง ผอ.วิชาการตรวจ</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#92400e;padding:10px;background:#fef3c7;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่าน ผช.ผอ.วิชาการแล้ว — รอรอง ผอ.วิชาการตรวจ</p>';
     } else if (curStatus === 'deputy_reviewed') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#6d28d9;padding:10px;background:#ede9fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#6d28d9;padding:10px;background:#ede9fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ</p>';
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>';
     } else {
@@ -1649,14 +1698,14 @@ function fillSingleFileInfo(sub) {
         '</button>';
     } else if (curStatus === 'assistant_reviewed') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#92400e;padding:10px;background:#fef3c7;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ตรวจแล้ว — รอรอง ผอ.วิชาการตรวจ</p>';
-    } else if (curStatus === 'submitted') {
+    } else if (curStatus === 'submitted' || curStatus === 'revision') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
     } else if (curStatus === 'deputy_reviewed') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#6d28d9;padding:10px;background:#ede9fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#6d28d9;padding:10px;background:#ede9fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ</p>';
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
     }
 
   /* ── รองผู้อำนวยการฝ่ายวิชาการ ── */
@@ -1672,7 +1721,7 @@ function fillSingleFileInfo(sub) {
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">รอ ผช.ผอ.วิชาการตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอ ผช.ผอ.วิชาการตรวจก่อน</p>';
     }
 
   /* ── ผู้อำนวยการ ── */
@@ -1680,7 +1729,7 @@ function fillSingleFileInfo(sub) {
     if (curStatus === 'deputy_reviewed') {
       btnBox.innerHTML =
         revisionBtn +
-        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#b45309;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#16a34a;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
           '<i data-lucide="gem" style="width:14px;height:14px;"></i> อนุมัติ (ผู้อำนวยการ) ✓' +
         '</button>';
     } else if (curStatus === 'final_approved') {
@@ -1690,19 +1739,16 @@ function fillSingleFileInfo(sub) {
           '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
         '</button>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">รอรอง ผอ.วิชาการตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอรอง ผอ.วิชาการตรวจก่อน</p>';
     }
 
-  /* ── portfolio admin (ฝ่ายวิชาการ) — เห็นได้ทุกขั้น ── */
+  /* ── portfolio admin (ฝ่ายวิชาการ) — ตรวจตามลำดับขั้น ── */
   } else {
     if (curStatus === 'submitted' || curStatus === 'revision') {
       btnBox.innerHTML =
         revisionBtn +
-        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:1;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:13px;height:13px;"></i> หัวหน้าฯ ✓' +
-        '</button>' +
-        '<button onclick="setReviewStatus(\'assistant_reviewed\')" style="flex:1;padding:11px;background:#b45309;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="medal" style="width:13px;height:13px;"></i> ผช.ผอ. ✓' +
+        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (หัวหน้ากลุ่มสาระ)' +
         '</button>';
     } else if (curStatus === 'head_reviewed' || curStatus === 'reviewed') {
       btnBox.innerHTML =
@@ -1719,7 +1765,7 @@ function fillSingleFileInfo(sub) {
     } else if (curStatus === 'deputy_reviewed') {
       btnBox.innerHTML =
         revisionBtn +
-        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#b45309;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#16a34a;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
           '<i data-lucide="gem" style="width:14px;height:14px;"></i> อนุมัติ (ผู้อำนวยการ) ✓' +
         '</button>';
     } else if (curStatus === 'final_approved') {
