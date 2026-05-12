@@ -1,4 +1,4 @@
-var CACHE_NAME = 'np-origins-v2';
+var CACHE_NAME = 'np-origins-v3';
 var STATIC_FILES = [
   '/webapp/index.html',
   '/webapp/room-request.html',
@@ -12,6 +12,11 @@ var STATIC_FILES = [
   '/webapp/manifest.json'
 ];
 
+/* ไฟล์ที่ต้องใช้ network-first (HTML, JS) เพื่อให้ได้ version ล่าสุดเสมอ */
+function isNetworkFirst(url) {
+  return url.endsWith('.html') || url.endsWith('.js');
+}
+
 /* Install — cache static files */
 self.addEventListener('install', function(e) {
   self.skipWaiting();
@@ -22,7 +27,7 @@ self.addEventListener('install', function(e) {
   );
 });
 
-/* Activate — clear old caches */
+/* Activate — clear ALL old caches (รวม v2) */
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
@@ -34,7 +39,7 @@ self.addEventListener('activate', function(e) {
   );
 });
 
-/* Fetch — cache-first for static, network-first for Firestore/API */
+/* Fetch */
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
 
@@ -42,13 +47,32 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('firestore.googleapis.com') ||
       url.includes('identitytoolkit.googleapis.com') ||
       url.includes('securetoken.googleapis.com') ||
-      url.includes('firebase') && url.includes('googleapis.com')) {
+      (url.includes('firebase') && url.includes('googleapis.com'))) {
     return;
   }
 
+  /* Network-first สำหรับ HTML และ JS — ได้ของใหม่ทันที */
+  if (isNetworkFirst(url)) {
+    e.respondWith(
+      fetch(e.request).then(function(response) {
+        if (response && response.status === 200) {
+          var clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(e.request, clone);
+          });
+        }
+        return response;
+      }).catch(function() {
+        /* offline fallback → ใช้ cache แทน */
+        return caches.match(e.request);
+      })
+    );
+    return;
+  }
+
+  /* Cache-first สำหรับ font, image, CSS */
   e.respondWith(
     caches.match(e.request).then(function(cached) {
-      /* มีใน cache → ส่ง cache ก่อน แล้ว fetch update ไว้ใน background */
       if (cached) {
         fetch(e.request).then(function(fresh) {
           if (fresh && fresh.status === 200) {
@@ -59,7 +83,6 @@ self.addEventListener('fetch', function(e) {
         }).catch(function() {});
         return cached;
       }
-      /* ไม่มีใน cache → fetch จาก network */
       return fetch(e.request).then(function(response) {
         if (!response || response.status !== 200 || response.type === 'opaque') {
           return response;
