@@ -515,9 +515,12 @@
           <h3 id="reviewModalTitle" style="font-size:17px;font-weight:800;color:#0f172a;"></h3>
           <p id="reviewModalSub" style="font-size:12px;color:#64748b;margin-top:2px;"></p>
         </div>
-        <button onclick="closeModal('reviewModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
-          <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
-        </button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="reviewRoleBadge" style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;"></span>
+          <button onclick="closeModal('reviewModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+            <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Course-based file list (shown when teacher submitted multiple courses) -->
@@ -548,7 +551,7 @@
       </div>
 
       <!-- Review Actions -->
-      <div style="margin-bottom:14px;">
+      <div style="margin-bottom:14px;" id="reviewNoteSection">
         <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">หมายเหตุสำหรับครู (ถ้ามี)</label>
         <textarea id="adminNote" rows="2" placeholder="เช่น โปรดแก้ไขหน้า 3..." style="resize:none;"></textarea>
       </div>
@@ -644,7 +647,14 @@ auth.onAuthStateChanged(function(u) {
 
 function bootApp(u) {
     document.getElementById('adminApp').style.display = 'block';
-    buildNavbar('Admin – ติดตามส่งงานประจำภาคเรียน', true);
+    var pageTitle = 'Admin – ติดตามส่งงานประจำภาคเรียน';
+    if (!isSuperAdmin && !adminPermissions.headOfGroup &&
+        !adminPermissions.assistantDirectorAcademic &&
+        !adminPermissions.deputyDirectorAcademic &&
+        !adminPermissions.director) {
+      pageTitle = 'ติดตามส่งงานประจำภาคเรียน (ดูข้อมูลเท่านั้น)';
+    }
+    buildNavbar(pageTitle, true);
     updateNavUser(u);
     buildSidebar('portfolio-admin');
     checkAdminAccess(u.email);
@@ -1307,6 +1317,27 @@ function openReview(subId, uid, docTypeId) {
     (t.staffGroup ? ' · ' + t.staffGroup : '') +
     ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
 
+  /* ── แสดง badge บทบาทผู้ตรวจ ── */
+  var badgeEl = document.getElementById('reviewRoleBadge');
+  if (badgeEl) {
+    var p2 = adminPermissions || {};
+    var badgeCfg = isSuperAdmin
+      ? { label:'⚡ SuperAdmin', bg:'#ede9fe', color:'#6d28d9' }
+      : isHeadOfGroupOnly
+      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'#92400e' }
+      : p2.assistantDirectorAcademic && !p2.deputyDirectorAcademic && !p2.director
+      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'#0e7490' }
+      : p2.deputyDirectorAcademic && !p2.director
+      ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'#ede9fe', color:'#7e22ce' }
+      : p2.director
+      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'#b45309' }
+      : { label:'👁 ดูข้อมูลเท่านั้น', bg:'#f1f5f9', color:'#64748b' };
+    badgeEl.style.background = badgeCfg.bg;
+    badgeEl.style.color = badgeCfg.color;
+    badgeEl.textContent = badgeCfg.label;
+    badgeEl.style.display = 'inline-flex';
+  }
+
   var multiSection = document.getElementById('multiFileSection');
 
   if (courseKeys.length > 1) {
@@ -1324,6 +1355,14 @@ function openReview(subId, uid, docTypeId) {
 
   document.getElementById('reviewModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  /* ซ่อน textarea หมายเหตุถ้าดูอย่างเดียว */
+  var p3 = adminPermissions || {};
+  var canReview = isSuperAdmin || isHeadOfGroupOnly ||
+    p3.assistantDirectorAcademic || p3.deputyDirectorAcademic || p3.director;
+  var noteSection = document.getElementById('reviewNoteSection');
+  if (noteSection) noteSection.style.display = canReview ? 'block' : 'none';
+
   lucide.createIcons();
 }
 
@@ -1742,39 +1781,40 @@ function fillSingleFileInfo(sub) {
       btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอรอง ผอ.วิชาการตรวจก่อน</p>';
     }
 
-  /* ── portfolio admin (ฝ่ายวิชาการ) — ตรวจตามลำดับขั้น ── */
+  /* ── portfolio (ฝ่ายวิชาการ) — ดูได้อย่างเดียว ไม่มีสิทธิ์ตรวจ ── */
   } else {
-    if (curStatus === 'submitted' || curStatus === 'revision') {
-      btnBox.innerHTML =
-        revisionBtn +
-        '<button onclick="setReviewStatus(\'head_reviewed\')" style="flex:2;padding:11px;background:#0369a1;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="user-check" style="width:14px;height:14px;"></i> ผ่านการตรวจ (หัวหน้ากลุ่มสาระ)' +
-        '</button>';
-    } else if (curStatus === 'head_reviewed' || curStatus === 'reviewed') {
-      btnBox.innerHTML =
-        revisionBtn +
-        '<button onclick="setReviewStatus(\'assistant_reviewed\')" style="flex:2;padding:11px;background:#b45309;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="medal" style="width:14px;height:14px;"></i> ผ่านการตรวจ (ผช.ผอ.วิชาการ)' +
-        '</button>';
-    } else if (curStatus === 'assistant_reviewed') {
-      btnBox.innerHTML =
-        revisionBtn +
-        '<button onclick="setReviewStatus(\'deputy_reviewed\')" style="flex:2;padding:11px;background:#7e22ce;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="crown" style="width:14px;height:14px;"></i> ผ่านการตรวจ (รอง ผอ.วิชาการ)' +
-        '</button>';
-    } else if (curStatus === 'deputy_reviewed') {
-      btnBox.innerHTML =
-        revisionBtn +
-        '<button onclick="setReviewStatus(\'final_approved\')" style="flex:2;padding:11px;background:#16a34a;color:white;border:none;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">' +
-          '<i data-lucide="gem" style="width:14px;height:14px;"></i> อนุมัติ (ผู้อำนวยการ) ✓' +
-        '</button>';
-    } else if (curStatus === 'final_approved') {
-      btnBox.innerHTML =
-        '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;flex:1;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>' +
-        '<button onclick="setReviewStatus(\'revision\')" style="padding:11px 16px;background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;font-weight:700;border-radius:12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">' +
-          '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
-        '</button>';
-    }
+    var viewOnlyStatusLabels = {
+      submitted:          '📤 ส่งงานแล้ว — รอหัวหน้ากลุ่มสาระตรวจ',
+      head_reviewed:      '👤 ผ่านหัวหน้าฯ แล้ว — รอ ผช.ผอ.วิชาการตรวจ',
+      reviewed:           '👤 ผ่านหัวหน้าฯ แล้ว — รอ ผช.ผอ.วิชาการตรวจ',
+      assistant_reviewed: '🏅 ผ่าน ผช.ผอ.วิชาการแล้ว — รอ รอง ผอ.วิชาการตรวจ',
+      deputy_reviewed:    '👑 ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ',
+      final_approved:     '✅ ผู้อำนวยการอนุมัติแล้ว',
+      revision:           '⚠️ ส่งคืนเพื่อแก้ไข'
+    };
+    var statusColors = {
+      submitted:          { bg:'#f0fdf4', color:'#15803d' },
+      head_reviewed:      { bg:'#e0f2fe', color:'#0369a1' },
+      reviewed:           { bg:'#e0f2fe', color:'#0369a1' },
+      assistant_reviewed: { bg:'#fef3c7', color:'#92400e' },
+      deputy_reviewed:    { bg:'#ede9fe', color:'#6d28d9' },
+      final_approved:     { bg:'#d1fae5', color:'#065f46' },
+      revision:           { bg:'#fffbeb', color:'#92400e' }
+    };
+    var sc = statusColors[curStatus] || { bg:'#f1f5f9', color:'#64748b' };
+    btnBox.innerHTML =
+      '<div style="width:100%;padding:10px 14px;border-radius:10px;background:' + sc.bg + ';display:flex;align-items:center;gap:8px;">' +
+        '<i data-lucide="eye" style="width:14px;height:14px;color:' + sc.color + ';flex-shrink:0;"></i>' +
+        '<p style="font-size:12px;font-weight:700;color:' + sc.color + ';margin:0;">' +
+          (viewOnlyStatusLabels[curStatus] || curStatus) +
+        '</p>' +
+      '</div>' +
+      '<div style="width:100%;padding:8px 14px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:10px;margin-top:6px;">' +
+        '<p style="font-size:11px;color:#94a3b8;margin:0;text-align:center;">' +
+          '🔒 บัญชีนี้มีสิทธิ์ <strong>ดูข้อมูลเท่านั้น</strong> ไม่มีสิทธิ์ตรวจหรือเปลี่ยนสถานะ<br>' +
+          'สิทธิ์ตรวจต้องเป็น: หัวหน้ากลุ่มสาระ / ผช.ผอ.วิชาการ / รอง ผอ.วิชาการ / ผู้อำนวยการ' +
+        '</p>' +
+      '</div>';
   }
   lucide.createIcons();
 }

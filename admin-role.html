@@ -312,10 +312,10 @@
             <label class="perm-row" id="wrap-portfolio" style="border-radius:8px;">
               <input type="checkbox" id="perm-portfolio" style="width:15px;height:15px;accent-color:#16a34a;flex-shrink:0;" onchange="onPermChange('portfolio')">
               <div style="flex:1;">
-                <div style="font-size:12px;font-weight:700;color:#1e293b;">จัดการระบบติดตามส่งงานประจำภาคเรียน</div>
-                <div style="font-size:10px;color:#64748b;">ติดตามและจัดการการส่งงานของครู</div>
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">ติดตามส่งงานครู (ฝ่ายวิชาการ — ดูภาพรวมได้อย่างเดียว)</div>
+                <div style="font-size:10px;color:#64748b;">ดูภาพรวมการส่งงานทุกกลุ่มสาระ · <strong style="color:#ef4444;">ไม่มีสิทธิ์ตรวจ/เปลี่ยนสถานะ</strong></div>
               </div>
-              <i data-lucide="folder-check" style="width:13px;height:13px;color:#86efac;flex-shrink:0;"></i>
+              <i data-lucide="eye" style="width:13px;height:13px;color:#86efac;flex-shrink:0;"></i>
             </label>
           </div>
         </div>
@@ -394,7 +394,7 @@
               <input type="checkbox" id="perm-assistantDirectorAcademic" style="width:15px;height:15px;accent-color:#0891b2;flex-shrink:0;" onchange="onPermChange('assistantDirectorAcademic')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้ช่วยผู้อำนวยการฝ่ายวิชาการ</div>
-                <div style="font-size:10px;color:#64748b;">ดูแลและกำกับงานด้านวิชาการ</div>
+                <div style="font-size:10px;color:#64748b;">ดูแลและกำกับงานด้านวิชาการ · <strong style="color:#0891b2;">ตรวจงานครูขั้นที่ 2 ได้ทุกกลุ่มสาระ (หลังหัวหน้ากลุ่มสาระตรวจแล้ว)</strong></div>
               </div>
               <i data-lucide="medal" style="width:13px;height:13px;color:#67e8f9;flex-shrink:0;"></i>
             </label>
@@ -446,7 +446,7 @@
               <input type="checkbox" id="perm-deputyDirectorAcademic" style="width:15px;height:15px;accent-color:#7e22ce;flex-shrink:0;" onchange="onPermChange('deputyDirectorAcademic')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายวิชาการ</div>
-                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านวิชาการ</div>
+                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านวิชาการ · <strong style="color:#7e22ce;">ตรวจงานครูขั้นที่ 3 ได้ทุกกลุ่มสาระ (หลัง ผช.ผอ.วิชาการตรวจแล้ว)</strong></div>
               </div>
               <i data-lucide="crown" style="width:13px;height:13px;color:#c4b5fd;flex-shrink:0;"></i>
             </label>
@@ -490,7 +490,7 @@
               <input type="checkbox" id="perm-director" style="width:15px;height:15px;accent-color:#b45309;flex-shrink:0;" onchange="onPermChange('director')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้อำนวยการ</div>
-                <div style="font-size:10px;color:#64748b;">เข้าถึงข้อมูลทุกส่วนของระบบ มีสิทธิ์สูงสุดระดับบริหาร</div>
+                <div style="font-size:10px;color:#64748b;">เข้าถึงข้อมูลทุกส่วนของระบบ มีสิทธิ์สูงสุดระดับบริหาร · <strong style="color:#b45309;">อนุมัติงานครูขั้นสุดท้ายได้ (หลัง รอง ผอ.ตรวจแล้ว)</strong></div>
               </div>
               <i data-lucide="gem" style="width:13px;height:13px;color:#fcd34d;flex-shrink:0;"></i>
             </label>
@@ -836,10 +836,10 @@ var PERM_DEFS = [
   },
   {
     key: 'portfolio',
-    label: 'ติดตามส่งงานครู',
-    desc: 'ติดตามการส่งงานประจำภาคเรียน',
+    label: 'ติดตามส่งงานครู (ดูอย่างเดียว)',
+    desc: 'ดูภาพรวมการส่งงาน · ไม่มีสิทธิ์ตรวจ/เปลี่ยนสถานะ',
     group: 'กลุ่มวิชาการ',
-    icon: 'folder-check',
+    icon: 'eye',
     color: '#16a34a',
     bg: '#dcfce7',
     border: '#86efac'
@@ -877,7 +877,7 @@ var PERM_DEFS = [
   {
     key: 'assistantDirectorAcademic',
     label: 'ผู้ช่วย ผอ.ฝ่ายวิชาการ',
-    desc: 'ดูแลและกำกับงานด้านวิชาการ',
+    desc: 'ตรวจงานครูขั้นที่ 2 ได้ทุกกลุ่มสาระ (หลังหัวหน้าฯ ตรวจ)',
     group: 'ผู้ช่วยผู้อำนวยการ',
     icon: 'medal',
     color: '#0891b2',
@@ -927,7 +927,7 @@ var PERM_DEFS = [
   {
     key: 'deputyDirectorAcademic',
     label: 'รองผู้อำนวยการฝ่ายวิชาการ',
-    desc: 'กำกับและอนุมัติงานด้านวิชาการ',
+    desc: 'ตรวจงานครูขั้นที่ 3 ได้ทุกกลุ่มสาระ (หลัง ผช.ผอ. ตรวจ)',
     group: 'รองผู้อำนวยการ',
     icon: 'crown',
     color: '#7e22ce',
@@ -967,7 +967,7 @@ var PERM_DEFS = [
   {
     key: 'director',
     label: 'ผู้อำนวยการ',
-    desc: 'เข้าถึงทุกส่วนของระบบ สิทธิ์สูงสุดระดับบริหาร',
+    desc: 'สิทธิ์สูงสุดระดับบริหาร · อนุมัติงานครูขั้นสุดท้าย',
     group: 'ผู้อำนวยการ',
     icon: 'gem',
     color: '#b45309',
