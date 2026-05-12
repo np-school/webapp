@@ -139,6 +139,8 @@
         zoom:1!important;
         transform:none!important;
       }
+      #memoPage2{ display:block!important; }
+      #memoPage2 > div{ page-break-before:always!important; }
     }
   </style>
   <script>
@@ -578,6 +580,76 @@
       </div>
 
     </div></div><!-- /memoContent -->
+
+    <!-- ── หน้า 2: ความคิดเห็นผู้ตรวจ ── -->
+    <div id="memoPage2" style="display:none;">
+    <div style="
+      width:210mm;
+      min-height:297mm;
+      padding:25mm 20mm 20mm 30mm;
+      font-family:'TH Sarabun New','Sarabun',sans-serif;
+      font-size:12pt;
+      line-height:1.6;
+      background:white;
+      color:#000;
+      box-sizing:border-box;
+      page-break-before:always;
+    ">
+
+      <!-- หัวหน้ากลุ่มสาระ -->
+      <div style="margin-bottom:40px;">
+        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
+        <div id="page2HeadNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+          <div style="text-align:center;min-width:240px;">
+            <div style="font-size:12pt;">ลงชื่อ</div>
+            <div style="height:40px;"></div>
+            <p id="page2HeadSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ผช.ผอ.วิชาการ + รอง ผอ.วิชาการ -->
+      <div style="margin-bottom:40px;">
+        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มบริหารงานวิชาการ</p>
+        <div id="page2AssistantNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+          <div style="text-align:center;min-width:240px;">
+            <div style="font-size:12pt;">ลงชื่อ</div>
+            <div style="height:40px;"></div>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">( นายสุเนตร  บอกประโคน )</p>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
+          </div>
+        </div>
+        <div id="page2DeputyNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;margin-top:32px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+          <div style="text-align:center;min-width:240px;">
+            <div style="font-size:12pt;">ลงชื่อ</div>
+            <div style="height:40px;"></div>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">( นางสาวสุจินดา  เอี่ยมศิริ )</p>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ผู้อำนวยการ -->
+      <div>
+        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
+        <div id="page2DirectorNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+          <div style="text-align:center;min-width:240px;">
+            <div style="font-size:12pt;">ลงชื่อ</div>
+            <div style="height:40px;"></div>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">( นายสมิงไพร  สุนทะวงษ์ )</p>
+            <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /memoPage2 -->
+
   </div><!-- /memo-paper -->
 </div>
 
@@ -1822,6 +1894,35 @@ function openMemoModal(subKey) {
 
   document.getElementById('memoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  /* ── หน้า 2: ความคิดเห็นผู้ตรวจแต่ละขั้น ── */
+  var page2 = document.getElementById('memoPage2');
+  var headNote      = sub.headNote      || '';
+  var assistantNote = sub.assistantNote || '';
+  var deputyNote    = sub.deputyNote    || '';
+  var directorNote  = sub.directorNote  || '';
+
+  /* แสดงหน้า 2 เสมอ (พิมพ์จะขึ้นหน้าใหม่อัตโนมัติ) */
+  if (page2) page2.style.display = 'block';
+
+  /* ชื่อหัวหน้ากลุ่มสาระ — ดึงจาก sub ถ้ามี */
+  var headSignNameEl = document.getElementById('page2HeadSignName');
+  if (headSignNameEl) {
+    var headName = sub.headReviewerName || '';
+    headSignNameEl.textContent = headName ? '( ' + headName + ' )' : '(                                   )';
+  }
+
+  function setNote(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || '';
+  }
+  setNote('page2HeadNote',      headNote);
+  setNote('page2AssistantNote', assistantNote);
+  setNote('page2DeputyNote',    deputyNote);
+  setNote('page2DirectorNote',  directorNote);
+
+  scaleA4();
   lucide.createIcons();
 }
 

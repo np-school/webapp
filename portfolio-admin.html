@@ -603,6 +603,7 @@ function normaliseGroup(g) {
 
 /* ─── AUTH + ADMIN CHECK ─── */
 var currentUserEmail = '';
+var currentUserName  = '';  /* ชื่อจริงของผู้ตรวจ สำหรับบันทึกลงใน Firestore */
 var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
 var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
 var adminPermissions  = {};    /* สิทธิ์ทั้งหมดของผู้ใช้ปัจจุบัน */
@@ -613,6 +614,7 @@ auth.onAuthStateChanged(function(u) {
   if (!u) { window.location.href = 'index.html'; return; }
 
   currentUserEmail = u.email.toLowerCase();
+  currentUserName  = u.displayName || '';
 
   db.collection('admins').doc(currentUserEmail).get().then(function(doc) {
     if (ov) ov.style.display = 'none';
@@ -629,19 +631,23 @@ auth.onAuthStateChanged(function(u) {
       document.getElementById('accessDenied').style.display='flex'; return;
     }
 
-    /* หัวหน้ากลุ่มสาระ: ล็อกมุมมองเฉพาะกลุ่มของตน */
-    if (!hasPortfolio && hasHeadOfGroup) {
-      isHeadOfGroupOnly = true;
-      /* ดึงกลุ่มสาระของตนจาก staff collection */
-      db.collection('staff').where('email','==',currentUserEmail).limit(1).get().then(function(ss) {
-        if (!ss.empty) {
+    /* ดึงชื่อจริงจาก staff collection */
+    db.collection('staff').where('email','==',currentUserEmail).limit(1).get().then(function(ss) {
+      if (!ss.empty) {
+        currentUserName  = ss.docs[0].data().name || currentUserName;
+        /* หัวหน้ากลุ่มสาระ: ล็อกมุมมองเฉพาะกลุ่มของตน */
+        if (!hasPortfolio && hasHeadOfGroup) {
+          isHeadOfGroupOnly = true;
           headOfGroupName = normaliseGroup(ss.docs[0].data().group || '');
         }
-        bootApp(u);
-      });
-      return;
-    }
-    bootApp(u);
+      } else if (!hasPortfolio && hasHeadOfGroup) {
+        isHeadOfGroupOnly = true;
+      }
+      bootApp(u);
+    }).catch(function() {
+      if (!hasPortfolio && hasHeadOfGroup) isHeadOfGroupOnly = true;
+      bootApp(u);
+    });
   }).catch(function() {
     if (ov) ov.style.display = 'none';
     document.getElementById('accessDenied').style.display = 'flex';
@@ -1881,19 +1887,62 @@ function setReviewStatus(status) {
   var courses = sub._courses || [];
   var targetDoc = courses.find(function(d){ return d.id === targetDocId; });
 
-  /* ── อัปเดตเฉพาะ status/adminNote ระดับ document เท่านั้น ── */
-  db.collection('portfolio_submissions').doc(targetDocId).update({
+  /* ── map status → field name สำหรับเก็บ note แยกต่อขั้น ── */
+  var noteFieldMap = {
+    head_reviewed:      'headNote',
+    reviewed:           'headNote',
+    assistant_reviewed: 'assistantNote',
+    deputy_reviewed:    'deputyNote',
+    final_approved:     'directorNote',
+    revision:           'adminNote'   /* revision ใช้ adminNote เดิม (แสดงให้ครูเห็น) */
+  };
+  var noteField = noteFieldMap[status] || 'adminNote';
+
+  /* ── สร้าง payload: บันทึก note ลง field ของขั้นนั้น + เก็บ timestamp/reviewedBy แยกขั้นด้วย ── */
+  var reviewerFieldMap = {
+    head_reviewed:      'headReviewedBy',
+    reviewed:           'headReviewedBy',
+    assistant_reviewed: 'assistantReviewedBy',
+    deputy_reviewed:    'deputyReviewedBy',
+    final_approved:     'directorReviewedBy',
+    revision:           'lastRevisedBy'
+  };
+  var reviewerField = reviewerFieldMap[status] || 'reviewedBy';
+
+  var updatePayload = {
     status:     status,
-    adminNote:  note,
+    adminNote:  status === 'revision' ? note : (targetDoc ? (targetDoc.adminNote || '') : ''),
     reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
     reviewedBy: currentUserEmail,
-  }).then(function() {
+  };
+  updatePayload[noteField]     = note;
+  updatePayload[reviewerField] = currentUserEmail;
+
+  /* บันทึกชื่อจริงของผู้ตรวจแต่ละขั้น (สำหรับแสดงในบันทึกข้อความ) */
+  var nameFieldMap = {
+    head_reviewed:      'headReviewerName',
+    reviewed:           'headReviewerName',
+    assistant_reviewed: 'assistantReviewerName',
+    deputy_reviewed:    'deputyReviewerName',
+    final_approved:     'directorReviewerName',
+  };
+  if (nameFieldMap[status] && currentUserName) {
+    updatePayload[nameFieldMap[status]] = currentUserName;
+  }
+
+  /* ── อัปเดตเฉพาะ status/note ระดับ document เท่านั้น ── */
+  db.collection('portfolio_submissions').doc(targetDocId).update(updatePayload).then(function() {
     showToast(toastMsgs[status] || status, toastType);
 
     /* อัปเดต in-memory เฉพาะ Firestore doc ที่เลือก */
     if (targetDoc) {
       targetDoc.status    = status;
-      targetDoc.adminNote = note;
+      targetDoc.adminNote = updatePayload.adminNote;
+      targetDoc[noteField]     = note;
+      targetDoc[reviewerField] = currentUserEmail;
+      if (nameFieldMap[status] && currentUserName) {
+        targetDoc[nameFieldMap[status]] = currentUserName;
+      }
     }
 
     /* คำนวณ merged status ของ container ใหม่ (ต่ำสุดของทุก doc) */
