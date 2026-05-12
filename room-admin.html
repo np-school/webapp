@@ -120,6 +120,27 @@
     .page-btn:hover{border-color:#a78bfa;color:#7c3aed;}
     .page-btn.active{background:#7c3aed;border-color:#7c3aed;color:white;}
     .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    /* ── Summary ── */
+    .sum-room-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:border-color .15s;}
+    .sum-room-card:hover{border-color:#c4b5fd;}
+    .sum-room-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#faf5ff;border-bottom:1px solid #ede9fe;gap:10px;flex-wrap:wrap;cursor:pointer;user-select:none;}
+    .sum-room-title{font-size:14px;font-weight:800;color:#1e293b;}
+    .sum-room-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+    .sum-badge{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;}
+    .sum-badge-total{background:#ede9fe;color:#6d28d9;}
+    .sum-badge-approved{background:#dcfce7;color:#15803d;}
+    .sum-badge-pending{background:#fef9c3;color:#b45309;}
+    .sum-badge-rejected{background:#fee2e2;color:#b91c1c;}
+    .sum-room-body{padding:14px 18px;}
+    .sum-bar-wrap{margin-bottom:8px;}
+    .sum-bar-label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#334155;margin-bottom:3px;}
+    .sum-bar-track{background:#f1f5f9;border-radius:6px;height:10px;overflow:hidden;}
+    .sum-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
+    .sum-booking-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
+    .sum-booking-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border-radius:9px;font-size:11px;color:#475569;}
+    .sum-booking-row .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .sum-toggle{font-size:10px;color:#7c3aed;font-weight:700;cursor:pointer;background:none;border:none;padding:0;margin-left:auto;}
+    .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -203,6 +224,9 @@
           <button class="tab-btn" id="subtab-btn-rooms" onclick="switchSubTab('rooms',this)">
             <i data-lucide="door-open" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>จัดการห้อง
           </button>
+          <button class="tab-btn" id="subtab-btn-summary" onclick="switchSubTab('summary',this);renderSummary()">
+            <i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>สรุปรายห้อง
+          </button>
         </div>
 
         <!-- Sub-tab: Bookings -->
@@ -227,6 +251,26 @@
             <button class="btn-primary" onclick="openRoomModal()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มห้องใหม่</button>
           </div>
           <div id="roomsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+
+        <!-- Sub-tab: Summary -->
+        <div id="tab-summary" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+          <!-- Period selector -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+            <h3 style="font-size:15px;font-weight:800;color:#1e293b;">สรุปการขอใช้งานห้องแต่ละห้อง</h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="filter-pill active" id="sum-pill-day"   onclick="setSumPeriod('day',this)">วันนี้</button>
+              <button class="filter-pill"        id="sum-pill-week"  onclick="setSumPeriod('week',this)">สัปดาห์นี้</button>
+              <button class="filter-pill"        id="sum-pill-month" onclick="setSumPeriod('month',this)">เดือนนี้</button>
+              <button class="filter-pill"        id="sum-pill-year"  onclick="setSumPeriod('year',this)">ปีนี้</button>
+            </div>
+          </div>
+          <!-- Period label -->
+          <div id="sumPeriodLabel" style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:16px;"></div>
+          <!-- Grand total row -->
+          <div id="sumTotals" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;"></div>
+          <!-- Per-room cards -->
+          <div id="summaryList" style="display:flex;flex-direction:column;gap:14px;"></div>
         </div>
 
       </div>
@@ -561,6 +605,179 @@
     modal.classList.add('open');document.body.style.overflow='hidden';
   }
   function closeFileView(){document.getElementById('fileViewModal').classList.remove('open');document.body.style.overflow='';}
+
+  /* ══════════════════════════════════════
+     SUMMARY TAB
+     ══════════════════════════════════════ */
+  var sumPeriod='day';
+
+  function setSumPeriod(p,el){
+    sumPeriod=p;
+    document.querySelectorAll('[id^="sum-pill-"]').forEach(function(b){b.classList.remove('active');});
+    el.classList.add('active');
+    renderSummary();
+  }
+
+  function parseDateFromBooking(b){
+    var dateStr=b.date||'';
+    var parsed=null;
+    if(/^\d{4}-\d{2}-\d{2}/.test(dateStr)){parsed=new Date(dateStr);}
+    else if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(dateStr)){
+      var p=dateStr.split('/');
+      var y=parseInt(p[2]);
+      parsed=new Date(y-(y>2500?543:0),parseInt(p[1])-1,parseInt(p[0]));
+    }
+    else if(b.createdAt&&b.createdAt.toDate){parsed=b.createdAt.toDate();}
+    return(parsed&&!isNaN(parsed))?parsed:null;
+  }
+
+  function inPeriod(d,period){
+    if(!d)return false;
+    var now=new Date();
+    var y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
+    if(period==='day'){
+      return d.getFullYear()===y&&d.getMonth()===m&&d.getDate()===day;
+    }
+    if(period==='week'){
+      var dow=now.getDay();
+      var weekStart=new Date(y,m,day-dow);weekStart.setHours(0,0,0,0);
+      var weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+7);
+      return d>=weekStart&&d<weekEnd;
+    }
+    if(period==='month'){
+      return d.getFullYear()===y&&d.getMonth()===m;
+    }
+    if(period==='year'){
+      return d.getFullYear()===y;
+    }
+    return false;
+  }
+
+  function periodLabel(period){
+    var now=new Date();
+    if(period==='day') return 'วันที่ '+now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    if(period==='week'){
+      var dow=now.getDay();
+      var ws=new Date(now);ws.setDate(now.getDate()-dow);ws.setHours(0,0,0,0);
+      var we=new Date(ws);we.setDate(ws.getDate()+6);
+      return 'สัปดาห์ '+ws.toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' – '+we.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+    }
+    if(period==='month') return now.toLocaleDateString('th-TH',{year:'numeric',month:'long'});
+    if(period==='year') return 'ปี '+now.toLocaleDateString('th-TH',{year:'numeric'});
+    return '';
+  }
+
+  function renderSummary(){
+    var label=document.getElementById('sumPeriodLabel');
+    if(label) label.textContent='ช่วงเวลา: '+periodLabel(sumPeriod);
+
+    var filtered=allBookings.filter(function(b){
+      return inPeriod(parseDateFromBooking(b),sumPeriod);
+    });
+
+    var gt={total:0,approved:0,pending:0,rejected:0};
+    filtered.forEach(function(b){gt.total++;if(b.status==='approved')gt.approved++;else if(b.status==='pending')gt.pending++;else if(b.status==='rejected')gt.rejected++;});
+    var totalsEl=document.getElementById('sumTotals');
+    if(totalsEl){
+      var grandDefs=[
+        {label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'#ede9fe',ic:'#7c3aed'},
+        {label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'#16a34a'},
+        {label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'#fef9c3',ic:'#d97706'},
+        {label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'#fee2e2',ic:'#dc2626'},
+      ];
+      totalsEl.innerHTML=grandDefs.map(function(g){
+        return '<div class="sum-grand-card">'+
+          '<div style="width:40px;height:40px;background:'+g.bg+';border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+            '<i data-lucide="'+g.icon+'" style="width:18px;height:18px;color:'+g.ic+';"></i>'+
+          '</div>'+
+          '<div><p style="font-size:10px;color:#64748b;font-weight:700;">'+g.label+'</p>'+
+          '<p style="font-size:22px;font-weight:800;line-height:1;color:#1e293b;">'+g.val+'</p></div>'+
+        '</div>';
+      }).join('');
+    }
+
+    var byRoom={};
+    filtered.forEach(function(b){
+      var r=b.room||'ไม่ระบุ';
+      if(!byRoom[r])byRoom[r]={total:0,approved:0,pending:0,rejected:0,items:[]};
+      byRoom[r].total++;
+      if(b.status==='approved')byRoom[r].approved++;
+      else if(b.status==='pending')byRoom[r].pending++;
+      else if(b.status==='rejected')byRoom[r].rejected++;
+      byRoom[r].items.push(b);
+    });
+
+    var sortedRooms=Object.keys(byRoom).sort(function(a,b){return byRoom[b].total-byRoom[a].total;});
+    var maxTotal=sortedRooms.length?byRoom[sortedRooms[0]].total:1;
+
+    var listEl=document.getElementById('summaryList');
+    if(!listEl)return;
+    if(!sortedRooms.length){
+      listEl.innerHTML='<div style="text-align:center;padding:48px;color:#94a3b8;font-style:italic;">ไม่มีข้อมูลในช่วงเวลานี้</div>';
+      lucide.createIcons();return;
+    }
+
+    listEl.innerHTML=sortedRooms.map(function(room){
+      var d=byRoom[room];
+      var apPct=d.total>0?Math.round((d.approved/d.total)*100):0;
+      var pePct=d.total>0?Math.round((d.pending/d.total)*100):0;
+      var rePct=d.total>0?Math.round((d.rejected/d.total)*100):0;
+      var totalBarPct=Math.round((d.total/maxTotal)*100);
+      var recentItems=d.items.slice(0,5);
+      var detailRows=recentItems.map(function(b){
+        var sColor=b.status==='approved'?'#22c55e':b.status==='rejected'?'#ef4444':'#f59e0b';
+        var sLabel=b.status==='approved'?'อนุมัติ':b.status==='rejected'?'ไม่อนุมัติ':'รอพิจารณา';
+        return '<div class="sum-booking-row">'+
+          '<span class="sdot" style="background:'+sColor+';"></span>'+
+          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#1e293b;">'+(b.fullName||b.userName||'-')+'</span>'+
+          '<span style="color:#64748b;flex-shrink:0;">'+b.date+'</span>'+
+          '<span style="color:#64748b;flex-shrink:0;">'+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span>'+
+          '<span style="background:'+sColor+'22;color:'+sColor+';border-radius:10px;padding:1px 7px;font-weight:700;flex-shrink:0;">'+sLabel+'</span>'+
+        '</div>';
+      }).join('');
+      var moreNote=d.items.length>5?'<p style="font-size:10px;color:#94a3b8;text-align:right;margin-top:6px;">+ อีก '+(d.items.length-5)+' รายการ</p>':'';
+      var cardId='sum-card-'+room.replace(/[^a-zA-Z0-9ก-ฮ]/g,'_');
+      return '<div class="sum-room-card" id="'+cardId+'">'+
+        '<div class="sum-room-header" onclick="toggleSumDetail(\''+cardId+'\')">'+
+          '<div>'+
+            '<p class="sum-room-title">'+room+'</p>'+
+            '<div style="display:flex;gap:4px;margin-top:6px;">'+
+              '<span class="sum-badge sum-badge-total">ทั้งหมด '+d.total+'</span>'+
+              '<span class="sum-badge sum-badge-approved">✅ '+d.approved+'</span>'+
+              '<span class="sum-badge sum-badge-pending">⏳ '+d.pending+'</span>'+
+              '<span class="sum-badge sum-badge-rejected">❌ '+d.rejected+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:2px;min-width:90px;">'+
+            '<div class="sum-bar-track" style="height:12px;"><div class="sum-bar-fill" style="width:'+totalBarPct+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa);"></div></div>'+
+            '<p style="font-size:10px;color:#94a3b8;font-weight:600;text-align:right;">'+totalBarPct+'% ของห้องท็อป</p>'+
+          '</div>'+
+          '<i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;" id="chev-'+cardId+'"></i>'+
+        '</div>'+
+        '<div class="sum-room-body" id="sum-body-'+cardId+'" style="display:none;">'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
+            '<div class="sum-bar-wrap"><div class="sum-bar-label"><span>อนุมัติ</span><span style="color:#16a34a;">'+d.approved+' ('+apPct+'%)</span></div><div class="sum-bar-track"><div class="sum-bar-fill" style="width:'+apPct+'%;background:linear-gradient(90deg,#16a34a,#4ade80);"></div></div></div>'+
+            '<div class="sum-bar-wrap"><div class="sum-bar-label"><span>รอพิจารณา</span><span style="color:#d97706;">'+d.pending+' ('+pePct+'%)</span></div><div class="sum-bar-track"><div class="sum-bar-fill" style="width:'+pePct+'%;background:linear-gradient(90deg,#f59e0b,#fcd34d);"></div></div></div>'+
+            '<div class="sum-bar-wrap"><div class="sum-bar-label"><span>ไม่อนุมัติ</span><span style="color:#dc2626;">'+d.rejected+' ('+rePct+'%)</span></div><div class="sum-bar-track"><div class="sum-bar-fill" style="width:'+rePct+'%;background:linear-gradient(90deg,#ef4444,#fca5a5);"></div></div></div>'+
+          '</div>'+
+          '<p style="font-size:11px;font-weight:800;color:#475569;margin-bottom:6px;">รายการล่าสุด</p>'+
+          '<div class="sum-booking-list">'+detailRows+'</div>'+
+          moreNote+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function toggleSumDetail(cardId){
+    var body=document.getElementById('sum-body-'+cardId);
+    var chev=document.getElementById('chev-'+cardId);
+    if(!body)return;
+    var isHidden=body.style.display==='none';
+    body.style.display=isHidden?'block':'none';
+    if(chev)chev.style.transform=isHidden?'rotate(180deg)':'rotate(0deg)';
+  }
 
   function switchTab(name,btn){
     document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
