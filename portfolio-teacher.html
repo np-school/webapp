@@ -1931,6 +1931,27 @@ function thaiDateToday() {
 function openMemoModal(subKey) {
   var sub = submissions[subKey];
   if (!sub) { showToast('ไม่พบข้อมูลการส่งงาน','error'); return; }
+
+  /* ── ดึงข้อมูล fresh จาก Firestore เพื่อให้ได้ note ล่าสุดจากผู้ตรวจ ── */
+  if (sub.id) {
+    db.collection('portfolio_submissions').doc(sub.id).get().then(function(doc) {
+      if (doc.exists) {
+        var fresh = doc.data();
+        ['headNote','assistantNote','deputyNote','directorNote',
+         'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName'
+        ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
+        submissions[subKey] = sub;
+      }
+      _renderMemoModal(subKey);
+    }).catch(function() { _renderMemoModal(subKey); });
+  } else {
+    _renderMemoModal(subKey);
+  }
+}
+
+function _renderMemoModal(subKey) {
+  var sub = submissions[subKey];
+  if (!sub) return;
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id === sub.docTypeId; }) || {};
 
   var staffName = (currentStaffData && currentStaffData.name)     || sub.staffName     || '';
