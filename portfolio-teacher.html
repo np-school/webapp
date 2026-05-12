@@ -805,14 +805,23 @@ var adminRoles = {
 function loadAdminRoles() {
   db.collection('admins').get().then(function(snap) {
     snap.forEach(function(doc) {
-      var p = doc.data();
-      var name  = p.name  || p.headOfGroupName || '';
+      var d     = doc.data();
+      var p     = d.permissions || {};   /* permissions อยู่ใน sub-object */
+      var name  = d.name  || '';
       var email = doc.id  || '';
-      /* หัวหน้ากลุ่มสาระ — headOfGroupSubject = ชื่อกลุ่มสาระ, headOfGroupName = ชื่อคน */
+
+      /* หัวหน้ากลุ่มสาระ
+         - p.headOfGroup = true/false
+         - d.headOfGroupSubject = ชื่อกลุ่มสาระ (เช่น "คณิตศาสตร์")
+         - d.headOfGroupName    = ชื่อคน
+         - d.headOfGroupEmail   = email */
       if (p.headOfGroup) {
-        var grp = p.headOfGroupSubject || '';  /* field จริงจาก admin-role.html */
+        var grp = d.headOfGroupSubject || '';
         if (grp) {
-          adminRoles.headOfGroup[grp] = { name: p.headOfGroupName || name, email: p.headOfGroupEmail || email };
+          adminRoles.headOfGroup[grp] = {
+            name:  d.headOfGroupName  || name,
+            email: d.headOfGroupEmail || email
+          };
         }
       }
       /* ผช.ผอ.วิชาการ */
