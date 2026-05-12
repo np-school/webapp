@@ -137,25 +137,6 @@
     .notes-btn:hover{border-color:#7c3aed;color:#7c3aed;background:#faf5ff;}
     .notes-btn.has-note{border-color:#f59e0b;color:#b45309;background:#fffbeb;}
     .notes-btn.has-revision{border-color:#ef4444;color:#dc2626;background:#fef2f2;animation:pulse-badge 2s ease-in-out infinite;}
-
-    /* ── Memo Modal (บันทึกข้อความราชการ) ── */
-    .memo-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1100;align-items:flex-start;justify-content:center;padding:24px;backdrop-filter:blur(6px);overflow-y:auto;}
-    .memo-modal-bg.open{display:flex;}
-    .memo-paper{background:#94a3b8;border-radius:8px;width:100%;max-width:820px;font-family:'Sarabun',sans-serif;margin:auto;padding:16px 16px 32px;}
-    .memo-a4-scaler{display:block;overflow:hidden;position:relative;}
-    #adminMemoContent{display:block;transform-origin:top left;box-shadow:0 2px 20px rgba(0,0,0,.25);}
-    @media print{
-      @page{size:A4 portrait;margin:0;}
-      html,body{margin:0!important;padding:0!important;background:white!important;}
-      body > *{display:none!important;}
-      .memo-modal-bg{display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important;}
-      #adminMemoPrintArea{display:block!important;position:static!important;width:100%!important;max-width:100%!important;background:white!important;padding:0!important;}
-      .memo-no-print{display:none!important;}
-      #adminMemoContent{width:210mm!important;min-height:297mm!important;padding:25mm 20mm 20mm 30mm!important;font-size:12pt!important;font-family:'TH Sarabun New','Sarabun',sans-serif!important;zoom:1!important;transform:none!important;}
-      #adminMemoPage2{display:block!important;}
-      #adminMemoPage2Content{width:210mm!important;min-height:auto!important;padding:15mm 20mm 20mm 30mm!important;font-size:12pt!important;font-family:'TH Sarabun New','Sarabun',sans-serif!important;zoom:1!important;transform:none!important;box-shadow:none!important;}
-      .memo-a4-scaler{overflow:visible!important;height:auto!important;}
-    }
     .note-timeline{display:flex;flex-direction:column;gap:0;}
     .note-tl-item{display:flex;gap:10px;position:relative;}
     .note-tl-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
@@ -240,6 +221,26 @@
     .dt-row.dragging{opacity:.45;border-style:dashed;}
     .color-swatch{width:20px;height:20px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
     .color-swatch.selected{border-color:#0f172a;}
+
+    /* ── Memo (บันทึกข้อความราชการ) ── */
+    .memo-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1100;align-items:flex-start;justify-content:center;padding:24px;backdrop-filter:blur(6px);overflow-y:auto;}
+    .memo-modal-bg.open{display:flex;}
+    .memo-paper{background:#94a3b8;border-radius:8px;width:100%;max-width:820px;box-shadow:none;font-family:'Sarabun',sans-serif;margin:auto;padding:16px 16px 32px;}
+    .memo-a4-scaler{display:block;overflow:hidden;position:relative;}
+    .memo-print-btn{padding:8px 18px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;}
+    .memo-print-btn:hover{background:#1e40af;}
+    @media print{
+      @page{size:A4 portrait;margin:0;}
+      html,body{margin:0!important;padding:0!important;background:white!important;}
+      body>*{display:none!important;}
+      .memo-modal-bg{display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important;}
+      #adminMemoPrintArea{display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important;background:white!important;padding:0!important;}
+      .admin-memo-no-print{display:none!important;}
+      #adminMemoContent{width:210mm!important;min-height:297mm!important;padding:25mm 20mm 20mm 30mm!important;font-size:12pt!important;font-family:'TH Sarabun New','Sarabun',sans-serif!important;zoom:1!important;transform:none!important;}
+      #adminMemoPage2{display:block!important;}
+      #adminMemoPage2Content{width:210mm!important;min-height:auto!important;padding:15mm 20mm 20mm 30mm!important;font-size:12pt!important;font-family:'TH Sarabun New','Sarabun',sans-serif!important;zoom:1!important;transform:none!important;box-shadow:none!important;}
+      .memo-a4-scaler{overflow:visible!important;height:auto!important;}
+    }
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -306,19 +307,19 @@
 
       <!-- Charts Panel -->
       <div id="chartsPanel">
-        <div style="display:grid;grid-template-columns:280px 1fr 1fr;gap:14px;" class="charts-section-grid">
+        <div class="charts-section">
           <!-- Donut: Status breakdown -->
-          <div class="chart-card" style="display:flex;flex-direction:column;">
+          <div class="chart-card">
             <p class="chart-title">สถานะงานทั้งหมด</p>
             <p class="chart-sub">สัดส่วนสถานะเอกสารทุกประเภท</p>
-            <div class="donut-wrap" style="height:220px;width:220px;margin:16px auto 4px;">
-              <canvas id="donutChart" width="220" height="220"></canvas>
+            <div class="donut-wrap" style="height:160px;">
+              <canvas id="donutChart" width="160" height="160"></canvas>
               <div class="donut-center">
-                <div class="donut-big" id="donutTotal" style="font-size:36px;font-weight:800;">-</div>
-                <div class="donut-label" style="font-size:12px;">รายการ</div>
+                <div class="donut-big" id="donutTotal">-</div>
+                <div class="donut-label">รายการ</div>
               </div>
             </div>
-            <div id="donutLegend" style="display:flex;flex-direction:column;gap:10px;margin-top:20px;padding:0 4px;"></div>
+            <div class="donut-legend" id="donutLegend"></div>
           </div>
 
           <!-- Horizontal bar: Progress per subject group -->
@@ -334,12 +335,8 @@
             <p class="chart-sub">จำนวนครูที่ส่งงานแต่ละประเภท</p>
             <div id="docTypeBars" style="margin-top:4px;"></div>
           </div>
-        </div><!-- /charts-section-grid -->
+        </div>
       </div>
-      <style>
-        @media(max-width:900px){.charts-section-grid{grid-template-columns:1fr 1fr!important;}}
-        @media(max-width:600px){.charts-section-grid{grid-template-columns:1fr!important;}}
-      </style>
 
       <!-- Stat Cards -->
       <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
@@ -2188,17 +2185,17 @@ function renderCharts() {
 
 /* ── 1. Donut Chart (Canvas) ── */
 function renderDonutChart() {
-  /* เรียงจาก approved → none ตามในภาพ */
   var statusConfig = [
-    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'#16a34a' },
-    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'#8b5cf6' },
-    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'#f59e0b' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'#0ea5e9' },
-    { key:'submitted',          label:'รอตรวจ',                   color:'#22c55e' },
+    { key:'none',               label:'ยังไม่ส่ง',                color:'#cbd5e1' },
+    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',       color:'#22c55e' },
     { key:'revision',           label:'ให้แก้ไข',                 color:'#ef4444' },
-    { key:'none',               label:'ยังไม่ส่ง',                color:'#e2e8f0' },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'#0ea5e9' },
+    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'#f59e0b' },
+    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'#8b5cf6' },
+    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'#16a34a' },
   ];
 
+  /* นับจากทุก slot (ครูทุกคน × ทุกประเภท) ใช้ container status (merged) */
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
   var total = teacherList.length * DOCUMENT_TYPES.length;
   var counts = {};
@@ -2218,65 +2215,37 @@ function renderDonutChart() {
   /* Draw donut */
   var canvas = document.getElementById('donutChart');
   if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var size = 220;
-  var cx = size/2, cy = size/2, r = 90, thick = 28;
-  ctx.clearRect(0, 0, size, size);
+  var ctx    = canvas.getContext('2d');
+  var cx = 80, cy = 80, r = 68, thick = 22;
+  ctx.clearRect(0, 0, 160, 160);
 
-  /* วาด background ring (สีเทาอ่อน) */
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
-  ctx.fillStyle = '#f1f5f9';
-  ctx.fill();
-
-  /* วาด slices */
   var startAngle = -Math.PI / 2;
-  var gap = 0.018;
-  var hasData = statusConfig.some(function(s){ return counts[s.key] > 0 && s.key !== 'none'; });
+  var gap = 0.025;
 
-  if (!hasData) {
-    /* ถ้าไม่มีข้อมูลเลย วาด ring เทาทั้งหมด */
+  statusConfig.forEach(function(s) {
+    var slice = total > 0 ? (counts[s.key] / total) * (2 * Math.PI) : 0;
+    if (slice < 0.001) return;
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
+    ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
     ctx.fill();
-  } else {
-    statusConfig.forEach(function(s) {
-      if (!counts[s.key]) return;
-      var slice = (counts[s.key] / total) * (2 * Math.PI);
-      if (slice < 0.001) return;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
-      ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
-      ctx.closePath();
-      ctx.fillStyle = s.color;
-      ctx.fill();
-      startAngle += slice;
-    });
-  }
-
-  /* Center hole — วาด white circle */
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI);
-  ctx.fillStyle = 'white';
-  ctx.fill();
+    startAngle += slice;
+  });
 
   /* Center label */
   document.getElementById('donutTotal').textContent = total;
 
-  /* Legend — แสดงทุก status (รวม 0) */
+  /* Legend — แสดงเฉพาะที่มีค่า */
   var leg = document.getElementById('donutLegend');
   leg.innerHTML = statusConfig.map(function(s) {
+    if (!counts[s.key]) return '';
     var pct = total > 0 ? Math.round((counts[s.key] / total) * 100) : 0;
-    var isZero = counts[s.key] === 0;
-    return '<div style="display:flex;align-items:center;gap:10px;">' +
-      '<div style="width:12px;height:12px;border-radius:50%;background:' + s.color + ';flex-shrink:0;' + (isZero?'opacity:.45;':'') + '"></div>' +
-      '<span style="font-size:13px;font-weight:600;color:' + (isZero?'#94a3b8':'#475569') + ';flex:1;">' + s.label + '</span>' +
-      '<span style="font-size:13px;font-weight:800;color:' + (isZero?'#94a3b8':'#0f172a') + ';">' + counts[s.key] +
-        ' <span style="font-size:11px;font-weight:600;color:#94a3b8;">(' + pct + '%)</span>' +
-      '</span>' +
+    return '<div class="legend-row">' +
+      '<div class="legend-dot" style="background:' + s.color + ';"></div>' +
+      '<span class="legend-label">' + s.label + '</span>' +
+      '<span class="legend-val">' + counts[s.key] + ' <span style="font-size:10px;color:#94a3b8;font-weight:600;">(' + pct + '%)</span></span>' +
     '</div>';
   }).join('');
 }
@@ -2746,6 +2715,9 @@ function renderTeacherDocBars(t) {
   lucide.createIcons();
 }
 
+/* ────── Admin Memo doc lookup map ────── */
+var adminMemoDocMap = {};
+
 /* ── Submission detail table ── */
 function renderTeacherSubTable(t) {
   var container = document.getElementById('teacherSubTable');
@@ -2757,6 +2729,9 @@ function renderTeacherSubTable(t) {
 
   var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
   document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + DOCUMENT_TYPES.length + ' รายการ';
+
+  adminMemoDocMap = {}; /* reset */
+  var memoDocIdx = 0;
 
   var html = '';
   DOCUMENT_TYPES.forEach(function(dt, idx) {
@@ -2784,7 +2759,6 @@ function renderTeacherSubTable(t) {
     html += '</div>' +
       '<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;background:' + bg + ';color:' + clr + ';flex-shrink:0;">' + lbl + '</span>' +
       (sub ? '<button onclick="event.stopPropagation();openNotesModal(\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" class="notes-btn' + (st==='revision'?' has-revision':((function(){var docs2=(sub._courses||[sub]);var hasN=docs2.some(function(d){return d.note||d.adminNote||d.headNote||d.assistantNote||d.deputyNote||d.directorNote;});return hasN?' has-note':'';})()) ) + '" style="flex-shrink:0;">💬 บันทึก</button>' : '') +
-      (sub ? (function(){ var firstDocId = (sub._courses && sub._courses[0] && sub._courses[0].id) || ''; return '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(firstDocId) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ</button>'; })() : '') +
       '<i data-lucide="chevron-down" id="chev-' + rowId + '" style="width:14px;height:14px;color:#94a3b8;transition:transform .2s;flex-shrink:0;margin-left:4px;"></i>' +
     '</div>';
 
@@ -2852,6 +2826,16 @@ function renderTeacherSubTable(t) {
             '<p style="font-size:12px;color:' + (dSt==='revision'?'#991b1b':'#78350f') + ';line-height:1.6;">' + esc(doc.adminNote) + '</p>' +
           '</div>';
         }
+
+        /* บันทึกข้อความราชการ button */
+        var memoKey = 'doc_' + (memoDocIdx++);
+        adminMemoDocMap[memoKey] = doc;
+        var hasMemo = !!(doc.memoRef || doc.memoDate || doc.memoSubject || doc.memoBody);
+        html += '<div style="margin-top:8px;">' +
+          '<button onclick="openAdminMemoModal(adminMemoDocMap[\'' + memoKey + '\'])" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid ' + (hasMemo ? '#bfdbfe' : '#e2e8f0') + ';background:' + (hasMemo ? '#eff6ff' : '#f8fafc') + ';color:' + (hasMemo ? '#1d4ed8' : '#94a3b8') + ';font-size:11px;font-weight:700;cursor:pointer;">' +
+            '<i data-lucide="file-signature" style="width:12px;height:12px;"></i> บันทึกข้อความ' +
+          '</button>' +
+        '</div>';
 
         html += '</div>'; /* end course-sub-row */
       });
@@ -3144,12 +3128,28 @@ function loadDocTypesFromFirestore() {
 }
 
 /* ════════════════════════════════════════════
-   ADMIN MEMO MODAL — ดูบันทึกข้อความราชการ
+   ADMIN MEMO MODAL (บันทึกข้อความราชการ) — read-only
    ════════════════════════════════════════════ */
 
-/* A4 Scaler */
+function toThaiNumerals(str) {
+  return String(str).replace(/[0-9]/g, function(d) {
+    return '๐๑๒๓๔๕๖๗๘๙'[parseInt(d)];
+  });
+}
+
+function renderAdminMemoBody(container, text) {
+  if (!container) return;
+  container.innerHTML = '';
+  String(text || '').split('\n').forEach(function(para) {
+    var p = document.createElement('p');
+    p.style.cssText = 'margin:0;text-indent:1.5cm;line-height:1.6;text-align:justify;text-justify:inter-character;';
+    p.textContent = para;
+    container.appendChild(p);
+  });
+}
+
 var adminMemoPage1Scale = 1;
-function scaleAdminA4() {
+function scaleAdminMemoA4() {
   var el = document.getElementById('adminMemoContent');
   if (el) {
     var wrapper = el.parentElement;
@@ -3162,9 +3162,7 @@ function scaleAdminA4() {
         var scale = Math.min(1, available / paperW);
         adminMemoPage1Scale = scale;
         el.style.transform = 'scale(' + scale + ')';
-        el.style.transformOrigin = 'top left';
-        var leftOffset = (available - paperW * scale) / 2;
-        el.style.marginLeft = Math.max(0, leftOffset) + 'px';
+        el.style.marginLeft = Math.max(0, (available - paperW * scale) / 2) + 'px';
         wrapper.style.height = (el.scrollHeight * scale) + 'px';
       }
     }
@@ -3176,188 +3174,110 @@ function scaleAdminA4() {
       el2.style.transform = 'scale(' + adminMemoPage1Scale + ')';
       el2.style.transformOrigin = 'top left';
       var paperW2 = el2.scrollWidth;
-      var leftOffset2 = (wrapper2.offsetWidth - paperW2 * adminMemoPage1Scale) / 2;
-      el2.style.marginLeft = Math.max(0, leftOffset2) + 'px';
+      el2.style.marginLeft = Math.max(0, (wrapper2.offsetWidth - paperW2 * adminMemoPage1Scale) / 2) + 'px';
       wrapper2.style.height = (el2.scrollHeight * adminMemoPage1Scale) + 'px';
-      wrapper2.style.overflow = 'visible';
     }
   }
 }
 
-function initAdminA4Scaler() {
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (m.target.classList && m.target.classList.contains('open')) {
-        setTimeout(scaleAdminA4, 80);
-        setTimeout(scaleAdminA4, 300);
-      }
-    });
-  });
-  var modal = document.getElementById('adminMemoModal');
-  if (modal) observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
-  window.addEventListener('resize', function(){ setTimeout(scaleAdminA4, 50); });
-}
+function openAdminMemoModal(doc) {
+  /* doc = Firestore data object (single course submission) */
+  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === doc.docTypeId; }) || {};
 
-function toThaiNumeralsAdmin(s) {
-  if (!s) return '';
-  var thaiDigits = ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'];
-  return String(s).replace(/[0-9]/g, function(d){ return thaiDigits[parseInt(d)]; });
-}
+  var staffName = doc.staffName     || doc.displayName || '';
+  var staffPos  = doc.staffPosition || '';
+  var staffGrp  = doc.staffGroup    || '';
 
-function thaiDateTodayAdmin() {
-  var d = new Date();
-  var thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-                  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  return d.getDate() + ' ' + thMonths[d.getMonth()] + ' ' + (d.getFullYear() + 543);
-}
-
-function renderAdminMemoBody(el, text) {
-  if (!el || !text) return;
-  var paragraphs = text.split('\n');
-  el.innerHTML = paragraphs.map(function(p) {
-    if (!p.trim()) return '<div style="height:0.8em;"></div>';
-    return '<p style="margin:0;text-indent:2.5em;font-size:12pt;line-height:1.8;">' + p + '</p>';
-  }).join('');
-}
-
-/* เปิด memo modal จากหน้า admin — รับ docId ของ portfolio_submissions doc */
-function openAdminMemoModal(docId, teacherEmail, docTypeId) {
-  var t = teacherMap[teacherEmail];
-  if (!t) { showToast('ไม่พบข้อมูลครู', 'error'); return; }
-  var sub = t.subs[docTypeId];
-  if (!sub) { showToast('ยังไม่มีการส่งงาน', 'warn'); return; }
-
-  /* ดึง fresh data จาก Firestore */
-  var targetDocId = docId || (sub._courses && sub._courses[0] && sub._courses[0].id) || null;
-  if (!targetDocId) { showToast('ไม่พบเอกสาร', 'error'); return; }
-
-  db.collection('portfolio_submissions').doc(targetDocId).get().then(function(doc) {
-    if (!doc.exists) { showToast('ไม่พบเอกสารใน Firestore', 'error'); return; }
-    var data = Object.assign({ id: doc.id }, doc.data());
-    _renderAdminMemoModal(data, t, docTypeId);
-  }).catch(function(e) {
-    /* fallback: ใช้ข้อมูลใน memory */
-    var fallback = (sub._courses && sub._courses[0]) || sub;
-    _renderAdminMemoModal(Object.assign({ id: targetDocId }, fallback), t, docTypeId);
-  });
-}
-
-function _renderAdminMemoModal(doc, t, docTypeId) {
-  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; }) || {};
-
-  var staffName = t.staffName || t.displayName || t.email;
-  var staffPos  = t.position  || '';
-  var staffGrp  = t.staffGroup || '';
-
-  var sem  = currentSem  || '';
-  var year = currentYear || '';
-
-  /* ── ที่ / วันที่ / เรื่อง ── */
-  function setT(id, val) {
+  function setText(id, val) {
     var el = document.getElementById(id);
-    if (el) el.textContent = val || '';
+    if (el) el.textContent = toThaiNumerals(val);
   }
 
-  setT('adminMemoPrintRef',     toThaiNumeralsAdmin(doc.memoRef || ''));
-  setT('adminMemoPrintDate',    toThaiNumeralsAdmin(doc.memoDate || thaiDateTodayAdmin()));
+  setText('adminMemoPrintRef',  doc.memoRef  || '');
+  setText('adminMemoPrintDate', doc.memoDate || '');
 
-  var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sem + ' ปีการศึกษา ' + year;
-  setT('adminMemoPrintSubject', toThaiNumeralsAdmin(doc.memoSubject || autoSubject));
-  setT('adminMemoPrintTo',      doc.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
+  var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + (doc.semester||'') + ' ปีการศึกษา ' + (doc.year||'');
+  setText('adminMemoPrintSubject', doc.memoSubject || autoSubject);
+  setText('adminMemoPrintTo',      doc.memoTo      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
 
   var throughWrap = document.getElementById('adminMemoPrintThroughWrap');
   var throughSpan = document.getElementById('adminMemoPrintThrough');
   if (doc.memoThrough) {
-    if (throughSpan) throughSpan.textContent = toThaiNumeralsAdmin(doc.memoThrough);
+    if (throughSpan) throughSpan.textContent = toThaiNumerals(doc.memoThrough);
     if (throughWrap) throughWrap.style.display = 'block';
   } else {
     if (throughWrap) throughWrap.style.display = 'none';
   }
 
-  /* ── เนื้อหา ── */
   var autoBody =
     'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
     (staffPos ? '  ตำแหน่ง ' + staffPos : '') +
     (staffGrp ? '  กลุ่มสาระการเรียนรู้' + staffGrp : '') +
     '\nขอส่ง' + (dt.label || 'งาน') +
-    (doc.courseCode || doc.courseName ? '  รายวิชา ' + (doc.courseCode||'') + '  ' + (doc.courseName||'') : '') +
-    '\nประจำภาคเรียนที่ ' + sem + '  ปีการศึกษา ' + year +
-    (doc.files && doc.files.length ? '  จำนวน ' + doc.files.length + ' ไฟล์' : '') +
+    '  รายวิชา ' + (doc.courseCode || '') + '  ' + (doc.courseName || '') +
+    '\nประจำภาคเรียนที่ ' + (doc.semester||'') + '  ปีการศึกษา ' + (doc.year||'') +
+    '  จำนวน ' + (doc.files ? doc.files.length : 0) + ' ไฟล์' +
     '  ตามเอกสารที่แนบมาพร้อมนี้' +
     '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
 
-  var bodyEl = document.getElementById('adminMemoBodyText');
-  renderAdminMemoBody(bodyEl, toThaiNumeralsAdmin(doc.memoBody || autoBody));
+  renderAdminMemoBody(document.getElementById('adminMemoBodyText'), toThaiNumerals(doc.memoBody || autoBody));
 
-  /* ── ลายมือชื่อครู ── */
-  setT('adminMemoSignName',  staffName ? '( ' + staffName + ' )' : '');
-  setT('adminMemoSignPos',   staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู');
-  setT('adminMemoSignGroup', staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
+  setText('adminMemoSignName',  staffName ? '( ' + staffName + ' )' : '');
+  setText('adminMemoSignPos',   staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู');
+  setText('adminMemoSignGroup', staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
 
-  /* ── หน้า 2: ความคิดเห็นผู้ตรวจ ── */
-  var page2 = document.getElementById('adminMemoPage2');
-  if (page2) page2.style.display = 'block';
+  /* หน้า 2: ความเห็นผู้ตรวจ */
+  document.getElementById('adminMemoPage2').style.display = 'block';
 
-  function setNote(id, text) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = text || '';
-  }
+  function setNote(id, val) { var el=document.getElementById(id); if(el) el.textContent = val||''; }
   setNote('adminPage2HeadNote',      doc.headNote      || '');
   setNote('adminPage2AssistantNote', doc.assistantNote || '');
   setNote('adminPage2DeputyNote',    doc.deputyNote    || '');
   setNote('adminPage2DirectorNote',  doc.directorNote  || '');
 
-  /* ชื่อผู้ตรวจแต่ละขั้น */
-  function setReviewerName(id, name) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = name ? '( ' + name + ' )' : '(                                   )';
-  }
-  setReviewerName('adminPage2HeadSign',      doc.headReviewerName      || '');
-  setReviewerName('adminPage2AssistantSign', doc.assistantReviewerName || '');
-  setReviewerName('adminPage2DeputySign',    doc.deputyReviewerName    || '');
-  setReviewerName('adminPage2DirectorSign',  doc.directorReviewerName  || '');
+  var headName = doc.headReviewerName || '';
+  setText('adminPage2HeadSignName',      headName      ? '( ' + headName      + ' )' : '(                                   )');
+  var assistantName = doc.assistantReviewerName || '';
+  setText('adminPage2AssistantSignName', assistantName ? '( ' + assistantName + ' )' : '(                                   )');
+  var deputyName = doc.deputyReviewerName || '';
+  setText('adminPage2DeputySignName',    deputyName    ? '( ' + deputyName    + ' )' : '(                                   )');
+  var directorName = doc.directorReviewerName || '';
+  setText('adminPage2DirectorSignName',  directorName  ? '( ' + directorName  + ' )' : '(                                   )');
 
   document.getElementById('adminMemoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  setTimeout(scaleAdminA4, 80);
-  setTimeout(scaleAdminA4, 300);
+  setTimeout(scaleAdminMemoA4, 80);
+  setTimeout(scaleAdminMemoA4, 320);
   lucide.createIcons();
 }
 
 function closeAdminMemoModal() {
-  var modal = document.getElementById('adminMemoModal');
-  if (modal) modal.classList.remove('open');
+  document.getElementById('adminMemoModal').classList.remove('open');
   document.body.style.overflow = '';
 }
 
-/* เรียก init เมื่อ DOM พร้อม */
-document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
-
-</script>
-
-<!-- ═══════════════════ ADMIN MEMO MODAL ═══════════════════ -->
+window.addEventListener('resize', function(){ setTimeout(scaleAdminMemoA4, 50); });
+<!-- ── Admin Memo Modal (บันทึกข้อความราชการ) ── -->
 <div id="adminMemoModal" class="memo-modal-bg" onclick="if(event.target===this)closeAdminMemoModal()">
   <div class="memo-paper" id="adminMemoPrintArea">
 
-    <!-- Toolbar -->
-    <div class="memo-no-print" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:4px 4px 0 0;">
+    <!-- Toolbar (ไม่พิมพ์) -->
+    <div class="admin-memo-no-print" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:4px 4px 0 0;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i data-lucide="file-signature" style="width:15px;height:15px;color:#7c3aed;"></i>
-        <span style="font-size:13px;font-weight:800;color:#1e293b;">บันทึกข้อความราชการ</span>
+        <i data-lucide="file-signature" style="width:15px;height:15px;color:#1d4ed8;"></i>
+        <span style="font-size:14px;font-weight:800;color:#0f172a;">บันทึกข้อความราชการ</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="window.print()" style="padding:8px 18px;background:#7c3aed;color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;">
-          <i data-lucide="printer" style="width:13px;height:13px;"></i> พิมพ์
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="memo-print-btn" onclick="window.print()">
+          <i data-lucide="printer" style="width:14px;height:14px;"></i> พิมพ์
         </button>
-        <button onclick="closeAdminMemoModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
-          <i data-lucide="x" style="width:15px;height:15px;color:#64748b;"></i>
-        </button>
+        <button onclick="closeAdminMemoModal()" style="padding:7px 14px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:#64748b;">ปิด</button>
       </div>
     </div>
 
-    <!-- กระดาษ A4 หน้า 1 -->
-    <div class="memo-a4-scaler"><div id="adminMemoContent" style="
+    <!-- A4 หน้า 1 -->
+    <div class="memo-a4-scaler" style="margin-top:12px;">
+    <div id="adminMemoContent" style="
       width:210mm;
       min-height:297mm;
       padding:25mm 20mm 20mm 30mm;
@@ -3367,20 +3287,24 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       background:white;
       color:#000;
       box-sizing:border-box;
-      text-align:justify;
-      text-justify:inter-character;
+      box-shadow:0 2px 20px rgba(0,0,0,.25);
     ">
-      <!-- ตราครุฑ + บันทึกข้อความ -->
-      <div style="position:relative;text-align:center;min-height:75px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
-        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISERUTExMWFRUXGB8aGBcXGR0dHxkhHxofHSAdGx8eICggICEnHxshIjEhJSktMi4yIiIzPTMsNygtLisBCgoKBQUFDgUFDisZExkrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrK//AABEIAFAAKAMBIgACEQEDEQH/xAAcAAABBQEBAQAAAAAAAAAAAAAAAQIDBAUGBwj/xAA0EAABAwMCBAMGBQUAAAAAAAABAAIDBAURITFBUWEGEhMicYGRoRQjMkJSscHR8PHh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAEC/8QAFhEBAQEAAAAAAAAAAAAAAAAAAAER/9oADAMBAAIRAxEAPwCyOijb7vVPpbfUVNPT+0PDSfD3yDWk7Du52PL5KxV3FkFIXBrnzuGIomjMkju4aOfxOyjIRUV1O+qr6loijBDGgBsb35Ox2JHwCAWmRz3Mc85c0EDI3yN1yVLd5LhTy3CF8zAy4RxiV7nSktaw5bqdtyOfRenX2iqr5TWWxOa6nMccJeQ0FziThzCOufT03WbQWGmq7HFYYpJ4qC3yvZcmRyFrniYBj3u3kYYNt+X0+KAiW2hqr/AG+Y0LqiVtSZhWTGWTfJZtIRxJd0z/jKvwVFTbzbrUyWmDY+VwdK5r2l+QHAhxydjtjJ9FZsdvpaBtRJW0NHVvNJJO2SJsjWx7tbI4hxyCTzHVdXhJoYLXTFxA3YH7OeT9OqAo2lsNfOIy3JbneMeI7kN8oPmBB67YBXZW6Fx3FEH53GVzNkla0l7gxoJJJIAAG5JPRSqr1HVQxOIjghaGhzjlrWjABJ9VVrJIaFrX3CV7nO2ZC3DpX/oGWgeZIHdAWaiiipYGQQMbHFG0NaxowGgbABMoiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiIP/9k=" style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:75px;height:75px;object-fit:contain;" alt="ตราครุฑ"/>
+
+      <!-- ตราครุฑ + หัวเรื่อง -->
+      <div style="position:relative;text-align:center;min-height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+        <img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Fgaruda.png?alt=media"
+             style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:75px;height:75px;object-fit:contain;"
+             alt="ตราครุฑ"/>
         <span style="font-size:20pt;font-weight:800;letter-spacing:2px;">บันทึกข้อความ</span>
       </div>
 
+      <!-- ส่วนราชการ -->
       <div style="margin-top:6px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">ส่วนราชการ</span>
         <span style="font-size:12pt;margin-left:6px;">โรงเรียนหนองกี่พิทยาคม&nbsp;&nbsp;อำเภอหนองกี่&nbsp;&nbsp;จังหวัดบุรีรัมย์</span>
       </div>
 
+      <!-- ที่ + วันที่ -->
       <div style="display:flex;text-align:left;">
         <div style="flex:0 0 80mm;">
           <span style="font-size:16pt;font-weight:800;">ที่</span>
@@ -3392,23 +3316,28 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         </div>
       </div>
 
+      <!-- เรื่อง -->
       <div style="text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintSubject"></span>
       </div>
 
+      <!-- ผ่าน (ถ้ามี) -->
       <div id="adminMemoPrintThroughWrap" style="display:none;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintThrough"></span>
       </div>
 
+      <!-- เรียน -->
       <div style="margin-top:4px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรียน</span>
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintTo"></span>
       </div>
 
+      <!-- เนื้อหา -->
       <div id="adminMemoBodyText" style="font-size:12pt;line-height:1.6;text-align:justify;text-justify:inter-character;margin:4px 0 0;"></div>
 
+      <!-- ลายมือชื่อ -->
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
         <div style="text-align:center;min-width:200px;">
           <div style="font-size:12pt;">ลงชื่อ</div>
@@ -3418,10 +3347,11 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
           <p id="adminMemoSignGroup" style="font-size:12pt;margin:0;line-height:1.5;"></p>
         </div>
       </div>
+
     </div></div><!-- /adminMemoContent -->
 
     <!-- หน้า 2: ความคิดเห็นผู้ตรวจ -->
-    <div id="adminMemoPage2" style="display:none;">
+    <div id="adminMemoPage2" style="display:none;margin-top:12px;">
     <div class="memo-a4-scaler"><div id="adminMemoPage2Content" style="
       width:210mm;
       min-height:auto;
@@ -3432,7 +3362,10 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       background:white;
       color:#000;
       box-sizing:border-box;
+      box-shadow:0 2px 20px rgba(0,0,0,.25);
     ">
+
+      <!-- หัวหน้ากลุ่มสาระ -->
       <div style="margin-bottom:24px;">
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
         <div id="adminPage2HeadNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
@@ -3440,12 +3373,13 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:28px;"></div>
-            <p id="adminPage2HeadSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
+            <p id="adminPage2HeadSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
           </div>
         </div>
       </div>
 
+      <!-- ผช.ผอ.วิชาการ + รอง ผอ.วิชาการ -->
       <div style="margin-bottom:24px;">
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มบริหารงานวิชาการ</p>
         <div id="adminPage2AssistantNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
@@ -3453,7 +3387,7 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:28px;"></div>
-            <p id="adminPage2AssistantSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
+            <p id="adminPage2AssistantSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
         </div>
@@ -3462,12 +3396,13 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:28px;"></div>
-            <p id="adminPage2DeputySign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
+            <p id="adminPage2DeputySignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
         </div>
       </div>
 
+      <!-- ผู้อำนวยการ -->
       <div>
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
         <div id="adminPage2DirectorNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
@@ -3475,16 +3410,18 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:28px;"></div>
-            <p id="adminPage2DirectorSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
+            <p id="adminPage2DirectorSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
           </div>
         </div>
       </div>
+
     </div></div><!-- /adminMemoPage2Content -->
     </div><!-- /adminMemoPage2 -->
 
   </div><!-- /memo-paper -->
 </div>
+<!-- ── End Admin Memo Modal ── -->
 
 </body>
 </html>
