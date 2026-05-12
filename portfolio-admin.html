@@ -789,6 +789,7 @@ function normaliseGroup(g) {
 /* ─── AUTH + ADMIN CHECK ─── */
 var currentUserEmail = '';
 var currentUserName  = '';  /* ชื่อจริงของผู้ตรวจ สำหรับบันทึกลงใน Firestore */
+var adminRoles = {};        /* { headOfGroup:{name,email}, assistantAcademic:{name,email}, deputyAcademic:{name,email}, director:{name,email} } */
 var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
 var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
 var adminPermissions  = {};    /* สิทธิ์ทั้งหมดของผู้ใช้ปัจจุบัน */
@@ -867,6 +868,18 @@ function bootApp(u) {
     buildSidebar('portfolio-admin');
     checkAdminAccess(u.email);
     updateSidebarProfile(u);
+    /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
+    db.collection('admins').get().then(function(snap) {
+      snap.forEach(function(d) {
+        var data = d.data();
+        var p = data.permissions || {};
+        var nameVal = data.name || d.id;
+        if (p.headOfGroup)               adminRoles.headOfGroup        = { name: nameVal, email: d.id };
+        if (p.assistantDirectorAcademic) adminRoles.assistantAcademic  = { name: nameVal, email: d.id };
+        if (p.deputyDirectorAcademic)    adminRoles.deputyAcademic     = { name: nameVal, email: d.id };
+        if (p.director)                  adminRoles.director           = { name: nameVal, email: d.id };
+      });
+    }).catch(function(){});
     loadDocTypesFromFirestore(); /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้ว loadAllSubmissions ตาม */
     loadAllSubmissions();
     lucide.createIcons();
@@ -3324,15 +3337,19 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   setNote('adminPage2DeputyNote',    doc.deputyNote    || '');
   setNote('adminPage2DirectorNote',  doc.directorNote  || '');
 
-  /* ชื่อผู้ตรวจแต่ละขั้น */
+  /* ชื่อผู้ตรวจแต่ละขั้น — fallback จาก adminRoles ถ้าไม่มีบันทึกไว้ */
   function setReviewerName(id, name) {
     var el = document.getElementById(id);
     if (el) el.textContent = name ? '( ' + name + ' )' : '(                                   )';
   }
-  setReviewerName('adminPage2HeadSign',      doc.headReviewerName      || '');
-  setReviewerName('adminPage2AssistantSign', doc.assistantReviewerName || '');
-  setReviewerName('adminPage2DeputySign',    doc.deputyReviewerName    || '');
-  setReviewerName('adminPage2DirectorSign',  doc.directorReviewerName  || '');
+  var headName      = doc.headReviewerName      || (adminRoles.headOfGroup       && adminRoles.headOfGroup.name)       || '';
+  var assistantName = doc.assistantReviewerName || (adminRoles.assistantAcademic && adminRoles.assistantAcademic.name) || '';
+  var deputyName    = doc.deputyReviewerName    || (adminRoles.deputyAcademic    && adminRoles.deputyAcademic.name)    || '';
+  var directorName  = doc.directorReviewerName  || (adminRoles.director          && adminRoles.director.name)          || '';
+  setReviewerName('adminPage2HeadSign',      headName);
+  setReviewerName('adminPage2AssistantSign', assistantName);
+  setReviewerName('adminPage2DeputySign',    deputyName);
+  setReviewerName('adminPage2DirectorSign',  directorName);
 
   document.getElementById('adminMemoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -3389,7 +3406,7 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
     ">
       <!-- ตราครุฑ + บันทึกข้อความ -->
       <div style="display:flex;align-items:center;justify-content:center;margin-bottom:4px;position:relative;">
-        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISERUTExMWFRUXGB8aGBcXGR0dHxkhHxofHSAdGx8eICggICEnHxshIjEhJSktMi4yIiIzPTMsNygtLisBCgoKBQUFDgUFDisZExkrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrK//AABEIAFAAKAMBIgACEQEDEQH/xAAcAAABBQEBAQAAAAAAAAAAAAAAAQIDBAUGBwj/xAA0EAABAwMCBAMGBQUAAAAAAAABAAIDBAURITFBUWEGEhMicYGRoRQjMkJSscHR8PHh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAEC/8QAFhEBAQEAAAAAAAAAAAAAAAAAAAER/9oADAMBAAIRAxEAPwCyOijb7vVPpbfUVNPT+0PDSfD3yDWk7Du52PL5KxV3FkFIXBrnzuGIomjMkju4aOfxOyjIRUV1O+qr6loijBDGgBsb35Ox2JHwCAWmRz3Mc85c0EDI3yN1yVLd5LhTy3CF8zAy4RxiV7nSktaw5bqdtyOfRenX2iqr5TWWxOa6nMccJeQ0FziThzCOufT03WbQWGmq7HFYYpJ4qC3yvZcmRyFrniYBj3u3kYYNt+X0+KAiW2hqr/AG+Y0LqiVtSZhWTGWTfJZtIRxJd0z/jKvwVFTbzbrUyWmDY+VwdK5r2l+QHAhxydjtjJ9FZsdvpaBtRJW0NHVvNJJO2SJsjWx7tbI4hxyCTzHVdXhJoYLXTFxA3YH7OeT9OqAo2lsNfOIy3JbneMeI7kN8oPmBB67YBXZW6Fx3FEH53GVzNkla0l7gxoJJJIAAG5JPRSqr1HVQxOIjghaGhzjlrWjABJ9VVrJIaFrX3CV7nO2ZC3DpX/oGWgeZIHdAWaiiipYGQQMbHFG0NaxowGgbABMoiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiIP/9k=" style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:75px;height:75px;object-fit:contain;" alt="ตราครุฑ"/>
+        <img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Fkrut.jpeg?alt=media&token=dd3ea7ba-a2b6-478c-a516-418fbab4584b" style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:75px;height:75px;object-fit:contain;" alt="ตราครุฑ"/>
         <span style="font-size:20pt;font-weight:800;letter-spacing:2px;line-height:75px;">บันทึกข้อความ</span>
       </div>
 
