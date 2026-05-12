@@ -789,7 +789,7 @@ function normaliseGroup(g) {
 /* ─── AUTH + ADMIN CHECK ─── */
 var currentUserEmail = '';
 var currentUserName  = '';  /* ชื่อจริงของผู้ตรวจ สำหรับบันทึกลงใน Firestore */
-var adminRoles = {};        /* { headOfGroup:{name,email}, assistantAcademic:{name,email}, deputyAcademic:{name,email}, director:{name,email} } */
+var adminRoles = {};        /* { headOfGroups:{groupName:{name,email}}, assistantAcademic:{name,email}, deputyAcademic:{name,email}, director:{name,email} } */
 var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
 var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
 var adminPermissions  = {};    /* สิทธิ์ทั้งหมดของผู้ใช้ปัจจุบัน */
@@ -870,11 +870,16 @@ function bootApp(u) {
     updateSidebarProfile(u);
     /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
     db.collection('admins').get().then(function(snap) {
+      adminRoles.headOfGroups = {};
       snap.forEach(function(d) {
         var data = d.data();
         var p = data.permissions || {};
-        var nameVal = data.name || d.id;
-        if (p.headOfGroup)               adminRoles.headOfGroup        = { name: nameVal, email: d.id };
+        var nameVal = data.name || data.headOfGroupName || d.id;
+        if (p.headOfGroup) {
+          /* เก็บแยกตามกลุ่มสาระ (headOfGroupSubject) เพื่อดึงให้ตรงกับครูที่ส่ง */
+          var grp = normaliseGroup(data.headOfGroupSubject || data.staffGroup || '');
+          adminRoles.headOfGroups[grp] = { name: nameVal, email: d.id };
+        }
         if (p.assistantDirectorAcademic) adminRoles.assistantAcademic  = { name: nameVal, email: d.id };
         if (p.deputyDirectorAcademic)    adminRoles.deputyAcademic     = { name: nameVal, email: d.id };
         if (p.director)                  adminRoles.director           = { name: nameVal, email: d.id };
@@ -3342,7 +3347,11 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
     var el = document.getElementById(id);
     if (el) el.textContent = name ? '( ' + name + ' )' : '(                                   )';
   }
-  var headName      = doc.headReviewerName      || (adminRoles.headOfGroup       && adminRoles.headOfGroup.name)       || '';
+  /* หัวหน้ากลุ่มสาระ: ดึงตรงกับกลุ่มของครูผู้ส่ง */
+  var teacherGroup = normaliseGroup(t.staffGroup || '');
+  var headOfGroupsMap = (adminRoles.headOfGroups) || {};
+  var headFallback = headOfGroupsMap[teacherGroup] || Object.values(headOfGroupsMap)[0] || null;
+  var headName      = doc.headReviewerName      || (headFallback && headFallback.name) || '';
   var assistantName = doc.assistantReviewerName || (adminRoles.assistantAcademic && adminRoles.assistantAcademic.name) || '';
   var deputyName    = doc.deputyReviewerName    || (adminRoles.deputyAcademic    && adminRoles.deputyAcademic.name)    || '';
   var directorName  = doc.directorReviewerName  || (adminRoles.director          && adminRoles.director.name)          || '';
