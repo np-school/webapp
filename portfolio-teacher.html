@@ -128,7 +128,7 @@
       html,body{margin:0!important;padding:0!important;background:white!important;}
       body > *{ display:none!important; }
       .memo-modal-bg{ display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important; }
-      #memoPrintArea{ display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important; }
+      #memoPrintArea{ display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important;background:white!important;padding:0!important; }
       .memo-no-print{ display:none!important; }
       #memoContent{
         width:210mm!important;
@@ -139,12 +139,24 @@
         zoom:1!important;
         transform:none!important;
       }
+      /* หน้า 2 ต่อจากหน้า 1 โดยไม่ขึ้นหน้าใหม่ */
       #memoPage2{ display:block!important; }
-      #memoPage2 > div{ page-break-before:always!important; }
+      #memoPage2Content{
+        width:210mm!important;
+        min-height:auto!important;
+        padding:15mm 20mm 20mm 30mm!important;
+        font-size:12pt!important;
+        font-family:'TH Sarabun New','Sarabun',sans-serif!important;
+        zoom:1!important;
+        transform:none!important;
+        box-shadow:none!important;
+      }
+      .memo-a4-scaler{ overflow:visible!important; height:auto!important; }
     }
   </style>
   <script>
   /* ── A4 Scaler: ย่อ memoContent ให้พอดีหน้าจอ โดยไม่กระทบขนาดพิมพ์จริง ── */
+  var page1Scale = 1;
   function scaleA4() {
     /* scale หน้า 1 */
     var el = document.getElementById('memoContent');
@@ -157,6 +169,7 @@
         var available = wrapper.offsetWidth;
         if (paperW > 0 && available > 0) {
           var scale = Math.min(1, available / paperW);
+          page1Scale = scale;   /* เก็บ scale ไว้ให้หน้า 2 ใช้ */
           el.style.transform = 'scale(' + scale + ')';
           el.style.transformOrigin = 'top left';
           var leftOffset = (available - paperW * scale) / 2;
@@ -165,23 +178,19 @@
         }
       }
     }
-    /* scale หน้า 2 (ใช้ขนาดเดียวกับหน้า 1) */
+    /* scale หน้า 2 — ใช้ scale เดียวกับหน้า 1 */
     var el2 = document.getElementById('memoPage2Content');
-    if (el2) {
+    if (el2 && page1Scale) {
       var wrapper2 = el2.parentElement;
       if (wrapper2) {
-        el2.style.transform = 'scale(1)';
+        el2.style.transform = 'scale(' + page1Scale + ')';
         el2.style.transformOrigin = 'top left';
         var paperW2 = el2.scrollWidth;
-        var available2 = wrapper2.offsetWidth;
-        if (paperW2 > 0 && available2 > 0) {
-          var scale2 = Math.min(1, available2 / paperW2);
-          el2.style.transform = 'scale(' + scale2 + ')';
-          el2.style.transformOrigin = 'top left';
-          var leftOffset2 = (available2 - paperW2 * scale2) / 2;
-          el2.style.marginLeft = Math.max(0, leftOffset2) + 'px';
-          wrapper2.style.height = (el2.scrollHeight * scale2) + 'px';
-        }
+        var leftOffset2 = (wrapper2.offsetWidth - paperW2 * page1Scale) / 2;
+        el2.style.marginLeft = Math.max(0, leftOffset2) + 'px';
+        /* ให้ wrapper สูงตาม content จริง ไม่ clip */
+        wrapper2.style.height = (el2.scrollHeight * page1Scale) + 'px';
+        wrapper2.style.overflow = 'visible';
       }
     }
   }
@@ -606,25 +615,24 @@
     <div id="memoPage2" style="display:none;">
     <div class="memo-a4-scaler"><div id="memoPage2Content" style="
       width:210mm;
-      min-height:297mm;
-      padding:25mm 20mm 20mm 30mm;
+      min-height:auto;
+      padding:12mm 20mm 20mm 30mm;
       font-family:'TH Sarabun New','Sarabun',sans-serif;
       font-size:12pt;
       line-height:1.6;
       background:white;
       color:#000;
       box-sizing:border-box;
-      page-break-before:always;
     ">
 
       <!-- หัวหน้ากลุ่มสาระ -->
-      <div style="margin-bottom:40px;">
+      <div style="margin-bottom:24px;">
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
-        <div id="page2HeadNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+        <div id="page2HeadNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;"></div>
+            <div style="height:28px;"></div>
             <p id="page2HeadSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
           </div>
@@ -632,22 +640,22 @@
       </div>
 
       <!-- ผช.ผอ.วิชาการ + รอง ผอ.วิชาการ -->
-      <div style="margin-bottom:40px;">
+      <div style="margin-bottom:24px;">
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มบริหารงานวิชาการ</p>
-        <div id="page2AssistantNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+        <div id="page2AssistantNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;"></div>
+            <div style="height:28px;"></div>
             <p id="page2AssistantSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสุเนตร  บอกประโคน )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
         </div>
-        <div id="page2DeputyNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;margin-top:32px;font-size:12pt;white-space:pre-wrap;"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+        <div id="page2DeputyNote" style="min-height:60px;padding-bottom:4px;margin-top:20px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;"></div>
+            <div style="height:28px;"></div>
             <p id="page2DeputySignName" style="font-size:12pt;margin:0;line-height:1.6;">( นางสาวสุจินดา  เอี่ยมศิริ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
@@ -657,11 +665,11 @@
       <!-- ผู้อำนวยการ -->
       <div>
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
-        <div id="page2DirectorNote" style="min-height:60px;border-bottom:1px dotted #999;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:36px;">
+        <div id="page2DirectorNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;"></div>
+            <div style="height:28px;"></div>
             <p id="page2DirectorSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสมิงไพร  สุนทะวงษ์ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
           </div>
