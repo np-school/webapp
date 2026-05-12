@@ -215,7 +215,10 @@
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#0369a1;">🏅 ผช.ผอ.บริหารทั่วไป</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#1d4ed8;">🏅 ผช.ผอ.บุคคล</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7c3aed;">🏅 ผช.ผอ.กิจการนักเรียน</th>
-                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7e22ce;">👑 รอง ผอ.</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7e22ce;">👑 รองผู้อำนวยการฝ่ายวิชาการ</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#6b21a8;">👑 รองผู้อำนวยการฝ่ายบริหารงบประมาณ</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#581c87;">👑 รองผู้อำนวยการฝ่ายบริหารทั่วไป</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#4a044e;">👑 รองผู้อำนวยการฝ่ายบริหารงานบุคคล</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#b45309;">🎖️ ผู้อำนวยการ</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#7c3aed;">🛡️ Admin</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:#64748b;">ดำเนินการ</th>
@@ -439,13 +442,37 @@
             <span style="font-size:12px;font-weight:800;color:#374151;">รองผู้อำนวยการ</span>
           </div>
           <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
-            <label class="perm-row" id="wrap-deputyDirector" style="border-radius:8px;">
-              <input type="checkbox" id="perm-deputyDirector" style="width:15px;height:15px;accent-color:#7e22ce;flex-shrink:0;" onchange="onPermChange('deputyDirector')">
+            <label class="perm-row" id="wrap-deputyDirectorAcademic" style="border-radius:8px;">
+              <input type="checkbox" id="perm-deputyDirectorAcademic" style="width:15px;height:15px;accent-color:#7e22ce;flex-shrink:0;" onchange="onPermChange('deputyDirectorAcademic')">
               <div style="flex:1;">
-                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการ</div>
-                <div style="font-size:10px;color:#64748b;">ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติงานในระดับรอง ผอ.</div>
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายวิชาการ</div>
+                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านวิชาการ</div>
               </div>
               <i data-lucide="crown" style="width:13px;height:13px;color:#c4b5fd;flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-deputyDirectorBudget" style="border-radius:8px;">
+              <input type="checkbox" id="perm-deputyDirectorBudget" style="width:15px;height:15px;accent-color:#6b21a8;flex-shrink:0;" onchange="onPermChange('deputyDirectorBudget')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายบริหารงบประมาณ</div>
+                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านงบประมาณ</div>
+              </div>
+              <i data-lucide="crown" style="width:13px;height:13px;color:#d8b4fe;flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-deputyDirectorGeneral" style="border-radius:8px;">
+              <input type="checkbox" id="perm-deputyDirectorGeneral" style="width:15px;height:15px;accent-color:#581c87;flex-shrink:0;" onchange="onPermChange('deputyDirectorGeneral')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายบริหารทั่วไป</div>
+                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านบริหารทั่วไป</div>
+              </div>
+              <i data-lucide="crown" style="width:13px;height:13px;color:#e9d5ff;flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-deputyDirectorPersonnel" style="border-radius:8px;">
+              <input type="checkbox" id="perm-deputyDirectorPersonnel" style="width:15px;height:15px;accent-color:#4a044e;flex-shrink:0;" onchange="onPermChange('deputyDirectorPersonnel')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายบริหารงานบุคคล</div>
+                <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านบริหารงานบุคคล</div>
+              </div>
+              <i data-lucide="crown" style="width:13px;height:13px;color:#f0abfc;flex-shrink:0;"></i>
             </label>
           </div>
         </div>
@@ -898,14 +925,44 @@ var PERM_DEFS = [
     border: '#c4b5fd'
   },
   {
-    key: 'deputyDirector',
-    label: 'รองผู้อำนวยการ',
-    desc: 'ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติในระดับรอง ผอ.',
+    key: 'deputyDirectorAcademic',
+    label: 'รองผู้อำนวยการฝ่ายวิชาการ',
+    desc: 'กำกับและอนุมัติงานด้านวิชาการ',
     group: 'รองผู้อำนวยการ',
     icon: 'crown',
     color: '#7e22ce',
     bg: '#ede9fe',
     border: '#c4b5fd'
+  },
+  {
+    key: 'deputyDirectorBudget',
+    label: 'รองผู้อำนวยการฝ่ายบริหารงบประมาณ',
+    desc: 'กำกับและอนุมัติงานด้านงบประมาณ',
+    group: 'รองผู้อำนวยการ',
+    icon: 'crown',
+    color: '#6b21a8',
+    bg: '#f3e8ff',
+    border: '#d8b4fe'
+  },
+  {
+    key: 'deputyDirectorGeneral',
+    label: 'รองผู้อำนวยการฝ่ายบริหารทั่วไป',
+    desc: 'กำกับและอนุมัติงานด้านบริหารทั่วไป',
+    group: 'รองผู้อำนวยการ',
+    icon: 'crown',
+    color: '#581c87',
+    bg: '#faf5ff',
+    border: '#e9d5ff'
+  },
+  {
+    key: 'deputyDirectorPersonnel',
+    label: 'รองผู้อำนวยการฝ่ายบริหารงานบุคคล',
+    desc: 'กำกับและอนุมัติงานด้านบริหารงานบุคคล',
+    group: 'รองผู้อำนวยการ',
+    icon: 'crown',
+    color: '#4a044e',
+    bg: '#fdf4ff',
+    border: '#f0abfc'
   },
   {
     key: 'director',
@@ -998,7 +1055,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.assistantDirectorAcademic && !p.deputyDirector && !p.director;
+      return !!p.assistantDirectorAcademic && !p.deputyDirectorAcademic && !p.deputyDirectorBudget && !p.deputyDirectorGeneral && !p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
@@ -1012,7 +1069,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.assistantDirectorBudget && !p.deputyDirector && !p.director;
+      return !!p.assistantDirectorBudget && !p.deputyDirectorAcademic && !p.deputyDirectorBudget && !p.deputyDirectorGeneral && !p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
@@ -1026,7 +1083,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.assistantDirectorGeneral && !p.deputyDirector && !p.director;
+      return !!p.assistantDirectorGeneral && !p.deputyDirectorAcademic && !p.deputyDirectorBudget && !p.deputyDirectorGeneral && !p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
@@ -1040,7 +1097,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.assistantDirectorPersonnel && !p.deputyDirector && !p.director;
+      return !!p.assistantDirectorPersonnel && !p.deputyDirectorAcademic && !p.deputyDirectorBudget && !p.deputyDirectorGeneral && !p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
@@ -1054,13 +1111,13 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.assistantDirectorStudent && !p.deputyDirector && !p.director;
+      return !!p.assistantDirectorStudent && !p.deputyDirectorAcademic && !p.deputyDirectorBudget && !p.deputyDirectorGeneral && !p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
-    key: 'deputydirector',
-    label: 'รองผู้อำนวยการ',
-    subtitle: 'ดูข้อมูลและรายงานทุกกลุ่มงาน อนุมัติงานในระดับรอง ผอ.',
+    key: 'deputydirectoracademic',
+    label: 'รองผู้อำนวยการฝ่ายวิชาการ',
+    subtitle: 'กำกับและอนุมัติงานด้านวิชาการ',
     icon: 'crown',
     color: '#7e22ce',
     bg: '#f5f3ff',
@@ -1068,7 +1125,49 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.deputyDirector && !p.director;
+      return !!p.deputyDirectorAcademic && !p.director;
+    }
+  },
+  {
+    key: 'deputydirectorbudget',
+    label: 'รองผู้อำนวยการฝ่ายบริหารงบประมาณ',
+    subtitle: 'กำกับและอนุมัติงานด้านงบประมาณ',
+    icon: 'crown',
+    color: '#6b21a8',
+    bg: '#faf5ff',
+    border: '#d8b4fe',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.deputyDirectorBudget && !p.director;
+    }
+  },
+  {
+    key: 'deputydirectorgeneral',
+    label: 'รองผู้อำนวยการฝ่ายบริหารทั่วไป',
+    subtitle: 'กำกับและอนุมัติงานด้านบริหารทั่วไป',
+    icon: 'crown',
+    color: '#581c87',
+    bg: '#fdf4ff',
+    border: '#e9d5ff',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.deputyDirectorGeneral && !p.director;
+    }
+  },
+  {
+    key: 'deputydirectorpersonnel',
+    label: 'รองผู้อำนวยการฝ่ายบริหารงานบุคคล',
+    subtitle: 'กำกับและอนุมัติงานด้านบริหารงานบุคคล',
+    icon: 'crown',
+    color: '#4a044e',
+    bg: '#fdf4ff',
+    border: '#f0abfc',
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.deputyDirectorPersonnel && !p.director;
     }
   },
   {
@@ -1096,7 +1195,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirector&&!p.director;
+      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
     }
   }
 ];
@@ -1150,14 +1249,14 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirector&&!p.director;
+    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
     {label:'Admin ทั้งหมด', val:total, icon:'users', color:'#7c3aed', bg:'#ede9fe'},
     {label:'มีสิทธิ์แล้ว',  val:withPerms, icon:'shield-check', color:'#16a34a', bg:'#dcfce7'},
     {label:'ยังไม่มีสิทธิ์', val:noPerms, icon:'shield-off', color:'#d97706', bg:'#fef9c3'},
-    {label:'กลุ่มงาน',      val:11, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
+    {label:'กลุ่มงาน',      val:15, icon:'layout-grid', color:'#0369a1', bg:'#e0f2fe'},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
     return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
@@ -1315,14 +1414,14 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="14" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="17" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var perms=a.data.permissions||{};
-    if(isSA) perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirector:true,director:true};
+    if(isSA) perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirectorAcademic:true,deputyDirectorBudget:true,deputyDirectorGeneral:true,deputyDirectorPersonnel:true,director:true};
 
-    var permKeys=['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirector','director','admins'];
+    var permKeys=['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director','admins'];
     var cells=permKeys.map(function(pk){
       var has=!!perms[pk];
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
@@ -1394,7 +1493,7 @@ function openAddModal(){
   resetStaffPicker();
   document.getElementById('headOfGroupPanel').classList.remove('show');
   resetHogPicker();
-  ['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirector','director'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
   });
@@ -1415,7 +1514,7 @@ function openEditModal(email){
   document.getElementById('staffPickerDisplay').value = admin.data.name || '';
   document.getElementById('staffDropdown').classList.remove('open');
   var p=admin.data.permissions||{};
-  ['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirector','director'].forEach(function(k){
+  ['bookings','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
@@ -1445,7 +1544,10 @@ function saveAdmin(){
     assistantDirectorGeneral:   document.getElementById('perm-assistantDirectorGeneral').checked,
     assistantDirectorPersonnel: document.getElementById('perm-assistantDirectorPersonnel').checked,
     assistantDirectorStudent:   document.getElementById('perm-assistantDirectorStudent').checked,
-    deputyDirector:     document.getElementById('perm-deputyDirector').checked,
+    deputyDirectorAcademic:   document.getElementById('perm-deputyDirectorAcademic').checked,
+    deputyDirectorBudget:     document.getElementById('perm-deputyDirectorBudget').checked,
+    deputyDirectorGeneral:    document.getElementById('perm-deputyDirectorGeneral').checked,
+    deputyDirectorPersonnel:  document.getElementById('perm-deputyDirectorPersonnel').checked,
     director:           document.getElementById('perm-director').checked,
     admins:             false
   };
