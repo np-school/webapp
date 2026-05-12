@@ -3300,15 +3300,6 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   setT('adminMemoPrintSubject', toThaiNumeralsAdmin(doc.memoSubject || autoSubject));
   setT('adminMemoPrintTo',      doc.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
 
-  var throughWrap = document.getElementById('adminMemoPrintThroughWrap');
-  var throughSpan = document.getElementById('adminMemoPrintThrough');
-  if (doc.memoThrough) {
-    if (throughSpan) throughSpan.textContent = toThaiNumeralsAdmin(doc.memoThrough);
-    if (throughWrap) throughWrap.style.display = 'block';
-  } else {
-    if (throughWrap) throughWrap.style.display = 'none';
-  }
-
   /* ── เนื้อหา ── */
   var autoBody =
     'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
@@ -3438,11 +3429,6 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       <div style="text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintSubject"></span>
-      </div>
-
-      <div id="adminMemoPrintThroughWrap" style="display:none;text-align:left;">
-        <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
-        <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintThrough"></span>
       </div>
 
       <div style="margin-top:4px;text-align:left;">

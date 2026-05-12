@@ -414,10 +414,7 @@
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">เรียน</label>
             <input type="text" id="memoTo" placeholder="เช่น ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" value="ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" style="font-size:13px;">
           </div>
-          <div>
-            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ผ่าน</label>
-            <input type="text" id="memoThrough" placeholder="เช่น หัวหน้ากลุ่มสาระ (ถ้ามี)" style="font-size:13px;">
-          </div>
+          <input type="hidden" id="memoThrough" value="">
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียด <span style="color:#94a3b8;font-weight:600;">(สร้างอัตโนมัติถ้าปล่อยว่าง)</span></label>
             <textarea id="memoBody" rows="3" placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ" style="resize:none;font-size:13px;"></textarea>
@@ -453,12 +450,6 @@
             <div>
               <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
               <span style="font-size:12pt;margin-left:4px;" id="prevSubject"></span>
-            </div>
-
-            <!-- ผ่าน (ถ้ามี) -->
-            <div id="prevThrough" style="display:none;">
-              <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
-              <span style="font-size:12pt;margin-left:4px;" id="prevThroughText"></span>
             </div>
 
             <!-- เรียน -->
@@ -575,12 +566,6 @@
       <div style="text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรื่อง</span>
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintSubject"></span>
-      </div>
-
-      <!-- ผ่าน (ถ้ามี) -->
-      <div id="memoPrintThroughWrap" style="display:none;text-align:left;">
-        <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
-        <span style="font-size:12pt;margin-left:6px;" id="memoPrintThrough"></span>
       </div>
 
       <!-- เรียน -->
@@ -1544,8 +1529,10 @@ function closeUploadModal() {
 }
 
 /* ─── SUBMIT ─── */
+var _isUploading = false;
 function submitDoc() {
   if (!currentUser || !currentDocId) return;
+  if (_isUploading) { showToast('กำลังอัปโหลด กรุณารอสักครู่...', 'info'); return; }
   var subjectGroup = document.getElementById('subjectGroup').value.trim();
   var note         = document.getElementById('submitNote').value.trim();
   var btn          = document.getElementById('submitBtn');
@@ -1634,12 +1621,13 @@ function submitDoc() {
 
   if (!driveAccessToken) {
     document.getElementById('driveAuthNotice').style.display = 'block';
-    authorizeDrive(function(){ uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
+    authorizeDrive(function(){ _isUploading = true; uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
     lucide.createIcons();
     return;
   }
+  _isUploading = true;
   uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn);
 }
 
@@ -1759,11 +1747,13 @@ function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
     showToast('ส่งงานสำเร็จ ✓', 'success');
     closeUploadModal(); loadSubmissions();
     resetBtn(btn); progressEl.style.display = 'none';
+    _isUploading = false;
   })
   .catch(function(e) {
     console.error(e);
     showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || e), 'error');
     resetBtn(btn); progressEl.style.display = 'none';
+    _isUploading = false;
   });
 }
 
@@ -1973,16 +1963,8 @@ function _renderMemoModal(subKey) {
   var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sub.semester + ' ปีการศึกษา ' + sub.year;
   document.getElementById('memoPrintSubject').textContent = toThaiNumerals(sub.memoSubject || autoSubject);
 
-  /* ── เรียน / ผ่าน ── */
+  /* ── เรียน ── */
   document.getElementById('memoPrintTo').textContent = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-  var throughWrap = document.getElementById('memoPrintThroughWrap');
-  var throughSpan = document.getElementById('memoPrintThrough');
-  if (sub.memoThrough) {
-    if (throughSpan) throughSpan.textContent = toThaiNumerals(sub.memoThrough);
-    if (throughWrap) throughWrap.style.display = 'block';
-  } else {
-    if (throughWrap) throughWrap.style.display = 'none';
-  }
 
   /* ── เนื้อหา (readonly — แสดงเป็น paragraph) ── */
   var autoBody =
@@ -2153,17 +2135,6 @@ function renderInlineMemoPreview() {
   setText('prevDate', date);
   setText('prevSubject', subject);
   setText('prevTo', to);
-
-  var throughRow  = document.getElementById('prevThrough');
-  var throughText = document.getElementById('prevThroughText');
-  if (throughRow && throughText) {
-    if (through) {
-      throughRow.style.display = 'block';
-      throughText.textContent  = toThaiNumerals(through);
-    } else {
-      throughRow.style.display = 'none';
-    }
-  }
 
   var bodyEl = document.getElementById('prevBody');
   renderMemoBody(bodyEl, toThaiNumerals(body));
