@@ -882,12 +882,15 @@ function renderDocList() {
     if (!hasAny) {
       statusLabel = 'ยังไม่ส่ง'; statusBg = '#f1f5f9'; statusColor = '#94a3b8';
     } else {
-      var allReviewed  = courses.every(function(k){ return (submissions[k].status||'submitted') === 'reviewed'; });
+      var allReviewed  = courses.every(function(k){ return ['head_reviewed','reviewed','assistant_reviewed','deputy_reviewed','final_approved'].indexOf(submissions[k].status||'submitted') >= 0; });
       var anyRevision  = courses.some(function(k){ return (submissions[k].status||'submitted') === 'revision'; });
+      var allFinal     = courses.every(function(k){ return (submissions[k].status||'submitted') === 'final_approved'; });
       if (anyRevision) {
         statusLabel = 'มีรายวิชาแก้ไข'; statusBg = '#fef9c3'; statusColor = '#92400e';
+      } else if (allFinal) {
+        statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
       } else if (allReviewed) {
-        statusLabel = 'ตรวจแล้วทุกวิชา'; statusBg = '#dbeafe'; statusColor = '#1e40af';
+        statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
       } else {
         statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
       }
@@ -913,9 +916,9 @@ function renderDocList() {
                   courses.map(function(subKey) {
                     var sub     = submissions[subKey];
                     var status  = sub.status || 'submitted';
-                    var slabel  = { submitted:'ส่งแล้ว', reviewed:'ตรวจแล้ว', head_reviewed:'หัวหน้าตรวจ', final_approved:'อนุมัติแล้ว', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
-                    var sbg     = { submitted:'#dcfce7', reviewed:'#dbeafe', head_reviewed:'#e0f2fe', final_approved:'#f5f3ff', revision:'#fef9c3' }[status] || '#dcfce7';
-                    var scol    = { submitted:'#15803d', reviewed:'#1e40af', head_reviewed:'#0369a1', final_approved:'#6d28d9', revision:'#92400e' }[status] || '#15803d';
+                    var slabel  = { submitted:'ส่งแล้ว', reviewed:'หัวหน้าฯ ตรวจ', head_reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
+                    var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || '#dcfce7';
+                    var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || '#15803d';
                     var files   = sub.files || [];
                     return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
                       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
