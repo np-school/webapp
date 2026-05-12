@@ -307,18 +307,18 @@
       <!-- Charts Panel -->
       <div id="chartsPanel">
         <div style="display:grid;grid-template-columns:280px 1fr 1fr;gap:14px;" class="charts-section-grid">
-          <!-- Donut: Status breakdown — ขนาดใหญ่ เด่นชัด -->
-          <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;">
-            <p class="chart-title" style="align-self:flex-start;">สถานะงานทั้งหมด</p>
-            <p class="chart-sub" style="align-self:flex-start;">สัดส่วนสถานะเอกสารทุกประเภท</p>
-            <div class="donut-wrap" style="height:200px;width:200px;margin:8px auto 0;">
-              <canvas id="donutChart" width="200" height="200"></canvas>
+          <!-- Donut: Status breakdown -->
+          <div class="chart-card" style="display:flex;flex-direction:column;">
+            <p class="chart-title">สถานะงานทั้งหมด</p>
+            <p class="chart-sub">สัดส่วนสถานะเอกสารทุกประเภท</p>
+            <div class="donut-wrap" style="height:220px;width:220px;margin:16px auto 4px;">
+              <canvas id="donutChart" width="220" height="220"></canvas>
               <div class="donut-center">
-                <div class="donut-big" id="donutTotal" style="font-size:32px;">-</div>
-                <div class="donut-label">รายการ</div>
+                <div class="donut-big" id="donutTotal" style="font-size:36px;font-weight:800;">-</div>
+                <div class="donut-label" style="font-size:12px;">รายการ</div>
               </div>
             </div>
-            <div class="donut-legend" id="donutLegend" style="width:100%;margin-top:16px;"></div>
+            <div id="donutLegend" style="display:flex;flex-direction:column;gap:10px;margin-top:20px;padding:0 4px;"></div>
           </div>
 
           <!-- Horizontal bar: Progress per subject group -->
@@ -2188,17 +2188,17 @@ function renderCharts() {
 
 /* ── 1. Donut Chart (Canvas) ── */
 function renderDonutChart() {
+  /* เรียงจาก approved → none ตามในภาพ */
   var statusConfig = [
-    { key:'none',               label:'ยังไม่ส่ง',                color:'#cbd5e1' },
-    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',       color:'#22c55e' },
-    { key:'revision',           label:'ให้แก้ไข',                 color:'#ef4444' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'#0ea5e9' },
-    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'#f59e0b' },
-    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'#8b5cf6' },
     { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'#16a34a' },
+    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'#8b5cf6' },
+    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'#f59e0b' },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'#0ea5e9' },
+    { key:'submitted',          label:'รอตรวจ',                   color:'#22c55e' },
+    { key:'revision',           label:'ให้แก้ไข',                 color:'#ef4444' },
+    { key:'none',               label:'ยังไม่ส่ง',                color:'#e2e8f0' },
   ];
 
-  /* นับจากทุก slot (ครูทุกคน × ทุกประเภท) ใช้ container status (merged) */
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
   var total = teacherList.length * DOCUMENT_TYPES.length;
   var counts = {};
@@ -2218,37 +2218,65 @@ function renderDonutChart() {
   /* Draw donut */
   var canvas = document.getElementById('donutChart');
   if (!canvas) return;
-  var ctx    = canvas.getContext('2d');
-  var cx = 100, cy = 100, r = 88, thick = 26;
-  ctx.clearRect(0, 0, 200, 200);
+  var ctx = canvas.getContext('2d');
+  var size = 220;
+  var cx = size/2, cy = size/2, r = 90, thick = 28;
+  ctx.clearRect(0, 0, size, size);
 
+  /* วาด background ring (สีเทาอ่อน) */
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
+  ctx.fillStyle = '#f1f5f9';
+  ctx.fill();
+
+  /* วาด slices */
   var startAngle = -Math.PI / 2;
-  var gap = 0.025;
+  var gap = 0.018;
+  var hasData = statusConfig.some(function(s){ return counts[s.key] > 0 && s.key !== 'none'; });
 
-  statusConfig.forEach(function(s) {
-    var slice = total > 0 ? (counts[s.key] / total) * (2 * Math.PI) : 0;
-    if (slice < 0.001) return;
+  if (!hasData) {
+    /* ถ้าไม่มีข้อมูลเลย วาด ring เทาทั้งหมด */
     ctx.beginPath();
-    ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
-    ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
-    ctx.closePath();
-    ctx.fillStyle = s.color;
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
+    ctx.fillStyle = '#e2e8f0';
     ctx.fill();
-    startAngle += slice;
-  });
+  } else {
+    statusConfig.forEach(function(s) {
+      if (!counts[s.key]) return;
+      var slice = (counts[s.key] / total) * (2 * Math.PI);
+      if (slice < 0.001) return;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
+      ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
+      ctx.closePath();
+      ctx.fillStyle = s.color;
+      ctx.fill();
+      startAngle += slice;
+    });
+  }
+
+  /* Center hole — วาด white circle */
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
 
   /* Center label */
   document.getElementById('donutTotal').textContent = total;
 
-  /* Legend — แสดงเฉพาะที่มีค่า */
+  /* Legend — แสดงทุก status (รวม 0) */
   var leg = document.getElementById('donutLegend');
   leg.innerHTML = statusConfig.map(function(s) {
-    if (!counts[s.key]) return '';
     var pct = total > 0 ? Math.round((counts[s.key] / total) * 100) : 0;
-    return '<div class="legend-row">' +
-      '<div class="legend-dot" style="background:' + s.color + ';"></div>' +
-      '<span class="legend-label">' + s.label + '</span>' +
-      '<span class="legend-val">' + counts[s.key] + ' <span style="font-size:10px;color:#94a3b8;font-weight:600;">(' + pct + '%)</span></span>' +
+    var isZero = counts[s.key] === 0;
+    return '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<div style="width:12px;height:12px;border-radius:50%;background:' + s.color + ';flex-shrink:0;' + (isZero?'opacity:.45;':'') + '"></div>' +
+      '<span style="font-size:13px;font-weight:600;color:' + (isZero?'#94a3b8':'#475569') + ';flex:1;">' + s.label + '</span>' +
+      '<span style="font-size:13px;font-weight:800;color:' + (isZero?'#94a3b8':'#0f172a') + ';">' + counts[s.key] +
+        ' <span style="font-size:11px;font-weight:600;color:#94a3b8;">(' + pct + '%)</span>' +
+      '</span>' +
     '</div>';
   }).join('');
 }
