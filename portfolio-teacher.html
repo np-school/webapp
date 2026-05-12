@@ -146,23 +146,44 @@
   <script>
   /* ── A4 Scaler: ย่อ memoContent ให้พอดีหน้าจอ โดยไม่กระทบขนาดพิมพ์จริง ── */
   function scaleA4() {
+    /* scale หน้า 1 */
     var el = document.getElementById('memoContent');
-    if (!el) return;
-    var wrapper = el.parentElement;
-    if (!wrapper) return;
-    // Reset scale ก่อนวัด
-    el.style.transform = 'scale(1)';
-    el.style.transformOrigin = 'top left';
-    var paperW = el.scrollWidth;
-    var available = wrapper.offsetWidth;
-    if (paperW <= 0 || available <= 0) return;
-    var scale = Math.min(1, available / paperW);
-    el.style.transform = 'scale(' + scale + ')';
-    el.style.transformOrigin = 'top left';
-    // margin auto เพื่อ center
-    var leftOffset = (available - paperW * scale) / 2;
-    el.style.marginLeft = Math.max(0, leftOffset) + 'px';
-    wrapper.style.height = (el.scrollHeight * scale) + 'px';
+    if (el) {
+      var wrapper = el.parentElement;
+      if (wrapper) {
+        el.style.transform = 'scale(1)';
+        el.style.transformOrigin = 'top left';
+        var paperW = el.scrollWidth;
+        var available = wrapper.offsetWidth;
+        if (paperW > 0 && available > 0) {
+          var scale = Math.min(1, available / paperW);
+          el.style.transform = 'scale(' + scale + ')';
+          el.style.transformOrigin = 'top left';
+          var leftOffset = (available - paperW * scale) / 2;
+          el.style.marginLeft = Math.max(0, leftOffset) + 'px';
+          wrapper.style.height = (el.scrollHeight * scale) + 'px';
+        }
+      }
+    }
+    /* scale หน้า 2 (ใช้ขนาดเดียวกับหน้า 1) */
+    var el2 = document.getElementById('memoPage2Content');
+    if (el2) {
+      var wrapper2 = el2.parentElement;
+      if (wrapper2) {
+        el2.style.transform = 'scale(1)';
+        el2.style.transformOrigin = 'top left';
+        var paperW2 = el2.scrollWidth;
+        var available2 = wrapper2.offsetWidth;
+        if (paperW2 > 0 && available2 > 0) {
+          var scale2 = Math.min(1, available2 / paperW2);
+          el2.style.transform = 'scale(' + scale2 + ')';
+          el2.style.transformOrigin = 'top left';
+          var leftOffset2 = (available2 - paperW2 * scale2) / 2;
+          el2.style.marginLeft = Math.max(0, leftOffset2) + 'px';
+          wrapper2.style.height = (el2.scrollHeight * scale2) + 'px';
+        }
+      }
+    }
   }
 
   function initA4Scaler() {
@@ -583,7 +604,7 @@
 
     <!-- ── หน้า 2: ความคิดเห็นผู้ตรวจ ── -->
     <div id="memoPage2" style="display:none;">
-    <div style="
+    <div class="memo-a4-scaler"><div id="memoPage2Content" style="
       width:210mm;
       min-height:297mm;
       padding:25mm 20mm 20mm 30mm;
@@ -647,7 +668,7 @@
         </div>
       </div>
 
-    </div>
+    </div></div><!-- /memoPage2Content -->
     </div><!-- /memoPage2 -->
 
   </div><!-- /memo-paper -->
@@ -785,12 +806,14 @@ function loadAdminRoles() {
   db.collection('admins').get().then(function(snap) {
     snap.forEach(function(doc) {
       var p = doc.data();
-      var name  = p.name  || '';
+      var name  = p.name  || p.headOfGroupName || '';
       var email = doc.id  || '';
-      /* หัวหน้ากลุ่มสาระ — อาจมีหลายคน แต่ละคนมี headOfGroupName ระบุกลุ่มสาระ */
+      /* หัวหน้ากลุ่มสาระ — headOfGroupSubject = ชื่อกลุ่มสาระ, headOfGroupName = ชื่อคน */
       if (p.headOfGroup) {
-        var grp = p.headOfGroupName || p.headOfGroupGroup || '';
-        adminRoles.headOfGroup[grp] = { name: name, email: email };
+        var grp = p.headOfGroupSubject || '';  /* field จริงจาก admin-role.html */
+        if (grp) {
+          adminRoles.headOfGroup[grp] = { name: p.headOfGroupName || name, email: p.headOfGroupEmail || email };
+        }
       }
       /* ผช.ผอ.วิชาการ */
       if (p.assistantDirectorAcademic && !adminRoles.assistantAcademic) {
