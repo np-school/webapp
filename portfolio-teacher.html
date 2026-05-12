@@ -618,7 +618,7 @@
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;"></div>
-            <p style="font-size:12pt;margin:0;line-height:1.6;">( นายสุเนตร  บอกประโคน )</p>
+            <p id="page2AssistantSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสุเนตร  บอกประโคน )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
         </div>
@@ -627,7 +627,7 @@
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;"></div>
-            <p style="font-size:12pt;margin:0;line-height:1.6;">( นางสาวสุจินดา  เอี่ยมศิริ )</p>
+            <p id="page2DeputySignName" style="font-size:12pt;margin:0;line-height:1.6;">( นางสาวสุจินดา  เอี่ยมศิริ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
         </div>
@@ -641,7 +641,7 @@
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;"></div>
-            <p style="font-size:12pt;margin:0;line-height:1.6;">( นายสมิงไพร  สุนทะวงษ์ )</p>
+            <p id="page2DirectorSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสมิงไพร  สุนทะวงษ์ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
           </div>
         </div>
@@ -772,6 +772,43 @@ function updateProgressTotal() {
   el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
 }
 var currentStaffData = null;
+
+/* ── ข้อมูลผู้มีสิทธิ์ตามตำแหน่งจาก admins collection ── */
+var adminRoles = {
+  headOfGroup: {},        /* กลุ่มสาระ → { name, email } */
+  assistantAcademic: null,/* { name, email } */
+  deputyAcademic: null,   /* { name, email } */
+  director: null          /* { name, email } */
+};
+
+function loadAdminRoles() {
+  db.collection('admins').get().then(function(snap) {
+    snap.forEach(function(doc) {
+      var p = doc.data();
+      var name  = p.name  || '';
+      var email = doc.id  || '';
+      /* หัวหน้ากลุ่มสาระ — อาจมีหลายคน แต่ละคนมี headOfGroupName ระบุกลุ่มสาระ */
+      if (p.headOfGroup) {
+        var grp = p.headOfGroupName || p.headOfGroupGroup || '';
+        adminRoles.headOfGroup[grp] = { name: name, email: email };
+      }
+      /* ผช.ผอ.วิชาการ */
+      if (p.assistantDirectorAcademic && !adminRoles.assistantAcademic) {
+        adminRoles.assistantAcademic = { name: name, email: email };
+      }
+      /* รอง ผอ.วิชาการ */
+      if (p.deputyDirectorAcademic && !adminRoles.deputyAcademic) {
+        adminRoles.deputyAcademic = { name: name, email: email };
+      }
+      /* ผู้อำนวยการ */
+      if (p.director && !adminRoles.director) {
+        adminRoles.director = { name: name, email: email };
+      }
+    });
+  }).catch(function(e) {
+    console.warn('loadAdminRoles error:', e);
+  });
+}
 var currentYear      = 2568;
 var currentSem       = 1;
 /* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
@@ -837,6 +874,7 @@ auth.onAuthStateChanged(function(u) {
       buildSidebar('portfolio-teacher');
       checkAdminAccess(u.email);
       renderStaffInfoBadge();
+      loadAdminRoles();
       /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
       loadDocTypesFromFirestore(function() {
         loadSubmissions();
@@ -1057,7 +1095,13 @@ function openUploadModal(docTypeId) {
   document.getElementById('memoDate').value = thaiDateToday();
   document.getElementById('memoSubject').value = '';
   document.getElementById('memoTo').value = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-  document.getElementById('memoThrough').value = '';
+  /* ผ่าน: ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติจากกลุ่มของครู */
+  var autoThrough = '';
+  if (currentStaffData && currentStaffData.group) {
+    var headInfo = adminRoles.headOfGroup[currentStaffData.group];
+    if (headInfo && headInfo.name) autoThrough = headInfo.name;
+  }
+  document.getElementById('memoThrough').value = autoThrough;
   document.getElementById('memoBody').value = '';
   switchMemoTab('edit');
 
@@ -1097,7 +1141,13 @@ function openManageCourseModal(docTypeId, subKey) {
   document.getElementById('memoDate').value = sub.memoDate || thaiDateToday();
   document.getElementById('memoSubject').value = sub.memoSubject || '';
   document.getElementById('memoTo').value = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-  document.getElementById('memoThrough').value = sub.memoThrough || '';
+  /* ผ่าน: ถ้าเคยบันทึกไว้แล้วใช้ค่าเดิม ถ้าไม่มีให้ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติ */
+  var savedThrough = sub.memoThrough || '';
+  if (!savedThrough && currentStaffData && currentStaffData.group) {
+    var headInfoR = adminRoles.headOfGroup[currentStaffData.group];
+    if (headInfoR && headInfoR.name) savedThrough = headInfoR.name;
+  }
+  document.getElementById('memoThrough').value = savedThrough;
   document.getElementById('memoBody').value = sub.memoBody || '';
   switchMemoTab('edit');
 
@@ -1905,11 +1955,36 @@ function openMemoModal(subKey) {
   /* แสดงหน้า 2 เสมอ (พิมพ์จะขึ้นหน้าใหม่อัตโนมัติ) */
   if (page2) page2.style.display = 'block';
 
-  /* ชื่อหัวหน้ากลุ่มสาระ — ดึงจาก sub ถ้ามี */
+  /* ชื่อหัวหน้ากลุ่มสาระ — ดึงจาก sub ถ้ามี หรือจาก adminRoles ตามกลุ่มของครู */
   var headSignNameEl = document.getElementById('page2HeadSignName');
   if (headSignNameEl) {
     var headName = sub.headReviewerName || '';
+    /* ถ้ายังไม่มีใน sub ให้หาจาก adminRoles ตามกลุ่มสาระของครู */
+    if (!headName && staffGrp && adminRoles.headOfGroup[staffGrp]) {
+      headName = adminRoles.headOfGroup[staffGrp].name;
+    }
     headSignNameEl.textContent = headName ? '( ' + headName + ' )' : '(                                   )';
+  }
+
+  /* ผช.ผอ.วิชาการ */
+  var assistantSignEl = document.getElementById('page2AssistantSignName');
+  if (assistantSignEl) {
+    var assistantName = (sub.assistantReviewerName) || (adminRoles.assistantAcademic && adminRoles.assistantAcademic.name) || '';
+    assistantSignEl.textContent = assistantName ? '( ' + assistantName + ' )' : '(                                   )';
+  }
+
+  /* รอง ผอ.วิชาการ */
+  var deputySignEl = document.getElementById('page2DeputySignName');
+  if (deputySignEl) {
+    var deputyName = (sub.deputyReviewerName) || (adminRoles.deputyAcademic && adminRoles.deputyAcademic.name) || '';
+    deputySignEl.textContent = deputyName ? '( ' + deputyName + ' )' : '(                                   )';
+  }
+
+  /* ผู้อำนวยการ */
+  var directorSignEl = document.getElementById('page2DirectorSignName');
+  if (directorSignEl) {
+    var directorName = (sub.directorReviewerName) || (adminRoles.director && adminRoles.director.name) || '';
+    directorSignEl.textContent = directorName ? '( ' + directorName + ' )' : '(                                   )';
   }
 
   function setNote(id, text) {
