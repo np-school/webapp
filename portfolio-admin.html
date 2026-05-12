@@ -132,6 +132,28 @@
       .matrix-table{font-size:10px;}
     }
 
+    /* ── Teacher Individual Panel ── */
+    #teacherStatCards{grid-template-columns:repeat(5,1fr);}
+    @media(max-width:900px){#teacherStatCards{grid-template-columns:repeat(3,1fr)!important;}}
+    @media(max-width:540px){#teacherStatCards{grid-template-columns:repeat(2,1fr)!important;}}
+    #teacherChartsRow{grid-template-columns:1fr 2fr;}
+    @media(max-width:800px){#teacherChartsRow{grid-template-columns:1fr!important;}}
+
+    .teacher-search-item{padding:10px 14px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:10px;transition:background .12s;}
+    .teacher-search-item:hover{background:#faf5ff;}
+
+    /* sub-table for individual */
+    .sub-doc-row{border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:10px;transition:border-color .15s;}
+    .sub-doc-row:hover{border-color:#c4b5fd;}
+    .sub-doc-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:white;}
+    .sub-doc-body{display:none;padding:0 14px 14px;border-top:1px solid #f1f5f9;background:#fafbff;}
+    .sub-doc-body.open{display:block;}
+    .note-bubble{padding:10px 12px;border-radius:10px;border-left:4px solid;margin-top:6px;}
+    .note-bubble.teacher{background:#f0fdf4;border-color:#22c55e;}
+    .note-bubble.admin{background:#fffbeb;border-color:#f59e0b;}
+    .note-bubble.revision{background:#fef2f2;border-color:#ef4444;}
+    .course-sub-row{padding:8px 10px;border-radius:10px;border:1.5px solid #e2e8f0;margin-top:8px;background:white;}
+
     /* ── Charts Section ── */
     .charts-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
     @media(max-width:1100px){.charts-section{grid-template-columns:1fr 1fr;}}
@@ -237,6 +259,9 @@
         <div class="sub-tab-bar">
           <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
             <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
+          </button>
+          <button class="sub-tab" id="subTabTeacher" onclick="switchSubTab('teacher')">
+            <i data-lucide="user-search" style="width:14px;height:14px;"></i> รายบุคคล
           </button>
           <button class="sub-tab" id="subTabDocTypes" onclick="switchSubTab('doctypes')">
             <i data-lucide="list-checks" style="width:14px;height:14px;"></i> จัดการหัวข้องาน
@@ -404,6 +429,109 @@
           </div>
         </div>
       </div><!-- end panelDocTypes -->
+
+      <!-- ══ SUB TAB: INDIVIDUAL TEACHER ══ -->
+      <div id="panelTeacher" style="display:none;flex-direction:column;gap:16px;">
+
+        <!-- Search box -->
+        <div class="card" style="padding:18px 20px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;position:relative;">
+              <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#94a3b8;pointer-events:none;"></i>
+              <input type="text" id="teacherSearchInput"
+                placeholder="พิมพ์ชื่อครู หรืออีเมล เพื่อค้นหา..."
+                style="padding-left:36px;width:100%;"
+                oninput="renderTeacherDropdown()">
+            </div>
+            <div id="teacherDropdownWrap" style="position:relative;flex:1;min-width:220px;display:none;">
+              <div id="teacherDropdown" style="position:absolute;top:0;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:200;max-height:280px;overflow-y:auto;"></div>
+            </div>
+          </div>
+          <!-- Selected teacher pill -->
+          <div id="selectedTeacherPill" style="display:none;margin-top:12px;padding:10px 14px;background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:12px;display:none;align-items:center;gap:10px;">
+            <img id="selectedTeacherAvatar" src="" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+              <p id="selectedTeacherName" style="font-size:14px;font-weight:800;color:#0f172a;"></p>
+              <p id="selectedTeacherMeta" style="font-size:11px;color:#7c3aed;font-weight:600;"></p>
+            </div>
+            <button onclick="clearTeacherSelection()" style="padding:6px;background:white;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
+              <i data-lucide="x" style="width:14px;height:14px;color:#64748b;"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Teacher detail panel (hidden until selected) -->
+        <div id="teacherDetailPanel" style="display:none;flex-direction:column;gap:16px;">
+
+          <!-- Stat cards row -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;" id="teacherStatCards">
+            <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
+              <p style="font-size:11px;color:#64748b;font-weight:600;">ส่งงานแล้ว</p>
+              <p id="ts_submitted" style="font-size:28px;font-weight:800;color:#22c55e;">-</p>
+              <p style="font-size:10px;color:#94a3b8;" id="ts_submittedOf">จาก - รายการ</p>
+            </div>
+            <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
+              <p style="font-size:11px;color:#64748b;font-weight:600;">หัวหน้าฯ ตรวจแล้ว</p>
+              <p id="ts_head" style="font-size:28px;font-weight:800;color:#0ea5e9;">-</p>
+            </div>
+            <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
+              <p style="font-size:11px;color:#64748b;font-weight:600;">ผช.ผอ. ตรวจแล้ว</p>
+              <p id="ts_assist" style="font-size:28px;font-weight:800;color:#f59e0b;">-</p>
+            </div>
+            <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
+              <p style="font-size:11px;color:#64748b;font-weight:600;">ผอ. อนุมัติ</p>
+              <p id="ts_final" style="font-size:28px;font-weight:800;color:#7c3aed;">-</p>
+            </div>
+            <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
+              <p style="font-size:11px;color:#64748b;font-weight:600;">ยังไม่ส่ง</p>
+              <p id="ts_missing" style="font-size:28px;font-weight:800;color:#ef4444;">-</p>
+            </div>
+          </div>
+
+          <!-- Charts row -->
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px;" id="teacherChartsRow">
+            <!-- Donut -->
+            <div class="chart-card">
+              <p class="chart-title">สัดส่วนสถานะงานทั้งหมด</p>
+              <p class="chart-sub" id="teacherChartSub">ครู: -</p>
+              <div class="donut-wrap" style="height:160px;">
+                <canvas id="teacherDonutChart" width="160" height="160"></canvas>
+                <div class="donut-center">
+                  <div class="donut-big" id="teacherDonutTotal">-</div>
+                  <div class="donut-label">รายการ</div>
+                </div>
+              </div>
+              <div class="donut-legend" id="teacherDonutLegend"></div>
+            </div>
+            <!-- Horizontal bar per doc type -->
+            <div class="chart-card">
+              <p class="chart-title">สถานะแต่ละประเภทงาน</p>
+              <p class="chart-sub">ความคืบหน้าการตรวจสอบแต่ละหัวข้อ</p>
+              <div id="teacherDocBars" style="margin-top:4px;"></div>
+            </div>
+          </div>
+
+          <!-- Submission table with notes -->
+          <div class="card" style="padding:18px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:15px;font-weight:800;color:#0f172a;">รายละเอียดการส่งงาน & บันทึกข้อความ</h3>
+              <span id="teacherSubCount" style="font-size:12px;color:#7c3aed;font-weight:700;background:#ede9fe;padding:3px 12px;border-radius:20px;"></span>
+            </div>
+            <div id="teacherSubTable"></div>
+          </div>
+
+        </div><!-- end teacherDetailPanel -->
+
+        <!-- placeholder when none selected -->
+        <div id="teacherNoSelect" style="text-align:center;padding:60px 20px;">
+          <div style="width:72px;height:72px;background:#ede9fe;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i data-lucide="user-search" style="width:36px;height:36px;color:#7c3aed;"></i>
+          </div>
+          <p style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:6px;">เลือกครูเพื่อดูรายละเอียด</p>
+          <p style="font-size:13px;color:#64748b;">พิมพ์ชื่อหรืออีเมลในช่องค้นหาด้านบน</p>
+        </div>
+
+      </div><!-- end panelTeacher -->
 
     </div>
   </div>
@@ -2137,19 +2265,352 @@ var currentSubTab = 'overview';
 function switchSubTab(tab) {
   currentSubTab = tab;
   document.getElementById('subTabOverview').className = 'sub-tab' + (tab==='overview'?' active':'');
+  document.getElementById('subTabTeacher').className  = 'sub-tab' + (tab==='teacher'?' active':'');
   document.getElementById('subTabDocTypes').className = 'sub-tab' + (tab==='doctypes'?' active':'');
   document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
   document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
 
   if (tab === 'doctypes') {
     loadDocTypeList();
     lucide.createIcons();
   }
+  if (tab === 'teacher') {
+    lucide.createIcons();
+  }
 }
 
 /* ════════════════════════════════════════════
-   DOC TYPE MANAGER – Firestore collection: portfolio_doc_types
+   TEACHER INDIVIDUAL PANEL
    ════════════════════════════════════════════ */
+
+var selectedTeacherKey = null;   /* email key ของครูที่เลือก */
+var teacherDonutCtx    = null;   /* canvas context */
+var teacherDonutChartObj = null;
+
+/* ── Dropdown Search ── */
+function renderTeacherDropdown() {
+  var q = (document.getElementById('teacherSearchInput').value || '').toLowerCase().trim();
+  var wrap = document.getElementById('teacherDropdownWrap');
+  var drop = document.getElementById('teacherDropdown');
+
+  if (!q) { wrap.style.display = 'none'; return; }
+
+  var results = Object.values(teacherMap).filter(function(t) {
+    if (!t.isTeacher) return false;
+    return (t.staffName || '').toLowerCase().includes(q) ||
+           (t.email     || '').toLowerCase().includes(q) ||
+           (t.staffGroup|| '').toLowerCase().includes(q);
+  }).slice(0, 10);
+
+  if (!results.length) {
+    drop.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;">ไม่พบครูที่ค้นหา</div>';
+    wrap.style.display = 'block';
+    return;
+  }
+
+  drop.innerHTML = results.map(function(t) {
+    var name = t.staffName || t.displayName || t.email;
+    var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7c3aed&color=fff&size=40';
+    return '<div class="teacher-search-item" onclick="selectTeacher(\'' + esc(t.email) + '\')">' +
+      '<img src="' + avatar + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">' +
+      '<div style="min-width:0;">' +
+        '<p style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(name) + '</p>' +
+        '<p style="font-size:11px;color:#7c3aed;font-weight:600;">' + esc(t.staffGroup || '') + (t.position ? ' · ' + esc(t.position) : '') + '</p>' +
+      '</div>' +
+      '<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:#ede9fe;color:#7c3aed;flex-shrink:0;">' + Object.keys(t.subs).length + '/' + DOCUMENT_TYPES.length + '</span>' +
+    '</div>';
+  }).join('');
+  wrap.style.display = 'block';
+
+  /* close when clicking outside */
+  document.onclick = function(ev) {
+    if (!document.getElementById('teacherDropdownWrap').contains(ev.target) &&
+        !document.getElementById('teacherSearchInput').contains(ev.target)) {
+      wrap.style.display = 'none';
+    }
+  };
+}
+
+function selectTeacher(email) {
+  selectedTeacherKey = email;
+  var t = teacherMap[email];
+  if (!t) return;
+
+  /* hide dropdown */
+  document.getElementById('teacherDropdownWrap').style.display = 'none';
+  document.getElementById('teacherSearchInput').value = '';
+
+  /* show pill */
+  var name   = t.staffName || t.displayName || t.email;
+  var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7c3aed&color=fff&size=72';
+  document.getElementById('selectedTeacherAvatar').src = avatar;
+  document.getElementById('selectedTeacherName').textContent  = name;
+  document.getElementById('selectedTeacherMeta').textContent  = (t.staffGroup || '') + (t.position ? ' · ' + t.position : '') + ' · ' + t.email;
+  document.getElementById('selectedTeacherPill').style.display = 'flex';
+
+  /* show detail panel */
+  document.getElementById('teacherNoSelect').style.display    = 'none';
+  document.getElementById('teacherDetailPanel').style.display = 'flex';
+
+  renderTeacherDetail(t);
+  lucide.createIcons();
+}
+
+function clearTeacherSelection() {
+  selectedTeacherKey = null;
+  document.getElementById('selectedTeacherPill').style.display = 'none';
+  document.getElementById('teacherDetailPanel').style.display  = 'none';
+  document.getElementById('teacherNoSelect').style.display     = 'block';
+}
+
+/* ── Render full detail for selected teacher ── */
+function renderTeacherDetail(t) {
+  var total = DOCUMENT_TYPES.length;
+  var submitted = 0, head = 0, assist = 0, deputy = 0, final = 0, revision = 0;
+  var missing = 0;
+
+  /* count by merged container status */
+  DOCUMENT_TYPES.forEach(function(dt) {
+    var sub = t.subs[dt.id];
+    if (!sub) { missing++; return; }
+    var st = sub.status || 'submitted';
+    if (st === 'final_approved')     final++;
+    else if (st === 'deputy_reviewed')    deputy++;
+    else if (st === 'assistant_reviewed') assist++;
+    else if (st === 'head_reviewed' || st === 'reviewed') head++;
+    else if (st === 'revision')  revision++;
+    else submitted++;
+  });
+
+  /* Stat cards */
+  var sentCount = total - missing;
+  document.getElementById('ts_submitted').textContent = sentCount;
+  document.getElementById('ts_submittedOf').textContent = 'จาก ' + total + ' รายการ';
+  document.getElementById('ts_head').textContent   = head + deputy + assist + final;
+  document.getElementById('ts_assist').textContent  = assist + deputy + final;
+  document.getElementById('ts_final').textContent   = final;
+  document.getElementById('ts_missing').textContent  = missing;
+
+  /* Donut */
+  var name = t.staffName || t.displayName || t.email;
+  document.getElementById('teacherChartSub').textContent = name;
+  document.getElementById('teacherDonutTotal').textContent = sentCount;
+  renderTeacherDonut({ submitted: submitted, head_reviewed: head, assistant_reviewed: assist, deputy_reviewed: deputy, final_approved: final, revision: revision });
+
+  /* Doc type bars */
+  renderTeacherDocBars(t);
+
+  /* Submission detail table */
+  renderTeacherSubTable(t);
+}
+
+/* ── Donut chart for teacher ── */
+function renderTeacherDonut(counts) {
+  var STATUS_CFG = [
+    { key:'submitted',          label:'รอตรวจ (ครูส่ง)',      color:'#22c55e' },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',    color:'#0ea5e9' },
+    { key:'assistant_reviewed', label:'ผช.ผอ. ตรวจแล้ว',      color:'#f59e0b' },
+    { key:'deputy_reviewed',    label:'รอง ผอ. ตรวจแล้ว',     color:'#8b5cf6' },
+    { key:'final_approved',     label:'ผอ. อนุมัติ',           color:'#7c3aed' },
+    { key:'revision',           label:'ให้แก้ไข',              color:'#ef4444' },
+  ];
+
+  var canvas = document.getElementById('teacherDonutChart');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  var cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 8, ri = R * 0.55;
+  ctx.clearRect(0,0,w,h);
+
+  var data = STATUS_CFG.map(function(s){ return { label:s.label, color:s.color, count:counts[s.key]||0 }; }).filter(function(d){ return d.count > 0; });
+  var total = data.reduce(function(a,b){ return a+b.count; }, 0);
+
+  var legend = document.getElementById('teacherDonutLegend');
+  if (!total) {
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fillStyle='#f1f5f9'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,ri,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+    if (legend) legend.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:12px;">ยังไม่มีงานส่ง</p>';
+    return;
+  }
+
+  var gap = 0.03;
+  var start = -Math.PI/2;
+  data.forEach(function(d) {
+    var sweep = (d.count / total) * Math.PI * 2 - gap;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,start+sweep);
+    ctx.closePath(); ctx.fillStyle = d.color; ctx.fill();
+    start += sweep + gap;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,ri,0,Math.PI*2);
+  ctx.fillStyle='white'; ctx.fill();
+
+  if (legend) {
+    legend.innerHTML = data.map(function(d){
+      return '<div class="legend-row"><div class="legend-dot" style="background:'+d.color+'"></div><span class="legend-label">'+d.label+'</span><span class="legend-val">'+d.count+'</span></div>';
+    }).join('');
+  }
+}
+
+/* ── Doc type bars per teacher ── */
+function renderTeacherDocBars(t) {
+  var container = document.getElementById('teacherDocBars');
+  if (!container) return;
+
+  var STATUS_LABEL = { submitted:'รอตรวจ', head_reviewed:'หัวหน้าฯ ✓', reviewed:'หัวหน้าฯ ✓', assistant_reviewed:'ผช.ผอ. ✓', deputy_reviewed:'รอง ผอ. ✓', final_approved:'ผอ. อนุมัติ', revision:'ให้แก้ไข' };
+  var STATUS_COLOR = { submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#f59e0b', deputy_reviewed:'#8b5cf6', final_approved:'#7c3aed', revision:'#ef4444' };
+  var STATUS_ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+  var MAX = 6;
+
+  container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
+    var sub = t.subs[dt.id];
+    var st  = sub ? (sub.status || 'submitted') : 'none';
+    var ord = STATUS_ORDER[st] || 0;
+    var pct = Math.round((ord / MAX) * 100);
+    var color = STATUS_COLOR[st] || '#e2e8f0';
+    var label = sub ? (STATUS_LABEL[st] || st) : 'ยังไม่ส่ง';
+    var coursesHtml = '';
+    if (sub && sub._courses && sub._courses.length > 1) {
+      coursesHtml = '<span style="font-size:9px;font-weight:800;background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:6px;margin-left:4px;">' + sub._courses.length + ' วิชา</span>';
+    }
+    return '<div class="docbar-row" style="margin-bottom:12px;">' +
+      '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
+        '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
+      '</div>' +
+      '<span class="docbar-label" title="' + esc(dt.label) + '">' + esc(dt.short || dt.label) + coursesHtml + '</span>' +
+      '<div class="docbar-track" style="width:100px;flex-shrink:0;">' +
+        '<div class="docbar-fill" style="width:' + pct + '%;background:' + color + ';"></div>' +
+      '</div>' +
+      '<span style="font-size:10px;font-weight:800;color:' + (sub?color:'#94a3b8') + ';min-width:80px;text-align:right;">' + esc(label) + '</span>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ── Submission detail table ── */
+function renderTeacherSubTable(t) {
+  var container = document.getElementById('teacherSubTable');
+  if (!container) return;
+
+  var STATUS_LABEL = { submitted:'📤 รอตรวจ', head_reviewed:'👤 หัวหน้าฯ ✓', reviewed:'👤 หัวหน้าฯ ✓', assistant_reviewed:'🏅 ผช.ผอ. ✓', deputy_reviewed:'👑 รอง ผอ. ✓', final_approved:'🎖 ผอ. อนุมัติ', revision:'⚠ ให้แก้ไข', none:'ยังไม่ส่ง' };
+  var STATUS_BG    = { submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef2f2', none:'#f8fafc' };
+  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#dc2626', none:'#94a3b8' };
+
+  var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
+  document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + DOCUMENT_TYPES.length + ' รายการ';
+
+  var html = '';
+  DOCUMENT_TYPES.forEach(function(dt, idx) {
+    var sub = t.subs[dt.id];
+    var st  = sub ? (sub.status || 'submitted') : 'none';
+    var bg  = STATUS_BG[st] || '#f8fafc';
+    var clr = STATUS_COLOR[st] || '#94a3b8';
+    var lbl = STATUS_LABEL[st] || st;
+    var rowId = 'tsr-' + idx;
+
+    html += '<div class="sub-doc-row">';
+    html += '<div class="sub-doc-header" onclick="toggleSubDocRow(\'' + rowId + '\')">' +
+      '<div style="width:32px;height:32px;border-radius:10px;background:' + dt.color + '18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+        '<i data-lucide="' + dt.icon + '" style="width:15px;height:15px;color:' + dt.color + ';"></i>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<p style="font-size:13px;font-weight:700;color:#0f172a;">' + esc(dt.label) + '</p>';
+
+    if (sub && sub._courses) {
+      var allFinal = sub._courses.every(function(d){ return d.status === 'final_approved'; });
+      var total = sub._courses.length;
+      html += '<p style="font-size:11px;color:#64748b;margin-top:1px;">' + total + ' รายวิชา' + (allFinal ? ' · ทั้งหมด ผอ.อนุมัติแล้ว' : '') + '</p>';
+    }
+
+    html += '</div>' +
+      '<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;background:' + bg + ';color:' + clr + ';flex-shrink:0;">' + lbl + '</span>' +
+      '<i data-lucide="chevron-down" id="chev-' + rowId + '" style="width:14px;height:14px;color:#94a3b8;transition:transform .2s;flex-shrink:0;margin-left:4px;"></i>' +
+    '</div>';
+
+    html += '<div class="sub-doc-body" id="body-' + rowId + '">';
+
+    if (!sub) {
+      html += '<div style="padding:12px;text-align:center;color:#94a3b8;font-size:13px;">⚠ ยังไม่มีการส่งงาน</div>';
+    } else {
+      /* workflow bar */
+      html += buildWorkflowBar(st);
+
+      /* per-course breakdown */
+      var docs = sub._courses || [sub];
+      docs.forEach(function(doc) {
+        if (doc._isContainer) return;
+        var dSt = doc.status || 'submitted';
+        var dBg  = STATUS_BG[dSt]    || '#f8fafc';
+        var dClr = STATUS_COLOR[dSt] || '#94a3b8';
+        var dLbl = STATUS_LABEL[dSt] || dSt;
+
+        html += '<div class="course-sub-row">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+
+        if (doc.courseCode) {
+          html += '<span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
+        }
+        if (doc.courseName) {
+          html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc(doc.courseName) + '</span>';
+        }
+        html += '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:' + dBg + ';color:' + dClr + ';margin-left:auto;">' + dLbl + '</span>';
+
+        /* file link */
+        if (doc.fileUrl || (doc.files && doc.files.length)) {
+          var url = doc.fileUrl || (doc.files[0].url || doc.files[0].fileUrl);
+          var fname = doc.fileName || (doc.files && doc.files[0].fileName) || 'เปิดไฟล์';
+          html += '</div><div style="margin-top:6px;display:flex;align-items:center;gap:6px;">' +
+            '<i data-lucide="file" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>' +
+            '<a href="' + esc(url) + '" target="_blank" style="font-size:12px;color:#7c3aed;font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + esc(fname) + '</a>' +
+            '<a href="' + esc(url) + '" target="_blank" style="font-size:11px;color:#7c3aed;font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 8px;background:#faf5ff;border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
+              '<i data-lucide="external-link" style="width:11px;height:11px;"></i> เปิด' +
+            '</a>';
+        } else {
+          html += '</div><div style="margin-top:6px;">';
+        }
+
+        /* submitted at */
+        if (doc.submittedAt) {
+          html += '<span style="font-size:10px;color:#94a3b8;display:flex;align-items:center;gap:3px;margin-top:4px;"><i data-lucide="clock" style="width:10px;height:10px;"></i> ส่งเมื่อ ' + formatDate(doc.submittedAt) + '</span>';
+        }
+        html += '</div>';
+
+        /* teacher note */
+        if (doc.note) {
+          html += '<div class="note-bubble teacher" style="margin-top:6px;">' +
+            '<p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:3px;">📝 บันทึกจากครู</p>' +
+            '<p style="font-size:12px;color:#166534;line-height:1.6;">' + esc(doc.note) + '</p>' +
+          '</div>';
+        }
+
+        /* admin note (revision) */
+        if (doc.adminNote) {
+          var noteCls = dSt === 'revision' ? 'revision' : 'admin';
+          html += '<div class="note-bubble ' + noteCls + '" style="margin-top:6px;">' +
+            '<p style="font-size:11px;font-weight:700;color:' + (dSt==='revision'?'#dc2626':'#92400e') + ';margin-bottom:3px;">' + (dSt==='revision'?'⚠ หมายเหตุการแก้ไข':'💬 ความเห็นผู้ตรวจ') + '</p>' +
+            '<p style="font-size:12px;color:' + (dSt==='revision'?'#991b1b':'#78350f') + ';line-height:1.6;">' + esc(doc.adminNote) + '</p>' +
+          '</div>';
+        }
+
+        html += '</div>'; /* end course-sub-row */
+      });
+    }
+
+    html += '</div></div>'; /* end sub-doc-body + sub-doc-row */
+  });
+
+  container.innerHTML = html;
+  lucide.createIcons();
+}
+
+function toggleSubDocRow(rowId) {
+  var body = document.getElementById('body-' + rowId);
+  var chev = document.getElementById('chev-' + rowId);
+  var open = body.classList.toggle('open');
+  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+}
+
 var editingDocTypeId = null; /* null = new, else Firestore doc id */
 var selectedDtColor  = '#3b82f6';
 var dragSrcIndex     = null;
