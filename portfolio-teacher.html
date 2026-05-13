@@ -1491,12 +1491,19 @@ function promptDeleteFile(subKey, fileIndex) {
   var fileName = sub && sub.files && sub.files[fileIndex] ? sub.files[fileIndex].fileName : '';
   pendingDeleteInfo = { subKey: subKey, fileIndex: fileIndex };
   document.getElementById('deleteFileName').textContent = fileName;
+  /* reset ปุ่มทุกครั้งที่เปิด modal ใหม่ */
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = false;
+  btn.textContent = 'ลบไฟล์';
   document.getElementById('confirmDeleteModal').classList.add('open');
   lucide.createIcons();
 }
 function closeDeleteModal() {
   document.getElementById('confirmDeleteModal').classList.remove('open');
   pendingDeleteInfo = null;
+  /* reset ปุ่มเสมอเมื่อปิด */
+  var btn = document.getElementById('confirmDeleteBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ลบไฟล์'; }
 }
 function confirmDelete() {
   if (!pendingDeleteInfo) return;
