@@ -2135,11 +2135,18 @@ function uploadDataURLToStorage(dataURL, uid, docTypeId) {
       var ia = new Uint8Array(ab);
       for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
       var blob = new Blob([ab], { type: mimeType });
+      /* path คงที่ — อัปโหลดทับได้ ไม่สะสมไฟล์เก่า */
       var path = 'signatures/' + currentYear + '/' + uid + '/memo_' + docTypeId + '.png';
-      firebase.storage().ref(path).put(blob, { contentType: 'image/png' })
-        .then(function(snap) { return snap.ref.getDownloadURL(); })
-        .then(function(url) { resolve(url); })
-        .catch(function(e) { console.warn('[MemoSig] upload error:', e); resolve(''); });
+      var uploadTask = firebase.storage().ref(path).put(blob, { contentType: 'image/png' });
+      uploadTask.on('state_changed',
+        null,
+        function(err) { console.warn('[MemoSig] upload error:', err.code); resolve(''); },
+        function() {
+          uploadTask.snapshot.ref.getDownloadURL()
+            .then(function(url) { resolve(url); })
+            .catch(function(e) { console.warn('[MemoSig] getDownloadURL error:', e); resolve(''); });
+        }
+      );
     } catch(e) { console.warn('[MemoSig] dataURL error:', e); resolve(''); }
   });
 }
