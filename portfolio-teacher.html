@@ -2401,8 +2401,8 @@ function openMemoModal(subKey) {
       }).catch(function(){})
     : Promise.resolve();
 
-  /* ดึง memo doc แบบ shared จาก portfolio_memos */
-  var memoId = currentUser.uid + '_' + sub.docTypeId + '_' + sub.year + '_' + sub.semester;
+  /* ดึง memo doc แบบ shared จาก portfolio_memos — ใช้ currentYear/currentSem ให้ตรงกับ getMemoDocId() */
+  var memoId = currentUser.uid + '_' + sub.docTypeId + '_' + currentYear + '_' + currentSem;
   var fetchMemo = db.collection('portfolio_memos').doc(memoId).get()
     .then(function(mDoc) { return mDoc.exists ? mDoc.data() : null; })
     .catch(function(){ return null; });
