@@ -3501,21 +3501,55 @@ function openAdminMemoModal(docId, teacherEmail, docTypeId) {
     db.collection('portfolio_memos').doc(memoId).get()
       .then(function(mDoc) {
         var memoData = mDoc.exists ? mDoc.data() : null;
-        /* ดึง submission doc สำหรับข้อมูลผู้ตรวจ (note/signature) */
-        var targetDocId = docId || (sub._courses && sub._courses[0] && sub._courses[0].id);
-        if (targetDocId) {
-          db.collection('portfolio_submissions').doc(targetDocId).get()
-            .then(function(sDoc) {
-              var subDoc = sDoc.exists ? Object.assign({ id: sDoc.id }, sDoc.data()) : Object.assign({ id: targetDocId }, (sub._courses && sub._courses[0]) || sub);
-              _renderAdminMemoModal(subDoc, t, docTypeId, memoData);
-            })
-            .catch(function() {
-              var fallback = Object.assign({ id: targetDocId || '' }, (sub._courses && sub._courses[0]) || sub);
-              _renderAdminMemoModal(fallback, t, docTypeId, memoData);
-            });
-        } else {
-          _renderAdminMemoModal(Object.assign({}, sub), t, docTypeId, memoData);
+
+        /* รวบรวม docId ทั้งหมดที่ต้อง fetch (ตัวที่คลิก + ทุก course) */
+        var idsToFetch = [];
+        if (docId) idsToFetch.push(docId);
+        if (sub._courses) {
+          sub._courses.forEach(function(c) {
+            if (c.id && idsToFetch.indexOf(c.id) === -1) idsToFetch.push(c.id);
+          });
         }
+        if (!idsToFetch.length) {
+          _renderAdminMemoModal(Object.assign({}, sub), t, docTypeId, memoData);
+          return;
+        }
+
+        /* field ที่ต้องรวมจากทุก course */
+        var sigFields = ['headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL',
+                         'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
+                         'headNote','assistantNote','deputyNote','directorNote'];
+
+        /* fetch ทุก doc แล้ว merge ลายเซ็นเข้าด้วยกัน */
+        Promise.all(idsToFetch.map(function(id){
+          return db.collection('portfolio_submissions').doc(id).get().catch(function(){ return null; });
+        })).then(function(snaps) {
+          /* ใช้ doc ที่ตรงกับ docId เป็นฐาน ไม่ก็ตัวแรก */
+          var primary = null;
+          snaps.forEach(function(s) {
+            if (s && s.exists && s.id === docId) primary = Object.assign({ id: s.id }, s.data());
+          });
+          if (!primary && snaps[0] && snaps[0].exists) {
+            primary = Object.assign({ id: snaps[0].id }, snaps[0].data());
+          }
+          if (!primary) {
+            primary = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
+          }
+
+          /* เติม field ลายเซ็น/ชื่อ/note จาก course อื่น ๆ ถ้า primary ยังว่าง */
+          snaps.forEach(function(s) {
+            if (!s || !s.exists) return;
+            var d = s.data();
+            sigFields.forEach(function(f) {
+              if (!primary[f] && d[f]) primary[f] = d[f];
+            });
+          });
+
+          _renderAdminMemoModal(primary, t, docTypeId, memoData);
+        }).catch(function() {
+          var fallback = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
+          _renderAdminMemoModal(fallback, t, docTypeId, memoData);
+        });
       })
       .catch(function(e) {
         console.warn('[AdminMemo] loadMemo error:', e);
