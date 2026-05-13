@@ -622,9 +622,9 @@
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
         <div style="text-align:center;min-width:200px;">
           <div style="font-size:12pt;">ลงชื่อ</div>
-          <div style="height:12px;"></div>
-          <div id="memoSignatureImgWrap" style="display:flex;justify-content:center;"><img id="memoSignatureImg" src="" style="max-width:180px;max-height:60px;display:none;" alt="ลายเซ็น"/></div>
-          <div style="height:8px;"></div>
+          <div style="height:48px;display:flex;align-items:center;justify-content:center;">
+            <img id="memoSignatureImg" src="" style="display:none;max-height:52px;max-width:180px;object-fit:contain;" alt="ลายเซ็น">
+          </div>
           <p id="memoSignName"  style="font-size:12pt;margin:2px 0 0;line-height:1.5;"></p>
           <p id="memoSignPos"   style="font-size:12pt;margin:0;line-height:1.5;"></p>
           <p id="memoSignGroup" style="font-size:12pt;margin:0;line-height:1.5;"></p>
@@ -654,8 +654,8 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;position:relative;">
-              <img id="page2HeadSignImg" src="" style="display:none;max-height:40px;max-width:120px;position:absolute;bottom:0;left:50%;transform:translateX(-50%);">
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="page2HeadSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
             </div>
             <p id="page2HeadSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
@@ -670,8 +670,8 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;position:relative;">
-              <img id="page2AssistantSignImg" src="" style="display:none;max-height:40px;max-width:120px;position:absolute;bottom:0;left:50%;transform:translateX(-50%);">
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="page2AssistantSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
             </div>
             <p id="page2AssistantSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
@@ -681,8 +681,8 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;position:relative;">
-              <img id="page2DeputySignImg" src="" style="display:none;max-height:40px;max-width:120px;position:absolute;bottom:0;left:50%;transform:translateX(-50%);">
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="page2DeputySignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
             </div>
             <p id="page2DeputySignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
@@ -697,8 +697,8 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;position:relative;">
-              <img id="page2DirectorSignImg" src="" style="display:none;max-height:40px;max-width:120px;position:absolute;bottom:0;left:50%;transform:translateX(-50%);">
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="page2DirectorSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
             </div>
             <p id="page2DirectorSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
@@ -2492,17 +2492,15 @@ function _renderMemoModal(subKey, memoData) {
   var headSignNameEl = document.getElementById('page2HeadSignName');
   if (headSignNameEl) {
     var headName = sub.headReviewerName || '';
-    /* ถ้ายังไม่มีใน sub ให้หาจาก adminRoles ตามกลุ่มสาระของครู */
     if (!headName && staffGrp && adminRoles.headOfGroup[staffGrp]) {
       headName = adminRoles.headOfGroup[staffGrp].name;
     }
     headSignNameEl.textContent = headName ? '( ' + headName + ' )' : '(                                   )';
   }
-  var headSignImgEl = document.getElementById('page2HeadSignImg');
-  if (headSignImgEl) {
-    var hSig = sub.headSignatureURL || '';
-    if (hSig) { headSignImgEl.src = hSig; headSignImgEl.style.display = 'block'; }
-    else { headSignImgEl.src = ''; headSignImgEl.style.display = 'none'; }
+  var headSigImg = document.getElementById('page2HeadSignImg');
+  if (headSigImg) {
+    if (sub.headSignatureURL) { headSigImg.src = sub.headSignatureURL; headSigImg.style.display = 'block'; }
+    else { headSigImg.src = ''; headSigImg.style.display = 'none'; }
   }
 
   /* ผช.ผอ.วิชาการ */
@@ -2511,11 +2509,10 @@ function _renderMemoModal(subKey, memoData) {
     var assistantName = (sub.assistantReviewerName) || (adminRoles.assistantAcademic && adminRoles.assistantAcademic.name) || '';
     assistantSignEl.textContent = assistantName ? '( ' + assistantName + ' )' : '(                                   )';
   }
-  var assistantSignImgEl = document.getElementById('page2AssistantSignImg');
-  if (assistantSignImgEl) {
-    var aSig = sub.assistantSignatureURL || '';
-    if (aSig) { assistantSignImgEl.src = aSig; assistantSignImgEl.style.display = 'block'; }
-    else { assistantSignImgEl.src = ''; assistantSignImgEl.style.display = 'none'; }
+  var assistantSigImg = document.getElementById('page2AssistantSignImg');
+  if (assistantSigImg) {
+    if (sub.assistantSignatureURL) { assistantSigImg.src = sub.assistantSignatureURL; assistantSigImg.style.display = 'block'; }
+    else { assistantSigImg.src = ''; assistantSigImg.style.display = 'none'; }
   }
 
   /* รอง ผอ.วิชาการ */
@@ -2524,11 +2521,10 @@ function _renderMemoModal(subKey, memoData) {
     var deputyName = (sub.deputyReviewerName) || (adminRoles.deputyAcademic && adminRoles.deputyAcademic.name) || '';
     deputySignEl.textContent = deputyName ? '( ' + deputyName + ' )' : '(                                   )';
   }
-  var deputySignImgEl = document.getElementById('page2DeputySignImg');
-  if (deputySignImgEl) {
-    var dSig = sub.deputySignatureURL || '';
-    if (dSig) { deputySignImgEl.src = dSig; deputySignImgEl.style.display = 'block'; }
-    else { deputySignImgEl.src = ''; deputySignImgEl.style.display = 'none'; }
+  var deputySigImg = document.getElementById('page2DeputySignImg');
+  if (deputySigImg) {
+    if (sub.deputySignatureURL) { deputySigImg.src = sub.deputySignatureURL; deputySigImg.style.display = 'block'; }
+    else { deputySigImg.src = ''; deputySigImg.style.display = 'none'; }
   }
 
   /* ผู้อำนวยการ */
@@ -2537,11 +2533,10 @@ function _renderMemoModal(subKey, memoData) {
     var directorName = (sub.directorReviewerName) || (adminRoles.director && adminRoles.director.name) || '';
     directorSignEl.textContent = directorName ? '( ' + directorName + ' )' : '(                                   )';
   }
-  var directorSignImgEl = document.getElementById('page2DirectorSignImg');
-  if (directorSignImgEl) {
-    var drSig = sub.directorSignatureURL || '';
-    if (drSig) { directorSignImgEl.src = drSig; directorSignImgEl.style.display = 'block'; }
-    else { directorSignImgEl.src = ''; directorSignImgEl.style.display = 'none'; }
+  var directorSigImg = document.getElementById('page2DirectorSignImg');
+  if (directorSigImg) {
+    if (sub.directorSignatureURL) { directorSigImg.src = sub.directorSignatureURL; directorSigImg.style.display = 'block'; }
+    else { directorSigImg.src = ''; directorSigImg.style.display = 'none'; }
   }
 
   function setNote(id, text) {
