@@ -770,11 +770,17 @@
         <textarea id="adminNote" rows="2" placeholder="กรอกความคิดเห็นหรือหมายเหตุก่อนกดยืนยัน..." style="resize:none;"></textarea>
 
         <!-- Signature pad -->
-        <div style="margin-top:12px;">
+        <div style="margin-top:12px;" id="adminSigPadWrap">
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
             ลายมือชื่อผู้ตรวจ
             <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องเซ็นก่อนกดยืนยัน</span>
           </label>
+          <!-- แสดงลายเซ็นเก่า (ถ้ามี) -->
+          <div id="existingSigPreview" style="display:none;margin-bottom:8px;padding:8px 12px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;">
+            <p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:6px;">✓ ลายเซ็นที่เซ็นไว้แล้ว</p>
+            <img id="existingSigImg" src="" style="max-height:52px;object-fit:contain;display:block;">
+            <p style="font-size:10px;color:#64748b;margin-top:4px;">เซ็นใหม่ด้านล่างเพื่อแทนที่</p>
+          </div>
           <canvas id="adminSigCanvas" class="admin-sig-canvas" width="420" height="90" style="height:90px;"></canvas>
           <div style="display:flex;justify-content:flex-end;margin-top:4px;">
             <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
@@ -1882,6 +1888,28 @@ function fillSingleFileInfo(sub) {
 
   var displayNote = displayFile.adminNote !== undefined ? displayFile.adminNote : (sub.adminNote || '');
 
+  /* ── ดึง signature URL ที่ตรวจไปแล้วของขั้นนี้ ── */
+  var _targetDocForSig = null;
+  if (courseFiles.length > 0 && courseFiles[0]._docId && origSub) {
+    var _allCourses = origSub._courses || [origSub];
+    _targetDocForSig = _allCourses.find(function(d){ return d.id === courseFiles[0]._docId; }) || null;
+  }
+  /* map status → URL field */
+  var sigUrlFieldMap = { head_reviewed:'headSignatureURL', reviewed:'headSignatureURL', assistant_reviewed:'assistantSignatureURL', deputy_reviewed:'deputySignatureURL', final_approved:'directorSignatureURL' };
+  var existingSigURL = _targetDocForSig ? (_targetDocForSig[sigUrlFieldMap[curStatus]] || '') : '';
+  /* แสดง preview ลายเซ็นเก่า (ถ้ามี) */
+  var existSigDiv = document.getElementById('existingSigPreview');
+  var existSigImg = document.getElementById('existingSigImg');
+  if (existSigDiv && existSigImg) {
+    if (existingSigURL) {
+      existSigImg.src = existingSigURL;
+      existSigDiv.style.display = 'block';
+    } else {
+      existSigDiv.style.display = 'none';
+      existSigImg.src = '';
+    }
+  }
+
   var statusLabels = {
     submitted:          'ส่งงานแล้ว — รอหัวหน้ากลุ่มสาระตรวจ',
     head_reviewed:      'ผ่านหัวหน้ากลุ่มสาระ — รอ ผช.ผอ.วิชาการตรวจ',
@@ -1923,7 +1951,26 @@ function fillSingleFileInfo(sub) {
       ' · สถานะ: ' + (statusLabels[curStatus] || curStatus);
   }
 
-  document.getElementById('adminNote').value = displayNote;
+  /* แสดง note เก่า (ของขั้นนี้) เป็น reference แต่ไม่เขียนทับ textarea
+     เพราะผู้ตรวจต้องกรอกความคิดเห็นใหม่ทุกครั้ง */
+  var prevNoteRef = document.getElementById('prevNoteRef');
+  if (!prevNoteRef) {
+    /* สร้าง element แสดง note เก่าครั้งแรก */
+    prevNoteRef = document.createElement('div');
+    prevNoteRef.id = 'prevNoteRef';
+    var noteTA = document.getElementById('adminNote');
+    if (noteTA && noteTA.parentNode) noteTA.parentNode.insertBefore(prevNoteRef, noteTA.nextSibling);
+  }
+  /* map status → note field */
+  var noteFieldMap2 = { head_reviewed:'headNote', reviewed:'headNote', assistant_reviewed:'assistantNote', deputy_reviewed:'deputyNote', final_approved:'directorNote', revision:'adminNote' };
+  var prevNoteVal = _targetDocForSig ? (_targetDocForSig[noteFieldMap2[curStatus]] || '') : '';
+  if (prevNoteVal) {
+    prevNoteRef.style.cssText = 'margin-top:6px;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;font-size:12px;color:#92400e;';
+    prevNoteRef.innerHTML = '<strong>ความคิดเห็นที่เคยบันทึกไว้:</strong> ' + esc(prevNoteVal);
+  } else {
+    prevNoteRef.style.display = 'none';
+    prevNoteRef.innerHTML = '';
+  }
 
   /* Workflow bar — ใช้สถานะของรายวิชาที่เลือก */
   var wfBox = document.getElementById('reviewWorkflowBar');
