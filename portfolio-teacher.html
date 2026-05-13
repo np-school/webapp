@@ -2310,6 +2310,7 @@ function saveMemoDocument(signatureURL, docTypeId) {
     signatureURL: signatureURL || '',
     updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
   };
+  console.log('[MemoSave] memoId =', memoId, '| signatureURL =', signatureURL ? signatureURL.substring(0,60)+'...' : '(ว่าง)');
   /* set + merge: อัปเดตทับ doc เดิมได้ */
   return db.collection('portfolio_memos').doc(memoId).set(data, { merge: true });
 }
@@ -2409,6 +2410,9 @@ function openMemoModal(subKey) {
 
   Promise.all([fetchSub, fetchMemo]).then(function(results) {
     var memoData = results[1];
+    console.log('[MemoModal] memoId =', memoId);
+    console.log('[MemoModal] memoData =', memoData ? JSON.stringify(Object.keys(memoData)) : 'null');
+    if (memoData) console.log('[MemoModal] signatureURL field =', memoData.signatureURL || '(ไม่มี)');
     _renderMemoModal(subKey, memoData);
   });
 }
@@ -2457,6 +2461,7 @@ function _renderMemoModal(subKey, memoData) {
   var sigImg = document.getElementById('memoSignatureImg');
   if (sigImg) {
     var sigSrc = memo.signatureURL || '';
+    console.log('[MemoModal] signatureURL =', sigSrc ? sigSrc.substring(0,80)+'...' : '(ว่าง)');
     if (sigSrc && sigSrc.length > 10) {
       sigImg.src = sigSrc;
       sigImg.style.display = 'block';
@@ -2464,6 +2469,8 @@ function _renderMemoModal(subKey, memoData) {
       sigImg.src = '';
       sigImg.style.display = 'none';
     }
+  } else {
+    console.warn('[MemoModal] ไม่พบ element memoSignatureImg');
   }
 
   document.getElementById('memoModal').classList.add('open');
