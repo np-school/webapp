@@ -1948,30 +1948,58 @@ function uploadSignatureToStorage(uid, courseCode, docTypeId) {
     if (typeof getSignatureDataURL !== 'function' || isSignatureEmpty()) {
       resolve(''); return;
     }
+
+    /* ตรวจว่า Firebase Storage พร้อมใช้งาน */
+    if (typeof firebase === 'undefined' || typeof firebase.storage !== 'function') {
+      console.warn('Firebase Storage SDK ไม่พร้อม — ข้ามการอัปโหลดลายเซ็น');
+      resolve(''); return;
+    }
+
     var dataURL = getSignatureDataURL();
+    if (!dataURL || dataURL.indexOf(',') === -1) { resolve(''); return; }
+
     /* แปลง dataURL → Blob */
-    var byteString = atob(dataURL.split(',')[1]);
-    var mimeType   = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    var ab = new ArrayBuffer(byteString.length);
-    var ia = new Uint8Array(ab);
-    for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-    var blob = new Blob([ab], { type: mimeType });
+    try {
+      var byteString = atob(dataURL.split(',')[1]);
+      var mimeType   = dataURL.split(',')[0].split(':')[1].split(';')[0];
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      var blob = new Blob([ab], { type: mimeType });
 
-    /* path: signatures/{uid}/{docTypeId}_{courseCode}_{timestamp}.png */
-    var ts   = Date.now();
-    var path = 'signatures/' + uid + '/' + docTypeId + '_' + sanitizeForFilename(courseCode) + '_' + ts + '.png';
-    var storageRef = firebase.storage().ref(path);
-    var uploadTask = storageRef.put(blob, { contentType: 'image/png' });
+      /* path: signatures/{uid}/{docTypeId}_{courseCode}_{timestamp}.png */
+      var ts   = Date.now();
+      var path = 'signatures/' + uid + '/' + docTypeId + '_' + sanitizeForFilename(courseCode) + '_' + ts + '.png';
 
-    uploadTask.on('state_changed',
-      null,
-      function(err) { reject(err); },
-      function() {
-        uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
-          resolve(url);
-        }).catch(reject);
-      }
-    );
+      console.log('[Signature] กำลังอัปโหลดไปที่:', path);
+
+      var storageRef = firebase.storage().ref(path);
+      var uploadTask = storageRef.put(blob, { contentType: 'image/png' });
+
+      uploadTask.on('state_changed',
+        function(snapshot) {
+          var pct = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100);
+          console.log('[Signature] อัปโหลด ' + pct + '%');
+        },
+        function(err) {
+          console.error('[Signature] อัปโหลดไม่สำเร็จ:', err.code, err.message);
+          /* ถ้า Storage error → ไม่หยุดการส่งงาน resolve เป็น '' แทน */
+          resolve('');
+        },
+        function() {
+          uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
+            console.log('[Signature] อัปโหลดสำเร็จ:', url);
+            resolve(url);
+          }).catch(function(err) {
+            console.error('[Signature] getDownloadURL error:', err);
+            resolve('');
+          });
+        }
+      );
+    } catch(e) {
+      console.error('[Signature] แปลง dataURL ไม่สำเร็จ:', e);
+      resolve('');
+    }
   });
 }
 
