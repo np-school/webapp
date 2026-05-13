@@ -17,6 +17,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <!-- Google API -->
@@ -105,6 +106,16 @@
     .file-entry.replacing{border-color:#f59e0b;background:#fffbeb;}
     .replace-zone{border:2px dashed #fbbf24;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#fffbeb;margin-top:6px;transition:all .2s;}
     .replace-zone:hover{border-color:#f59e0b;background:#fef3c7;}
+
+    /* ── Signature Pad ── */
+    .sig-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2100;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
+    .sig-modal-bg.open{display:flex;}
+    .sig-box{background:white;border-radius:20px;width:100%;max-width:520px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,.25);}
+    .sig-canvas-wrap{border:2px solid #e2e8f0;border-radius:12px;background:#fafafa;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;}
+    .sig-canvas-wrap::after{content:'เซ็นชื่อในกรอบนี้';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#cbd5e1;font-weight:600;pointer-events:none;transition:opacity .2s;}
+    .sig-canvas-wrap.has-sig::after{opacity:0;}
+    #sigCanvas{display:block;width:100%;height:160px;touch-action:none;}
+    .sig-preview-img{max-height:60px;object-fit:contain;display:block;}
 
     @media(max-width:640px){
       .doc-item{flex-direction:column;align-items:flex-start;gap:10px;}
@@ -414,10 +425,31 @@
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">เรียน</label>
             <input type="text" id="memoTo" placeholder="เช่น ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" value="ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" style="font-size:13px;">
           </div>
-          <input type="hidden" id="memoThrough" value="">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ผ่าน</label>
+            <input type="text" id="memoThrough" placeholder="เช่น หัวหน้ากลุ่มสาระ (ถ้ามี)" style="font-size:13px;">
+          </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียด <span style="color:#94a3b8;font-weight:600;">(สร้างอัตโนมัติถ้าปล่อยว่าง)</span></label>
             <textarea id="memoBody" rows="3" placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ" style="resize:none;font-size:13px;"></textarea>
+          </div>
+
+          <!-- ลายเซ็น -->
+          <div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;background:#f8fafc;">
+            <div style="flex:1;display:flex;align-items:center;gap:10px;">
+              <div id="sigStatusIcon" style="width:36px;height:36px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="pen-line" style="width:16px;height:16px;color:#94a3b8;"></i>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#374151;">ลายมือชื่อผู้ส่ง</div>
+                <div id="sigStatusText" style="font-size:11px;color:#94a3b8;margin-top:1px;">ยังไม่มีลายเซ็น</div>
+              </div>
+              <img id="sigThumbInForm" src="" style="display:none;max-height:32px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0;padding:2px;background:white;">
+            </div>
+            <button onclick="openSigModal()" id="sigActionBtn" style="padding:7px 14px;background:#1d4ed8;color:white;font-weight:700;border-radius:8px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="pen-line" style="width:12px;height:12px;"></i>
+              <span id="sigActionLabel">วาดลายเซ็น</span>
+            </button>
           </div>
         </div>
 
@@ -452,6 +484,12 @@
               <span style="font-size:12pt;margin-left:4px;" id="prevSubject"></span>
             </div>
 
+            <!-- ผ่าน (ถ้ามี) -->
+            <div id="prevThrough" style="display:none;">
+              <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
+              <span style="font-size:12pt;margin-left:4px;" id="prevThroughText"></span>
+            </div>
+
             <!-- เรียน -->
             <div style="margin-top:4px;">
               <span style="font-size:16pt;font-weight:800;">เรียน</span>
@@ -465,7 +503,9 @@
             <div style="display:flex;justify-content:flex-end;margin-top:24px;">
               <div style="text-align:center;min-width:160px;">
                 <div style="font-size:11px;">ลงชื่อ</div>
-                <div style="height:30px;"></div>
+                <div style="height:30px;position:relative;display:flex;align-items:center;justify-content:center;">
+                  <img id="prevSignImg" class="sig-preview-img" src="" style="display:none;max-height:36px;">
+                </div>
                 <p id="prevSignName"  style="font-size:11px;margin:2px 0 0;line-height:1.5;"></p>
                 <p id="prevSignPos"   style="font-size:11px;margin:0;line-height:1.5;"></p>
                 <p id="prevSignGroup" style="font-size:11px;margin:0;line-height:1.5;"></p>
@@ -568,6 +608,12 @@
         <span style="font-size:12pt;margin-left:6px;" id="memoPrintSubject"></span>
       </div>
 
+      <!-- ผ่าน (ถ้ามี) -->
+      <div id="memoPrintThroughWrap" style="display:none;text-align:left;">
+        <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
+        <span style="font-size:12pt;margin-left:6px;" id="memoPrintThrough"></span>
+      </div>
+
       <!-- เรียน -->
       <div style="margin-top:4px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรียน</span>
@@ -587,7 +633,9 @@
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
         <div style="text-align:center;min-width:200px;">
           <div style="font-size:12pt;">ลงชื่อ</div>
-          <div style="height:48px;"></div>
+          <div style="height:48px;display:flex;align-items:center;justify-content:center;">
+            <img id="memoSignImg" src="" style="display:none;max-height:52px;object-fit:contain;">
+          </div>
           <p id="memoSignName"  style="font-size:12pt;margin:2px 0 0;line-height:1.5;"></p>
           <p id="memoSignPos"   style="font-size:12pt;margin:0;line-height:1.5;"></p>
           <p id="memoSignGroup" style="font-size:12pt;margin:0;line-height:1.5;"></p>
@@ -684,6 +732,47 @@
 
 <!-- hidden input for replace -->
 <input type="file" id="replaceFileInput" style="display:none;" accept=".pdf,application/pdf" onchange="onReplaceFileSelected(this)">
+
+<!-- ── Signature Pad Modal ── -->
+<div id="sigModal" class="sig-modal-bg">
+  <div class="sig-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <h3 style="font-size:17px;font-weight:800;color:#0f172a;margin:0;">ลายมือชื่อของคุณ</h3>
+        <p style="font-size:12px;color:#64748b;margin:4px 0 0;" id="sigModalSub">วาดลายเซ็นในกรอบด้านล่าง รองรับนิ้ว / Apple Pencil / เมาส์</p>
+      </div>
+      <button onclick="closeSigModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+        <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+      </button>
+    </div>
+
+    <!-- canvas -->
+    <div class="sig-canvas-wrap" id="sigCanvasWrap">
+      <canvas id="sigCanvas"></canvas>
+    </div>
+
+    <!-- actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px;flex-wrap:wrap;">
+      <button onclick="clearSigCanvas()" style="padding:9px 16px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;">
+        <i data-lucide="eraser" style="width:14px;height:14px;"></i> ลบแล้ววาดใหม่
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeSigModal()" style="padding:9px 18px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">ยกเลิก</button>
+        <button onclick="saveSig()" id="saveSigBtn" style="padding:9px 20px;background:#1d4ed8;color:white;font-weight:800;border-radius:10px;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;">
+          <i data-lucide="check" style="width:14px;height:14px;"></i> บันทึกลายเซ็น
+        </button>
+      </div>
+    </div>
+
+    <!-- saving state -->
+    <div id="sigSavingState" style="display:none;margin-top:10px;text-align:center;font-size:13px;color:#64748b;font-weight:600;">
+      <span style="display:inline-flex;align-items:center;gap:6px;">
+        <span style="width:14px;height:14px;border:2px solid #e2e8f0;border-top-color:#1d4ed8;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>
+        กำลังบันทึก...
+      </span>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ════════════════════════════════════════════
@@ -786,6 +875,15 @@ function updateProgressTotal() {
   el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
 }
 var currentStaffData = null;
+
+/* ── Signature ── */
+var currentSignatureUrl   = '';   /* URL จาก Firebase Storage (submission ปัจจุบัน) */
+var currentSignatureB64   = '';   /* base64 สำหรับ preview ก่อน upload */
+var sigDrawing = false;
+var sigLastX   = 0;
+var sigLastY   = 0;
+var sigCtx     = null;
+var _sigModalCallback = null;    /* callback หลัง save */
 
 /* ── ข้อมูลผู้มีสิทธิ์ตามตำแหน่งจาก admins collection ── */
 var adminRoles = {
@@ -907,6 +1005,8 @@ auth.onAuthStateChanged(function(u) {
       lucide.createIcons();
       /* init Google auth after user confirmed */
       setTimeout(initGoogleAuth, 500);
+      /* โหลดลายเซ็นล่าสุด */
+      setTimeout(loadLatestSignature, 800);
     })
     .catch(function(e) {
       if (ov) ov.style.display = 'none';
@@ -1130,6 +1230,13 @@ function openUploadModal(docTypeId) {
   document.getElementById('memoBody').value = '';
   switchMemoTab('edit');
 
+  /* reset ลายเซ็น → ใช้ลายเซ็นล่าสุดที่โหลดมา */
+  currentSignatureUrl = '';
+  currentSignatureB64 = '';
+  /* โหลดลายเซ็นล่าสุดสำหรับ submission ใหม่ */
+  loadLatestSignature();
+  updateSigStatusUI('');
+
   /* auto-fill กลุ่มสาระ */
   if (window._defaultSubjectGroup) {
     document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
@@ -1175,6 +1282,19 @@ function openManageCourseModal(docTypeId, subKey) {
   document.getElementById('memoThrough').value = savedThrough;
   document.getElementById('memoBody').value = sub.memoBody || '';
   switchMemoTab('edit');
+
+  /* restore ลายเซ็นจาก submission เดิม หรือโหลดล่าสุด */
+  var savedSig = sub.signatureUrl || '';
+  if (savedSig) {
+    currentSignatureUrl = savedSig;
+    currentSignatureB64 = savedSig;
+    updateSigStatusUI(savedSig);
+  } else {
+    currentSignatureUrl = '';
+    currentSignatureB64 = '';
+    loadLatestSignature();
+    updateSigStatusUI('');
+  }
 
   /* แสดง panel ของวิชานี้ */
   courseRows = [{ code: sub.courseCode, name: sub.courseName, files: [], managingSubKey: subKey }];
@@ -1529,10 +1649,8 @@ function closeUploadModal() {
 }
 
 /* ─── SUBMIT ─── */
-var _isUploading = false;
 function submitDoc() {
   if (!currentUser || !currentDocId) return;
-  if (_isUploading) { showToast('กำลังอัปโหลด กรุณารอสักครู่...', 'info'); return; }
   var subjectGroup = document.getElementById('subjectGroup').value.trim();
   var note         = document.getElementById('submitNote').value.trim();
   var btn          = document.getElementById('submitBtn');
@@ -1621,13 +1739,12 @@ function submitDoc() {
 
   if (!driveAccessToken) {
     document.getElementById('driveAuthNotice').style.display = 'block';
-    authorizeDrive(function(){ _isUploading = true; uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
+    authorizeDrive(function(){ uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
     lucide.createIcons();
     return;
   }
-  _isUploading = true;
   uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn);
 }
 
@@ -1747,13 +1864,11 @@ function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
     showToast('ส่งงานสำเร็จ ✓', 'success');
     closeUploadModal(); loadSubmissions();
     resetBtn(btn); progressEl.style.display = 'none';
-    _isUploading = false;
   })
   .catch(function(e) {
     console.error(e);
     showToast('อัปโหลดไม่สำเร็จ: ' + (e.message || e), 'error');
     resetBtn(btn); progressEl.style.display = 'none';
-    _isUploading = false;
   });
 }
 
@@ -1854,6 +1969,7 @@ function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseNa
     memoTo:        document.getElementById('memoTo') ? document.getElementById('memoTo').value.trim() : 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
     memoThrough:   document.getElementById('memoThrough') ? document.getElementById('memoThrough').value.trim() : '',
     memoBody:      document.getElementById('memoBody') ? document.getElementById('memoBody').value.trim() : '',
+    signatureUrl:  currentSignatureUrl || currentSignatureB64 || '',
     updatedAt:     now,
     submittedAt:   now,
     resubmittedAt: null,
@@ -1963,8 +2079,16 @@ function _renderMemoModal(subKey) {
   var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sub.semester + ' ปีการศึกษา ' + sub.year;
   document.getElementById('memoPrintSubject').textContent = toThaiNumerals(sub.memoSubject || autoSubject);
 
-  /* ── เรียน ── */
+  /* ── เรียน / ผ่าน ── */
   document.getElementById('memoPrintTo').textContent = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+  var throughWrap = document.getElementById('memoPrintThroughWrap');
+  var throughSpan = document.getElementById('memoPrintThrough');
+  if (sub.memoThrough) {
+    if (throughSpan) throughSpan.textContent = toThaiNumerals(sub.memoThrough);
+    if (throughWrap) throughWrap.style.display = 'block';
+  } else {
+    if (throughWrap) throughWrap.style.display = 'none';
+  }
 
   /* ── เนื้อหา (readonly — แสดงเป็น paragraph) ── */
   var autoBody =
@@ -1984,6 +2108,14 @@ function _renderMemoModal(subKey) {
   document.getElementById('memoSignName').textContent  = staffName ? '( ' + staffName + ' )' : '';
   document.getElementById('memoSignPos').textContent   = staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู';
   document.getElementById('memoSignGroup').textContent = staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '';
+
+  /* ลายเซ็นใน print */
+  var sigImg = document.getElementById('memoSignImg');
+  var sigSrc = sub.signatureUrl || currentSignatureUrl || currentSignatureB64 || '';
+  if (sigImg) {
+    if (sigSrc) { sigImg.src = sigSrc; sigImg.style.display = 'block'; }
+    else { sigImg.style.display = 'none'; }
+  }
 
   document.getElementById('memoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -2136,13 +2268,249 @@ function renderInlineMemoPreview() {
   setText('prevSubject', subject);
   setText('prevTo', to);
 
+  var throughRow  = document.getElementById('prevThrough');
+  var throughText = document.getElementById('prevThroughText');
+  if (throughRow && throughText) {
+    if (through) {
+      throughRow.style.display = 'block';
+      throughText.textContent  = toThaiNumerals(through);
+    } else {
+      throughRow.style.display = 'none';
+    }
+  }
+
   var bodyEl = document.getElementById('prevBody');
   renderMemoBody(bodyEl, toThaiNumerals(body));
 
   setText('prevSignName', staffName ? '( ' + staffName + ' )' : '');
   setText('prevSignPos',  staffPos  ? 'ตำแหน่ง ' + staffPos : 'ครู');
   setText('prevSignGroup', staffGrp ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
+
+  /* ลายเซ็น inline preview */
+  var prevSigImg = document.getElementById('prevSignImg');
+  if (prevSigImg) {
+    var sigSrc = currentSignatureB64 || currentSignatureUrl || '';
+    if (sigSrc) { prevSigImg.src = sigSrc; prevSigImg.style.display = 'block'; }
+    else { prevSigImg.style.display = 'none'; }
+  }
 }
-</script>
+
+/* ══════════════════════════════════════════
+   SIGNATURE PAD
+   ══════════════════════════════════════════ */
+
+function openSigModal(callback) {
+  _sigModalCallback = callback || null;
+  var modal = document.getElementById('sigModal');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  initSigCanvas();
+  lucide.createIcons();
+}
+
+function closeSigModal() {
+  document.getElementById('sigModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function initSigCanvas() {
+  var canvas = document.getElementById('sigCanvas');
+  if (!canvas) return;
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = 160         * dpr;
+  canvas.style.width  = rect.width + 'px';
+  canvas.style.height = '160px';
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle = '#0f172a';
+  sigCtx.lineWidth   = 2.2;
+  sigCtx.lineCap     = 'round';
+  sigCtx.lineJoin    = 'round';
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('sigCanvasWrap').classList.remove('has-sig');
+
+  /* Mouse events */
+  canvas.onmousedown  = function(e){ sigDrawing = true; var p = getSigPos(e); sigLastX = p.x; sigLastY = p.y; sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); document.getElementById('sigCanvasWrap').classList.add('has-sig'); };
+  canvas.onmousemove  = function(e){ if(!sigDrawing) return; var p=getSigPos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); sigLastX=p.x; sigLastY=p.y; };
+  canvas.onmouseup    = function(){ sigDrawing=false; };
+  canvas.onmouseleave = function(){ sigDrawing=false; };
+
+  /* Touch / Apple Pencil events */
+  canvas.ontouchstart = function(e){
+    e.preventDefault();
+    sigDrawing = true;
+    var p = getSigTouchPos(e.touches[0], canvas);
+    sigLastX = p.x; sigLastY = p.y;
+    sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y);
+    document.getElementById('sigCanvasWrap').classList.add('has-sig');
+    /* Apple Pencil pressure */
+    if (e.touches[0].force !== undefined) {
+      sigCtx.lineWidth = 1.4 + (e.touches[0].force || 0.5) * 2.4;
+    }
+  };
+  canvas.ontouchmove = function(e){
+    e.preventDefault();
+    if (!sigDrawing) return;
+    var t = e.touches[0];
+    var p = getSigTouchPos(t, canvas);
+    if (t.force !== undefined) sigCtx.lineWidth = 1.4 + (t.force || 0.5) * 2.4;
+    sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+    sigLastX = p.x; sigLastY = p.y;
+  };
+  canvas.ontouchend = function(e){ e.preventDefault(); sigDrawing = false; };
+}
+
+function getSigPos(e) {
+  var canvas = document.getElementById('sigCanvas');
+  var r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function getSigTouchPos(t, canvas) {
+  var r = canvas.getBoundingClientRect();
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+
+function clearSigCanvas() {
+  if (!sigCtx) return;
+  var canvas = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('sigCanvasWrap').classList.remove('has-sig');
+}
+
+function isSigCanvasBlank() {
+  var canvas = document.getElementById('sigCanvas');
+  if (!canvas) return true;
+  var data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  for (var i = 3; i < data.length; i += 4) { if (data[i] > 0) return false; }
+  return true;
+}
+
+function saveSig() {
+  if (isSigCanvasBlank()) { showToast('กรุณาวาดลายเซ็นก่อน', 'error'); return; }
+  var canvas = document.getElementById('sigCanvas');
+  /* trim canvas: สร้าง canvas ใหม่ขนาดพอดีลายเซ็น */
+  var trimmed = trimSigCanvas(canvas);
+  var b64 = trimmed.toDataURL('image/png');
+  currentSignatureB64 = b64;
+
+  /* แสดง saving state */
+  document.getElementById('saveSigBtn').disabled  = true;
+  document.getElementById('sigSavingState').style.display = 'block';
+
+  /* upload ขึ้น Firebase Storage */
+  uploadSignatureToStorage(b64)
+    .then(function(url) {
+      currentSignatureUrl = url;
+      updateSigStatusUI(url);
+      document.getElementById('sigSavingState').style.display = 'none';
+      closeSigModal();
+      showToast('บันทึกลายเซ็นสำเร็จ ✓', 'success');
+      if (_sigModalCallback) _sigModalCallback(url);
+    })
+    .catch(function(e) {
+      console.error('sig upload error:', e);
+      /* fallback: ใช้ base64 ชั่วคราว (จะ upload พร้อม submit) */
+      currentSignatureUrl = '';
+      updateSigStatusUI(b64);
+      document.getElementById('sigSavingState').style.display = 'none';
+      document.getElementById('saveSigBtn').disabled = false;
+      closeSigModal();
+      showToast('บันทึกลายเซ็น (local) ✓', 'success');
+    });
+}
+
+function trimSigCanvas(src) {
+  var ctx = src.getContext('2d');
+  var w = src.width, h = src.height;
+  var d = ctx.getImageData(0, 0, w, h).data;
+  var minX = w, minY = h, maxX = 0, maxY = 0;
+  for (var i = 0; i < d.length; i += 4) {
+    if (d[i+3] > 0) {
+      var px = (i/4) % w, py = Math.floor((i/4) / w);
+      if (px < minX) minX = px; if (px > maxX) maxX = px;
+      if (py < minY) minY = py; if (py > maxY) maxY = py;
+    }
+  }
+  var pad = 8;
+  minX = Math.max(0, minX-pad); minY = Math.max(0, minY-pad);
+  maxX = Math.min(w, maxX+pad); maxY = Math.min(h, maxY+pad);
+  if (maxX <= minX || maxY <= minY) return src;
+  var out = document.createElement('canvas');
+  out.width = maxX - minX; out.height = maxY - minY;
+  out.getContext('2d').drawImage(src, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+  return out;
+}
+
+function uploadSignatureToStorage(b64) {
+  return new Promise(function(resolve, reject) {
+    if (typeof firebase === 'undefined' || !firebase.storage) {
+      reject(new Error('Firebase Storage not available'));
+      return;
+    }
+    var uid         = currentUser ? currentUser.uid : 'unknown';
+    var timestamp   = Date.now();
+    var storagePath = 'signatures/' + uid + '/' + timestamp + '.png';
+    var storageRef  = firebase.storage().ref(storagePath);
+    /* แปลง base64 → Blob */
+    var byteStr = atob(b64.split(',')[1]);
+    var arr     = new Uint8Array(byteStr.length);
+    for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+    var blob = new Blob([arr], { type: 'image/png' });
+    storageRef.put(blob).then(function(snap) {
+      return snap.ref.getDownloadURL();
+    }).then(function(url) {
+      resolve(url);
+    }).catch(reject);
+  });
+}
+
+function updateSigStatusUI(sigSrc) {
+  var icon    = document.getElementById('sigStatusIcon');
+  var text    = document.getElementById('sigStatusText');
+  var thumb   = document.getElementById('sigThumbInForm');
+  var label   = document.getElementById('sigActionLabel');
+  if (sigSrc) {
+    if (icon)  icon.style.background = '#f0fdf4';
+    if (icon)  icon.innerHTML = '<i data-lucide="check-circle" style="width:16px;height:16px;color:#22c55e;"></i>';
+    if (text)  text.textContent = 'มีลายเซ็นแล้ว';
+    if (text)  text.style.color = '#16a34a';
+    if (thumb) { thumb.src = sigSrc; thumb.style.display = 'block'; }
+    if (label) label.textContent = 'เซ็นใหม่';
+  } else {
+    if (icon)  icon.style.background = '#f1f5f9';
+    if (icon)  icon.innerHTML = '<i data-lucide="pen-line" style="width:16px;height:16px;color:#94a3b8;"></i>';
+    if (text)  text.textContent = 'ยังไม่มีลายเซ็น';
+    if (text)  text.style.color = '#94a3b8';
+    if (thumb) thumb.style.display = 'none';
+    if (label) label.textContent = 'วาดลายเซ็น';
+  }
+  lucide.createIcons();
+}
+
+/* โหลดลายเซ็นล่าสุดของ user จาก Firebase Storage (list files) */
+function loadLatestSignature() {
+  if (!currentUser || typeof firebase === 'undefined' || !firebase.storage) return;
+  var uid = currentUser.uid;
+  firebase.storage().ref('signatures/' + uid).listAll()
+    .then(function(res) {
+      if (res.items.length === 0) return;
+      /* เรียงตาม name (timestamp) เอาล่าสุด */
+      var items = res.items.slice().sort(function(a, b) {
+        return a.name > b.name ? -1 : 1;
+      });
+      return items[0].getDownloadURL();
+    })
+    .then(function(url) {
+      if (!url) return;
+      currentSignatureUrl = url;
+      currentSignatureB64 = url;
+      updateSigStatusUI(url);
+    })
+    .catch(function(e) {
+      console.warn('loadLatestSignature:', e);
+    });
+}
 </body>
 </html>
