@@ -19,6 +19,32 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
+  <script>
+    /* ── Storage bucket patch: เผื่อ firebase.js เก่าไม่มี storageBucket ── */
+    (function() {
+      try {
+        var app = firebase.app();
+        if (!app.options.storageBucket) {
+          /* reinitialize ด้วย config ที่มี storageBucket */
+          console.warn('[Storage] storageBucket missing — patching config');
+          firebase.apps.forEach(function(a) { a.delete(); });
+          firebase.initializeApp({
+            apiKey:        'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
+            authDomain:    'np-webapp-74616.firebaseapp.com',
+            projectId:     'np-webapp-74616',
+            storageBucket: 'np-webapp-74616.firebasestorage.app',
+            appId:         '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
+          });
+          /* reinit shared vars */
+          if (typeof auth !== 'undefined') auth = firebase.auth();
+          if (typeof db   !== 'undefined') db   = firebase.firestore();
+        }
+        if (typeof storage === 'undefined') {
+          window.storage = firebase.storage();
+        }
+      } catch(e) { console.error('[Storage patch]', e); }
+    })();
+  </script>
   <script src="shared/common.js"></script>
   <!-- Google API -->
   <script src="https://apis.google.com/js/api.js"></script>
