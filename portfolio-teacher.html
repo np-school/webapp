@@ -988,20 +988,33 @@ function authorizeDrive(callback) {
   tokenClient.requestAccessToken({ prompt: '' });
 }
 
+/* ── Override handleLogin จาก common.js ──
+   เพิ่ม: ซ่อน overlay ถ้า popup ถูกปิด/cancel
+   และ timeout กัน stuck ทุกกรณี ── */
+function handleLogin() {
+  var ov = document.getElementById('loadingOverlay');
+  if (ov) ov.style.display = 'flex';
+
+  /* timeout 15s — ถ้า popup ถูกปิดโดยไม่มี callback */
+  var loginTimeout = setTimeout(function() {
+    if (ov) ov.style.display = 'none';
+  }, 15000);
+
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .then(function() { clearTimeout(loginTimeout); })
+    .catch(function(e) {
+      clearTimeout(loginTimeout);
+      if (ov) ov.style.display = 'none';
+      /* popup_closed_by_user ไม่ใช่ error จริง ไม่ต้อง log */
+      if (e.code !== 'auth/popup-closed-by-user' &&
+          e.code !== 'auth/cancelled-popup-request') {
+        console.error(e);
+      }
+    });
+}
+
 window.onload = function() {
   if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
-  /* safety net: ถ้า auth ไม่ตอบสนองใน 8 วินาที ให้ซ่อน overlay และแสดง loginGate */
-  setTimeout(function() {
-    var ov = document.getElementById('loadingOverlay');
-    if (ov && ov.style.display !== 'none') {
-      ov.style.display = 'none';
-      var gate = document.getElementById('loginGate');
-      var main = document.getElementById('mainApp');
-      if (gate && main && main.style.display === 'none') {
-        gate.style.display = 'flex';
-      }
-    }
-  }, 8000);
 };
 
 /* ─── AUTH ─── */
