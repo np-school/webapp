@@ -3481,29 +3481,60 @@ function renderAdminMemoBody(el, text) {
   }).join('');
 }
 
-/* เปิด memo modal จากหน้า admin — รับ docId ของ portfolio_submissions doc */
+/* เปิด memo modal จากหน้า admin — อ่าน memo จาก portfolio_memos (shared doc) */
 function openAdminMemoModal(docId, teacherEmail, docTypeId) {
   var t = teacherMap[teacherEmail];
   if (!t) { showToast('ไม่พบข้อมูลครู', 'error'); return; }
   var sub = t.subs[docTypeId];
   if (!sub) { showToast('ยังไม่มีการส่งงาน', 'warn'); return; }
 
-  /* ดึง fresh data จาก Firestore */
-  var targetDocId = docId || (sub._courses && sub._courses[0] && sub._courses[0].id) || null;
-  if (!targetDocId) { showToast('ไม่พบเอกสาร', 'error'); return; }
+  /* หา uid ของครู จาก submission */
+  var docRef = docId
+    ? db.collection('portfolio_submissions').doc(docId)
+    : (sub._courses && sub._courses[0] && sub._courses[0].id
+        ? db.collection('portfolio_submissions').doc(sub._courses[0].id)
+        : null);
 
-  db.collection('portfolio_submissions').doc(targetDocId).get().then(function(doc) {
-    if (!doc.exists) { showToast('ไม่พบเอกสารใน Firestore', 'error'); return; }
-    var data = Object.assign({ id: doc.id }, doc.data());
-    _renderAdminMemoModal(data, t, docTypeId);
-  }).catch(function(e) {
-    /* fallback: ใช้ข้อมูลใน memory */
-    var fallback = (sub._courses && sub._courses[0]) || sub;
-    _renderAdminMemoModal(Object.assign({ id: targetDocId }, fallback), t, docTypeId);
-  });
+  /* ดึง uid ของครูจาก submission เพื่อสร้าง memoId */
+  function proceedWithUid(uid) {
+    var memoId = uid + '_' + docTypeId + '_' + currentYear + '_' + currentSem;
+    db.collection('portfolio_memos').doc(memoId).get()
+      .then(function(mDoc) {
+        var memoData = mDoc.exists ? mDoc.data() : null;
+        /* ดึง submission doc สำหรับข้อมูลผู้ตรวจ (note/signature) */
+        var targetDocId = docId || (sub._courses && sub._courses[0] && sub._courses[0].id);
+        if (targetDocId) {
+          db.collection('portfolio_submissions').doc(targetDocId).get()
+            .then(function(sDoc) {
+              var subDoc = sDoc.exists ? Object.assign({ id: sDoc.id }, sDoc.data()) : Object.assign({ id: targetDocId }, (sub._courses && sub._courses[0]) || sub);
+              _renderAdminMemoModal(subDoc, t, docTypeId, memoData);
+            })
+            .catch(function() {
+              var fallback = Object.assign({ id: targetDocId || '' }, (sub._courses && sub._courses[0]) || sub);
+              _renderAdminMemoModal(fallback, t, docTypeId, memoData);
+            });
+        } else {
+          _renderAdminMemoModal(Object.assign({}, sub), t, docTypeId, memoData);
+        }
+      })
+      .catch(function(e) {
+        console.warn('[AdminMemo] loadMemo error:', e);
+        var fallback = Object.assign({ id: docId || '' }, (sub._courses && sub._courses[0]) || sub);
+        _renderAdminMemoModal(fallback, t, docTypeId, null);
+      });
+  }
+
+  /* ถ้ามี docRef ให้ดึง uid จาก Firestore; ถ้าไม่มีก็ใช้ uid จาก teacherMap หรือ email */
+  if (docRef) {
+    docRef.get().then(function(d) {
+      var uid = (d.exists && d.data().uid) || t.uid || teacherEmail;
+      proceedWithUid(uid);
+    }).catch(function() { proceedWithUid(t.uid || teacherEmail); });
+  } else {
+    proceedWithUid(t.uid || teacherEmail);
+  }
 }
-
-function _renderAdminMemoModal(doc, t, docTypeId) {
+function _renderAdminMemoModal(doc, t, docTypeId, memoData) {
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; }) || {};
 
   var staffName = t.staffName || t.displayName || t.email;
@@ -3513,18 +3544,21 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   var sem  = currentSem  || '';
   var year = currentYear || '';
 
+  /* ── อ่านข้อมูล memo จาก shared document (memoData) ── */
+  var memo = memoData || {};
+
   /* ── ที่ / วันที่ / เรื่อง ── */
   function setT(id, val) {
     var el = document.getElementById(id);
     if (el) el.textContent = val || '';
   }
 
-  setT('adminMemoPrintRef',     toThaiNumeralsAdmin(doc.memoRef || ''));
-  setT('adminMemoPrintDate',    toThaiNumeralsAdmin(doc.memoDate || thaiDateTodayAdmin()));
+  setT('adminMemoPrintRef',     toThaiNumeralsAdmin(memo.memoRef || ''));
+  setT('adminMemoPrintDate',    toThaiNumeralsAdmin(memo.memoDate || thaiDateTodayAdmin()));
 
   var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sem + ' ปีการศึกษา ' + year;
-  setT('adminMemoPrintSubject', toThaiNumeralsAdmin(doc.memoSubject || autoSubject));
-  setT('adminMemoPrintTo',      doc.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
+  setT('adminMemoPrintSubject', toThaiNumeralsAdmin(memo.memoSubject || autoSubject));
+  setT('adminMemoPrintTo',      memo.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
 
   /* ── เนื้อหา ── */
   var autoBody =
@@ -3539,17 +3573,17 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
     '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
 
   var bodyEl = document.getElementById('adminMemoBodyText');
-  renderAdminMemoBody(bodyEl, toThaiNumeralsAdmin(doc.memoBody || autoBody));
+  renderAdminMemoBody(bodyEl, toThaiNumeralsAdmin(memo.memoBody || autoBody));
 
   /* ── ลายมือชื่อครู ── */
   setT('adminMemoSignName',  staffName ? '( ' + staffName + ' )' : '');
   setT('adminMemoSignPos',   staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู');
   setT('adminMemoSignGroup', staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
 
-  /* ลายเซ็นรูปภาพ */
+  /* ลายเซ็นรูปภาพ — อ่านจาก memo shared doc */
   var adminSigImg = document.getElementById('adminMemoSignImg');
   if (adminSigImg) {
-    var sigSrc = doc.signatureUrl || '';
+    var sigSrc = memo.signatureURL || doc.signatureURL || doc.signatureUrl || '';
     if (sigSrc) { adminSigImg.src = sigSrc; adminSigImg.style.display = 'block'; }
     else { adminSigImg.style.display = 'none'; }
   }

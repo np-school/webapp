@@ -1172,19 +1172,16 @@ function openUploadModal(docTypeId) {
   document.getElementById('courseFilePanels').innerHTML = '';
   document.getElementById('courseRowsContainer').innerHTML = '';
 
-  /* reset memo fields */
-  if(document.getElementById('memoRef')) document.getElementById('memoRef').value = '';
-  document.getElementById('memoDate').value = thaiDateToday();
-  document.getElementById('memoSubject').value = '';
-  document.getElementById('memoTo').value = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-  /* ผ่าน: ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติจากกลุ่มของครู */
-  var autoThrough = '';
-  if (currentStaffData && currentStaffData.group) {
-    var headInfo = adminRoles.headOfGroup[currentStaffData.group];
-    if (headInfo && headInfo.name) autoThrough = headInfo.name;
-  }
-  document.getElementById('memoThrough').value = autoThrough;
-  document.getElementById('memoBody').value = '';
+  /* โหลด memo fields จาก portfolio_memos (shared document) */
+  loadMemoDocument(docTypeId, function() {
+    /* ถ้ายังไม่มี memoDate ให้ใส่วันนี้ */
+    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
+    /* ถ้ายังไม่มี memoThrough ให้ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติ */
+    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
+      var headInfo = adminRoles.headOfGroup[currentStaffData.group];
+      if (headInfo && headInfo.name) document.getElementById('memoThrough').value = headInfo.name;
+    }
+  });
   switchMemoTab('edit');
 
   /* auto-fill กลุ่มสาระ */
@@ -1220,18 +1217,14 @@ function openManageCourseModal(docTypeId, subKey) {
   document.getElementById('uploadProgress').style.display = 'none';
 
   /* restore memo fields */
-  if(document.getElementById('memoRef')) document.getElementById('memoRef').value = sub.memoRef || '';
-  document.getElementById('memoDate').value = sub.memoDate || thaiDateToday();
-  document.getElementById('memoSubject').value = sub.memoSubject || '';
-  document.getElementById('memoTo').value = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-  /* ผ่าน: ถ้าเคยบันทึกไว้แล้วใช้ค่าเดิม ถ้าไม่มีให้ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติ */
-  var savedThrough = sub.memoThrough || '';
-  if (!savedThrough && currentStaffData && currentStaffData.group) {
-    var headInfoR = adminRoles.headOfGroup[currentStaffData.group];
-    if (headInfoR && headInfoR.name) savedThrough = headInfoR.name;
-  }
-  document.getElementById('memoThrough').value = savedThrough;
-  document.getElementById('memoBody').value = sub.memoBody || '';
+  /* โหลด memo fields จาก portfolio_memos (shared document) */
+  loadMemoDocument(docTypeId, function() {
+    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
+    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
+      var headInfoR = adminRoles.headOfGroup[currentStaffData.group];
+      if (headInfoR && headInfoR.name) document.getElementById('memoThrough').value = headInfoR.name;
+    }
+  });
   switchMemoTab('edit');
 
   /* แสดง panel ของวิชานี้ */
@@ -2028,7 +2021,14 @@ function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
         return processRow(rowIdx + 1);
       });
     }
-    return processRow(0);
+    return processRow(0).then(function() {
+      /* บันทึก memo แบบ shared (ทำครั้งเดียวต่อ docType/ภาคเรียน) */
+      return uploadSignatureToStorage(currentUser.uid, '_memo_', dt.id)
+        .then(function(sigURL) {
+          return saveMemoDocument(sigURL, dt.id);
+        })
+        .catch(function(e) { console.warn('[Memo] saveMemoDocument error:', e); });
+    });
   })
   .then(function() {
     showToast('ส่งงานสำเร็จ ✓', 'success');
@@ -2091,8 +2091,10 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
   })
   .then(function(uploaded) {
     var allFiles = existingFiles.concat(uploaded);
-    return uploadSignatureToStorage(currentUser.uid, sub.courseCode || '', currentDocId)
+    return uploadSignatureToStorage(currentUser.uid, '_memo_', currentDocId)
       .then(function(sigURL) {
+        /* บันทึก memo shared document */
+        saveMemoDocument(sigURL, currentDocId).catch(function(e){ console.warn('[Memo] save error:', e); });
         var updateData = {
           files: allFiles,
           fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
@@ -2101,7 +2103,6 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
           resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
-        if (sigURL) updateData.signatureURL = sigURL;
         return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
       });
   })
@@ -2200,14 +2201,6 @@ function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseNa
     courseCode:    courseCode,
     courseName:    courseName,
     status:        'submitted',
-    /* บันทึกข้อความราชการ */
-    memoRef:       document.getElementById('memoRef') ? document.getElementById('memoRef').value.trim() : '',
-    memoDate:      document.getElementById('memoDate') ? document.getElementById('memoDate').value.trim() : '',
-    memoSubject:   document.getElementById('memoSubject') ? document.getElementById('memoSubject').value.trim() : '',
-    memoTo:        document.getElementById('memoTo') ? document.getElementById('memoTo').value.trim() : 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
-    memoThrough:   document.getElementById('memoThrough') ? document.getElementById('memoThrough').value.trim() : '',
-    memoBody:      document.getElementById('memoBody') ? document.getElementById('memoBody').value.trim() : '',
-    signatureURL:  signatureURL || '',
     updatedAt:     now,
     submittedAt:   now,
     resubmittedAt: null,
@@ -2248,6 +2241,72 @@ function resetBtn(btn) {
   btn.disabled  = false;
   btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
   lucide.createIcons();
+}
+
+/* ════════════════════════════════════════════
+   SHARED MEMO DOCUMENT — portfolio_memos
+   key: {uid}_{docTypeId}_{year}_{sem}
+   ทั้งครูและ admin อ่าน/เขียน doc เดียวกัน
+   ════════════════════════════════════════════ */
+
+function getMemoDocId(docTypeId) {
+  var dt = docTypeId || currentDocId || '';
+  return currentUser.uid + '_' + dt + '_' + currentYear + '_' + currentSem;
+}
+
+/* บันทึก memo แยกออกจาก submission → portfolio_memos */
+function saveMemoDocument(signatureURL, docTypeId) {
+  var memoId = getMemoDocId(docTypeId);
+  var data = {
+    uid:          currentUser.uid,
+    email:        currentUser.email,
+    staffName:    (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
+    staffPosition:(currentStaffData && currentStaffData.position) || '',
+    staffGroup:   (currentStaffData && currentStaffData.group)    || '',
+    docTypeId:    docTypeId || currentDocId,
+    year:         currentYear,
+    semester:     currentSem,
+    yearSem:      currentYear + '_' + currentSem,
+    memoRef:      (document.getElementById('memoRef')     && document.getElementById('memoRef').value.trim())     || '',
+    memoDate:     (document.getElementById('memoDate')    && document.getElementById('memoDate').value.trim())    || '',
+    memoSubject:  (document.getElementById('memoSubject') && document.getElementById('memoSubject').value.trim()) || '',
+    memoTo:       (document.getElementById('memoTo')      && document.getElementById('memoTo').value.trim())      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
+    memoThrough:  (document.getElementById('memoThrough') && document.getElementById('memoThrough').value.trim()) || '',
+    memoBody:     (document.getElementById('memoBody')    && document.getElementById('memoBody').value.trim())    || '',
+    signatureURL: signatureURL || '',
+    updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  /* set + merge: อัปเดตทับ doc เดิมได้ */
+  return db.collection('portfolio_memos').doc(memoId).set(data, { merge: true });
+}
+
+/* โหลด memo กลับมาเติมใน form fields */
+function loadMemoDocument(docTypeId, callback) {
+  var memoId = getMemoDocId(docTypeId);
+  db.collection('portfolio_memos').doc(memoId).get()
+    .then(function(doc) {
+      if (doc.exists) {
+        var d = doc.data();
+        if (document.getElementById('memoRef'))     document.getElementById('memoRef').value     = d.memoRef     || '';
+        if (document.getElementById('memoDate'))    document.getElementById('memoDate').value    = d.memoDate    || thaiDateToday();
+        if (document.getElementById('memoSubject')) document.getElementById('memoSubject').value = d.memoSubject || '';
+        if (document.getElementById('memoTo'))      document.getElementById('memoTo').value      = d.memoTo      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+        if (document.getElementById('memoThrough')) document.getElementById('memoThrough').value = d.memoThrough || '';
+        if (document.getElementById('memoBody'))    document.getElementById('memoBody').value    = d.memoBody    || '';
+        /* โหลดลายเซ็น (ถ้ามี URL ที่บันทึกไว้) */
+        window._loadedMemoSignatureURL = d.signatureURL || '';
+      } else {
+        /* memo ยังไม่มี — เติม default */
+        if (document.getElementById('memoDate')) document.getElementById('memoDate').value = thaiDateToday();
+        if (document.getElementById('memoTo'))   document.getElementById('memoTo').value   = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+        window._loadedMemoSignatureURL = '';
+      }
+      if (callback) callback();
+    })
+    .catch(function(e) {
+      console.warn('[Memo] loadMemoDocument error:', e);
+      if (callback) callback();
+    });
 }
 
 /* ─── THAI DATE ─── */
@@ -2293,24 +2352,34 @@ function openMemoModal(subKey) {
   var sub = submissions[subKey];
   if (!sub) { showToast('ไม่พบข้อมูลการส่งงาน','error'); return; }
 
-  /* ── ดึงข้อมูล fresh จาก Firestore เพื่อให้ได้ note ล่าสุดจากผู้ตรวจ ── */
-  if (sub.id) {
-    db.collection('portfolio_submissions').doc(sub.id).get().then(function(doc) {
-      if (doc.exists) {
-        var fresh = doc.data();
-        ['headNote','assistantNote','deputyNote','directorNote',
-         'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName'
-        ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
-        submissions[subKey] = sub;
-      }
-      _renderMemoModal(subKey);
-    }).catch(function() { _renderMemoModal(subKey); });
-  } else {
-    _renderMemoModal(subKey);
-  }
+  /* ดึง fresh data จาก Firestore สำหรับ note/ลายเซ็นผู้ตรวจ */
+  var freshSub = sub;
+  var fetchSub = sub.id
+    ? db.collection('portfolio_submissions').doc(sub.id).get().then(function(doc) {
+        if (doc.exists) {
+          var fresh = doc.data();
+          ['headNote','assistantNote','deputyNote','directorNote',
+           'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName'
+          ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
+          submissions[subKey] = sub;
+          freshSub = sub;
+        }
+      }).catch(function(){})
+    : Promise.resolve();
+
+  /* ดึง memo doc แบบ shared จาก portfolio_memos */
+  var memoId = currentUser.uid + '_' + sub.docTypeId + '_' + sub.year + '_' + sub.semester;
+  var fetchMemo = db.collection('portfolio_memos').doc(memoId).get()
+    .then(function(mDoc) { return mDoc.exists ? mDoc.data() : null; })
+    .catch(function(){ return null; });
+
+  Promise.all([fetchSub, fetchMemo]).then(function(results) {
+    var memoData = results[1];
+    _renderMemoModal(subKey, memoData);
+  });
 }
 
-function _renderMemoModal(subKey) {
+function _renderMemoModal(subKey, memoData) {
   var sub = submissions[subKey];
   if (!sub) return;
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id === sub.docTypeId; }) || {};
@@ -2319,17 +2388,19 @@ function _renderMemoModal(subKey) {
   var staffPos  = (currentStaffData && currentStaffData.position) || sub.staffPosition || '';
   var staffGrp  = (currentStaffData && currentStaffData.group)    || sub.staffGroup    || '';
 
+  /* ── อ่านข้อมูล memo จาก shared document (memoData) ── */
+  var memo = memoData || {};
+
   /* ── ที่ / วันที่ / เรื่อง ── */
-  document.getElementById('memoPrintRef').textContent     = toThaiNumerals(sub.memoRef     || '');
-  document.getElementById('memoPrintDate').textContent    = toThaiNumerals(sub.memoDate    || thaiDateToday());
-  /* เรื่อง: auto = "ส่ง{ชื่องาน} ประจำภาคเรียนที่ N ปีการศึกษา YYYY" */
+  document.getElementById('memoPrintRef').textContent     = toThaiNumerals(memo.memoRef     || '');
+  document.getElementById('memoPrintDate').textContent    = toThaiNumerals(memo.memoDate    || thaiDateToday());
   var autoSubject = 'ส่ง' + (dt.label || 'งาน') + ' ประจำภาคเรียนที่ ' + sub.semester + ' ปีการศึกษา ' + sub.year;
-  document.getElementById('memoPrintSubject').textContent = toThaiNumerals(sub.memoSubject || autoSubject);
+  document.getElementById('memoPrintSubject').textContent = toThaiNumerals(memo.memoSubject || autoSubject);
 
   /* ── เรียน ── */
-  document.getElementById('memoPrintTo').textContent = sub.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+  document.getElementById('memoPrintTo').textContent = memo.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
 
-  /* ── เนื้อหา (readonly — แสดงเป็น paragraph) ── */
+  /* ── เนื้อหา ── */
   var autoBody =
     'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
     (staffPos  ? '  ตำแหน่ง ' + staffPos  : '') +
@@ -2341,18 +2412,18 @@ function _renderMemoModal(subKey) {
     '  ตามเอกสารที่แนบมาพร้อมนี้' +
     '\n\nจึงเรียนมาเพื่อโปรดทราบและพิจารณา';
   var bodyEl = document.getElementById('memoBodyInlineText');
-  renderMemoBody(bodyEl, toThaiNumerals(sub.memoBody || autoBody));
+  renderMemoBody(bodyEl, toThaiNumerals(memo.memoBody || autoBody));
 
   /* ── ลายมือชื่อ ── */
   document.getElementById('memoSignName').textContent  = staffName ? '( ' + staffName + ' )' : '';
   document.getElementById('memoSignPos').textContent   = staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู';
   document.getElementById('memoSignGroup').textContent = staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '';
 
-  /* แสดงลายเซ็นจาก dataURL (ถ้ามี) หรือจากที่บันทึกใน sub */
+  /* แสดงลายเซ็นจาก shared memo doc */
   var sigImg = document.getElementById('memoSignatureImg');
   if (sigImg) {
-    var sigSrc = (typeof getSignatureDataURL === 'function' && !isSignatureEmpty()) ? getSignatureDataURL() : (sub.signatureURL || '');
-    if (sigSrc && sigSrc.length > 100) {
+    var sigSrc = memo.signatureURL || '';
+    if (sigSrc && sigSrc.length > 10) {
       sigImg.src = sigSrc;
       sigImg.style.display = 'block';
     } else {
