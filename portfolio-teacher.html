@@ -719,6 +719,23 @@
   </div>
 </div>
 
+<!-- ── Confirm Delete Submission Modal ── -->
+<div id="confirmDeleteSubModal" class="modal-bg" onclick="if(event.target===this)closeDeleteSubModal()">
+  <div style="background:white;border-radius:20px;width:100%;max-width:400px;padding:28px 24px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.2);">
+    <div style="width:56px;height:56px;border-radius:16px;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <i data-lucide="trash-2" style="width:24px;height:24px;color:#dc2626;"></i>
+    </div>
+    <h3 style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:6px;">ลบงานที่ส่งนี้?</h3>
+    <p id="deleteSubCourseName" style="font-size:14px;font-weight:700;color:#1d4ed8;margin-bottom:4px;"></p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:6px;">ระบบจะลบไฟล์ทุกไฟล์ใน Google Drive และลายเซ็นที่เกี่ยวข้องออกทั้งหมด</p>
+    <p style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:20px;">⚠️ ไม่สามารถกู้คืนได้</p>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeDeleteSubModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
+      <button id="confirmDeleteSubBtn" onclick="confirmDeleteSubmission()" style="flex:1;padding:11px;background:#dc2626;color:white;font-weight:800;border-radius:12px;border:none;cursor:pointer;">ลบงาน</button>
+    </div>
+  </div>
+</div>
+
 <!-- hidden input for replace -->
 <input type="file" id="replaceFileInput" style="display:none;" accept=".pdf,application/pdf" onchange="onReplaceFileSelected(this)">
 
@@ -1103,12 +1120,15 @@ function renderDocList() {
                       (status === 'revision' && sub.adminNote
                         ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p></div>'
                         : '') +
-                      '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">' +
+                      '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
                         '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                           '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
                         '</button>' +
                         '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #bfdbfe;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                           '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
+                        '</button>' +
+                        '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:#dc2626;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #fecaca;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
+                          '<i data-lucide="trash-2" style="width:11px;height:11px;"></i> ลบงาน' +
                         '</button>' +
                       '</div>' +
                     '</div>';
@@ -1585,6 +1605,106 @@ function confirmDelete() {
     });
   } else {
     proceedDelete();
+  }
+}
+
+/* ─── DELETE WHOLE SUBMISSION ─── */
+var pendingDeleteSubKey = null;
+
+function promptDeleteSubmission(subKey) {
+  var sub = submissions[subKey];
+  if (!sub) return;
+  pendingDeleteSubKey = subKey;
+  var label = (sub.courseCode ? sub.courseCode + ' ' : '') + (sub.courseName || '');
+  document.getElementById('deleteSubCourseName').textContent = label;
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  btn.disabled = false;
+  btn.textContent = 'ลบงาน';
+  document.getElementById('confirmDeleteSubModal').classList.add('open');
+  lucide.createIcons();
+}
+
+function closeDeleteSubModal() {
+  document.getElementById('confirmDeleteSubModal').classList.remove('open');
+  pendingDeleteSubKey = null;
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ลบงาน'; }
+}
+
+function confirmDeleteSubmission() {
+  if (!pendingDeleteSubKey) return;
+  var subKey = pendingDeleteSubKey;
+  var sub = submissions[subKey];
+  if (!sub) { closeDeleteSubModal(); return; }
+
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังลบ...';
+
+  var files = sub.files || [];
+
+  /* ลบลายเซ็นจาก Storage */
+  function deleteSignature() {
+    var sigURL = sub.signatureURL || '';
+    if (!sigURL) return Promise.resolve();
+    try {
+      var ref = firebase.storage().refFromURL(sigURL);
+      return ref.delete().catch(function(e) {
+        console.warn('[Signature] ลบไม่สำเร็จ:', e.code);
+      });
+    } catch(e) {
+      console.warn('[Signature] refFromURL error:', e);
+      return Promise.resolve();
+    }
+  }
+
+  /* ลบไฟล์ทุกไฟล์จาก Drive */
+  function deleteAllDriveFiles() {
+    if (!driveAccessToken) return Promise.resolve();
+    var promises = files.filter(function(f){ return f && f.fileId; }).map(function(f) {
+      return fetch(
+        'https://www.googleapis.com/drive/v3/files/' + f.fileId + '?supportsAllDrives=true',
+        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
+      ).then(function(res) {
+        if (!res.ok && res.status !== 404) console.warn('Drive delete warning:', res.status, f.fileId);
+      }).catch(function(e) { console.warn('Drive delete error:', e); });
+    });
+    return Promise.all(promises);
+  }
+
+  /* ลบ Firestore doc */
+  function deleteFirestoreDoc() {
+    return db.collection('portfolio_submissions').doc(sub.id).delete();
+  }
+
+  function proceedDeleteSub() {
+    deleteAllDriveFiles()
+      .then(deleteSignature)
+      .then(deleteFirestoreDoc)
+      .then(function() {
+        showToast('ลบงานเรียบร้อย ✓', 'success');
+        delete submissions[subKey];
+        closeDeleteSubModal();
+        renderDocList();
+      })
+      .catch(function(e) {
+        showToast('เกิดข้อผิดพลาด: ' + (e.message || e), 'error');
+        btn.disabled = false;
+        btn.textContent = 'ลบงาน';
+      });
+  }
+
+  /* ถ้ามีไฟล์ใน Drive ต้อง auth ก่อน */
+  var hasDriveFiles = files.some(function(f){ return f && f.fileId; });
+  if (hasDriveFiles && !driveAccessToken) {
+    btn.textContent = 'รอการอนุญาต Drive...';
+    authorizeDrive(function() {
+      btn.disabled = true;
+      btn.textContent = 'กำลังลบ...';
+      proceedDeleteSub();
+    });
+  } else {
+    proceedDeleteSub();
   }
 }
 
