@@ -654,9 +654,7 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
-              <img id="page2HeadSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
-            </div>
+            <div style="height:28px;"></div>
             <p id="page2HeadSignName" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
           </div>
@@ -670,9 +668,7 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
-              <img id="page2AssistantSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
-            </div>
+            <div style="height:28px;"></div>
             <p id="page2AssistantSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสุเนตร  บอกประโคน )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
@@ -681,9 +677,7 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
-              <img id="page2DeputySigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
-            </div>
+            <div style="height:28px;"></div>
             <p id="page2DeputySignName" style="font-size:12pt;margin:0;line-height:1.6;">( นางสาวสุจินดา  เอี่ยมศิริ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
@@ -697,9 +691,7 @@
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
-              <img id="page2DirectorSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
-            </div>
+            <div style="height:28px;"></div>
             <p id="page2DirectorSignName" style="font-size:12pt;margin:0;line-height:1.6;">( นายสมิงไพร  สุนทะวงษ์ )</p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
           </div>
@@ -1739,12 +1731,6 @@ function closeUploadModal() {
     canvas.style.width  = rect.width  + 'px';
     canvas.style.height = rect.height + 'px';
 
-    /* reset style after canvas resize (canvas.width= resets ctx state) */
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-
     function getPos(e) {
       var r = canvas.getBoundingClientRect();
       var src = e.touches ? e.touches[0] : e;
@@ -2335,7 +2321,7 @@ function loadMemoDocument(docTypeId, callback) {
     .then(function(doc) {
       if (doc.exists) {
         var d = doc.data();
-        if (document.getElementById('memoRef'))     document.getElementById('memoRef').value     = d.memoRef     || '';
+        if (document.getElementById('memoRef'))     document.getElementById('memoRef').value     = ''; /* ไม่โหลดค่าเก่า ให้ครูพิมพ์ใหม่ทุกครั้ง */
         if (document.getElementById('memoDate'))    document.getElementById('memoDate').value    = d.memoDate    || thaiDateToday();
         if (document.getElementById('memoSubject')) document.getElementById('memoSubject').value = d.memoSubject || '';
         if (document.getElementById('memoTo'))      document.getElementById('memoTo').value      = d.memoTo      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
@@ -2407,8 +2393,7 @@ function openMemoModal(subKey) {
         if (doc.exists) {
           var fresh = doc.data();
           ['headNote','assistantNote','deputyNote','directorNote',
-           'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
-           'headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL'
+           'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName'
           ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
           submissions[subKey] = sub;
           freshSub = sub;
@@ -2535,18 +2520,6 @@ function _renderMemoModal(subKey, memoData) {
   setNote('page2AssistantNote', assistantNote);
   setNote('page2DeputyNote',    deputyNote);
   setNote('page2DirectorNote',  directorNote);
-
-  /* ── ลายเซ็นดิจิตอลผู้ตรวจแต่ละขั้น ── */
-  function setReviewerSig(imgId, url) {
-    var el = document.getElementById(imgId);
-    if (!el) return;
-    if (url) { el.src = url; el.style.display = 'block'; }
-    else      { el.src = ''; el.style.display = 'none'; }
-  }
-  setReviewerSig('page2HeadSigImg',      sub.headSignatureURL      || '');
-  setReviewerSig('page2AssistantSigImg', sub.assistantSignatureURL || '');
-  setReviewerSig('page2DeputySigImg',    sub.deputySignatureURL    || '');
-  setReviewerSig('page2DirectorSigImg',  sub.directorSignatureURL  || '');
 
   scaleA4();
   lucide.createIcons();
