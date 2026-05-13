@@ -415,6 +415,10 @@
             <input type="text" id="memoTo" placeholder="เช่น ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" value="ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม" style="font-size:13px;">
           </div>
           <input type="hidden" id="memoThrough" value="">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียด <span style="color:#94a3b8;font-weight:600;">(สร้างอัตโนมัติถ้าปล่อยว่าง)</span></label>
+            <textarea id="memoBody" rows="3" placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ" style="resize:none;font-size:13px;"></textarea>
+          </div>
           <!-- ลายเซ็นดิจิตอล -->
           <div>
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ลายมือชื่อผู้ส่ง <span style="color:#ef4444;">*</span> <span style="color:#94a3b8;font-weight:600;">(วาดลายเซ็นในกล่องด้านล่าง)</span></label>
@@ -422,10 +426,6 @@
             <div style="display:flex;justify-content:flex-end;margin-top:4px;">
               <button type="button" onclick="clearSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">ล้างลายเซ็น</button>
             </div>
-          </div>
-          <div>
-            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ข้อความ / รายละเอียด <span style="color:#94a3b8;font-weight:600;">(สร้างอัตโนมัติถ้าปล่อยว่าง)</span></label>
-            <textarea id="memoBody" rows="3" placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ" style="resize:none;font-size:13px;"></textarea>
           </div>
         </div>
 
@@ -2008,14 +2008,24 @@ function toThaiNumerals(str) {
 }
 
 /* แปลงข้อความ (แบ่งด้วย \n) เป็น <p> หลายย่อหน้า
-   - ทุกย่อหน้ามี indent เหมือนกัน (1.5cm) */
+   - บรรทัดแรกของแต่ละย่อหน้า: indent 1.5cm
+   - บรรทัด wrap ถัดไปชิดซ้าย (ไม่ indent) */
 function renderMemoBody(container, text) {
   if (!container) return;
   container.innerHTML = '';
   var paragraphs = String(text || '').split('\n');
   paragraphs.forEach(function(para) {
     var p = document.createElement('p');
-    p.style.cssText = 'margin:0;text-indent:1.5cm;line-height:1.6;text-align:justify;text-justify:inter-character;';
+    /* hanging indent: text-indent ลบ padding-left ออก ให้ wrap ชิดซ้าย */
+    p.style.cssText = [
+      'margin:0',
+      'padding-left:0',
+      'text-indent:1.5cm',
+      'line-height:1.6',
+      'text-align:justify',
+      'text-justify:inter-character',
+      'word-break:break-word'
+    ].join(';');
     p.textContent = para;
     container.appendChild(p);
   });
