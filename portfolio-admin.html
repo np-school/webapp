@@ -317,6 +317,9 @@
           <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
             <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
           </button>
+          <button class="sub-tab" id="subTabGroup" onclick="switchSubTab('group')">
+            <i data-lucide="layers" style="width:14px;height:14px;"></i> รายกลุ่มสาระ
+          </button>
           <button class="sub-tab" id="subTabTeacher" onclick="switchSubTab('teacher')">
             <i data-lucide="user-search" style="width:14px;height:14px;"></i> รายบุคคล
           </button>
@@ -460,6 +463,58 @@
       </div>
 
       </div><!-- end panelOverview -->
+
+      <!-- ══ SUB TAB: GROUP VIEW ══ -->
+      <div id="panelGroup" style="display:none;flex-direction:column;gap:20px;">
+
+        <!-- Group selector bar -->
+        <div class="card" style="padding:16px 18px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;">
+            <div>
+              <h2 style="font-size:16px;font-weight:800;color:#0f172a;">ภาพรวมรายกลุ่มสาระการเรียนรู้</h2>
+              <p style="font-size:12px;color:#64748b;margin-top:2px;">เลือกกลุ่มสาระเพื่อดูรายละเอียดครูและสถานะงานในกลุ่มนั้น</p>
+            </div>
+            <div id="groupTabBtns" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Group stats row -->
+        <div id="groupStatRow" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+          <div class="stat-card"><div style="width:36px;height:36px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="users" style="width:18px;height:18px;color:#7c3aed;"></i></div><div><p id="gs_teachers" style="font-size:20px;font-weight:800;color:#0f172a;">-</p><p style="font-size:10px;color:#64748b;font-weight:600;">ครูในกลุ่ม</p></div></div>
+          <div class="stat-card"><div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="send" style="width:18px;height:18px;color:#22c55e;"></i></div><div><p id="gs_submitted" style="font-size:20px;font-weight:800;color:#0f172a;">-</p><p style="font-size:10px;color:#64748b;font-weight:600;">ส่งงานแล้ว</p></div></div>
+          <div class="stat-card"><div style="width:36px;height:36px;border-radius:10px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:18px;height:18px;color:#0ea5e9;"></i></div><div><p id="gs_pending" style="font-size:20px;font-weight:800;color:#0f172a;">-</p><p style="font-size:10px;color:#64748b;font-weight:600;">รอตรวจ</p></div></div>
+          <div class="stat-card"><div style="width:36px;height:36px;border-radius:10px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="shield-check" style="width:18px;height:18px;color:#059669;"></i></div><div><p id="gs_final" style="font-size:20px;font-weight:800;color:#0f172a;">-</p><p style="font-size:10px;color:#64748b;font-weight:600;">ผอ.อนุมัติ</p></div></div>
+          <div class="stat-card"><div style="width:36px;height:36px;border-radius:10px;background:#fef9c3;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="alert-circle" style="width:18px;height:18px;color:#eab308;"></i></div><div><p id="gs_missing" style="font-size:20px;font-weight:800;color:#0f172a;">-</p><p style="font-size:10px;color:#64748b;font-weight:600;">ยังไม่ส่ง</p></div></div>
+        </div>
+        <style>@media(max-width:800px){#groupStatRow{grid-template-columns:repeat(3,1fr)!important;}}@media(max-width:480px){#groupStatRow{grid-template-columns:repeat(2,1fr)!important;}}</style>
+
+        <!-- Group progress bar per doc type -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" id="groupChartsRow">
+          <div class="chart-card">
+            <p class="chart-title">ความครบถ้วนแต่ละประเภทงาน</p>
+            <p class="chart-sub" id="groupChartSub">ในกลุ่มสาระที่เลือก</p>
+            <div id="groupDocBars" style="margin-top:8px;"></div>
+          </div>
+          <div class="chart-card">
+            <p class="chart-title">สัดส่วนสถานะงาน</p>
+            <p class="chart-sub">ภาพรวมสถานะทุกเอกสารในกลุ่มนี้</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;" id="groupStatusBreakdown"></div>
+          </div>
+        </div>
+        <style>@media(max-width:700px){#groupChartsRow{grid-template-columns:1fr!important;}}</style>
+
+        <!-- Teacher list in group -->
+        <div class="card" style="padding:18px 20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <h3 style="font-size:15px;font-weight:800;color:#0f172a;">รายชื่อครูในกลุ่มสาระ</h3>
+            <span id="groupTeacherCount" style="font-size:12px;color:#7c3aed;font-weight:700;background:#ede9fe;padding:3px 12px;border-radius:20px;"></span>
+          </div>
+          <div id="groupTeacherList" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">เลือกกลุ่มสาระด้านบน</div>
+          </div>
+        </div>
+
+      </div><!-- end panelGroup -->
 
       <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
       <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
@@ -1053,6 +1108,11 @@ function loadAllSubmissions() {
 
       updateStats();
       renderView();
+      /* re-render group panel ถ้ากำลังอยู่ใน tab นั้น */
+      if (currentSubTab === 'group') {
+        renderGroupTabBtns();
+        renderGroupPanel();
+      }
     });
   }).catch(function(e) {
     main.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
@@ -2625,13 +2685,239 @@ function renderDocTypeBars() {
    SUB TAB SWITCHING
    ════════════════════════════════════════════ */
 var currentSubTab = 'overview';
+var currentGroupTab = ''; /* กลุ่มสาระที่เลือกอยู่ใน tab รายกลุ่มสาระ */
+
+/* ════════════════════════════════════════════
+   GROUP PANEL
+   ════════════════════════════════════════════ */
+
+function renderGroupTabBtns() {
+  var bar = document.getElementById('groupTabBtns');
+  if (!bar) return;
+  /* ถ้ายังไม่ได้เลือก หรือกลุ่มที่เลือกไม่อยู่ใน availableGroups แล้ว → เลือกกลุ่มแรก */
+  if (!currentGroupTab || availableGroups.indexOf(currentGroupTab) === -1) {
+    currentGroupTab = availableGroups[0] || '';
+  }
+  bar.innerHTML = availableGroups.map(function(g) {
+    var isActive = g === currentGroupTab;
+    return '<button onclick="selectGroupTab(\'' + esc(g) + '\')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;border:2px solid ' + (isActive ? '#7c3aed' : '#e2e8f0') + ';background:' + (isActive ? '#7c3aed' : 'white') + ';color:' + (isActive ? 'white' : '#64748b') + ';cursor:pointer;transition:all .2s;">' + esc(g) + '</button>';
+  }).join('');
+}
+
+function selectGroupTab(g) {
+  currentGroupTab = g;
+  renderGroupTabBtns();
+  renderGroupPanel();
+}
+
+function renderGroupPanel() {
+  var g = currentGroupTab;
+  if (!g) {
+    document.getElementById('groupTeacherList').innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">ยังไม่มีข้อมูลกลุ่มสาระ</div>';
+    return;
+  }
+
+  /* กรองครูในกลุ่ม */
+  var teachers = Object.values(teacherMap).filter(function(t) {
+    return t.isTeacher && normaliseGroup(t.staffGroup) === normaliseGroup(g);
+  });
+
+  /* นับสถิติ */
+  var totalSlots   = teachers.length * DOCUMENT_TYPES.length;
+  var submittedCnt = 0, pendingCnt = 0, finalCnt = 0, missingCnt = 0;
+  teachers.forEach(function(t) {
+    DOCUMENT_TYPES.forEach(function(dt) {
+      var sub = t.subs[dt.id];
+      if (!sub) { missingCnt++; return; }
+      var st = sub.status || 'submitted';
+      if (st === 'final_approved') finalCnt++;
+      else if (st === 'submitted' || st === 'head_reviewed' || st === 'reviewed' ||
+               st === 'assistant_reviewed' || st === 'deputy_reviewed') { submittedCnt++; pendingCnt++; }
+      else if (st === 'revision') submittedCnt++;
+      else missingCnt++;
+    });
+  });
+
+  /* อัปเดต stat cards */
+  document.getElementById('gs_teachers').textContent  = teachers.length;
+  document.getElementById('gs_submitted').textContent = submittedCnt;
+  document.getElementById('gs_pending').textContent   = pendingCnt;
+  document.getElementById('gs_final').textContent     = finalCnt;
+  document.getElementById('gs_missing').textContent   = missingCnt;
+
+  /* chart sub label */
+  document.getElementById('groupChartSub').textContent = 'กลุ่มสาระ' + g;
+
+  /* teacher count badge */
+  document.getElementById('groupTeacherCount').textContent = teachers.length + ' คน';
+
+  /* ── doc type bars ── */
+  var docBarsEl = document.getElementById('groupDocBars');
+  if (docBarsEl) {
+    var teacherCount = teachers.length || 1;
+    docBarsEl.innerHTML = DOCUMENT_TYPES.map(function(dt) {
+      var submitted = 0, approved = 0;
+      teachers.forEach(function(t) {
+        var sub = t.subs[dt.id];
+        if (!sub) return;
+        var st = sub.status || 'submitted';
+        if (st !== 'none') submitted++;
+        if (st === 'final_approved') approved++;
+      });
+      var pct = Math.round((submitted / teacherCount) * 100);
+      var pctA = Math.round((approved  / teacherCount) * 100);
+      return '<div class="docbar-row">' +
+        '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
+          '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
+        '</div>' +
+        '<span class="docbar-label" title="' + esc(dt.label) + '">' + esc(dt.short || dt.label) + '</span>' +
+        '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;width:90px;">' +
+          '<div class="docbar-track" style="width:90px;"><div class="docbar-fill" style="width:' + pct + '%;background:' + dt.color + '55;"></div></div>' +
+          '<div class="docbar-track" style="width:90px;"><div class="docbar-fill" style="width:' + pctA + '%;background:' + dt.color + ';"></div></div>' +
+        '</div>' +
+        '<span class="docbar-num">' + submitted + '/' + teacherCount + '</span>' +
+      '</div>';
+    }).join('');
+    lucide.createIcons();
+  }
+
+  /* ── status breakdown bars ── */
+  var statusBreakEl = document.getElementById('groupStatusBreakdown');
+  if (statusBreakEl) {
+    var statuses = [
+      { key:'final_approved',     label:'ผอ.อนุมัติ',         color:'#16a34a', bg:'#dcfce7' },
+      { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจ',        color:'#8b5cf6', bg:'#ede9fe' },
+      { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจ',         color:'#f59e0b', bg:'#fef9c3' },
+      { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจ',      color:'#0ea5e9', bg:'#e0f2fe' },
+      { key:'submitted',          label:'รอตรวจ',             color:'#22c55e', bg:'#dcfce7' },
+      { key:'revision',           label:'ให้แก้ไข',           color:'#ef4444', bg:'#fee2e2' },
+      { key:'none',               label:'ยังไม่ส่ง',          color:'#94a3b8', bg:'#f1f5f9' },
+    ];
+    var statusCounts = {};
+    statuses.forEach(function(s){ statusCounts[s.key] = 0; });
+    teachers.forEach(function(t) {
+      DOCUMENT_TYPES.forEach(function(dt) {
+        var sub = t.subs[dt.id];
+        if (!sub) { statusCounts['none']++; return; }
+        var st = sub.status || 'submitted';
+        if (st === 'reviewed') st = 'head_reviewed';
+        if (statusCounts[st] !== undefined) statusCounts[st]++;
+        else statusCounts['none']++;
+      });
+    });
+    var grandTotal = totalSlots || 1;
+    statusBreakEl.innerHTML = statuses.map(function(s) {
+      var cnt = statusCounts[s.key];
+      if (!cnt) return '';
+      var pct = Math.round((cnt / grandTotal) * 100);
+      return '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<div style="width:10px;height:10px;border-radius:3px;background:' + s.color + ';flex-shrink:0;"></div>' +
+        '<span style="font-size:12px;font-weight:700;color:#334155;flex:1;">' + s.label + '</span>' +
+        '<div style="width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;">' +
+          '<div style="width:' + pct + '%;height:100%;border-radius:4px;background:' + s.color + ';transition:width .4s;"></div>' +
+        '</div>' +
+        '<span style="font-size:11px;font-weight:800;color:' + s.color + ';min-width:32px;text-align:right;">' + cnt + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ── teacher list ── */
+  var listEl = document.getElementById('groupTeacherList');
+  if (!teachers.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">ไม่พบครูในกลุ่มสาระนี้</div>';
+    return;
+  }
+
+  /* เรียงตาม % ความสมบูรณ์ (น้อย → มาก) เพื่อให้เห็นคนที่ต้องติดตามก่อน */
+  teachers.sort(function(a, b) {
+    var pa = getNeedsReviewPriority(a), pb = getNeedsReviewPriority(b);
+    if (pb !== pa) return pb - pa;
+    return getLatestSubmitTime(b) - getLatestSubmitTime(a);
+  });
+
+  listEl.innerHTML = teachers.map(function(t) {
+    var subCount = Object.keys(t.subs).length;
+    var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
+    var finalC = 0, pendC = 0, revC = 0, missC = 0;
+    DOCUMENT_TYPES.forEach(function(dt) {
+      var sub = t.subs[dt.id];
+      if (!sub) { missC++; return; }
+      (sub._courses || [sub]).forEach(function(doc) {
+        if (doc._isContainer) return;
+        var st = doc.status || 'submitted';
+        if (st === 'final_approved') finalC++;
+        else if (st === 'revision') revC++;
+        else pendC++;
+      });
+    });
+
+    /* doc chips matrix */
+    var chipsHtml = DOCUMENT_TYPES.map(function(dt) {
+      var sub = t.subs[dt.id];
+      var st  = sub ? (sub.status || 'submitted') : 'none';
+      if (st === 'reviewed') st = 'head_reviewed';
+      var stColors = {
+        none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc',
+        assistant_reviewed:'#fcd34d', deputy_reviewed:'#c4b5fd',
+        final_approved:'#6ee7b7', revision:'#fde68a'
+      };
+      var tipLabels = { none:'ยังไม่ส่ง', submitted:'รอตรวจ', head_reviewed:'หัวหน้าฯ ✓',
+        assistant_reviewed:'ผช.ผอ. ✓', deputy_reviewed:'รอง ผอ. ✓',
+        final_approved:'ผอ.อนุมัติ ✓', revision:'ให้แก้ไข' };
+      return '<div title="' + esc(dt.short || dt.label) + ': ' + (tipLabels[st]||st) + '" ' +
+        'onclick="openReview(\'' + esc(dt.id + '_' + t.email) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" ' +
+        'style="width:20px;height:20px;border-radius:5px;background:' + (stColors[st]||'#e2e8f0') + ';cursor:' + (sub?'pointer':'default') + ';flex-shrink:0;" ' +
+        (sub ? 'class="matrix-cell"' : '') + '></div>';
+    }).join('');
+
+    return '<div class="teacher-row" style="padding:0;">' +
+      '<div class="teacher-header" onclick="switchSubTab(\'teacher\');setTimeout(function(){selectTeacherFromGroup(\'' + esc(t.email) + '\');},50);" style="padding:12px 16px;">' +
+        '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=38" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+            '<p style="font-size:13px;font-weight:800;color:#0f172a;">' + esc(t.staffName||t.displayName) + '</p>' +
+            (t.position ? '<span style="font-size:10px;background:#f1f5f9;color:#475569;padding:1px 7px;border-radius:7px;">' + esc(t.position) + '</span>' : '') +
+            (pendC  ? '<span style="background:#fef9c3;color:#92400e;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;">รอตรวจ ' + pendC + '</span>' : '') +
+            (revC   ? '<span style="background:#fee2e2;color:#b91c1c;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;">แก้ไข ' + revC + '</span>' : '') +
+            (finalC ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;">ผอ.อนุมัติ ' + finalC + '</span>' : '') +
+            (missC  ? '<span style="background:#f1f5f9;color:#94a3b8;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;">ยังไม่ส่ง ' + missC + '</span>' : '') +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">' +
+            '<div class="pbar-bg" style="flex:1;max-width:160px;"><div class="pbar-fill" style="width:' + pct + '%;"></div></div>' +
+            '<span style="font-size:10px;font-weight:700;color:#7c3aed;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
+          '</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;">' + chipsHtml + '</div>' +
+        '</div>' +
+        '<i data-lucide="chevron-right" style="width:14px;height:14px;color:#94a3b8;flex-shrink:0;"></i>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+/* เลือกครูใน tab รายบุคคล จาก group panel */
+function selectTeacherFromGroup(email) {
+  var t = teacherMap[email];
+  if (!t) return;
+  /* set search input & trigger selection */
+  var si = document.getElementById('teacherSearchInput');
+  if (si) {
+    si.value = t.staffName || t.displayName || email;
+    renderTeacherDropdown();
+    selectTeacher(email);
+  }
+}
+
+
 
 function switchSubTab(tab) {
   currentSubTab = tab;
-  document.getElementById('subTabOverview').className = 'sub-tab' + (tab==='overview'?' active':'');
-  document.getElementById('subTabTeacher').className  = 'sub-tab' + (tab==='teacher'?' active':'');
-  document.getElementById('subTabDocTypes').className = 'sub-tab' + (tab==='doctypes'?' active':'');
+  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'?' active':'');
+  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'?' active':'');
+  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'?' active':'');
+  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes'?' active':'');
   document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
   document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
   document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
 
@@ -2640,6 +2926,11 @@ function switchSubTab(tab) {
     lucide.createIcons();
   }
   if (tab === 'teacher') {
+    lucide.createIcons();
+  }
+  if (tab === 'group') {
+    renderGroupTabBtns();
+    renderGroupPanel();
     lucide.createIcons();
   }
 }
