@@ -17,13 +17,28 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script>
+    /* patch storageBucket ก่อน firebase.js initializeApp */
+    window._patchFirebaseStorage = function() {
+      if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
+        /* firebase.js ยังไม่ init — ไม่ต้องทำอะไร จะ patch หลัง init */
+      }
+    };
+  </script>
   <script src="shared/firebase.js"></script>
+  <script>
+    /* patch storageBucket หลัง initializeApp */
+    try {
+      if (firebase.apps.length > 0 && !firebase.app().options.storageBucket) {
+        firebase.app().options.storageBucket = 'np-webapp-74616.firebasestorage.app';
+      }
+    } catch(e) {}
+  </script>
   <script src="shared/common.js"></script>
   <!-- Google API -->
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client"></script>
-  <!-- Firebase Storage (โหลดหลัง firebase.js เพื่อไม่ block auth) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
@@ -975,6 +990,18 @@ function authorizeDrive(callback) {
 
 window.onload = function() {
   if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
+  /* safety net: ถ้า auth ไม่ตอบสนองใน 8 วินาที ให้ซ่อน overlay และแสดง loginGate */
+  setTimeout(function() {
+    var ov = document.getElementById('loadingOverlay');
+    if (ov && ov.style.display !== 'none') {
+      ov.style.display = 'none';
+      var gate = document.getElementById('loginGate');
+      var main = document.getElementById('mainApp');
+      if (gate && main && main.style.display === 'none') {
+        gate.style.display = 'flex';
+      }
+    }
+  }, 8000);
 };
 
 /* ─── AUTH ─── */
