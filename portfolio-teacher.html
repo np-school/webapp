@@ -1508,9 +1508,27 @@ function confirmDelete() {
   var btn = document.getElementById('confirmDeleteBtn');
   var fileToDelete = sub.files[fileIndex];
   var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
+  var isDeletingAll = newFiles.length === 0;
+
+  /* ── ลบลายเซ็นจาก Storage (เฉพาะกรณีลบทั้ง submission) ── */
+  function deleteSignatureFromStorage() {
+    if (!isDeletingAll) return Promise.resolve();
+    var sigURL = sub.signatureURL || '';
+    if (!sigURL) return Promise.resolve();
+    try {
+      var ref = firebase.storage().refFromURL(sigURL);
+      return ref.delete().catch(function(e) {
+        /* ถ้าลบไม่ได้ (ไฟล์ถูกลบแล้ว / permission) ไม่ต้อง block การลบ doc */
+        console.warn('[Signature] ลบจาก Storage ไม่สำเร็จ:', e.code);
+      });
+    } catch(e) {
+      console.warn('[Signature] refFromURL error:', e);
+      return Promise.resolve();
+    }
+  }
 
   function updateFirestore() {
-    if (newFiles.length === 0) return db.collection('portfolio_submissions').doc(sub.id).delete();
+    if (isDeletingAll) return db.collection('portfolio_submissions').doc(sub.id).delete();
     return db.collection('portfolio_submissions').doc(sub.id).update({
       files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -1530,22 +1548,25 @@ function confirmDelete() {
       });
     }
 
-    driveDeletePromise.then(updateFirestore).then(function() {
-      showToast('ลบไฟล์สำเร็จ', 'success');
-      closeDeleteModal();
-      if (newFiles.length === 0) {
-        delete submissions[subKey];
-        closeUploadModal();
-      } else {
-        submissions[subKey] = Object.assign({}, sub, { files: newFiles });
-        var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
-        if (rowIdx >= 0) renderCourseFilePanels();
-      }
-      renderDocList();
-    }).catch(function(e) {
-      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-      btn.disabled = false; btn.textContent = 'ลบไฟล์';
-    });
+    driveDeletePromise
+      .then(deleteSignatureFromStorage)
+      .then(updateFirestore)
+      .then(function() {
+        showToast('ลบไฟล์สำเร็จ', 'success');
+        closeDeleteModal();
+        if (isDeletingAll) {
+          delete submissions[subKey];
+          closeUploadModal();
+        } else {
+          submissions[subKey] = Object.assign({}, sub, { files: newFiles });
+          var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
+          if (rowIdx >= 0) renderCourseFilePanels();
+        }
+        renderDocList();
+      }).catch(function(e) {
+        showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+        btn.disabled = false; btn.textContent = 'ลบไฟล์';
+      });
   }
 
   /* ต้อง auth Drive ก่อนเสมอเพื่อให้ลบได้จริง */
@@ -1993,9 +2014,9 @@ function uploadSignatureToStorage(uid, courseCode, docTypeId) {
       for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
       var blob = new Blob([ab], { type: mimeType });
 
-      /* path: signatures/{uid}/{docTypeId}_{courseCode}_{timestamp}.png */
+      /* path: signatures/{year}/{uid}/{docTypeId}_{courseCode}_{timestamp}.png */
       var ts   = Date.now();
-      var path = 'signatures/' + uid + '/' + docTypeId + '_' + sanitizeForFilename(courseCode) + '_' + ts + '.png';
+      var path = 'signatures/' + currentYear + '/' + uid + '/' + docTypeId + '_' + sanitizeForFilename(courseCode) + '_' + ts + '.png';
 
       console.log('[Signature] กำลังอัปโหลดไปที่:', path);
 
