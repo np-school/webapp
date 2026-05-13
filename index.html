@@ -851,6 +851,7 @@
   }
 
   /* ════ Portfolio Dashboard ════ */
+  /* PF_DOC_TYPES โหลดจาก Firestore (portfolio_doc_types) — ไม่ hardcode */
   var PF_DOC_TYPES = [
     { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
     { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
@@ -861,7 +862,50 @@
     { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
     { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
     { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
-  ];
+  ]; /* fallback — ถูกแทนที่เมื่อ Firestore โหลดสำเร็จ */
+  var _pfDocTypesLoaded = false;
+  var _pfDocTypesUnsub  = null;
+
+  function pfColorToBg(hex) { return hex + '15'; }
+
+  /* โหลด doc types จาก Firestore — เรียกครั้งเดียวตอน pfInit */
+  function pfLoadDocTypes(callback) {
+    if (_pfDocTypesUnsub) { _pfDocTypesUnsub(); _pfDocTypesUnsub = null; }
+    _pfDocTypesUnsub = db.collection('portfolio_doc_types')
+      .orderBy('order')
+      .onSnapshot(function(snap) {
+        if (!snap.empty) {
+          var loaded = [];
+          snap.forEach(function(d) {
+            var data = d.data();
+            if (data.active === false) return; /* กรอง inactive ฝั่ง client */
+            loaded.push({
+              id:    data.id    || d.id,
+              label: data.label || '',
+              short: data.short || '',
+              icon:  data.icon  || 'file',
+              color: data.color || '#7c3aed',
+              bg:    pfColorToBg(data.color || '#7c3aed'),
+            });
+          });
+          if (loaded.length) PF_DOC_TYPES = loaded;
+        }
+        if (!_pfDocTypesLoaded) {
+          _pfDocTypesLoaded = true;
+          if (callback) callback();
+        } else {
+          /* realtime update — re-render ถ้าข้อมูลส่งโหลดอยู่แล้ว */
+          if (pfUid) pfLoad();
+        }
+      }, function(err) {
+        console.warn('pfLoadDocTypes error:', err);
+        if (!_pfDocTypesLoaded) {
+          _pfDocTypesLoaded = true;
+          if (callback) callback(); /* ใช้ fallback ต่อไป */
+        }
+      });
+  }
+
   var pfYear = 2568;
   var pfSem  = 1;
   var pfUid  = null;
@@ -981,12 +1025,18 @@
         if (snap.empty) {
           /* ไม่ใช่ staff — แสดงข้อความแจ้ง */
           var wrap = document.getElementById('pfDocList');
-          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">ระบบส่งงานสำหรับครูและบุคลากรโรงเรียนเท่านั้น</div>';
+          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">\u0e23\u0e30\u0e1a\u0e1a\u0e2a\u0e48\u0e07\u0e07\u0e32\u0e19\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e23\u0e39\u0e41\u0e25\u0e30\u0e1a\u0e38\u0e04\u0e25\u0e32\u0e01\u0e23\u0e42\u0e23\u0e07\u0e40\u0e23\u0e35\u0e22\u0e19\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19</div>';
+          document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
           return;
         }
-        pfLoad();
+        pfIsStaff = true;
+        /* โหลด doc types จาก Firestore ก่อน แล้วค่อย load submissions */
+        pfLoadDocTypes(function() { pfLoad(); });
       })
-      .catch(function() { pfLoad(); });
+      .catch(function() {
+        pfIsStaff = true;
+        pfLoadDocTypes(function() { pfLoad(); });
+      });
   }
 
   /* เรียก callback ทันทีที่โหลด */
