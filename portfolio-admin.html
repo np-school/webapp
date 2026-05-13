@@ -317,6 +317,9 @@
           <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
             <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
           </button>
+          <button class="sub-tab" id="subTabGroup" onclick="switchSubTab('group')">
+            <i data-lucide="layers" style="width:14px;height:14px;"></i> รายกลุ่มสาระ
+          </button>
           <button class="sub-tab" id="subTabTeacher" onclick="switchSubTab('teacher')">
             <i data-lucide="user-search" style="width:14px;height:14px;"></i> รายบุคคล
           </button>
@@ -460,6 +463,33 @@
       </div>
 
       </div><!-- end panelOverview -->
+
+      <!-- ══ SUB TAB: BY SUBJECT GROUP ══ -->
+      <div id="panelGroup" style="display:none;flex-direction:column;gap:16px;">
+
+        <!-- Toolbar -->
+        <div class="card" style="padding:14px 18px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="grpPanelFilterBar">
+              <button class="filter-pill active" id="grpPanelFilterAll" onclick="setGrpPanelFilter('all')">ทุกสถานะ</button>
+              <button class="filter-pill" id="grpPanelFilterIncomplete" onclick="setGrpPanelFilter('incomplete')">ยังไม่ครบ</button>
+              <button class="filter-pill" id="grpPanelFilterPending" onclick="setGrpPanelFilter('pending')">รอตรวจ</button>
+            </div>
+            <div style="position:relative;min-width:220px;flex:1;max-width:320px;">
+              <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#94a3b8;pointer-events:none;"></i>
+              <input type="text" id="grpPanelSearch" placeholder="ค้นหาชื่อครู..." style="padding-left:34px;width:100%;" oninput="renderGroupPanel()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Group cards container -->
+        <div id="grpPanelContent">
+          <div style="text-align:center;padding:60px;color:#94a3b8;">
+            <i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i>
+          </div>
+        </div>
+
+      </div><!-- end panelGroup -->
 
       <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
       <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
@@ -1053,6 +1083,7 @@ function loadAllSubmissions() {
 
       updateStats();
       renderView();
+      if (currentSubTab === 'group') renderGroupPanel();
     });
   }).catch(function(e) {
     main.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
@@ -2625,24 +2656,240 @@ function renderDocTypeBars() {
    SUB TAB SWITCHING
    ════════════════════════════════════════════ */
 var currentSubTab = 'overview';
+var grpPanelFilter = 'all';
 
 function switchSubTab(tab) {
   currentSubTab = tab;
-  document.getElementById('subTabOverview').className = 'sub-tab' + (tab==='overview'?' active':'');
-  document.getElementById('subTabTeacher').className  = 'sub-tab' + (tab==='teacher'?' active':'');
-  document.getElementById('subTabDocTypes').className = 'sub-tab' + (tab==='doctypes'?' active':'');
+  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview' ?' active':'');
+  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'    ?' active':'');
+  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'  ?' active':'');
+  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes' ?' active':'');
   document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
   document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
   document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
 
-  if (tab === 'doctypes') {
-    loadDocTypeList();
-    lucide.createIcons();
-  }
-  if (tab === 'teacher') {
-    lucide.createIcons();
-  }
+  if (tab === 'doctypes') { loadDocTypeList(); lucide.createIcons(); }
+  if (tab === 'group')    { renderGroupPanel(); lucide.createIcons(); }
+  if (tab === 'teacher')  { lucide.createIcons(); }
 }
+
+/* ── filter state สำหรับ panel กลุ่มสาระ ── */
+function setGrpPanelFilter(f) {
+  grpPanelFilter = f;
+  ['grpPanelFilterAll','grpPanelFilterIncomplete','grpPanelFilterPending'].forEach(function(id) {
+    var suffix = id.replace('grpPanelFilter','').toLowerCase();
+    document.getElementById(id).className = 'filter-pill' + (suffix === f ? ' active' : '');
+  });
+  renderGroupPanel();
+}
+
+/* ════════════════════════════════════════════
+   PANEL: รายกลุ่มสาระ
+   ════════════════════════════════════════════ */
+function renderGroupPanel() {
+  var container = document.getElementById('grpPanelContent');
+  if (!container) return;
+
+  var q = ((document.getElementById('grpPanelSearch') || {}).value || '').toLowerCase();
+
+  /* กลุ่มสาระที่จะแสดง — headOfGroup เห็นเฉพาะกลุ่มตน */
+  var groups = isHeadOfGroupOnly && headOfGroupName
+    ? [headOfGroupName]
+    : availableGroups.slice();
+
+  if (!groups.length) {
+    container.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;">ยังไม่มีข้อมูลกลุ่มสาระ</div>';
+    return;
+  }
+
+  var STATUS_ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+  var STATUS_LABEL = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'อนุมัติแล้ว', revision:'ขอแก้ไข' };
+  var STATUS_CHIP  = { none:'chip-none', submitted:'chip-submitted', head_reviewed:'chip-head_reviewed', reviewed:'chip-reviewed', assistant_reviewed:'chip-assistant_reviewed', deputy_reviewed:'chip-deputy_reviewed', final_approved:'chip-final_approved', revision:'chip-revision' };
+  var STATUS_DOT   = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#3b82f6', assistant_reviewed:'#f59e0b', deputy_reviewed:'#8b5cf6', final_approved:'#16a34a', revision:'#ef4444' };
+
+  var html = '';
+
+  groups.forEach(function(grp) {
+    /* ครูในกลุ่มนี้ */
+    var teachers = Object.values(teacherMap).filter(function(t) {
+      return t.isTeacher && normaliseGroup(t.staffGroup) === normaliseGroup(grp);
+    });
+
+    /* กรองตาม search */
+    var filtered = teachers.filter(function(t) {
+      if (!q) return true;
+      return (t.staffName || '').toLowerCase().includes(q) ||
+             (t.email     || '').toLowerCase().includes(q);
+    });
+
+    /* กรองตาม status filter */
+    if (grpPanelFilter === 'incomplete') {
+      filtered = filtered.filter(function(t) { return Object.keys(t.subs).length < DOCUMENT_TYPES.length; });
+    } else if (grpPanelFilter === 'pending') {
+      filtered = filtered.filter(function(t) {
+        return Object.values(t.subs).some(function(s) {
+          var docs = s._courses || [s];
+          return docs.some(function(d) {
+            var st = d.status || 'submitted';
+            return st === 'submitted' || st === 'head_reviewed' || st === 'assistant_reviewed' || st === 'deputy_reviewed';
+          });
+        });
+      });
+    }
+
+    if (!filtered.length && q) return; /* ซ่อนกลุ่มที่ไม่มีผลค้นหา */
+
+    /* คำนวณสถิติกลุ่ม */
+    var totalSlots  = teachers.length * DOCUMENT_TYPES.length;
+    var sentCount   = 0, approvedCount = 0, pendingCount = 0, revCount = 0;
+    teachers.forEach(function(t) {
+      DOCUMENT_TYPES.forEach(function(dt) {
+        var sub = t.subs[dt.id];
+        var st  = sub ? (sub.status || 'submitted') : 'none';
+        if (st !== 'none') sentCount++;
+        if (st === 'final_approved') approvedCount++;
+        if (st === 'submitted' || st === 'head_reviewed' || st === 'assistant_reviewed' || st === 'deputy_reviewed') pendingCount++;
+        if (st === 'revision') revCount++;
+      });
+    });
+    var pct = totalSlots > 0 ? Math.round((sentCount / totalSlots) * 100) : 0;
+
+    /* สีแถบกลุ่ม — hash จากชื่อกลุ่ม */
+    var grpColors = [
+      {bg:'#eff6ff',border:'#bfdbfe',accent:'#1d4ed8'},
+      {bg:'#f5f3ff',border:'#ddd6fe',accent:'#7c3aed'},
+      {bg:'#f0fdf4',border:'#bbf7d0',accent:'#15803d'},
+      {bg:'#fef9c3',border:'#fde047',accent:'#a16207'},
+      {bg:'#fce7f3',border:'#f9a8d4',accent:'#be185d'},
+      {bg:'#ecfeff',border:'#a5f3fc',accent:'#0369a1'},
+      {bg:'#fff7ed',border:'#fdba74',accent:'#c2410c'},
+      {bg:'#fdf4ff',border:'#e9d5ff',accent:'#7e22ce'},
+    ];
+    var ci = 0; for (var ci2=0; ci2<grp.length; ci2++) ci = (ci*31 + grp.charCodeAt(ci2)) % grpColors.length;
+    var gc = grpColors[ci];
+
+    html += '<div style="background:white;border-radius:20px;border:1.5px solid ' + gc.border + ';box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">';
+
+    /* ── Group Header ── */
+    html += '<div style="background:' + gc.bg + ';padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">' +
+      '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:38px;height:38px;border-radius:11px;background:' + gc.accent + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i data-lucide="users" style="width:18px;height:18px;color:white;"></i>' +
+        '</div>' +
+        '<div>' +
+          '<p style="font-size:15px;font-weight:800;color:#0f172a;">' + esc2(grp) + '</p>' +
+          '<p style="font-size:11px;color:#64748b;margin-top:1px;">' + teachers.length + ' คน · ส่งแล้ว ' + sentCount + '/' + totalSlots + ' รายการ</p>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+        (pendingCount ? '<span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:#fef3c7;color:#b45309;border:1px solid #fde68a;">⏳ รอตรวจ ' + pendingCount + '</span>' : '') +
+        (approvedCount ? '<span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:#dcfce7;color:#15803d;border:1px solid #86efac;">✅ อนุมัติ ' + approvedCount + '</span>' : '') +
+        (revCount ? '<span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;">⚠ แก้ไข ' + revCount + '</span>' : '') +
+      '</div>' +
+    '</div>';
+
+    /* Progress bar */
+    html += '<div style="padding:0 20px;background:' + gc.bg + ';border-bottom:1.5px solid ' + gc.border + ';">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">' +
+        '<span style="font-size:10px;font-weight:700;color:#64748b;">ความคืบหน้าโดยรวม</span>' +
+        '<span style="font-size:11px;font-weight:800;color:' + gc.accent + ';">' + pct + '%</span>' +
+      '</div>' +
+      '<div style="background:rgba(0,0,0,.08);border-radius:6px;height:7px;margin-bottom:12px;overflow:hidden;">' +
+        '<div style="height:100%;border-radius:6px;background:' + gc.accent + ';width:' + pct + '%;transition:width .5s ease;"></div>' +
+      '</div>' +
+    '</div>';
+
+    /* Doc type header row */
+    var docHeaderCells = DOCUMENT_TYPES.map(function(dt) {
+      return '<th style="text-align:center;padding:8px 6px;font-size:9px;font-weight:800;color:#94a3b8;white-space:nowrap;min-width:58px;max-width:80px;border-right:1px solid #f1f5f9;">' +
+        '<div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;">' +
+          '<div style="width:22px;height:22px;border-radius:6px;background:' + dt.color + '18;display:flex;align-items:center;justify-content:center;margin:0 auto;">' +
+            '<i data-lucide="' + dt.icon + '" style="width:11px;height:11px;color:' + dt.color + ';"></i>' +
+          '</div>' +
+          '<span style="overflow:hidden;text-overflow:ellipsis;max-width:68px;display:block;">' + esc2(dt.short || dt.label) + '</span>' +
+        '</div>' +
+      '</th>';
+    }).join('');
+
+    html += '<div style="overflow-x:auto;padding:12px 20px 16px;">';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+    html += '<thead><tr>' +
+      '<th style="text-align:left;padding:8px 10px 8px 0;font-size:11px;font-weight:800;color:#374151;min-width:140px;">ครู</th>' +
+      docHeaderCells +
+      '<th style="text-align:center;padding:8px 6px;font-size:9px;font-weight:800;color:#94a3b8;">รวม</th>' +
+    '</tr></thead>';
+    html += '<tbody>';
+
+    /* เรียง: รอตรวจก่อน → ส่งน้อยก่อน */
+    filtered.sort(function(a, b) {
+      var pa = getNeedsReviewPriority(a), pb = getNeedsReviewPriority(b);
+      if (pb !== pa) return pb - pa;
+      return Object.keys(a.subs).length - Object.keys(b.subs).length;
+    });
+
+    filtered.forEach(function(t) {
+      var subCount = Object.keys(t.subs).length;
+      var tPct = DOCUMENT_TYPES.length > 0 ? Math.round(subCount / DOCUMENT_TYPES.length * 100) : 0;
+      var reviewPri = getNeedsReviewPriority(t);
+      var rowBg = reviewPri >= 1 ? '#fffdf5' : 'white';
+
+      /* avatar initials */
+      var parts = (t.staffName || '').trim().split(' ');
+      var initials = parts.length >= 2 ? (parts[parts.length-2][0]||'') + (parts[parts.length-1][0]||'') : (t.staffName||'?')[0];
+      var colors2 = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
+      var ci3 = 0; for (var xi=0;xi<(t.staffName||'').length;xi++) ci3=(ci3*31+(t.staffName||'').charCodeAt(xi))%colors2.length;
+
+      var docCells = DOCUMENT_TYPES.map(function(dt) {
+        var sub = t.subs[dt.id];
+        var st  = sub ? (sub.status || 'submitted') : 'none';
+        var chipCls = STATUS_CHIP[st] || 'chip-none';
+        var dot = STATUS_DOT[st] || '#d1d5db';
+        var lbl = STATUS_LABEL[st] || st;
+        var clickable = sub ? 'onclick="openReview(\'' + esc(t.email) + '\',\'' + dt.id + '\')" style="cursor:pointer;"' : 'style="cursor:default;opacity:.45;"';
+        return '<td style="text-align:center;padding:5px 4px;border-right:1px solid #f8fafc;">' +
+          '<div class="doc-chip ' + chipCls + '" ' + clickable + ' title="' + esc2(dt.label) + ': ' + esc2(lbl) + '" style="padding:4px 7px;font-size:10px;justify-content:center;gap:4px;min-width:52px;">' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:' + dot + ';flex-shrink:0;display:inline-block;"></span>' +
+            '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44px;">' + esc2(lbl) + '</span>' +
+          '</div>' +
+        '</td>';
+      }).join('');
+
+      html += '<tr style="background:' + rowBg + ';border-bottom:1px solid #f8fafc;transition:background .12s;" onmouseover="this.style.background=\'#faf5ff\'" onmouseout="this.style.background=\'' + rowBg + '\'">' +
+        '<td style="padding:8px 10px 8px 0;vertical-align:middle;">' +
+          '<div style="display:flex;align-items:center;gap:9px;">' +
+            '<div style="width:32px;height:32px;border-radius:50%;background:' + colors2[ci3] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;">' + esc2(initials) + '</div>' +
+            '<div style="min-width:0;">' +
+              '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc2(t.staffName || t.email) + '</p>' +
+              '<p style="font-size:10px;color:#7c3aed;font-weight:700;">' + tPct + '% · ' + subCount + '/' + DOCUMENT_TYPES.length + '</p>' +
+            '</div>' +
+          '</div>' +
+        '</td>' +
+        docCells +
+        '<td style="text-align:center;padding:5px 6px;vertical-align:middle;">' +
+          '<span style="font-size:11px;font-weight:800;color:' + (tPct===100?'#15803d':'#64748b') + ';">' + tPct + '%</span>' +
+        '</td>' +
+      '</tr>';
+    });
+
+    if (!filtered.length) {
+      html += '<tr><td colspan="' + (DOCUMENT_TYPES.length + 2) + '" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px;font-style:italic;">ไม่พบรายชื่อครู</td></tr>';
+    }
+
+    html += '</tbody></table>';
+    html += '</div>'; /* /overflow-x */
+    html += '</div>'; /* /group card */
+  });
+
+  if (!html) {
+    html = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;font-style:italic;">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>';
+  }
+
+  container.innerHTML = html;
+  lucide.createIcons();
+}
+
+function esc2(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 /* ════════════════════════════════════════════
    NOTES TIMELINE MODAL
