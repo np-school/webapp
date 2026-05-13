@@ -3300,6 +3300,15 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   setT('adminMemoPrintSubject', toThaiNumeralsAdmin(doc.memoSubject || autoSubject));
   setT('adminMemoPrintTo',      doc.memoTo || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม');
 
+  var throughWrap = document.getElementById('adminMemoPrintThroughWrap');
+  var throughSpan = document.getElementById('adminMemoPrintThrough');
+  if (doc.memoThrough) {
+    if (throughSpan) throughSpan.textContent = toThaiNumeralsAdmin(doc.memoThrough);
+    if (throughWrap) throughWrap.style.display = 'block';
+  } else {
+    if (throughWrap) throughWrap.style.display = 'none';
+  }
+
   /* ── เนื้อหา ── */
   var autoBody =
     'ด้วย' + (staffName ? 'ข้าพเจ้า ' + staffName : 'ข้าพเจ้า') +
@@ -3319,6 +3328,14 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   setT('adminMemoSignName',  staffName ? '( ' + staffName + ' )' : '');
   setT('adminMemoSignPos',   staffPos  ? 'ตำแหน่ง ' + staffPos  : 'ครู');
   setT('adminMemoSignGroup', staffGrp  ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
+
+  /* ลายเซ็นรูปภาพ */
+  var adminSigImg = document.getElementById('adminMemoSignImg');
+  if (adminSigImg) {
+    var sigSrc = doc.signatureUrl || '';
+    if (sigSrc) { adminSigImg.src = sigSrc; adminSigImg.style.display = 'block'; }
+    else { adminSigImg.style.display = 'none'; }
+  }
 
   /* ── หน้า 2: ความคิดเห็นผู้ตรวจ ── */
   var page2 = document.getElementById('adminMemoPage2');
@@ -3431,6 +3448,11 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintSubject"></span>
       </div>
 
+      <div id="adminMemoPrintThroughWrap" style="display:none;text-align:left;">
+        <span style="font-size:16pt;font-weight:800;">ผ่าน</span>
+        <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintThrough"></span>
+      </div>
+
       <div style="margin-top:4px;text-align:left;">
         <span style="font-size:16pt;font-weight:800;">เรียน</span>
         <span style="font-size:12pt;margin-left:6px;" id="adminMemoPrintTo"></span>
@@ -3441,7 +3463,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
         <div style="text-align:center;min-width:200px;">
           <div style="font-size:12pt;">ลงชื่อ</div>
-          <div style="height:48px;"></div>
+          <div style="height:48px;display:flex;align-items:center;justify-content:center;">
+            <img id="adminMemoSignImg" src="" style="display:none;max-height:52px;object-fit:contain;">
+          </div>
           <p id="adminMemoSignName"  style="font-size:12pt;margin:2px 0 0;line-height:1.5;"></p>
           <p id="adminMemoSignPos"   style="font-size:12pt;margin:0;line-height:1.5;"></p>
           <p id="adminMemoSignGroup" style="font-size:12pt;margin:0;line-height:1.5;"></p>
