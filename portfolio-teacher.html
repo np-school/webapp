@@ -2021,9 +2021,13 @@ function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
         return processRow(rowIdx + 1);
       });
     }
+    /* capture dataURL ก่อนเริ่ม loop (canvas อาจถูก reset ทีหลัง) */
+    var _capturedSigDataURL = (typeof getSignatureDataURL === 'function' && !isSignatureEmpty())
+      ? getSignatureDataURL() : '';
+
     return processRow(0).then(function() {
-      /* บันทึก memo แบบ shared (ทำครั้งเดียวต่อ docType/ภาคเรียน) */
-      return uploadSignatureToStorage(currentUser.uid, '_memo_', dt.id)
+      /* บันทึก memo แบบ shared — อัปโหลดลายเซ็นที่ capture ไว้ก่อนหน้า */
+      return uploadDataURLToStorage(_capturedSigDataURL, currentUser.uid, dt.id)
         .then(function(sigURL) {
           return saveMemoDocument(sigURL, dt.id);
         })
@@ -2087,24 +2091,26 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
         return uploadNext(idx + 1);
       });
     }
+    var _capturedSigDataURL = (typeof getSignatureDataURL === 'function' && !isSignatureEmpty())
+      ? getSignatureDataURL() : '';
     return uploadNext(0);
   })
   .then(function(uploaded) {
     var allFiles = existingFiles.concat(uploaded);
-    return uploadSignatureToStorage(currentUser.uid, '_memo_', currentDocId)
+    /* บันทึก memo shared document ด้วยลายเซ็นที่ capture ไว้ */
+    uploadDataURLToStorage(_capturedSigDataURL, currentUser.uid, currentDocId)
       .then(function(sigURL) {
-        /* บันทึก memo shared document */
         saveMemoDocument(sigURL, currentDocId).catch(function(e){ console.warn('[Memo] save error:', e); });
-        var updateData = {
-          files: allFiles,
-          fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
-          subjectGroup: subjectGroup,
-          note: note,
-          resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        };
-        return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
       });
+    var updateData = {
+      files: allFiles,
+      fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
+      subjectGroup: subjectGroup,
+      note: note,
+      resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
   })
   .then(function() {
     showToast('เพิ่มไฟล์สำเร็จ ✓', 'success');
@@ -2114,6 +2120,27 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
   .catch(function(e) {
     showToast('อัปโหลดไม่สำเร็จ: ' + (e.message||e), 'error');
     resetBtn(btn); progressEl.style.display = 'none';
+  });
+}
+
+/* อัปโหลด dataURL ที่ capture ไว้แล้วไปยัง Storage — ไม่อ่าน canvas ใหม่ */
+function uploadDataURLToStorage(dataURL, uid, docTypeId) {
+  return new Promise(function(resolve) {
+    if (!dataURL || dataURL.indexOf(',') === -1) { resolve(''); return; }
+    if (typeof firebase === 'undefined' || typeof firebase.storage !== 'function') { resolve(''); return; }
+    try {
+      var byteString = atob(dataURL.split(',')[1]);
+      var mimeType   = dataURL.split(',')[0].split(':')[1].split(';')[0];
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      var blob = new Blob([ab], { type: mimeType });
+      var path = 'signatures/' + currentYear + '/' + uid + '/memo_' + docTypeId + '.png';
+      firebase.storage().ref(path).put(blob, { contentType: 'image/png' })
+        .then(function(snap) { return snap.ref.getDownloadURL(); })
+        .then(function(url) { resolve(url); })
+        .catch(function(e) { console.warn('[MemoSig] upload error:', e); resolve(''); });
+    } catch(e) { console.warn('[MemoSig] dataURL error:', e); resolve(''); }
   });
 }
 
