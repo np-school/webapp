@@ -17,6 +17,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <!-- Google API -->
@@ -1667,19 +1668,25 @@ function submitDoc() {
       uploadManageFiles(subKey, newFiles, subjectGroup, note, btn);
     } else {
       /* ไม่มีไฟล์ใหม่ → บันทึก meta เท่านั้น */
-      db.collection('portfolio_submissions').doc(sub.id).update({
-        subjectGroup: subjectGroup,
-        note: note,
-        memoDate:    document.getElementById('memoDate').value.trim(),
-        memoSubject: document.getElementById('memoSubject').value.trim(),
-        memoTo:      document.getElementById('memoTo').value.trim(),
-        memoThrough: document.getElementById('memoThrough').value.trim(),
-        memoBody:    document.getElementById('memoBody').value.trim(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      }).then(function() {
-        showToast('บันทึกสำเร็จ ✓', 'success');
-        closeUploadModal(); loadSubmissions();
-      }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+      uploadSignatureToStorage(currentUser.uid, sub.courseCode || '', currentDocId)
+        .then(function(sigURL) {
+          var updateData = {
+            subjectGroup: subjectGroup,
+            note: note,
+            memoDate:    document.getElementById('memoDate').value.trim(),
+            memoSubject: document.getElementById('memoSubject').value.trim(),
+            memoTo:      document.getElementById('memoTo').value.trim(),
+            memoThrough: document.getElementById('memoThrough').value.trim(),
+            memoBody:    document.getElementById('memoBody').value.trim(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          };
+          if (sigURL) updateData.signatureURL = sigURL;
+          return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
+        })
+        .then(function() {
+          showToast('บันทึกสำเร็จ ✓', 'success');
+          closeUploadModal(); loadSubmissions();
+        }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
     }
     return;
   }
@@ -1839,7 +1846,10 @@ function uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn) {
         });
       }
       return uploadNext(0).then(function(files) {
-        return saveCourseSubmission(files, note, subjectGroup, row.code, row.name);
+        return uploadSignatureToStorage(currentUser.uid, row.code, currentDocId)
+          .then(function(sigURL) {
+            return saveCourseSubmission(files, note, subjectGroup, row.code, row.name, sigURL);
+          });
       }).then(function() {
         return processRow(rowIdx + 1);
       });
@@ -1907,14 +1917,19 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
   })
   .then(function(uploaded) {
     var allFiles = existingFiles.concat(uploaded);
-    return db.collection('portfolio_submissions').doc(sub.id).update({
-      files: allFiles,
-      fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
-      subjectGroup: subjectGroup,
-      note: note,
-      resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    return uploadSignatureToStorage(currentUser.uid, sub.courseCode || '', currentDocId)
+      .then(function(sigURL) {
+        var updateData = {
+          files: allFiles,
+          fileUrl: allFiles[0] ? allFiles[0].fileUrl : '',
+          subjectGroup: subjectGroup,
+          note: note,
+          resubmittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        if (sigURL) updateData.signatureURL = sigURL;
+        return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
+      });
   })
   .then(function() {
     showToast('เพิ่มไฟล์สำเร็จ ✓', 'success');
@@ -1927,7 +1942,40 @@ function uploadManageFiles(subKey, newFiles, subjectGroup, note, btn) {
   });
 }
 
-function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseName) {
+/* ─── UPLOAD SIGNATURE TO FIREBASE STORAGE ─── */
+function uploadSignatureToStorage(uid, courseCode, docTypeId) {
+  return new Promise(function(resolve, reject) {
+    if (typeof getSignatureDataURL !== 'function' || isSignatureEmpty()) {
+      resolve(''); return;
+    }
+    var dataURL = getSignatureDataURL();
+    /* แปลง dataURL → Blob */
+    var byteString = atob(dataURL.split(',')[1]);
+    var mimeType   = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    var blob = new Blob([ab], { type: mimeType });
+
+    /* path: signatures/{uid}/{docTypeId}_{courseCode}_{timestamp}.png */
+    var ts   = Date.now();
+    var path = 'signatures/' + uid + '/' + docTypeId + '_' + sanitizeForFilename(courseCode) + '_' + ts + '.png';
+    var storageRef = firebase.storage().ref(path);
+    var uploadTask = storageRef.put(blob, { contentType: 'image/png' });
+
+    uploadTask.on('state_changed',
+      null,
+      function(err) { reject(err); },
+      function() {
+        uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
+          resolve(url);
+        }).catch(reject);
+      }
+    );
+  });
+}
+
+function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseName, signatureURL) {
   var key    = currentYear + '_' + currentSem;
   var now    = firebase.firestore.FieldValue.serverTimestamp();
   var subKey = currentDocId + '_' + courseCode;
@@ -1957,7 +2005,7 @@ function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseNa
     memoTo:        document.getElementById('memoTo') ? document.getElementById('memoTo').value.trim() : 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
     memoThrough:   document.getElementById('memoThrough') ? document.getElementById('memoThrough').value.trim() : '',
     memoBody:      document.getElementById('memoBody') ? document.getElementById('memoBody').value.trim() : '',
-    signatureDataURL: (typeof getSignatureDataURL === 'function') ? getSignatureDataURL() : '',
+    signatureURL:  signatureURL || '',
     updatedAt:     now,
     submittedAt:   now,
     resubmittedAt: null,
@@ -2101,7 +2149,7 @@ function _renderMemoModal(subKey) {
   /* แสดงลายเซ็นจาก dataURL (ถ้ามี) หรือจากที่บันทึกใน sub */
   var sigImg = document.getElementById('memoSignatureImg');
   if (sigImg) {
-    var sigSrc = (typeof getSignatureDataURL === 'function' && !isSignatureEmpty()) ? getSignatureDataURL() : (sub.signatureDataURL || '');
+    var sigSrc = (typeof getSignatureDataURL === 'function' && !isSignatureEmpty()) ? getSignatureDataURL() : (sub.signatureURL || '');
     if (sigSrc && sigSrc.length > 100) {
       sigImg.src = sigSrc;
       sigImg.style.display = 'block';
