@@ -17,7 +17,29 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
+  <script>
+    /* ── Storage patch: เผื่อ firebase.js เก่าไม่มี storageBucket ── */
+    (function() {
+      try {
+        var app = firebase.app();
+        if (!app.options.storageBucket) {
+          firebase.apps.forEach(function(a) { a.delete(); });
+          firebase.initializeApp({
+            apiKey:        'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
+            authDomain:    'np-webapp-74616.firebaseapp.com',
+            projectId:     'np-webapp-74616',
+            storageBucket: 'np-webapp-74616.firebasestorage.app',
+            appId:         '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
+          });
+        }
+        if (typeof window.storage === 'undefined') {
+          window.storage = firebase.storage();
+        }
+      } catch(e) { console.error('[Admin Storage patch]', e); }
+    })();
+  </script>
   <script src="shared/common.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
@@ -131,6 +153,10 @@
       .stat-cards-grid{grid-template-columns:repeat(2,1fr)!important;}
       .matrix-table{font-size:10px;}
     }
+
+    /* ── Signature Pad (Admin Review) ── */
+    .admin-sig-canvas{border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:crosshair;touch-action:none;width:100%;max-width:100%;display:block;}
+    .admin-sig-canvas:focus{outline:none;}
 
     /* ── Notes button & modal ── */
     .notes-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;border:1.5px solid #e2e8f0;background:white;color:#64748b;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
@@ -742,6 +768,18 @@
           <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องกรอกก่อนกดยืนยัน</span>
         </label>
         <textarea id="adminNote" rows="2" placeholder="กรอกความคิดเห็นหรือหมายเหตุก่อนกดยืนยัน..." style="resize:none;"></textarea>
+
+        <!-- Signature pad -->
+        <div style="margin-top:12px;">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
+            ลายมือชื่อผู้ตรวจ
+            <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องเซ็นก่อนกดยืนยัน</span>
+          </label>
+          <canvas id="adminSigCanvas" class="admin-sig-canvas" width="420" height="90" style="height:90px;"></canvas>
+          <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+            <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
+          </div>
+        </div>
       </div>
 
       <div style="display:flex;gap:10px;" id="reviewActionButtons">
@@ -1609,6 +1647,12 @@ function openReview(subId, uid, docTypeId) {
   var noteSection = document.getElementById('reviewNoteSection');
   if (noteSection) noteSection.style.display = canReview ? 'block' : 'none';
 
+  /* เคลียร์ note + signature เมื่อเปิด modal ใหม่ทุกครั้ง */
+  var noteEl = document.getElementById('adminNote');
+  if (noteEl) noteEl.value = '';
+  if (typeof clearAdminSignature === 'function') clearAdminSignature();
+  if (typeof initAdminSigPadNow  === 'function') initAdminSigPadNow();
+
   lucide.createIcons();
 }
 
@@ -2065,13 +2109,104 @@ function fillSingleFileInfo(sub) {
   lucide.createIcons();
 }
 
+/* ════════════════════════════════════════════
+   ADMIN SIGNATURE PAD
+   ════════════════════════════════════════════ */
+(function() {
+  var canvas, ctx, drawing = false, hasSig = false;
+
+  function initAdminSigPad() {
+    canvas = document.getElementById('adminSigCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    var rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
+    canvas.height = Math.floor(rect.height * (window.devicePixelRatio || 1));
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    canvas.style.width  = rect.width  + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    /* reset drawing flag & re-setup style after scale */
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    function getPos(e) {
+      var r = canvas.getBoundingClientRect();
+      var src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+    function start(e) { e.preventDefault(); drawing = true; var p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e)  { if (!drawing) return; e.preventDefault(); var p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasSig = true; }
+    function end()    { drawing = false; }
+
+    canvas.addEventListener('mousedown',  start);
+    canvas.addEventListener('mousemove',  move);
+    canvas.addEventListener('mouseup',    end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove',  move,  { passive: false });
+    canvas.addEventListener('touchend',   end);
+  }
+
+  window.clearAdminSignature = function() {
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+    hasSig = false;
+  };
+  window.isAdminSigEmpty = function() { return !hasSig; };
+  window.getAdminSigDataURL = function() { return canvas ? canvas.toDataURL('image/png') : ''; };
+  window.initAdminSigPadNow = function() {
+    hasSig = false;
+    setTimeout(initAdminSigPad, 80);
+  };
+})();
+
+/* อัปโหลด admin signature ไปยัง Firebase Storage */
+function uploadAdminSignatureToStorage(docId, status) {
+  if (typeof isAdminSigEmpty === 'function' && isAdminSigEmpty()) {
+    return Promise.resolve(null);
+  }
+  var dataURL = getAdminSigDataURL();
+  if (!dataURL) return Promise.resolve(null);
+
+  var storageRef = firebase.storage().ref();
+  var sigFieldMap = {
+    head_reviewed:      'headSignature',
+    reviewed:           'headSignature',
+    assistant_reviewed: 'assistantSignature',
+    deputy_reviewed:    'deputySignature',
+    final_approved:     'directorSignature',
+  };
+  var folder = sigFieldMap[status] || 'reviewSignature';
+  var path = 'admin_signatures/' + folder + '/' + docId + '_' + Date.now() + '.png';
+
+  /* แปลง dataURL → Blob */
+  var byteStr = atob(dataURL.split(',')[1]);
+  var arr = new Uint8Array(byteStr.length);
+  for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+  var blob = new Blob([arr], { type: 'image/png' });
+
+  return storageRef.child(path).put(blob).then(function(snap) {
+    return snap.ref.getDownloadURL();
+  }).catch(function(e) {
+    console.warn('[AdminSig] อัปโหลดลายเซ็นไม่สำเร็จ:', e.message);
+    return null;
+  });
+}
+
 function setReviewStatus(status) {
   var note = document.getElementById('adminNote').value.trim();
 
   /* ── บังคับเขียนความคิดเห็นทุกขั้นที่เป็นการ "ผ่าน/อนุมัติ" ── */
   var approvalStatuses = ['head_reviewed', 'reviewed', 'assistant_reviewed', 'deputy_reviewed', 'final_approved'];
   if (approvalStatuses.indexOf(status) !== -1 && !note) {
-    /* Highlight textarea */
     var noteEl = document.getElementById('adminNote');
     if (noteEl) {
       noteEl.style.borderColor = '#ef4444';
@@ -2083,6 +2218,21 @@ function setReviewStatus(status) {
       }, 2500);
     }
     showToast('กรุณาเขียนความคิดเห็นก่อนกดยืนยัน', 'warn');
+    return;
+  }
+
+  /* ── บังคับเซ็นลายเซ็นทุกขั้นที่เป็นการ "ผ่าน/อนุมัติ" ── */
+  if (approvalStatuses.indexOf(status) !== -1 && typeof isAdminSigEmpty === 'function' && isAdminSigEmpty()) {
+    var sigCanvas = document.getElementById('adminSigCanvas');
+    if (sigCanvas) {
+      sigCanvas.style.border = '2px solid #ef4444';
+      sigCanvas.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
+      setTimeout(function() {
+        sigCanvas.style.border = '';
+        sigCanvas.style.boxShadow = '';
+      }, 2500);
+    }
+    showToast('กรุณาเซ็นลายมือชื่อก่อนกดยืนยัน', 'warn');
     return;
   }
 
@@ -2167,8 +2317,26 @@ function setReviewStatus(status) {
     updatePayload[nameFieldMap[status]] = currentUserName;
   }
 
-  /* ── อัปเดตเฉพาะ status/note ระดับ document เท่านั้น ── */
-  db.collection('portfolio_submissions').doc(targetDocId).update(updatePayload).then(function() {
+  /* ── อัปเดตเฉพาะ status/note ระดับ document เท่านั้น — อัปโหลดลายเซ็นก่อน ── */
+  /* map status → field เก็บ URL ลายเซ็นผู้ตรวจ */
+  var sigUrlFieldMap = {
+    head_reviewed:      'headSignatureURL',
+    reviewed:           'headSignatureURL',
+    assistant_reviewed: 'assistantSignatureURL',
+    deputy_reviewed:    'deputySignatureURL',
+    final_approved:     'directorSignatureURL',
+  };
+
+  /* ปุ่มทุกปุ่มใน reviewActionButtons ให้ disable ระหว่างรอ */
+  var actionBtns = document.querySelectorAll('#reviewActionButtons button');
+  actionBtns.forEach(function(b){ b.disabled = true; });
+
+  uploadAdminSignatureToStorage(targetDocId, status).then(function(sigURL) {
+    if (sigURL && sigUrlFieldMap[status]) {
+      updatePayload[sigUrlFieldMap[status]] = sigURL;
+    }
+    return db.collection('portfolio_submissions').doc(targetDocId).update(updatePayload);
+  }).then(function() {
     showToast(toastMsgs[status] || status, toastType);
 
     /* อัปเดต in-memory เฉพาะ Firestore doc ที่เลือก */
@@ -2179,6 +2347,9 @@ function setReviewStatus(status) {
       targetDoc[reviewerField] = currentUserEmail;
       if (nameFieldMap[status] && currentUserName) {
         targetDoc[nameFieldMap[status]] = currentUserName;
+      }
+      if (updatePayload[sigUrlFieldMap[status]]) {
+        targetDoc[sigUrlFieldMap[status]] = updatePayload[sigUrlFieldMap[status]];
       }
     }
 
@@ -2191,7 +2362,10 @@ function setReviewStatus(status) {
 
     closeModal('reviewModal');
     loadAllSubmissions();
-  }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+  }).catch(function(e){
+    actionBtns.forEach(function(b){ b.disabled = false; });
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  });
 }
 
 /* ─── HELPERS ─── */
@@ -3368,6 +3542,18 @@ function _renderAdminMemoModal(doc, t, docTypeId) {
   setReviewerName('adminPage2DeputySign',    deputyName);
   setReviewerName('adminPage2DirectorSign',  directorName);
 
+  /* ── ลายเซ็นดิจิตอลผู้ตรวจแต่ละขั้น ── */
+  function setReviewerSig(imgId, url) {
+    var el = document.getElementById(imgId);
+    if (!el) return;
+    if (url) { el.src = url; el.style.display = 'block'; }
+    else      { el.src = ''; el.style.display = 'none'; }
+  }
+  setReviewerSig('adminPage2HeadSigImg',      doc.headSignatureURL      || '');
+  setReviewerSig('adminPage2AssistantSigImg', doc.assistantSignatureURL || '');
+  setReviewerSig('adminPage2DeputySigImg',    doc.deputySignatureURL    || '');
+  setReviewerSig('adminPage2DirectorSigImg',  doc.directorSignatureURL  || '');
+
   document.getElementById('adminMemoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 
@@ -3492,7 +3678,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;"></div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="adminPage2HeadSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
+            </div>
             <p id="adminPage2HeadSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">หัวหน้ากลุ่มสาระการเรียนรู้</p>
           </div>
@@ -3505,7 +3693,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;"></div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="adminPage2AssistantSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
+            </div>
             <p id="adminPage2AssistantSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้ช่วยผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
@@ -3514,7 +3704,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;"></div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="adminPage2DeputySigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
+            </div>
             <p id="adminPage2DeputySign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">รองผู้อำนวยการกลุ่มวิชาการ</p>
           </div>
@@ -3527,7 +3719,9 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
-            <div style="height:28px;"></div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:center;">
+              <img id="adminPage2DirectorSigImg" src="" style="display:none;max-height:44px;object-fit:contain;">
+            </div>
             <p id="adminPage2DirectorSign" style="font-size:12pt;margin:0;line-height:1.6;"></p>
             <p style="font-size:12pt;margin:0;line-height:1.6;">ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม</p>
           </div>
