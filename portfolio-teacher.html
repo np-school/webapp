@@ -17,12 +17,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <!-- Google API -->
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client"></script>
+  <!-- Firebase Storage (โหลดหลัง firebase.js เพื่อไม่ block auth) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <style>
     *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
@@ -1230,12 +1231,8 @@ function openUploadModal(docTypeId) {
   document.getElementById('memoBody').value = '';
   switchMemoTab('edit');
 
-  /* reset ลายเซ็น → ใช้ลายเซ็นล่าสุดที่โหลดมา */
-  currentSignatureUrl = '';
-  currentSignatureB64 = '';
-  /* โหลดลายเซ็นล่าสุดสำหรับ submission ใหม่ */
-  loadLatestSignature();
-  updateSigStatusUI('');
+  /* ใช้ลายเซ็นที่โหลดมาแล้วตอน login (currentSignatureUrl/B64) */
+  updateSigStatusUI(currentSignatureUrl || currentSignatureB64 || '');
 
   /* auto-fill กลุ่มสาระ */
   if (window._defaultSubjectGroup) {
@@ -1283,17 +1280,12 @@ function openManageCourseModal(docTypeId, subKey) {
   document.getElementById('memoBody').value = sub.memoBody || '';
   switchMemoTab('edit');
 
-  /* restore ลายเซ็นจาก submission เดิม หรือโหลดล่าสุด */
-  var savedSig = sub.signatureUrl || '';
-  if (savedSig) {
-    currentSignatureUrl = savedSig;
-    currentSignatureB64 = savedSig;
-    updateSigStatusUI(savedSig);
-  } else {
-    currentSignatureUrl = '';
-    currentSignatureB64 = '';
-    loadLatestSignature();
-    updateSigStatusUI('');
+  /* restore ลายเซ็นจาก submission เดิม ถ้าไม่มีใช้ที่ cache ไว้ */
+  var savedSig = sub.signatureUrl || currentSignatureUrl || currentSignatureB64 || '';
+  updateSigStatusUI(savedSig);
+  if (sub.signatureUrl) {
+    currentSignatureUrl = sub.signatureUrl;
+    currentSignatureB64 = sub.signatureUrl;
   }
 
   /* แสดง panel ของวิชานี้ */
@@ -2471,6 +2463,8 @@ function updateSigStatusUI(sigSrc) {
   var text    = document.getElementById('sigStatusText');
   var thumb   = document.getElementById('sigThumbInForm');
   var label   = document.getElementById('sigActionLabel');
+  /* ถ้า modal ยังไม่ถูก render elements เหล่านี้อาจไม่มี — ไม่ error */
+  if (!icon && !text) return;
   if (sigSrc) {
     if (icon)  icon.style.background = '#f0fdf4';
     if (icon)  icon.innerHTML = '<i data-lucide="check-circle" style="width:16px;height:16px;color:#22c55e;"></i>';
@@ -2491,26 +2485,34 @@ function updateSigStatusUI(sigSrc) {
 
 /* โหลดลายเซ็นล่าสุดของ user จาก Firebase Storage (list files) */
 function loadLatestSignature() {
-  if (!currentUser || typeof firebase === 'undefined' || !firebase.storage) return;
-  var uid = currentUser.uid;
-  firebase.storage().ref('signatures/' + uid).listAll()
-    .then(function(res) {
-      if (res.items.length === 0) return;
-      /* เรียงตาม name (timestamp) เอาล่าสุด */
-      var items = res.items.slice().sort(function(a, b) {
-        return a.name > b.name ? -1 : 1;
+  try {
+    if (!currentUser) return;
+    if (typeof firebase === 'undefined') return;
+    var storage = null;
+    try { storage = firebase.storage(); } catch(e) { return; }
+    if (!storage) return;
+
+    var uid = currentUser.uid;
+    storage.ref('signatures/' + uid).listAll()
+      .then(function(res) {
+        if (!res || res.items.length === 0) return;
+        var items = res.items.slice().sort(function(a, b) {
+          return a.name > b.name ? -1 : 1;
+        });
+        return items[0].getDownloadURL();
+      })
+      .then(function(url) {
+        if (!url) return;
+        currentSignatureUrl = url;
+        currentSignatureB64 = url;
+        updateSigStatusUI(url);
+      })
+      .catch(function(e) {
+        console.warn('loadLatestSignature (non-critical):', e.message || e);
       });
-      return items[0].getDownloadURL();
-    })
-    .then(function(url) {
-      if (!url) return;
-      currentSignatureUrl = url;
-      currentSignatureB64 = url;
-      updateSigStatusUI(url);
-    })
-    .catch(function(e) {
-      console.warn('loadLatestSignature:', e);
-    });
+  } catch(e) {
+    console.warn('loadLatestSignature error (non-critical):', e.message || e);
+  }
 }
 </body>
 </html>
