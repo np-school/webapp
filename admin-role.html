@@ -360,10 +360,10 @@
 
             <!-- Panel: เลือกหัวหน้ากลุ่มสาระจาก staff (custom picker) -->
             <div id="headOfGroupPanel">
-              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">เลือกหัวหน้ากลุ่มสาระที่ได้รับสิทธิ์</label>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">เลือกบุคลากรที่ได้รับสิทธิ์หัวหน้ากลุ่มสาระ</label>
               <div class="staff-picker-wrap" id="hogPickerWrap">
                 <div style="position:relative;">
-                  <input type="text" id="hogPickerDisplay" class="staff-picker-input" placeholder="🔍 พิมพ์หรือเลือกหัวหน้ากลุ่มสาระ..." readonly onclick="toggleHogDropdown()" autocomplete="off" style="border-color:#fde68a;">
+                  <input type="text" id="hogPickerDisplay" class="staff-picker-input" placeholder="🔍 พิมพ์หรือเลือกบุคลากร..." readonly onclick="toggleHogDropdown()" autocomplete="off" style="border-color:#fde68a;">
                   <i data-lucide="chevron-down" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;pointer-events:none;"></i>
                 </div>
                 <div class="staff-picker-dropdown" id="hogDropdown">
@@ -727,33 +727,34 @@ function filterHogPicker() {
 function renderHogPickerList(query) {
   var listEl = document.getElementById('hogPickerList');
   if (!listEl) return;
-  var heads = allStaffList.filter(function(s){ return s.role === 'หัวหน้ากลุ่มสาระ'; });
-  if (!heads.length) {
-    listEl.innerHTML = '<div class="staff-picker-empty">⚠️ ไม่พบบุคลากรที่มีสถานะ "หัวหน้ากลุ่มสาระ"</div>';
+  /* แสดงบุคลากรทั้งหมด — ไม่จำกัดเฉพาะ role หัวหน้ากลุ่มสาระ */
+  if (!allStaffList.length) {
+    listEl.innerHTML = '<div class="staff-picker-loading">กำลังโหลดรายชื่อ...</div>';
     return;
   }
   var q = (query || '').toLowerCase();
-  var filtered = heads.filter(function(s){
-    return !q || (s.name + s.email + s.group).toLowerCase().indexOf(q) >= 0;
+  var filtered = allStaffList.filter(function(s){
+    return !q || (s.name + s.email + s.group + s.role).toLowerCase().indexOf(q) >= 0;
   });
   _hogFilteredCache = filtered;
   if (!filtered.length) {
     listEl.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
     return;
   }
-  var colors = ['#d97706','#b45309','#92400e','#78350f','#a16207'];
+  var colors = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
   var curEmail = _selectedHog ? _selectedHog.email : '';
   listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);
     var ci = 0; for(var i=0;i<s.name.length;i++) ci=(ci*31+s.name.charCodeAt(i))%colors.length;
     var isSel = s.email && s.email === curEmail;
+    var isHead = s.role === 'หัวหน้ากลุ่มสาระ';
     return '<div class="staff-picker-item' + (isSel?' selected':'') + '" data-hog-idx="' + idx + '">' +
       '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;pointer-events:none;">' + initials + '</div>' +
       '<div style="min-width:0;pointer-events:none;">' +
         '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
         '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
-          '<span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' +
-          (s.group ? ' · ' + esc2(s.group) : '') +
+          (s.group ? esc2(s.group) : '') +
+          (isHead ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
           (s.email ? ' · ' + esc2(s.email) : '') +
         '</p>' +
       '</div>' +
