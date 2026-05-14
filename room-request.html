@@ -847,7 +847,7 @@
     'สนามกีฬากลาง'    :{bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
     'ห้องประชุมราชพฤกษ์':{bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
     'โดมอเนกประสงค์'  :{bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
-    'ห้องประชุมปาริชาติ':{bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
+    'ห้องประชุมปาริชาต' :{bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
     'ห้องประชุมชวนชน'  :{bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'}
   };
   var ROOM_PASTEL_FALLBACK=[
@@ -869,6 +869,10 @@
   }
   function getRoomColor(n){return getRoomPastel(n).accent;}
 
+  /* ── Normalize legacy room names → current names ── */
+  var ROOM_NAME_ALIAS={'ห้องประชุมปาริชาติ':'ห้องประชุมปาริชาต'};
+  function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
+
   var bookingPage=0;
   var PAGE_SIZE=20;
 
@@ -876,7 +880,7 @@
     try{
     allBookings=[];
     var today=new Date().toISOString().split('T')[0],app=0,pen=0;
-    snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
+    snap.forEach(function(d){var bk=Object.assign({id:d.id},d.data());bk.room=normalizeRoomName(bk.room||'');allBookings.push(bk);});
     allBookings.sort(function(a,b){
       var da=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;
       var db2=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;
@@ -974,7 +978,7 @@
     function loadRooms(){
       return db.collection('rooms').get().then(function(snap){
         allRooms=[];
-        snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+        snap.forEach(function(d){var rm=Object.assign({id:d.id},d.data());rm.name=normalizeRoomName(rm.name||'');allRooms.push(rm);});
         allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
         safeRun(renderRoomTabs,'tabs');
         safeRun(renderRoomBanner,'banner');
@@ -991,7 +995,7 @@
     setTimeout(function(){
       db.collection('bookings').onSnapshot(function(snap){safeRun(function(){processBookings(snap);},'rt');},function(e){});
       db.collection('rooms').onSnapshot(function(snap){
-        allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});
+        allRooms=[];snap.forEach(function(d){var rm=Object.assign({id:d.id},d.data());rm.name=normalizeRoomName(rm.name||'');allRooms.push(rm);});
         allRooms.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
         safeRun(renderRoomTabs,'rt-tabs');safeRun(renderRoomBanner,'rt-banner');
       },function(e){});

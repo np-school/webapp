@@ -389,6 +389,10 @@
   // LINE handled by Cloud Functions
   var SUPER_ADMIN = 'nattapol@nongki.ac.th';
   var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null;
+
+  /* ── Normalize legacy room names → current names ── */
+  var ROOM_NAME_ALIAS={'ห้องประชุมปาริชาติ':'ห้องประชุมปาริชาต'};
+  function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
   var currentPage=1,PAGE_SIZE=100;
 
   function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';lucide.createIcons();}
@@ -435,10 +439,10 @@
 
   function initListeners(){
     db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
-      allBookings=[];snap.forEach(function(d){allBookings.push(Object.assign({id:d.id},d.data()));});
+      allBookings=[];snap.forEach(function(d){var bk=Object.assign({id:d.id},d.data());bk.room=normalizeRoomName(bk.room||'');allBookings.push(bk);});
       updateStats();renderBookings();renderCharts();
     });
-    db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){allRooms.push(Object.assign({id:d.id},d.data()));});renderRooms();});
+    db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){var rm=Object.assign({id:d.id},d.data());rm.name=normalizeRoomName(rm.name||'');allRooms.push(rm);});renderRooms();});
   }
 
   function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
