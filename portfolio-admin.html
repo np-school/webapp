@@ -317,6 +317,9 @@
           <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
             <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
           </button>
+          <button class="sub-tab" id="subTabGroup" onclick="switchSubTab('group')">
+            <i data-lucide="layers" style="width:14px;height:14px;"></i> รายกลุ่มสาระ
+          </button>
           <button class="sub-tab" id="subTabTeacher" onclick="switchSubTab('teacher')">
             <i data-lucide="user-search" style="width:14px;height:14px;"></i> รายบุคคล
           </button>
@@ -460,6 +463,17 @@
       </div>
 
       </div><!-- end panelOverview -->
+
+      <!-- ══ SUB TAB: GROUP SUMMARY ══ -->
+      <div id="panelGroup" style="display:none;flex-direction:column;gap:16px;">
+        <div class="card" style="padding:20px 22px;">
+          <h2 style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:4px;">สถิติรายกลุ่มสาระ</h2>
+          <p style="font-size:12px;color:#64748b;margin-bottom:18px;">สัดส่วนการส่งและตรวจงานแยกตามกลุ่มสาระการเรียนรู้</p>
+          <div id="groupStatContent">
+            <div style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div><!-- end panelGroup -->
 
       <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
       <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
@@ -2628,20 +2642,156 @@ var currentSubTab = 'overview';
 
 function switchSubTab(tab) {
   currentSubTab = tab;
-  document.getElementById('subTabOverview').className = 'sub-tab' + (tab==='overview'?' active':'');
-  document.getElementById('subTabTeacher').className  = 'sub-tab' + (tab==='teacher'?' active':'');
-  document.getElementById('subTabDocTypes').className = 'sub-tab' + (tab==='doctypes'?' active':'');
+  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'  ? ' active' : '');
+  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'     ? ' active' : '');
+  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'   ? ' active' : '');
+  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes'  ? ' active' : '');
   document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
   document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
   document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
 
-  if (tab === 'doctypes') {
-    loadDocTypeList();
-    lucide.createIcons();
+  if (tab === 'doctypes') { loadDocTypeList(); lucide.createIcons(); }
+  if (tab === 'teacher')  { lucide.createIcons(); }
+  if (tab === 'group')    { renderGroupPanel(); lucide.createIcons(); }
+}
+
+/* ════════════════════════════════════════════
+   PANEL: รายกลุ่มสาระ
+   ════════════════════════════════════════════ */
+function renderGroupPanel() {
+  var el = document.getElementById('groupStatContent');
+  if (!el) return;
+
+  /* รวบรวมข้อมูลแยกตามกลุ่มสาระ */
+  var groupData = {}; /* group → { teachers:[], submitted:0, head:0, assist:0, deputy:0, final:0, total:0 } */
+
+  Object.values(teacherMap).forEach(function(t) {
+    if (!t.isTeacher) return;
+    var grp = normaliseGroup(t.staffGroup) || 'ไม่ระบุกลุ่ม';
+    if (!groupData[grp]) groupData[grp] = { teachers:[], submitted:0, head:0, assist:0, deputy:0, final:0, revision:0, total:0 };
+    groupData[grp].teachers.push(t);
+    groupData[grp].total += DOCUMENT_TYPES.length;
+
+    Object.values(t.subs).forEach(function(sub) {
+      (sub._courses || [sub]).forEach(function(doc) {
+        if (doc._isContainer) return;
+        var st = doc.status || 'submitted';
+        if      (st === 'final_approved')     groupData[grp].final++;
+        else if (st === 'deputy_reviewed')    groupData[grp].deputy++;
+        else if (st === 'assistant_reviewed') groupData[grp].assist++;
+        else if (st === 'head_reviewed' || st === 'reviewed') groupData[grp].head++;
+        else if (st === 'revision')           groupData[grp].revision++;
+        else                                  groupData[grp].submitted++;
+      });
+    });
+  });
+
+  var groups = Object.keys(groupData).sort();
+  if (!groups.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">ยังไม่มีข้อมูล</div>';
+    return;
   }
-  if (tab === 'teacher') {
-    lucide.createIcons();
-  }
+
+  var STATUS_COLORS = {
+    final:     { bg:'#dcfce7', text:'#15803d', label:'ผอ.อนุมัติ' },
+    deputy:    { bg:'#ede9fe', text:'#6d28d9', label:'รอง ผอ.ตรวจแล้ว' },
+    assist:    { bg:'#fef3c7', text:'#92400e', label:'ผช.ผอ.ตรวจแล้ว' },
+    head:      { bg:'#e0f2fe', text:'#0369a1', label:'หัวหน้าฯ ตรวจแล้ว' },
+    submitted: { bg:'#f0fdf4', text:'#15803d', label:'รอตรวจ' },
+    revision:  { bg:'#fef2f2', text:'#dc2626', label:'ให้แก้ไข' },
+  };
+
+  var html = '';
+  groups.forEach(function(grp) {
+    var d = groupData[grp];
+    var teacherCount = d.teachers.length;
+    var sentCount = d.submitted + d.head + d.assist + d.deputy + d.final + d.revision;
+    var pct = d.total > 0 ? Math.round((sentCount / d.total) * 100) : 0;
+    var finalPct = d.total > 0 ? Math.round((d.final / d.total) * 100) : 0;
+
+    /* สร้าง stacked bar */
+    var segments = [
+      { key:'final',     val:d.final },
+      { key:'deputy',    val:d.deputy },
+      { key:'assist',    val:d.assist },
+      { key:'head',      val:d.head },
+      { key:'submitted', val:d.submitted },
+      { key:'revision',  val:d.revision },
+    ];
+    var stackedBar = '<div style="display:flex;height:12px;border-radius:8px;overflow:hidden;background:#f1f5f9;margin:6px 0;">';
+    segments.forEach(function(seg) {
+      if (!seg.val || !d.total) return;
+      var w = Math.round((seg.val / d.total) * 100);
+      var cfg = STATUS_COLORS[seg.key];
+      var segColors = { final:'#16a34a', deputy:'#8b5cf6', assist:'#f59e0b', head:'#0ea5e9', submitted:'#22c55e', revision:'#ef4444' };
+      stackedBar += '<div style="width:' + w + '%;background:' + segColors[seg.key] + ';transition:width .4s;" title="' + cfg.label + ': ' + seg.val + '"></div>';
+    });
+    stackedBar += '</div>';
+
+    /* badge สรุปสถานะ */
+    var badges = segments.filter(function(s){ return s.val > 0; }).map(function(seg) {
+      var cfg = STATUS_COLORS[seg.key];
+      return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + cfg.bg + ';color:' + cfg.text + ';">' + cfg.label + ' ' + seg.val + '</span>';
+    }).join('');
+
+    /* รายชื่อครูในกลุ่ม */
+    var teacherList = d.teachers.map(function(t) {
+      var subCount = Object.keys(t.subs).length;
+      var pctT = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
+      var barColor = pctT >= 100 ? '#22c55e' : pctT >= 50 ? '#f59e0b' : '#ef4444';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f8fafc;">' +
+        '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.email) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t.staffName||t.email) + '</p>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">' +
+            '<div style="flex:1;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;">' +
+              '<div style="width:' + pctT + '%;height:100%;background:' + barColor + ';border-radius:4px;transition:width .4s;"></div>' +
+            '</div>' +
+            '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:32px;text-align:right;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    html +=
+      '<div style="border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:14px;">' +
+        /* header กลุ่ม */
+        '<div style="padding:14px 18px;background:linear-gradient(90deg,#faf5ff,#f8fafc);display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;" onclick="toggleGroupSection(this)">' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<div style="width:36px;height:36px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<i data-lucide="graduation-cap" style="width:16px;height:16px;color:#7c3aed;"></i>' +
+            '</div>' +
+            '<div>' +
+              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(grp) + '</p>' +
+              '<p style="font-size:11px;color:#64748b;font-weight:600;">' + teacherCount + ' คน · ส่งงานแล้ว ' + pct + '% · ผ่าน ผอ. ' + finalPct + '%</p>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-size:22px;font-weight:800;color:' + (finalPct >= 100 ? '#16a34a' : '#7c3aed') + ';">' + finalPct + '%</span>' +
+            '<i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;transition:transform .2s;" class="group-chev"></i>' +
+          '</div>' +
+        '</div>' +
+        /* stacked bar + badges */
+        '<div style="padding:0 18px 4px;" class="group-body">' +
+          stackedBar +
+          '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">' + badges + '</div>' +
+          /* รายชื่อครู */
+          '<div style="padding:0 0 4px;">' + teacherList + '</div>' +
+        '</div>' +
+      '</div>';
+  });
+
+  el.innerHTML = html;
+  lucide.createIcons();
+}
+
+function toggleGroupSection(header) {
+  var body = header.nextElementSibling;
+  var chev = header.querySelector('.group-chev');
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chev) chev.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 /* ════════════════════════════════════════════
@@ -3794,7 +3944,7 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       </div>
 
       <div style="margin-bottom:24px;">
-        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มบริหารงานวิชาการ</p>
+        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มวิชาการ</p>
         <div id="adminPage2AssistantNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
