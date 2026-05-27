@@ -9,6 +9,67 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
+  <script>
+    /* ── In-App Browser Detection (LINE / Facebook / IG WebView)
+       Google Sign-In ถูกบล็อกใน WebView → บังคับเปิดใน Browser จริง ── */
+    (function() {
+      var ua = navigator.userAgent || '';
+      var isLine    = /Line\//i.test(ua);
+      var isInApp   = isLine
+        || /FBAN|FBAV|Instagram|MicroMessenger|WebView/i.test(ua)
+        || (/iPhone|iPod|iPad/.test(ua) && !/Safari\//.test(ua));
+
+      if (!isInApp) return;
+
+      var currentUrl = window.location.href;
+
+      /* Android → intent:// เปิด Chrome โดยตรง */
+      if (/Android/i.test(ua)) {
+        var intentUrl = 'intent://'
+          + currentUrl.replace(/^https?:\/\//, '')
+          + '#Intent;scheme=https;action=android.intent.action.VIEW;'
+          + 'package=com.android.chrome;end';
+        window.location.replace(intentUrl);
+        return;
+      }
+
+      /* iOS → แสดง banner (Apple บล็อก intent://) */
+      function showBanner() {
+        /* ซ่อนทุกอย่างในหน้า แล้วแสดงแค่หน้าแนะนำ */
+        document.body.style.cssText = 'margin:0;padding:0;background:#f8fafc;font-family:Sarabun,sans-serif;';
+        document.body.innerHTML =
+          '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">'
+          + '<div style="width:72px;height:72px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">'
+          + '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          + '</div>'
+          + '<h1 style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">กรุณาเปิดใน Safari</h1>'
+          + '<p style="font-size:14px;color:#64748b;line-height:1.7;margin-bottom:28px;">'
+          + 'ระบบล็อกอินด้วย Google<br>ไม่รองรับการเปิดผ่านแอป LINE<br>กรุณาเปิดลิงก์นี้ใน Safari</p>'
+          + '<div style="background:white;border:1.5px solid #e2e8f0;border-radius:16px;padding:20px 24px;max-width:320px;width:100%;margin-bottom:24px;">'
+          + '<p style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:14px;">วิธีเปิดใน Safari</p>'
+          + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;text-align:left;">'
+          + '<div style="width:24px;height:24px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">1</div>'
+          + '<p style="font-size:13px;color:#334155;line-height:1.6;">กดปุ่ม <strong>··· (สามจุด)</strong> มุมขวาบนของ LINE</p>'
+          + '</div>'
+          + '<div style="display:flex;align-items:flex-start;gap:12px;text-align:left;">'
+          + '<div style="width:24px;height:24px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">2</div>'
+          + '<p style="font-size:13px;color:#334155;line-height:1.6;">เลือก <strong>"เปิดใน Safari"</strong> หรือ <strong>"เปิดในเบราว์เซอร์"</strong></p>'
+          + '</div>'
+          + '</div>'
+          + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + currentUrl + '\').then(function(){this.textContent=\'คัดลอกแล้ว ✓\';this.style.background=\'#16a34a\';}).catch(function(){})" '
+          + 'style="padding:12px 24px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;max-width:320px;">'
+          + '📋 คัดลอกลิงก์เพื่อวางใน Safari'
+          + '</button>'
+          + '</div>';
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showBanner);
+      } else {
+        showBanner();
+      }
+    })();
+  </script>
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
   <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
