@@ -815,13 +815,12 @@ function loadDocTypesFromFirestore(callback) {
           /* กรอง active ฝั่ง client เพื่อไม่ต้องใช้ composite index */
           if (data.active === false) return;
           DOCUMENT_TYPES.push({
-            id:         data.id    || d.id,
-            label:      data.label || '',
-            short:      data.short || '',
-            icon:       data.icon  || 'file',
-            color:      data.color || '#7c3aed',
-            bg:         colorToBg(data.color || '#7c3aed'),
-            department: data.department || '',
+            id:    data.id    || d.id,
+            label: data.label || '',
+            short: data.short || '',
+            icon:  data.icon  || 'file',
+            color: data.color || '#7c3aed',
+            bg:    colorToBg(data.color || '#7c3aed'),
           });
         });
       }
@@ -1112,17 +1111,7 @@ function renderDocList() {
     submittedDocIds.add(sub.docTypeId);
   });
 
-  /* จัดกลุ่ม DOCUMENT_TYPES ตาม department */
-  var deptOrder = []; /* ลำดับฝ่ายที่เจอ */
-  var deptMap   = {}; /* department → [dt, ...] */
-  DOCUMENT_TYPES.forEach(function(dt) {
-    var dept = dt.department || 'ไม่ระบุฝ่าย';
-    if (!deptMap[dept]) { deptMap[dept] = []; deptOrder.push(dept); }
-    deptMap[dept].push(dt);
-  });
-
-  /* build doc item HTML */
-  function buildDocItem(dt, globalIdx) {
+  DOCUMENT_TYPES.forEach(function(dt, idx) {
     var courses = docCourses[dt.id] || [];
     var hasAny  = courses.length > 0;
 
@@ -1146,14 +1135,15 @@ function renderDocList() {
 
     var borderColor = !hasAny ? '#e2e8f0' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? '#f59e0b' : '#22c55e';
 
-    return '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
+    html +=
+      '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
         '<div style="display:flex;align-items:flex-start;gap:14px;">' +
           '<div class="doc-icon" style="background:' + dt.bg + ';flex-shrink:0;">' +
             '<i data-lucide="' + dt.icon + '" style="width:20px;height:20px;color:' + dt.color + ';"></i>' +
           '</div>' +
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (globalIdx+1) + '. ' + dt.label + '</p>' +
+              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
               '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusColor + ';">' + statusLabel + '</span>' +
             '</div>' +
 
@@ -1203,34 +1193,7 @@ function renderDocList() {
           '</div>' +
         '</div>' +
       '</div>';
-  }
-
-  /* render แยกฝ่าย */
-  var globalIdx = 0;
-  deptOrder.forEach(function(dept) {
-    var items = deptMap[dept];
-
-    /* Section header */
-    html +=
-      '<div style="display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:4px;">' +
-        '<div style="width:4px;height:22px;background:#1d4ed8;border-radius:3px;flex-shrink:0;"></div>' +
-        '<p style="font-size:13px;font-weight:800;color:#1e293b;letter-spacing:.4px;">' + esc(dept) + '</p>' +
-        '<div style="flex:1;height:1px;background:#e2e8f0;"></div>' +
-        '<span style="font-size:11px;color:#94a3b8;font-weight:600;">' + items.length + ' รายการ</span>' +
-      '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">';
-
-    items.forEach(function(dt) {
-      html += buildDocItem(dt, globalIdx);
-      globalIdx++;
-    });
-
-    html += '</div>';
   });
-
-  if (!globalIdx) {
-    html = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">ไม่มีรายการงาน</div>';
-  }
 
   list.innerHTML = html;
 
