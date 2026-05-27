@@ -685,6 +685,17 @@
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อย่อ (สำหรับแสดงในตาราง)</label>
           <input type="text" id="dtShort" placeholder="เช่น แผนการ" maxlength="20">
         </div>
+        <!-- Department -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ฝ่ายที่รับผิดชอบ <span style="color:#ef4444;">*</span></label>
+          <select id="dtDepartment" style="width:100%;">
+            <option value="academic">ฝ่ายวิชาการ</option>
+            <option value="budget">ฝ่ายงบประมาณ</option>
+            <option value="personnel">ฝ่ายบริหารงานบุคคล</option>
+            <option value="general">ฝ่ายบริหารทั่วไป</option>
+          </select>
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">หัวข้องานจะแสดงในหน้าส่งงานของครู ภายใต้ฝ่ายที่เลือก</p>
+        </div>
         <!-- ID -->
         <div>
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">รหัสหัวข้อ (ภาษาอังกฤษ ไม่มีช่องว่าง) <span style="color:#ef4444;">*</span></label>
@@ -3510,6 +3521,11 @@ function renderDocTypeRows(docs) {
   }
 
   list.innerHTML = docs.map(function(dt, i) {
+    var DEPT_LABELS = { academic:'ฝ่ายวิชาการ', budget:'ฝ่ายงบประมาณ', personnel:'ฝ่ายบริหารงานบุคคล', general:'ฝ่ายบริหารทั่วไป' };
+    var DEPT_COLORS = { academic:'#1d4ed8', budget:'#16a34a', personnel:'#7c3aed', general:'#ea580c' };
+    var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'#fff7ed' };
+    var deptKey = dt.department || 'academic';
+    var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'#f1f5f9') + ';color:' + (DEPT_COLORS[deptKey]||'#64748b') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';
     var activeLabel = dt.active === false
       ? '<span style="background:#f1f5f9;color:#94a3b8;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ซ่อน</span>'
       : '<span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ใช้งาน</span>';
@@ -3525,6 +3541,7 @@ function renderDocTypeRows(docs) {
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
           '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
           (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
+          deptBadge +
           activeLabel +
         '</div>' +
         '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc(dt.id||dt._id) + ' · ไอคอน: ' + esc(dt.icon||'-') + '</p>' +
@@ -3547,7 +3564,7 @@ function seedDefaultDocTypes() {
   var batch = db.batch();
   DOCUMENT_TYPES.forEach(function(dt, i) {
     var ref = db.collection('portfolio_doc_types').doc(dt.id);
-    batch.set(ref, { id: dt.id, label: dt.label, short: dt.short||'', icon: dt.icon||'file', color: dt.color||'#7c3aed', order: i, active: true });
+    batch.set(ref, { id: dt.id, label: dt.label, short: dt.short||'', icon: dt.icon||'file', color: dt.color||'#7c3aed', order: i, active: true, department: dt.department||'academic' });
   });
   batch.commit().then(function() {
     showToast('นำเข้าหัวข้อเริ่มต้นสำเร็จ', '#22c55e');
@@ -3606,6 +3623,7 @@ function openDocTypeModal(firestoreId) {
   document.getElementById('dtIcon').value   = 'file';
   document.getElementById('dtColor').value  = '#3b82f6';
   document.getElementById('dtActive').checked = true;
+  document.getElementById('dtDepartment').value = 'academic';
   selectedDtColor = '#3b82f6';
   updateColorSwatches('#3b82f6');
   syncToggleUI();
@@ -3621,6 +3639,7 @@ function openDocTypeModal(firestoreId) {
       document.getElementById('dtIcon').value   = data.icon   || 'file';
       document.getElementById('dtColor').value  = data.color  || '#3b82f6';
       document.getElementById('dtActive').checked = data.active !== false;
+      document.getElementById('dtDepartment').value = data.department || 'academic';
       selectedDtColor = data.color || '#3b82f6';
       updateColorSwatches(selectedDtColor);
       syncToggleUI();
@@ -3680,12 +3699,13 @@ function saveDocType() {
   var icon   = document.getElementById('dtIcon').value.trim() || 'file';
   var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
   var active = document.getElementById('dtActive').checked;
+  var department = document.getElementById('dtDepartment').value || 'academic';
 
   if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
   if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
   if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
 
-  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active };
+  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active, department: department };
 
   var prom;
   if (editingDocTypeId) {
@@ -3726,7 +3746,7 @@ function loadDocTypesFromFirestore() {
     snap.forEach(function(d) {
       var data = d.data();
       if (data.active === false) return; /* กรอง inactive ฝั่ง client */
-      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed' });
+      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed', department: data.department||'academic' });
     });
     /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่ */
     if (currentSubTab === 'overview') {
