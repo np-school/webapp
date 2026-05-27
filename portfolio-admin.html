@@ -46,9 +46,6 @@
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    .dept-tab{background:#f8fafc;color:#64748b;}
-    .dept-tab:hover{background:#f1f5f9;color:#334155;}
-    .dept-tab-active-admin{background:#7c3aed!important;color:white!important;box-shadow:0 4px 12px rgba(124,58,237,.25);}
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
     .toast.hide{animation:toastOut .3s ease forwards;}
@@ -306,10 +303,10 @@
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:6px;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:6px 10px;">
             <button onclick="changeYear(-1)" style="background:none;border:none;cursor:pointer;color:#7c3aed;display:flex;padding:2px;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-            <span id="yearLabel" style="font-size:14px;font-weight:800;color:#0f172a;min-width:40px;text-align:center;">2568</span>
+            <span id="yearLabel" style="font-size:14px;font-weight:800;color:#0f172a;min-width:40px;text-align:center;"></span>
             <button onclick="changeYear(1)" style="background:none;border:none;cursor:pointer;color:#7c3aed;display:flex;padding:2px;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
           </div>
-          <button class="sem-pill active" id="semPill1" onclick="selectSem(1)">ภาคเรียน 1</button>
+          <button class="sem-pill" id="semPill1" onclick="selectSem(1)">ภาคเรียน 1</button>
           <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียน 2</button>
         </div>
       </div>
@@ -420,14 +417,6 @@
             <p style="font-size:11px;color:#64748b;font-weight:600;">ยังไม่ส่ง</p>
           </div>
         </div>
-      </div>
-
-      <!-- Department Tabs -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-        <button id="deptTab-academic"  onclick="selectDept('academic')"  class="dept-tab dept-tab-active-admin" style="padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มวิชาการ</button>
-        <button id="deptTab-budget"    onclick="selectDept('budget')"    class="dept-tab" style="padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มงบประมาณ</button>
-        <button id="deptTab-personnel" onclick="selectDept('personnel')" class="dept-tab" style="padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มบุคคล</button>
-        <button id="deptTab-general"   onclick="selectDept('general')"   class="dept-tab" style="padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มทั่วไป</button>
       </div>
 
       <!-- Controls -->
@@ -863,32 +852,28 @@ var DOCUMENT_TYPES = [
   { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'#eab308' },
 ];
 
-var currentYear = 2568;
-var currentSem  = 1;
-var currentDept = 'academic';
-
-var DEPARTMENTS = [
-  { id:'academic',  label:'กลุ่มวิชาการ' },
-  { id:'budget',    label:'กลุ่มบริหารงบประมาณ' },
-  { id:'personnel', label:'กลุ่มบริหารงานบุคคล' },
-  { id:'general',   label:'กลุ่มบริหารทั่วไป' },
-];
-function filteredDocTypes() {
-  return filteredDocTypes().filter(function(dt) {
-    return (dt.department || 'academic') === currentDept;
-  });
-}
-function selectDept(dept) {
-  currentDept = dept;
-  DEPARTMENTS.forEach(function(d) {
-    var btn = document.getElementById('deptTab-' + d.id);
-    if (!btn) return;
-    btn.className = 'dept-tab' + (d.id === dept ? ' dept-tab-active-admin' : '');
-  });
-  /* rebuild doc filter bar then re-render */
-  buildDocFilterBar();
-  renderView();
-}
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+─────────────────────────────────────────── */
+(function() {
+  var now    = new Date();
+  var month  = now.getMonth() + 1;
+  var day    = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1; thYear = ceYear + 543;
+  } else if (month >= 11) {
+    sem = 2; thYear = ceYear + 543;
+  } else {
+    sem = 2; thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})();
+var currentYear = window._defaultYear || 2568;
+var currentSem  = window._defaultSem  || 1;
 var allSubs     = []; /* all submissions for year+sem */
 var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
 var currentFilter = 'all';
@@ -988,7 +973,6 @@ function bootApp(u) {
     checkAdminAccess(u.email);
     updateSidebarProfile(u);
     initYearSemUI();
-    selectDept('academic');
     /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
     db.collection('admins').get().then(function(snap) {
       adminRoles.headOfGroups = {};
@@ -1178,7 +1162,7 @@ function buildDocFilterBar() {
     if (el.id !== 'docAll' && el.tagName !== 'SPAN') bar.removeChild(el);
   });
 
-  filteredDocTypes().forEach(function(dt) {
+  DOCUMENT_TYPES.forEach(function(dt) {
     var btn = document.createElement('button');
     btn.className = 'filter-pill' + (currentDocFilter === dt.id ? ' active' : '');
     btn.id = 'doc_' + dt.id;
@@ -1193,7 +1177,7 @@ function buildDocFilterBar() {
 function setDocFilter(d) {
   currentDocFilter = d;
   document.getElementById('docAll').className = 'filter-pill' + (d === 'all' ? ' active' : '');
-  filteredDocTypes().forEach(function(dt) {
+  DOCUMENT_TYPES.forEach(function(dt) {
     var el = document.getElementById('doc_' + dt.id);
     if (el) el.className = 'filter-pill' + (d === dt.id ? ' active' : '');
   });
@@ -1206,7 +1190,7 @@ function updateStats() {
   var submitted = allSubs.filter(function(s){ return s.status && s.status !== 'none'; }).length;
   var reviewed  = allSubs.filter(function(s){ return s.status === 'head_reviewed' || s.status === 'reviewed' || s.status === 'assistant_reviewed' || s.status === 'deputy_reviewed'; }).length;
   var finalApproved = allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
-  var totalPossible = teachers * filteredDocTypes().length;
+  var totalPossible = teachers * DOCUMENT_TYPES.length;
   var pending   = totalPossible - submitted;
 
   document.getElementById('statTeachers').textContent = teachers;
@@ -1263,8 +1247,8 @@ function getFilteredTeachers() {
       if (normaliseGroup(t.staffGroup) !== normaliseGroup(currentGroup)) return false;
     }
     var count = Object.keys(t.subs).length;
-    if (currentFilter === 'complete')   return count === filteredDocTypes().length;
-    if (currentFilter === 'incomplete') return count < filteredDocTypes().length;
+    if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
+    if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
     if (currentFilter === 'pending')    return Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
     /* doc type filter — กรองเฉพาะครูที่มีงานชนิดนั้น */
     if (currentDocFilter !== 'all') return t.subs.hasOwnProperty(currentDocFilter);
@@ -1355,7 +1339,7 @@ function renderListView() {
   var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:10px;">';
   teachers.forEach(function(t) {
     var subCount = Object.keys(t.subs).length;
-    var pct = Math.round((subCount / filteredDocTypes().length) * 100);
+    var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     /* นับจาก doc จริงใน _courses (ไม่ใช่ merged status ของ container) */
     var finalCount = 0, headRevCount = 0, assistRevCount = 0, deputyRevCount = 0, pendingCount = 0, revisionCount = 0;
     Object.values(t.subs).forEach(function(sub) {
@@ -1403,7 +1387,7 @@ function renderListView() {
             '</div>' +
             '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
               '<div class="pbar-bg" style="flex:1;max-width:200px;"><div class="pbar-fill" style="width:' + pct + '%;"></div></div>' +
-              '<span style="font-size:11px;font-weight:700;color:#7c3aed;">' + subCount + '/' + filteredDocTypes().length + '</span>' +
+              '<span style="font-size:11px;font-weight:700;color:#7c3aed;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
               '<span style="font-size:10px;color:#94a3b8;">(' + finalCount + ' ผอ.อนุมัติ)</span>' +
             '</div>' +
           '</div>' +
@@ -1411,7 +1395,7 @@ function renderListView() {
         '</div>' +
         '<div class="teacher-docs" id="docs-' + t.uid + '">' +
           '<div class="doc-grid">' +
-            filteredDocTypes().map(function(dt) {
+            DOCUMENT_TYPES.map(function(dt) {
               var sub = t.subs[dt.id];
               var status = sub ? (sub.status||'submitted') : 'none';
               var needsReview = sub && (status==='submitted' || status==='head_reviewed');
@@ -1607,7 +1591,7 @@ function renderMatrixView() {
     '<table class="matrix-table">' +
     '<thead><tr>' +
       '<th style="text-align:left;min-width:160px;padding-left:8px;">ครู</th>' +
-      filteredDocTypes().map(function(dt){
+      DOCUMENT_TYPES.map(function(dt){
         return '<th style="min-width:54px;" title="' + dt.label + '">' +
           '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
             '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
@@ -1630,7 +1614,7 @@ function renderMatrixView() {
       '</div>' +
     '</div></td>';
 
-    filteredDocTypes().forEach(function(dt) {
+    DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
       var status = sub ? (sub.status||'submitted') : 'none';
       var cellCls = 'matrix-cell cell-' + status;
@@ -1641,7 +1625,7 @@ function renderMatrixView() {
       '</div></td>';
     });
 
-    html += '<td style="text-align:center;"><span style="font-size:13px;font-weight:800;color:' + (count===filteredDocTypes().length?'#7c3aed':'#64748b') + ';">' + count + '/' + filteredDocTypes().length + '</span></td>';
+    html += '<td style="text-align:center;"><span style="font-size:13px;font-weight:800;color:' + (count===DOCUMENT_TYPES.length?'#7c3aed':'#64748b') + ';">' + count + '/' + DOCUMENT_TYPES.length + '</span></td>';
     html += '</tr>';
   });
 
@@ -2542,12 +2526,12 @@ function renderDonutChart() {
   ];
 
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
-  var total = teacherList.length * filteredDocTypes().length;
+  var total = teacherList.length * DOCUMENT_TYPES.length;
   var counts = {};
   statusConfig.forEach(function(s){ counts[s.key] = 0; });
 
   teacherList.forEach(function(t) {
-    filteredDocTypes().forEach(function(dt) {
+    DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
       if (!sub) { counts['none']++; return; }
       var st = sub.status || 'submitted';
@@ -2636,7 +2620,7 @@ function renderGroupBars() {
     if (!t.isTeacher) return;
     var g = normaliseGroup(t.staffGroup);
     if (!groupData[g]) groupData[g] = { total:0, approved:0 };
-    filteredDocTypes().forEach(function(dt) {
+    DOCUMENT_TYPES.forEach(function(dt) {
       groupData[g].total++;
       var sub = t.subs[dt.id];
       if (sub && sub.status === 'final_approved') groupData[g].approved++;
@@ -2680,7 +2664,7 @@ function renderDocTypeBars() {
   var teacherCount = Object.values(teacherMap).filter(function(t){ return t.isTeacher; }).length;
   if (!teacherCount) { container.innerHTML = ''; return; }
 
-  container.innerHTML = filteredDocTypes().map(function(dt) {
+  container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
     var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status && s.status !== 'none'; }).length;
     var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
     var pct = Math.round((submitted / teacherCount) * 100);
@@ -2746,7 +2730,7 @@ function buildGroupData() {
     var grp = normaliseGroup(t.staffGroup) || 'ไม่ระบุกลุ่ม';
     if (!_groupData[grp]) _groupData[grp] = { teachers:[], submitted:0, head:0, assist:0, deputy:0, final:0, revision:0, total:0 };
     _groupData[grp].teachers.push(t);
-    _groupData[grp].total += filteredDocTypes().length;
+    _groupData[grp].total += DOCUMENT_TYPES.length;
     Object.values(t.subs).forEach(function(sub) {
       (sub._courses || [sub]).forEach(function(doc) {
         if (doc._isContainer) return;
@@ -2902,7 +2886,7 @@ function renderGroupDetail() {
   }).join('');
 
   /* กราฟแท่งแนวนอน: แต่ละประเภทงาน */
-  var docBars = filteredDocTypes().map(function(dt) {
+  var docBars = DOCUMENT_TYPES.map(function(dt) {
     /* นับแยกตามสถานะของกลุ่มนี้ */
     var counts = { final:0, deputy:0, assist:0, head:0, submitted:0, revision:0, none:0 };
     d.teachers.forEach(function(t) {
@@ -2950,9 +2934,9 @@ function renderGroupDetail() {
   /* รายชื่อครู */
   var teacherRows = d.teachers.slice().sort(function(a,b){ return (b.subs ? Object.keys(b.subs).length : 0) - (a.subs ? Object.keys(a.subs).length : 0); }).map(function(t) {
     var subCount = Object.keys(t.subs).length;
-    var pctT = Math.round((subCount / filteredDocTypes().length) * 100);
+    var pctT = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     var barColor = pctT >= 100 ? '#16a34a' : pctT >= 60 ? '#7c3aed' : pctT >= 30 ? '#f59e0b' : '#ef4444';
-    var docChips = filteredDocTypes().map(function(dt) {
+    var docChips = DOCUMENT_TYPES.map(function(dt) {
       var sub = t.subs[dt.id];
       var st = sub ? (sub.status || 'submitted') : 'none';
       var chipColor = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'#c4b5fd', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || '#e2e8f0';
@@ -2967,7 +2951,7 @@ function renderGroupDetail() {
           '<div style="flex:1;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;">' +
             '<div style="width:' + pctT + '%;height:100%;background:' + barColor + ';border-radius:4px;"></div>' +
           '</div>' +
-          '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:32px;text-align:right;">' + subCount + '/' + filteredDocTypes().length + '</span>' +
+          '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:32px;text-align:right;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:3px;flex-wrap:wrap;max-width:200px;justify-content:flex-end;">' + docChips + '</div>' +
@@ -3181,7 +3165,7 @@ function renderTeacherDropdown() {
         '<p style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(name) + '</p>' +
         '<p style="font-size:11px;color:#7c3aed;font-weight:600;">' + esc(t.staffGroup || '') + (t.position ? ' · ' + esc(t.position) : '') + '</p>' +
       '</div>' +
-      '<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:#ede9fe;color:#7c3aed;flex-shrink:0;">' + Object.keys(t.subs).length + '/' + filteredDocTypes().length + '</span>' +
+      '<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:#ede9fe;color:#7c3aed;flex-shrink:0;">' + Object.keys(t.subs).length + '/' + DOCUMENT_TYPES.length + '</span>' +
     '</div>';
   }).join('');
   wrap.style.display = 'block';
@@ -3229,11 +3213,11 @@ function clearTeacherSelection() {
 
 /* ── Render full detail for selected teacher ── */
 function renderTeacherDetail(t) {
-  var total = filteredDocTypes().length;
+  var total = DOCUMENT_TYPES.length;
   var submitted = 0, head = 0, assist = 0, deputy = 0, final = 0, revision = 0, none = 0;
 
   /* count by merged container status per slot */
-  filteredDocTypes().forEach(function(dt) {
+  DOCUMENT_TYPES.forEach(function(dt) {
     var sub = t.subs[dt.id];
     if (!sub) { none++; return; }
     var st = sub.status || 'submitted';
@@ -3327,7 +3311,7 @@ function renderTeacherDocBars(t) {
   var STATUS_ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
   var MAX = 6;
 
-  container.innerHTML = filteredDocTypes().map(function(dt) {
+  container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
     var sub = t.subs[dt.id];
     var st  = sub ? (sub.status || 'submitted') : 'none';
     var ord = STATUS_ORDER[st] || 0;
@@ -3361,11 +3345,11 @@ function renderTeacherSubTable(t) {
   var STATUS_BG    = { submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef2f2', none:'#f8fafc' };
   var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#dc2626', none:'#94a3b8' };
 
-  var sentCount = filteredDocTypes().filter(function(dt){ return t.subs[dt.id]; }).length;
-  document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + filteredDocTypes().length + ' รายการ';
+  var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
+  document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + DOCUMENT_TYPES.length + ' รายการ';
 
   var html = '';
-  filteredDocTypes().forEach(function(dt, idx) {
+  DOCUMENT_TYPES.forEach(function(dt, idx) {
     var sub = t.subs[dt.id];
     var st  = sub ? (sub.status || 'submitted') : 'none';
     var bg  = STATUS_BG[st] || '#f8fafc';
@@ -3742,7 +3726,7 @@ function loadDocTypesFromFirestore() {
     snap.forEach(function(d) {
       var data = d.data();
       if (data.active === false) return; /* กรอง inactive ฝั่ง client */
-      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed', department: data.department||'academic' });
+      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed' });
     });
     /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่ */
     if (currentSubTab === 'overview') {
