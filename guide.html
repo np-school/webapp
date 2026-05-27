@@ -3,9 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
   <title>คู่มือการใช้งาน – NP Origins</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: #1e293b; }
@@ -220,9 +234,33 @@
       .hero { padding: 36px 16px 52px; }
       .ptab-btn { min-width: 100px; font-size: 12px; padding: 9px 10px; }
     }
+    @media(max-width:1023px){
+      #mainGrid{flex-direction:column;}
+      #contentArea{width:100%;}
+    }
+    @media(min-width:1024px){
+      #hamburgerBtn{display:none!important;}
+    }
   </style>
 </head>
-<body>
+<body style="background:#f1f5f9;min-height:100vh;overflow-x:hidden;">
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Navbar -->
+<nav id="navbar" class="navbar"></nav>
+
+<!-- Main Grid -->
+<div id="mainGrid" style="display:flex;">
+
+  <!-- Sidebar -->
+  <div class="sidebar-wrap" id="sidebar">
+    <div class="sidebar-inner" id="sidebarInner"></div>
+  </div>
+
+  <!-- Content -->
+  <div id="contentArea" style="flex:1;min-width:0;padding:0;">
 
 <!-- ══ HERO ══ -->
 <div class="hero">
@@ -1052,6 +1090,23 @@
 </div><!-- end main-wrap -->
 
 <script>
+  /* ── Navbar + Sidebar ── */
+  buildNavbar('คู่มือการใช้งาน', false);
+  buildSidebar('guide');
+
+  /* ── Auth state ── */
+  auth.onAuthStateChanged(function(user) {
+    var ov = document.getElementById('loadingOverlay');
+    if (user) {
+      updateNavUser(user);
+      updateSidebarProfile(user);
+      checkAdminAccess(user.email);
+    } else {
+      resetNavUI();
+    }
+    if (ov) ov.style.display = 'none';
+  });
+
   lucide.createIcons();
 
   /* ── Primary tab switch ── */
@@ -1129,5 +1184,9 @@
     }
   })();
 </script>
+
+  </div><!-- end #contentArea -->
+</div><!-- end #mainGrid -->
+
 </body>
 </html>
