@@ -735,6 +735,19 @@
           </div>
           <input type="text" id="dtColor" value="#3b82f6" maxlength="9" placeholder="#3b82f6" style="margin-top:8px;width:120px;" oninput="syncColorInput()">
         </div>
+        <!-- Department (ฝ่าย) -->
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ฝ่าย <span style="color:#ef4444;">*</span></label>
+          <select id="dtDepartment" style="font-family:'Sarabun',sans-serif;">
+            <option value="">-- เลือกฝ่าย --</option>
+            <option value="ฝ่ายวิชาการ">ฝ่ายวิชาการ</option>
+            <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
+            <option value="ฝ่ายบริหารทั่วไป">ฝ่ายบริหารทั่วไป</option>
+            <option value="ฝ่ายกิจการนักเรียน">ฝ่ายกิจการนักเรียน</option>
+            <option value="ฝ่ายแผนงาน">ฝ่ายแผนงาน</option>
+          </select>
+        </div>
+
         <!-- Active toggle -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
           <div>
@@ -3525,6 +3538,7 @@ function renderDocTypeRows(docs) {
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
           '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
           (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
+          (dt.department ? '<span style="font-size:10px;font-weight:700;background:#ede9fe;color:#6d28d9;padding:1px 8px;border-radius:8px;">' + esc(dt.department) + '</span>' : '') +
           activeLabel +
         '</div>' +
         '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc(dt.id||dt._id) + ' · ไอคอน: ' + esc(dt.icon||'-') + '</p>' +
@@ -3605,6 +3619,7 @@ function openDocTypeModal(firestoreId) {
   document.getElementById('dtId').value     = '';
   document.getElementById('dtIcon').value   = 'file';
   document.getElementById('dtColor').value  = '#3b82f6';
+  document.getElementById('dtDepartment').value = '';
   document.getElementById('dtActive').checked = true;
   selectedDtColor = '#3b82f6';
   updateColorSwatches('#3b82f6');
@@ -3620,6 +3635,7 @@ function openDocTypeModal(firestoreId) {
       document.getElementById('dtId').value     = data.id     || firestoreId;
       document.getElementById('dtIcon').value   = data.icon   || 'file';
       document.getElementById('dtColor').value  = data.color  || '#3b82f6';
+      document.getElementById('dtDepartment').value = data.department || '';
       document.getElementById('dtActive').checked = data.active !== false;
       selectedDtColor = data.color || '#3b82f6';
       updateColorSwatches(selectedDtColor);
@@ -3674,18 +3690,20 @@ function syncColorInput() {
 
 /* ── save doc type ── */
 function saveDocType() {
-  var label  = document.getElementById('dtLabel').value.trim();
-  var short  = document.getElementById('dtShort').value.trim();
-  var id     = document.getElementById('dtId').value.trim();
-  var icon   = document.getElementById('dtIcon').value.trim() || 'file';
-  var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
-  var active = document.getElementById('dtActive').checked;
+  var label      = document.getElementById('dtLabel').value.trim();
+  var short      = document.getElementById('dtShort').value.trim();
+  var id         = document.getElementById('dtId').value.trim();
+  var icon       = document.getElementById('dtIcon').value.trim() || 'file';
+  var color      = document.getElementById('dtColor').value.trim() || '#3b82f6';
+  var department = document.getElementById('dtDepartment').value.trim();
+  var active     = document.getElementById('dtActive').checked;
 
-  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
-  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
+  if (!label)      { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
+  if (!id)         { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
+  if (!department) { showToast('กรุณาเลือกฝ่าย', '#ef4444'); return; }
   if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
 
-  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active };
+  var saveData = { id: id, label: label, short: short, icon: icon, color: color, department: department, active: active };
 
   var prom;
   if (editingDocTypeId) {
@@ -3726,7 +3744,7 @@ function loadDocTypesFromFirestore() {
     snap.forEach(function(d) {
       var data = d.data();
       if (data.active === false) return; /* กรอง inactive ฝั่ง client */
-      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed' });
+      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'#7c3aed', department: data.department||'' });
     });
     /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่ */
     if (currentSubTab === 'overview') {
