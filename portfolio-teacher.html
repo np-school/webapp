@@ -133,6 +133,11 @@
     .replace-zone{border:2px dashed #fbbf24;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#fffbeb;margin-top:6px;transition:all .2s;}
     .replace-zone:hover{border-color:#f59e0b;background:#fef3c7;}
 
+    /* ── Department Tabs ── */
+    .dept-tab{background:#f8fafc;color:#64748b;}
+    .dept-tab:hover{background:#f1f5f9;color:#334155;}
+    .dept-tab-active{background:#1d4ed8!important;color:white!important;box-shadow:0 4px 12px rgba(29,78,216,.25);}
+
     @media(max-width:640px){
       .doc-item{flex-direction:column;align-items:flex-start;gap:10px;}
       .doc-item-right{width:100%;}
@@ -295,8 +300,8 @@
           <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;">
             <div>
               <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:6px;">ระบบส่งงานประจำภาคเรียน</div>
-              <h1 style="font-size:24px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">ปีการศึกษา <span id="displayYear"></span></h1>
-              <p style="font-size:13px;color:rgba(255,255,255,.7);" id="displaySem"></p>
+              <h1 style="font-size:24px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">ปีการศึกษา <span id="displayYear">2568</span></h1>
+              <p style="font-size:13px;color:rgba(255,255,255,.7);" id="displaySem">ภาคเรียนที่ 1</p>
             </div>
             <div>
               <!-- Year Picker -->
@@ -304,14 +309,14 @@
                 <button onclick="changeYear(-1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                   <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
                 </button>
-                <span id="yearLabel" style="font-size:15px;font-weight:800;color:white;min-width:44px;text-align:center;"></span>
+                <span id="yearLabel" style="font-size:15px;font-weight:800;color:white;min-width:44px;text-align:center;">2568</span>
                 <button onclick="changeYear(1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                   <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
                 </button>
               </div>
               <!-- Semester Pills -->
               <div style="display:flex;gap:8px;">
-                <button class="sem-pill" id="semPill1" onclick="selectSem(1)">ภาคเรียนที่ 1</button>
+                <button class="sem-pill active" id="semPill1" onclick="selectSem(1)">ภาคเรียนที่ 1</button>
                 <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียนที่ 2</button>
               </div>
             </div>
@@ -333,8 +338,15 @@
       </div>
 
       <div class="card" style="padding:20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-          <h2 style="font-size:16px;font-weight:800;color:#0f172a;">รายการงานที่ต้องส่ง</h2>
+        <!-- Department Tabs -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:2px solid #f1f5f9;padding-bottom:14px;">
+          <button id="deptTab-academic"  onclick="selectDept('academic')"  class="dept-tab dept-tab-active" style="padding:7px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มวิชาการ</button>
+          <button id="deptTab-budget"    onclick="selectDept('budget')"    class="dept-tab" style="padding:7px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มงบประมาณ</button>
+          <button id="deptTab-personnel" onclick="selectDept('personnel')" class="dept-tab" style="padding:7px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มบุคคล</button>
+          <button id="deptTab-general"   onclick="selectDept('general')"   class="dept-tab" style="padding:7px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">กลุ่มทั่วไป</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h2 id="deptTitle" style="font-size:16px;font-weight:800;color:#0f172a;">รายการงานที่ต้องส่ง</h2>
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span><span style="font-size:11px;color:#64748b;font-weight:600;">ส่งแล้ว</span>
             <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;margin-left:8px;"></span><span style="font-size:11px;color:#64748b;font-weight:600;">ตรวจแล้ว</span>
@@ -787,7 +799,7 @@ function sanitizeForFilename(str) {
 
 /* DOCUMENT_TYPES โหลดจาก Firestore (portfolio_doc_types) — fallback hardcode ถ้า collection ว่าง */
 var DOCUMENT_TYPES = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+  { id:'syllabus',         department:'academic', label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
@@ -815,12 +827,13 @@ function loadDocTypesFromFirestore(callback) {
           /* กรอง active ฝั่ง client เพื่อไม่ต้องใช้ composite index */
           if (data.active === false) return;
           DOCUMENT_TYPES.push({
-            id:    data.id    || d.id,
-            label: data.label || '',
-            short: data.short || '',
-            icon:  data.icon  || 'file',
-            color: data.color || '#7c3aed',
-            bg:    colorToBg(data.color || '#7c3aed'),
+            id:         data.id         || d.id,
+            label:      data.label      || '',
+            short:      data.short      || '',
+            icon:       data.icon       || 'file',
+            color:      data.color      || '#7c3aed',
+            bg:         colorToBg(data.color || '#7c3aed'),
+            department: data.department || 'academic',
           });
         });
       }
@@ -841,11 +854,10 @@ function loadDocTypesFromFirestore(callback) {
 }
 
 function updateProgressTotal() {
-  /* อัปเดตตัวเลข total ใน progress bar ให้ตรงกับ DOCUMENT_TYPES จริง */
   var el = document.getElementById('progressText');
   if (!el) return;
   var current = el.textContent.split('/')[0].trim();
-  el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
+  el.textContent = current + ' / ' + filteredDocTypes().length + ' รายการ';
 }
 var currentStaffData = null;
 
@@ -896,38 +908,21 @@ function loadAdminRoles() {
     console.warn('loadAdminRoles error:', e);
   });
 }
-/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
-   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
-   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
-   ปีการศึกษา (พ.ศ.) = ปี ค.ศ. + 543 โดย
-     ภาคเรียน 1 → ปี พ.ศ. ของวันที่นั้น
-     ภาคเรียน 2 ที่เปิดในเดือน พ.ย.–ธ.ค. → ปี พ.ศ. ของปีนั้น
-     ภาคเรียน 2 ที่ยังค้างมาถึง ม.ค.–พ.ค. → ปี พ.ศ. ของปีก่อน
-─────────────────────────────────────────── */
-(function() {
-  var now   = new Date();
-  var month = now.getMonth() + 1; /* 1–12 */
-  var day   = now.getDate();
-  var ceYear = now.getFullYear();
-  var sem, thYear;
-  /* ภาคเรียน 1: 16 พ.ค. – 31 ต.ค. */
-  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
-    sem = 1;
-    thYear = ceYear + 543;
-  /* ภาคเรียน 2: 1 พ.ย. – 15 พ.ค. */
-  } else if (month >= 11) {
-    sem = 2;
-    thYear = ceYear + 543;
-  } else {
-    /* ม.ค. – 15 พ.ค.: ยังอยู่ในภาค 2 ของปีการศึกษาก่อน */
-    sem = 2;
-    thYear = (ceYear - 1) + 543;
-  }
-  window._defaultYear = thYear;
-  window._defaultSem  = sem;
-})();
-var currentYear      = window._defaultYear || 2568;
-var currentSem       = window._defaultSem  || 1;
+var currentYear      = 2568;
+var currentSem       = 1;
+var currentDept      = 'academic'; /* academic | budget | personnel | general */
+
+/* ── Department config ── */
+var DEPARTMENTS = [
+  { id:'academic',  label:'กลุ่มวิชาการ',      color:'#1d4ed8' },
+  { id:'budget',    label:'กลุ่มบริหารงบประมาณ', color:'#0891b2' },
+  { id:'personnel', label:'กลุ่มบริหารงานบุคคล', color:'#7c3aed' },
+  { id:'general',   label:'กลุ่มบริหารทั่วไป',   color:'#059669' },
+];
+function deptLabel(id) {
+  var d = DEPARTMENTS.find(function(x){ return x.id === id; });
+  return d ? d.label : id;
+}
 /* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
 var submissions      = {};
 var currentDocId     = null;
@@ -992,6 +987,7 @@ auth.onAuthStateChanged(function(u) {
       checkAdminAccess(u.email);
       renderStaffInfoBadge();
       initYearSemUI();
+      selectDept('academic');
       loadAdminRoles();
       /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
       loadDocTypesFromFirestore(function() {
@@ -1051,13 +1047,44 @@ function autoFillSubjectGroup(group) {
   window._defaultSubjectGroup = MAP[group] || '';
 }
 
-/* ─── YEAR / SEM UI INIT ─── */
-function initYearSemUI() {
-  document.getElementById('yearLabel').textContent   = currentYear;
-  document.getElementById('displayYear').textContent = currentYear;
-  document.getElementById('displaySem').textContent  = 'ภาคเรียนที่ ' + currentSem;
-  document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
-  document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
+/* ─── DEPARTMENT TABS ─── */
+function selectDept(dept) {
+  currentDept = dept;
+  DEPARTMENTS.forEach(function(d) {
+    var btn = document.getElementById('deptTab-' + d.id);
+    if (!btn) return;
+    btn.className = 'dept-tab' + (d.id === dept ? ' dept-tab-active' : '');
+  });
+  var titleEl = document.getElementById('deptTitle');
+  if (titleEl) titleEl.textContent = 'รายการงานที่ต้องส่ง — ' + deptLabel(dept);
+  renderDocList();
+}
+
+/* กรอง DOCUMENT_TYPES ตาม department ที่เลือก */
+function filteredDocTypes() {
+  return DOCUMENT_TYPES.filter(function(dt) {
+    /* ถ้า doc type ไม่มี department ให้ถือเป็น academic (backward compat) */
+    var dep = dt.department || 'academic';
+    return dep === currentDept;
+  });
+}
+
+/* ─── DEPARTMENT TABS ─── */
+function selectDept(dept) {
+  currentDept = dept;
+  DEPARTMENTS.forEach(function(d) {
+    var btn = document.getElementById('deptTab-' + d.id);
+    if (!btn) return;
+    btn.className = 'dept-tab' + (d.id === dept ? ' dept-tab-active' : '');
+  });
+  var titleEl = document.getElementById('deptTitle');
+  if (titleEl) titleEl.textContent = 'รายการงานที่ต้องส่ง — ' + deptLabel(dept);
+  renderDocList();
+}
+function filteredDocTypes() {
+  return DOCUMENT_TYPES.filter(function(dt) {
+    return (dt.department || 'academic') === currentDept;
+  });
 }
 
 /* ─── YEAR / SEM ─── */
@@ -1111,7 +1138,15 @@ function renderDocList() {
     submittedDocIds.add(sub.docTypeId);
   });
 
-  DOCUMENT_TYPES.forEach(function(dt, idx) {
+  var dts = filteredDocTypes();
+  if (dts.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#94a3b8;"><p style="font-size:14px;font-weight:700;margin-bottom:6px;">ยังไม่มีรายการงานสำหรับฝ่ายนี้</p><p style="font-size:12px;">ผู้ดูแลระบบจะเพิ่มรายการงานในภายหลัง</p></div>';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressText').textContent = '0 / 0 รายการ';
+    lucide.createIcons();
+    return;
+  }
+  dts.forEach(function(dt, idx) {
     var courses = docCourses[dt.id] || [];
     var hasAny  = courses.length > 0;
 
@@ -1197,8 +1232,11 @@ function renderDocList() {
 
   list.innerHTML = html;
 
-  var total = DOCUMENT_TYPES.length;
-  var submittedCount = submittedDocIds.size;
+  /* นับเฉพาะ docType ที่อยู่ใน dept ปัจจุบัน */
+  var deptDocIds = new Set(dts.map(function(d){ return d.id; }));
+  var total = dts.length;
+  var submittedCount = 0;
+  deptDocIds.forEach(function(id){ if (submittedDocIds.has(id)) submittedCount++; });
   var pct = total ? Math.round((submittedCount / total) * 100) : 0;
   document.getElementById('progressBar').style.width    = pct + '%';
   document.getElementById('progressText').textContent   = submittedCount + ' / ' + total + ' รายการ';
