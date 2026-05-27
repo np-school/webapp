@@ -234,13 +234,10 @@
       .hero { padding: 36px 16px 52px; }
       .ptab-btn { min-width: 100px; font-size: 12px; padding: 9px 10px; }
     }
-    @media(max-width:1023px){
-      #mainGrid{flex-direction:column;}
-      #contentArea{width:100%;}
-    }
-    @media(min-width:1024px){
-      #hamburgerBtn{display:none!important;}
-    }
+    /* sidebar เป็น fixed drawer เสมอ ทุก viewport */
+    .sidebar-wrap{position:fixed;top:0;left:0;height:100vh;z-index:200;transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.12);transition:transform .3s ease;width:272px;}
+    .sidebar-wrap.open{transform:translateX(0);}
+    .sidebar-inner{background:#f8fafc;border-right:1px solid #e2e8f0;height:100%;padding:20px 12px;display:flex;flex-direction:column;overflow-y:auto;}
   </style>
 </head>
 <body style="background:#f1f5f9;min-height:100vh;overflow-x:hidden;">
@@ -251,16 +248,12 @@
 <!-- Navbar -->
 <nav id="navbar" class="navbar"></nav>
 
-<!-- Main Grid -->
-<div id="mainGrid" style="display:flex;">
+<!-- Sidebar drawer (fixed, always hidden until opened) -->
+<div class="sidebar-wrap" id="sidebar">
+  <div class="sidebar-inner" id="sidebarInner"></div>
+</div>
 
-  <!-- Sidebar -->
-  <div class="sidebar-wrap" id="sidebar">
-    <div class="sidebar-inner" id="sidebarInner"></div>
-  </div>
-
-  <!-- Content -->
-  <div id="contentArea" style="flex:1;min-width:0;padding:0;">
+<!-- Content full width -->
 
 <!-- ══ HERO ══ -->
 <div class="hero">
@@ -1185,8 +1178,7 @@
   })();
 </script>
 
-  </div><!-- end #contentArea -->
-</div><!-- end #mainGrid -->
+
 
 </body>
 </html>
