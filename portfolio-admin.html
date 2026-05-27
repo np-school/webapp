@@ -303,10 +303,10 @@
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:6px;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:6px 10px;">
             <button onclick="changeYear(-1)" style="background:none;border:none;cursor:pointer;color:#7c3aed;display:flex;padding:2px;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-            <span id="yearLabel" style="font-size:14px;font-weight:800;color:#0f172a;min-width:40px;text-align:center;">2568</span>
+            <span id="yearLabel" style="font-size:14px;font-weight:800;color:#0f172a;min-width:40px;text-align:center;"></span>
             <button onclick="changeYear(1)" style="background:none;border:none;cursor:pointer;color:#7c3aed;display:flex;padding:2px;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
           </div>
-          <button class="sem-pill active" id="semPill1" onclick="selectSem(1)">ภาคเรียน 1</button>
+          <button class="sem-pill" id="semPill1" onclick="selectSem(1)">ภาคเรียน 1</button>
           <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียน 2</button>
         </div>
       </div>
@@ -852,8 +852,28 @@ var DOCUMENT_TYPES = [
   { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'#eab308' },
 ];
 
-var currentYear = 2568;
-var currentSem  = 1;
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+─────────────────────────────────────────── */
+(function() {
+  var now    = new Date();
+  var month  = now.getMonth() + 1;
+  var day    = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1; thYear = ceYear + 543;
+  } else if (month >= 11) {
+    sem = 2; thYear = ceYear + 543;
+  } else {
+    sem = 2; thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})();
+var currentYear = window._defaultYear || 2568;
+var currentSem  = window._defaultSem  || 1;
 var allSubs     = []; /* all submissions for year+sem */
 var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
 var currentFilter = 'all';
@@ -952,6 +972,7 @@ function bootApp(u) {
     buildSidebar('portfolio-admin');
     checkAdminAccess(u.email);
     updateSidebarProfile(u);
+    initYearSemUI();
     /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
     db.collection('admins').get().then(function(snap) {
       adminRoles.headOfGroups = {};
@@ -972,6 +993,13 @@ function bootApp(u) {
     loadDocTypesFromFirestore(); /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้ว loadAllSubmissions ตาม */
     loadAllSubmissions();
     lucide.createIcons();
+}
+
+/* ─── YEAR / SEM UI INIT ─── */
+function initYearSemUI() {
+  document.getElementById('yearLabel').textContent = currentYear;
+  document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
+  document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
 }
 
 /* ─── YEAR / SEM ─── */

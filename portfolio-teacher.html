@@ -295,8 +295,8 @@
           <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;">
             <div>
               <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:6px;">ระบบส่งงานประจำภาคเรียน</div>
-              <h1 style="font-size:24px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">ปีการศึกษา <span id="displayYear">2568</span></h1>
-              <p style="font-size:13px;color:rgba(255,255,255,.7);" id="displaySem">ภาคเรียนที่ 1</p>
+              <h1 style="font-size:24px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">ปีการศึกษา <span id="displayYear"></span></h1>
+              <p style="font-size:13px;color:rgba(255,255,255,.7);" id="displaySem"></p>
             </div>
             <div>
               <!-- Year Picker -->
@@ -304,14 +304,14 @@
                 <button onclick="changeYear(-1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                   <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
                 </button>
-                <span id="yearLabel" style="font-size:15px;font-weight:800;color:white;min-width:44px;text-align:center;">2568</span>
+                <span id="yearLabel" style="font-size:15px;font-weight:800;color:white;min-width:44px;text-align:center;"></span>
                 <button onclick="changeYear(1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                   <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
                 </button>
               </div>
               <!-- Semester Pills -->
               <div style="display:flex;gap:8px;">
-                <button class="sem-pill active" id="semPill1" onclick="selectSem(1)">ภาคเรียนที่ 1</button>
+                <button class="sem-pill" id="semPill1" onclick="selectSem(1)">ภาคเรียนที่ 1</button>
                 <button class="sem-pill" id="semPill2" onclick="selectSem(2)">ภาคเรียนที่ 2</button>
               </div>
             </div>
@@ -896,8 +896,38 @@ function loadAdminRoles() {
     console.warn('loadAdminRoles error:', e);
   });
 }
-var currentYear      = 2568;
-var currentSem       = 1;
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+   ปีการศึกษา (พ.ศ.) = ปี ค.ศ. + 543 โดย
+     ภาคเรียน 1 → ปี พ.ศ. ของวันที่นั้น
+     ภาคเรียน 2 ที่เปิดในเดือน พ.ย.–ธ.ค. → ปี พ.ศ. ของปีนั้น
+     ภาคเรียน 2 ที่ยังค้างมาถึง ม.ค.–พ.ค. → ปี พ.ศ. ของปีก่อน
+─────────────────────────────────────────── */
+(function() {
+  var now   = new Date();
+  var month = now.getMonth() + 1; /* 1–12 */
+  var day   = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  /* ภาคเรียน 1: 16 พ.ค. – 31 ต.ค. */
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1;
+    thYear = ceYear + 543;
+  /* ภาคเรียน 2: 1 พ.ย. – 15 พ.ค. */
+  } else if (month >= 11) {
+    sem = 2;
+    thYear = ceYear + 543;
+  } else {
+    /* ม.ค. – 15 พ.ค.: ยังอยู่ในภาค 2 ของปีการศึกษาก่อน */
+    sem = 2;
+    thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})();
+var currentYear      = window._defaultYear || 2568;
+var currentSem       = window._defaultSem  || 1;
 /* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
 var submissions      = {};
 var currentDocId     = null;
@@ -961,6 +991,7 @@ auth.onAuthStateChanged(function(u) {
       buildSidebar('portfolio-teacher');
       checkAdminAccess(u.email);
       renderStaffInfoBadge();
+      initYearSemUI();
       loadAdminRoles();
       /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
       loadDocTypesFromFirestore(function() {
@@ -1018,6 +1049,15 @@ function autoFillSubjectGroup(group) {
     'ศิลปะ':'ศิลปะ','การงานอาชีพ':'การงานอาชีพ','แนะแนว':'แนะแนว',
   };
   window._defaultSubjectGroup = MAP[group] || '';
+}
+
+/* ─── YEAR / SEM UI INIT ─── */
+function initYearSemUI() {
+  document.getElementById('yearLabel').textContent   = currentYear;
+  document.getElementById('displayYear').textContent = currentYear;
+  document.getElementById('displaySem').textContent  = 'ภาคเรียนที่ ' + currentSem;
+  document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
+  document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
 }
 
 /* ─── YEAR / SEM ─── */
