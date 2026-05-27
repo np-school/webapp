@@ -785,17 +785,25 @@ function sanitizeForFilename(str) {
   return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
 }
 
+/* ─── 4 ฝ่ายบริหาร ─── */
+var DEPARTMENTS = [
+  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff' },
+  { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'#16a34a', bg:'#f0fdf4' },
+  { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'#7c3aed', bg:'#f5f3ff' },
+  { id:'general',   label:'ฝ่ายบริหารทั่วไป',   icon:'building-2',     color:'#ea580c', bg:'#fff7ed' },
+];
+
 /* DOCUMENT_TYPES โหลดจาก Firestore (portfolio_doc_types) — fallback hardcode ถ้า collection ว่าง */
 var DOCUMENT_TYPES = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
-  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
-  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
-  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
-  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
-  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
-  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
-  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
-  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff', department:'academic'  },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff', department:'academic'  },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4', department:'academic'  },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb', department:'academic'  },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8', department:'academic'  },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff', department:'academic'  },
+  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed', department:'academic'  },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff', department:'academic'  },
+  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8', department:'academic'  },
 ];
 var _docTypesLoaded = false;
 var _docTypesUnsubscribe = null;
@@ -815,12 +823,13 @@ function loadDocTypesFromFirestore(callback) {
           /* กรอง active ฝั่ง client เพื่อไม่ต้องใช้ composite index */
           if (data.active === false) return;
           DOCUMENT_TYPES.push({
-            id:    data.id    || d.id,
-            label: data.label || '',
-            short: data.short || '',
-            icon:  data.icon  || 'file',
-            color: data.color || '#7c3aed',
-            bg:    colorToBg(data.color || '#7c3aed'),
+            id:         data.id         || d.id,
+            label:      data.label      || '',
+            short:      data.short      || '',
+            icon:       data.icon       || 'file',
+            color:      data.color      || '#7c3aed',
+            bg:         colorToBg(data.color || '#7c3aed'),
+            department: data.department || 'academic',
           });
         });
       }
@@ -1111,88 +1120,120 @@ function renderDocList() {
     submittedDocIds.add(sub.docTypeId);
   });
 
-  DOCUMENT_TYPES.forEach(function(dt, idx) {
-    var courses = docCourses[dt.id] || [];
-    var hasAny  = courses.length > 0;
+  /* จัดกลุ่มตามฝ่าย */
+  var byDept = {};
+  DEPARTMENTS.forEach(function(dep) { byDept[dep.id] = []; });
 
-    var statusLabel, statusBg, statusColor;
-    if (!hasAny) {
-      statusLabel = 'ยังไม่ส่ง'; statusBg = '#f1f5f9'; statusColor = '#94a3b8';
-    } else {
-      var allReviewed  = courses.every(function(k){ return ['head_reviewed','reviewed','assistant_reviewed','deputy_reviewed','final_approved'].indexOf(submissions[k].status||'submitted') >= 0; });
-      var anyRevision  = courses.some(function(k){ return (submissions[k].status||'submitted') === 'revision'; });
-      var allFinal     = courses.every(function(k){ return (submissions[k].status||'submitted') === 'final_approved'; });
-      if (anyRevision) {
-        statusLabel = 'มีรายวิชาแก้ไข'; statusBg = '#fef9c3'; statusColor = '#92400e';
-      } else if (allFinal) {
-        statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
-      } else if (allReviewed) {
-        statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
-      } else {
-        statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
-      }
-    }
+  var globalIdx = 0;
+  DOCUMENT_TYPES.forEach(function(dt) {
+    globalIdx++;
+    var deptId = dt.department || 'academic';
+    if (!byDept[deptId]) byDept[deptId] = [];
+    byDept[deptId].push({ dt: dt, idx: globalIdx });
+  });
 
-    var borderColor = !hasAny ? '#e2e8f0' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? '#f59e0b' : '#22c55e';
+  /* วนแต่ละฝ่าย */
+  DEPARTMENTS.forEach(function(dep) {
+    var items = byDept[dep.id] || [];
+    if (!items.length) return; /* ข้ามฝ่ายที่ไม่มีงาน */
 
+    /* หัวข้อฝ่าย */
     html +=
-      '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
-        '<div style="display:flex;align-items:flex-start;gap:14px;">' +
-          '<div class="doc-icon" style="background:' + dt.bg + ';flex-shrink:0;">' +
-            '<i data-lucide="' + dt.icon + '" style="width:20px;height:20px;color:' + dt.color + ';"></i>' +
-          '</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + (idx+1) + '. ' + dt.label + '</p>' +
-              '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusColor + ';">' + statusLabel + '</span>' +
-            '</div>' +
-
-            /* รายวิชาย่อย */
-            (hasAny
-              ? '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">' +
-                  courses.map(function(subKey) {
-                    var sub     = submissions[subKey];
-                    var status  = sub.status || 'submitted';
-                    var slabel  = { submitted:'ส่งแล้ว', reviewed:'หัวหน้าฯ ตรวจ', head_reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
-                    var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || '#dcfce7';
-                    var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || '#15803d';
-                    var files   = sub.files || [];
-                    return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
-                      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                        '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
-                        '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
-                        '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
-                        '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
-                      '</div>' +
-                      (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc(sub.note) + '</p>' : '') +
-                      (status === 'revision' && sub.adminNote
-                        ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p></div>'
-                        : '') +
-                      '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
-                        '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
-                          '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
-                        '</button>' +
-                        '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #bfdbfe;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
-                          '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
-                        '</button>' +
-                        '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:#dc2626;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #fecaca;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
-                          '<i data-lucide="trash-2" style="width:11px;height:11px;"></i> ลบงาน' +
-                        '</button>' +
-                      '</div>' +
-                    '</div>';
-                  }).join('') +
-                '</div>'
-              : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
-            ) +
-          '</div>' +
-          '<div style="flex-shrink:0;">' +
-            '<button onclick="openUploadModal(\'' + dt.id + '\')" style="padding:7px 14px;background:#1d4ed8;color:white;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">' +
-              '<i data-lucide="plus" style="width:12px;height:12px;"></i>' +
-              (hasAny ? 'เพิ่มวิชา' : 'ส่งงาน') +
-            '</button>' +
-          '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px;">' +
+        '<div style="width:32px;height:32px;border-radius:9px;background:' + dep.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i data-lucide="' + dep.icon + '" style="width:16px;height:16px;color:' + dep.color + ';"></i>' +
         '</div>' +
+        '<span style="font-size:14px;font-weight:800;color:#0f172a;">' + dep.label + '</span>' +
+        '<div style="flex:1;height:1px;background:#e2e8f0;"></div>' +
+        '<span style="font-size:11px;font-weight:700;color:#94a3b8;">' + items.length + ' รายการ</span>' +
       '</div>';
+
+    /* รายการงานในฝ่ายนี้ */
+    items.forEach(function(entry) {
+      var dt      = entry.dt;
+      var idx     = entry.idx;
+      var courses = docCourses[dt.id] || [];
+      var hasAny  = courses.length > 0;
+
+      var statusLabel, statusBg, statusColor;
+      if (!hasAny) {
+        statusLabel = 'ยังไม่ส่ง'; statusBg = '#f1f5f9'; statusColor = '#94a3b8';
+      } else {
+        var allReviewed  = courses.every(function(k){ return ['head_reviewed','reviewed','assistant_reviewed','deputy_reviewed','final_approved'].indexOf(submissions[k].status||'submitted') >= 0; });
+        var anyRevision  = courses.some(function(k){ return (submissions[k].status||'submitted') === 'revision'; });
+        var allFinal     = courses.every(function(k){ return (submissions[k].status||'submitted') === 'final_approved'; });
+        if (anyRevision) {
+          statusLabel = 'มีรายวิชาแก้ไข'; statusBg = '#fef9c3'; statusColor = '#92400e';
+        } else if (allFinal) {
+          statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
+        } else if (allReviewed) {
+          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
+        } else {
+          statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
+        }
+      }
+
+      var borderColor = !hasAny ? '#e2e8f0' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? '#f59e0b' : '#22c55e';
+
+      html +=
+        '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
+          '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+            '<div class="doc-icon" style="background:' + dt.bg + ';flex-shrink:0;">' +
+              '<i data-lucide="' + dt.icon + '" style="width:20px;height:20px;color:' + dt.color + ';"></i>' +
+            '</div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + idx + '. ' + dt.label + '</p>' +
+                '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusColor + ';">' + statusLabel + '</span>' +
+              '</div>' +
+
+              /* รายวิชาย่อย */
+              (hasAny
+                ? '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">' +
+                    courses.map(function(subKey) {
+                      var sub     = submissions[subKey];
+                      var status  = sub.status || 'submitted';
+                      var slabel  = { submitted:'ส่งแล้ว', reviewed:'หัวหน้าฯ ตรวจ', head_reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
+                      var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || '#dcfce7';
+                      var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || '#15803d';
+                      var files   = sub.files || [];
+                      return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
+                        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                          '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
+                          '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
+                          '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
+                          '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+                        '</div>' +
+                        (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc(sub.note) + '</p>' : '') +
+                        (status === 'revision' && sub.adminNote
+                          ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p></div>'
+                          : '') +
+                        '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
+                          '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
+                            '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
+                          '</button>' +
+                          '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #bfdbfe;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
+                            '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
+                          '</button>' +
+                          '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:#dc2626;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #fecaca;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
+                            '<i data-lucide="trash-2" style="width:11px;height:11px;"></i> ลบงาน' +
+                          '</button>' +
+                        '</div>' +
+                      '</div>';
+                    }).join('') +
+                  '</div>'
+                : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
+              ) +
+            '</div>' +
+            '<div style="flex-shrink:0;">' +
+              '<button onclick="openUploadModal(\'' + dt.id + '\')" style="padding:7px 14px;background:#1d4ed8;color:white;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">' +
+                '<i data-lucide="plus" style="width:12px;height:12px;"></i>' +
+                (hasAny ? 'เพิ่มวิชา' : 'ส่งงาน') +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
   });
 
   list.innerHTML = html;
