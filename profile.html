@@ -442,10 +442,21 @@
               <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><div class="info-val" id="v_phone">—</div></div>
               <div class="info-field"><div class="info-label">LINE ID</div><div class="info-val" id="v_line_id">—</div></div>
-              <div class="info-field"><div class="info-label">การศึกษาสูงสุด</div><div class="info-val" id="v_education">—</div></div>
-              <div class="info-field"><div class="info-label">สาขาวิชา</div><div class="info-val" id="v_edu_major">—</div></div>
             </div>
           </div>
+          <!-- Education list -->
+          <div style="border-top:1px solid #f1f5f9;margin-top:16px;padding-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-size:13px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
+                <i data-lucide="graduation-cap" style="width:16px;height:16px;color:#7c3aed;"></i> ประวัติการศึกษา
+              </div>
+              <button class="edit-btn" style="background:#7c3aed;padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
+                <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่ม
+              </button>
+            </div>
+            <div id="educationList"><div class="empty-block">ยังไม่มีข้อมูลการศึกษา</div></div>
+          </div>
+          <div id="personalView_end"></div>
           <!-- Edit mode -->
           <div id="personalEdit" style="display:none;">
             <div class="info-grid">
@@ -456,8 +467,6 @@
               <div class="info-field"><div class="info-label">ศาสนา</div><input type="text" id="e_religion" placeholder="พุทธ"></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><input type="text" id="e_phone" placeholder="08x-xxx-xxxx"></div>
               <div class="info-field"><div class="info-label">LINE ID</div><input type="text" id="e_line_id" placeholder="LINE ID"></div>
-              <div class="info-field"><div class="info-label">การศึกษาสูงสุด</div><select id="e_education"><option value="">เลือก</option><option>ปริญญาตรี</option><option>ปริญญาโท</option><option>ปริญญาเอก</option></select></div>
-              <div class="info-field"><div class="info-label">สาขาวิชา</div><input type="text" id="e_edu_major" placeholder="เช่น ภาษาไทย"></div>
               <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><textarea id="e_address" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"></textarea></div>
             </div>
           </div>
@@ -934,7 +943,7 @@ function switchSubtab(id, btn){
   document.querySelectorAll('.subtab-btn').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('panel-'+id).classList.add('active');
   btn.classList.add('active');
-  if(id==='personal')    loadPersonal();
+  if(id==='personal')    { loadPersonal(); loadEducation(); }
   if(id==='career')      loadCareerHistory();
 
   if(id==='teaching')    loadTeaching();
@@ -1089,6 +1098,129 @@ function renderSarMedia(){
 }
 
 /* SAR data loaders */
+/* ─── SECTION: ประวัติการศึกษา ─── */
+var educationItems = [];
+var EDU_LEVEL_OPTS = ['ต่ำกว่าปริญญาตรี','ปริญญาตรี','ปริญญาโท','ปริญญาเอก'];
+var EDU_COLORS = { 'ต่ำกว่าปริญญาตรี':'#64748b', 'ปริญญาตรี':'#1d4ed8', 'ปริญญาโท':'#7c3aed', 'ปริญญาเอก':'#0369a1' };
+var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 'ปริญญาตรี':'#eff6ff', 'ปริญญาโท':'#f5f3ff', 'ปริญญาเอก':'#e0f2fe' };
+
+function loadEducation(){
+  if(!currentUser) return;
+  db.collection('staff_education').where('uid','==',currentUser.uid)
+    .orderBy('sort_order').get()
+    .then(function(snap){
+      educationItems = [];
+      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+      renderEducation();
+    }).catch(function(){
+      db.collection('staff_education').where('uid','==',currentUser.uid).get()
+        .then(function(snap){
+          educationItems = [];
+          snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+          educationItems.sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); });
+          renderEducation();
+        }).catch(function(){ renderEducation(); });
+    });
+}
+
+function renderEducation(){
+  var el = document.getElementById('educationList');
+  if(!el) return;
+  if(!educationItems.length){
+    el.innerHTML = '<div class="empty-block" style="padding:24px 16px;">' +
+      '<div style="font-size:28px;margin-bottom:8px;">🎓</div>' +
+      '<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px;">ยังไม่มีข้อมูลการศึกษา</div>' +
+      '<div style="font-size:12px;color:#94a3b8;">กด "+ เพิ่ม" เพื่อบันทึกประวัติการศึกษา</div>' +
+    '</div>';
+    return;
+  }
+  var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+  var sorted = educationItems.slice().sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+  el.innerHTML = '<div style="display:grid;gap:10px;">' +
+    sorted.map(function(item){
+      var col = EDU_COLORS[item.level] || '#64748b';
+      var bg  = EDU_BG[item.level]    || '#f8fafc';
+      return '<div style="background:'+bg+';border:1.5px solid '+col+'22;border-left:4px solid '+col+';border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
+            '<span style="font-size:10px;font-weight:800;color:'+col+';background:white;border:1px solid '+col+'44;padding:2px 9px;border-radius:20px;">'+esc(item.level||'')+'</span>' +
+            (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc(item.degree)+'</span>' : '') +
+          '</div>' +
+          (item.institution ? '<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px;">'+esc(item.institution)+'</div>' : '') +
+          (item.major ? '<div style="font-size:11px;font-weight:600;color:#64748b;">วิชาเอก: '+esc(item.major)+'</div>' : '') +
+          (item.grad_year ? '<div style="font-size:11px;font-weight:600;color:#94a3b8;margin-top:3px;">ปีที่สำเร็จการศึกษา: '+esc(item.grad_year)+'</div>' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:5px;flex-shrink:0;">' +
+          '<button class="del-btn" style="background:#eff6ff;" onclick="editEducationItem(\''+item._id+'\')" title="แก้ไข">' +
+            '<i data-lucide="pencil" style="width:13px;height:13px;color:#1d4ed8;"></i></button>' +
+          '<button class="del-btn" onclick="deleteEducationItem(\''+item._id+'\')" title="ลบ">' +
+            '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+  lucide.createIcons();
+}
+
+function addEducationItem(editId, prefill){
+  prefill = prefill || {};
+  var html = '<div id="eduModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
+    '<div style="background:white;border-radius:20px;width:100%;max-width:440px;padding:26px;">' +
+    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:18px;">'+(editId?'แก้ไข':'เพิ่ม')+' ประวัติการศึกษา</h3>' +
+    '<div style="display:grid;gap:13px;">' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ระดับการศึกษา</div>' +
+        '<select id="em_level" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;">' +
+          EDU_LEVEL_OPTS.map(function(l){ return '<option'+(prefill.level===l?' selected':'')+'>'+l+'</option>'; }).join('') +
+        '</select></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">สถาบันที่เรียน</div>' +
+        '<input type="text" id="em_institution" value="'+esc(prefill.institution||'')+'" placeholder="เช่น มหาวิทยาลัยราชภัฏบุรีรัมย์"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วุฒิการศึกษา</div>' +
+        '<input type="text" id="em_degree" value="'+esc(prefill.degree||'')+'" placeholder="เช่น ครุศาสตรบัณฑิต, วท.บ."></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วิชาเอก / สาขาวิชา</div>' +
+        '<input type="text" id="em_major" value="'+esc(prefill.major||'')+'" placeholder="เช่น คอมพิวเตอร์ศึกษา"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ปีที่สำเร็จการศึกษา (พ.ศ.)</div>' +
+        '<input type="text" id="em_grad_year" value="'+esc(prefill.grad_year||'')+'" placeholder="เช่น 2558" maxlength="4"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">' +
+      '<button class="cancel-btn" onclick="document.getElementById(\'eduModal\').remove()">ยกเลิก</button>' +
+      '<button class="save-btn" style="background:#7c3aed;" onclick="saveEducationItem(\''+( editId||'')+'\')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
+    '</div>' +
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  lucide.createIcons();
+}
+
+function editEducationItem(id){
+  var item = educationItems.find(function(x){ return x._id===id; });
+  if(!item) return;
+  addEducationItem(id, item);
+}
+
+function saveEducationItem(editId){
+  var level       = document.getElementById('em_level').value;
+  var institution = document.getElementById('em_institution').value.trim();
+  var degree      = document.getElementById('em_degree').value.trim();
+  var major       = document.getElementById('em_major').value.trim();
+  var grad_year   = document.getElementById('em_grad_year').value.trim();
+  if(!institution){ showToast('กรุณากรอกสถาบันที่เรียน','warn'); return; }
+  var levelOrder  = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+  var data = { uid:currentUser.uid, level:level, institution:institution, degree:degree, major:major, grad_year:grad_year, sort_order:levelOrder[level]||0 };
+  var col = db.collection('staff_education');
+  var p = editId ? col.doc(editId).set(data) : col.add(data);
+  p.then(function(){
+    document.getElementById('eduModal').remove();
+    showToast(editId?'อัปเดตแล้ว':'เพิ่มข้อมูลแล้ว','success');
+    loadEducation();
+  }).catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
+}
+
+function deleteEducationItem(id){
+  if(!confirm('ลบรายการนี้?')) return;
+  db.collection('staff_education').doc(id).delete()
+    .then(function(){ showToast('ลบแล้ว'); loadEducation(); })
+    .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
+}
+
 function loadPersonalForSar(){
   if(!currentUser) return;
   db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
@@ -1217,8 +1349,7 @@ function renderPersonalView(){
   setValEl('v_address',     p.address||'');
   setValEl('v_phone',       p.phone||'');
   setValEl('v_line_id',     p.line_id||'');
-  setValEl('v_education',   p.education||'');
-  setValEl('v_edu_major',   p.edu_major||'');
+  loadEducation();
   lucide.createIcons();
 }
 function editSection(section){
@@ -1235,8 +1366,6 @@ function editSection(section){
     document.getElementById('e_religion').value    = p.religion   || '';
     document.getElementById('e_phone').value        = p.phone     || '';
     document.getElementById('e_line_id').value      = p.line_id   || '';
-    document.getElementById('e_education').value    = p.education || '';
-    document.getElementById('e_edu_major').value    = p.edu_major || '';
     document.getElementById('e_address').value      = p.address   || '';
   } else if(section==='career'){
     var c=careerData;
@@ -1289,8 +1418,6 @@ function saveSection(section){
       religion:    document.getElementById('e_religion').value.trim(),
       phone:       document.getElementById('e_phone').value.trim(),
       line_id:     document.getElementById('e_line_id').value.trim(),
-      education:   document.getElementById('e_education').value,
-      edu_major:   document.getElementById('e_edu_major').value.trim(),
       address:     document.getElementById('e_address').value.trim(),
       updatedAt:   now
     };
