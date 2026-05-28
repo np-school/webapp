@@ -347,13 +347,13 @@
             </div>
           </div>
 
-          <!-- ประวัติโรงเรียน -->
+          <!-- ประวัติการทำงาน -->
           <div class="sar-card">
             <div class="sar-card-head">
-              <div class="sar-card-icon" style="background:#f0fdf4;"><i data-lucide="map-pin" style="width:17px;height:17px;color:#16a34a;"></i></div>
-              <div class="sar-card-title">ประวัติโรงเรียน</div>
+              <div class="sar-card-icon" style="background:#f0fdf4;"><i data-lucide="briefcase" style="width:17px;height:17px;color:#16a34a;"></i></div>
+              <div class="sar-card-title">ประวัติการทำงาน</div>
             </div>
-            <div class="sar-card-body" id="sar-career-body">
+            <div class="sar-card-body" id="sar-career-body" style="padding:8px 4px;">
               <div class="sar-empty">กำลังโหลด...</div>
             </div>
           </div>
@@ -987,22 +987,48 @@ function renderSarSchoolHistory(){
   var el = document.getElementById('sar-career-body');
   if(!el) return;
   if(!careerHistoryItems.length){
-    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประวัติโรงเรียน</div>';
+    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
     return;
   }
-  var colors = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed'];
-  el.innerHTML = careerHistoryItems.map(function(item, i){
-    var isCurrent = !item.end_date;
-    var color = colors[i % colors.length];
-    var dateRange = thDate(item.start_date) + (isCurrent ? ' – ปัจจุบัน' : ' – ' + thDate(item.end_date));
-    return '<div class="sar-row" style="align-items:flex-start;gap:10px;">' +
-      '<div style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0;margin-top:5px;"></div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:700;color:#0f172a;">' + esc(item.school_name||'') + (isCurrent ? ' <span style="font-size:10px;font-weight:800;color:#16a34a;background:#dcfce7;padding:1px 7px;border-radius:10px;">ปัจจุบัน</span>' : '') + '</div>' +
-        '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + esc(dateRange) + '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
+  var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
+  el.innerHTML = '<div class="career-timeline">' +
+    careerHistoryItems.map(function(item, idx){
+      var col = colors[idx % colors.length];
+      var bdr = borderColors[idx % borderColors.length];
+      var isFirst   = idx === 0;
+      var isCurrent = !item.end_date;
+      var periodStr = item.start_date ? thDate(item.start_date) : '';
+      if(item.end_date) periodStr += ' – ' + thDate(item.end_date);
+      var durStr = '';
+      if(item.start_date){
+        var from = new Date(item.start_date);
+        var to   = item.end_date ? new Date(item.end_date) : new Date();
+        var yy = to.getFullYear()-from.getFullYear(), mm = to.getMonth()-from.getMonth();
+        if(mm<0){yy--;mm+=12;}
+        if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
+      }
+      var labelBadge = '';
+      if(isFirst)   labelBadge += '<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isCurrent) labelBadge += '<span style="font-size:10px;font-weight:800;color:#0369a1;background:#e0f2fe;padding:2px 8px;border-radius:20px;">ปัจจุบัน</span>';
+      return '<div class="ct-node">' +
+        '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
+          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
+        '</div>' +
+        '<div class="ct-card" style="border-color:'+bdr+';">' +
+          (labelBadge ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+labelBadge+'</div>' : '') +
+          (periodStr  ? '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+esc(periodStr)+'</div>' : '') +
+          '<div class="ct-school">'+esc(item.school||'')+'</div>' +
+          (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
+          '<div class="ct-chips">' +
+            (item.position?'<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(item.position)+'</span>':'') +
+            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
+          '</div>' +
+          (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
   lucide.createIcons();
 }
 
