@@ -242,6 +242,14 @@
     .ct-service-lbl{font-size:10px;font-weight:700;color:#64748b;margin-top:4px;}
     @keyframes ct-blink{0%,100%{opacity:1;}50%{opacity:.5;}}
     .ct-now-badge{animation:ct-blink 2.2s infinite;}
+
+    /* ── Career History ── */
+    .ct-transfer-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:#7c3aed;background:#f5f3ff;border:1px solid #c4b5fd;padding:2px 8px;border-radius:20px;}
+    .ct-node-history .ct-card{border-color:#e9d5ff;}
+    .ct-history-section{margin-top:10px;padding-top:12px;border-top:1px dashed #e2e8f0;}
+    .ct-history-section-title{font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .ch-add-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f5f3ff;color:#7c3aed;border:1.5px dashed #c4b5fd;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;}
+    .ch-add-btn:hover{background:#ede9fe;border-color:#a78bfa;}
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;">
@@ -507,6 +515,15 @@
               <div class="info-field"><div class="info-label">วิชาเอก</div><input type="text" id="e_major_subject" placeholder="เช่น ภาษาไทย"></div>
             </div>
           </div>
+        </div>
+
+        <!-- ── ประวัติการย้ายโรงเรียน ── -->
+        <div class="info-card" style="margin-top:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:#7c3aed;"></i> ประวัติการย้ายโรงเรียน</div>
+            <button class="edit-btn" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มประวัติ</button>
+          </div>
+          <div id="careerHistoryList"><div class="empty-block">กำลังโหลด...</div></div>
         </div>
       </div>
 
@@ -949,7 +966,7 @@ function switchSubtab(id, btn){
   document.getElementById('panel-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='personal')    loadPersonal();
-  if(id==='career')      loadCareer();
+  if(id==='career')      { loadCareer(); loadCareerHistory(); }
   if(id==='teaching')    loadTeaching();
   if(id==='duties')      loadDuties();
   if(id==='development') loadDevelopment();
@@ -1445,6 +1462,190 @@ function renderCareerView(){
   var c=careerData;
   document.getElementById('careerTimeline').innerHTML = buildCareerTimelineHTML(c);
   lucide.createIcons();
+}
+
+/* ─── SECTION: ประวัติการย้ายโรงเรียน (sub-collection) ─── */
+var careerHistoryItems = [];
+
+function loadCareerHistory(){
+  if(!currentUser) return;
+  var el = document.getElementById('careerHistoryList');
+  if(el) el.innerHTML = '<div class="empty-block">กำลังโหลด...</div>';
+
+  db.collection('staff_career_history')
+    .where('uid','==', currentUser.uid)
+    .orderBy('start_date')
+    .get()
+    .then(function(snap){
+      careerHistoryItems = [];
+      snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
+      renderCareerHistory();
+    })
+    .catch(function(){
+      /* fallback ไม่มี index — ไม่ orderBy */
+      db.collection('staff_career_history')
+        .where('uid','==', currentUser.uid).get()
+        .then(function(snap){
+          careerHistoryItems = [];
+          snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
+          /* sort client-side */
+          careerHistoryItems.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
+          renderCareerHistory();
+        }).catch(function(){ renderCareerHistory(); });
+    });
+}
+
+function renderCareerHistory(){
+  var el = document.getElementById('careerHistoryList');
+  if(!el) return;
+  if(!careerHistoryItems.length){
+    el.innerHTML = '<div class="empty-block">ยังไม่มีประวัติการย้ายโรงเรียน<br><span style="font-size:12px;">กดปุ่ม "เพิ่มประวัติ" เพื่อบันทึกประวัติการย้ายโรงเรียนแต่ละแห่ง</span></div>';
+    return;
+  }
+
+  /* color palette for nodes */
+  var colors=['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
+  var borderColors=['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
+
+  el.innerHTML = '<div class="career-timeline">' +
+    careerHistoryItems.map(function(item, idx){
+      var col   = colors[idx % colors.length];
+      var bdr   = borderColors[idx % borderColors.length];
+      var isLast = idx === careerHistoryItems.length - 1;
+      var endStr = item.end_date ? thDate(item.end_date) : (isLast ? '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' : '');
+      var periodStr = item.start_date ? thDate(item.start_date) + (item.end_date ? ' – ' + thDate(item.end_date) : '') : '';
+
+      /* คำนวณระยะเวลา */
+      var durStr = '';
+      if(item.start_date){
+        var from = new Date(item.start_date);
+        var to   = item.end_date ? new Date(item.end_date) : new Date();
+        var yy = to.getFullYear()-from.getFullYear(), mm = to.getMonth()-from.getMonth();
+        if(mm<0){yy--;mm+=12;}
+        if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
+      }
+
+      return '<div class="ct-node">' +
+        '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
+          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
+        '</div>' +
+        '<div class="ct-card" style="border-color:'+bdr+';">' +
+          '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+esc(periodStr)+'</div>' +
+          '<div class="ct-school">'+esc(item.school||'')+'</div>' +
+          (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
+          '<div class="ct-chips">' +
+            (item.position?'<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(item.position)+'</span>':'') +
+            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
+            (item.reason?'<span class="ct-transfer-badge"><i data-lucide="arrow-right-circle" style="width:10px;height:10px;"></i>'+esc(item.reason)+'</span>':'') +
+          '</div>' +
+          (durStr?'<div class="ct-service-bar"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
+          '<div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">' +
+            '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:#eff6ff;">' +
+              '<i data-lucide="pencil" style="width:13px;height:13px;color:#1d4ed8;"></i></button>' +
+            '<button class="del-btn" onclick="deleteCareerHistoryItem(\''+item._id+'\')" title="ลบ">' +
+              '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+  lucide.createIcons();
+}
+
+function addCareerHistoryItem(editId, prefill){
+  prefill = prefill || {};
+  var modalId = 'chModal';
+  var existing = document.getElementById(modalId);
+  if(existing) existing.remove();
+
+  var html = '<div id="'+modalId+'" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
+    '<div style="background:white;border-radius:20px;width:100%;max-width:480px;padding:26px;max-height:90vh;overflow-y:auto;">' +
+    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:18px;">'+(editId?'แก้ไข':'เพิ่ม')+' ประวัติการย้ายโรงเรียน</h3>' +
+    '<div style="display:grid;gap:13px;">' +
+
+    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ชื่อโรงเรียน <span style="color:#ef4444;">*</span></div>' +
+      '<input type="text" id="ch_school" placeholder="เช่น โรงเรียนหนองกี่พิทยาคม" value="'+esc(prefill.school||'')+'"></div>' +
+
+    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">สังกัด สพม./สพป.</div>' +
+      '<input type="text" id="ch_department" placeholder="เช่น สพม. บุรีรัมย์" value="'+esc(prefill.department||'')+'"></div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วันที่เริ่มงาน</div>' +
+        '<input type="date" id="ch_start_date" value="'+esc(prefill.start_date||'')+'"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วันที่สิ้นสุด <span style="color:#94a3b8;">(เว้นถ้าปัจจุบัน)</span></div>' +
+        '<input type="date" id="ch_end_date" value="'+esc(prefill.end_date||'')+'"></div>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ตำแหน่ง</div>' +
+        '<input type="text" id="ch_position" placeholder="เช่น ครู" value="'+esc(prefill.position||'')+'"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วิทยฐานะ</div>' +
+        '<select id="ch_academic_rank">' +
+          '<option value="">ไม่มี/ไม่ระบุ</option>' +
+          '<option'+(prefill.academic_rank==='ครูชำนาญการ'?' selected':'')+'>ครูชำนาญการ</option>' +
+          '<option'+(prefill.academic_rank==='ครูชำนาญการพิเศษ'?' selected':'')+'>ครูชำนาญการพิเศษ</option>' +
+          '<option'+(prefill.academic_rank==='ครูเชี่ยวชาญ'?' selected':'')+'>ครูเชี่ยวชาญ</option>' +
+          '<option'+(prefill.academic_rank==='ครูเชี่ยวชาญพิเศษ'?' selected':'')+'>ครูเชี่ยวชาญพิเศษ</option>' +
+        '</select></div>' +
+    '</div>' +
+
+    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">เหตุผลการย้าย / ลักษณะการโอน</div>' +
+      '<input type="text" id="ch_reason" placeholder="เช่น ย้ายตามคู่สมรส, ขอย้ายกลับภูมิลำเนา, โอนกลับ" value="'+esc(prefill.reason||'')+'"></div>' +
+
+    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">หมายเหตุ</div>' +
+      '<textarea id="ch_note" rows="2" placeholder="ข้อมูลเพิ่มเติม...">'+esc(prefill.note||'')+'</textarea></div>' +
+
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">' +
+    '<button class="cancel-btn" onclick="document.getElementById(\''+modalId+'\').remove()">ยกเลิก</button>' +
+    '<button class="save-btn" style="background:#7c3aed;" onclick="saveCareerHistoryItem('+(editId?'\''+editId+'\'':'null')+')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
+    '</div></div></div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+  lucide.createIcons();
+}
+
+function editCareerHistoryItem(id){
+  var item = careerHistoryItems.find(function(i){ return i._id===id; });
+  if(!item) return;
+  addCareerHistoryItem(id, item);
+}
+
+function saveCareerHistoryItem(editId){
+  var school = document.getElementById('ch_school').value.trim();
+  if(!school){ showToast('กรุณากรอกชื่อโรงเรียน','warn'); return; }
+
+  var data = {
+    uid:          currentUser.uid,
+    school:       school,
+    department:   document.getElementById('ch_department').value.trim(),
+    start_date:   document.getElementById('ch_start_date').value,
+    end_date:     document.getElementById('ch_end_date').value,
+    position:     document.getElementById('ch_position').value.trim(),
+    academic_rank:document.getElementById('ch_academic_rank').value,
+    reason:       document.getElementById('ch_reason').value.trim(),
+    note:         document.getElementById('ch_note').value.trim(),
+    updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var promise = editId
+    ? db.collection('staff_career_history').doc(editId).set(data, {merge:true})
+    : db.collection('staff_career_history').add(data);
+
+  promise
+    .then(function(){
+      document.getElementById('chModal').remove();
+      showToast(editId?'แก้ไขข้อมูลแล้ว':'เพิ่มประวัติแล้ว','success');
+      loadCareerHistory();
+    })
+    .catch(function(e){ showToast('เกิดข้อผิดพลาด: '+(e.message||e),'error'); });
+}
+
+function deleteCareerHistoryItem(id){
+  if(!confirm('ลบประวัติการย้ายโรงเรียนนี้?')) return;
+  db.collection('staff_career_history').doc(id).delete()
+    .then(function(){ showToast('ลบแล้ว'); loadCareerHistory(); })
+    .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 
 /* ─── SECTION: ภาระงานสอน ─── */
