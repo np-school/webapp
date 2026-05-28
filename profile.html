@@ -264,7 +264,22 @@
     @keyframes ct-blink{0%,100%{opacity:1;}50%{opacity:.5;}}
     .ct-now-badge{animation:ct-blink 2.2s infinite;}
 
-    /* ── Career History ── */
+    /* ── SAR Portfolio summary ── */
+    .port-doc-row { display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
+    .port-doc-row:last-child { border-bottom:none; }
+    .port-doc-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .port-doc-info { flex:1; min-width:0; }
+    .port-doc-title { font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px; }
+    .port-course-chip { display:inline-flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:5px 10px; margin:3px 4px 3px 0; cursor:pointer; transition:all .15s; text-decoration:none; }
+    .port-course-chip:hover { border-color:#93c5fd; background:#eff6ff; box-shadow:0 2px 6px rgba(29,78,216,.08); }
+    .port-course-chip.has-files { border-color:#86efac; background:#f0fdf4; }
+    .port-course-chip.revision  { border-color:#fde68a; background:#fffbeb; }
+    .port-course-code { font-size:10px; font-weight:800; color:#1d4ed8; background:#eff6ff; padding:1px 6px; border-radius:4px; flex-shrink:0; }
+    .port-course-name { font-size:11px; font-weight:700; color:#334155; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .port-file-link { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800; color:#1d4ed8; text-decoration:none; padding:2px 6px; background:#eff6ff; border-radius:5px; flex-shrink:0; }
+    .port-file-link:hover { background:#dbeafe; }
+
+  
     .ct-transfer-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:#7c3aed;background:#f5f3ff;border:1px solid #c4b5fd;padding:2px 8px;border-radius:20px;}
     .ct-node-history .ct-card{border-color:#e9d5ff;}
     .ct-history-section{margin-top:10px;padding-top:12px;border-top:1px dashed #e2e8f0;}
@@ -339,7 +354,7 @@
       <!-- Subtab bar -->
       <div class="subtab-bar" id="subtabBar">
         <button class="subtab-btn active" onclick="switchSubtab('sar',this)">
-          <i data-lucide="layout-dashboard" style="width:15px;height:15px;"></i> ภาพรวม SAR
+          <i data-lucide="layout-dashboard" style="width:15px;height:15px;"></i> Self-Assessment Report
         </button>
         <button class="subtab-btn" onclick="switchSubtab('personal',this)">
           <i data-lucide="user" style="width:15px;height:15px;"></i> ข้อมูลส่วนตัว
@@ -456,6 +471,30 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- ── Portfolio Submission Summary ── -->
+        <div style="margin-top:14px;">
+          <div class="sar-card" id="portfolioSummaryCard">
+            <div class="sar-card-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="sar-card-icon" style="background:#eff6ff;"><i data-lucide="folder-check" style="width:17px;height:17px;color:#1d4ed8;"></i></div>
+                <div>
+                  <div class="sar-card-title" style="margin-bottom:2px;">สรุปการส่งงาน Portfolio</div>
+                  <div id="portfolioSemLabel" style="font-size:10px;font-weight:700;color:#94a3b8;">กำลังโหลด...</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:12px;font-weight:700;color:#64748b;" id="portfolioProgressText">—</div>
+                <div style="width:100px;background:#e2e8f0;border-radius:6px;height:7px;overflow:hidden;">
+                  <div id="portfolioProgressBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#1d4ed8,#3b82f6);width:0%;transition:width .6s;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="sar-card-body" id="portfolioDocList" style="padding:14px 18px;">
+              <div class="sar-empty">กำลังโหลด...</div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1116,6 +1155,7 @@ function renderSarOverview(){
   renderSarDuties();
   renderSarDev();
   renderSarMedia();
+  loadPortfolioForSar();
   if(!personalData||!personalData.uid) loadPersonalForSar();
   if(!educationItems.length)           loadEducationForSar();
   if(!careerHistoryItems.length)       loadCareerHistoryForSar();
@@ -2276,6 +2316,217 @@ function applyFilter(){
   });
   buildSemTabs(filtered);
 }
+
+/* ══════════════════════════════════════════════
+   PORTFOLIO SUMMARY (SAR panel)
+   ดึงข้อมูลจาก portfolio_submissions ภาคเรียนปัจจุบัน
+   ══════════════════════════════════════════════ */
+(function(){
+  /* คำนวณภาคเรียนปัจจุบันแบบเดียวกับ portfolio-teacher.html */
+  var now    = new Date();
+  var month  = now.getMonth() + 1;
+  var day    = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1; thYear = ceYear + 543;
+  } else if (month >= 11) {
+    sem = 2; thYear = ceYear + 543;
+  } else {
+    sem = 2; thYear = (ceYear - 1) + 543;
+  }
+  window._sarPortYear = thYear;
+  window._sarPortSem  = sem;
+})();
+
+/* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
+var _sarDocTypes = [
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
+  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
+  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+];
+var _sarPortSubs = null; /* cache */
+var _sarDocTypesLoaded = false;
+
+function _getDocTypeInfo(id) {
+  return _sarDocTypes.find(function(d){ return d.id === id; }) || { id:id, label:id, icon:'file', color:'#64748b', bg:'#f1f5f9' };
+}
+
+function loadPortfolioForSar() {
+  var el = document.getElementById('portfolioDocList');
+  var semLbl = document.getElementById('portfolioSemLabel');
+  if (!el) return;
+  if (!currentUser) { el.innerHTML = '<div class="sar-empty">ไม่พบข้อมูลผู้ใช้</div>'; return; }
+
+  var portYear = window._sarPortYear || 2568;
+  var portSem  = window._sarPortSem  || 1;
+  var key      = portYear + '_' + portSem;
+
+  if (semLbl) semLbl.textContent = 'ปีการศึกษา ' + portYear + ' ภาคเรียนที่ ' + portSem;
+  el.innerHTML = '<div class="sar-empty">กำลังโหลด...</div>';
+
+  /* โหลด doc types จาก Firestore ก่อน (ถ้ายังไม่เคย) */
+  function fetchAndRender() {
+    db.collection('portfolio_submissions')
+      .where('uid', '==', _targetUid())
+      .where('yearSem', '==', key)
+      .get()
+      .then(function(snap) {
+        var subs = {};
+        snap.forEach(function(d) {
+          var data = d.data();
+          var subKey = data.docTypeId + '_' + (data.courseCode || '');
+          subs[subKey] = Object.assign({ id: d.id }, data);
+        });
+        _sarPortSubs = subs;
+        renderPortfolioSummary(subs, portYear, portSem);
+      })
+      .catch(function(e) {
+        console.warn('loadPortfolioForSar error:', e);
+        el.innerHTML = '<div class="sar-empty">ไม่สามารถโหลดข้อมูลได้</div>';
+      });
+  }
+
+  /* โหลด doc types จาก Firestore ถ้ายังไม่มี */
+  if (!_sarDocTypesLoaded) {
+    db.collection('portfolio_doc_types').orderBy('order').get()
+      .then(function(snap) {
+        if (!snap.empty) {
+          _sarDocTypes = [];
+          snap.forEach(function(d) {
+            var data = d.data();
+            if (data.active === false) return;
+            _sarDocTypes.push({
+              id:     data.id     || d.id,
+              label:  data.label  || '',
+              icon:   data.icon   || 'file',
+              color:  data.color  || '#64748b',
+              bg:     (data.color || '#64748b') + '15',
+            });
+          });
+        }
+        _sarDocTypesLoaded = true;
+        fetchAndRender();
+      })
+      .catch(function() { _sarDocTypesLoaded = true; fetchAndRender(); });
+  } else {
+    fetchAndRender();
+  }
+}
+
+function renderPortfolioSummary(subs, portYear, portSem) {
+  var el  = document.getElementById('portfolioDocList');
+  var bar = document.getElementById('portfolioProgressBar');
+  var txt = document.getElementById('portfolioProgressText');
+  if (!el) return;
+
+  /* รวบรวม docTypeId → [subKeys] */
+  var docCourses = {};
+  Object.keys(subs).forEach(function(subKey) {
+    var dtId = subs[subKey].docTypeId;
+    if (!dtId) return;
+    if (!docCourses[dtId]) docCourses[dtId] = [];
+    docCourses[dtId].push(subKey);
+  });
+
+  var totalDocs     = _sarDocTypes.length;
+  var submittedDocs = 0;
+  _sarDocTypes.forEach(function(dt) { if (docCourses[dt.id] && docCourses[dt.id].length) submittedDocs++; });
+  var pct = totalDocs ? Math.round((submittedDocs / totalDocs) * 100) : 0;
+
+  if (bar) bar.style.width = pct + '%';
+  if (txt) txt.textContent = submittedDocs + ' / ' + totalDocs + ' รายการ';
+
+  if (!_sarDocTypes.length) {
+    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประเภทเอกสาร</div>';
+    return;
+  }
+
+  var STATUS_LABEL = { submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว',
+    assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' };
+  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af',
+    assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' };
+  var STATUS_BG    = { submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe',
+    assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' };
+
+  var html = '<div style="display:grid;gap:2px;">';
+
+  _sarDocTypes.forEach(function(dt) {
+    var courses = docCourses[dt.id] || [];
+    var hasAny  = courses.length > 0;
+
+    /* ไอคอนสถานะรวม */
+    var overallBadge = '';
+    if (!hasAny) {
+      overallBadge = '<span style="font-size:10px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:1px 8px;border-radius:20px;">ยังไม่ส่ง</span>';
+    } else {
+      var anyRevision = courses.some(function(k){ return subs[k].status === 'revision'; });
+      var allFinal    = courses.every(function(k){ return subs[k].status === 'final_approved'; });
+      var obg, ocol, olbl;
+      if (anyRevision)  { obg = '#fef9c3'; ocol = '#92400e'; olbl = 'มีรายวิชาแก้ไข'; }
+      else if (allFinal){ obg = '#d1fae5'; ocol = '#065f46'; olbl = 'ผอ.อนุมัติครบ'; }
+      else              { obg = '#dcfce7'; ocol = '#15803d'; olbl = 'ส่งแล้ว ' + courses.length + ' วิชา'; }
+      overallBadge = '<span style="font-size:10px;font-weight:700;color:'+ocol+';background:'+obg+';padding:1px 8px;border-radius:20px;">'+olbl+'</span>';
+    }
+
+    /* course chips */
+    var chipsHtml = '';
+    if (hasAny) {
+      chipsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">';
+      courses.forEach(function(subKey) {
+        var sub    = subs[subKey];
+        var status = sub.status || 'submitted';
+        var files  = sub.files  || [];
+        var chipClass = 'port-course-chip' + (status === 'revision' ? ' revision' : (files.length ? ' has-files' : ''));
+        var stBg  = STATUS_BG[status]    || '#dcfce7';
+        var stCol = STATUS_COLOR[status] || '#15803d';
+        var stLbl = STATUS_LABEL[status] || 'ส่งแล้ว';
+
+        chipsHtml +=
+          '<div class="' + chipClass + '" title="' + esc(sub.courseName || '') + '">' +
+            (sub.courseCode ? '<span class="port-course-code">' + esc(sub.courseCode) + '</span>' : '') +
+            '<span class="port-course-name">' + esc(sub.courseName || '(ไม่ระบุ)') + '</span>' +
+            '<span style="font-size:9px;font-weight:800;color:' + stCol + ';background:' + stBg + ';padding:1px 6px;border-radius:4px;white-space:nowrap;">' + stLbl + '</span>' +
+            /* ปุ่มเปิดไฟล์ */
+            (files.length
+              ? files.map(function(f, fi) {
+                  if (!f || !f.fileUrl) return '';
+                  return '<a href="' + esc(f.fileUrl) + '" target="_blank" class="port-file-link" title="' + esc(f.fileName || ('ไฟล์ ' + (fi+1))) + '" onclick="event.stopPropagation();">' +
+                    '<i data-lucide="file-text" style="width:11px;height:11px;"></i>' + (fi+1) +
+                    '</a>';
+                }).join('')
+              : '') +
+          '</div>';
+      });
+      chipsHtml += '</div>';
+    }
+
+    html +=
+      '<div class="port-doc-row">' +
+        '<div class="port-doc-icon" style="background:' + dt.bg + ';">' +
+          '<i data-lucide="' + dt.icon + '" style="width:16px;height:16px;color:' + dt.color + ';"></i>' +
+        '</div>' +
+        '<div class="port-doc-info">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span class="port-doc-title">' + esc(dt.label) + '</span>' +
+            overallBadge +
+          '</div>' +
+          chipsHtml +
+        '</div>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+  lucide.createIcons();
+}
+
 </script>
 </body>
 </html>
