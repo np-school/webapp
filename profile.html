@@ -501,6 +501,16 @@ function init(){
   if(typeof checkAdminAccess==='function') checkAdminAccess(currentUser.email);
 
   /* โหลด staff + doc_types พร้อมกัน แล้วค่อย loadSubmissions */
+  /* timeout 6 วินาที ป้องกัน Firestore ค้าง */
+  var settled = false;
+  function guardedInit(){
+    if(settled) return; settled=true;
+    loadSubmissions();
+  }
+  setTimeout(function(){
+    if(!settled){ settled=true; finishRender(); }
+  }, 6000);
+
   var staffPromise = db.collection('staff')
     .where('email','==', currentUser.email.toLowerCase()).limit(1).get()
     .then(function(snap){
@@ -527,8 +537,8 @@ function init(){
     }).catch(function(){/* use fallback */});
 
   Promise.all([staffPromise, dtPromise]).then(function(){
-    loadSubmissions();
-  });
+    guardedInit();
+  }).catch(function(){ guardedInit(); });
 }
 
 /* ── Fill static hero parts ── */
@@ -539,6 +549,7 @@ function fillHeroStatic(){
   document.getElementById('profilePosition').textContent = (currentStaff && currentStaff.position) || '';
   document.getElementById('profileGroup').textContent    = (currentStaff && currentStaff.group)    || '';
   setAvatar((currentStaff && currentStaff.photoURL) || currentUser.photoURL, name);
+  document.getElementById('loadingOverlay').style.display='none';
   document.getElementById('mainApp').style.display='block';
   lucide.createIcons();
 }
@@ -613,7 +624,7 @@ function buildSemData(docs){
 function finishRender(){
   computeStats();
   renderSemList(allSemData);
-  document.getElementById('loadingOverlay').style.display='none';
+  /* overlay ถูกซ่อนแล้วใน fillHeroStatic — ไม่ต้องซ่อนซ้ำ */
   lucide.createIcons();
 }
 
