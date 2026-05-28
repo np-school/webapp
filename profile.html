@@ -484,13 +484,16 @@ var allSemData   = []; /* [{yearSem,year,sem,docs:{docTypeId:[subDocs]}}] */
 
 /* ── AUTH ── */
 auth.onAuthStateChanged(function(u){
+  /* ซ่อน overlay ทันที ไม่รอ Firestore */
+  document.getElementById('loadingOverlay').style.display='none';
   if(!u){
-    document.getElementById('loadingOverlay').style.display='none';
     document.getElementById('loginGate').style.display='flex';
     lucide.createIcons(); return;
   }
   document.getElementById('loginGate').style.display='none';
+  document.getElementById('mainApp').style.display='block';
   currentUser = u;
+  lucide.createIcons();
   init();
 });
 
@@ -549,8 +552,6 @@ function fillHeroStatic(){
   document.getElementById('profilePosition').textContent = (currentStaff && currentStaff.position) || '';
   document.getElementById('profileGroup').textContent    = (currentStaff && currentStaff.group)    || '';
   setAvatar((currentStaff && currentStaff.photoURL) || currentUser.photoURL, name);
-  document.getElementById('loadingOverlay').style.display='none';
-  document.getElementById('mainApp').style.display='block';
   lucide.createIcons();
 }
 
