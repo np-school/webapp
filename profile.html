@@ -52,7 +52,7 @@
     .avatar-ring{width:88px;height:88px;border-radius:50%;border:3px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
     .avatar-ring img{width:100%;height:100%;object-fit:cover;}
     .avatar-initials{font-size:28px;font-weight:800;color:rgba(255,255,255,.85);}
-    .hero-stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px 16px;min-width:80px;text-align:center;}
+    .hero-stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px 12px;min-width:72px;text-align:center;}
     .hero-stat-val{font-size:22px;font-weight:800;color:white;line-height:1;}
     .hero-stat-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.6);margin-top:3px;}
 
@@ -126,7 +126,7 @@
     }
 
     /* ── Subtabs ── */
-    .subtab-bar{display:flex;gap:4px;padding:4px;background:#f1f5f9;border-radius:14px;width:fit-content;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
+    .subtab-bar{display:flex;gap:4px;padding:4px;background:#f1f5f9;border-radius:14px;width:100%;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
     .subtab-bar::-webkit-scrollbar{display:none;}
     .subtab-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:#64748b;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
     .subtab-btn:hover:not(.active){background:rgba(255,255,255,.6);color:#334155;}
@@ -303,7 +303,7 @@
             <div style="font-size:11px;color:rgba(255,255,255,.4);" id="profileEmail"></div>
           </div>
           <!-- stats -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;gap:8px;flex-wrap:nowrap;align-items:center;flex-shrink:0;">
             <div class="hero-stat">
               <div class="hero-stat-val" id="statSems">–</div>
               <div class="hero-stat-lbl">ภาคเรียน</div>
@@ -316,18 +316,7 @@
               <div class="hero-stat-val" id="statApproved" style="color:#c4b5fd;">–</div>
               <div class="hero-stat-lbl">อนุมัติ</div>
             </div>
-            <div class="ring-wrap" id="ringWrap" style="display:none;">
-              <svg width="76" height="76" viewBox="0 0 76 76">
-                <circle cx="38" cy="38" r="30" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/>
-                <circle id="ringCircle" cx="38" cy="38" r="30" fill="none" stroke="#34d399" stroke-width="7"
-                  stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"
-                  style="transition:stroke-dashoffset .9s ease;"/>
-              </svg>
-              <div class="ring-center">
-                <div class="ring-pct" id="ringPct">0%</div>
-                <div class="ring-sub">ส่งงาน</div>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -804,13 +793,7 @@ function computeStats(){
   document.getElementById('statSubmitted').textContent= totalSubs || '–';
   document.getElementById('statApproved').textContent = approved  || '–';
 
-  if(totalSubs>0){
-    document.getElementById('ringWrap').style.display='flex';
-    var pct = Math.round(approved/totalSubs*100);
-    document.getElementById('ringPct').textContent=pct+'%';
-    var circ=188.5, offset=circ-(pct/100*circ);
-    setTimeout(function(){ document.getElementById('ringCircle').style.strokeDashoffset=offset; },150);
-  }
+
 }
 
 /* ── Render semester accordion list ── */
