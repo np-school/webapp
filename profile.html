@@ -137,7 +137,7 @@
     /* ── Info form cards ── */
     .info-card{background:white;border-radius:16px;border:1.5px solid #e2e8f0;padding:22px 24px;margin-bottom:14px;}
     .info-card-title{font-size:14px;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-    .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
     .info-field{display:flex;flex-direction:column;gap:5px;}
     .info-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;}
     .info-val{font-size:14px;font-weight:600;color:#0f172a;background:#f8fafc;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;}
@@ -450,9 +450,8 @@
               <div class="info-field"><div class="info-label">สัญชาติ</div><div class="info-val" id="v_nationality">—</div></div>
               <div class="info-field"><div class="info-label">เชื้อชาติ</div><div class="info-label2" id="v_ethnicity" style="font-size:14px;font-weight:600;color:#0f172a;background:#f8fafc;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;">—</div></div>
               <div class="info-field"><div class="info-label">ศาสนา</div><div class="info-val" id="v_religion">—</div></div>
-              <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><div class="info-val" id="v_phone">—</div></div>
-              <div class="info-field"><div class="info-label">LINE ID</div><div class="info-val" id="v_line_id">—</div></div>
+              <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
             </div>
           </div>
           <!-- Education list -->
@@ -477,7 +476,6 @@
               <div class="info-field"><div class="info-label">เชื้อชาติ</div><input type="text" id="e_ethnicity" placeholder="ไทย"></div>
               <div class="info-field"><div class="info-label">ศาสนา</div><input type="text" id="e_religion" placeholder="พุทธ"></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><input type="text" id="e_phone" placeholder="08x-xxx-xxxx"></div>
-              <div class="info-field"><div class="info-label">LINE ID</div><input type="text" id="e_line_id" placeholder="LINE ID"></div>
               <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><textarea id="e_address" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"></textarea></div>
             </div>
           </div>
@@ -998,9 +996,7 @@ function renderSarPersonal(){
     sarRow('เชื้อชาติ', p.ethnicity||'') +
     sarRow('ศาสนา', p.religion||'') +
     sarRow('ที่อยู่ปัจจุบัน', p.address||'') +
-    sarRow('เบอร์โทรศัพท์', p.phone||'') +
-    sarRow('LINE ID', p.line_id||'') +
-    sarRow('การศึกษาสูงสุด', (p.education||'') + (p.edu_major?' ('+p.edu_major+')':''));
+    sarRow('เบอร์โทรศัพท์', p.phone||'');
   document.getElementById('sar-personal-body').innerHTML = html || '<div class="sar-empty">ยังไม่มีข้อมูล</div>';
   lucide.createIcons();
 }
@@ -1393,7 +1389,6 @@ function renderPersonalView(){
   setValEl('v_religion',    p.religion||'');
   setValEl('v_address',     p.address||'');
   setValEl('v_phone',       p.phone||'');
-  setValEl('v_line_id',     p.line_id||'');
   loadEducation();
   lucide.createIcons();
 }
@@ -1410,7 +1405,6 @@ function editSection(section){
     document.getElementById('e_ethnicity').value   = p.ethnicity  || '';
     document.getElementById('e_religion').value    = p.religion   || '';
     document.getElementById('e_phone').value        = p.phone     || '';
-    document.getElementById('e_line_id').value      = p.line_id   || '';
     document.getElementById('e_address').value      = p.address   || '';
   } else if(section==='career'){
     var c=careerData;
@@ -1462,7 +1456,6 @@ function saveSection(section){
       ethnicity:   document.getElementById('e_ethnicity').value.trim(),
       religion:    document.getElementById('e_religion').value.trim(),
       phone:       document.getElementById('e_phone').value.trim(),
-      line_id:     document.getElementById('e_line_id').value.trim(),
       address:     document.getElementById('e_address').value.trim(),
       updatedAt:   now
     };
