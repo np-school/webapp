@@ -457,8 +457,22 @@
           </div>
           <!-- View mode -->
           <div id="personalView">
+            <!-- Admin-owned section -->
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+                <i data-lucide="shield-check" style="width:13px;height:13px;color:#7c3aed;flex-shrink:0;"></i>
+                <span style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase;">จัดการโดย Admin</span>
+                <span style="font-size:10px;color:#94a3b8;font-weight:600;">· ติดต่อผู้ดูแลระบบเพื่อแก้ไข</span>
+              </div>
+              <div class="info-grid">
+                <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ชื่อ-นามสกุล</div><div class="info-val" id="v_fullname" style="background:#f1f5f9;color:#475569;">—</div></div>
+                <div class="info-field"><div class="info-label">ตำแหน่ง</div><div class="info-val" id="v_position" style="background:#f1f5f9;color:#475569;">—</div></div>
+                <div class="info-field"><div class="info-label">กลุ่มสาระ / กลุ่มงาน</div><div class="info-val" id="v_group" style="background:#f1f5f9;color:#475569;">—</div></div>
+                <div class="info-field"><div class="info-label">วิทยฐานะ</div><div class="info-val" id="v_acrank" style="background:#f1f5f9;color:#475569;">—</div></div>
+              </div>
+            </div>
+            <!-- User-owned section -->
             <div class="info-grid">
-              <div class="info-field"><div class="info-label">ชื่อ-นามสกุล</div><div class="info-val" id="v_fullname">—</div></div>
               <div class="info-field"><div class="info-label">วันเกิด</div><div class="info-val" id="v_birthday">—</div></div>
               <div class="info-field"><div class="info-label">อายุ</div><div class="info-val" id="v_age">—</div></div>
               <div class="info-field"><div class="info-label">สัญชาติ</div><div class="info-val" id="v_nationality">—</div></div>
@@ -483,8 +497,29 @@
           <div id="personalView_end"></div>
           <!-- Edit mode -->
           <div id="personalEdit" style="display:none;">
+            <!-- Admin fields — read only -->
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+                <i data-lucide="lock" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>
+                <span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase;">ข้อมูลที่จัดการโดย Admin — ไม่สามารถแก้ไขได้</span>
+              </div>
+              <div class="info-grid">
+                <div class="info-field" style="grid-column:1/-1;">
+                  <div class="info-label">ชื่อ-นามสกุล</div>
+                  <div id="e_fullname_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">ตำแหน่ง</div>
+                  <div id="e_position_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">กลุ่มสาระ / กลุ่มงาน</div>
+                  <div id="e_group_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                </div>
+              </div>
+            </div>
+            <!-- User-editable fields -->
             <div class="info-grid">
-              <div class="info-field"><div class="info-label">ชื่อ-นามสกุล</div><input type="text" id="e_fullname" placeholder="เช่น นายสมชาย ใจดี"></div>
               <div class="info-field"><div class="info-label">วันเกิด</div><input type="date" id="e_birthday"></div>
               <div class="info-field"><div class="info-label">สัญชาติ</div><input type="text" id="e_nationality" placeholder="ไทย"></div>
               <div class="info-field"><div class="info-label">เชื้อชาติ</div><input type="text" id="e_ethnicity" placeholder="ไทย"></div>
@@ -1000,17 +1035,25 @@ function sarVal(v){ return v ? '<span class="sar-val">'+esc(v)+'</span>' : '<spa
 function sarRow(lbl,v){ return '<div class="sar-row"><span class="sar-lbl">'+lbl+'</span>'+sarVal(v)+'</div>'; }
 
 function renderSarPersonal(){
-  var p=personalData||{};
-  var name = p.fullname||(currentStaff&&currentStaff.name)||'';
+  var p = personalData  || {};
+  var a = adminSyncData || {};
+  var name     = a.name     || (currentStaff&&currentStaff.name)     || p.fullname || '';
+  var position = a.position || (currentStaff&&currentStaff.position) || '';
+  var group    = a.group    || (currentStaff&&currentStaff.group)    || '';
+  var acrank   = a.academic_rank || '';
   var birthday = thDate(p.birthday);
-  var age = calcAge(p.birthday);
-  var html = sarRow('ชื่อ-นามสกุล', name) +
-    sarRow('วันเกิด', birthday + (age?' (อายุ '+age+')':'')) +
-    sarRow('สัญชาติ', p.nationality||'') +
-    sarRow('เชื้อชาติ', p.ethnicity||'') +
-    sarRow('ศาสนา', p.religion||'') +
-    sarRow('ที่อยู่ปัจจุบัน', p.address||'') +
-    sarRow('เบอร์โทรศัพท์', p.phone||'');
+  var age      = calcAge(p.birthday);
+  var html =
+    sarRow('ชื่อ-นามสกุล',       name) +
+    sarRow('ตำแหน่ง',            position) +
+    sarRow('กลุ่มสาระ / กลุ่มงาน', group) +
+    (acrank ? sarRow('วิทยฐานะ', acrank) : '') +
+    sarRow('วันเกิด',            birthday + (age?' (อายุ '+age+')':'')) +
+    sarRow('สัญชาติ',            p.nationality||'') +
+    sarRow('เชื้อชาติ',          p.ethnicity||'') +
+    sarRow('ศาสนา',              p.religion||'') +
+    sarRow('ที่อยู่ปัจจุบัน',    p.address||'') +
+    sarRow('เบอร์โทรศัพท์',      p.phone||'');
   document.getElementById('sar-personal-body').innerHTML = html || '<div class="sar-empty">ยังไม่มีข้อมูล</div>';
   lucide.createIcons();
 }
@@ -1239,10 +1282,17 @@ function deleteEducationItem(id){
 
 function loadPersonalForSar(){
   if(!currentUser) return;
-  db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
-    personalData = d.exists ? d.data() : {};
+  var email = currentUser.email.toLowerCase();
+  Promise.all([
+    db.collection('staff_profile').doc(currentUser.uid).get().catch(function(){ return null; }),
+    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
+  ]).then(function(results){
+    var profileDoc = results[0];
+    var syncDoc    = results[1];
+    if(profileDoc && profileDoc.exists) personalData  = profileDoc.data();
+    if(syncDoc    && syncDoc.exists)    adminSyncData = syncDoc.data();
     renderSarPersonal();
-  }).catch(function(){});
+  });
 }
 function loadCareerForSar(){
   if(!currentUser) return;
@@ -1373,36 +1423,46 @@ function setValEl(id, val){
 }
 
 /* ─── SECTION: ข้อมูลส่วนตัว ─── */
-var personalData={};
+var personalData  = {};  /* user-owned fields */
+var adminSyncData = {};  /* admin-owned fields จาก staff_profile_sync */
+
 function loadPersonal(){
   if(!currentUser) return;
   var email = currentUser.email.toLowerCase();
-  db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
-    personalData = d.exists ? d.data() : {};
-    if(!personalData.fullname && email){
-      db.collection('staff_profile_sync').doc(email).get().then(function(s){
-        if(s.exists){
-          var sync = s.data();
-          if(!personalData.fullname) personalData.fullname = sync.name  || '';
-          if(!personalData.phone)    personalData.phone    = sync.phone || '';
-        }
-        renderPersonalView();
-      }).catch(function(){ renderPersonalView(); });
-    } else {
-      renderPersonalView();
-    }
-  }).catch(function(){ renderPersonalView(); });
+
+  /* โหลดทั้งสอง collection พร้อมกัน แล้ว merge */
+  Promise.all([
+    db.collection('staff_profile').doc(currentUser.uid).get().catch(function(){ return null; }),
+    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
+  ]).then(function(results){
+    var profileDoc = results[0];
+    var syncDoc    = results[1];
+
+    personalData  = (profileDoc && profileDoc.exists) ? profileDoc.data() : {};
+    adminSyncData = (syncDoc    && syncDoc.exists)    ? syncDoc.data()    : {};
+
+    renderPersonalView();
+  });
 }
 function renderPersonalView(){
-  var p=personalData;
-  setValEl('v_fullname',    p.fullname   || (currentStaff&&currentStaff.name) || '');
+  var p = personalData;
+  var a = adminSyncData;
+
+  /* Admin-owned: ใช้จาก sync ก่อน fallback staff */
+  setValEl('v_fullname',  a.name     || (currentStaff&&currentStaff.name) || p.fullname || '');
+  setValEl('v_position',  a.position || (currentStaff&&currentStaff.position) || '');
+  setValEl('v_group',     a.group    || (currentStaff&&currentStaff.group) || '');
+  setValEl('v_acrank',    a.academic_rank || '');
+
+  /* User-owned */
   setValEl('v_birthday',    thDate(p.birthday));
   setValEl('v_age',         calcAge(p.birthday));
   setValEl('v_nationality', p.nationality||'');
   document.getElementById('v_ethnicity').textContent = p.ethnicity||'—';
   setValEl('v_religion',    p.religion||'');
-  setValEl('v_address',     p.address||'');
   setValEl('v_phone',       p.phone||'');
+  setValEl('v_address',     p.address||'');
+
   loadEducation();
   lucide.createIcons();
 }
@@ -1412,14 +1472,22 @@ function editSection(section){
   viewEl.style.display='none'; editEl.style.display='block';
   /* fill inputs */
   if(section==='personal'){
-    var p=personalData;
-    document.getElementById('e_fullname').value    = p.fullname   || (currentStaff&&currentStaff.name)||'';
-    document.getElementById('e_birthday').value    = p.birthday   || '';
-    document.getElementById('e_nationality').value = p.nationality|| '';
-    document.getElementById('e_ethnicity').value   = p.ethnicity  || '';
-    document.getElementById('e_religion').value    = p.religion   || '';
-    document.getElementById('e_phone').value        = p.phone     || '';
-    document.getElementById('e_address').value      = p.address   || '';
+    var p = personalData;
+    var a = adminSyncData;
+    /* fill read-only admin boxes */
+    var roName = document.getElementById('e_fullname_ro');
+    var roPos  = document.getElementById('e_position_ro');
+    var roGrp  = document.getElementById('e_group_ro');
+    if(roName) roName.textContent = a.name     || (currentStaff&&currentStaff.name)     || '—';
+    if(roPos)  roPos.textContent  = a.position || (currentStaff&&currentStaff.position) || '—';
+    if(roGrp)  roGrp.textContent  = a.group    || (currentStaff&&currentStaff.group)    || '—';
+    /* fill user-editable inputs */
+    document.getElementById('e_birthday').value    = p.birthday    || '';
+    document.getElementById('e_nationality').value = p.nationality || '';
+    document.getElementById('e_ethnicity').value   = p.ethnicity   || '';
+    document.getElementById('e_religion').value    = p.religion    || '';
+    document.getElementById('e_phone').value       = p.phone       || '';
+    document.getElementById('e_address').value     = p.address     || '';
   } else if(section==='career'){
     var c=careerData;
     document.getElementById('e_start_date').value    = c.start_date     || '';
@@ -1462,9 +1530,8 @@ function saveSection(section){
   var profileRef = db.collection('staff_profile').doc(currentUser.uid);
 
   if(section==='personal'){
-    personalData={
+    var userFields = {
       uid:         currentUser.uid,
-      fullname:    document.getElementById('e_fullname').value.trim(),
       birthday:    document.getElementById('e_birthday').value,
       nationality: document.getElementById('e_nationality').value.trim(),
       ethnicity:   document.getElementById('e_ethnicity').value.trim(),
@@ -1473,22 +1540,14 @@ function saveSection(section){
       address:     document.getElementById('e_address').value.trim(),
       updatedAt:   now
     };
-    /* บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) */
-    profileRef.set(personalData, {merge:true})
+    /* merge=true เพื่อไม่ทับ field อื่นที่มีอยู่ใน staff_profile */
+    profileRef.set(userFields, { merge: true })
       .then(function(){
+        /* อัปเดต personalData ใน memory เฉพาะ user fields */
+        Object.assign(personalData, userFields);
         showToast('บันทึกข้อมูลส่วนตัวแล้ว','success');
         cancelSection('personal');
         renderPersonalView();
-        /* sync ไปยัง staff — best-effort ถ้า fail ไม่กระทบ */
-        db.collection('staff').where('email','==', currentUser.email.toLowerCase()).limit(1).get()
-          .then(function(snap){
-            if(snap.empty) return;
-            snap.docs[0].ref.update({
-              name:      personalData.fullname || snap.docs[0].data().name,
-              phone:     personalData.phone,
-              updatedAt: now
-            }).catch(function(){});
-          }).catch(function(){});
       })
       .catch(function(e){
         console.error('saveSection personal error:', e);

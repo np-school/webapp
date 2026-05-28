@@ -667,35 +667,20 @@ function saveStaff() {
     : db.collection('staff').add(Object.assign({}, data, { createdAt: now }));
 
   staffPromise.then(function() {
-    /* ── ซิงค์ไปยัง staff_profile ถ้ามี email ── */
+    /* ── ซิงค์ไปยัง staff_profile_sync (keyed by email) ── */
     if (email) {
-      db.collection('staff_profile').where('uid','!=','').limit(500).get()
-        .catch(function(){ return { docs: [] }; })
-        .then(function(){
-          /* หา staff_profile ด้วย email ผ่าน auth uid ไม่ได้โดยตรง
-             ใช้วิธีค้นหา uid จาก staff collection แล้ว update staff_profile ตาม doc id */
-          db.collection('staff_profile')
-            /* staff_profile ใช้ uid เป็น doc id — หา uid จากฝั่ง staff */
-            .where('uid','>=','').limit(1).get()
-            .catch(function(){ return null; });
-          /* ── วิธีที่ถูกต้อง: query staff_profile ที่มี uid ตรงกับ staff doc ที่มี email นี้ ── */
-          db.collection('staff').where('email','==', email).limit(1).get()
-            .then(function(snap){
-              if(snap.empty) return;
-              /* staff_profile doc id = uid ของ user ที่มี email นี้
-                 แต่เราไม่รู้ uid จาก admin side — ใช้ email เป็น index แทน */
-              /* บันทึก profileSync แยก field เพื่อไม่ทับข้อมูลที่ user กรอกเอง */
-              db.collection('staff_profile_sync').doc(email).set({
-                email:         email,
-                name:          name,
-                position:      position,
-                subject_group: group,
-                academic_rank: data.role || '',
-                phone:         phone,
-                updatedAt:     now
-              }, {merge: true});
-            });
-        });
+      /* staff_profile_sync ใช้ email เป็น doc id
+         profile.html จะอ่านจากที่นี่เพื่อแสดง field ที่ admin เป็นเจ้าของ */
+      db.collection('staff_profile_sync').doc(email).set({
+        email:         email,
+        name:          name,
+        position:      position,
+        group:         group,
+        academic_rank: data.role    || '',
+        subject:       data.subject || '',
+        syncedAt:      now,
+        syncedBy:      'admin'
+      }, { merge: true }).catch(function(e){ console.warn('sync warn:', e); });
     }
     closeModal('staffModal');
     showToast(editingId ? 'อัปเดตข้อมูลแล้ว ✓' : 'เพิ่มบุคลากรแล้ว ✓');
