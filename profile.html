@@ -6,6 +6,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1d4ed8">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW:',e);});}</script>
@@ -17,6 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
@@ -865,16 +867,14 @@ var personalData={};
 function loadPersonal(){
   if(!currentUser) return;
   var email = currentUser.email.toLowerCase();
-  /* โหลด staff_profile (ข้อมูลที่ user กรอกเอง) */
   db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
     personalData = d.exists ? d.data() : {};
-    /* ถ้ายังไม่มี fullname ให้ดึงจาก staff_profile_sync (admin กรอกใน staff.html) */
     if(!personalData.fullname && email){
       db.collection('staff_profile_sync').doc(email).get().then(function(s){
         if(s.exists){
           var sync = s.data();
-          if(!personalData.fullname)   personalData.fullname   = sync.name          || '';
-          if(!personalData.phone)      personalData.phone      = sync.phone         || '';
+          if(!personalData.fullname) personalData.fullname = sync.name  || '';
+          if(!personalData.phone)    personalData.phone    = sync.phone || '';
         }
         renderPersonalView();
       }).catch(function(){ renderPersonalView(); });
@@ -971,14 +971,13 @@ function saveSection(section){
       address:     document.getElementById('e_address').value.trim(),
       updatedAt:   now
     };
-
-    /* ── 1. บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) ── */
+    /* บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) */
     profileRef.set(personalData, {merge:true})
       .then(function(){
         showToast('บันทึกข้อมูลส่วนตัวแล้ว','success');
         cancelSection('personal');
         renderPersonalView();
-        /* ── 2. sync ไปยัง staff (best-effort — ถ้า user ไม่มีสิทธิ์ก็ไม่กระทบ) ── */
+        /* sync ไปยัง staff — best-effort ถ้า fail ไม่กระทบ */
         db.collection('staff').where('email','==', currentUser.email.toLowerCase()).limit(1).get()
           .then(function(snap){
             if(snap.empty) return;
@@ -1008,14 +1007,12 @@ function saveSection(section){
       major_subject:   document.getElementById('e_major_subject').value.trim(),
       updatedAt:       now
     };
-
-    /* ── 1. บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) ── */
     profileRef.set(careerData, {merge:true})
       .then(function(){
         showToast('บันทึกประวัติการทำงานแล้ว','success');
         cancelSection('career');
         renderCareerView();
-        /* ── 2. sync ไปยัง staff (best-effort) ── */
+        /* sync ไปยัง staff — best-effort */
         db.collection('staff').where('email','==', currentUser.email.toLowerCase()).limit(1).get()
           .then(function(snap){
             if(snap.empty) return;
@@ -1040,7 +1037,6 @@ function loadCareer(){
   var email = currentUser.email.toLowerCase();
   db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
     careerData = d.exists ? d.data() : {};
-    /* ถ้ายังไม่มีข้อมูล ดึงจาก staff_profile_sync ที่ admin อาจกรอกไว้ */
     if(!careerData.cur_position && email){
       db.collection('staff_profile_sync').doc(email).get().then(function(s){
         if(s.exists){
@@ -1318,6 +1314,7 @@ function deleteMediaItem(id){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 
+function filterByStatus(){
   var val=document.getElementById('filterStatus').value;
   if(val==='all'){ renderSemList(allSemData); return; }
   var filtered=allSemData.filter(function(sem){
