@@ -314,6 +314,9 @@
         <button class="subtab-btn" onclick="switchSubtab('personal',this)">
           <i data-lucide="user" style="width:15px;height:15px;"></i> ข้อมูลส่วนตัว
         </button>
+        <button class="subtab-btn" onclick="switchSubtab('career',this)">
+          <i data-lucide="briefcase" style="width:15px;height:15px;"></i> ประวัติการทำงาน
+        </button>
         <button class="subtab-btn" onclick="switchSubtab('teaching',this)">
           <i data-lucide="book-open" style="width:15px;height:15px;"></i> ภาระงานสอน
         </button>
@@ -402,7 +405,21 @@
         </div>
       </div>
 
-      <!-- ─── PANEL: Portfolio ─── -->
+      <!-- ─── PANEL: ประวัติการทำงาน ─── -->
+      <div class="subtab-panel" id="panel-career">
+        <!-- ประวัติโรงเรียน -->
+        <div class="info-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:#7c3aed;"></i> ประวัติโรงเรียน</div>
+            <button class="edit-btn" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px;display:flex;align-items:center;gap:6px;">
+            <i data-lucide="info" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>
+            เพิ่มทุกโรงเรียนตามลำดับ — โรงเรียนแรกสุด = แรกบรรจุ · โรงเรียนที่ไม่มีวันสิ้นสุด = ปัจจุบัน
+          </div>
+          <div id="careerHistoryList"><div class="empty-block">กำลังโหลด...</div></div>
+        </div>
+      </div>
 
       <!-- ─── PANEL: ข้อมูลส่วนตัว ─── -->
       <div class="subtab-panel" id="panel-personal">
@@ -918,6 +935,7 @@ function switchSubtab(id, btn){
   document.getElementById('panel-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='personal')    loadPersonal();
+  if(id==='career')      loadCareerHistory();
 
   if(id==='teaching')    loadTeaching();
   if(id==='duties')      loadDuties();
