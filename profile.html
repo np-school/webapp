@@ -503,17 +503,37 @@
             <div id="careerTimeline" class="career-timeline"></div>
           </div>
           <div id="careerEdit" style="display:none;">
-            <div class="info-grid">
-              <div class="info-field"><div class="info-label">วันที่เริ่มรับราชการ</div><input type="date" id="e_start_date"></div>
-              <div class="info-field"><div class="info-label">ตำแหน่งปัจจุบัน</div><input type="text" id="e_cur_position" placeholder="เช่น ครู"></div>
-              <div class="info-field"><div class="info-label">วิทยฐานะ</div><select id="e_academic_rank"><option value="">เลือก</option><option>ไม่มีวิทยฐานะ</option><option>ครูชำนาญการ</option><option>ครูชำนาญการพิเศษ</option><option>ครูเชี่ยวชาญ</option><option>ครูเชี่ยวชาญพิเศษ</option></select></div>
-              <div class="info-field"><div class="info-label">โรงเรียนปัจจุบัน</div><input type="text" id="e_cur_school" placeholder="ชื่อโรงเรียน"></div>
-              <div class="info-field"><div class="info-label">สังกัด สพม./สพป.</div><input type="text" id="e_department" placeholder="เช่น สพม. นครราชสีมา เขต 2"></div>
-              <div class="info-field"><div class="info-label">โรงเรียนแรกบรรจุ</div><input type="text" id="e_first_school" placeholder="ชื่อโรงเรียน"></div>
-              <div class="info-field"><div class="info-label">วันที่เริ่มงานโรงเรียนปัจจุบัน</div><input type="date" id="e_cur_school_date"></div>
-              <div class="info-field"><div class="info-label">กลุ่มสาระการเรียนรู้</div><input type="text" id="e_subject_group" placeholder="เช่น ภาษาไทย"></div>
-              <div class="info-field"><div class="info-label">วิชาเอก</div><input type="text" id="e_major_subject" placeholder="เช่น ภาษาไทย"></div>
+
+            <!-- กลุ่ม 1: ข้อมูลราชการ -->
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px;">
+              <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">ข้อมูลราชการ</div>
+              <div class="info-grid">
+                <div class="info-field"><div class="info-label">วันที่เริ่มรับราชการ</div><input type="date" id="e_start_date"></div>
+                <div class="info-field"><div class="info-label">ตำแหน่งปัจจุบัน</div><input type="text" id="e_cur_position" placeholder="เช่น ครู"></div>
+                <div class="info-field"><div class="info-label">วิทยฐานะ</div><select id="e_academic_rank"><option value="">เลือก</option><option>ไม่มีวิทยฐานะ</option><option>ครูชำนาญการ</option><option>ครูชำนาญการพิเศษ</option><option>ครูเชี่ยวชาญ</option><option>ครูเชี่ยวชาญพิเศษ</option></select></div>
+                <div class="info-field"><div class="info-label">กลุ่มสาระการเรียนรู้</div><input type="text" id="e_subject_group" placeholder="เช่น เทคโนโลยี"></div>
+                <div class="info-field"><div class="info-label">วิชาเอก</div><input type="text" id="e_major_subject" placeholder="เช่น คอมพิวเตอร์"></div>
+              </div>
             </div>
+
+            <!-- กลุ่ม 2: โรงเรียนแรกบรรจุ -->
+            <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:14px;">
+              <div style="font-size:10px;font-weight:800;color:#15803d;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">🟢 โรงเรียนแรกบรรจุ</div>
+              <div class="info-grid">
+                <div class="info-field"><div class="info-label">ชื่อโรงเรียน</div><input type="text" id="e_first_school" placeholder="ชื่อโรงเรียนแรกที่บรรจุ"></div>
+              </div>
+            </div>
+
+            <!-- กลุ่ม 3: โรงเรียนปัจจุบัน -->
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:16px;">
+              <div style="font-size:10px;font-weight:800;color:#1d4ed8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">🔵 โรงเรียนปัจจุบัน</div>
+              <div class="info-grid">
+                <div class="info-field"><div class="info-label">ชื่อโรงเรียน</div><input type="text" id="e_cur_school" placeholder="ชื่อโรงเรียนที่ทำงานปัจจุบัน"></div>
+                <div class="info-field"><div class="info-label">สังกัด สพม./สพป.</div><input type="text" id="e_department" placeholder="เช่น สพม. บุรีรัมย์"></div>
+                <div class="info-field"><div class="info-label">วันที่เริ่มงานที่โรงเรียนนี้</div><input type="date" id="e_cur_school_date"></div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -1439,20 +1459,6 @@ function buildCareerTimelineHTML(c){
     '</div>';
   } else if(!c.cur_school && c.first_school){
     /* ไม่มีโรงเรียนปัจจุบันแยก — แสดง now badge บน node แรกแทน */
-  }
-
-  /* ── Node 3: อนาคต / ว่าง (placeholder คำนวณ 60 ปี) ── */
-  if(c.start_date){
-    var retireYear = new Date(c.start_date).getFullYear() + 543 + (60 - (new Date().getFullYear() - new Date(c.start_date).getFullYear()));
-    html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#d1d5db;background:#f8fafc;">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#d1d5db"/></svg>' +
-      '</div>' +
-      '<div class="ct-card" style="border-style:dashed;border-color:#e2e8f0;background:transparent;">' +
-        '<div class="ct-period"><i data-lucide="hourglass" style="width:11px;height:11px;"></i>เกษียณอายุราชการ</div>' +
-        '<div style="font-size:13px;font-weight:700;color:#94a3b8;">อายุครบ 60 ปี · ปีการศึกษา ~'+retireYear+'</div>' +
-      '</div>' +
-    '</div>';
   }
 
   return '<div class="career-timeline">'+html+'</div>';
