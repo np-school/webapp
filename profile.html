@@ -302,22 +302,7 @@
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,.4);" id="profileEmail"></div>
           </div>
-          <!-- stats -->
-          <div style="display:flex;gap:8px;flex-wrap:nowrap;align-items:center;flex-shrink:0;">
-            <div class="hero-stat">
-              <div class="hero-stat-val" id="statSems">–</div>
-              <div class="hero-stat-lbl">ภาคเรียน</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hero-stat-val" id="statSubmitted" style="color:#4ade80;">–</div>
-              <div class="hero-stat-lbl">ส่งแล้ว</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hero-stat-val" id="statApproved" style="color:#c4b5fd;">–</div>
-              <div class="hero-stat-lbl">อนุมัติ</div>
-            </div>
 
-          </div>
         </div>
       </div>
 
@@ -425,7 +410,7 @@
 
       <!-- ─── PANEL: Portfolio ─── -->
       <div class="subtab-panel" id="panel-portfolio">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
           <h2 style="font-size:15px;font-weight:800;color:#0f172a;flex:1;">ประวัติการส่งงานรายภาคเรียน</h2>
           <select id="filterStatus" onchange="applyFilter()" style="font-size:12px;font-weight:700;color:#475569;background:white;border:1.5px solid #e2e8f0;padding:7px 12px;border-radius:10px;outline:none;cursor:pointer;">
             <option value="all">ทุกสถานะ</option>
@@ -435,7 +420,9 @@
             <option value="revision">แก้ไข</option>
           </select>
         </div>
-        <div id="semList"></div>
+        <!-- Semester selector tabs -->
+        <div id="semTabBar" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:16px;flex-wrap:nowrap;"></div>
+        <div id="semDetail"></div>
       </div>
 
       <!-- ─── PANEL: ข้อมูลส่วนตัว ─── -->
@@ -780,36 +767,74 @@ function finishRender(){
 }
 
 function computeStats(){
-  var totalSubs=0, approved=0;
-  allSemData.forEach(function(s){
-    Object.values(s.docs).forEach(function(courses){
-      totalSubs += courses.length;
-      courses.forEach(function(c){
-        if((c.status||'')==='final_approved') approved++;
-      });
-    });
-  });
-  document.getElementById('statSems').textContent     = allSemData.length || '–';
-  document.getElementById('statSubmitted').textContent= totalSubs || '–';
-  document.getElementById('statApproved').textContent = approved  || '–';
-
-
+  /* stats removed from hero — keep function for future use */
 }
 
-/* ── Render semester accordion list ── */
+/* ── Semester tab system ── */
+var currentSemFilter = 'all';
+var currentSemIdx = 0;
+
 function renderSemList(data){
-  var container=document.getElementById('semList');
-  if(!data||!data.length){
-    container.innerHTML='<div style="text-align:center;padding:56px 20px;background:white;border-radius:18px;border:1.5px solid #e2e8f0;">' +
+  buildSemTabs(data);
+}
+
+function buildSemTabs(data){
+  var bar = document.getElementById('semTabBar');
+  if(!bar) return;
+  if(!data || !data.length){
+    bar.innerHTML = '';
+    document.getElementById('semDetail').innerHTML =
+      '<div style="text-align:center;padding:56px 20px;background:white;border-radius:18px;border:1.5px solid #e2e8f0;">' +
       '<div style="font-size:38px;margin-bottom:14px;">📂</div>' +
       '<div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px;">ยังไม่มีข้อมูลการส่งงาน</div>' +
       '<div style="font-size:13px;color:#94a3b8;">ข้อมูลจะแสดงเมื่อมีการส่งงานในระบบ</div></div>';
     return;
   }
-  container.innerHTML='';
-  data.forEach(function(sem,idx){
-    container.appendChild(buildSemBlock(sem, idx===0));
+  /* data is sorted newest first — index 0 = current */
+  bar.innerHTML = data.map(function(sem, idx){
+    var isSem2 = sem.sem === 2;
+    var isActive = idx === currentSemIdx;
+    var bg    = isActive ? (isSem2 ? '#7c3aed' : '#1d4ed8') : 'white';
+    var color = isActive ? 'white' : '#475569';
+    var border= isActive ? 'transparent' : '#e2e8f0';
+    var label = 'ภาค ' + sem.sem + '/' + sem.year;
+    return '<button onclick="selectSemTab('+idx+')" style="' +
+      'flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;' +
+      'background:'+bg+';color:'+color+';border:1.5px solid '+border+';' +
+      'cursor:pointer;white-space:nowrap;transition:all .2s;' +
+      (idx===0 ? 'box-shadow:0 2px 8px rgba(0,0,0,.08);' : '') +
+      '">'+label+(idx===0?'<span style="font-size:10px;margin-left:5px;opacity:.75;">ปัจจุบัน</span>':'')+'</button>';
+  }).join('');
+  renderSemDetail(data[currentSemIdx]);
+  lucide.createIcons();
+}
+
+function selectSemTab(idx){
+  currentSemIdx = idx;
+  var filterVal = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'all';
+  var data = filterVal === 'all' ? allSemData : allSemData.filter(function(sem){
+    return Object.values(sem.docs).some(function(courses){
+      return courses.some(function(c){ return (c.status||'submitted')===filterVal; });
+    });
   });
+  buildSemTabs(data);
+}
+
+function renderSemDetail(sem){
+  var container = document.getElementById('semDetail');
+  if(!sem){ container.innerHTML=''; return; }
+  container.innerHTML = '';
+  var block = buildSemBlock(sem, true);
+  /* force open, hide toggle arrow */
+  block.style.cursor = 'default';
+  var header = block.querySelector('.sem-header');
+  if(header){
+    header.style.cursor = 'default';
+    header.onclick = null;
+    var chevron = header.querySelector('.sem-chevron');
+    if(chevron) chevron.style.display = 'none';
+  }
+  container.appendChild(block);
   lucide.createIcons();
 }
 
@@ -1877,14 +1902,18 @@ function deleteMediaItem(id){
 }
 
 function filterByStatus(){
-  var val=document.getElementById('filterStatus').value;
-  if(val==='all'){ renderSemList(allSemData); return; }
-  var filtered=allSemData.filter(function(sem){
+  applyFilter();
+}
+function applyFilter(){
+  currentSemIdx = 0; /* reset to newest when filter changes */
+  var val = document.getElementById('filterStatus').value;
+  if(val==='all'){ buildSemTabs(allSemData); return; }
+  var filtered = allSemData.filter(function(sem){
     return Object.values(sem.docs).some(function(courses){
       return courses.some(function(c){ return (c.status||'submitted')===val; });
     });
   });
-  renderSemList(filtered);
+  buildSemTabs(filtered);
 }
 </script>
 </body>
