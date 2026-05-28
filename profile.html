@@ -279,6 +279,15 @@
 <!-- Main App -->
 <div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
+
+  <!-- View Mode Banner -->
+  <div id="viewModeBar" style="display:none;background:#fef9c3;border-bottom:1.5px solid #fde68a;padding:9px 20px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <i data-lucide="eye" style="width:15px;height:15px;color:#b45309;flex-shrink:0;"></i>
+      <span id="viewModeName" style="font-size:13px;font-weight:700;color:#92400e;">กำลังดูโปรไฟล์บุคลากร — (โหมดอ่านอย่างเดียว)</span>
+    </div>
+    <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#92400e;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> กลับรายชื่อบุคลากร</a>
+  </div>
   <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
@@ -436,7 +445,7 @@
         <div class="info-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:#7c3aed;"></i> ประวัติโรงเรียน</div>
-            <button class="edit-btn" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
+            <button class="edit-btn edit-only" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
           </div>
           <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px;display:flex;align-items:center;gap:6px;">
             <i data-lucide="info" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>
@@ -452,7 +461,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div class="info-card-title"><i data-lucide="user-circle" style="width:18px;height:18px;color:#1d4ed8;"></i> ข้อมูลส่วนตัว</div>
             <div id="personalActions" style="display:flex;gap:8px;">
-              <button class="edit-btn" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
+              <button class="edit-btn edit-only" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
             </div>
           </div>
           <!-- View mode -->
@@ -488,7 +497,7 @@
               <div style="font-size:13px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
                 <i data-lucide="graduation-cap" style="width:16px;height:16px;color:#7c3aed;"></i> ประวัติการศึกษา
               </div>
-              <button class="edit-btn" style="background:#7c3aed;padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
+              <button class="edit-btn edit-only" style="background:#7c3aed;padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
                 <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่ม
               </button>
             </div>
@@ -536,7 +545,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="book-open" style="width:18px;height:18px;color:#1d4ed8;"></i> ภาระงานสอนตามตาราง</div>
-            <button class="edit-btn" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
+            <button class="edit-btn edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
           </div>
           <!-- header -->
           <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;">
@@ -558,7 +567,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="clipboard-list" style="width:18px;height:18px;color:#7c3aed;"></i> ภาระงานที่ได้รับหมายมอบ</div>
-            <button class="edit-btn" style="background:#7c3aed;" onclick="addDutyRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มงาน</button>
+            <button class="edit-btn edit-only" style="background:#7c3aed;" onclick="addDutyRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มงาน</button>
           </div>
           <div id="dutiesList"><div class="empty-block">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div></div>
         </div>
@@ -569,7 +578,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="award" style="width:18px;height:18px;color:#f59e0b;"></i> การพัฒนาตนเอง / อบรม / สัมมนา</div>
-            <button class="edit-btn" style="background:#f59e0b;" onclick="addDevItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายการ</button>
+            <button class="edit-btn edit-only" style="background:#f59e0b;" onclick="addDevItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายการ</button>
           </div>
           <div id="devList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div></div>
         </div>
@@ -580,7 +589,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="layout-grid" style="width:18px;height:18px;color:#06b6d4;"></i> สื่อนวัตกรรมการเรียนรู้</div>
-            <button class="edit-btn" style="background:#06b6d4;" onclick="addMediaItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มสื่อ</button>
+            <button class="edit-btn edit-only" style="background:#06b6d4;" onclick="addMediaItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มสื่อ</button>
           </div>
           <div id="mediaList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div></div>
         </div>
@@ -630,9 +639,15 @@ var currentUser  = null;
 var currentStaff = null;
 var allSemData   = []; /* [{yearSem,year,sem,docs:{docTypeId:[subDocs]}}] */
 
+/* ── View-mode: ถ้ามี ?staffId= = admin/staff ดูโปรไฟล์คนอื่น ── */
+var _urlParams   = new URLSearchParams(location.search);
+var _viewStaffId = _urlParams.get('staffId') || '';  /* staff doc id */
+var isViewMode   = !!_viewStaffId;                    /* true = ดูโปรไฟล์คนอื่น */
+var _viewStaff   = null; /* staff doc ของคนที่ถูกดู (view mode) */
+var _viewUid     = '';   /* uid ของคนที่ถูกดู */
+
 /* ── AUTH ── */
 auth.onAuthStateChanged(function(u){
-  /* ซ่อน overlay ทันที ไม่รอ Firestore */
   document.getElementById('loadingOverlay').style.display='none';
   if(!u){
     document.getElementById('loginGate').style.display='flex';
@@ -646,29 +661,65 @@ auth.onAuthStateChanged(function(u){
 });
 
 function init(){
-  if(typeof buildNavbar  === 'function') buildNavbar('ข้อมูลบุคลากร', false);
-  if(typeof updateNavUser=== 'function') updateNavUser(currentUser);
-  if(typeof buildSidebar === 'function') buildSidebar('profile');
-  if(typeof checkAdminAccess==='function') checkAdminAccess(currentUser.email);
+  if(typeof buildNavbar   === 'function') buildNavbar(isViewMode ? 'ดูโปรไฟล์บุคลากร' : 'My Portfolio', false);
+  if(typeof updateNavUser === 'function') updateNavUser(currentUser);
+  if(typeof buildSidebar  === 'function') buildSidebar('profile');
+  if(typeof checkAdminAccess === 'function') checkAdminAccess(currentUser.email);
 
-  /* ── โหลดข้อมูลแบบขนาน แล้วค่อย render ── */
+  /* ── ซ่อน edit controls ทั้งหมดถ้าอยู่ใน view mode ── */
+  if(isViewMode){
+    document.querySelectorAll('.edit-only').forEach(function(el){ el.style.display='none'; });
+    /* แสดง back button */
+    var backBar = document.getElementById('viewModeBar');
+    if(backBar) backBar.style.display='flex';
+  }
+
+  /* ── โหลดข้อมูลแบบขนาน ── */
   var staffDone = false, dtDone = false;
   function tryRender(){
     if(staffDone && dtDone) loadSubmissions();
   }
 
-  /* Staff */
-  db.collection('staff')
-    .where('email','==', currentUser.email.toLowerCase()).limit(1).get()
-    .then(function(snap){
-      currentStaff = snap.empty ? null : snap.docs[0].data();
-    })
-    .catch(function(){})
-    .then(function(){
-      fillHeroStatic();
-      staffDone = true;
-      tryRender();
-    });
+  if(isViewMode){
+    /* ── View mode: โหลด staff doc ด้วย staffId จาก URL ── */
+    db.collection('staff').doc(_viewStaffId).get()
+      .then(function(doc){
+        if(doc.exists){
+          _viewStaff = Object.assign({ _id: doc.id }, doc.data());
+          currentStaff = _viewStaff;
+          _viewUid  = _viewStaff.uid || '';
+        }
+      })
+      .catch(function(){})
+      .then(function(){
+        fillHeroStatic();
+        staffDone = true;
+        tryRender();
+      });
+  } else {
+    /* ── Normal mode: โหลด staff doc ด้วย email ── */
+    db.collection('staff')
+      .where('email','==', currentUser.email.toLowerCase()).limit(1).get()
+      .then(function(snap){
+        if(!snap.empty){
+          currentStaff = snap.empty ? null : snap.docs[0].data();
+          /* ── Sync uid กลับ staff collection เพื่อให้ view-mode ใช้ได้ ── */
+          var staffDocId = snap.docs[0].id;
+          var storedUid  = snap.docs[0].data().uid || '';
+          if(storedUid !== currentUser.uid){
+            db.collection('staff').doc(staffDocId)
+              .update({ uid: currentUser.uid })
+              .catch(function(){});
+          }
+        }
+      })
+      .catch(function(){})
+      .then(function(){
+        fillHeroStatic();
+        staffDone = true;
+        tryRender();
+      });
+  }
 
   /* Doc types */
   db.collection('portfolio_doc_types').orderBy('order').get()
@@ -693,7 +744,7 @@ function init(){
       tryRender();
     });
 
-  /* Safety timeout 8s — ถ้า Firestore ค้างก็ render เลย */
+  /* Safety timeout 8s */
   setTimeout(function(){
     if(!staffDone){ staffDone=true; fillHeroStatic(); }
     if(!dtDone){ dtDone=true; }
@@ -701,15 +752,34 @@ function init(){
   }, 8000);
 }
 
-/* ── Fill static hero parts ── */
+/* ── Fill hero ── */
 function fillHeroStatic(){
-  var name = (currentStaff && currentStaff.name) || currentUser.displayName || currentUser.email;
+  var staff = isViewMode ? _viewStaff : currentStaff;
+  var name  = (staff && staff.name) || (!isViewMode ? (currentUser.displayName || currentUser.email) : '—');
+  var email = (staff && staff.email) || (!isViewMode ? currentUser.email : '');
   document.getElementById('profileName').textContent     = name;
-  document.getElementById('profileEmail').textContent    = currentUser.email;
-  document.getElementById('profilePosition').textContent = (currentStaff && currentStaff.position) || '';
-  document.getElementById('profileGroup').textContent    = (currentStaff && currentStaff.group)    || '';
-  setAvatar((currentStaff && currentStaff.photoURL) || currentUser.photoURL, name);
+  document.getElementById('profileEmail').textContent    = email;
+  document.getElementById('profilePosition').textContent = (staff && staff.position) || '';
+  document.getElementById('profileGroup').textContent    = (staff && staff.group)    || '';
+  var photoURL = (staff && staff.photoURL) || (!isViewMode ? currentUser.photoURL : '');
+  setAvatar(photoURL, name);
+  /* อัปเดต banner */
+  if(isViewMode){
+    var nm = document.getElementById('viewModeName');
+    if(nm) nm.textContent = 'กำลังดูโปรไฟล์: ' + name + ' — (โหมดอ่านอย่างเดียว)';
+  }
   lucide.createIcons();
+}
+
+/* ── helper: uid ที่ใช้ query ── */
+function _targetUid(){
+  return isViewMode ? _viewUid : (currentUser ? currentUser.uid : '');
+}
+
+/* ── guard: block write ops in view mode ── */
+function _assertNotViewMode(){
+  if(isViewMode){ showToast('โหมดดูอย่างเดียว — ไม่สามารถแก้ไขข้อมูลได้','warn'); return false; }
+  return true;
 }
 
 function setAvatar(url,name){
@@ -726,25 +796,28 @@ function setInitials(wrap,name){
   wrap.innerHTML='<span class="avatar-initials">'+ini+'</span>';
 }
 
-/* ── Load all submissions for this user ── */
+/* ── Load all submissions ── */
 function loadSubmissions(){
+  /* view mode: ใช้ uid ของ staff ที่ถูกดู ถ้าไม่มี uid = ยังไม่เคย login ระบบ */
+  var targetUid = isViewMode ? _viewUid : currentUser.uid;
+
+  if(!targetUid){
+    /* บุคลากรคนนี้ยังไม่เคย login → ไม่มี portfolio */
+    finishRender();
+    return;
+  }
+
   db.collection('portfolio_submissions')
-    .where('uid','==', currentUser.uid)
+    .where('uid','==', targetUid)
     .get()
-    .then(function(snap){
-      buildSemData(snap.docs);
-    })
+    .then(function(snap){ buildSemData(snap.docs); })
     .catch(function(e){
       console.error('portfolio_submissions query error:', e);
-      /* Firestore index อาจยังไม่มี — fallback: query แบบ orderBy เดียว */
       db.collection('portfolio_submissions')
-        .where('uid','==', currentUser.uid)
+        .where('uid','==', targetUid)
         .get()
         .then(function(snap){ buildSemData(snap.docs); })
-        .catch(function(e2){
-          console.error(e2);
-          finishRender();
-        });
+        .catch(function(e2){ console.error(e2); finishRender(); });
     });
 }
 
@@ -1172,7 +1245,7 @@ var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 
 
 function loadEducation(){
   if(!currentUser) return;
-  db.collection('staff_education').where('uid','==',currentUser.uid).get()
+  db.collection('staff_education').where('uid','==',_targetUid()).get()
     .then(function(snap){
       educationItems = [];
       snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1256,6 +1329,7 @@ function editEducationItem(id){
 }
 
 function saveEducationItem(editId){
+  if(!_assertNotViewMode()) return;
   var level       = document.getElementById('em_level').value;
   var institution = document.getElementById('em_institution').value.trim();
   var degree      = document.getElementById('em_degree').value.trim();
@@ -1274,6 +1348,7 @@ function saveEducationItem(editId){
 }
 
 function deleteEducationItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบรายการนี้?')) return;
   db.collection('staff_education').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadEducation(); })
@@ -1282,9 +1357,11 @@ function deleteEducationItem(id){
 
 function loadPersonalForSar(){
   if(!currentUser) return;
-  var email = currentUser.email.toLowerCase();
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
   Promise.all([
-    db.collection('staff_profile').doc(currentUser.uid).get().catch(function(){ return null; }),
+    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
     db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
   ]).then(function(results){
     var profileDoc = results[0];
@@ -1296,7 +1373,7 @@ function loadPersonalForSar(){
 }
 function loadCareerForSar(){
   if(!currentUser) return;
-  db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
+  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
     careerData = d.exists ? d.data() : {};
     renderSarCareer();
   }).catch(function(){});
@@ -1330,7 +1407,7 @@ function renderSarEducation(){
 
 function loadEducationForSar(){
   if(!currentUser) return;
-  db.collection('staff_education').where('uid','==',currentUser.uid).get()
+  db.collection('staff_education').where('uid','==',_targetUid()).get()
     .then(function(snap){
       educationItems = [];
       snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1342,7 +1419,7 @@ function loadEducationForSar(){
 
 function loadCareerHistoryForSar(){
   if(!currentUser) return;
-  db.collection('staff_career_history').where('uid','==',currentUser.uid).get()
+  db.collection('staff_career_history').where('uid','==',_targetUid()).get()
     .then(function(snap){
       careerHistoryItems = [];
       snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1352,7 +1429,7 @@ function loadCareerHistoryForSar(){
 }
 function loadTeachingForSar(){
   if(!currentUser) return;
-  db.collection('staff_teaching').where('uid','==',currentUser.uid).get()
+  db.collection('staff_teaching').where('uid','==',_targetUid()).get()
     .then(function(snap){
       teachingItems=[];
       snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1361,7 +1438,7 @@ function loadTeachingForSar(){
 }
 function loadDutiesForSar(){
   if(!currentUser) return;
-  db.collection('staff_duties').where('uid','==',currentUser.uid).get()
+  db.collection('staff_duties').where('uid','==',_targetUid()).get()
     .then(function(snap){
       dutyItems=[];
       snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1370,7 +1447,7 @@ function loadDutiesForSar(){
 }
 function loadDevForSar(){
   if(!currentUser) return;
-  db.collection('staff_development').where('uid','==',currentUser.uid).get()
+  db.collection('staff_development').where('uid','==',_targetUid()).get()
     .then(function(snap){
       devItems=[];
       snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1379,7 +1456,7 @@ function loadDevForSar(){
 }
 function loadMediaForSar(){
   if(!currentUser) return;
-  db.collection('staff_media').where('uid','==',currentUser.uid).get()
+  db.collection('staff_media').where('uid','==',_targetUid()).get()
     .then(function(snap){
       mediaItems=[];
       snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1428,11 +1505,13 @@ var adminSyncData = {};  /* admin-owned fields จาก staff_profile_sync */
 
 function loadPersonal(){
   if(!currentUser) return;
-  var email = currentUser.email.toLowerCase();
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
 
   /* โหลดทั้งสอง collection พร้อมกัน แล้ว merge */
   Promise.all([
-    db.collection('staff_profile').doc(currentUser.uid).get().catch(function(){ return null; }),
+    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
     db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
   ]).then(function(results){
     var profileDoc = results[0];
@@ -1467,6 +1546,7 @@ function renderPersonalView(){
   lucide.createIcons();
 }
 function editSection(section){
+  if(!_assertNotViewMode()) return;
   var viewEl=document.getElementById(section+'View');
   var editEl=document.getElementById(section+'Edit');
   viewEl.style.display='none'; editEl.style.display='block';
@@ -1526,8 +1606,9 @@ function cancelSection(section){
   var eb=hdr.querySelector('.edit-btn'); if(eb) eb.style.display='';
 }
 function saveSection(section){
+  if(!_assertNotViewMode()) return;
   var now = firebase.firestore.FieldValue.serverTimestamp();
-  var profileRef = db.collection('staff_profile').doc(currentUser.uid);
+  var profileRef = db.collection('staff_profile').doc(_targetUid());
 
   if(section==='personal'){
     var userFields = {
@@ -1595,8 +1676,10 @@ function saveSection(section){
 var careerData={};
 function loadCareer(){
   if(!currentUser) return;
-  var email = currentUser.email.toLowerCase();
-  db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
+  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
     careerData = d.exists ? d.data() : {};
     if(!careerData.cur_position && email){
       db.collection('staff_profile_sync').doc(email).get().then(function(s){
@@ -1721,7 +1804,7 @@ function loadCareerHistory(){
   if(el) el.innerHTML = '<div class="empty-block">กำลังโหลด...</div>';
 
   db.collection('staff_career_history')
-    .where('uid','==', currentUser.uid)
+    .where('uid','==', _targetUid())
     .orderBy('start_date')
     .get()
     .then(function(snap){
@@ -1732,7 +1815,7 @@ function loadCareerHistory(){
     .catch(function(){
       /* fallback ไม่มี index — ไม่ orderBy */
       db.collection('staff_career_history')
-        .where('uid','==', currentUser.uid).get()
+        .where('uid','==', _targetUid()).get()
         .then(function(snap){
           careerHistoryItems = [];
           snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
@@ -1867,6 +1950,7 @@ function editCareerHistoryItem(id){
 }
 
 function saveCareerHistoryItem(editId){
+  if(!_assertNotViewMode()) return;
   var school = document.getElementById('ch_school').value.trim();
   if(!school){ showToast('กรุณากรอกชื่อโรงเรียน','warn'); return; }
 
@@ -1895,6 +1979,7 @@ function saveCareerHistoryItem(editId){
 }
 
 function deleteCareerHistoryItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบประวัติการย้ายโรงเรียนนี้?')) return;
   db.collection('staff_career_history').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadCareerHistory(); })
@@ -1905,13 +1990,13 @@ function deleteCareerHistoryItem(id){
 var teachingItems=[];
 function loadTeaching(){
   if(!currentUser) return;
-  db.collection('staff_teaching').where('uid','==',currentUser.uid).orderBy('order').get()
+  db.collection('staff_teaching').where('uid','==',_targetUid()).orderBy('order').get()
     .then(function(snap){
       teachingItems=[];
       snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
       renderTeaching();
     }).catch(function(){
-      db.collection('staff_teaching').where('uid','==',currentUser.uid).get()
+      db.collection('staff_teaching').where('uid','==',_targetUid()).get()
         .then(function(snap){
           teachingItems=[];
           snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
@@ -1956,6 +2041,7 @@ function addTeachRow(){
   lucide.createIcons();
 }
 function saveTeachRow(){
+  if(!_assertNotViewMode()) return;
   var code=document.getElementById('tm_code').value.trim();
   var name=document.getElementById('tm_name').value.trim();
   var periods=parseInt(document.getElementById('tm_periods').value)||0;
@@ -1966,6 +2052,7 @@ function saveTeachRow(){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 function deleteTeachItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบรายวิชานี้?')) return;
   db.collection('staff_teaching').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadTeaching(); })
@@ -1976,7 +2063,7 @@ function deleteTeachItem(id){
 var dutyItems=[];
 function loadDuties(){
   if(!currentUser) return;
-  db.collection('staff_duties').where('uid','==',currentUser.uid).get()
+  db.collection('staff_duties').where('uid','==',_targetUid()).get()
     .then(function(snap){
       dutyItems=[];
       snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
@@ -2012,6 +2099,7 @@ function addDutyRow(){
   lucide.createIcons();
 }
 function saveDutyRow(){
+  if(!_assertNotViewMode()) return;
   var group=document.getElementById('dm_group').value.trim();
   var task=document.getElementById('dm_task').value.trim();
   if(!task){ showToast('กรุณากรอกรายละเอียดงาน','warn'); return; }
@@ -2020,6 +2108,7 @@ function saveDutyRow(){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 function deleteDutyItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบรายการนี้?')) return;
   db.collection('staff_duties').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadDuties(); })
@@ -2030,7 +2119,7 @@ function deleteDutyItem(id){
 var devItems=[];
 function loadDevelopment(){
   if(!currentUser) return;
-  db.collection('staff_development').where('uid','==',currentUser.uid).get()
+  db.collection('staff_development').where('uid','==',_targetUid()).get()
     .then(function(snap){
       devItems=[];
       snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
@@ -2071,6 +2160,7 @@ function addDevItem(){
   lucide.createIcons();
 }
 function saveDevItem(){
+  if(!_assertNotViewMode()) return;
   var title=document.getElementById('dv_title').value.trim();
   var organizer=document.getElementById('dv_organizer').value.trim();
   var date_str=document.getElementById('dv_date').value.trim();
@@ -2081,6 +2171,7 @@ function saveDevItem(){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 function deleteDevItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบรายการนี้?')) return;
   db.collection('staff_development').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadDevelopment(); })
@@ -2092,7 +2183,7 @@ var mediaItems=[];
 var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wordwall','flipgrid','book','image','video','music','code-2','globe','file-text'];
 function loadMedia(){
   if(!currentUser) return;
-  db.collection('staff_media').where('uid','==',currentUser.uid).get()
+  db.collection('staff_media').where('uid','==',_targetUid()).get()
     .then(function(snap){
       mediaItems=[];
       snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
@@ -2132,6 +2223,7 @@ function addMediaItem(){
   lucide.createIcons();
 }
 function saveMediaItem(){
+  if(!_assertNotViewMode()) return;
   var name=document.getElementById('mm_name').value.trim();
   var subject=document.getElementById('mm_subject').value.trim();
   var url=document.getElementById('mm_url').value.trim();
@@ -2142,6 +2234,7 @@ function saveMediaItem(){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 function deleteMediaItem(id){
+  if(!_assertNotViewMode()) return;
   if(!confirm('ลบรายการนี้?')) return;
   db.collection('staff_media').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadMedia(); })

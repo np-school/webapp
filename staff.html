@@ -572,7 +572,10 @@ function renderStaff() {
         '<div style="display:flex;align-items:center;gap:10px;">' +
           '<div class="avatar-initials" style="background:' + avatarColor + ';">' + initials + '</div>' +
           '<div>' +
-            '<p style="font-weight:700;color:#0f172a;font-size:13px;">' + esc(s.name || '') + '</p>' +
+            '<a href="profile.html?staffId=' + s.id + '" style="font-weight:700;color:#0f172a;font-size:13px;text-decoration:none;cursor:pointer;" ' +
+              'onmouseover="this.style.color=\'#1d4ed8\'" onmouseout="this.style.color=\'#0f172a\'">' +
+              esc(s.name || '') +
+            '</a>' +
             (s.subject ? '<p style="font-size:11px;color:#94a3b8;">วิชา: ' + esc(s.subject) + '</p>' : '') +
           '</div>' +
         '</div>' +

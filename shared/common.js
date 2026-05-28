@@ -256,8 +256,10 @@ function updateSidebarProfile(user) {
    Sidebar Builder
    buildSidebar(activePage)
 
+/*
    activePage:
      'index'            → หน้าแรก
+     'profile'          → My Portfolio (โปรไฟล์บุคลากร)
      'room-request'     → หน้าจองห้อง
      'room-admin'    → หน้า admin จองห้อง (แสดง tab)
      'portfolio-admin'  → หน้า admin ส่งงาน
@@ -268,8 +270,9 @@ function updateSidebarProfile(user) {
    ════════════════════════════════════════════════ */
 
 var MAIN_MENU = [
-  { label: 'หน้าแรก',          icon: 'home',      href: 'index.html'  },
-  { label: 'คู่มือการใช้งาน',   icon: 'book-open', href: 'guide.html'  },
+  { label: 'หน้าแรก',          icon: 'home',         href: 'index.html'   },
+  { label: 'My Portfolio',      icon: 'layout-dashboard', href: 'profile.html' },
+  { label: 'คู่มือการใช้งาน',   icon: 'book-open',    href: 'guide.html'   },
 ];
 
 var GROUP_MENU = [
