@@ -347,6 +347,17 @@
             </div>
           </div>
 
+          <!-- ประวัติการศึกษา -->
+          <div class="sar-card">
+            <div class="sar-card-head">
+              <div class="sar-card-icon" style="background:#f5f3ff;"><i data-lucide="graduation-cap" style="width:17px;height:17px;color:#7c3aed;"></i></div>
+              <div class="sar-card-title">ประวัติการศึกษา</div>
+            </div>
+            <div class="sar-card-body" id="sar-education-body">
+              <div class="sar-empty">กำลังโหลด...</div>
+            </div>
+          </div>
+
           <!-- ประวัติการทำงาน -->
           <div class="sar-card">
             <div class="sar-card-head">
@@ -958,12 +969,14 @@ function switchSubtab(id, btn){
    ════════════════════════════════════════ */
 function renderSarOverview(){
   renderSarPersonal();
+  renderSarEducation();
   renderSarSchoolHistory();
   renderSarTeaching();
   renderSarDuties();
   renderSarDev();
   renderSarMedia();
   if(!personalData||!personalData.uid) loadPersonalForSar();
+  if(!educationItems.length)           loadEducationForSar();
   if(!careerHistoryItems.length)       loadCareerHistoryForSar();
   if(!teachingItems.length)            loadTeachingForSar();
   if(!dutyItems.length)                loadDutiesForSar();
@@ -1106,21 +1119,14 @@ var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 
 
 function loadEducation(){
   if(!currentUser) return;
-  db.collection('staff_education').where('uid','==',currentUser.uid)
-    .orderBy('sort_order').get()
+  db.collection('staff_education').where('uid','==',currentUser.uid).get()
     .then(function(snap){
       educationItems = [];
       snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
       renderEducation();
-    }).catch(function(){
-      db.collection('staff_education').where('uid','==',currentUser.uid).get()
-        .then(function(snap){
-          educationItems = [];
-          snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
-          educationItems.sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); });
-          renderEducation();
-        }).catch(function(){ renderEducation(); });
-    });
+    }).catch(function(e){ console.error('loadEducation error:',e); renderEducation(); });
 }
 
 function renderEducation(){
@@ -1235,6 +1241,45 @@ function loadCareerForSar(){
     renderSarCareer();
   }).catch(function(){});
 }
+function renderSarEducation(){
+  var el = document.getElementById('sar-education-body');
+  if(!el) return;
+  if(!educationItems.length){
+    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลการศึกษา</div>';
+    return;
+  }
+  var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+  var sorted = educationItems.slice().sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+  el.innerHTML = sorted.map(function(item){
+    var col = EDU_COLORS[item.level] || '#64748b';
+    var bg  = EDU_BG[item.level]    || '#f8fafc';
+    return '<div class="sar-row" style="align-items:flex-start;gap:10px;padding:8px 0;">' +
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:5px;"></div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">' +
+          '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';border:1px solid '+col+'44;padding:1px 7px;border-radius:20px;">'+esc(item.level||'')+'</span>' +
+          (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc(item.degree)+'</span>' : '') +
+        '</div>' +
+        (item.institution ? '<div style="font-size:12px;font-weight:600;color:#334155;">'+esc(item.institution)+'</div>' : '') +
+        (item.major ? '<div style="font-size:11px;color:#94a3b8;">วิชาเอก: '+esc(item.major)+'</div>' : '') +
+        (item.grad_year ? '<div style="font-size:11px;color:#94a3b8;">สำเร็จการศึกษา พ.ศ. '+esc(item.grad_year)+'</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function loadEducationForSar(){
+  if(!currentUser) return;
+  db.collection('staff_education').where('uid','==',currentUser.uid).get()
+    .then(function(snap){
+      educationItems = [];
+      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+      renderSarEducation();
+    }).catch(function(){});
+}
+
 function loadCareerHistoryForSar(){
   if(!currentUser) return;
   db.collection('staff_career_history').where('uid','==',currentUser.uid).get()
