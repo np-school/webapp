@@ -300,7 +300,7 @@
             <option value="revision">แก้ไข</option>
           </select>
         </div>
-        <div id="semList"><div class="empty-block">กำลังโหลดข้อมูล...</div></div>
+        <div id="semList"></div>
       </div>
 
       <!-- ─── PANEL: ข้อมูลส่วนตัว ─── -->
@@ -503,26 +503,27 @@ function init(){
   if(typeof buildSidebar === 'function') buildSidebar('profile');
   if(typeof checkAdminAccess==='function') checkAdminAccess(currentUser.email);
 
-  /* โหลด staff + doc_types พร้อมกัน แล้วค่อย loadSubmissions */
-  /* timeout 6 วินาที ป้องกัน Firestore ค้าง */
-  var settled = false;
-  function guardedInit(){
-    if(settled) return; settled=true;
-    loadSubmissions();
+  /* ── โหลดข้อมูลแบบขนาน แล้วค่อย render ── */
+  var staffDone = false, dtDone = false;
+  function tryRender(){
+    if(staffDone && dtDone) loadSubmissions();
   }
-  setTimeout(function(){
-    if(!settled){ settled=true; finishRender(); }
-  }, 6000);
 
-  var staffPromise = db.collection('staff')
+  /* Staff */
+  db.collection('staff')
     .where('email','==', currentUser.email.toLowerCase()).limit(1).get()
     .then(function(snap){
       currentStaff = snap.empty ? null : snap.docs[0].data();
+    })
+    .catch(function(){})
+    .then(function(){
       fillHeroStatic();
-    }).catch(function(){ fillHeroStatic(); });
+      staffDone = true;
+      tryRender();
+    });
 
-  var dtPromise = db.collection('portfolio_doc_types')
-    .orderBy('order').get()
+  /* Doc types */
+  db.collection('portfolio_doc_types').orderBy('order').get()
     .then(function(snap){
       if(!snap.empty){
         var list=[];
@@ -537,11 +538,19 @@ function init(){
         });
         if(list.length) DOCUMENT_TYPES=list;
       }
-    }).catch(function(){/* use fallback */});
+    })
+    .catch(function(){})
+    .then(function(){
+      dtDone = true;
+      tryRender();
+    });
 
-  Promise.all([staffPromise, dtPromise]).then(function(){
-    guardedInit();
-  }).catch(function(){ guardedInit(); });
+  /* Safety timeout 8s — ถ้า Firestore ค้างก็ render เลย */
+  setTimeout(function(){
+    if(!staffDone){ staffDone=true; fillHeroStatic(); }
+    if(!dtDone){ dtDone=true; }
+    tryRender();
+  }, 8000);
 }
 
 /* ── Fill static hero parts ── */
