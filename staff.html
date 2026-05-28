@@ -640,30 +640,63 @@ function openEditModal(id) {
 
 function saveStaff() {
   if (!canWrite) { showToast('คุณไม่มีสิทธิ์จัดการข้อมูลบุคลากร', 'warn'); return; }
-  var name = document.getElementById('fName').value.trim();
+  var name     = document.getElementById('fName').value.trim();
   var position = document.getElementById('fPosition').value.trim();
-  var group = document.getElementById('fGroup').value;
-  if (!name) { showToast('กรุณากรอกชื่อ-นามสกุล', 'warn'); return; }
+  var group    = document.getElementById('fGroup').value;
+  if (!name)     { showToast('กรุณากรอกชื่อ-นามสกุล', 'warn'); return; }
   if (!position) { showToast('กรุณากรอกตำแหน่ง', 'warn'); return; }
-  if (!group) { showToast('กรุณาเลือกกลุ่มสาระ / กลุ่มงาน', 'warn'); return; }
+  if (!group)    { showToast('กรุณาเลือกกลุ่มสาระ / กลุ่มงาน', 'warn'); return; }
 
-  var data = {
-    name: name,
-    position: position,
-    group: group,
-    role: document.getElementById('fRole').value,
-    email: document.getElementById('fEmail').value.trim(),
-    phone: document.getElementById('fPhone').value.trim(),
-    subject: document.getElementById('fSubject').value.trim(),
-    note: document.getElementById('fNote').value.trim(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  var now   = firebase.firestore.FieldValue.serverTimestamp();
+  var email = document.getElementById('fEmail').value.trim().toLowerCase();
+  var phone = document.getElementById('fPhone').value.trim();
+  var data  = {
+    name:      name,
+    position:  position,
+    group:     group,
+    role:      document.getElementById('fRole').value,
+    email:     email,
+    phone:     phone,
+    subject:   document.getElementById('fSubject').value.trim(),
+    note:      document.getElementById('fNote').value.trim(),
+    updatedAt: now
   };
 
-  var promise = editingId
+  var staffPromise = editingId
     ? db.collection('staff').doc(editingId).update(data)
-    : db.collection('staff').add(Object.assign(data, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+    : db.collection('staff').add(Object.assign({}, data, { createdAt: now }));
 
-  promise.then(function() {
+  staffPromise.then(function() {
+    /* ── ซิงค์ไปยัง staff_profile ถ้ามี email ── */
+    if (email) {
+      db.collection('staff_profile').where('uid','!=','').limit(500).get()
+        .catch(function(){ return { docs: [] }; })
+        .then(function(){
+          /* หา staff_profile ด้วย email ผ่าน auth uid ไม่ได้โดยตรง
+             ใช้วิธีค้นหา uid จาก staff collection แล้ว update staff_profile ตาม doc id */
+          db.collection('staff_profile')
+            /* staff_profile ใช้ uid เป็น doc id — หา uid จากฝั่ง staff */
+            .where('uid','>=','').limit(1).get()
+            .catch(function(){ return null; });
+          /* ── วิธีที่ถูกต้อง: query staff_profile ที่มี uid ตรงกับ staff doc ที่มี email นี้ ── */
+          db.collection('staff').where('email','==', email).limit(1).get()
+            .then(function(snap){
+              if(snap.empty) return;
+              /* staff_profile doc id = uid ของ user ที่มี email นี้
+                 แต่เราไม่รู้ uid จาก admin side — ใช้ email เป็น index แทน */
+              /* บันทึก profileSync แยก field เพื่อไม่ทับข้อมูลที่ user กรอกเอง */
+              db.collection('staff_profile_sync').doc(email).set({
+                email:         email,
+                name:          name,
+                position:      position,
+                subject_group: group,
+                academic_rank: data.role || '',
+                phone:         phone,
+                updatedAt:     now
+              }, {merge: true});
+            });
+        });
+    }
     closeModal('staffModal');
     showToast(editingId ? 'อัปเดตข้อมูลแล้ว ✓' : 'เพิ่มบุคลากรแล้ว ✓');
   }).catch(function(e) { showToast(e.message, 'error'); });

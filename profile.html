@@ -6,7 +6,6 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1d4ed8">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW:',e);});}</script>
@@ -18,7 +17,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
@@ -866,9 +864,23 @@ function setValEl(id, val){
 var personalData={};
 function loadPersonal(){
   if(!currentUser) return;
+  var email = currentUser.email.toLowerCase();
+  /* โหลด staff_profile (ข้อมูลที่ user กรอกเอง) */
   db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
     personalData = d.exists ? d.data() : {};
-    renderPersonalView();
+    /* ถ้ายังไม่มี fullname ให้ดึงจาก staff_profile_sync (admin กรอกใน staff.html) */
+    if(!personalData.fullname && email){
+      db.collection('staff_profile_sync').doc(email).get().then(function(s){
+        if(s.exists){
+          var sync = s.data();
+          if(!personalData.fullname)   personalData.fullname   = sync.name          || '';
+          if(!personalData.phone)      personalData.phone      = sync.phone         || '';
+        }
+        renderPersonalView();
+      }).catch(function(){ renderPersonalView(); });
+    } else {
+      renderPersonalView();
+    }
   }).catch(function(){ renderPersonalView(); });
 }
 function renderPersonalView(){
@@ -941,8 +953,12 @@ function cancelSection(section){
   var eb=hdr.querySelector('.edit-btn'); if(eb) eb.style.display='';
 }
 function saveSection(section){
+  var now = firebase.firestore.FieldValue.serverTimestamp();
+  var profileRef = db.collection('staff_profile').doc(currentUser.uid);
+
   if(section==='personal'){
     personalData={
+      uid:         currentUser.uid,
       fullname:    document.getElementById('e_fullname').value.trim(),
       birthday:    document.getElementById('e_birthday').value,
       nationality: document.getElementById('e_nationality').value.trim(),
@@ -953,13 +969,34 @@ function saveSection(section){
       education:   document.getElementById('e_education').value,
       edu_major:   document.getElementById('e_edu_major').value.trim(),
       address:     document.getElementById('e_address').value.trim(),
-      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt:   now
     };
-    db.collection('staff_profile').doc(currentUser.uid).set(personalData,{merge:true})
-      .then(function(){ showToast('บันทึกข้อมูลส่วนตัวแล้ว','success'); cancelSection('personal'); renderPersonalView(); })
-      .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
+
+    /* ── 1. บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) ── */
+    profileRef.set(personalData, {merge:true})
+      .then(function(){
+        showToast('บันทึกข้อมูลส่วนตัวแล้ว','success');
+        cancelSection('personal');
+        renderPersonalView();
+        /* ── 2. sync ไปยัง staff (best-effort — ถ้า user ไม่มีสิทธิ์ก็ไม่กระทบ) ── */
+        db.collection('staff').where('email','==', currentUser.email.toLowerCase()).limit(1).get()
+          .then(function(snap){
+            if(snap.empty) return;
+            snap.docs[0].ref.update({
+              name:      personalData.fullname || snap.docs[0].data().name,
+              phone:     personalData.phone,
+              updatedAt: now
+            }).catch(function(){});
+          }).catch(function(){});
+      })
+      .catch(function(e){
+        console.error('saveSection personal error:', e);
+        showToast('เกิดข้อผิดพลาด: ' + (e.message||e), 'error');
+      });
+
   } else if(section==='career'){
     careerData={
+      uid:             currentUser.uid,
       start_date:      document.getElementById('e_start_date').value,
       cur_position:    document.getElementById('e_cur_position').value.trim(),
       academic_rank:   document.getElementById('e_academic_rank').value,
@@ -969,11 +1006,30 @@ function saveSection(section){
       cur_school_date: document.getElementById('e_cur_school_date').value,
       subject_group:   document.getElementById('e_subject_group').value.trim(),
       major_subject:   document.getElementById('e_major_subject').value.trim(),
-      updatedAt:       firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt:       now
     };
-    db.collection('staff_profile').doc(currentUser.uid).set(careerData,{merge:true})
-      .then(function(){ showToast('บันทึกประวัติการทำงานแล้ว','success'); cancelSection('career'); renderCareerView(); })
-      .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
+
+    /* ── 1. บันทึก staff_profile ก่อน (user มีสิทธิ์เสมอ) ── */
+    profileRef.set(careerData, {merge:true})
+      .then(function(){
+        showToast('บันทึกประวัติการทำงานแล้ว','success');
+        cancelSection('career');
+        renderCareerView();
+        /* ── 2. sync ไปยัง staff (best-effort) ── */
+        db.collection('staff').where('email','==', currentUser.email.toLowerCase()).limit(1).get()
+          .then(function(snap){
+            if(snap.empty) return;
+            var updates = { updatedAt: now };
+            if(careerData.cur_position)  updates.position = careerData.cur_position;
+            if(careerData.subject_group) updates.group    = careerData.subject_group;
+            if(careerData.academic_rank) updates.role     = careerData.academic_rank;
+            snap.docs[0].ref.update(updates).catch(function(){});
+          }).catch(function(){});
+      })
+      .catch(function(e){
+        console.error('saveSection career error:', e);
+        showToast('เกิดข้อผิดพลาด: ' + (e.message||e), 'error');
+      });
   }
 }
 
@@ -981,9 +1037,23 @@ function saveSection(section){
 var careerData={};
 function loadCareer(){
   if(!currentUser) return;
+  var email = currentUser.email.toLowerCase();
   db.collection('staff_profile').doc(currentUser.uid).get().then(function(d){
     careerData = d.exists ? d.data() : {};
-    renderCareerView();
+    /* ถ้ายังไม่มีข้อมูล ดึงจาก staff_profile_sync ที่ admin อาจกรอกไว้ */
+    if(!careerData.cur_position && email){
+      db.collection('staff_profile_sync').doc(email).get().then(function(s){
+        if(s.exists){
+          var sync = s.data();
+          if(!careerData.cur_position)  careerData.cur_position  = sync.position      || '';
+          if(!careerData.subject_group) careerData.subject_group = sync.subject_group || '';
+          if(!careerData.academic_rank) careerData.academic_rank = sync.academic_rank || '';
+        }
+        renderCareerView();
+      }).catch(function(){ renderCareerView(); });
+    } else {
+      renderCareerView();
+    }
   }).catch(function(){ renderCareerView(); });
 }
 function renderCareerView(){
@@ -1248,7 +1318,6 @@ function deleteMediaItem(id){
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
 
-function filterByStatus(){
   var val=document.getElementById('filterStatus').value;
   if(val==='all'){ renderSemList(allSemData); return; }
   var filtered=allSemData.filter(function(sem){
