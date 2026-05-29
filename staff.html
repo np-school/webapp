@@ -1052,43 +1052,46 @@ lucide.createIcons();
 </script>
 
 <!-- ══ Modal: SAR Overview (iframe) ══ -->
-<div id="sarModal" class="modal-bg" onclick="if(event.target===this)closeSarModal()">
-  <div class="modal-box wide" style="max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+<div id="sarModal" class="modal-bg" onclick="if(event.target===this)closeSarModal()" style="padding:0;align-items:flex-end;">
+  <div id="sarModalBox" style="width:100%;max-width:680px;height:92dvh;display:flex;flex-direction:column;background:white;border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.2);margin:0 auto;">
 
-    <!-- Header (sticky) -->
-    <div style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:20px 20px 0 0;padding:16px 20px;display:flex;align-items:center;gap:14px;">
-      <div style="width:48px;height:48px;border-radius:50%;border:2.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <span id="sarModalInitials" style="font-size:17px;font-weight:800;color:rgba(255,255,255,.85);">?</span>
+    <!-- Header -->
+    <div style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:20px 20px 0 0;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+      <!-- avatar initials -->
+      <div style="width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span id="sarModalInitials" style="font-size:15px;font-weight:800;color:rgba(255,255,255,.9);">?</span>
       </div>
+      <!-- name + tags -->
       <div style="flex:1;min-width:0;">
-        <div id="sarModalName" style="font-size:16px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">—</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;">
-          <span id="sarModalPosition" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;"></span>
-          <span id="sarModalGroup"    style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;"></span>
+        <div id="sarModalName" style="font-size:15px;font-weight:800;color:white;line-height:1.2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          <span id="sarModalPosition" style="font-size:10px;font-weight:700;color:rgba(255,255,255,.75);background:rgba(255,255,255,.14);padding:1px 8px;border-radius:20px;"></span>
+          <span id="sarModalGroup"    style="font-size:10px;font-weight:700;color:rgba(255,255,255,.75);background:rgba(255,255,255,.14);padding:1px 8px;border-radius:20px;"></span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-shrink:0;">
+      <!-- actions -->
+      <div style="display:flex;gap:7px;flex-shrink:0;">
         <a id="sarModalProfileLink" href="#" target="_blank"
-           style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:rgba(255,255,255,.15);color:white;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.2);">
-          <i data-lucide="external-link" style="width:13px;height:13px;"></i> ดูเต็ม
+           style="display:inline-flex;align-items:center;gap:4px;padding:6px 11px;background:rgba(255,255,255,.15);color:white;border-radius:9px;font-size:11px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.2);white-space:nowrap;">
+          <i data-lucide="external-link" style="width:12px;height:12px;"></i> ดูเต็ม
         </a>
         <button onclick="closeSarModal()"
-                style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-          <i data-lucide="x" style="width:16px;height:16px;"></i>
+                style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="x" style="width:15px;height:15px;"></i>
         </button>
       </div>
     </div>
 
-    <!-- Loading overlay (แสดงขณะ iframe ยังโหลด) -->
-    <div id="sarModalLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:white;">
-      <div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin .8s linear infinite;"></div>
+    <!-- Loading -->
+    <div id="sarModalLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#f8fafc;">
+      <div style="width:34px;height:34px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin .8s linear infinite;"></div>
       <p style="font-size:13px;font-weight:700;color:#64748b;">กำลังโหลดข้อมูล...</p>
     </div>
 
-    <!-- iframe — ซ่อนไว้ก่อน โชว์เมื่อ load เสร็จ -->
+    <!-- iframe — เต็มพื้นที่ที่เหลือ -->
     <iframe id="sarModalIframe"
             src=""
-            style="display:none;flex:1;width:100%;border:none;border-radius:0 0 20px 20px;"
+            style="display:none;flex:1;width:100%;min-height:0;border:none;"
             onload="document.getElementById('sarModalLoading').style.display='none';this.style.display='block';">
     </iframe>
 
@@ -1096,8 +1099,11 @@ lucide.createIcons();
 </div>
 
 <style>
-/* ── ปิด body scroll เมื่อ modal เปิด ── */
-body.modal-open { overflow: hidden; }
+/* บน desktop ให้ modal ลอยกลางจอแทน bottom-sheet */
+@media(min-width:768px){
+  #sarModal{ align-items:center !important; padding:20px !important; }
+  #sarModalBox{ border-radius:20px !important; height:90dvh; max-height:90dvh; }
+}
 </style>
 
 </body>

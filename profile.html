@@ -62,8 +62,9 @@
     body.embed-mode .sidebar-wrap   { display: none !important; }
     body.embed-mode #viewModeBar    { display: none !important; }
     body.embed-mode #loginGate      { display: none !important; }
-    body.embed-mode #mainApp > div  { padding-left: 0 !important; }
-    body.embed-mode { background: white; }
+    body.embed-mode { background: white; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    /* content area เต็มความกว้าง ไม่มี sidebar แล้ว */
+    body.embed-mode #contentArea    { padding: 16px 14px !important; min-height: unset !important; }
     html.embed-mode * { visibility: hidden; }
 
     /* Hero */
