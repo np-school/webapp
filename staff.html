@@ -1005,13 +1005,10 @@ function downloadTemplate() {
 /* ═══════════════════════════════════════════
    SAR Modal – แสดงภาพรวม SAR ของบุคลากร
    ═══════════════════════════════════════════ */
-var SM_EDU_COLORS = {'ต่ำกว่าปริญญาตรี':'#64748b','ปริญญาตรี':'#1d4ed8','ปริญญาโท':'#7c3aed','ปริญญาเอก':'#0369a1'};
-var SM_EDU_BG     = {'ต่ำกว่าปริญญาตรี':'#f1f5f9','ปริญญาตรี':'#eff6ff','ปริญญาโท':'#f5f3ff','ปริญญาเอก':'#e0f2fe'};
-var _smStaffId = '', _smStaffData = null, _smTargetUid = '';
+var _smStaffId = '', _smStaffData = null;
 
 function openSarModal(staffId, staffEmail) {
   _smStaffId   = staffId;
-  _smTargetUid = '';
   var s = allStaff.find(function(x){ return x.id === staffId; });
   _smStaffData = s || null;
 
@@ -1026,373 +1023,81 @@ function openSarModal(staffId, staffEmail) {
   var ini = name.trim().split(' ').slice(0,2).map(function(w){return (w||'')[0]||'';}).join('').toUpperCase() || '?';
   document.getElementById('sarModalInitials').textContent = ini;
 
+  /* โหลด iframe */
+  var iframe = document.getElementById('sarModalIframe');
+  iframe.src = '';
+  document.getElementById('sarModalLoading').style.display = 'block';
+  iframe.style.display = 'none';
+
   document.getElementById('sarModal').classList.add('open');
-  document.getElementById('sarModalLoading').style.display  = 'block';
-  document.getElementById('sarModalContent').style.display  = 'none';
+  document.body.style.overflow = 'hidden';
   lucide.createIcons();
 
-  db.collection('staff').doc(staffId).get().then(function(doc) {
-    if (doc.exists) _smTargetUid = doc.data().uid || '';
-    _smLoadAll(staffEmail);
-  }).catch(function() { _smLoadAll(staffEmail); });
+  /* หน่วง 1 tick เพื่อให้ modal render ก่อน แล้วค่อยโหลด iframe */
+  setTimeout(function() {
+    iframe.src = 'profile.html?staffId=' + encodeURIComponent(staffId) + '&embed=1';
+  }, 50);
 }
 
 function closeSarModal() {
   document.getElementById('sarModal').classList.remove('open');
-}
-
-function _smLoadAll(email) {
-  var loaded = 0, total = 7;
-  function done() {
-    loaded++;
-    if (loaded >= total) {
-      document.getElementById('sarModalLoading').style.display = 'none';
-      document.getElementById('sarModalContent').style.display = 'block';
-      lucide.createIcons();
-    }
-  }
-  /* 1. ข้อมูลส่วนตัว */
-  if (_smTargetUid && email) {
-    Promise.all([
-      db.collection('staff_profile').doc(_smTargetUid).get().catch(function(){ return null; }),
-      db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
-    ]).then(function(res) {
-      _smRenderPersonal(
-        (res[0] && res[0].exists) ? res[0].data() : {},
-        (res[1] && res[1].exists) ? res[1].data() : {}
-      );
-      done();
-    });
-  } else { _smRenderPersonal({}, {}); done(); }
-
-  /* 2. การศึกษา */
-  if (_smTargetUid) {
-    db.collection('staff_education').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        var ord = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
-        items.sort(function(a,b){ return (ord[a.level]||0)-(ord[b.level]||0); });
-        _smRenderEducation(items); done();
-      }).catch(function(){ _smRenderEducation([]); done(); });
-  } else { _smRenderEducation([]); done(); }
-
-  /* 3. ประวัติการทำงาน */
-  if (_smTargetUid) {
-    db.collection('staff_career_history').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        items.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
-        _smRenderCareer(items); done();
-      }).catch(function(){ _smRenderCareer([]); done(); });
-  } else { _smRenderCareer([]); done(); }
-
-  /* 4. ภาระงานสอน */
-  if (_smTargetUid) {
-    db.collection('staff_teaching').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        _smRenderTeaching(items); done();
-      }).catch(function(){ _smRenderTeaching([]); done(); });
-  } else { _smRenderTeaching([]); done(); }
-
-  /* 5. งานที่ได้รับมอบหมาย */
-  if (_smTargetUid) {
-    db.collection('staff_duties').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        _smRenderDuties(items); done();
-      }).catch(function(){ _smRenderDuties([]); done(); });
-  } else { _smRenderDuties([]); done(); }
-
-  /* 6. การพัฒนาตนเอง */
-  if (_smTargetUid) {
-    db.collection('staff_development').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        _smRenderDev(items); done();
-      }).catch(function(){ _smRenderDev([]); done(); });
-  } else { _smRenderDev([]); done(); }
-
-  /* 7. สื่อนวัตกรรม */
-  if (_smTargetUid) {
-    db.collection('staff_media').where('uid','==',_smTargetUid).get()
-      .then(function(snap) {
-        var items = [];
-        snap.forEach(function(d){ items.push(Object.assign({_id:d.id},d.data())); });
-        _smRenderMedia(items); done();
-      }).catch(function(){ _smRenderMedia([]); done(); });
-  } else { _smRenderMedia([]); done(); }
-}
-
-function _smEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function _smRow(lbl,v){
-  return '<div class="sar-row"><span class="sar-lbl">'+lbl+'</span>' +
-    (v ? '<span class="sar-val">'+_smEsc(v)+'</span>' : '<span class="sar-val empty-val">—</span>') +
-  '</div>';
-}
-function _smThDate(d){
-  if(!d) return '';
-  var dt=new Date(d), m=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  return dt.getDate()+' '+m[dt.getMonth()]+' '+(dt.getFullYear()+543);
-}
-function _smAge(d){
-  if(!d) return '';
-  var dt=new Date(d),now=new Date(),age=now.getFullYear()-dt.getFullYear(),mo=now.getMonth()-dt.getMonth();
-  if(mo<0||(mo===0&&now.getDate()<dt.getDate())) age--;
-  return age+' ปี';
-}
-
-function _smRenderPersonal(p, a) {
-  var s = _smStaffData || {};
-  var rank = a.academic_rank || s.academic_rank || '';
-  var html =
-    _smRow('ชื่อ-นามสกุล', a.name||s.name||p.fullname||'') +
-    _smRow('ตำแหน่ง', a.position||s.position||'') +
-    _smRow('กลุ่มสาระ / กลุ่มงาน', a.group||s.group||'') +
-    (rank ? _smRow('วิทยฐานะ', rank) : '') +
-    _smRow('วันเกิด', _smThDate(p.birthday)+(_smAge(p.birthday)?' (อายุ '+_smAge(p.birthday)+')':'')) +
-    _smRow('สัญชาติ', p.nationality||'') +
-    _smRow('เชื้อชาติ', p.ethnicity||'') +
-    _smRow('ศาสนา', p.religion||'') +
-    _smRow('ที่อยู่ปัจจุบัน', p.address||'') +
-    _smRow('เบอร์โทรศัพท์', p.phone||'');
-  document.getElementById('sm-personal-body').innerHTML = html || '<div class="sar-empty">ยังไม่มีข้อมูล</div>';
-}
-
-function _smRenderEducation(items) {
-  var el = document.getElementById('sm-education-body');
-  if (!items.length) { el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลการศึกษา</div>'; return; }
-  el.innerHTML = items.map(function(item) {
-    var col=SM_EDU_COLORS[item.level]||'#64748b', bg=SM_EDU_BG[item.level]||'#f8fafc';
-    return '<div class="sar-row" style="align-items:flex-start;gap:10px;padding:8px 0;">' +
-      '<div style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:5px;"></div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">' +
-          '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';border:1px solid '+col+'44;padding:1px 7px;border-radius:20px;">'+_smEsc(item.level||'')+'</span>' +
-          (item.degree?'<span style="font-size:12px;font-weight:700;color:#0f172a;">'+_smEsc(item.degree)+'</span>':'') +
-        '</div>' +
-        (item.institution?'<div style="font-size:12px;font-weight:600;color:#334155;">'+_smEsc(item.institution)+'</div>':'') +
-        (item.major?'<div style="font-size:11px;color:#94a3b8;">วิชาเอก: '+_smEsc(item.major)+'</div>':'') +
-        (item.grad_year?'<div style="font-size:11px;color:#94a3b8;">สำเร็จการศึกษา พ.ศ. '+_smEsc(item.grad_year)+'</div>':'') +
-      '</div></div>';
-  }).join('');
-}
-
-function _smRenderCareer(items) {
-  var el = document.getElementById('sm-career-body');
-  if (!items.length) { el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลประวัติการทำงาน</div>'; return; }
-  var cols=['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
-  var bdrs=['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
-  el.innerHTML='<div class="sm-career-timeline">'+items.map(function(item,idx){
-    var col=cols[idx%cols.length], bdr=bdrs[idx%bdrs.length];
-    var period=item.start_date?_smThDate(item.start_date):'';
-    if(item.end_date) period+=' – '+_smThDate(item.end_date);
-    var badges='';
-    if(idx===0) badges+='<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:1px 7px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
-    if(!item.end_date) badges+='<span style="font-size:10px;font-weight:800;color:#0369a1;background:#e0f2fe;padding:1px 7px;border-radius:20px;">ปัจจุบัน</span>';
-    return '<div class="sm-ct-node">'+
-      '<div class="sm-ct-dot" style="color:'+col+';background:'+bdr+';">'+
-        '<svg viewBox="0 0 8 8" width="8" height="8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>'+
-      '</div>'+
-      '<div class="sm-ct-card" style="border-color:'+bdr+';">'+
-        (badges?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">'+badges+'</div>':'')+
-        (period?'<div class="sm-ct-period">'+_smEsc(period)+'</div>':'')+
-        '<div class="sm-ct-school">'+_smEsc(item.school||'')+'</div>'+
-        (item.department?'<div class="sm-ct-dept">'+_smEsc(item.department)+'</div>':'')+
-        '<div class="sm-ct-chips">'+
-          (item.position?'<span class="sm-ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+_smEsc(item.position)+'</span>':'')+
-          (item.academic_rank?'<span class="sm-ct-chip" style="background:#fffbeb;color:#b45309;">'+_smEsc(item.academic_rank)+'</span>':'')+
-        '</div>'+
-      '</div>'+
-    '</div>';
-  }).join('')+'</div>';
-}
-
-function _smRenderTeaching(items) {
-  var el=document.getElementById('sm-teaching-body');
-  if(!items.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลภาระงานสอน</div>'; return; }
-  var total=0;
-  var rows=items.map(function(item){
-    total+=(parseInt(item.periods)||0);
-    return '<div class="sar-teach-row">'+
-      (item.code?'<span class="sar-teach-code">'+_smEsc(item.code)+'</span>':'')+
-      '<span class="sar-teach-name">'+_smEsc(item.name||'')+'</span>'+
-      '<span class="sar-teach-periods">'+_smEsc(String(item.periods||0))+' คาบ/สัปดาห์</span>'+
-      (item.level?'<span class="sar-teach-level">'+_smEsc(item.level)+'</span>':'')+
-    '</div>';
-  }).join('');
-  el.innerHTML=rows+'<div class="sar-teach-total">รวม '+total+' คาบ/สัปดาห์</div>';
-}
-
-function _smRenderDuties(items) {
-  var el=document.getElementById('sm-duties-body');
-  if(!items.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div>'; return; }
-  var colors=['#f97316','#1d4ed8','#7c3aed','#16a34a','#e11d48','#0891b2'];
-  el.innerHTML=items.map(function(item,i){
-    return '<div class="sar-row" style="align-items:flex-start;">'+
-      '<div class="sar-duty-dot" style="background:'+colors[i%colors.length]+';"></div>'+
-      '<span class="sar-duty-text">'+_smEsc(item.task||'')+'</span>'+
-      (item.group?'<span class="sar-duty-group">'+_smEsc(item.group)+'</span>':'')+
-    '</div>';
-  }).join('');
-}
-
-function _smRenderDev(items) {
-  var el=document.getElementById('sm-dev-body');
-  if(!items.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลการพัฒนาตนเอง</div>'; return; }
-  el.innerHTML=items.map(function(item){
-    return '<div class="sar-dev-item">'+
-      '<div class="sar-dev-dot"></div>'+
-      '<div><div class="sar-dev-title">'+_smEsc(item.title||'')+'</div>'+
-        '<div class="sar-dev-meta">'+(item.organizer?_smEsc(item.organizer)+' · ':'')+(item.date_str?_smEsc(item.date_str):'')+(item.hours?' · '+item.hours+' ชม.':'')+'</div>'+
-      '</div></div>';
-  }).join('');
-}
-
-function _smRenderMedia(items) {
-  var el=document.getElementById('sm-media-body');
-  if(!items.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
-  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">'+
-    items.map(function(item){
-      return '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:9px;">'+
-        '<div class="sar-media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:15px;height:15px;color:#06b6d4;"></i></div>'+
-        '<div style="min-width:0;">'+
-          '<div class="sar-media-name">'+_smEsc(item.name||'')+'</div>'+
-          (item.subject?'<div class="sar-media-sub">'+_smEsc(item.subject)+'</div>':'')+
-          (item.url?'<a href="'+_smEsc(item.url)+'" target="_blank" style="font-size:10px;color:#1d4ed8;font-weight:700;">เปิดลิงก์</a>':'')+
-        '</div></div>';
-    }).join('')+'</div>';
-  lucide.createIcons();
+  document.body.style.overflow = '';
+  /* clear iframe src เพื่อหยุด Firebase listener ใน profile.html */
+  var iframe = document.getElementById('sarModalIframe');
+  if (iframe) iframe.src = '';
 }
 /* ═══════════════ END SAR Modal ═══════════════ */
 
 lucide.createIcons();
 </script>
 
-<!-- ══ Modal: SAR Overview ══ -->
+<!-- ══ Modal: SAR Overview (iframe) ══ -->
 <div id="sarModal" class="modal-bg" onclick="if(event.target===this)closeSarModal()">
-  <div class="modal-box wide" style="max-height:90vh;overflow-y:auto;padding:0;">
-    <!-- Header -->
-    <div style="position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:20px 20px 0 0;padding:18px 22px;display:flex;align-items:center;gap:14px;">
-      <div id="sarModalAvatar" style="width:52px;height:52px;border-radius:50%;border:2.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
-        <span id="sarModalInitials" style="font-size:18px;font-weight:800;color:rgba(255,255,255,.85);">?</span>
+  <div class="modal-box wide" style="max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+
+    <!-- Header (sticky) -->
+    <div style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:20px 20px 0 0;padding:16px 20px;display:flex;align-items:center;gap:14px;">
+      <div style="width:48px;height:48px;border-radius:50%;border:2.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span id="sarModalInitials" style="font-size:17px;font-weight:800;color:rgba(255,255,255,.85);">?</span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:1.2px;margin-bottom:2px;">ภาพรวม SAR</div>
-        <div id="sarModalName" style="font-size:17px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">—</div>
+        <div id="sarModalName" style="font-size:16px;font-weight:800;color:white;line-height:1.2;margin-bottom:4px;">—</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">
           <span id="sarModalPosition" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;"></span>
-          <span id="sarModalGroup" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;"></span>
+          <span id="sarModalGroup"    style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;"></span>
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
-        <a id="sarModalProfileLink" href="#" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:rgba(255,255,255,.15);color:white;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.2);">
+        <a id="sarModalProfileLink" href="#" target="_blank"
+           style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:rgba(255,255,255,.15);color:white;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.2);">
           <i data-lucide="external-link" style="width:13px;height:13px;"></i> ดูเต็ม
         </a>
-        <button onclick="closeSarModal()" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <button onclick="closeSarModal()"
+                style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
           <i data-lucide="x" style="width:16px;height:16px;"></i>
         </button>
       </div>
     </div>
-    <!-- Loading -->
-    <div id="sarModalLoading" style="padding:48px;text-align:center;">
-      <div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;"></div>
+
+    <!-- Loading overlay (แสดงขณะ iframe ยังโหลด) -->
+    <div id="sarModalLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:white;">
+      <div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin .8s linear infinite;"></div>
       <p style="font-size:13px;font-weight:700;color:#64748b;">กำลังโหลดข้อมูล...</p>
     </div>
-    <!-- SAR Content -->
-    <div id="sarModalContent" style="display:none;padding:18px 20px;">
-      <!-- Row 1: ข้อมูลส่วนตัว + การศึกษา | ประวัติการทำงาน -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;align-items:stretch;">
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="sar-card">
-            <div class="sar-card-head"><div class="sar-card-icon" style="background:#eff6ff;"><i data-lucide="user-circle" style="width:17px;height:17px;color:#1d4ed8;"></i></div><div class="sar-card-title">ข้อมูลส่วนตัว</div></div>
-            <div class="sar-card-body" id="sm-personal-body"><div class="sar-empty">กำลังโหลด...</div></div>
-          </div>
-          <div class="sar-card">
-            <div class="sar-card-head"><div class="sar-card-icon" style="background:#f5f3ff;"><i data-lucide="graduation-cap" style="width:17px;height:17px;color:#7c3aed;"></i></div><div class="sar-card-title">ประวัติการศึกษา</div></div>
-            <div class="sar-card-body" id="sm-education-body"><div class="sar-empty">กำลังโหลด...</div></div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;">
-          <div class="sar-card" style="flex:1;">
-            <div class="sar-card-head"><div class="sar-card-icon" style="background:#f0fdf4;"><i data-lucide="briefcase" style="width:17px;height:17px;color:#16a34a;"></i></div><div class="sar-card-title">ประวัติการทำงาน</div></div>
-            <div class="sar-card-body" id="sm-career-body" style="padding:8px 4px;"><div class="sar-empty">กำลังโหลด...</div></div>
-          </div>
-        </div>
-      </div>
-      <!-- ภาระงานสอน + งานที่ได้รับ + การพัฒนา + สื่อ -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-        <div class="sar-card" style="grid-column:1/-1;">
-          <div class="sar-card-head"><div class="sar-card-icon" style="background:#fff7ed;"><i data-lucide="book-open" style="width:17px;height:17px;color:#f97316;"></i></div><div class="sar-card-title">ภาระงานสอนตามตาราง</div></div>
-          <div class="sar-card-body" id="sm-teaching-body"><div class="sar-empty">กำลังโหลด...</div></div>
-        </div>
-        <div class="sar-card">
-          <div class="sar-card-head"><div class="sar-card-icon" style="background:#f5f3ff;"><i data-lucide="clipboard-list" style="width:17px;height:17px;color:#7c3aed;"></i></div><div class="sar-card-title">งานที่ได้รับมอบหมาย</div></div>
-          <div class="sar-card-body" id="sm-duties-body"><div class="sar-empty">กำลังโหลด...</div></div>
-        </div>
-        <div class="sar-card">
-          <div class="sar-card-head"><div class="sar-card-icon" style="background:#fffbeb;"><i data-lucide="award" style="width:17px;height:17px;color:#f59e0b;"></i></div><div class="sar-card-title">การพัฒนาตนเอง</div></div>
-          <div class="sar-card-body" id="sm-dev-body"><div class="sar-empty">กำลังโหลด...</div></div>
-        </div>
-        <div class="sar-card" style="grid-column:1/-1;">
-          <div class="sar-card-head"><div class="sar-card-icon" style="background:#ecfeff;"><i data-lucide="layout-grid" style="width:17px;height:17px;color:#06b6d4;"></i></div><div class="sar-card-title">สื่อนวัตกรรมการเรียนรู้</div></div>
-          <div class="sar-card-body" id="sm-media-body"><div class="sar-empty">กำลังโหลด...</div></div>
-        </div>
-      </div>
-    </div>
+
+    <!-- iframe — ซ่อนไว้ก่อน โชว์เมื่อ load เสร็จ -->
+    <iframe id="sarModalIframe"
+            src=""
+            style="display:none;flex:1;width:100%;border:none;border-radius:0 0 20px 20px;"
+            onload="document.getElementById('sarModalLoading').style.display='none';this.style.display='block';">
+    </iframe>
+
   </div>
 </div>
 
 <style>
-.sar-card{background:white;border-radius:18px;border:1.5px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.sar-card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #f1f5f9;}
-.sar-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sar-card-title{font-size:14px;font-weight:800;color:#0f172a;flex:1;}
-.sar-card-body{padding:14px 18px;}
-.sar-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f8fafc;}
-.sar-row:last-child{border-bottom:none;}
-.sar-lbl{font-size:11px;font-weight:700;color:#94a3b8;min-width:110px;flex-shrink:0;padding-top:1px;}
-.sar-val{font-size:13px;font-weight:600;color:#0f172a;flex:1;}
-.sar-val.empty-val{color:#cbd5e1;font-style:italic;}
-.sar-teach-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f8fafc;}
-.sar-teach-row:last-child{border-bottom:none;}
-.sar-teach-code{font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
-.sar-teach-name{font-size:12px;font-weight:600;color:#334155;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sar-teach-periods{font-size:11px;font-weight:800;color:#f97316;background:#fff7ed;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
-.sar-teach-level{font-size:10px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 6px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
-.sar-teach-total{font-size:12px;font-weight:800;color:#f97316;padding:8px 0 2px;text-align:right;}
-.sar-dev-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f8fafc;}
-.sar-dev-item:last-child{border-bottom:none;}
-.sar-dev-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:5px;}
-.sar-dev-title{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:2px;}
-.sar-dev-meta{font-size:10px;font-weight:600;color:#94a3b8;}
-.sar-media-icon{width:30px;height:30px;border-radius:8px;background:#ecfeff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sar-media-name{font-size:12px;font-weight:700;color:#0f172a;flex:1;}
-.sar-media-sub{font-size:10px;font-weight:600;color:#64748b;}
-.sar-duty-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-.sar-duty-text{font-size:12px;font-weight:600;color:#0f172a;flex:1;}
-.sar-duty-group{font-size:10px;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
-.sar-empty{text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-weight:600;}
-.sm-career-timeline{position:relative;padding:4px 0 4px 28px;}
-.sm-career-timeline::before{content:'';position:absolute;left:12px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,#93c5fd,#c4b5fd);border-radius:2px;}
-.sm-ct-node{position:relative;margin-bottom:18px;}
-.sm-ct-node:last-child{margin-bottom:0;}
-.sm-ct-dot{position:absolute;left:-23px;top:12px;width:14px;height:14px;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 2px currentColor;display:flex;align-items:center;justify-content:center;}
-.sm-ct-card{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 14px;}
-.sm-ct-period{font-size:10px;font-weight:800;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;}
-.sm-ct-school{font-size:13px;font-weight:800;color:#0f172a;margin-bottom:3px;}
-.sm-ct-dept{font-size:11px;font-weight:600;color:#64748b;margin-bottom:7px;}
-.sm-ct-chips{display:flex;flex-wrap:wrap;gap:4px;}
-.sm-ct-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
-@media(max-width:640px){
-  #sarModal .modal-box.wide{border-radius:16px;}
-  #sarModalContent > div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
-}
+/* ── ปิด body scroll เมื่อ modal เปิด ── */
+body.modal-open { overflow: hidden; }
 </style>
 
 </body>

@@ -10,6 +10,17 @@
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW:',e);});}</script>
+  <script>
+    /* ใส่ embed-mode ก่อน paint เพื่อป้องกัน flash of navbar/sidebar */
+    if(new URLSearchParams(location.search).get('embed')==='1'){
+      document.documentElement.classList.add('embed-mode');
+      /* ใช้ documentElement ก่อน body render เสร็จ แล้วย้ายไป body ตอน DOMContentLoaded */
+      document.addEventListener('DOMContentLoaded',function(){
+        document.body.classList.add('embed-mode');
+        document.documentElement.classList.remove('embed-mode');
+      });
+    }
+  </script>
   <title>โปรไฟล์บุคลากร – โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -43,6 +54,17 @@
       .sidebar-wrap.open{transform:translateX(0);}
     }
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}.sidebar-inner{border-right:none;}}
+
+    /* ── Embed mode: ซ่อน chrome ทั้งหมดเมื่อโหลดใน iframe ── */
+    body.embed-mode #loadingOverlay { display: none !important; }
+    body.embed-mode #navbar         { display: none !important; }
+    body.embed-mode #sidebarOverlay { display: none !important; }
+    body.embed-mode .sidebar-wrap   { display: none !important; }
+    body.embed-mode #viewModeBar    { display: none !important; }
+    body.embed-mode #loginGate      { display: none !important; }
+    body.embed-mode #mainApp > div  { padding-left: 0 !important; }
+    body.embed-mode { background: white; }
+    html.embed-mode * { visibility: hidden; }
 
     /* Hero */
     .profile-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:24px;padding:0;position:relative;overflow:hidden;margin-bottom:28px;}
@@ -703,6 +725,7 @@ var allSemData   = []; /* [{yearSem,year,sem,docs:{docTypeId:[subDocs]}}] */
 var _urlParams   = new URLSearchParams(location.search);
 var _viewStaffId = _urlParams.get('staffId') || '';  /* staff doc id */
 var isViewMode   = !!_viewStaffId;                    /* true = ดูโปรไฟล์คนอื่น */
+var isEmbed      = _urlParams.get('embed') === '1';   /* true = โหลดใน iframe ของ staff.html */
 var _viewStaff   = null; /* staff doc ของคนที่ถูกดู (view mode) */
 var _viewUid     = '';   /* uid ของคนที่ถูกดู */
 
@@ -721,10 +744,12 @@ auth.onAuthStateChanged(function(u){
 });
 
 function init(){
-  if(typeof buildNavbar   === 'function') buildNavbar(isViewMode ? 'ดูโปรไฟล์บุคลากร' : 'My Portfolio', false);
-  if(typeof updateNavUser === 'function') updateNavUser(currentUser);
-  if(typeof buildSidebar  === 'function') buildSidebar('profile');
-  if(typeof checkAdminAccess === 'function') checkAdminAccess(currentUser.email);
+  if(!isEmbed){
+    if(typeof buildNavbar   === 'function') buildNavbar(isViewMode ? 'ดูโปรไฟล์บุคลากร' : 'My Portfolio', false);
+    if(typeof updateNavUser === 'function') updateNavUser(currentUser);
+    if(typeof buildSidebar  === 'function') buildSidebar('profile');
+    if(typeof checkAdminAccess === 'function') checkAdminAccess(currentUser.email);
+  }
 
   /* ── ซ่อน edit controls ทั้งหมดถ้าอยู่ใน view mode ── */
   if(isViewMode){
