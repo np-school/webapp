@@ -246,7 +246,7 @@
     .sar-empty{text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-weight:600;}
 
     /* ── Career Timeline ── */
-    .career-timeline{position:relative;padding:4px 0 4px 32px;}
+    .career-timeline{position:relative;padding:4px 0 4px 32px;flex:1;}
     .career-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,#93c5fd,#c4b5fd);border-radius:2px;}
     .ct-node{position:relative;margin-bottom:22px;}
     .ct-node:last-child{margin-bottom:0;}
@@ -411,12 +411,12 @@
 
           <!-- คอลัมน์ขวา: ประวัติการทำงาน (สูงเต็ม) -->
           <div style="display:flex;flex-direction:column;">
-            <div class="sar-card" style="flex:1;">
+            <div class="sar-card" style="flex:1;display:flex;flex-direction:column;">
               <div class="sar-card-head">
                 <div class="sar-card-icon" style="background:#f0fdf4;"><i data-lucide="briefcase" style="width:17px;height:17px;color:#16a34a;"></i></div>
                 <div class="sar-card-title">ประวัติการทำงาน</div>
               </div>
-              <div class="sar-card-body" id="sar-career-body" style="padding:8px 4px;">
+              <div class="sar-card-body" id="sar-career-body" style="padding:8px 4px;flex:1;display:flex;flex-direction:column;">
                 <div class="sar-empty">กำลังโหลด...</div>
               </div>
             </div>
@@ -1201,7 +1201,7 @@ function renderSarSchoolHistory(){
   }
   var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
   var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
-  el.innerHTML = '<div class="career-timeline">' +
+  el.innerHTML = '<div class="career-timeline" style="height:100%;">' +
     careerHistoryItems.map(function(item, idx){
       var col = colors[idx % colors.length];
       var bdr = borderColors[idx % borderColors.length];
