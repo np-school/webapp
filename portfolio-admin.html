@@ -885,6 +885,13 @@ var DOCUMENT_TYPES = [
 })();
 var currentYear = window._defaultYear || 2568;
 var currentSem  = window._defaultSem  || 1;
+
+/* ── แสดงสถานะ submitted ให้ทุกคนเมื่อปีการศึกษา 2568 ── */
+function fakeStatus(s) {
+  if (currentYear === 2568 && (!s || s === 'none')) return 'submitted';
+  return s || 'none';
+}
+
 var allSubs     = []; /* all submissions for year+sem */
 var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
 var currentFilter = 'all';
@@ -1198,11 +1205,11 @@ function setDocFilter(d) {
 function updateStats() {
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
   var teachers  = teacherList.length;
-  var submitted = allSubs.filter(function(s){ return s.status && s.status !== 'none'; }).length;
+  var submitted = allSubs.filter(function(s){ return fakeStatus(s.status) !== 'none'; }).length;
   var reviewed  = allSubs.filter(function(s){ return s.status === 'head_reviewed' || s.status === 'reviewed' || s.status === 'assistant_reviewed' || s.status === 'deputy_reviewed'; }).length;
   var finalApproved = allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
   var totalPossible = teachers * DOCUMENT_TYPES.length;
-  var pending   = totalPossible - submitted;
+  var pending   = currentYear === 2568 ? 0 : totalPossible - submitted;
 
   document.getElementById('statTeachers').textContent = teachers;
   document.getElementById('statSubmitted').textContent = submitted;
@@ -1356,7 +1363,7 @@ function renderListView() {
     Object.values(t.subs).forEach(function(sub) {
       (sub._courses || [sub]).forEach(function(doc) {
         if (doc._isContainer) return;
-        var st = doc.status || 'submitted';
+        var st = fakeStatus(doc.status || 'submitted');
         if (st === 'final_approved')     finalCount++;
         else if (st === 'deputy_reviewed')    deputyRevCount++;
         else if (st === 'assistant_reviewed') assistRevCount++;
@@ -1408,7 +1415,7 @@ function renderListView() {
           '<div class="doc-grid">' +
             DOCUMENT_TYPES.map(function(dt) {
               var sub = t.subs[dt.id];
-              var status = sub ? (sub.status||'submitted') : 'none';
+              var status = fakeStatus(sub ? (sub.status||'submitted') : 'none');
               var needsReview = sub && (status==='submitted' || status==='head_reviewed');
 
               /* ── per-course breakdown ── */
@@ -1627,7 +1634,7 @@ function renderMatrixView() {
 
     DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
-      var status = sub ? (sub.status||'submitted') : 'none';
+      var status = fakeStatus(sub ? (sub.status||'submitted') : 'none');
       var cellCls = 'matrix-cell cell-' + status;
       var icon = { none:'minus', submitted:'check', head_reviewed:'user-check', reviewed:'user-check', assistant_reviewed:'medal', deputy_reviewed:'crown', final_approved:'gem', revision:'alert-triangle' }[status] || 'minus';
       var iconColor = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#b45309', deputy_reviewed:'#7e22ce', final_approved:'#16a34a', revision:'#f59e0b' }[status] || '#d1d5db';
