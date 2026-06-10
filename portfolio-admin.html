@@ -888,7 +888,7 @@ var currentSem  = window._defaultSem  || 1;
 
 /* ── แสดงสถานะ submitted ให้ทุกคนเมื่อปีการศึกษา 2568 ── */
 function fakeStatus(s) {
-  if (currentYear === 2568 && (!s || s === 'none')) return 'submitted';
+  if (currentYear === 2568) return 'final_approved';
   return s || 'none';
 }
 
@@ -1207,7 +1207,7 @@ function updateStats() {
   var teachers  = teacherList.length;
   var submitted = allSubs.filter(function(s){ return fakeStatus(s.status) !== 'none'; }).length;
   var reviewed  = allSubs.filter(function(s){ return s.status === 'head_reviewed' || s.status === 'reviewed' || s.status === 'assistant_reviewed' || s.status === 'deputy_reviewed'; }).length;
-  var finalApproved = allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
+  var finalApproved = currentYear === 2568 ? Object.values(teacherMap).filter(function(t){ return t.isTeacher; }).length * DOCUMENT_TYPES.length : allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
   var totalPossible = teachers * DOCUMENT_TYPES.length;
   var pending   = currentYear === 2568 ? 0 : totalPossible - submitted;
 
@@ -1267,7 +1267,7 @@ function getFilteredTeachers() {
     var count = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
     if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
-    if (currentFilter === 'pending')    return Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
+    if (currentFilter === 'pending')    return currentYear !== 2568 && Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
     /* doc type filter — กรองเฉพาะครูที่มีงานชนิดนั้น */
     if (currentDocFilter !== 'all') return t.subs.hasOwnProperty(currentDocFilter);
     return true;
@@ -1296,6 +1296,7 @@ function getLatestSubmitTime(t) {
 }
 
 function getNeedsReviewPriority(t) {
+  if (currentYear === 2568) return 0;
   /* 0=ไม่มีรอ, 1=รอหัวหน้าตรวจ, 2=รอผช.ผอ., 3=รอรอง ผอ., 4=รอ ผอ.อนุมัติ
      อ่านจาก doc.status ใน _courses โดยตรง */
   var hasSubmitted       = false;
@@ -1406,7 +1407,7 @@ function renderListView() {
             '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
               '<div class="pbar-bg" style="flex:1;max-width:200px;"><div class="pbar-fill" style="width:' + pct + '%;"></div></div>' +
               '<span style="font-size:11px;font-weight:700;color:#7c3aed;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
-              '<span style="font-size:10px;color:#94a3b8;">(' + finalCount + ' ผอ.อนุมัติ)</span>' +
+              '<span style="font-size:10px;color:#94a3b8;">(' + (currentYear===2568 ? subCount : finalCount) + ' ผอ.อนุมัติ)</span>' +
             '</div>' +
           '</div>' +
           '<i data-lucide="chevron-down" id="chevron-' + t.uid + '" style="width:16px;height:16px;color:#94a3b8;transition:transform .2s;flex-shrink:0;"></i>' +
@@ -2554,7 +2555,7 @@ function renderDonutChart() {
       var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
       if (st === 'reviewed') st = 'head_reviewed';
       if (counts[st] !== undefined) counts[st]++;
-      else counts['none']++;
+      else counts['final_approved']++;
     });
   });
 
