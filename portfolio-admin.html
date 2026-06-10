@@ -1264,7 +1264,7 @@ function getFilteredTeachers() {
     if (currentGroup !== 'all') {
       if (normaliseGroup(t.staffGroup) !== normaliseGroup(currentGroup)) return false;
     }
-    var count = Object.keys(t.subs).length;
+    var count = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
     if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
     if (currentFilter === 'pending')    return Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
@@ -1356,7 +1356,7 @@ function renderListView() {
 
   var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:10px;">';
   teachers.forEach(function(t) {
-    var subCount = Object.keys(t.subs).length;
+    var subCount = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
     var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     /* นับจาก doc จริงใน _courses (ไม่ใช่ merged status ของ container) */
     var finalCount = 0, headRevCount = 0, assistRevCount = 0, deputyRevCount = 0, pendingCount = 0, revisionCount = 0;
@@ -2551,8 +2551,7 @@ function renderDonutChart() {
   teacherList.forEach(function(t) {
     DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
-      if (!sub) { counts['none']++; return; }
-      var st = sub.status || 'submitted';
+      var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
       if (st === 'reviewed') st = 'head_reviewed';
       if (counts[st] !== undefined) counts[st]++;
       else counts['none']++;
@@ -2683,7 +2682,7 @@ function renderDocTypeBars() {
   if (!teacherCount) { container.innerHTML = ''; return; }
 
   container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
-    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status && s.status !== 'none'; }).length;
+    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
     var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
     var pct = Math.round((submitted / teacherCount) * 100);
     var pctFinal = Math.round((finalApproved / teacherCount) * 100);
@@ -2951,12 +2950,12 @@ function renderGroupDetail() {
 
   /* รายชื่อครู */
   var teacherRows = d.teachers.slice().sort(function(a,b){ return (b.subs ? Object.keys(b.subs).length : 0) - (a.subs ? Object.keys(a.subs).length : 0); }).map(function(t) {
-    var subCount = Object.keys(t.subs).length;
+    var subCount = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
     var pctT = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     var barColor = pctT >= 100 ? '#16a34a' : pctT >= 60 ? '#7c3aed' : pctT >= 30 ? '#f59e0b' : '#ef4444';
     var docChips = DOCUMENT_TYPES.map(function(dt) {
       var sub = t.subs[dt.id];
-      var st = sub ? (sub.status || 'submitted') : 'none';
+      var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
       var chipColor = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'#c4b5fd', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || '#e2e8f0';
       return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc(dt.label) + '"></div>';
     }).join('');
