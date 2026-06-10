@@ -2641,7 +2641,7 @@ function renderGroupBars() {
     DOCUMENT_TYPES.forEach(function(dt) {
       groupData[g].total++;
       var sub = t.subs[dt.id];
-      if (sub && sub.status === 'final_approved') groupData[g].approved++;
+      if (fakeStatus(sub ? sub.status : 'none') === 'final_approved') groupData[g].approved++;
     });
   });
 
@@ -2683,8 +2683,8 @@ function renderDocTypeBars() {
   if (!teacherCount) { container.innerHTML = ''; return; }
 
   container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
-    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
-    var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
+    var submitted     = currentYear === 2568 ? teacherCount : allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
+    var finalApproved = currentYear === 2568 ? teacherCount : allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
     var pct = Math.round((submitted / teacherCount) * 100);
     var pctFinal = Math.round((finalApproved / teacherCount) * 100);
 
