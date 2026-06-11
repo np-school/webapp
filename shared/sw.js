@@ -1,15 +1,20 @@
-var CACHE_NAME = 'np-origins-v4';
-var STATIC_FILES = [
+var CACHE_NAME = 'np-origins-v5';
+/* แยก must-have (core) กับ optional
+   cache.addAll จะ fail ทั้งหมดถ้าไฟล์ใดไฟล์หนึ่งโหลดไม่ได้
+   → เปลี่ยนเป็น cache ทีละไฟล์แทน */
+var CORE_FILES = [
   '/webapp/index.html',
-  '/webapp/room-request.html',
-  '/webapp/room-admin.html',
   '/webapp/guide.html',
-  '/webapp/portfolio-teacher.html',
-  '/webapp/portfolio-admin.html',
   '/webapp/shared/common.js',
   '/webapp/shared/styles.css',
   '/webapp/shared/firebase.js',
   '/webapp/manifest.json'
+];
+var OPTIONAL_FILES = [
+  '/webapp/room-request.html',
+  '/webapp/room-admin.html',
+  '/webapp/portfolio-teacher.html',
+  '/webapp/portfolio-admin.html'
 ];
 
 /* ไฟล์ที่ต้องใช้ network-first (HTML, JS) เพื่อให้ได้ version ล่าสุดเสมอ */
@@ -17,12 +22,22 @@ function isNetworkFirst(url) {
   return url.endsWith('.html') || url.endsWith('.js');
 }
 
-/* Install — cache static files */
+/* Install — cache ทีละไฟล์ เพื่อไม่ให้ไฟล์ที่ยังไม่มีทำให้ SW fail ทั้งหมด */
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(STATIC_FILES);
+      /* core: ต้องได้ทุกไฟล์ */
+      var corePromise = cache.addAll(CORE_FILES);
+      /* optional: พลาดได้ ไม่กระทบ install */
+      var optPromise = Promise.all(
+        OPTIONAL_FILES.map(function(url) {
+          return cache.add(url).catch(function(err) {
+            console.warn('SW optional cache skip:', url, err.message);
+          });
+        })
+      );
+      return corePromise.then(function() { return optPromise; });
     })
   );
 });
@@ -43,7 +58,7 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
 
-  /* ข้าม Firebase API, Firestore, Auth — ต้องออนไลน์เสมอ */
+  /* ข้าม Firebase, Google OAuth, Cloud Functions — ต้องออนไลน์เสมอ */
   if (url.includes('firestore.googleapis.com') ||
       url.includes('identitytoolkit.googleapis.com') ||
       url.includes('securetoken.googleapis.com') ||
