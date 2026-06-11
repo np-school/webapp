@@ -96,135 +96,12 @@ function isInAppBrowser() {
 function handleLogin() {
   var ov = document.getElementById('loadingOverlay');
   if (ov) ov.style.display = 'flex';
-
-  /* LINE / In-App Browser → ไม่รองรับทั้ง popup และ redirect */
-  if (isInAppBrowser()) {
-    if (ov) ov.style.display = 'none';
-    _showOpenInBrowserAlert();
-    return;
-  }
-
-  var ua = navigator.userAgent || '';
-  /* iOS/iPadOS (ทุก browser) บังคับใช้ WebKit — redirect ถูก ITP ตัด → ใช้ popup
-     macOS/Windows/Android → ใช้ redirect (Brave/Chrome บล็อก popup 3rd-party cookie) */
-  var isIOS = /iPhone|iPad|iPod/.test(ua) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPad iOS 13+ */
-
-  if (isIOS) {
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-      .catch(function(e) {
-        console.error('Popup error:', e.code, e.message);
-        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-          if (ov) ov.style.display = 'none';
-        } else if (e.code === 'auth/popup-blocked') {
-          if (ov) ov.style.display = 'none';
-          showToast('กรุณาอนุญาต Popup ใน Safari แล้วลองใหม่', 'warn');
-        } else {
-          if (ov) ov.style.display = 'none';
-          showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
-        }
-      });
-  } else {
-    /* Chrome/Brave/Firefox: redirect */
-    auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
-      .catch(function(e) {
-        console.error('Redirect error:', e.code, e.message);
-        if (ov) ov.style.display = 'none';
-        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
-      });
-  }
-}
-
-/* รับผล redirect กลับมา — เรียกครั้งเดียวตอนโหลดหน้า (ก่อน onAuthStateChanged) */
-function handleRedirectResult() {
-  if (isInAppBrowser()) return; /* ไม่ต้องรอใน in-app browser */
-
-  var ov = document.getElementById('loadingOverlay');
-
-  auth.getRedirectResult()
-    .then(function(result) {
-      if (result && result.user) {
-        /* redirect login สำเร็จ — onAuthStateChanged จะ fire ต่อเอง */
-        console.log('Redirect login success:', result.user.email);
-        /* คง loading ไว้ให้ onAuthStateChanged ปิดเอง */
-      } else {
-        /* ไม่มี redirect result = โหลดหน้าปกติ ปิด loading ถ้ายังไม่มี auth */
-        if (ov && !auth.currentUser) {
-          /* onAuthStateChanged จะปิดเอง — ไม่ต้องทำอะไร */
-        }
-      }
-    })
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
     .catch(function(e) {
-      console.error('Redirect result error:', e.code, e.message);
+      console.error(e);
       if (ov) ov.style.display = 'none';
-      if (e.code === 'auth/web-storage-unsupported' ||
-          e.code === 'auth/operation-not-supported-in-this-environment') {
-        showToast('เบราว์เซอร์ไม่รองรับการล็อกอิน กรุณาใช้ Chrome หรือ Safari', 'error');
-      } else if (e.code && e.code !== 'auth/no-auth-event') {
-        /* auth/no-auth-event = ไม่มี redirect ก่อนหน้า — ปกติ ไม่ต้อง toast */
-        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
-      }
     });
 }
-
-/* แสดง alert แนะนำให้เปิดใน browser จริง */
-function _showOpenInBrowserAlert() {
-  var ua = navigator.userAgent || '';
-  var isIOS = /iPhone|iPod|iPad/.test(ua);
-  var currentUrl = window.location.href;
-
-  /* สร้าง overlay */
-  var overlay = document.createElement('div');
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:99999;' +
-    'display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);';
-
-  var steps = isIOS
-    ? '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;text-align:left;">' +
-        '<div style="width:22px;height:22px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">1</div>' +
-        '<p style="font-size:13px;color:#334155;line-height:1.6;">กดปุ่ม <strong>··· (สามจุด)</strong> มุมขวาบนของ LINE</p></div>' +
-        '<div style="display:flex;align-items:flex-start;gap:10px;text-align:left;">' +
-        '<div style="width:22px;height:22px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">2</div>' +
-        '<p style="font-size:13px;color:#334155;line-height:1.6;">เลือก <strong>"เปิดใน Safari"</strong></p></div>'
-    : '<div style="display:flex;align-items:flex-start;gap:10px;text-align:left;">' +
-        '<div style="width:22px;height:22px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">1</div>' +
-        '<p style="font-size:13px;color:#334155;line-height:1.6;">กดปุ่ม <strong>··· (สามจุด)</strong> แล้วเลือก <strong>"เปิดใน Chrome"</strong></p></div>';
-
-  overlay.innerHTML =
-    '<div style="background:white;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center;">' +
-      '<div style="width:60px;height:60px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-      '</div>' +
-      '<h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:8px;">กรุณาเปิดในเบราว์เซอร์</h2>' +
-      '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:20px;">ระบบล็อกอิน Google ไม่รองรับการเปิดผ่าน LINE Browser</p>' +
-      '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">' + steps + '</div>' +
-      '<button id="_copyLinkBtn" style="width:100%;padding:12px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">📋 คัดลอกลิงก์</button>' +
-      '<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">ปิด</button>' +
-    '</div>';
-
-  document.body.appendChild(overlay);
-
-  document.getElementById('_copyLinkBtn').addEventListener('click', function() {
-    var btn = this;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(currentUrl).then(function() {
-        btn.textContent = '✓ คัดลอกแล้ว!';
-        btn.style.background = '#16a34a';
-      });
-    } else {
-      /* fallback */
-      var ta = document.createElement('textarea');
-      ta.value = currentUrl;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      btn.textContent = '✓ คัดลอกแล้ว!';
-      btn.style.background = '#16a34a';
-    }
-  });
-}
-
 function handleLogout() {
   var ov = document.getElementById('loadingOverlay');
   if (ov) ov.style.display = 'flex';
@@ -233,10 +110,6 @@ function handleLogout() {
   });
 }
 
-/* เรียก handleRedirectResult() ใน onAuthStateChanged ของแต่ละหน้า
-   ตัวอย่าง (วางไว้ก่อน auth.onAuthStateChanged):
-   ─────────────────────────────────────────────
-   handleRedirectResult();
    auth.onAuthStateChanged(function(user) { ... });
    ───────────────────────────────────────────── */
 
