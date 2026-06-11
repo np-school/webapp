@@ -104,14 +104,34 @@ function handleLogin() {
     return;
   }
 
-  /* ใช้ redirect เท่านั้น — popup ถูกบล็อกโดย Brave/Safari (3rd-party cookie policy)
-     หน้าจะ reload และรับผลผ่าน handleRedirectResult() */
-  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
-    .catch(function(e) {
-      console.error('Redirect error:', e.code, e.message);
-      if (ov) ov.style.display = 'none';
-      showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
-    });
+  var ua = navigator.userAgent || '';
+  /* Safari (รวม iPad/iPhone) บล็อก redirect ด้วย ITP → ต้องใช้ popup
+     Brave/Chrome/Firefox → ใช้ redirect (popup ถูกบล็อก 3rd-party cookie) */
+  var isSafari = /Safari\//.test(ua) && !/Chrome\/|Chromium\/|CriOS\/|FxiOS\//.test(ua);
+
+  if (isSafari) {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+      .catch(function(e) {
+        console.error('Popup error:', e.code, e.message);
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+          if (ov) ov.style.display = 'none';
+        } else if (e.code === 'auth/popup-blocked') {
+          if (ov) ov.style.display = 'none';
+          showToast('กรุณาอนุญาต Popup ใน Safari แล้วลองใหม่', 'warn');
+        } else {
+          if (ov) ov.style.display = 'none';
+          showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
+        }
+      });
+  } else {
+    /* Chrome/Brave/Firefox: redirect */
+    auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
+      .catch(function(e) {
+        console.error('Redirect error:', e.code, e.message);
+        if (ov) ov.style.display = 'none';
+        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
+      });
+  }
 }
 
 /* รับผล redirect กลับมา — เรียกครั้งเดียวตอนโหลดหน้า (ก่อน onAuthStateChanged) */
