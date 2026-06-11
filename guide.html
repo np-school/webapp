@@ -63,10 +63,11 @@
       padding: 6px; margin-bottom: 20px;
       border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.05);
       overflow-x: auto; -webkit-overflow-scrolling: touch;
+      max-width: 100%; box-sizing: border-box;
     }
     .ptab-bar::-webkit-scrollbar { height: 0; }
     .ptab-btn {
-      flex: 1; min-width: 120px; padding: 11px 16px; border: none;
+      flex: 1; min-width: 80px; padding: 11px 16px; border: none;
       border-radius: 11px; font-family: 'Sarabun', sans-serif; font-size: 13px;
       font-weight: 700; color: #64748b; cursor: pointer; background: none;
       display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -239,7 +240,14 @@
     }
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
   body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
-</style>
+
+    @media(max-width:600px){
+      .ptab-btn { min-width:0; font-size:12px; padding:9px 10px; gap:5px; }
+      .ptab-btn i, .ptab-btn [data-lucide] { display:none; }
+      .stab-btn { font-size:11px; padding:7px 10px; }
+    }
+
+  </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh">
 

@@ -122,7 +122,13 @@
     @media(max-width:540px){
       .cal-content-grid{grid-template-columns:1fr!important;}
     }
-</style>
+
+    @media(max-width:600px){
+      .room-tab { font-size:11px !important; padding:5px 10px !important; white-space:nowrap; }
+      #roomTabsWrap { flex-wrap:nowrap !important; }
+    }
+
+  </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
 
@@ -153,12 +159,12 @@
     <!-- Room tabs -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>
-      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;">
+      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
         <button class="room-tab active" onclick="selectRoomFilter('all',this)">ทุกห้อง</button>
       </div>
     </div>
 
-    <div class="cal-content-grid">
+    <div class="cal-content-grid" style="max-width:100%;">
       <!-- Calendar -->
       <div style="display:flex;flex-direction:column;gap:18px;">
         <div class="card" style="overflow:hidden;">
