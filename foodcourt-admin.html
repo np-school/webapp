@@ -284,7 +284,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <div class="page-title">ภาพรวมบัญชี Food Court</div>
             <div class="page-sub">โรงเรียนหนองกี่พิทยาคม – อัปเดตล่าสุด <span id="lastUpdated"></span></div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="exportCSV()">⬇️ ส่งออก CSV</button><button class="btn btn-blue" onclick="openAddModal(null)">➕ เพิ่มรายการ</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="exportCSV()">⬇️ ส่งออก CSV</button><button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button></div>
         </div>
 
 
@@ -360,7 +360,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <div class="page-title">รายการทั้งหมด</div>
             <div class="page-sub">รายรับ – รายจ่าย แบ่งตามวัน</div>
           </div>
-          <button class="btn btn-blue" onclick="openAddModal(null)">➕ เพิ่มรายการ</button>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button>
         </div>
 
         <!-- Sub Tab Bar -->
@@ -392,7 +392,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <div class="page-title">จัดการรายการ</div>
             <div class="page-sub">รายการประจำและการตั้งค่า</div>
           </div>
-          <button class="btn btn-blue" onclick="openAddModal(null)">➕ เพิ่มรายการ</button>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button>
         </div>
 
         <!-- Sub Tab Bar -->
@@ -815,6 +815,50 @@ function recomputeBalance(){
   transactions.forEach(t=>t.balance=map[t.id]||0);
 }
 
+// ── FIRESTORE PERSISTENCE ──
+const FC_TX_COLL = 'foodcourt_transactions';
+const FC_META_DOC = db.collection('foodcourt_meta').doc('config');
+
+function fcSaveTransaction(t){
+  db.collection(FC_TX_COLL).doc(String(t.id)).set(t).catch(function(e){console.error('save tx',e);});
+}
+function fcDeleteTransaction(id){
+  db.collection(FC_TX_COLL).doc(String(id)).delete().catch(function(e){console.error('delete tx',e);});
+}
+function fcSaveRecurring(){
+  FC_META_DOC.set({recurringItems:recurringItems},{merge:true}).catch(function(e){console.error('save recurring',e);});
+}
+
+/* โหลดข้อมูลจาก Firestore — ถ้ายังไม่เคยมีข้อมูล (ครั้งแรก) จะ seed จาก CSV/ค่าเริ่มต้น แล้วบันทึกขึ้น Firestore */
+function loadFoodcourtData(){
+  return Promise.all([
+    db.collection(FC_TX_COLL).get(),
+    FC_META_DOC.get()
+  ]).then(function(results){
+    var txSnap=results[0], metaSnap=results[1];
+
+    if(!txSnap.empty){
+      transactions=[];
+      txSnap.forEach(function(doc){ transactions.push(doc.data()); });
+    } else {
+      /* ครั้งแรก – seed ข้อมูลตัวอย่างขึ้น Firestore */
+      transactions.forEach(function(t){ fcSaveTransaction(t); });
+    }
+
+    if(metaSnap.exists && metaSnap.data().recurringItems && metaSnap.data().recurringItems.length){
+      recurringItems=metaSnap.data().recurringItems;
+    } else {
+      fcSaveRecurring();
+    }
+
+    recomputeBalance();
+  }).catch(function(e){
+    console.error('โหลดข้อมูล Food Court ไม่สำเร็จ',e);
+    toast('โหลดข้อมูลจาก Firestore ไม่สำเร็จ ใช้ข้อมูลตัวอย่างชั่วคราว','#dc2626');
+    recomputeBalance();
+  });
+}
+
 // ── SIDEBAR + TABS ──
 function switchTab(id,el){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -841,6 +885,12 @@ function switchManageSub(panel,el){
   document.getElementById('panelMgmt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
   if(panel==='recurring') renderManage();
   if(panel==='entry') renderDailyEntry();
+}
+
+/* ปุ่ม "เพิ่มรายการ" → ไปที่จัดการรายการ → บันทึกรายวัน */
+function goToDailyEntry(){
+  switchTab('manage',document.getElementById('sb-manage'));
+  switchManageSub('entry',document.getElementById('subMgmtEntry'));
 }
 
 // ── DASHBOARD ──
@@ -1059,19 +1109,20 @@ function saveDailyEntry(){
   const date=document.getElementById('entryDate').value;
   if(!date){toast('กรุณาเลือกวันที่','#dc2626');return;}
   let count=0;
+  let newTx=[];
 
   recurringItems.forEach(r=>{
     if(r.shopCount){
       const c=parseInt(document.getElementById('entryShopCount-'+r.id)?.value)||0;
       if(c>0){
-        transactions.push({id:Date.now()+Math.random(),date,name:r.name,income:0,expense:c*50,balance:0,note:c+' ร้าน',recurring:true});
-        count++;
+        const t={id:Date.now()+Math.random(),date,name:r.name,income:0,expense:c*50,balance:0,note:c+' ร้าน',recurring:true};
+        transactions.push(t);newTx.push(t);count++;
       }
     } else {
       const v=parseFloat(document.getElementById('entryAmt-'+r.id)?.value)||0;
       if(v>0){
-        transactions.push({id:Date.now()+Math.random(),date,name:r.name,income:r.type==='income'?v:0,expense:r.type==='expense'?v:0,balance:0,note:'',recurring:true});
-        count++;
+        const t={id:Date.now()+Math.random(),date,name:r.name,income:r.type==='income'?v:0,expense:r.type==='expense'?v:0,balance:0,note:'',recurring:true};
+        transactions.push(t);newTx.push(t);count++;
       }
     }
   });
@@ -1081,8 +1132,8 @@ function saveDailyEntry(){
       const name=(document.getElementById('entryExtraName-'+r.id)?.value||'').trim();
       const amount=parseFloat(document.getElementById('entryExtraAmt-'+r.id)?.value)||0;
       if(name&&amount>0){
-        transactions.push({id:Date.now()+Math.random(),date,name,income:type==='income'?amount:0,expense:type==='expense'?amount:0,balance:0,note:'',recurring:false});
-        count++;
+        const t={id:Date.now()+Math.random(),date,name,income:type==='income'?amount:0,expense:type==='expense'?amount:0,balance:0,note:'',recurring:false};
+        transactions.push(t);newTx.push(t);count++;
       }
     });
   });
@@ -1090,6 +1141,7 @@ function saveDailyEntry(){
   if(!count){toast('ไม่มีรายการที่จะบันทึก','#dc2626');return;}
 
   recomputeBalance();
+  newTx.forEach(t=>fcSaveTransaction(t));
   extraEntryRows={income:[],expense:[]};
   renderDailyEntry();
   renderDashboard();
@@ -1115,8 +1167,9 @@ function saveQuickLog(){
   const note=document.getElementById('quickLogNote').value.trim();
   if(!date||!amount){toast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
   const isIncome=_quickLogRec.type==='income';
-  transactions.push({id:Date.now(),date,name:_quickLogRec.name,income:isIncome?amount:0,expense:isIncome?0:amount,balance:0,note,recurring:true});
-  recomputeBalance();closeQuickLogModal();renderDashboard();
+  const t={id:Date.now(),date,name:_quickLogRec.name,income:isIncome?amount:0,expense:isIncome?0:amount,balance:0,note,recurring:true};
+  transactions.push(t);
+  recomputeBalance();fcSaveTransaction(t);closeQuickLogModal();renderDashboard();
   toast('บันทึก "'+_quickLogRec.name+'" แล้ว ✅','#16a34a');
 }
 
@@ -1141,8 +1194,9 @@ function saveShopCount(){
   if(!date){toast('กรุณาเลือกวันที่','#dc2626');return;}
   if(!count){toast('กรุณาใส่จำนวนร้าน','#dc2626');return;}
   const amount=count*50;
-  transactions.push({id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true});
-  recomputeBalance();closeShopCountModal();renderDashboard();
+  const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
+  transactions.push(t);
+  recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
   toast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount)+' ✅','#1d4ed8');
 }
 
@@ -1172,8 +1226,9 @@ function saveTransaction(){
   const name=document.getElementById('addName').value.trim();
   const note=document.getElementById('addNote').value.trim();
   if(!date||!name||!amount){toast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
-  transactions.push({id:Date.now(),date,name,income:addType==='income'?amount:0,expense:addType==='expense'?amount:0,balance:0,note,recurring:false});
-  recomputeBalance();closeAddModal();renderDashboard();
+  const t={id:Date.now(),date,name,income:addType==='income'?amount:0,expense:addType==='expense'?amount:0,balance:0,note,recurring:false};
+  transactions.push(t);
+  recomputeBalance();fcSaveTransaction(t);closeAddModal();renderDashboard();
   toast('บันทึกรายการแล้ว ✅','#16a34a');
 }
 
@@ -1194,12 +1249,14 @@ function saveRecurring(){
   document.getElementById('recName').value='';
   document.getElementById('recAmount').value='';
   document.getElementById('recDesc').value='';
+  fcSaveRecurring();
   renderManage();renderDashboardRecurring();
   toast('เพิ่มรายการประจำแล้ว ✅','#16a34a');
 }
 function deleteRec(id){
   if(!confirm('ลบรายการประจำนี้?')) return;
   recurringItems=recurringItems.filter(r=>r.id!==id);
+  fcSaveRecurring();
   renderManage();renderDashboardRecurring();
   toast('ลบรายการประจำแล้ว','#dc2626');
 }
@@ -1264,7 +1321,7 @@ function renderDaily(){
 function deleteRow(id){
   if(!confirm('ลบรายการนี้?')) return;
   transactions=transactions.filter(t=>t.id!==id);
-  recomputeBalance();renderDaily();
+  recomputeBalance();fcDeleteTransaction(id);renderDaily();
   if(document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
   toast('ลบรายการเรียบร้อย','#dc2626');
 }
@@ -1289,7 +1346,6 @@ function toast(msg,bg='#16a34a'){
 }
 
 // ── AUTH + ADMIN CHECK ──
-recomputeBalance();
 document.getElementById('filterMonth').value=new Date().toISOString().slice(0,7);
 
 var _authResolved=false;
@@ -1329,7 +1385,9 @@ function bootApp(u){
   buildSidebar('foodcourt-admin');
   checkAdminAccess(u.email);
   updateSidebarProfile(u);
-  renderDashboard();
+  loadFoodcourtData().then(function(){
+    renderDashboard();
+  });
 }
 </script>
 </body>
