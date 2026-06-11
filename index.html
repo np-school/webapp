@@ -573,6 +573,7 @@
     lucide.createIcons();
   }
 
+  handleRedirectResult(); /* รับผล redirect login กลับมา — ต้องเรียกก่อน onAuthStateChanged */
   auth.onAuthStateChanged(_initUI);
 
   /* ── Login Gate ── */

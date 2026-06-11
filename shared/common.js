@@ -104,36 +104,61 @@ function handleLogin() {
     return;
   }
 
-  /* ใช้ popup — redirect ติดปัญหา 3rd-party cookie blocked (Firefox/Safari ITP)
-     popup ไม่ใช้ iframe จึงไม่ติดปัญหานี้ */
+  /* ลอง popup ก่อน — ถ้าถูกบล็อก fallback ไป redirect
+     redirect ต้องการ handleRedirectResult() รับผลตอนโหลดหน้าใหม่ */
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .then(function() {
+      /* popup สำเร็จ — onAuthStateChanged จะจัดการต่อเอง */
+    })
     .catch(function(e) {
-      console.error(e);
-      if (ov) ov.style.display = 'none';
+      console.error('Popup login error:', e.code, e.message);
       if (e.code === 'auth/popup-blocked') {
-        /* popup ถูกบล็อก → fallback ไป redirect */
-        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-      } else if (e.code !== 'auth/popup-closed-by-user') {
+        /* popup ถูกบล็อก → แสดง loading แล้ว redirect */
+        if (ov) ov.style.display = 'flex';
+        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
+          .catch(function(re) {
+            console.error('Redirect error:', re);
+            if (ov) ov.style.display = 'none';
+            showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
+          });
+      } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+        /* ผู้ใช้ปิด popup เอง — ไม่ต้องแสดง error */
+        if (ov) ov.style.display = 'none';
+      } else {
+        if (ov) ov.style.display = 'none';
         showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
       }
     });
 }
 
-/* รับผล redirect กลับมา — เรียกครั้งเดียวตอนโหลดหน้า */
+/* รับผล redirect กลับมา — เรียกครั้งเดียวตอนโหลดหน้า (ก่อน onAuthStateChanged) */
 function handleRedirectResult() {
   if (isInAppBrowser()) return; /* ไม่ต้องรอใน in-app browser */
+
+  var ov = document.getElementById('loadingOverlay');
+
   auth.getRedirectResult()
     .then(function(result) {
-      /* result.user จะมีค่าถ้า redirect login สำเร็จ — onAuthStateChanged จัดการต่อ */
       if (result && result.user) {
+        /* redirect login สำเร็จ — onAuthStateChanged จะ fire ต่อเอง */
         console.log('Redirect login success:', result.user.email);
+        /* คง loading ไว้ให้ onAuthStateChanged ปิดเอง */
+      } else {
+        /* ไม่มี redirect result = โหลดหน้าปกติ ปิด loading ถ้ายังไม่มี auth */
+        if (ov && !auth.currentUser) {
+          /* onAuthStateChanged จะปิดเอง — ไม่ต้องทำอะไร */
+        }
       }
     })
     .catch(function(e) {
-      console.error('Redirect result error:', e);
-      /* auth/web-storage-unsupported = Safari ITP บล็อก 3rd-party cookie */
-      if (e.code === 'auth/web-storage-unsupported' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      console.error('Redirect result error:', e.code, e.message);
+      if (ov) ov.style.display = 'none';
+      if (e.code === 'auth/web-storage-unsupported' ||
+          e.code === 'auth/operation-not-supported-in-this-environment') {
         showToast('เบราว์เซอร์ไม่รองรับการล็อกอิน กรุณาใช้ Chrome หรือ Safari', 'error');
+      } else if (e.code && e.code !== 'auth/no-auth-event') {
+        /* auth/no-auth-event = ไม่มี redirect ก่อนหน้า — ปกติ ไม่ต้อง toast */
+        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
       }
     });
 }
