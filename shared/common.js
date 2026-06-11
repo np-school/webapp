@@ -377,12 +377,12 @@ function buildSidebar(activePage) {
   html += '<div class="sec-label" style="margin-top:6px;">บริการออนไลน์</div>';
   GROUP_MENU.forEach(function(g) {
     html +=
-      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+      '<div class="sidebar-group-label">' +
         '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>' +
         '<span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
       '</div>';
     if (!g.items.length) {
-      html += '<div style="padding:5px 14px 4px 36px;font-size:11px;color:#cbd5e1;font-style:italic;">อยู่ระหว่างพัฒนา</div>';
+      html += '<div class="sidebar-dev-note">อยู่ระหว่างพัฒนา</div>';
     } else {
       g.items.forEach(function(item) {
         var key = item.href ? item.href.replace('.html', '') : '';
@@ -417,7 +417,7 @@ function buildSidebar(activePage) {
     if (!rowsHtml) return;
 
     adminGroupHtml +=
-      '<div style="display:flex;align-items:center;gap:7px;padding:6px 14px 3px;margin-top:2px;">' +
+      '<div class="sidebar-group-label">' +
         '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
         '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
       '</div>' +
@@ -426,12 +426,12 @@ function buildSidebar(activePage) {
 
   html +=
     '<div id="adminSidebarSection" style="display:none;">' +
-      '<div style="margin:12px 16px;height:1px;background:#e9d5ff;"></div>' +
+      '<div class="sidebar-admin-divider"></div>' +
       '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
       adminGroupHtml +
       /* SuperAdmin-only slot */
       '<div id="superadminSidebarSlot" style="display:none;">' +
-        '<div style="margin:8px 16px 4px;display:flex;align-items:center;gap:6px;">' +
+        '<div class="sidebar-superadmin-label">' +
           '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
           '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
         '</div>' +

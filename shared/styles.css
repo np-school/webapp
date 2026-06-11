@@ -226,9 +226,6 @@ input:focus, select:focus, textarea:focus {
   max-width: 1280px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-  .sidebar-btn     { padding: 9px 12px; font-size: 13px; border-radius: 11px; }
-  .sec-label       { padding: 10px 12px 5px; font-size: 9px; }
-}
 
 /* ══════════════════════════════════════════════
    Sidebar – Group Labels & Sub-elements
@@ -249,15 +246,4 @@ input:focus, select:focus, textarea:focus {
   display: flex; align-items: center; gap: 6px;
 }
 
-/* ══════════════════════════════════════════════
-   Mobile Sidebar – Smooth scroll, ระยะห่างสวย
-   คง spacing เดิม, scroll ได้สบาย
-   ══════════════════════════════════════════════ */
-@media (max-width: 1023px) {
-  .sidebar-inner {
-    padding: 20px 12px;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
 }
