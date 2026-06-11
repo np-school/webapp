@@ -315,9 +315,7 @@ var ADMIN_GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'banknote',
-    items: [
-      { id: 'adminMenuItem-foodcourt', label: 'บัญชีรายได้ Food Court', icon: 'utensils', href: 'foodcourt-admin.html' },
-    ],
+    items: [],
   },
   {
     group: 'กลุ่มบริหารงานบุคคล',
@@ -337,7 +335,8 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มบริหารทั่วไป',
     icon: 'building-2',
     items: [
-      { id: 'adminMenuItem-booking', label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'room-admin.html' },
+      { id: 'adminMenuItem-booking',    label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'room-admin.html' },
+      { id: 'adminMenuItem-foodcourt',  label: 'บัญชีรายได้ Food Court',       icon: 'utensils',     href: 'foodcourt-admin.html' },
     ],
   },
 ];

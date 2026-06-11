@@ -264,7 +264,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       <div class="page-inner" style="padding-bottom:0">
         <div class="page-header" style="margin-bottom:14px">
           <div>
-            <div class="page-title">Food Court บัญชีรายได้</div>
+            <div class="page-title">บัญชีรายได้ Food Court</div>
             <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
           </div>
         </div>
@@ -397,6 +397,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <option value="">ทุกเดือน</option>
           </select>
           <input type="text" id="filterSearch" placeholder="ค้นหารายการ..." style="flex:1;min-width:160px" oninput="renderDaily()">
+        </div>
+
+        <!-- Monthly Chart (แสดงเมื่อเลือกเดือน) -->
+        <div id="monthlyChartWrap" style="display:none;margin-bottom:16px">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+              <div class="card-title" style="margin-bottom:0" id="monthlyChartTitle">สรุปรายได้เดือนนี้</div>
+              <div id="monthlyChartKpi" style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px"></div>
+            </div>
+            <div style="height:200px;position:relative"><canvas id="monthlyBarChart"></canvas></div>
+          </div>
         </div>
 
         <div id="dailyList"></div>
@@ -1402,6 +1413,50 @@ function deleteRec(id){
   toast('ลบรายการประจำแล้ว','#dc2626');
 }
 
+// ── MONTHLY CHART ──
+var monthlyBarChart;
+function renderMonthlyChart(month){
+  const wrap = document.getElementById('monthlyChartWrap');
+  if(!month){ wrap.style.display='none'; if(monthlyBarChart){monthlyBarChart.destroy();monthlyBarChart=null;} return; }
+
+  const rows = transactions.filter(t=>t.date.startsWith(month));
+  if(!rows.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+
+  // ชื่อเดือนสำหรับ title
+  const [y,mo]=month.split('-');
+  const mLabel=new Date(parseInt(y),parseInt(mo)-1,1).toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  document.getElementById('monthlyChartTitle').textContent='สรุป '+mLabel;
+
+  // KPI
+  const totalIn=rows.reduce((s,t)=>s+t.income,0);
+  const totalOut=rows.reduce((s,t)=>s+t.expense,0);
+  const net=totalIn-totalOut;
+  document.getElementById('monthlyChartKpi').innerHTML=`
+    <span style="font-weight:800;color:var(--green)">รับ ฿${fmt(totalIn)}</span>
+    <span style="color:var(--text2)">|</span>
+    <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
+    <span style="color:var(--text2)">|</span>
+    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
+  `;
+
+  // Group by date
+  const days=[...new Set(rows.map(t=>t.date))].sort();
+  const labels=days.map(fmtDate);
+  const incomes=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
+  const expenses=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
+
+  if(monthlyBarChart) monthlyBarChart.destroy();
+  monthlyBarChart=new Chart(document.getElementById('monthlyBarChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:5},
+      {label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:11}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
+  });
+}
+
 // ── POPULATE MONTH FILTER ──
 function populateMonthFilter(){
   const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
@@ -1423,6 +1478,7 @@ function populateMonthFilter(){
 // ── DAILY ──
 function renderDaily(){
   const filterMonth=document.getElementById('filterMonth').value;
+  renderMonthlyChart(filterMonth);
   const filterSearch=document.getElementById('filterSearch').value.toLowerCase();
   let rows=[...transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
   if(filterMonth) rows=rows.filter(r=>r.date.startsWith(filterMonth));
@@ -1537,7 +1593,7 @@ auth.onAuthStateChanged(function(u){
 
 function bootApp(u){
   document.getElementById('adminApp').style.display='block';
-  buildNavbar('Food Court บัญชีรายได้', false);
+  buildNavbar('บัญชีรายได้ Food Court', false);
   updateNavUser(u);
   buildSidebar('foodcourt-admin');
   checkAdminAccess(u.email);
