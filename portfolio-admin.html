@@ -6,6 +6,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7c3aed">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
@@ -269,7 +270,7 @@
     .dt-row.dragging{opacity:.45;border-style:dashed;}
     .color-swatch{width:20px;height:20px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
     .color-swatch.selected{border-color:#0f172a;}
-  body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
+  body{overflow-x:hidden;}#mainContent,#mainGrid{max-width:100%;}
 </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
@@ -459,7 +460,7 @@
       </div>
 
       <!-- Main Content -->
-      <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+      <div id="mainContent" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
         <div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;">
           <i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;margin-bottom:12px;"></i>
           <p>กำลังโหลดข้อมูล...</p>
