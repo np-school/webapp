@@ -18,21 +18,16 @@
 }
 body{background:#f1f5f9;color:var(--text);min-height:100vh}
 
-/* ── NAVBAR (matches shared styles.css) ── */
+/* ── NAVBAR ── */
 .navbar{
   position:sticky;top:0;z-index:150;
   background:#1d4ed8;padding:0 20px;height:56px;
   display:flex;align-items:center;
   box-shadow:0 4px 12px rgba(0,0,0,.12);
 }
-.navbar-inner{
-  width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
+.navbar-inner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;color:white;font-weight:800;font-size:15px}
 .brand-ico{background:rgba(255,255,255,.2);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.nav-tabs{display:flex;gap:2px}
-.nav-tab{background:none;border:none;color:rgba(255,255,255,.65);font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
-.nav-tab:hover,.nav-tab.active{background:rgba(255,255,255,.18);color:white}
 #hamburgerBtn{display:none;background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px}
 
 /* ── MAIN LAYOUT ── */
@@ -56,7 +51,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 .sidebar-btn.active{background:#1d4ed8;color:white;box-shadow:0 8px 15px -3px rgba(30,64,175,.25)}
 .sec-label{padding:14px 15px 7px;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px}
 
-/* ── SIDEBAR OVERLAY (mobile) ── */
+/* ── SIDEBAR OVERLAY ── */
 #sidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
 #sidebarOverlay.open{display:block}
 
@@ -67,11 +62,8 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
   #mainGrid{flex-direction:column}
   #contentArea{width:100%}
   #hamburgerBtn{display:block !important}
-  .nav-tabs{display:none}
 }
-@media(min-width:1024px){
-  #hamburgerBtn{display:none !important}
-}
+@media(min-width:1024px){#hamburgerBtn{display:none !important}}
 
 /* ── CONTENT ── */
 #contentArea{flex:1;overflow:hidden}
@@ -84,6 +76,14 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
 .page-title{font-size:21px;font-weight:800;color:var(--text)}
 .page-sub{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ── SUB TABS (like portfolio-admin) ── */
+.sub-tab-bar{display:flex;gap:4px;padding:4px;background:#f1f5f9;border-radius:14px;width:fit-content;margin-bottom:20px}
+.sub-tab{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:#64748b;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif}
+.sub-tab.active{background:white;color:#1d4ed8;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.sub-tab:hover:not(.active){background:rgba(255,255,255,.6);color:var(--text)}
+.sub-panel{display:none}
+.sub-panel.active{display:block}
 
 /* ── CARD ── */
 .card{background:white;border-radius:16px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04);padding:20px}
@@ -102,7 +102,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 
 /* ── PERIOD TABS ── */
 .period-tabs{display:flex;gap:4px}
-.ptab{background:var(--slate-lt);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s}
+.ptab{background:var(--slate-lt);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif}
 .ptab.active{background:var(--blue);color:white;border-color:var(--blue)}
 
 /* ── CHARTS ── */
@@ -110,7 +110,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
 .chart-wrap{position:relative;height:250px}
 
-/* ── RECURRING SECTION ON DASHBOARD ── */
+/* ── RECURRING ── */
 .rec-section-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 @media(max-width:700px){.rec-section-grid{grid-template-columns:1fr}}
 .rec-col-label{font-size:12px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
@@ -132,7 +132,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 .rec-log-btn.expense-btn{background:var(--red-lt);color:var(--red);border-color:var(--red-mid)}
 .rec-log-btn.expense-btn:hover{background:var(--red);color:white}
 
-/* ── SHOP COUNT INPUT (inline) ── */
+/* ── SHOP COUNT INPUT ── */
 .shop-count-wrap{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 .shop-count-input{width:52px;padding:4px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;text-align:center;font-family:'Sarabun',sans-serif;color:var(--text);outline:none}
 .shop-count-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(29,78,216,.1)}
@@ -192,8 +192,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .btn{padding:9px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;font-family:'Sarabun',sans-serif}
 .btn-blue{background:var(--blue);color:white;box-shadow:0 4px 12px rgba(29,78,216,.25)}
 .btn-blue:hover{background:#1e40af}
-.btn-green{background:var(--green);color:white;box-shadow:0 4px 12px rgba(22,163,74,.2)}
-.btn-green:hover{background:#15803d}
+.btn-green{background:var(--green);color:white}
 .btn-ghost{background:var(--slate-lt);color:var(--text2);border:1px solid var(--border)}
 .btn-ghost:hover{background:#f1f5f9}
 .btn-sm{padding:6px 12px;font-size:12px}
@@ -202,17 +201,36 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 /* ── MODAL ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:900;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
 .modal-bg.open{display:flex}
-.modal-box{background:white;border-radius:20px;width:100%;max-width:500px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
+.modal-box{background:white;border-radius:20px;width:100%;max-width:520px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .modal-title{font-size:16px;font-weight:800}
 
-/* ── SHOP COUNT MODAL ── */
+/* ── ADD MODAL visual form ── */
+.modal-type-card{flex:1;border:2px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .18s;background:white}
+.modal-type-card:hover{border-color:#bfdbfe;background:var(--blue-lt)}
+.modal-type-card.active.income{border-color:#22c55e;background:var(--green-lt)}
+.modal-type-card.active.expense{border-color:var(--red);background:var(--red-lt)}
+.modal-type-card .type-ico{font-size:28px;margin-bottom:6px}
+.modal-type-card .type-lbl{font-size:13px;font-weight:800;color:var(--text2)}
+.modal-type-card.active.income .type-lbl{color:var(--green)}
+.modal-type-card.active.expense .type-lbl{color:var(--red)}
+
+/* ── Amount big input ── */
+.amount-input-wrap{position:relative;margin-bottom:16px}
+.amount-input-wrap .currency{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:22px;font-weight:800;color:var(--text2);pointer-events:none}
+.amount-big{padding:14px 14px 14px 42px !important;font-size:26px !important;font-weight:800 !important;border-radius:14px !important;text-align:right}
+
+/* ── SHOP COUNT MODAL preview ── */
 .shop-count-modal-preview{
   background:var(--blue-lt);border:1.5px solid var(--blue-mid);border-radius:12px;
   padding:14px 18px;text-align:center;margin:14px 0;
 }
 .shop-count-modal-preview .preview-amount{font-size:28px;font-weight:800;color:var(--blue)}
 .shop-count-modal-preview .preview-label{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* ── MANAGE LIST ── */
+.rec-manage-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.rec-manage-item:last-child{border-bottom:none}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:10px;color:white;font-weight:700;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;animation:tIn .3s ease}
@@ -237,6 +255,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   background:var(--amber-lt);border:1px solid var(--amber-mid);
   border-radius:8px;padding:3px 9px;color:var(--amber);font-weight:800;font-size:12px;
 }
+
+/* ── Manage tab rec items grid ── */
+.manage-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(max-width:640px){.manage-rec-grid{grid-template-columns:1fr}}
+.manage-rec-card{background:#fafbfd;border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;align-items:flex-start;gap:10px;transition:all .18s}
+.manage-rec-card.income-type{border-left:4px solid var(--green)}
+.manage-rec-card.expense-type{border-left:4px solid var(--red)}
+.manage-rec-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.07)}
 </style>
 </head>
 <body>
@@ -248,15 +274,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       <div class="brand-ico">🍽️</div>
       <span>Food Court บัญชีรายได้</span>
     </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <!-- Mobile hamburger -->
+    <div style="display:flex;align-items:center;gap:8px">
       <button id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
-      <!-- Desktop nav tabs (optional quick nav) -->
-      <div class="nav-tabs" id="navTabs">
-        <button class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-        <button class="nav-tab" onclick="switchTab('daily',this)">📋 รายวัน</button>
-      </div>
-      <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="exportCSV()">⬇️ ส่งออก CSV</button>
+      <!-- Shared nav links matching portfolio-admin pattern -->
+      <a href="portfolio-admin.html" style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);border:none;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px">📋 Portfolio</a>
+      <a href="room-admin.html" style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);border:none;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px">🏫 ห้องประชุม</a>
+      <button class="btn btn-ghost btn-sm" style="margin-left:4px;font-size:12px" onclick="exportCSV()">⬇️ ส่งออก CSV</button>
     </div>
   </div>
 </nav>
@@ -276,6 +299,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       </button>
       <button class="sidebar-btn" id="sb-daily" onclick="switchTab('daily',this,true)">
         📋 <span>รายการทั้งหมด</span>
+      </button>
+      <button class="sidebar-btn" id="sb-manage" onclick="switchTab('manage',this,true)">
+        ⚙️ <span>จัดการรายการ</span>
       </button>
 
       <div class="sec-label" style="margin-top:10px">การดำเนินการ</div>
@@ -344,18 +370,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
           </div>
         </div>
 
-        <!-- ════════ RECURRING SECTION ════════ -->
+        <!-- RECURRING SECTION ON DASHBOARD -->
         <div class="card" style="margin-bottom:18px">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div>
               <div class="card-title" style="margin-bottom:2px">รายการประจำ</div>
-              <div style="font-size:11px;color:var(--text2)">กดปุ่ม บันทึกวันนี้ เพื่อเพิ่มรายการประจำสำหรับวันนี้</div>
+              <div style="font-size:11px;color:var(--text2)">กดปุ่ม บันทึกวันนี้ เพื่อบันทึกรายการประจำ</div>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="openRecModal()">⚙️ จัดการรายการประจำ</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchTab('manage',document.getElementById('sb-manage'),true)">⚙️ จัดการรายการ</button>
           </div>
 
           <div class="rec-section-grid">
-            <!-- INCOME RECURRING -->
             <div>
               <div class="rec-col-label" style="color:var(--green)">
                 <div class="rec-col-ico" style="background:var(--green-lt)">💰</div>
@@ -363,7 +388,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
               </div>
               <div id="dashRecIncome"></div>
             </div>
-            <!-- EXPENSE RECURRING -->
             <div>
               <div class="rec-col-label" style="color:var(--red)">
                 <div class="rec-col-ico" style="background:var(--red-lt)">💸</div>
@@ -377,7 +401,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       </div>
     </div>
 
-    <!-- ═══════════ DAILY ═══════════ -->
+    <!-- ═══════════ DAILY (รายการทั้งหมด) – with subtabs ═══════════ -->
     <div class="tab-content" id="tab-daily">
       <div class="page-inner">
 
@@ -389,17 +413,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
           <button class="btn btn-blue" onclick="openAddModal(null)">➕ เพิ่มรายการ</button>
         </div>
 
+        <!-- Sub Tab Bar -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">📋 ทุกรายการ</button>
+          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">💰 รายรับ</button>
+          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">💸 รายจ่าย</button>
+        </div>
+
         <!-- Summary bar -->
         <div class="sum-bar" id="sumBar"></div>
 
         <!-- Filters -->
         <div class="filter-row">
           <input type="month" id="filterMonth" style="width:160px" onchange="renderDaily()">
-          <select id="filterType" style="width:130px" onchange="renderDaily()">
-            <option value="">ทุกรายการ</option>
-            <option value="income">รายรับ</option>
-            <option value="expense">รายจ่าย</option>
-          </select>
           <input type="text" id="filterSearch" placeholder="ค้นหารายการ..." style="flex:1;min-width:160px" oninput="renderDaily()">
         </div>
 
@@ -407,40 +433,131 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       </div>
     </div>
 
+    <!-- ═══════════ MANAGE (จัดการรายการ) – with subtabs ═══════════ -->
+    <div class="tab-content" id="tab-manage">
+      <div class="page-inner">
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">จัดการรายการ</div>
+            <div class="page-sub">รายการประจำและการตั้งค่า</div>
+          </div>
+          <button class="btn btn-blue" onclick="openAddModal(null)">➕ เพิ่มรายการ</button>
+        </div>
+
+        <!-- Sub Tab Bar -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subMgmtRec" onclick="switchManageSub('recurring',this)">🔄 รายการประจำ</button>
+          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">➕ เพิ่มรายการใหม่</button>
+        </div>
+
+        <!-- Panel: Recurring -->
+        <div class="sub-panel active" id="panelMgmtRecurring">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
+            </div>
+            <button class="btn btn-blue btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">➕ เพิ่มรายการประจำ</button>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%"></span>รายรับประจำ</div>
+            <div class="manage-rec-grid" id="manageRecIncome"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%"></span>รายจ่ายประจำ</div>
+            <div class="manage-rec-grid" id="manageRecExpense"></div>
+          </div>
+        </div>
+
+        <!-- Panel: Add New Recurring -->
+        <div class="sub-panel" id="panelMgmtAddnew">
+          <div class="card" style="max-width:560px">
+            <div class="modal-title" style="margin-bottom:18px">➕ เพิ่มรายการประจำใหม่</div>
+
+            <div style="margin-bottom:14px">
+              <label style="margin-bottom:8px;display:block">ประเภท</label>
+              <div style="display:flex;gap:10px">
+                <div class="modal-type-card active income" id="recCardIn" onclick="setRecType('income')">
+                  <div class="type-ico">💰</div>
+                  <div class="type-lbl">รายรับ</div>
+                </div>
+                <div class="modal-type-card expense" id="recCardOut" onclick="setRecType('expense')">
+                  <div class="type-ico">💸</div>
+                  <div class="type-lbl">รายจ่าย</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>ชื่อรายการ</label>
+                <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
+              </div>
+              <div class="form-group">
+                <label>จำนวนเงินปกติ (0=ไม่แน่นอน)</label>
+                <input type="number" id="recAmount" placeholder="0" min="0">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:18px">
+              <label>คำอธิบาย</label>
+              <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn btn-blue" onclick="saveRecurring()">💾 เพิ่มรายการ</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div><!-- /contentArea -->
 </div><!-- /mainGrid -->
 
 
-<!-- ═══ MODAL: เพิ่มรายการ (ไม่ประจำ / ประจำ) ═══ -->
+<!-- ═══ MODAL: เพิ่มรายการ (visual form) ═══ -->
 <div class="modal-bg" id="addModal">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-title">➕ เพิ่มรายการ</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeAddModal()">✕ ปิด</button>
+      <div class="modal-title">➕ บันทึกรายการ</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAddModal()">✕</button>
     </div>
-    <div style="margin-bottom:14px">
-      <label style="display:block;margin-bottom:6px">ประเภทรายการ</label>
-      <div class="type-toggle">
-        <button class="type-btn income active" id="btnIn" onclick="setType('income')">💰 รายรับ</button>
-        <button class="type-btn expense" id="btnOut" onclick="setType('expense')">💸 รายจ่าย</button>
+
+    <!-- Type cards -->
+    <div style="display:flex;gap:10px;margin-bottom:18px">
+      <div class="modal-type-card active income" id="cardIn" onclick="setType('income')">
+        <div class="type-ico">💰</div>
+        <div class="type-lbl">รายรับ</div>
+      </div>
+      <div class="modal-type-card expense" id="cardOut" onclick="setType('expense')">
+        <div class="type-ico">💸</div>
+        <div class="type-lbl">รายจ่าย</div>
       </div>
     </div>
+
+    <!-- Big amount input -->
+    <div class="form-group" style="margin-bottom:16px">
+      <label>จำนวนเงิน</label>
+      <div class="amount-input-wrap">
+        <span class="currency">฿</span>
+        <input type="number" id="addAmount" class="amount-big" placeholder="0.00" min="0">
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>วันที่</label>
         <input type="date" id="addDate">
       </div>
       <div class="form-group">
-        <label>จำนวนเงิน (บาท)</label>
-        <input type="number" id="addAmount" placeholder="0" min="0">
+        <label>รายการ</label>
+        <input type="text" id="addName" placeholder="ชื่อรายการ..." list="recNameList">
+        <datalist id="recNameList"></datalist>
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>รายการ</label>
-      <input type="text" id="addName" placeholder="ชื่อรายการ..." list="recNameList">
-      <datalist id="recNameList"></datalist>
-    </div>
-    <div class="form-group" style="margin-bottom:18px">
+    <div class="form-group" style="margin-bottom:20px">
       <label>หมายเหตุ (ถ้ามี)</label>
       <input type="text" id="addNote" placeholder="หมายเหตุ...">
     </div>
@@ -456,26 +573,24 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
       <div class="modal-title">🏫 นำเข้ารายได้โรงเรียน</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeShopCountModal()">✕ ปิด</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeShopCountModal()">✕</button>
     </div>
-    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--text2)">
+    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--text2)">
       คำนวณจากจำนวนร้านค้า × <strong style="color:var(--text)">50 บาท/ร้าน</strong>
     </div>
-    <div class="form-row" style="margin-bottom:0">
-      <div class="form-group">
-        <label>วันที่</label>
-        <input type="date" id="shopCountDate">
-      </div>
-      <div class="form-group">
-        <label>จำนวนร้านค้า</label>
-        <input type="number" id="shopCountNum" placeholder="0" min="0" oninput="updateShopPreview()" style="font-size:18px;font-weight:800;text-align:center">
-      </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>วันที่</label>
+      <input type="date" id="shopCountDate">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label>จำนวนร้านค้า</label>
+      <input type="number" id="shopCountNum" placeholder="0" min="0" oninput="updateShopPreview()" style="font-size:22px;font-weight:800;text-align:center">
     </div>
     <div class="shop-count-modal-preview" id="shopPreview">
       <div class="preview-amount">฿0</div>
       <div class="preview-label">= 0 ร้าน × 50 บาท</div>
     </div>
-    <div class="form-group" style="margin-bottom:18px">
+    <div class="form-group" style="margin-bottom:20px">
       <label>หมายเหตุ (ถ้ามี)</label>
       <input type="text" id="shopCountNote" placeholder="หมายเหตุ...">
     </div>
@@ -486,65 +601,31 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   </div>
 </div>
 
-<!-- ═══ MODAL: จัดการรายการประจำ ═══ -->
-<div class="modal-bg" id="recModal">
-  <div class="modal-box" style="max-width:560px">
-    <div class="modal-header">
-      <div class="modal-title">⚙️ จัดการรายการประจำ</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeRecModal()">✕ ปิด</button>
-    </div>
-
-    <!-- List existing -->
-    <div style="max-height:300px;overflow-y:auto;margin-bottom:16px" id="recManageList"></div>
-
-    <!-- Add new -->
-    <div style="border-top:1px solid var(--border);padding-top:16px">
-      <div style="font-size:13px;font-weight:800;margin-bottom:12px">➕ เพิ่มรายการประจำใหม่</div>
-      <div style="margin-bottom:12px">
-        <div class="type-toggle">
-          <button class="type-btn income active" id="recBtnIn" onclick="setRecType('income')">💰 รายรับ</button>
-          <button class="type-btn expense" id="recBtnOut" onclick="setRecType('expense')">💸 รายจ่าย</button>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>ชื่อรายการ</label>
-          <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
-        </div>
-        <div class="form-group">
-          <label>จำนวนเงินปกติ (0=ไม่แน่นอน)</label>
-          <input type="number" id="recAmount" placeholder="0" min="0">
-        </div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px">
-        <label>คำอธิบาย</label>
-        <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
-      </div>
-      <div style="display:flex;justify-content:flex-end">
-        <button class="btn btn-blue" onclick="saveRecurring()">💾 เพิ่มรายการ</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ MODAL: Quick Log รายการประจำ ═══ -->
 <div class="modal-bg" id="quickLogModal">
-  <div class="modal-box" style="max-width:400px">
+  <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
-      <div class="modal-title" id="quickLogTitle">บันทึกรายการ</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeQuickLogModal()">✕ ปิด</button>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>วันที่</label>
-        <input type="date" id="quickLogDate">
+      <div>
+        <div class="modal-title" id="quickLogTitle">บันทึกรายการ</div>
+        <div id="quickLogTypeBadge" style="margin-top:4px"></div>
       </div>
-      <div class="form-group">
-        <label>จำนวนเงิน (บาท)</label>
-        <input type="number" id="quickLogAmount" placeholder="0" min="0">
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickLogModal()">✕</button>
+    </div>
+
+    <!-- Big amount -->
+    <div class="form-group" style="margin-bottom:14px">
+      <label>จำนวนเงิน</label>
+      <div class="amount-input-wrap">
+        <span class="currency">฿</span>
+        <input type="number" id="quickLogAmount" class="amount-big" placeholder="0.00" min="0">
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:18px">
+
+    <div class="form-group" style="margin-bottom:14px">
+      <label>วันที่</label>
+      <input type="date" id="quickLogDate">
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
       <label>หมายเหตุ</label>
       <input type="text" id="quickLogNote" placeholder="หมายเหตุ...">
     </div>
@@ -700,34 +781,23 @@ const CSV_RAW = `วันที่,รายการ,รายรับ,รา
 const SHOP_TRANSFER_NAME = 'นำเข้ารายได้โรงเรียน ร้าน*50 บาท';
 
 function parseCSV(raw){
-  const lines = raw.trim().split('\n');
-  const rows = [];
+  const lines=raw.trim().split('\n');const rows=[];
   for(let i=1;i<lines.length;i++){
-    const cols = lines[i].split(',');
+    const cols=lines[i].split(',');
     if(cols.length<4) continue;
-    rows.push({
-      id: Date.now()+i,
-      date: cols[0].trim(),
-      name: cols[1].trim(),
-      income: parseFloat(cols[2])||0,
-      expense: parseFloat(cols[3])||0,
-      balance: parseFloat(cols[4])||0,
-      note: cols[5]?cols[5].trim():'',
-      recurring: false
-    });
+    rows.push({id:Date.now()+i,date:cols[0].trim(),name:cols[1].trim(),income:parseFloat(cols[2])||0,expense:parseFloat(cols[3])||0,balance:parseFloat(cols[4])||0,note:cols[5]?cols[5].trim():'',recurring:false});
   }
   return rows;
 }
 
-// ── STATE ──
-let transactions = parseCSV(CSV_RAW);
-let period = 'week';
-let addType = 'income';
-let recType = 'income';
-let quickLogRecId = null;
-let barChart, lineChart, donutChart;
+let transactions=parseCSV(CSV_RAW);
+let period='week';
+let addType='income';
+let recType='income';
+let dailySubFilter='all';
+let barChart,lineChart,donutChart;
 
-let recurringItems = [
+let recurringItems=[
   {id:1,type:'income',name:'รับเงิน % ร้านค้าโรงอาหาร',amount:0,desc:'% ยอดขายรายวันจากร้านค้า'},
   {id:2,type:'income',name:'ร้านสวัสดิการโรงเรียน',amount:0,desc:''},
   {id:3,type:'income',name:'ร้านเกดเอง',amount:0,desc:''},
@@ -740,16 +810,14 @@ let recurringItems = [
   {id:10,type:'expense',name:SHOP_TRANSFER_NAME,amount:900,desc:'นำส่งโรงเรียน – คำนวณจากจำนวนร้าน × 50',shopCount:true},
 ];
 
-// ── UTILS ──
-const fmt = n => Math.round(n).toLocaleString('th-TH');
-const fmtDate = d => new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
-const today = () => new Date().toISOString().split('T')[0];
-const colors = ['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#b45309'];
+const fmt=n=>Math.round(n).toLocaleString('th-TH');
+const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+const today=()=>new Date().toISOString().split('T')[0];
+const colors=['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#b45309'];
 
 function recomputeBalance(){
-  const sorted = [...transactions].sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
-  let bal=0;
-  const map={};
+  const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
+  let bal=0;const map={};
   sorted.forEach(t=>{bal+=t.income-t.expense;map[t.id]=bal;});
   transactions.forEach(t=>t.balance=map[t.id]||0);
 }
@@ -760,47 +828,52 @@ function toggleSidebar(){
   document.getElementById('sidebarOverlay').classList.toggle('open');
 }
 
-function switchTab(id, el, fromSidebar=false){
+function switchTab(id,el,fromSidebar=false){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
-
-  // sync sidebar buttons
   document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
-  const sbBtn = document.getElementById('sb-'+id);
+  const sbBtn=document.getElementById('sb-'+id);
   if(sbBtn) sbBtn.classList.add('active');
-
-  // sync nav tabs
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  if(el && !fromSidebar) el.classList.add('active');
-
   if(fromSidebar){
-    // close mobile sidebar
     document.getElementById('sidebarWrap').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
-
   if(id==='dashboard') renderDashboard();
   if(id==='daily') renderDaily();
+  if(id==='manage') renderManage();
+}
+
+function switchDailySub(type,el){
+  dailySubFilter=type;
+  document.querySelectorAll('#tab-daily .sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderDaily();
+}
+
+function switchManageSub(panel,el){
+  document.querySelectorAll('#tab-manage .sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#tab-manage .sub-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panelMgmt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
+  if(panel==='recurring') renderManage();
 }
 
 // ── DASHBOARD ──
 function renderDashboard(){
-  const totalIn  = transactions.reduce((s,t)=>s+t.income,0);
-  const totalOut = transactions.reduce((s,t)=>s+t.expense,0);
-  const balance  = totalIn-totalOut;
-  const days     = [...new Set(transactions.map(t=>t.date))].length;
-  const incTx    = transactions.filter(t=>t.income>0).length;
+  const totalIn=transactions.reduce((s,t)=>s+t.income,0);
+  const totalOut=transactions.reduce((s,t)=>s+t.expense,0);
+  const balance=totalIn-totalOut;
+  const days=[...new Set(transactions.map(t=>t.date))].length;
+  const incTx=transactions.filter(t=>t.income>0).length;
 
-  // sidebar balance
-  document.getElementById('sidebarBalance').textContent = '฿'+fmt(balance);
-  document.getElementById('sidebarBalance').style.color = balance>=0?'var(--blue)':'var(--red)';
-  document.getElementById('sidebarDays').textContent = days+' วันทำการ';
+  document.getElementById('sidebarBalance').textContent='฿'+fmt(balance);
+  document.getElementById('sidebarBalance').style.color=balance>=0?'var(--blue)':'var(--red)';
+  document.getElementById('sidebarDays').textContent=days+' วันทำการ';
 
-  // last updated
-  const latestDate = [...new Set(transactions.map(t=>t.date))].sort().pop();
-  document.getElementById('lastUpdated').textContent = latestDate?fmtDate(latestDate):'-';
+  const latestDate=[...new Set(transactions.map(t=>t.date))].sort().pop();
+  document.getElementById('lastUpdated').textContent=latestDate?fmtDate(latestDate):'-';
 
-  document.getElementById('kpiGrid').innerHTML = `
+  document.getElementById('kpiGrid').innerHTML=`
     <div class="kpi income"><div class="kpi-icon">💰</div>
       <div class="kpi-label">รายรับรวม</div>
       <div class="kpi-value">฿${fmt(totalIn)}</div>
@@ -819,118 +892,59 @@ function renderDashboard(){
       <div class="kpi-sub">เฉลี่ยจาก ${days} วัน</div></div>
   `;
 
-  renderBarChart();
-  renderLineChart();
-  renderDonut();
-  renderDashboardRecurring();
+  renderBarChart();renderLineChart();renderDonut();renderDashboardRecurring();
 }
 
 function getFilteredDays(){
-  const all = [...new Set(transactions.map(t=>t.date))].sort();
+  const all=[...new Set(transactions.map(t=>t.date))].sort();
   if(period==='all') return all;
-  if(period==='month'){
-    const now=new Date(),m=now.getMonth(),y=now.getFullYear();
-    return all.filter(d=>{const dt=new Date(d+'T00:00:00');return dt.getMonth()===m&&dt.getFullYear()===y;});
-  }
-  if(period==='week'){
-    const now=new Date(); now.setHours(0,0,0,0);
-    const wStart=new Date(now); wStart.setDate(now.getDate()-now.getDay()+1);
-    return all.filter(d=>new Date(d+'T00:00:00')>=wStart);
-  }
+  if(period==='month'){const now=new Date(),m=now.getMonth(),y=now.getFullYear();return all.filter(d=>{const dt=new Date(d+'T00:00:00');return dt.getMonth()===m&&dt.getFullYear()===y;});}
+  if(period==='week'){const now=new Date();now.setHours(0,0,0,0);const wStart=new Date(now);wStart.setDate(now.getDate()-now.getDay()+1);return all.filter(d=>new Date(d+'T00:00:00')>=wStart);}
   return all;
 }
-
-function setPeriod(p,el){
-  period=p;
-  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderBarChart();
-}
+function setPeriod(p,el){period=p;document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderBarChart();}
 
 function renderBarChart(){
-  const days=getFilteredDays();
-  const labels=days.map(fmtDate);
+  const days=getFilteredDays();const labels=days.map(fmtDate);
   const incomes=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
   const expenses=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
   if(barChart) barChart.destroy();
-  barChart=new Chart(document.getElementById('barChart'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},
-      {label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},
-      scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
-  });
+  barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderLineChart(){
-  const days=[...new Set(transactions.map(t=>t.date))].sort();
-  const labels=days.map(fmtDate);
+  const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDate);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{
-    type:'line',
-    data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},
-      scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
-  });
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
   const shopMap={};
   transactions.filter(t=>t.income>0).forEach(t=>{shopMap[t.name]=(shopMap[t.name]||0)+t.income;});
-  const labels=Object.keys(shopMap);
-  const data=Object.values(shopMap);
-  const bg=labels.map((_,i)=>colors[i%colors.length]);
+  const labels=Object.keys(shopMap);const data=Object.values(shopMap);const bg=labels.map((_,i)=>colors[i%colors.length]);
   if(donutChart) donutChart.destroy();
-  donutChart=new Chart(document.getElementById('donutChart'),{
-    type:'doughnut',
-    data:{labels,datasets:[{data,backgroundColor:bg,borderWidth:2,borderColor:'white'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}
-  });
-  document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`
-    <div class="legend-item">
-      <div class="legend-dot" style="background:${bg[i]}"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div>
-        <div style="font-size:10px;color:var(--text2)">฿${fmt(data[i])}</div>
-      </div>
-    </div>`).join('');
+  donutChart=new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:bg,borderWidth:2,borderColor:'white'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});
+  document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${bg[i]}"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div><div style="font-size:10px;color:var(--text2)">฿${fmt(data[i])}</div></div></div>`).join('');
 }
 
 // ── DASHBOARD RECURRING ──
 function renderDashboardRecurring(){
-  const inc = recurringItems.filter(r=>r.type==='income');
-  const exp = recurringItems.filter(r=>r.type==='expense');
-
-  document.getElementById('dashRecIncome').innerHTML = inc.length
-    ? inc.map(r=>recDashCard(r)).join('')
-    : '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
-
-  document.getElementById('dashRecExpense').innerHTML = exp.length
-    ? exp.map(r=>recDashCard(r)).join('')
-    : '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
+  const inc=recurringItems.filter(r=>r.type==='income');
+  const exp=recurringItems.filter(r=>r.type==='expense');
+  document.getElementById('dashRecIncome').innerHTML=inc.length?inc.map(r=>recDashCard(r)).join(''):'<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
+  document.getElementById('dashRecExpense').innerHTML=exp.length?exp.map(r=>recDashCard(r)).join(''):'<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
 }
 
 function recDashCard(r){
-  const isShopTransfer = r.shopCount === true;
-  const amtLabel = r.amount>0 ? '฿'+fmt(r.amount)+'/ครั้ง' : 'ยอดไม่แน่นอน';
-
+  const isShopTransfer=r.shopCount===true;
+  const amtLabel=r.amount>0?'฿'+fmt(r.amount)+'/ครั้ง':'ยอดไม่แน่นอน';
   if(isShopTransfer){
-    // Special: shop count input inline
-    return `
-    <div class="rec-item expense-type" id="recItem-${r.id}">
+    return `<div class="rec-item expense-type" id="recItem-${r.id}">
       <div class="rec-dot dot-out"></div>
-      <div style="flex:1;min-width:0">
-        <div class="rec-name">${r.name}</div>
-        <div class="rec-sub">${r.desc||''}</div>
-      </div>
+      <div style="flex:1;min-width:0"><div class="rec-name">${r.name}</div><div class="rec-sub">${r.desc||''}</div></div>
       <div class="shop-count-wrap">
-        <input class="shop-count-input" type="number" id="shopCount-${r.id}" min="0" placeholder="ร้าน"
-          oninput="updateInlineShopPreview(${r.id})" value="">
+        <input class="shop-count-input" type="number" id="shopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateInlineShopPreview(${r.id})" value="">
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
           <span class="shop-count-preview" id="shopPreviewInline-${r.id}" style="color:var(--text2)">× 50 = ฿0</span>
           <button class="rec-log-btn expense-btn" onclick="openShopCountModalFromRec(${r.id})">บันทึกวันนี้</button>
@@ -938,181 +952,163 @@ function recDashCard(r){
       </div>
     </div>`;
   }
-
-  return `
-  <div class="rec-item ${r.type}-type">
+  return `<div class="rec-item ${r.type}-type">
     <div class="rec-dot ${r.type==='income'?'dot-in':'dot-out'}"></div>
-    <div style="flex:1;min-width:0">
-      <div class="rec-name">${r.name}</div>
-      <div class="rec-sub">${amtLabel}${r.desc?' · '+r.desc:''}</div>
-    </div>
+    <div style="flex:1;min-width:0"><div class="rec-name">${r.name}</div><div class="rec-sub">${amtLabel}${r.desc?' · '+r.desc:''}</div></div>
     <button class="rec-log-btn ${r.type==='expense'?'expense-btn':''}" onclick="openQuickLog(${r.id})">บันทึกวันนี้</button>
   </div>`;
 }
 
 function updateInlineShopPreview(recId){
-  const input = document.getElementById('shopCount-'+recId);
-  const count = parseInt(input.value)||0;
-  const amount = count*50;
-  const preview = document.getElementById('shopPreviewInline-'+recId);
-  preview.textContent = '× 50 = ฿'+fmt(amount);
-  preview.style.color = count>0?'var(--red)':'var(--text2)';
+  const input=document.getElementById('shopCount-'+recId);const count=parseInt(input.value)||0;
+  const amount=count*50;const preview=document.getElementById('shopPreviewInline-'+recId);
+  preview.textContent='× 50 = ฿'+fmt(amount);preview.style.color=count>0?'var(--red)':'var(--text2)';
 }
 
-// ── QUICK LOG MODAL ──
-let _quickLogRec = null;
+// ── MANAGE ──
+function renderManage(){
+  const inc=recurringItems.filter(r=>r.type==='income');
+  const exp=recurringItems.filter(r=>r.type==='expense');
+  document.getElementById('manageRecIncome').innerHTML=inc.length
+    ? inc.map(r=>manageRecCard(r)).join('')
+    : '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
+  document.getElementById('manageRecExpense').innerHTML=exp.length
+    ? exp.map(r=>manageRecCard(r)).join('')
+    : '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
+}
+
+function manageRecCard(r){
+  const amtLabel=r.amount>0?'฿'+fmt(r.amount)+'/ครั้ง':(r.shopCount?'คำนวณจากจำนวนร้าน':'ยอดไม่แน่นอน');
+  return `<div class="manage-rec-card ${r.type}-type">
+    <div style="font-size:22px;flex-shrink:0">${r.type==='income'?'💰':'💸'}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:800;font-size:13px;margin-bottom:3px">${r.name}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${amtLabel}${r.desc?' · '+r.desc:''}</div>
+      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRec(${r.id})">🗑 ลบ</button>
+    </div>
+  </div>`;
+}
+
+// ── QUICK LOG ──
+let _quickLogRec=null;
 function openQuickLog(recId){
-  _quickLogRec = recurringItems.find(r=>r.id===recId);
-  if(!_quickLogRec) return;
-  document.getElementById('quickLogTitle').textContent = '📝 '+_quickLogRec.name;
-  document.getElementById('quickLogDate').value = today();
-  document.getElementById('quickLogAmount').value = _quickLogRec.amount||'';
-  document.getElementById('quickLogNote').value = '';
+  _quickLogRec=recurringItems.find(r=>r.id===recId);if(!_quickLogRec) return;
+  document.getElementById('quickLogTitle').textContent='📝 '+_quickLogRec.name;
+  document.getElementById('quickLogTypeBadge').innerHTML=`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${_quickLogRec.type==='income'?'var(--green-lt)':'var(--red-lt)'};color:${_quickLogRec.type==='income'?'var(--green)':'var(--red)'}">${_quickLogRec.type==='income'?'รายรับ':'รายจ่าย'}</span>`;
+  document.getElementById('quickLogDate').value=today();
+  document.getElementById('quickLogAmount').value=_quickLogRec.amount||'';
+  document.getElementById('quickLogNote').value='';
   document.getElementById('quickLogModal').classList.add('open');
 }
-function closeQuickLogModal(){ document.getElementById('quickLogModal').classList.remove('open'); }
+function closeQuickLogModal(){document.getElementById('quickLogModal').classList.remove('open');}
 function saveQuickLog(){
   if(!_quickLogRec) return;
-  const date = document.getElementById('quickLogDate').value;
-  const amount = parseFloat(document.getElementById('quickLogAmount').value)||0;
-  const note = document.getElementById('quickLogNote').value.trim();
-  if(!date||!amount){ toast('กรุณากรอกข้อมูลให้ครบ','#dc2626'); return; }
-  const isIncome = _quickLogRec.type==='income';
+  const date=document.getElementById('quickLogDate').value;
+  const amount=parseFloat(document.getElementById('quickLogAmount').value)||0;
+  const note=document.getElementById('quickLogNote').value.trim();
+  if(!date||!amount){toast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
+  const isIncome=_quickLogRec.type==='income';
   transactions.push({id:Date.now(),date,name:_quickLogRec.name,income:isIncome?amount:0,expense:isIncome?0:amount,balance:0,note,recurring:true});
-  recomputeBalance();
-  closeQuickLogModal();
-  renderDashboard();
+  recomputeBalance();closeQuickLogModal();renderDashboard();
   toast('บันทึก "'+_quickLogRec.name+'" แล้ว ✅','#16a34a');
 }
 
 // ── SHOP COUNT MODAL ──
 function openShopCountModalFromRec(recId){
-  // Use inline value if present
-  const input = document.getElementById('shopCount-'+recId);
-  const prefilledCount = input ? (parseInt(input.value)||0) : 0;
-  document.getElementById('shopCountDate').value = today();
-  document.getElementById('shopCountNum').value = prefilledCount||'';
-  document.getElementById('shopCountNote').value = '';
-  updateShopPreview();
-  document.getElementById('shopCountModal').classList.add('open');
+  const input=document.getElementById('shopCount-'+recId);
+  const prefilledCount=input?(parseInt(input.value)||0):0;
+  document.getElementById('shopCountDate').value=today();
+  document.getElementById('shopCountNum').value=prefilledCount||'';
+  document.getElementById('shopCountNote').value='';
+  updateShopPreview();document.getElementById('shopCountModal').classList.add('open');
 }
-function closeShopCountModal(){ document.getElementById('shopCountModal').classList.remove('open'); }
+function closeShopCountModal(){document.getElementById('shopCountModal').classList.remove('open');}
 function updateShopPreview(){
-  const count = parseInt(document.getElementById('shopCountNum').value)||0;
-  const amount = count*50;
-  document.getElementById('shopPreview').innerHTML = `
-    <div class="preview-amount">฿${fmt(amount)}</div>
-    <div class="preview-label">= ${count} ร้าน × 50 บาท</div>`;
+  const count=parseInt(document.getElementById('shopCountNum').value)||0;const amount=count*50;
+  document.getElementById('shopPreview').innerHTML=`<div class="preview-amount">฿${fmt(amount)}</div><div class="preview-label">= ${count} ร้าน × 50 บาท</div>`;
 }
 function saveShopCount(){
-  const date  = document.getElementById('shopCountDate').value;
-  const count = parseInt(document.getElementById('shopCountNum').value)||0;
-  const note  = document.getElementById('shopCountNote').value.trim();
-  if(!date){ toast('กรุณาเลือกวันที่','#dc2626'); return; }
-  if(!count){ toast('กรุณาใส่จำนวนร้าน','#dc2626'); return; }
-  const amount = count*50;
-  transactions.push({
-    id:Date.now(),date,
-    name:SHOP_TRANSFER_NAME,
-    income:0,expense:amount,balance:0,
-    note:(note||count+' ร้าน'),
-    recurring:true
-  });
-  recomputeBalance();
-  closeShopCountModal();
-  renderDashboard();
+  const date=document.getElementById('shopCountDate').value;
+  const count=parseInt(document.getElementById('shopCountNum').value)||0;
+  const note=document.getElementById('shopCountNote').value.trim();
+  if(!date){toast('กรุณาเลือกวันที่','#dc2626');return;}
+  if(!count){toast('กรุณาใส่จำนวนร้าน','#dc2626');return;}
+  const amount=count*50;
+  transactions.push({id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true});
+  recomputeBalance();closeShopCountModal();renderDashboard();
   toast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount)+' ✅','#1d4ed8');
 }
 
 // ── ADD MODAL ──
 function openAddModal(prefillName){
-  document.getElementById('addDate').value = today();
-  document.getElementById('addAmount').value = '';
-  document.getElementById('addName').value = prefillName||'';
-  document.getElementById('addNote').value = '';
+  document.getElementById('addDate').value=today();
+  document.getElementById('addAmount').value='';
+  document.getElementById('addName').value=prefillName||'';
+  document.getElementById('addNote').value='';
   setType('income');
-  const dl = document.getElementById('recNameList');
-  dl.innerHTML = recurringItems.map(r=>`<option value="${r.name}">`).join('');
+  const dl=document.getElementById('recNameList');
+  dl.innerHTML=recurringItems.map(r=>`<option value="${r.name}">`).join('');
   document.getElementById('addModal').classList.add('open');
+  setTimeout(()=>document.getElementById('addAmount').focus(),100);
 }
-function closeAddModal(){ document.getElementById('addModal').classList.remove('open'); }
+function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
 function setType(t){
   addType=t;
-  document.getElementById('btnIn').className='type-btn income'+(t==='income'?' active':'');
-  document.getElementById('btnOut').className='type-btn expense'+(t==='expense'?' active':'');
+  ['cardIn','cardOut'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className='modal-type-card '+(id==='cardIn'?'income':'expense')+(t===(id==='cardIn'?'income':'expense')?' active':'');
+  });
 }
 function saveTransaction(){
-  const date   = document.getElementById('addDate').value;
-  const amount = parseFloat(document.getElementById('addAmount').value)||0;
-  const name   = document.getElementById('addName').value.trim();
-  const note   = document.getElementById('addNote').value.trim();
-  if(!date||!name||!amount){ toast('กรุณากรอกข้อมูลให้ครบ','#dc2626'); return; }
+  const date=document.getElementById('addDate').value;
+  const amount=parseFloat(document.getElementById('addAmount').value)||0;
+  const name=document.getElementById('addName').value.trim();
+  const note=document.getElementById('addNote').value.trim();
+  if(!date||!name||!amount){toast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
   transactions.push({id:Date.now(),date,name,income:addType==='income'?amount:0,expense:addType==='expense'?amount:0,balance:0,note,recurring:false});
-  recomputeBalance();
-  closeAddModal();
-  renderDashboard();
-  renderDaily();
+  recomputeBalance();closeAddModal();renderDashboard();
   toast('บันทึกรายการแล้ว ✅','#16a34a');
 }
 
-// ── RECURRING MANAGE MODAL ──
-function openRecModal(){
-  renderRecManageList();
-  document.getElementById('recModal').classList.add('open');
-}
-function closeRecModal(){ document.getElementById('recModal').classList.remove('open'); }
+// ── RECURRING MANAGE (add/delete) ──
 function setRecType(t){
   recType=t;
-  document.getElementById('recBtnIn').className='type-btn income'+(t==='income'?' active':'');
-  document.getElementById('recBtnOut').className='type-btn expense'+(t==='expense'?' active':'');
-}
-function renderRecManageList(){
-  document.getElementById('recManageList').innerHTML = recurringItems.map(r=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="width:8px;height:8px;border-radius:50%;background:${r.type==='income'?'var(--green)':'var(--red)'};flex-shrink:0"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:13px">${r.name}</div>
-        <div style="font-size:11px;color:var(--text2)">${r.type==='income'?'รายรับ':'รายจ่าย'} · ${r.amount>0?'฿'+fmt(r.amount):r.shopCount?'คำนวณจากจำนวนร้าน':'ยอดไม่แน่นอน'}${r.desc?' · '+r.desc:''}</div>
-      </div>
-      <button class="btn btn-ghost btn-xs" style="color:var(--red);flex-shrink:0" onclick="deleteRec(${r.id})">ลบ</button>
-    </div>`).join('');
+  ['recCardIn','recCardOut'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className='modal-type-card '+(id==='recCardIn'?'income':'expense')+(t===(id==='recCardIn'?'income':'expense')?' active':'');
+  });
 }
 function saveRecurring(){
-  const name   = document.getElementById('recName').value.trim();
-  const amount = parseFloat(document.getElementById('recAmount').value)||0;
-  const desc   = document.getElementById('recDesc').value.trim();
-  if(!name){ toast('กรุณาใส่ชื่อรายการ','#dc2626'); return; }
+  const name=document.getElementById('recName').value.trim();
+  const amount=parseFloat(document.getElementById('recAmount').value)||0;
+  const desc=document.getElementById('recDesc').value.trim();
+  if(!name){toast('กรุณาใส่ชื่อรายการ','#dc2626');return;}
   recurringItems.push({id:Date.now(),type:recType,name,amount,desc});
   document.getElementById('recName').value='';
   document.getElementById('recAmount').value='';
   document.getElementById('recDesc').value='';
-  renderRecManageList();
-  renderDashboardRecurring();
+  renderManage();renderDashboardRecurring();
   toast('เพิ่มรายการประจำแล้ว ✅','#16a34a');
 }
 function deleteRec(id){
   if(!confirm('ลบรายการประจำนี้?')) return;
   recurringItems=recurringItems.filter(r=>r.id!==id);
-  renderRecManageList();
-  renderDashboardRecurring();
+  renderManage();renderDashboardRecurring();
   toast('ลบรายการประจำแล้ว','#dc2626');
 }
 
 // ── DAILY ──
 function renderDaily(){
-  const filterMonth  = document.getElementById('filterMonth').value;
-  const filterType   = document.getElementById('filterType').value;
-  const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
-  let rows = [...transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
+  const filterMonth=document.getElementById('filterMonth').value;
+  const filterSearch=document.getElementById('filterSearch').value.toLowerCase();
+  let rows=[...transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
   if(filterMonth) rows=rows.filter(r=>r.date.startsWith(filterMonth));
-  if(filterType==='income') rows=rows.filter(r=>r.income>0);
-  if(filterType==='expense') rows=rows.filter(r=>r.expense>0);
+  if(dailySubFilter==='income') rows=rows.filter(r=>r.income>0);
+  if(dailySubFilter==='expense') rows=rows.filter(r=>r.expense>0);
   if(filterSearch) rows=rows.filter(r=>r.name.toLowerCase().includes(filterSearch)||r.note.toLowerCase().includes(filterSearch));
 
   const totalIn=rows.reduce((s,r)=>s+r.income,0);
-  const totalOut=rows.reduce((s,r)=>s+r.expense,0);
-  const net=totalIn-totalOut;
-
+  const totalOut=rows.reduce((s,r)=>s+r.expense,0);const net=totalIn-totalOut;
   document.getElementById('sumBar').innerHTML=`
     <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
     <div class="divider"></div>
@@ -1122,58 +1118,46 @@ function renderDaily(){
     <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
   `;
 
-  if(!rows.length){
-    document.getElementById('dailyList').innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>ไม่พบรายการ</div></div>`;
-    return;
-  }
+  if(!rows.length){document.getElementById('dailyList').innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>ไม่พบรายการ</div></div>`;return;}
 
-  const byDate={};
-  rows.forEach(r=>{(byDate[r.date]=byDate[r.date]||[]).push(r);});
+  const byDate={};rows.forEach(r=>{(byDate[r.date]=byDate[r.date]||[]).push(r);});
   const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
 
   document.getElementById('dailyList').innerHTML=dates.map(date=>{
     const items=byDate[date];
-    const dayIn=items.reduce((s,i)=>s+i.income,0);
-    const dayOut=items.reduce((s,i)=>s+i.expense,0);
-    return `
-      <div class="day-section">
-        <div class="day-header">
-          <div class="day-title">${fmtDate(date)}</div>
-          <div class="day-stats">
-            <span class="day-in">+฿${fmt(dayIn)}</span>
-            <span class="day-out">-฿${fmt(dayOut)}</span>
-          </div>
+    const dayIn=items.reduce((s,i)=>s+i.income,0);const dayOut=items.reduce((s,i)=>s+i.expense,0);
+    return `<div class="day-section">
+      <div class="day-header">
+        <div class="day-title">${fmtDate(date)}</div>
+        <div class="day-stats">
+          <span class="day-in">+฿${fmt(dayIn)}</span>
+          <span class="day-out">-฿${fmt(dayOut)}</span>
         </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>รายการ</th><th>ประเภท</th>
-              <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
-              <th>หมายเหตุ</th><th></th>
-            </tr></thead>
-            <tbody>
-              ${items.map(r=>`
-                <tr>
-                  <td style="font-weight:600">${r.name}${r.name===SHOP_TRANSFER_NAME&&r.note?` <span class="amount-highlight">${r.note}</span>`:''}</td>
-                  <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
-                  <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
-                  <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
-                  <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
-                  <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>รายการ</th><th>ประเภท</th>
+          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
+          <th>หมายเหตุ</th><th></th>
+        </tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td style="font-weight:600">${r.name}${r.name===SHOP_TRANSFER_NAME&&r.note?` <span class="amount-highlight">${r.note}</span>`:''}</td>
+            <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
+            <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
+            <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
+            <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
+            <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
   }).join('');
 }
 
 function deleteRow(id){
   if(!confirm('ลบรายการนี้?')) return;
   transactions=transactions.filter(t=>t.id!==id);
-  recomputeBalance();
-  renderDaily();
+  recomputeBalance();renderDaily();
   if(document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
   toast('ลบรายการเรียบร้อย','#dc2626');
 }
@@ -1192,8 +1176,7 @@ function exportCSV(){
 
 // ── TOAST ──
 function toast(msg,bg='#16a34a'){
-  const el=document.createElement('div');
-  el.className='toast';el.style.background=bg;el.textContent=msg;
+  const el=document.createElement('div');el.className='toast';el.style.background=bg;el.textContent=msg;
   document.body.appendChild(el);
   setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),350);},2800);
 }
