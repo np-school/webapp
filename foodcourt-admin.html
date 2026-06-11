@@ -282,9 +282,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
         <div class="page-header">
           <div>
             <div class="page-title">ภาพรวมบัญชี Food Court</div>
-            <div class="page-sub">โรงเรียนหนองกี่พิทยาคม – อัปเดตล่าสุด <span id="lastUpdated"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+              <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
+              <div id="lastUpdatedChip" style="display:none;background:#f1f5f9;border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text2)">บันทึกล่าสุด: <span id="lastUpdated"></span></div>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button><button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button>
+            <button class="btn btn-blue" onclick="openAddModal()">+ เพิ่มรายการ</button>
+          </div>
         </div>
 
 
@@ -914,7 +920,13 @@ function renderDashboard(){
   const incTx=transactions.filter(t=>t.income>0).length;
 
   const latestDate=[...new Set(transactions.map(t=>t.date))].sort().pop();
-  document.getElementById('lastUpdated').textContent=latestDate?fmtDate(latestDate):'-';
+  const chip=document.getElementById('lastUpdatedChip');
+  if(latestDate){
+    document.getElementById('lastUpdated').textContent=fmtDate(latestDate);
+    chip.style.display='inline-flex';
+  } else {
+    chip.style.display='none';
+  }
 
   document.getElementById('kpiGrid').innerHTML=`
     <div class="kpi income"><div class="kpi-icon">💰</div>
