@@ -1,16 +1,13 @@
-var CACHE_NAME = 'np-origins-v5';
-/* แยก must-have (core) กับ optional
-   cache.addAll จะ fail ทั้งหมดถ้าไฟล์ใดไฟล์หนึ่งโหลดไม่ได้
-   → เปลี่ยนเป็น cache ทีละไฟล์แทน */
-var CORE_FILES = [
+var CACHE_NAME = 'np-origins-v6';
+/* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
+   cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
+var ALL_FILES = [
   '/webapp/index.html',
   '/webapp/guide.html',
   '/webapp/shared/common.js',
   '/webapp/shared/styles.css',
   '/webapp/shared/firebase.js',
-  '/webapp/manifest.json'
-];
-var OPTIONAL_FILES = [
+  '/webapp/manifest.json',
   '/webapp/room-request.html',
   '/webapp/room-admin.html',
   '/webapp/portfolio-teacher.html',
@@ -22,22 +19,20 @@ function isNetworkFirst(url) {
   return url.endsWith('.html') || url.endsWith('.js');
 }
 
-/* Install — cache ทีละไฟล์ เพื่อไม่ให้ไฟล์ที่ยังไม่มีทำให้ SW fail ทั้งหมด */
+/* Install — cache ทีละไฟล์ทั้งหมด พลาดได้ ไม่กระทบ install */
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      /* core: ต้องได้ทุกไฟล์ */
-      var corePromise = cache.addAll(CORE_FILES);
-      /* optional: พลาดได้ ไม่กระทบ install */
-      var optPromise = Promise.all(
-        OPTIONAL_FILES.map(function(url) {
-          return cache.add(url).catch(function(err) {
-            console.warn('SW optional cache skip:', url, err.message);
+      return Promise.all(
+        ALL_FILES.map(function(url) {
+          return fetch(url).then(function(res) {
+            if (res && res.status === 200) return cache.put(url, res);
+          }).catch(function(err) {
+            console.warn('SW cache skip:', url, err.message);
           });
         })
       );
-      return corePromise.then(function() { return optPromise; });
     })
   );
 });
