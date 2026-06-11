@@ -97,19 +97,25 @@ function handleLogin() {
   var ov = document.getElementById('loadingOverlay');
   if (ov) ov.style.display = 'flex';
 
-  /* LINE / In-App Browser → redirect ไม่ทำงาน บล็อกเลย */
+  /* LINE / In-App Browser → ไม่รองรับทั้ง popup และ redirect */
   if (isInAppBrowser()) {
     if (ov) ov.style.display = 'none';
     _showOpenInBrowserAlert();
     return;
   }
 
-  /* ใช้ redirect แทน popup เพื่อรองรับ mobile browser ทุกตัว */
-  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
+  /* ใช้ popup — redirect ติดปัญหา 3rd-party cookie blocked (Firefox/Safari ITP)
+     popup ไม่ใช้ iframe จึงไม่ติดปัญหานี้ */
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
     .catch(function(e) {
       console.error(e);
       if (ov) ov.style.display = 'none';
-      showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
+      if (e.code === 'auth/popup-blocked') {
+        /* popup ถูกบล็อก → fallback ไป redirect */
+        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+      } else if (e.code !== 'auth/popup-closed-by-user') {
+        showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
+      }
     });
 }
 

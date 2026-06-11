@@ -555,9 +555,7 @@
   buildNavbar('NP Origins', false);
   buildSidebar('index');
 
-  /* ── Auth Init ──
-     รอ getRedirectResult() resolve ก่อนเสมอ
-     ป้องกัน loading spinner ค้างเมื่อ redirect กลับจาก Google  ── */
+  /* ── Auth Init ── */
   function _initUI(user) {
     if(user){
       document.getElementById('publicView').style.display='none';
@@ -575,39 +573,7 @@
     lucide.createIcons();
   }
 
-  /* ── Auth Init ──
-     getRedirectResult() อาจ hang บน Safari/iOS เพราะ ITP บล็อก iframe auth
-     แก้ด้วย: race กับ timeout 4 วิ — ใครเสร็จก่อน ปล่อย onAuthStateChanged ก่อน
-     และ guard ด้วย flag เพื่อไม่ให้ register ซ้ำ ── */
-  var _authListening = false;
-  function _startListening() {
-    if (_authListening) return;
-    _authListening = true;
-    auth.onAuthStateChanged(_initUI);
-  }
-
-  /* timeout 4 วิ — ถ้า getRedirectResult ไม่ตอบ ปล่อยให้หน้าทำงานได้ */
-  var _redirectTimeout = setTimeout(function() {
-    console.warn('getRedirectResult timeout — starting auth listener anyway');
-    _startListening();
-  }, 4000);
-
-  auth.getRedirectResult()
-    .then(function(result) {
-      if (result && result.user) {
-        console.log('Redirect login OK:', result.user.email);
-      }
-    })
-    .catch(function(e) {
-      if (e.code && e.code !== 'auth/no-auth-event') {
-        console.error('getRedirectResult error:', e.code, e.message);
-        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
-      }
-    })
-    .finally(function() {
-      clearTimeout(_redirectTimeout);
-      _startListening();
-    });
+  auth.onAuthStateChanged(_initUI);
 
   /* ── Login Gate ── */
   function showLoginGate(title, desc, icon) {
