@@ -5,9 +5,6 @@
 
 * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Page background (มาตรฐานทุกหน้า) ── */
-html, body { background: #f1f5f9; color: #1e293b; }
-
 /* ── Loading Overlay ── */
 #loadingOverlay {
   display: flex; position: fixed; inset: 0;
@@ -23,10 +20,13 @@ html, body { background: #f1f5f9; color: #1e293b; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Sidebar ── */
-.sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
+.sidebar-wrap {
+  width: 272px; flex-shrink: 0; transition: transform .3s ease;
+  position: sticky; top: 0; align-self: flex-start; height: 100vh;
+}
 .sidebar-inner {
   background: #f8fafc; border-right: 1px solid #e2e8f0;
-  min-height: 100vh; height: 100vh; padding: 20px 12px;
+  height: 100vh; padding: 20px 12px;
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -247,4 +247,6 @@ input:focus, select:focus, textarea:focus {
 .sidebar-superadmin-label {
   margin: 8px 16px 4px;
   display: flex; align-items: center; gap: 6px;
+}
+
 }

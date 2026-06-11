@@ -123,13 +123,13 @@
     .sum-bar-track{background:#f1f5f9;border-radius:6px;height:10px;overflow:hidden;}
     .sum-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
     .sum-booking-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
-    .sum-booking-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border-radius:9px;font-size:11px;color:#475569;}
+    .sum-booking-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f1f5f9;border-radius:9px;font-size:11px;color:#475569;}
     .sum-booking-row .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
     .sum-toggle{font-size:10px;color:#7c3aed;font-weight:700;cursor:pointer;background:none;border:none;padding:0;margin-left:auto;}
     .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body style="background:#f1f5f9;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -328,7 +328,7 @@
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ลบคำขอ</h3><p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p></div>
     </div>
-    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
+    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f1f5f9;border-radius:10px;" id="deleteModalText"></p>
     <div style="display:flex;gap:10px;"><button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button><button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmDelete()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ</button></div>
   </div>
 </div>
@@ -360,7 +360,7 @@
       <span style="font-weight:800;color:#1e293b;font-size:14px;">📎 ไฟล์แนบ — ผังการจัดโต๊ะ</span>
       <button onclick="closeFileView()" style="background:#f1f5f9;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
     </div>
-    <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:#f8fafc;">
+    <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:#f1f5f9;">
       <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
       <div id="fileViewError" style="display:none;padding:40px;color:#94a3b8;"></div>
       <p id="fileViewName" style="font-size:12px;color:#64748b;margin-top:10px;font-weight:600;"></p>
@@ -474,7 +474,7 @@
               '<span><b style="color:#1e293b;">ผู้เข้าร่วม:</b> '+(b.attendees||'-')+' คน</span>' +
               '<span><b style="color:#1e293b;">วัตถุประสงค์:</b> '+b.purpose+'</span>' +
             '</div>' +
-            (equip?'<div style="font-size:11px;color:#475569;background:#f8fafc;padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
+            (equip?'<div style="font-size:11px;color:#475569;background:#f1f5f9;padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
             (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:#dcfce7;color:#15803d;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
             (b.approvedBy&&b.status==='approved'?'<div style="font-size:11px;color:#15803d;margin-top:3px;opacity:.8;">✅ อนุมัติโดย: '+b.approvedBy+'</div>':'')+
             (b.rejectReason?'<div style="font-size:12px;background:#fee2e2;color:#b91c1c;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">❌ เหตุผล: '+b.rejectReason+'</div>':'')+
