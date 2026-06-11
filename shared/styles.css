@@ -48,8 +48,16 @@ html {
   padding: 13px 16px; border-radius: 14px; font-weight: 700;
   color: #64748b; width: 100%; background: none; border: none;
   cursor: pointer; text-decoration: none; transition: all .2s;
-  font-size: 0.875rem; line-height: 1.4; /* 14px stable ข้ามเบราว์เซอร์ */
+  /* lock ขนาดเป็น px ป้องกัน Brave/Chrome inherit UA stylesheet ต่างจาก Firefox */
+  font-size: 14px; line-height: 20px; min-height: 46px;
+  font-family: 'Sarabun', sans-serif;
+  box-sizing: border-box;
   white-space: nowrap; overflow: hidden;
+}
+/* reset สำหรับ <a> tag — Brave มี UA font-size:medium ที่ override ได้ */
+a.sidebar-btn {
+  font-size: 14px; line-height: 20px;
+  font-family: 'Sarabun', sans-serif;
 }
 .sidebar-btn span {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
@@ -265,24 +273,3 @@ input:focus, select:focus, textarea:focus {
 }
 
 }
-
-/* ══════════════════════════════════════════════
-   Layout Fix: Scrollable pages (Approach 1)
-   ── ให้ body เลื่อนได้ตามปกติ ──
-   ══════════════════════════════════════════════ */
-
-/* ป้องกันเลื่อนข้าง */
-body { overflow-x: hidden; }
-
-/* mainGrid ไม่ล็อก overflow */
-#mainGrid { overflow: visible; }
-
-/* contentArea ไม่ล็อก scroll — ให้ body จัดการ */
-#contentArea { overflow-y: visible; height: auto; max-width: 100%; }
-
-/* Mobile: sidebar drawer ล็อก body scroll ชั่วคราวเมื่อเปิด */
-body.sidebar-open { overflow: hidden; }
-
-/* ป้องกัน table ล้น viewport */
-table { width: 100%; }
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

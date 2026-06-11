@@ -299,7 +299,7 @@
   body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
 </style>
 </head>
-<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
@@ -324,7 +324,7 @@
 </div>
 
 <!-- Main App -->
-<div id="mainApp" style="display:none;">
+<div id="mainApp" style="display:none;flex-direction:column;flex:1;">
   <nav id="navbar" class="navbar"></nav>
 
   <!-- View Mode Banner -->
@@ -335,11 +335,11 @@
     </div>
     <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#92400e;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> กลับรายชื่อบุคลากร</a>
   </div>
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;overflow:hidden;">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;height:100%;-webkit-overflow-scrolling:touch;" id="contentArea">
+    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
 
       <!-- Hero -->
       <div class="profile-hero">
@@ -726,7 +726,7 @@ auth.onAuthStateChanged(function(u){
     lucide.createIcons(); return;
   }
   document.getElementById('loginGate').style.display='none';
-  document.getElementById('mainApp').style.display='block';
+  document.getElementById('mainApp').style.display='flex';
   currentUser = u;
   lucide.createIcons();
   init();
