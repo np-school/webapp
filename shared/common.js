@@ -110,8 +110,8 @@ function handleLogout() {
   });
 }
 
-   auth.onAuthStateChanged(function(user) { ... });
-   ───────────────────────────────────────────── */
+/* auth.onAuthStateChanged — ใช้ใน index.html / หน้าอื่นๆ แยกต่างหาก
+   ════════════════════════════════════════════════ */
 
 /* ════════════════════════════════
    Admin Access Check
