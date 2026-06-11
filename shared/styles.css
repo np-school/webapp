@@ -283,12 +283,12 @@ input:focus, select:focus, textarea:focus {
    ป้องกัน content ทะลุขอบจอบนมือถือ
    ══════════════════════════════════════════════ */
 
-/* Global safe-guard — ทุก element ไม่กว้างเกิน viewport */
+/* Global safe-guard — ล็อก box-sizing เท่านั้น; ไม่ตั้ง max-width:100% บน * เพราะทำลาย flex/grid */
 *, *::before, *::after {
-  max-width: 100%;
   box-sizing: border-box;
 }
-/* ยกเว้น svg/canvas ที่ต้องการ max-width ตามธรรมชาติ */
+/* ป้องกัน replaced content ล้น viewport */
+img, video, iframe, embed, object { max-width: 100%; height: auto; }
 svg, canvas { max-width: none; }
 
 @media (max-width: 640px) {
@@ -309,26 +309,18 @@ svg, canvas { max-width: none; }
   #contentArea {
     padding: 14px 12px !important;
   }
-  /* ป้องกัน flex item ล้นออกข้าง */
+  /* ป้องกัน card ล้น */
   .card, [class*="card"] {
     max-width: 100%;
     overflow-wrap: break-word;
     word-break: break-word;
-  }
-  /* ป้องกัน image ล้น */
-  img, iframe, video {
-    max-width: 100%;
-    height: auto;
+    overflow-x: hidden;
   }
   /* modal กว้างสุดจอบนมือถือ */
   .modal-box {
     max-width: 100% !important;
     margin: 8px !important;
     width: calc(100% - 16px) !important;
-  }
-  /* canvas ใน overflow wrapper */
-  canvas {
-    max-width: 100%;
   }
 }
 @media (max-width: 480px) {
