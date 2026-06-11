@@ -3,6 +3,18 @@
    โรงเรียนหนองกี่พิทยาคม – Shared Stylesheet
    ═══════════════════════════════════════════════ */
 
+/* ── Cross-browser normalization
+   ล็อก base font-size ให้ทุกเบราว์เซอร์ใช้ค่าเดียวกัน
+   ป้องกัน Zen (Firefox), Brave (Chromium), Safari ขนาดต่างกัน ── */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Loading Overlay ── */
@@ -33,7 +45,8 @@
   padding: 13px 16px; border-radius: 14px; font-weight: 700;
   color: #64748b; width: 100%; background: none; border: none;
   cursor: pointer; text-decoration: none; transition: all .2s;
-  font-size: 14px; white-space: nowrap; overflow: hidden;
+  font-size: 0.875rem; line-height: 1.4; /* 14px stable ข้ามเบราว์เซอร์ */
+  white-space: nowrap; overflow: hidden;
 }
 .sidebar-btn span {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
@@ -44,7 +57,7 @@
 .sidebar-btn.admin-btn:hover { background: #faf5ff; }
 .sidebar-btn.admin-btn.active { background: #7c3aed; color: white; box-shadow: 0 8px 15px -3px rgba(124,58,237,.25); }
 .sec-label {
-  padding: 14px 16px 8px; font-size: 10px; font-weight: 800;
+  padding: 14px 16px 8px; font-size: 0.625rem; font-weight: 800; /* 10px */
   color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;
 }
 
@@ -105,7 +118,7 @@
 /* ── Form Inputs ── */
 input[type=text], input[type=number], input[type=date], select, textarea {
   border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 10px;
-  outline: none; font-size: 14px; width: 100%; color: #1e293b;
+  outline: none; font-size: 0.875rem; width: 100%; color: #1e293b; /* 14px */
   transition: border-color .15s; font-family: 'Sarabun', sans-serif;
 }
 input:focus, select:focus, textarea:focus {
@@ -221,6 +234,7 @@ input:focus, select:focus, textarea:focus {
   position: sticky; top: 0; z-index: 150;
   background: #1d4ed8; padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  font-size: 1rem; /* ป้องกัน Firefox/Zen inherit ผิด */
 }
 .navbar.purple { background: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
 .navbar-inner {
