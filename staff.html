@@ -622,6 +622,7 @@ function openAddModal() {
   document.getElementById('fRole').value = '';
   document.getElementById('fAcademicRank').value = '';
   openModal('staffModal');
+  lucide.createIcons();
 }
 
 function openEditModal(id) {
@@ -640,6 +641,7 @@ function openEditModal(id) {
   document.getElementById('fRole').value = s.role || '';
   document.getElementById('fAcademicRank').value = s.academic_rank || '';
   openModal('staffModal');
+  lucide.createIcons();
 }
 
 function saveStaff() {
@@ -698,6 +700,7 @@ function openDeleteModal(id, name) {
   deleteId = id;
   document.getElementById('deleteModalSub').textContent = name;
   openModal('deleteModal');
+  lucide.createIcons();
 }
 function confirmDelete() {
   if (!canWrite) { showToast('คุณไม่มีสิทธิ์ลบข้อมูลบุคลากร', 'warn'); return; }
@@ -709,8 +712,8 @@ function confirmDelete() {
 }
 
 /* ════ Modal helpers ════ */
-function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; lucide.createIcons(); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+/* openModal / closeModal ใช้จาก shared/common.js
+   (lucide.createIcons() เรียกแยกหลัง openModal ในจุดที่ modal มีไอคอน) */
 
 /* ════ Export CSV ════ */
 function exportCSV() {
@@ -746,6 +749,7 @@ function openImportModal() {
   document.getElementById('importCount').textContent = '0';
   switchImportTab('file');
   openModal('importModal');
+  lucide.createIcons();
 }
 
 function switchImportTab(tab) {

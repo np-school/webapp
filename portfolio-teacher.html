@@ -2633,9 +2633,7 @@ function formatDate(ts) {
   var d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
+/* closeModal ใช้จาก shared/common.js */
 
 /* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
 function switchMemoTab(tab) {

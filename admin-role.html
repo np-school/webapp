@@ -1654,8 +1654,7 @@ function confirmQuickPerm(){
 function esc(s){ return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+/* openModal / closeModal ใช้จาก shared/common.js */
 
 function showToast(msg, type){
   var t=document.createElement('div');

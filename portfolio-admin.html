@@ -2544,11 +2544,7 @@ function formatDate(ts) {
 }
 function esc(s){ var d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
 
-/* Override closeModal for convenience */
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
+/* closeModal ใช้จาก shared/common.js */
 
 /* ══════════════════════════════════════
    CHARTS
