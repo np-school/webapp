@@ -264,14 +264,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       <div class="page-inner" style="padding-bottom:0">
         <div class="page-header" style="margin-bottom:14px">
           <div>
-            <div class="page-title">🍽️ Food Court บัญชีรายได้</div>
+            <div class="page-title">Food Court บัญชีรายได้</div>
             <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
           </div>
         </div>
         <div class="sub-tab-bar" style="margin-bottom:0">
-          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">📋 รายการทั้งหมด</button>
-          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">⚙️ จัดการรายการ</button>
+          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
+          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
+          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">จัดการ</button>
         </div>
       </div>
 
@@ -284,7 +284,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <div class="page-title">ภาพรวมบัญชี Food Court</div>
             <div class="page-sub">โรงเรียนหนองกี่พิทยาคม – อัปเดตล่าสุด <span id="lastUpdated"></span></div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="exportCSV()">⬇️ ส่งออก CSV</button><button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button><button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button></div>
         </div>
 
 
@@ -320,27 +320,39 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
           </div>
         </div>
 
-        <!-- RECURRING SECTION ON DASHBOARD -->
+        <!-- RECURRING SUMMARY SECTION ON DASHBOARD -->
         <div class="card" style="margin-bottom:18px">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div>
-              <div class="card-title" style="margin-bottom:2px">รายการประจำ</div>
-              <div style="font-size:11px;color:var(--text2)">กดปุ่ม บันทึกวันนี้ เพื่อบันทึกรายการประจำ</div>
+              <div class="card-title" style="margin-bottom:2px">สรุปรายการประจำ</div>
+              <div style="font-size:11px;color:var(--text2)">รายรับ – รายจ่ายจากรายการประจำตามช่วงเวลา</div>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="switchTab('manage',document.getElementById('sb-manage'),true)">⚙️ จัดการรายการ</button>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <div class="period-tabs" id="recPeriodTabs">
+                <button class="ptab active" onclick="setRecPeriod('day',this)">วันนี้</button>
+                <button class="ptab" onclick="setRecPeriod('week',this)">สัปดาห์นี้</button>
+                <button class="ptab" onclick="setRecPeriod('month',this)">เดือนนี้</button>
+                <button class="ptab" onclick="setRecPeriod('year',this)">ปีนี้</button>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('manage',document.getElementById('sb-manage'),true)">จัดการรายการ</button>
+            </div>
           </div>
 
+          <!-- KPI Summary row -->
+          <div id="recSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+
+          <!-- Income list -->
           <div class="rec-section-grid">
             <div>
-              <div class="rec-col-label" style="color:var(--green)">
-                <div class="rec-col-ico" style="background:var(--green-lt)">💰</div>
+              <div class="rec-col-label" style="color:var(--green);margin-bottom:10px">
+                <div class="rec-col-ico" style="background:var(--green-lt);font-size:13px">+</div>
                 รายรับประจำ
               </div>
               <div id="dashRecIncome"></div>
             </div>
             <div>
-              <div class="rec-col-label" style="color:var(--red)">
-                <div class="rec-col-ico" style="background:var(--red-lt)">💸</div>
+              <div class="rec-col-label" style="color:var(--red);margin-bottom:10px">
+                <div class="rec-col-ico" style="background:var(--red-lt);font-size:13px">−</div>
                 รายจ่ายประจำ
               </div>
               <div id="dashRecExpense"></div>
@@ -360,14 +372,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
             <div class="page-title">รายการทั้งหมด</div>
             <div class="page-sub">รายรับ – รายจ่าย แบ่งตามวัน</div>
           </div>
-          <button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
         </div>
 
         <!-- Sub Tab Bar -->
         <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">📋 ทุกรายการ</button>
-          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">💰 รายรับ</button>
-          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">💸 รายจ่าย</button>
+          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">ทุกรายการ</button>
+          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">รายรับ</button>
+          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">รายจ่าย</button>
         </div>
 
         <!-- Summary bar -->
@@ -390,16 +402,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
         <div class="page-header">
           <div>
             <div class="page-title">จัดการรายการ</div>
-            <div class="page-sub">รายการประจำและการตั้งค่า</div>
+            <div class="page-sub">บันทึกรายวันและรายการประจำ</div>
           </div>
-          <button class="btn btn-blue" onclick="goToDailyEntry()">➕ เพิ่มรายการ</button>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
         </div>
 
         <!-- Sub Tab Bar -->
         <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subMgmtEntry" onclick="switchManageSub('entry',this)">📝 บันทึกรายวัน</button>
-          <button class="sub-tab" id="subMgmtRec" onclick="switchManageSub('recurring',this)">🔄 รายการประจำ</button>
-          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">➕ เพิ่มรายการใหม่</button>
+          <button class="sub-tab active" id="subMgmtEntry" onclick="switchManageSub('entry',this)">บันทึกรายวัน</button>
+          <button class="sub-tab" id="subMgmtRec" onclick="switchManageSub('recurring',this)">รายการประจำ</button>
+          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">เพิ่มรายการประจำ</button>
         </div>
 
         <!-- Panel: Daily Entry -->
@@ -438,7 +450,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 
             <div class="sum-bar" id="entrySumBar" style="margin-bottom:0"></div>
             <div style="display:flex;justify-content:flex-end;margin-top:18px">
-              <button class="btn btn-blue" onclick="saveDailyEntry()">💾 บันทึกรายวัน</button>
+              <button class="btn btn-blue" onclick="saveDailyEntry()">บันทึกรายวัน</button>
             </div>
           </div>
         </div>
@@ -450,7 +462,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
               <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
               <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
             </div>
-            <button class="btn btn-blue btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">➕ เพิ่มรายการประจำ</button>
+            <button class="btn btn-blue btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">+ เพิ่มรายการประจำ</button>
           </div>
 
           <div style="margin-bottom:14px">
@@ -466,7 +478,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
         <!-- Panel: Add New Recurring -->
         <div class="sub-panel" id="panelMgmtAddnew">
           <div class="card" style="max-width:560px">
-            <div class="modal-title" style="margin-bottom:18px">➕ เพิ่มรายการประจำใหม่</div>
+            <div class="modal-title" style="margin-bottom:18px">เพิ่มรายการประจำใหม่</div>
 
             <div style="margin-bottom:14px">
               <label style="margin-bottom:8px;display:block">ประเภท</label>
@@ -497,7 +509,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
               <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
             </div>
             <div style="display:flex;justify-content:flex-end">
-              <button class="btn btn-blue" onclick="saveRecurring()">💾 เพิ่มรายการ</button>
+              <button class="btn btn-blue" onclick="saveRecurring()">บันทึก</button>
             </div>
           </div>
         </div>
@@ -514,7 +526,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <div class="modal-bg" id="addModal">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-title">➕ บันทึกรายการ</div>
+      <div class="modal-title">บันทึกรายการ</div>
       <button class="btn btn-ghost btn-sm" onclick="closeAddModal()">✕</button>
     </div>
 
@@ -556,7 +568,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeAddModal()">ยกเลิก</button>
-      <button class="btn btn-blue" onclick="saveTransaction()">💾 บันทึก</button>
+      <button class="btn btn-blue" onclick="saveTransaction()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -565,7 +577,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <div class="modal-bg" id="shopCountModal">
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
-      <div class="modal-title">🏫 นำเข้ารายได้โรงเรียน</div>
+      <div class="modal-title">นำเข้ารายได้โรงเรียน</div>
       <button class="btn btn-ghost btn-sm" onclick="closeShopCountModal()">✕</button>
     </div>
     <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--text2)">
@@ -589,7 +601,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeShopCountModal()">ยกเลิก</button>
-      <button class="btn btn-blue" onclick="saveShopCount()">💾 บันทึก</button>
+      <button class="btn btn-blue" onclick="saveShopCount()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -624,7 +636,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeQuickLogModal()">ยกเลิก</button>
-      <button class="btn btn-blue" id="quickLogSaveBtn" onclick="saveQuickLog()">💾 บันทึก</button>
+      <button class="btn btn-blue" id="quickLogSaveBtn" onclick="saveQuickLog()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -959,41 +971,77 @@ function renderDonut(){
   document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${bg[i]}"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div><div style="font-size:10px;color:var(--text2)">฿${fmt(data[i])}</div></div></div>`).join('');
 }
 
-// ── DASHBOARD RECURRING ──
-function renderDashboardRecurring(){
-  const inc=recurringItems.filter(r=>r.type==='income');
-  const exp=recurringItems.filter(r=>r.type==='expense');
-  document.getElementById('dashRecIncome').innerHTML=inc.length?inc.map(r=>recDashCard(r)).join(''):'<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
-  document.getElementById('dashRecExpense').innerHTML=exp.length?exp.map(r=>recDashCard(r)).join(''):'<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
+// ── DASHBOARD RECURRING SUMMARY ──
+let recPeriod = 'day';
+
+function setRecPeriod(p, el) {
+  recPeriod = p;
+  document.querySelectorAll('#recPeriodTabs .ptab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderDashboardRecurring();
 }
 
-function recDashCard(r){
-  const isShopTransfer=r.shopCount===true;
-  const amtLabel=r.amount>0?'฿'+fmt(r.amount)+'/ครั้ง':'ยอดไม่แน่นอน';
-  if(isShopTransfer){
-    return `<div class="rec-item expense-type" id="recItem-${r.id}">
-      <div class="rec-dot dot-out"></div>
-      <div style="flex:1;min-width:0"><div class="rec-name">${r.name}</div><div class="rec-sub">${r.desc||''}</div></div>
-      <div class="shop-count-wrap">
-        <input class="shop-count-input" type="number" id="shopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateInlineShopPreview(${r.id})" value="">
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-          <span class="shop-count-preview" id="shopPreviewInline-${r.id}" style="color:var(--text2)">× 50 = ฿0</span>
-          <button class="rec-log-btn expense-btn" onclick="openShopCountModalFromRec(${r.id})">บันทึกวันนี้</button>
+function getRecPeriodTx() {
+  const now = new Date();
+  return transactions.filter(t => {
+    const d = new Date(t.date + 'T00:00:00');
+    if (recPeriod === 'day') {
+      return t.date === today();
+    } else if (recPeriod === 'week') {
+      const wStart = new Date(now); wStart.setHours(0,0,0,0);
+      wStart.setDate(now.getDate() - now.getDay() + 1);
+      return d >= wStart;
+    } else if (recPeriod === 'month') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    } else if (recPeriod === 'year') {
+      return d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
+
+function renderDashboardRecurring() {
+  const periodTx = getRecPeriodTx();
+  const totalIn = periodTx.reduce((s,t) => s + t.income, 0);
+  const totalOut = periodTx.reduce((s,t) => s + t.expense, 0);
+  const net = totalIn - totalOut;
+
+  document.getElementById('recSummaryKpi').innerHTML = `
+    <div style="background:var(--green-lt);border:1px solid var(--green-mid);border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">รายรับ</div>
+      <div style="font-size:20px;font-weight:800;color:var(--green)">฿${fmt(totalIn)}</div>
+    </div>
+    <div style="background:var(--red-lt);border:1px solid var(--red-mid);border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">รายจ่าย</div>
+      <div style="font-size:20px;font-weight:800;color:var(--red)">฿${fmt(totalOut)}</div>
+    </div>
+    <div style="background:${net>=0?'var(--blue-lt)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--blue-mid)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
+      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">฿${fmt(net)}</div>
+    </div>
+  `;
+
+  // Group by name
+  const incMap = {}, expMap = {};
+  periodTx.forEach(t => {
+    if (t.income > 0) incMap[t.name] = (incMap[t.name]||0) + t.income;
+    if (t.expense > 0) expMap[t.name] = (expMap[t.name]||0) + t.expense;
+  });
+
+  const renderSummaryList = (map) => {
+    const entries = Object.entries(map).sort((a,b) => b[1]-a[1]);
+    if (!entries.length) return '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการในช่วงนี้</div>';
+    return entries.map(([name, amount]) => `
+      <div class="rec-item" style="border-left:none;margin-bottom:6px">
+        <div style="flex:1;min-width:0">
+          <div class="rec-name" style="font-size:12px">${name}</div>
         </div>
-      </div>
-    </div>`;
-  }
-  return `<div class="rec-item ${r.type}-type">
-    <div class="rec-dot ${r.type==='income'?'dot-in':'dot-out'}"></div>
-    <div style="flex:1;min-width:0"><div class="rec-name">${r.name}</div><div class="rec-sub">${amtLabel}${r.desc?' · '+r.desc:''}</div></div>
-    <button class="rec-log-btn ${r.type==='expense'?'expense-btn':''}" onclick="openQuickLog(${r.id})">บันทึกวันนี้</button>
-  </div>`;
-}
+        <div style="font-size:13px;font-weight:800;color:var(--text)">฿${fmt(amount)}</div>
+      </div>`).join('');
+  };
 
-function updateInlineShopPreview(recId){
-  const input=document.getElementById('shopCount-'+recId);const count=parseInt(input.value)||0;
-  const amount=count*50;const preview=document.getElementById('shopPreviewInline-'+recId);
-  preview.textContent='× 50 = ฿'+fmt(amount);preview.style.color=count>0?'var(--red)':'var(--text2)';
+  document.getElementById('dashRecIncome').innerHTML = renderSummaryList(incMap);
+  document.getElementById('dashRecExpense').innerHTML = renderSummaryList(expMap);
 }
 
 // ── MANAGE ──
@@ -1145,7 +1193,7 @@ function saveDailyEntry(){
   extraEntryRows={income:[],expense:[]};
   renderDailyEntry();
   renderDashboard();
-  toast('บันทึกรายวันแล้ว '+count+' รายการ ✅','#16a34a');
+  toast('บันทึกรายวันแล้ว '+count+' รายการ','#16a34a');
 }
 
 
@@ -1170,7 +1218,7 @@ function saveQuickLog(){
   const t={id:Date.now(),date,name:_quickLogRec.name,income:isIncome?amount:0,expense:isIncome?0:amount,balance:0,note,recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeQuickLogModal();renderDashboard();
-  toast('บันทึก "'+_quickLogRec.name+'" แล้ว ✅','#16a34a');
+  toast('บันทึก "'+_quickLogRec.name+'" แล้ว','#16a34a');
 }
 
 // ── SHOP COUNT MODAL ──
@@ -1197,7 +1245,7 @@ function saveShopCount(){
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  toast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount)+' ✅','#1d4ed8');
+  toast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
 }
 
 // ── ADD MODAL ──
@@ -1229,7 +1277,7 @@ function saveTransaction(){
   const t={id:Date.now(),date,name,income:addType==='income'?amount:0,expense:addType==='expense'?amount:0,balance:0,note,recurring:false};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeAddModal();renderDashboard();
-  toast('บันทึกรายการแล้ว ✅','#16a34a');
+  toast('บันทึกรายการแล้ว','#16a34a');
 }
 
 // ── RECURRING MANAGE (add/delete) ──
@@ -1251,7 +1299,7 @@ function saveRecurring(){
   document.getElementById('recDesc').value='';
   fcSaveRecurring();
   renderManage();renderDashboardRecurring();
-  toast('เพิ่มรายการประจำแล้ว ✅','#16a34a');
+  toast('เพิ่มรายการประจำแล้ว','#16a34a');
 }
 function deleteRec(id){
   if(!confirm('ลบรายการประจำนี้?')) return;
@@ -1335,7 +1383,7 @@ function exportCSV(){
   const blob=new Blob(['\ufeff',[header,...rows].join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='FoodCourt_'+today()+'.csv';a.click();
-  toast('ส่งออก CSV แล้ว ✅','#1d4ed8');
+  toast('ส่งออก CSV แล้ว','#1d4ed8');
 }
 
 // ── TOAST ──
@@ -1380,7 +1428,7 @@ auth.onAuthStateChanged(function(u){
 
 function bootApp(u){
   document.getElementById('adminApp').style.display='block';
-  buildNavbar('บัญชีรายได้ Food Court', false);
+  buildNavbar('Food Court บัญชีรายได้', false);
   updateNavUser(u);
   buildSidebar('foodcourt-admin');
   checkAdminAccess(u.email);
