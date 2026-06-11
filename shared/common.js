@@ -104,30 +104,13 @@ function handleLogin() {
     return;
   }
 
-  /* ลอง popup ก่อน — ถ้าถูกบล็อก fallback ไป redirect
-     redirect ต้องการ handleRedirectResult() รับผลตอนโหลดหน้าใหม่ */
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-    .then(function() {
-      /* popup สำเร็จ — onAuthStateChanged จะจัดการต่อเอง */
-    })
+  /* ใช้ redirect เท่านั้น — popup ถูกบล็อกโดย Brave/Safari (3rd-party cookie policy)
+     หน้าจะ reload และรับผลผ่าน handleRedirectResult() */
+  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
     .catch(function(e) {
-      console.error('Popup login error:', e.code, e.message);
-      if (e.code === 'auth/popup-blocked') {
-        /* popup ถูกบล็อก → แสดง loading แล้ว redirect */
-        if (ov) ov.style.display = 'flex';
-        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
-          .catch(function(re) {
-            console.error('Redirect error:', re);
-            if (ov) ov.style.display = 'none';
-            showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
-          });
-      } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-        /* ผู้ใช้ปิด popup เอง — ไม่ต้องแสดง error */
-        if (ov) ov.style.display = 'none';
-      } else {
-        if (ov) ov.style.display = 'none';
-        showToast('เข้าสู่ระบบไม่สำเร็จ: ' + e.message, 'error');
-      }
+      console.error('Redirect error:', e.code, e.message);
+      if (ov) ov.style.display = 'none';
+      showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
     });
 }
 
