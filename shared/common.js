@@ -359,7 +359,7 @@ function buildSidebar(activePage) {
 
   /* ── close button ── */
   var html =
-    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+    '<div id="sidebarCloseRow" style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
       '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
         '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>' +
       '</button>' +

@@ -20,13 +20,10 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Sidebar ── */
-.sidebar-wrap {
-  width: 272px; flex-shrink: 0; transition: transform .3s ease;
-  position: sticky; top: 0; align-self: flex-start; height: 100vh;
-}
+.sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
 .sidebar-inner {
   background: #f8fafc; border-right: 1px solid #e2e8f0;
-  height: 100vh; padding: 20px 12px;
+  min-height: 100vh; height: 100vh; padding: 20px 12px;
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -68,6 +65,7 @@
 }
 @media (min-width: 1024px) {
   #hamburgerBtn { display: none !important; }
+  #sidebarCloseRow { display: none !important; }
   .sidebar-inner { border-right: none; }
 }
 
