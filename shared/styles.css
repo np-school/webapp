@@ -23,8 +23,10 @@
 .sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
 .sidebar-inner {
   background: #f8fafc; border-right: 1px solid #e2e8f0;
-  min-height: 100vh; padding: 20px 12px;
+  min-height: 100vh; height: 100vh; padding: 20px 12px;
   display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .sidebar-btn {
   display: flex; align-items: center; gap: 12px;
@@ -55,6 +57,7 @@
   .sidebar-wrap {
     position: fixed; top: 0; left: 0; height: 100vh; z-index: 200;
     transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,.12);
+    overflow: hidden;
   }
   .sidebar-wrap.open { transform: translateX(0); }
   #mainGrid { flex-direction: column; }
