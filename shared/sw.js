@@ -1,4 +1,4 @@
-var CACHE_NAME = 'np-origins-v3';
+var CACHE_NAME = 'np-origins-v4';
 var STATIC_FILES = [
   '/webapp/index.html',
   '/webapp/room-request.html',
@@ -47,6 +47,9 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('firestore.googleapis.com') ||
       url.includes('identitytoolkit.googleapis.com') ||
       url.includes('securetoken.googleapis.com') ||
+      url.includes('accounts.google.com') ||
+      url.includes('oauth2.googleapis.com') ||
+      url.includes('cloudfunctions.net') ||
       (url.includes('firebase') && url.includes('googleapis.com'))) {
     return;
   }
