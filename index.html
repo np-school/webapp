@@ -553,7 +553,11 @@
 
   buildNavbar('NP Origins', false);
   buildSidebar('index');
-  auth.onAuthStateChanged(function(user){
+
+  /* ── Auth Init ──
+     รอ getRedirectResult() resolve ก่อนเสมอ
+     ป้องกัน loading spinner ค้างเมื่อ redirect กลับจาก Google  ── */
+  function _initUI(user) {
     if(user){
       document.getElementById('publicView').style.display='none';
       document.getElementById('privateView').style.display='block';
@@ -568,7 +572,21 @@
     }
     document.getElementById('loadingOverlay').style.display='none';
     lucide.createIcons();
-  });
+  }
+
+  /* รอ redirect result resolve ก่อน แล้วค่อย listen onAuthStateChanged
+     ป้องกัน race condition: onAuthStateChanged ยิง null ก่อน redirect token พร้อม */
+  auth.getRedirectResult()
+    .then(function() { /* redirect login สำเร็จ → onAuthStateChanged จะยิงใหม่เอง */ })
+    .catch(function(e) {
+      if (e.code && e.code !== 'auth/no-auth-event') {
+        console.error('getRedirectResult:', e);
+        showToast('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่', 'error');
+      }
+    })
+    .finally(function() {
+      auth.onAuthStateChanged(_initUI);
+    });
 
   /* ── Login Gate ── */
   function showLoginGate(title, desc, icon) {
