@@ -119,7 +119,7 @@
     #fileViewModal.open{display:flex;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -127,7 +127,7 @@
 <!-- Navbar -->
 <nav id="navbar" class="navbar"></nav>
 
-<div id="mainContent" style="display:none;display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+<div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow:hidden;">
 
   <!-- Sidebar -->
   <div class="sidebar-wrap" id="sidebar">
@@ -135,7 +135,7 @@
   </div>
 
   <!-- Content -->
-  <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+  <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
     <!-- Booking button top + Room image banner -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div style="flex:1;min-width:0;" id="roomBannerInlineWrap"></div>

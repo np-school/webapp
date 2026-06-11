@@ -265,33 +265,3 @@ input:focus, select:focus, textarea:focus {
 }
 
 }
-
-/* ── Independent Scroll Layout ──
-   sidebar scroll แยก / content scroll แยก
-   ต้องการให้ #mainGrid เป็น flex row ที่ไม่ขยายเกินจอ
-   และ #contentArea scroll ได้อิสระ ── */
-@media (min-width: 1024px) {
-  #mainGrid {
-    align-items: flex-start; /* ป้องกัน stretch ทำให้ sidebar สูงเกิน */
-  }
-  #contentArea {
-    min-height: calc(100vh - 69px); /* 69px = navbar height */
-    overflow-y: auto;
-  }
-}
-
-/* ── mainGrid layout lock (override inline styles) ── */
-@media (min-width: 1024px) {
-  #mainGrid {
-    /* override inline min-height ที่ทำให้ทั้งหน้า scroll */
-    min-height: unset !important;
-    height: calc(100vh - 69px); /* ล็อกความสูงเท่าจอ หักลบ navbar */
-    overflow: hidden;           /* ห้าม mainGrid เอง scroll */
-    align-items: stretch;
-  }
-  #contentArea {
-    overflow-y: auto !important;
-    height: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-}

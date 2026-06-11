@@ -134,7 +134,7 @@
     @media(max-width:768px){#pubCalGrid{grid-template-columns:1fr!important;}}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -328,7 +328,7 @@
 
 <!-- ── Private Dashboard ── -->
 <div id="privateView" style="display:none;">
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;overflow:hidden;">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
@@ -336,7 +336,7 @@
     </div>
 
     <!-- Content -->
-    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;height:100%;-webkit-overflow-scrolling:touch;">
 
       <!-- Dashboard tab -->
       <div id="tab-dashboard" class="tab-content active">

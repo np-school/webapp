@@ -227,7 +227,7 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -270,11 +270,11 @@
 <!-- Main App -->
 <div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
-  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;overflow:hidden;">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
+    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;height:100%;-webkit-overflow-scrolling:touch;" id="contentArea">
 
       <!-- ── YEAR & SEMESTER SELECTOR ── -->
       <div class="year-hero" style="margin-bottom:24px;">

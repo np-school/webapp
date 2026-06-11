@@ -298,7 +298,7 @@
     .ch-add-btn:hover{background:#ede9fe;border-color:#a78bfa;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
@@ -334,11 +334,11 @@
     </div>
     <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#92400e;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> กลับรายชื่อบุคลากร</a>
   </div>
-  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;overflow:hidden;">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
+    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;height:100%;-webkit-overflow-scrolling:touch;" id="contentArea">
 
       <!-- Hero -->
       <div class="profile-hero">

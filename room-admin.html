@@ -129,7 +129,7 @@
     .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -148,7 +148,7 @@
   <!-- Navbar -->
   <nav id="navbar" class="navbar"></nav>
 
-  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow:hidden;">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
@@ -156,7 +156,7 @@
     </div>
 
     <!-- Main content -->
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
 
       <!-- Charts Panel -->
       <div id="chartsPanel">

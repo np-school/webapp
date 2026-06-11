@@ -268,7 +268,7 @@
     .color-swatch.selected{border-color:#0f172a;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -286,7 +286,7 @@
 <div id="adminApp" style="display:none;">
   <nav id="navbar" class="navbar purple"></nav>
 
-  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow:hidden;">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
@@ -455,7 +455,7 @@
       </div>
 
       <!-- Main Content -->
-      <div id="mainContent">
+      <div id="contentArea" style="flex:1;min-width:0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
         <div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;">
           <i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;margin-bottom:12px;"></i>
           <p>กำลังโหลดข้อมูล...</p>
