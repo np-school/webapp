@@ -54,8 +54,6 @@
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    
-    }
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
@@ -140,7 +138,7 @@
     .memo-print-btn:hover{background:#1e40af;}
     @media print{
       @page { size:A4 portrait; margin:0; }
-      html,body{margin:0!important;padding:0!important;}
+      html,body{margin:0!important;padding:0!important;background:white!important;}
       body > *{ display:none!important; }
       .memo-modal-bg{ display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important; }
       #memoPrintArea{ display:block!important;position:static!important;width:100%!important;max-width:100%!important;box-shadow:none!important;border-radius:0!important;background:white!important;padding:0!important; }
