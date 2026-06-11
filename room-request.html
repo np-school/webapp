@@ -26,8 +26,6 @@
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     /* Sidebar */
-    
-    }
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
     /* Card */
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
@@ -122,6 +120,16 @@
     @media(max-width:540px){
       .cal-content-grid{grid-template-columns:1fr!important;}
       .form-group{grid-template-columns:1fr!important;}
+      /* time slot grid 4-col → 2-col บนมือถือ */
+      #timeSlotGrid{grid-template-columns:repeat(2,1fr)!important;}
+      /* modal ไม่ล้นจอ */
+      .modal-box{border-radius:16px!important;}
+    }
+
+    @media(max-width:360px){
+      /* จอเล็กมาก time slot 1-col */
+      #timeSlotGrid{grid-template-columns:1fr!important;}
+      .time-slot-btn{font-size:11px;padding:8px 4px;}
     }
 
     @media(max-width:600px){

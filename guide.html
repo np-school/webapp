@@ -239,6 +239,16 @@
   body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
 
     @media(max-width:600px){
+      /* ลด padding contentArea บนมือถือ */
+      #contentArea, [style*="padding:24px 20px"] { padding: 16px 12px !important; }
+      /* wf-bar 5-step: ลด padding ให้พอดี */
+      .wf-step { font-size: 8px !important; padding: 6px 2px !important; }
+      /* cta-btn เต็มความกว้าง */
+      .cta-wrap { flex-direction: column; align-items: stretch; }
+      .cta-btn { justify-content: center; }
+    }
+
+    @media(max-width:600px){
       .ptab-bar { flex-wrap: nowrap; }
       .ptab-btn { min-width: 0; flex-shrink: 1; font-size: 12px; padding: 9px 8px; gap: 4px; }
       .ptab-btn i, .ptab-btn svg { display: none; }

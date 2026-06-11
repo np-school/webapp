@@ -6,6 +6,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7c3aed">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
@@ -1037,7 +1038,7 @@ function selectSem(s) {
 }
 
 function loadAllSubmissions() {
-  var main = document.getElementById('mainContent');
+  var main = document.getElementById('contentArea');
   main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i><p style="margin-top:12px;">กำลังโหลดข้อมูล...</p></div>';
   lucide.createIcons();
 
@@ -1354,7 +1355,7 @@ function getNeedsReviewPriority(t) {
 
 function renderListView() {
   var teachers = getFilteredTeachers();
-  var main = document.getElementById('mainContent');
+  var main = document.getElementById('contentArea');
 
   if (!teachers.length) {
     main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;"><i data-lucide="search-x" style="width:36px;height:36px;margin-bottom:12px;"></i><p style="font-size:14px;font-weight:700;">ไม่พบข้อมูล</p></div>';
@@ -1622,7 +1623,7 @@ function buildWorkflowBar(status) {
 /* ─── MATRIX VIEW ─── */
 function renderMatrixView() {
   var teachers = getFilteredTeachers();
-  var main = document.getElementById('mainContent');
+  var main = document.getElementById('contentArea');
 
   if (!teachers.length) {
     main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;"><p style="font-size:14px;font-weight:700;">ไม่พบข้อมูล</p></div>';
