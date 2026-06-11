@@ -5,6 +5,9 @@
 
 * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Page background (มาตรฐานทุกหน้า) ── */
+html, body { background: #f1f5f9; color: #1e293b; }
+
 /* ── Loading Overlay ── */
 #loadingOverlay {
   display: flex; position: fixed; inset: 0;
@@ -244,6 +247,4 @@ input:focus, select:focus, textarea:focus {
 .sidebar-superadmin-label {
   margin: 8px 16px 4px;
   display: flex; align-items: center; gap: 6px;
-}
-
 }
