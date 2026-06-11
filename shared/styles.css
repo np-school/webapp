@@ -35,7 +35,10 @@ html {
 .sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
 .sidebar-inner {
   background: #f8fafc; border-right: 1px solid #e2e8f0;
-  min-height: 100vh; height: 100vh; padding: 20px 12px;
+  height: 100vh;        /* ล็อกความสูงเท่าจอ */
+  position: sticky;     /* ติดอยู่กับที่ขณะ content scroll */
+  top: 0;
+  padding: 20px 12px;
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -261,4 +264,34 @@ input:focus, select:focus, textarea:focus {
   display: flex; align-items: center; gap: 6px;
 }
 
+}
+
+/* ── Independent Scroll Layout ──
+   sidebar scroll แยก / content scroll แยก
+   ต้องการให้ #mainGrid เป็น flex row ที่ไม่ขยายเกินจอ
+   และ #contentArea scroll ได้อิสระ ── */
+@media (min-width: 1024px) {
+  #mainGrid {
+    align-items: flex-start; /* ป้องกัน stretch ทำให้ sidebar สูงเกิน */
+  }
+  #contentArea {
+    min-height: calc(100vh - 69px); /* 69px = navbar height */
+    overflow-y: auto;
+  }
+}
+
+/* ── mainGrid layout lock (override inline styles) ── */
+@media (min-width: 1024px) {
+  #mainGrid {
+    /* override inline min-height ที่ทำให้ทั้งหน้า scroll */
+    min-height: unset !important;
+    height: calc(100vh - 69px); /* ล็อกความสูงเท่าจอ หักลบ navbar */
+    overflow: hidden;           /* ห้าม mainGrid เอง scroll */
+    align-items: stretch;
+  }
+  #contentArea {
+    overflow-y: auto !important;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
 }
