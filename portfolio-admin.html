@@ -146,7 +146,8 @@
     .file-item.fi-none{border-left:4px solid #e2e8f0;opacity:.6;}
 
     @media(max-width:768px){
-      .stat-cards-grid{grid-template-columns:repeat(3,1fr)!important;}
+      .stat-cards-grid{grid-template-columns:repeat(5,1fr);}
+      @media(max-width:900px){ .stat-cards-grid{grid-template-columns:repeat(3,1fr)!important;} }
       .doc-grid{grid-template-columns:repeat(2,1fr)!important;}
     }
     @media(max-width:480px){
@@ -372,7 +373,7 @@
       </style>
 
       <!-- Stat Cards -->
-      <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+      <div class="stat-cards-grid" style="display:grid;gap:12px;">
         <div class="stat-card">
           <div style="width:40px;height:40px;border-radius:12px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i data-lucide="users" style="width:20px;height:20px;color:#7c3aed;"></i>

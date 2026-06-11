@@ -167,7 +167,7 @@
     <div class="pub-section" style="position:relative;z-index:1;">
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;">
         <!-- Text -->
-        <div style="flex:1;min-width:260px;">
+        <div style="flex:1;min-width:min(260px,100%);">
           <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:22px;letter-spacing:.5px;">
             <i data-lucide="zap" style="width:13px;height:13px;"></i> NP Origins
           </div>
@@ -474,7 +474,7 @@
           </div>
           <div style="padding:18px 20px;display:flex;align-items:stretch;gap:16px;flex-wrap:wrap;">
             <!-- LINE Connect Card -->
-            <div id="lineCard" style="flex:1;min-width:240px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(6,199,85,.22);">
+            <div id="lineCard" style="flex:1;min-width:min(240px,100%);background:linear-gradient(135deg,#06C755,#00a541);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(6,199,85,.22);">
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                   <svg width="20" height="20" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
@@ -487,7 +487,7 @@
               <button id="lineBtn" onclick="lineConnect()" style="padding:9px 18px;background:white;color:#06C755;font-weight:800;border-radius:10px;border:none;cursor:pointer;font-size:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12);">เชื่อมต่อ LINE</button>
             </div>
             <!-- Steps + notifications (side by side) -->
-            <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+            <div style="flex:1;min-width:min(220px,100%);display:flex;flex-direction:column;gap:10px;">
               <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border-radius:12px;padding:10px 14px;">
                 <div style="width:24px;height:24px;background:linear-gradient(135deg,#06C755,#00a541);color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">1</div>
                 <div style="flex:1;">

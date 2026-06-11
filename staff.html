@@ -112,6 +112,17 @@
     }
     @media(max-width:640px){
       .stat-grid{grid-template-columns:repeat(2,1fr)!important;}
+      /* modal wide ต้องไม่ล้นจอมือถือ */
+      .modal-box.wide{max-width:calc(100vw - 32px)!important;width:100%!important;}
+      /* 2-col grid inline ที่ไม่มี media query */
+      #sarModalBox{border-radius:20px!important;}
+    }
+    @media(max-width:480px){
+      /* grid 2 คอลัมน์ใน modal พับเป็น 1 */
+      .modal-box .staff-two-col,
+      [style*="grid-template-columns:1fr 1fr"]{
+        grid-template-columns:1fr!important;
+      }
     }
   body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
 </style>
