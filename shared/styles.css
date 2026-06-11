@@ -265,3 +265,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 }
+
+/* ══════════════════════════════════════════════
+   Layout Fix: Scrollable pages (Approach 1)
+   ── ให้ body เลื่อนได้ตามปกติ ──
+   ══════════════════════════════════════════════ */
+
+/* ป้องกันเลื่อนข้าง */
+body { overflow-x: hidden; }
+
+/* mainGrid ไม่ล็อก overflow */
+#mainGrid { overflow: visible; }
+
+/* contentArea ไม่ล็อก scroll — ให้ body จัดการ */
+#contentArea { overflow-y: visible; height: auto; max-width: 100%; }
+
+/* Mobile: sidebar drawer ล็อก body scroll ชั่วคราวเมื่อเปิด */
+body.sidebar-open { overflow: hidden; }
+
+/* ป้องกัน table ล้น viewport */
+table { width: 100%; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

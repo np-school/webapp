@@ -231,9 +231,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .manage-rec-card.income-type{border-left:4px solid var(--green)}
 .manage-rec-card.expense-type{border-left:4px solid var(--red)}
 .manage-rec-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.07)}
+body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
 </style>
 </head>
-<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -252,7 +253,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <nav id="navbar" class="navbar"></nav>
 
   <!-- ── MAIN GRID ── -->
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow:hidden;">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
 
     <!-- ── SIDEBAR ── -->
     <div class="sidebar-wrap" id="sidebar">
@@ -260,7 +261,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
     </div>
 
     <!-- ── CONTENT ── -->
-    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
       <div class="page-inner" style="padding-bottom:0">
         <div class="page-header" style="margin-bottom:14px">
           <div>
@@ -1511,7 +1512,7 @@ function renderDaily(){
         </div>
       </div>
       <div class="tbl-wrap">
-        <table><thead><tr>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table><thead><tr>
           <th>รายการ</th><th>ประเภท</th>
           <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
           <th>หมายเหตุ</th><th></th>
@@ -1524,7 +1525,7 @@ function renderDaily(){
             <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
             <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
           </tr>`).join('')}
-        </tbody></table>
+        </tbody></table></div>
       </div>
     </div>`;
   }).join('');

@@ -168,7 +168,8 @@
       }
       .memo-a4-scaler{ overflow:visible!important; height:auto!important; }
     }
-  </style>
+  body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
+</style>
   <script>
   /* ── A4 Scaler: ย่อ memoContent ให้พอดีหน้าจอ โดยไม่กระทบขนาดพิมพ์จริง ── */
   var page1Scale = 1;
@@ -227,7 +228,7 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body style="background:#f8fafc;height:100vh;overflow:hidden;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -270,7 +271,7 @@
 <!-- Main App -->
 <div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;overflow:hidden;">
+  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
