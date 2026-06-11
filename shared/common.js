@@ -105,11 +105,12 @@ function handleLogin() {
   }
 
   var ua = navigator.userAgent || '';
-  /* Safari (รวม iPad/iPhone) บล็อก redirect ด้วย ITP → ต้องใช้ popup
-     Brave/Chrome/Firefox → ใช้ redirect (popup ถูกบล็อก 3rd-party cookie) */
-  var isSafari = /Safari\//.test(ua) && !/Chrome\/|Chromium\/|CriOS\/|FxiOS\//.test(ua);
+  /* iOS/iPadOS (ทุก browser) บังคับใช้ WebKit — redirect ถูก ITP ตัด → ใช้ popup
+     macOS/Windows/Android → ใช้ redirect (Brave/Chrome บล็อก popup 3rd-party cookie) */
+  var isIOS = /iPhone|iPad|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPad iOS 13+ */
 
-  if (isSafari) {
+  if (isIOS) {
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
       .catch(function(e) {
         console.error('Popup error:', e.code, e.message);
