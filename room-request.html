@@ -121,6 +121,7 @@
 
     @media(max-width:540px){
       .cal-content-grid{grid-template-columns:1fr!important;}
+      .form-group{grid-template-columns:1fr!important;}
     }
 
     @media(max-width:600px){
@@ -128,6 +129,19 @@
       #roomTabsWrap { flex-wrap:nowrap !important; }
     }
 
+    /* room tabs mobile: scroll แนวนอนแทน wrap */
+    @media(max-width:640px){
+      #roomTabsWrap {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        max-width: 100%;
+      }
+      .room-tab { flex-shrink: 0; font-size: 11px; padding: 5px 10px; }
+      /* calendar card ไม่ล้น */
+      .cal-content-grid { max-width: 100%; overflow: hidden; }
+    }
   </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
@@ -159,7 +173,7 @@
     <!-- Room tabs -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>
-      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
+      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:nowrap;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">
         <button class="room-tab active" onclick="selectRoomFilter('all',this)">ทุกห้อง</button>
       </div>
     </div>
