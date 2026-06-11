@@ -124,6 +124,7 @@ function checkAdminAccess(email) {
       _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
       _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
+      _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
 
       /* SuperAdmin-only */
       if (isSA) {
@@ -311,6 +312,13 @@ var SUPERADMIN_EMAIL = 'nattapol@nongki.ac.th';
    (แต่ละ item มี id เพื่อให้ checkAdminAccess toggle ได้)
    ════════════════════════════════ */
 var ADMIN_GROUP_MENU = [
+  {
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'banknote',
+    items: [
+      { id: 'adminMenuItem-foodcourt', label: 'บัญชีรายได้ Food Court', icon: 'utensils', href: 'foodcourt-admin.html' },
+    ],
+  },
   {
     group: 'กลุ่มบริหารงานบุคคล',
     icon: 'users',
