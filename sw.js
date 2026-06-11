@@ -1,4 +1,4 @@
-var CACHE_NAME = 'np-origins-v6';
+var CACHE_NAME = 'np-origins-v7';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
 var ALL_FILES = [
