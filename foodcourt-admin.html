@@ -393,7 +393,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 
         <!-- Filters -->
         <div class="filter-row">
-          <input type="month" id="filterMonth" style="width:160px" onchange="renderDaily()">
+          <select id="filterMonth" style="width:180px" onchange="renderDaily()">
+            <option value="">ทุกเดือน</option>
+          </select>
           <input type="text" id="filterSearch" placeholder="ค้นหารายการ..." style="flex:1;min-width:160px" oninput="renderDaily()">
         </div>
 
@@ -528,53 +530,49 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 </div><!-- /adminApp -->
 
 
-<!-- ═══ MODAL: เพิ่มรายการ (visual form) ═══ -->
+<!-- ═══ MODAL: เพิ่มรายการ (daily-entry style) ═══ -->
 <div class="modal-bg" id="addModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">บันทึกรายการ</div>
+  <div class="modal-box" style="max-width:600px;max-height:92vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;background:white;z-index:10;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px">
+      <div class="modal-title">เพิ่มรายการ</div>
       <button class="btn btn-ghost btn-sm" onclick="closeAddModal()">✕</button>
     </div>
 
-    <!-- Type cards -->
-    <div style="display:flex;gap:10px;margin-bottom:18px">
-      <div class="modal-type-card active income" id="cardIn" onclick="setType('income')">
-        <div class="type-ico">💰</div>
-        <div class="type-lbl">รายรับ</div>
-      </div>
-      <div class="modal-type-card expense" id="cardOut" onclick="setType('expense')">
-        <div class="type-ico">💸</div>
-        <div class="type-lbl">รายจ่าย</div>
-      </div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>วันที่</label>
+      <input type="date" id="addDate">
     </div>
 
-    <!-- Big amount input -->
-    <div class="form-group" style="margin-bottom:16px">
-      <label>จำนวนเงิน</label>
-      <div class="amount-input-wrap">
-        <span class="currency">฿</span>
-        <input type="number" id="addAmount" class="amount-big" placeholder="0.00" min="0">
-      </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="badge badge-in">ประจำ</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text)">รายรับประจำ</span>
     </div>
+    <div id="modalEntryRecIncome" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>วันที่</label>
-        <input type="date" id="addDate">
-      </div>
-      <div class="form-group">
-        <label>รายการ</label>
-        <input type="text" id="addName" placeholder="ชื่อรายการ..." list="recNameList">
-        <datalist id="recNameList"></datalist>
-      </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text)">รายรับอื่นๆ</span>
     </div>
-    <div class="form-group" style="margin-bottom:20px">
-      <label>หมายเหตุ (ถ้ามี)</label>
-      <input type="text" id="addNote" placeholder="หมายเหตุ...">
+    <div id="modalExtraIncome" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+    <button class="upload-area" style="margin-bottom:20px;padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('income')">+ เพิ่มรายรับอื่นๆ</button>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="badge badge-out">ประจำ</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div id="modalEntryRecExpense" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text)">รายจ่ายอื่นๆ</span>
+    </div>
+    <div id="modalExtraExpense" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+    <button class="upload-area" style="margin-bottom:20px;padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
+
+    <div class="sum-bar" id="modalSumBar" style="margin-bottom:0"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeAddModal()">ยกเลิก</button>
-      <button class="btn btn-blue" onclick="saveTransaction()">บันทึก</button>
+      <button class="btn btn-blue" onclick="saveModalEntry()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -870,6 +868,7 @@ function loadFoodcourtData(){
     }
 
     recomputeBalance();
+    populateMonthFilter();
   }).catch(function(e){
     console.error('โหลดข้อมูล Food Court ไม่สำเร็จ',e);
     toast('โหลดข้อมูลจาก Firestore ไม่สำเร็จ ใช้ข้อมูลตัวอย่างชั่วคราว','#dc2626');
@@ -1203,6 +1202,7 @@ function saveDailyEntry(){
   recomputeBalance();
   newTx.forEach(t=>fcSaveTransaction(t));
   extraEntryRows={income:[],expense:[]};
+  populateMonthFilter();
   renderDailyEntry();
   renderDashboard();
   toast('บันทึกรายวันแล้ว '+count+' รายการ','#16a34a');
@@ -1260,36 +1260,117 @@ function saveShopCount(){
   toast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
 }
 
-// ── ADD MODAL ──
-function openAddModal(prefillName){
+// ── ADD MODAL (daily-entry style) ──
+let modalExtraRows={income:[],expense:[]};
+
+function openAddModal(){
   document.getElementById('addDate').value=today();
-  document.getElementById('addAmount').value='';
-  document.getElementById('addName').value=prefillName||'';
-  document.getElementById('addNote').value='';
-  setType('income');
-  const dl=document.getElementById('recNameList');
-  dl.innerHTML=recurringItems.map(r=>`<option value="${r.name}">`).join('');
+  modalExtraRows={income:[],expense:[]};
+  renderModalEntryRows();
   document.getElementById('addModal').classList.add('open');
-  setTimeout(()=>document.getElementById('addAmount').focus(),100);
 }
 function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
-function setType(t){
-  addType=t;
-  ['cardIn','cardOut'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.className='modal-type-card '+(id==='cardIn'?'income':'expense')+(t===(id==='cardIn'?'income':'expense')?' active':'');
-  });
+
+function renderModalEntryRows(){
+  const recIncome=recurringItems.filter(r=>r.type==='income');
+  const recExpense=recurringItems.filter(r=>r.type==='expense');
+  document.getElementById('modalEntryRecIncome').innerHTML=recIncome.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
+  document.getElementById('modalEntryRecExpense').innerHTML=recExpense.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
+  renderModalExtraRows('income');
+  renderModalExtraRows('expense');
+  updateModalSumBar();
 }
-function saveTransaction(){
+
+function modalEntryRow(r){
+  if(r.shopCount){
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+      <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+      <div class="shop-count-wrap" style="margin-left:0">
+        <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
+        <span style="font-size:11px;color:var(--text2)">ร้าน × 50</span>
+      </div>
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+    <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input type="number" id="mEntryAmt-${r.id}" min="0" placeholder="0" style="width:120px;text-align:right" oninput="updateModalSumBar()">
+      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
+    </div>
+  </div>`;
+}
+
+function addModalExtraRow(type){
+  modalExtraRows[type].push({id:Date.now()+Math.random(),name:'',amount:''});
+  renderModalExtraRows(type);
+  updateModalSumBar();
+}
+function removeModalExtraRow(type,id){
+  modalExtraRows[type]=modalExtraRows[type].filter(r=>r.id!==id);
+  renderModalExtraRows(type);
+  updateModalSumBar();
+}
+function renderModalExtraRows(type){
+  const wrap=document.getElementById(type==='income'?'modalExtraIncome':'modalExtraExpense');
+  wrap.innerHTML=modalExtraRows[type].map(r=>`
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="mExtraName-${r.id}" value="${r.name}">
+      <input type="number" min="0" placeholder="0" style="width:110px;text-align:right" id="mExtraAmt-${r.id}" value="${r.amount}" oninput="updateModalSumBar()">
+      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
+      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeModalExtraRow('${type}',${r.id})">✕</button>
+    </div>`).join('');
+}
+
+function updateModalSumBar(){
+  let totalIn=0,totalOut=0;
+  recurringItems.forEach(r=>{
+    if(r.shopCount){
+      const c=parseInt(document.getElementById('mEntryShopCount-'+r.id)?.value)||0;
+      totalOut+=c*50;
+    } else {
+      const v=parseFloat(document.getElementById('mEntryAmt-'+r.id)?.value)||0;
+      if(r.type==='income') totalIn+=v; else totalOut+=v;
+    }
+  });
+  modalExtraRows.income.forEach(r=>{totalIn+=parseFloat(document.getElementById('mExtraAmt-'+r.id)?.value)||0;});
+  modalExtraRows.expense.forEach(r=>{totalOut+=parseFloat(document.getElementById('mExtraAmt-'+r.id)?.value)||0;});
+  const net=totalIn-totalOut;
+  document.getElementById('modalSumBar').innerHTML=`
+    <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
+  `;
+}
+
+function saveModalEntry(){
   const date=document.getElementById('addDate').value;
-  const amount=parseFloat(document.getElementById('addAmount').value)||0;
-  const name=document.getElementById('addName').value.trim();
-  const note=document.getElementById('addNote').value.trim();
-  if(!date||!name||!amount){toast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
-  const t={id:Date.now(),date,name,income:addType==='income'?amount:0,expense:addType==='expense'?amount:0,balance:0,note,recurring:false};
-  transactions.push(t);
-  recomputeBalance();fcSaveTransaction(t);closeAddModal();renderDashboard();
-  toast('บันทึกรายการแล้ว','#16a34a');
+  if(!date){toast('กรุณาเลือกวันที่','#dc2626');return;}
+  let count=0; let newTx=[];
+  recurringItems.forEach(r=>{
+    if(r.shopCount){
+      const c=parseInt(document.getElementById('mEntryShopCount-'+r.id)?.value)||0;
+      if(c>0){ const t={id:Date.now()+Math.random(),date,name:r.name,income:0,expense:c*50,balance:0,note:c+' ร้าน',recurring:true}; transactions.push(t);newTx.push(t);count++; }
+    } else {
+      const v=parseFloat(document.getElementById('mEntryAmt-'+r.id)?.value)||0;
+      if(v>0){ const t={id:Date.now()+Math.random(),date,name:r.name,income:r.type==='income'?v:0,expense:r.type==='expense'?v:0,balance:0,note:'',recurring:true}; transactions.push(t);newTx.push(t);count++; }
+    }
+  });
+  ['income','expense'].forEach(type=>{
+    modalExtraRows[type].forEach(r=>{
+      const name=(document.getElementById('mExtraName-'+r.id)?.value||'').trim();
+      const amount=parseFloat(document.getElementById('mExtraAmt-'+r.id)?.value)||0;
+      if(name&&amount>0){ const t={id:Date.now()+Math.random(),date,name,income:type==='income'?amount:0,expense:type==='expense'?amount:0,balance:0,note:'',recurring:false}; transactions.push(t);newTx.push(t);count++; }
+    });
+  });
+  if(!count){toast('ไม่มีรายการที่จะบันทึก','#dc2626');return;}
+  recomputeBalance();
+  newTx.forEach(t=>fcSaveTransaction(t));
+  populateMonthFilter();
+  closeAddModal();
+  renderDashboard();
+  toast('บันทึกแล้ว '+count+' รายการ','#16a34a');
 }
 
 // ── RECURRING MANAGE (add/delete) ──
@@ -1319,6 +1400,24 @@ function deleteRec(id){
   fcSaveRecurring();
   renderManage();renderDashboardRecurring();
   toast('ลบรายการประจำแล้ว','#dc2626');
+}
+
+// ── POPULATE MONTH FILTER ──
+function populateMonthFilter(){
+  const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
+  const sel=document.getElementById('filterMonth');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">ทุกเดือน</option>'+months.map(m=>{
+    const [y,mo]=m.split('-');
+    const d=new Date(parseInt(y),parseInt(mo)-1,1);
+    const label=d.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+    return `<option value="${m}"${m===cur?' selected':''}>${label}</option>`;
+  }).join('');
+  // default to current month if exists
+  if(!cur){
+    const thisMonth=new Date().toISOString().slice(0,7);
+    if(months.includes(thisMonth)) sel.value=thisMonth;
+  }
 }
 
 // ── DAILY ──
@@ -1406,8 +1505,6 @@ function toast(msg,bg='#16a34a'){
 }
 
 // ── AUTH + ADMIN CHECK ──
-document.getElementById('filterMonth').value=new Date().toISOString().slice(0,7);
-
 var _authResolved=false;
 setTimeout(function(){
   if(_authResolved) return;
