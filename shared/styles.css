@@ -224,7 +224,7 @@ input:focus, select:focus, textarea:focus {
 }
 .navbar.purple { background: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
 .navbar-inner {
-  max-width: 1280px; margin: 0 auto;
+  max-width: var(--max-w); margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 
@@ -255,10 +255,11 @@ input:focus, select:focus, textarea:focus {
 
 /* ── Navbar height token (เปลี่ยนที่นี่ที่เดียว) ── */
 :root {
-  --navbar-h: 69px;
+  --navbar-h:   69px;
   --content-px: 24px;
   --content-py: 28px;
-  --max-w: 1280px;
+  --max-w:      1280px;  /* ← ความกว้างหลักทุกหน้า */
+  --max-w-wide: 1280px;  /* ← admin หน้ากว้าง (foodcourt, portfolio-admin) เท่ากันเลย */
 }
 
 /* ── Outer flex wrapper (sidebar + content) ── */
@@ -268,7 +269,7 @@ input:focus, select:focus, textarea:focus {
   margin: 0 auto;
   min-height: calc(100vh - var(--navbar-h));
 }
-.page-wrap.wide { max-width: 1400px; }
+.page-wrap.wide { max-width: var(--max-w-wide); }
 
 /* ── Content area ── */
 .page-content {
