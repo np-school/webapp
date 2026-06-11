@@ -6,7 +6,6 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1d4ed8">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
@@ -15,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="shared/styles.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@0.561.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -24,7 +23,7 @@
   <script src="shared/common.js?v=5"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: #1e293b; }
+    body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: #1e293b; }
 
     /* ── Hero ── */
     .hero {
@@ -64,11 +63,10 @@
       padding: 6px; margin-bottom: 20px;
       border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.05);
       overflow-x: auto; -webkit-overflow-scrolling: touch;
-      max-width: 100%; box-sizing: border-box;
     }
     .ptab-bar::-webkit-scrollbar { height: 0; }
     .ptab-btn {
-      flex: 1; min-width: 80px; padding: 11px 16px; border: none;
+      flex: 1; min-width: 120px; padding: 11px 16px; border: none;
       border-radius: 11px; font-family: 'Sarabun', sans-serif; font-size: 13px;
       font-weight: 700; color: #64748b; cursor: pointer; background: none;
       display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -169,7 +167,7 @@
     .wf-div    { width: 1px; background: rgba(0,0,0,.08); align-self: stretch; flex-shrink: 0; }
 
     /* ── Overview grid ── */
-    .sys-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
     @media(max-width:540px){ .sys-grid { grid-template-columns: 1fr; } }
     .sys-card {
       border-radius: 12px; padding: 16px;
@@ -211,7 +209,7 @@
     .cta-purple { background: #7c3aed; box-shadow: 0 6px 18px rgba(124,58,237,.3); }
 
     /* ── User flow diagram ── */
-    .flow-row { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 12px 0; overflow: hidden; max-width: 100%; }
+    .flow-row { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 12px 0; }
     .flow-box {
       padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 700;
       text-align: center; flex-shrink: 0;
@@ -235,62 +233,14 @@
     @media(max-width:600px){
       .card { padding: 18px 16px; }
       .hero { padding: 36px 16px 52px; }
+      .ptab-btn { min-width: 100px; font-size: 12px; padding: 9px 10px; }
     }
-    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
-  body{overflow-x:hidden;max-width:100vw;}
-  #contentArea,#mainGrid{max-width:100%;overflow-x:hidden;}
-  *{box-sizing:border-box;}
-  img,table,pre,canvas{max-width:100%;}
-
-    @media(max-width:600px){
-      /* ลด padding contentArea บนมือถือ */
-      #contentArea, [style*="padding:24px 20px"] { padding: 16px 12px !important; }
-      /* wf-bar 5-step: ลด padding ให้พอดี */
-      .wf-step { font-size: 8px !important; padding: 6px 2px !important; }
-      /* cta-btn เต็มความกว้าง */
-      .cta-wrap { flex-direction: column; align-items: stretch; }
-      .cta-btn { justify-content: center; }
+    
     }
 
-    @media(max-width:600px){
-      .main-wrap { padding: 14px 10px 40px !important; }
-      .card { padding: 16px 14px !important; border-radius: 14px !important; }
-      .hero { padding: 28px 12px 44px !important; }
-      .hero h1 { font-size: clamp(18px,5vw,26px) !important; }
-      /* primary tab: scroll แนวนอน ซ่อน icon */
-      .ptab-bar { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; gap: 4px !important; }
-      .ptab-btn { flex-shrink: 0 !important; min-width: 0 !important; font-size: 12px !important; padding: 9px 10px !important; gap: 3px !important; }
-      .ptab-btn i, .ptab-btn svg { display: none !important; }
-      /* sub tab */
-      .stab-btn { font-size: 11px !important; padding: 6px 8px !important; }
-      /* workflow bar */
-      .wf-bar { overflow-x: auto !important; }
-      .wf-step { min-width: 44px !important; font-size: 8px !important; padding: 5px 2px !important; }
-      /* role table */
-      .role-table { font-size: 11px !important; }
-      .role-table th, .role-table td { padding: 7px 8px !important; }
-      /* sys cards */
-      .sys-grid { grid-template-columns: 1fr !important; }
-      /* sys pills */
-      .sys-pills { gap: 6px !important; }
-      .sys-pill { font-size: 11px !important; padding: 5px 10px !important; }
-      /* cta */
-      .cta-wrap { flex-direction: column !important; align-items: stretch !important; }
-      .cta-btn { justify-content: center !important; }
-      /* alert box */
-      .alert { font-size: 12px !important; padding: 10px 12px !important; }
-      /* step */
-      .step-num { width: 28px !important; height: 28px !important; font-size: 12px !important; }
-      .step-title { font-size: 13px !important; }
-      .step-desc { font-size: 12px !important; }
-    }
-    @media(max-width:400px){
-      .ptab-btn { font-size: 11px !important; padding: 8px 7px !important; }
-      .stab-btn { font-size: 10px !important; padding: 5px 7px !important; }
-    }
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh">
+<body style="background:#f1f5f9;min-height:100vh;overflow-x:hidden;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -299,11 +249,11 @@
 <nav id="navbar" class="navbar"></nav>
 
 <!-- Main App -->
-<div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
+<div class="page-wrap">
   <div class="sidebar-wrap" id="sidebar">
     <div class="sidebar-inner" id="sidebarInner"></div>
   </div>
-  <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-x:hidden;max-width:100%;box-sizing:border-box;">
+  <div class="page-content">
 
 <!-- ══ HERO ══ -->
 <div class="hero">
@@ -395,7 +345,7 @@
         </div>
         ผู้ใช้งานและสิทธิ์แต่ละประเภท
       </div>
-      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="role-table">
+      <table class="role-table">
         <thead>
           <tr>
             <th>ประเภทผู้ใช้</th>
@@ -430,7 +380,7 @@
             <td>อนุมัติขั้นสุดท้าย, ดูรายงานภาพรวม, จัดการรายการเอกสาร</td>
           </tr>
         </tbody>
-      </table></div>
+      </table>
     </div>
 
     <!-- การแจ้งเตือน LINE -->
@@ -635,8 +585,8 @@
           </div>
           Flow การทำงานของระบบจองห้อง
         </div>
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">
-          <div style="min-width:380px;">
+        <div style="overflow-x:auto;">
+          <div style="min-width:460px;">
             <div class="flow-row">
               <div class="flow-box fb-blue">ครูส่งคำขอ</div>
               <div class="flow-arrow">→</div>
@@ -928,7 +878,7 @@
           มีหน้าจัดการพิเศษ (<strong>admin-portfolio.html</strong>) สำหรับผู้ที่มีสิทธิ์ตรวจสอบ ระบบแบ่งตามบทบาท ดังนี้
         </p>
 
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="role-table">
+        <table class="role-table">
           <thead>
             <tr>
               <th>บทบาท</th>
@@ -953,7 +903,7 @@
               <td>อนุมัติขั้นสุดท้าย → final_approved, จัดการรายการเอกสาร, ดูรายงานภาพรวมทุกครู</td>
             </tr>
           </tbody>
-        </table></div>
+        </table>
 
         <div class="sdiv">การตรวจสอบงาน</div>
         <div class="step">

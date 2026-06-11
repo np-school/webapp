@@ -6,7 +6,6 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7c3aed">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
@@ -14,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="shared/styles.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@0.561.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -112,7 +111,7 @@
     .cell-revision{background:#fef9c3;}
 
     /* ── stat card ── */
-    .stat-card{padding:12px 14px;border-radius:14px;background:white;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;}
+    .stat-card{padding:16px 18px;border-radius:16px;background:white;border:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;}
 
     /* ── pbar ── */
     .pbar-bg{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
@@ -147,14 +146,11 @@
     .file-item.fi-none{border-left:4px solid #e2e8f0;opacity:.6;}
 
     @media(max-width:768px){
-      .stat-cards-grid{grid-template-columns:repeat(5,1fr);}
-      @media(max-width:1100px){ .stat-cards-grid{grid-template-columns:repeat(5,1fr)!important;} }
-      @media(max-width:900px){ .stat-cards-grid{grid-template-columns:repeat(3,1fr)!important;} }
+      .stat-cards-grid{grid-template-columns:repeat(3,1fr)!important;}
       .doc-grid{grid-template-columns:repeat(2,1fr)!important;}
     }
     @media(max-width:480px){
       .stat-cards-grid{grid-template-columns:repeat(2,1fr)!important;}
-      .stat-card { padding: 10px 10px !important; gap: 8px !important; }
       .matrix-table{font-size:10px;}
     }
 
@@ -176,7 +172,7 @@
     #adminMemoContent{display:block;transform-origin:top left;box-shadow:0 2px 20px rgba(0,0,0,.25);}
     @media print{
       @page{size:A4 portrait;margin:0;}
-      html,body{margin:0!important;padding:0!important;}
+      html,body{margin:0!important;padding:0!important;background:white!important;}
       body > *{display:none!important;}
       .memo-modal-bg{display:block!important;position:static!important;background:none!important;padding:0!important;overflow:visible!important;}
       #adminMemoPrintArea{display:block!important;position:static!important;width:100%!important;max-width:100%!important;background:white!important;padding:0!important;}
@@ -270,10 +266,9 @@
     .dt-row.dragging{opacity:.45;border-style:dashed;}
     .color-swatch{width:20px;height:20px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
     .color-swatch.selected{border-color:#0f172a;}
-  body{overflow-x:hidden;}#mainContent,#mainGrid{max-width:100%;}
-</style>
+  </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -291,12 +286,12 @@
 <div id="adminApp" style="display:none;">
   <nav id="navbar" class="navbar purple"></nav>
 
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
+  <div class="page-wrap wide">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
 
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+    <div class="page-content" style="display:flex;flex-direction:column;gap:20px;">
 
       <!-- Header -->
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
@@ -376,50 +371,50 @@
       </style>
 
       <!-- Stat Cards -->
-      <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+      <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
         <div class="stat-card">
-          <div style="width:34px;height:34px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="users" style="width:16px;height:16px;color:#7c3aed;"></i>
+          <div style="width:40px;height:40px;border-radius:12px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="users" style="width:20px;height:20px;color:#7c3aed;"></i>
           </div>
-          <div style="min-width:0;">
-            <p style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.1;" id="statTeachers">-</p>
-            <p style="font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;">ครูทั้งหมด</p>
+          <div>
+            <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statTeachers">-</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ครูทั้งหมด</p>
           </div>
         </div>
         <div class="stat-card">
-          <div style="width:34px;height:34px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="check-circle" style="width:16px;height:16px;color:#22c55e;"></i>
+          <div style="width:40px;height:40px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="check-circle" style="width:20px;height:20px;color:#22c55e;"></i>
           </div>
-          <div style="min-width:0;">
-            <p style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.1;" id="statSubmitted">-</p>
-            <p style="font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;">ส่งงานแล้ว</p>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div style="width:34px;height:34px;border-radius:10px;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="eye" style="width:16px;height:16px;color:#3b82f6;"></i>
-          </div>
-          <div style="min-width:0;">
-            <p style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.1;" id="statReviewed">-</p>
-            <p style="font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;">ระหว่างตรวจสอบ</p>
+          <div>
+            <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statSubmitted">-</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ส่งงานแล้ว</p>
           </div>
         </div>
         <div class="stat-card">
-          <div style="width:34px;height:34px;border-radius:10px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="shield-check" style="width:16px;height:16px;color:#059669;"></i>
+          <div style="width:40px;height:40px;border-radius:12px;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="eye" style="width:20px;height:20px;color:#3b82f6;"></i>
           </div>
-          <div style="min-width:0;">
-            <p style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.1;" id="statFinalApproved">-</p>
-            <p style="font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;"> ผอ.อนุมัติ</p>
+          <div>
+            <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statReviewed">-</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">อยู่ระหว่างตรวจสอบ</p>
           </div>
         </div>
         <div class="stat-card">
-          <div style="width:34px;height:34px;border-radius:10px;background:#fef9c3;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="alert-circle" style="width:16px;height:16px;color:#eab308;"></i>
+          <div style="width:40px;height:40px;border-radius:12px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="shield-check" style="width:20px;height:20px;color:#059669;"></i>
           </div>
-          <div style="min-width:0;">
-            <p style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.1;" id="statPending">-</p>
-            <p style="font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;">ยังไม่ส่ง</p>
+          <div>
+            <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statFinalApproved">-</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ผู้อำนวยการอนุมัติ</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div style="width:40px;height:40px;border-radius:12px;background:#fef9c3;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="alert-circle" style="width:20px;height:20px;color:#eab308;"></i>
+          </div>
+          <div>
+            <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statPending">-</p>
+            <p style="font-size:11px;color:#64748b;font-weight:600;">ยังไม่ส่ง</p>
           </div>
         </div>
       </div>
@@ -460,7 +455,7 @@
       </div>
 
       <!-- Main Content -->
-      <div id="mainContent" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+      <div id="mainContent">
         <div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;">
           <i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;margin-bottom:12px;"></i>
           <p>กำลังโหลดข้อมูล...</p>
@@ -904,7 +899,6 @@ var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
 var currentDocFilter = 'all'; /* doc type filter */
 var availableGroups = []; /* กลุ่มสาระที่มีอยู่จริงใน staff (สร้าง dynamic) */
-var _staffSkeletonCache = null; /* cache teacherMap skeleton + availableGroups จาก staff collection (ไม่เปลี่ยนตามปี/เทอม) */
 
 /* กลุ่มสาระที่นับเป็น "ครู" (ไม่รวมผู้บริหาร/เจ้าหน้าที่) */
 var NON_TEACHER_GROUPS = ['ผู้บริหาร', 'เจ้าหน้าที่'];
@@ -1050,62 +1044,34 @@ function loadAllSubmissions() {
   currentDocFilter = 'all';
   buildDocFilterBar();
 
-  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ──
-     (cache ผลลัพธ์ไว้ — staff ไม่เปลี่ยนตามปี/เทอม จึงดึงครั้งแรกครั้งเดียวพอ) */
-  var staffSkeletonPromise;
-  if (_staffSkeletonCache) {
-    staffSkeletonPromise = Promise.resolve(_staffSkeletonCache);
-  } else {
-    staffSkeletonPromise = db.collection('staff').orderBy('name').get().then(function(staffSnap) {
-      var skTeacherMap = {};
-      var skAvailableGroups = [];
-      var groupSet = {};
-
-      staffSnap.forEach(function(d) {
-        var s = Object.assign({ id: d.id }, d.data());
-        if (!s.email) return;
-        var eKey = s.email.toLowerCase();
-        var grp  = normaliseGroup(s.group);
-        var isTeacher = NON_TEACHER_GROUPS.indexOf(grp) === -1;
-
-        /* เก็บกลุ่มสาระที่เป็นครูจริง ๆ */
-        if (isTeacher && grp && !groupSet[grp]) {
-          groupSet[grp] = true;
-          skAvailableGroups.push(grp);
-        }
-
-        skTeacherMap[eKey] = {
-          uid:          eKey,          /* ใช้ email เป็น key เหมือนเดิม */
-          email:        eKey,
-          staffName:    s.name  || '', /* ชื่อจริงจาก staff */
-          displayName:  s.name  || eKey,
-          position:     s.position || '',
-          staffGroup:   grp,
-          isTeacher:    isTeacher
-        };
-      });
-
-      _staffSkeletonCache = { teacherMap: skTeacherMap, availableGroups: skAvailableGroups };
-      return _staffSkeletonCache;
-    });
-  }
-
-  return staffSkeletonPromise.then(function(skeleton) {
+  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
+  db.collection('staff').orderBy('name').get().then(function(staffSnap) {
     allSubs = [];
     teacherMap = {};
-    availableGroups = skeleton.availableGroups.slice();
+    availableGroups = [];
+    var groupSet = {};
 
-    /* clone skeleton ใหม่ทุกครั้ง พร้อม subs:{} ว่าง — ไม่ให้ข้อมูลเทอมก่อนค้างอยู่ */
-    Object.keys(skeleton.teacherMap).forEach(function(eKey) {
-      var base = skeleton.teacherMap[eKey];
+    staffSnap.forEach(function(d) {
+      var s = Object.assign({ id: d.id }, d.data());
+      if (!s.email) return;
+      var eKey = s.email.toLowerCase();
+      var grp  = normaliseGroup(s.group);
+      var isTeacher = NON_TEACHER_GROUPS.indexOf(grp) === -1;
+
+      /* เก็บกลุ่มสาระที่เป็นครูจริง ๆ */
+      if (isTeacher && grp && !groupSet[grp]) {
+        groupSet[grp] = true;
+        availableGroups.push(grp);
+      }
+
       teacherMap[eKey] = {
-        uid:          base.uid,
-        email:        base.email,
-        staffName:    base.staffName,
-        displayName:  base.displayName,
-        position:     base.position,
-        staffGroup:   base.staffGroup,
-        isTeacher:    base.isTeacher,
+        uid:          eKey,          /* ใช้ email เป็น key เหมือนเดิม */
+        email:        eKey,
+        staffName:    s.name  || '', /* ชื่อจริงจาก staff */
+        displayName:  s.name  || eKey,
+        position:     s.position || '',
+        staffGroup:   grp,
+        isTeacher:    isTeacher,
         subs:         {}
       };
     });
@@ -2549,7 +2515,11 @@ function formatDate(ts) {
 }
 function esc(s){ var d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
 
-/* closeModal ใช้จาก shared/common.js */
+/* Override closeModal for convenience */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
 
 /* ══════════════════════════════════════
    CHARTS

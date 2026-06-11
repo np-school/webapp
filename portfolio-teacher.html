@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="shared/styles.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@0.561.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -56,7 +56,7 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     
     }
-    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
+
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
     .toast.hide{animation:toastOut .3s ease forwards;}
@@ -168,8 +168,7 @@
       }
       .memo-a4-scaler{ overflow:visible!important; height:auto!important; }
     }
-  body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
-</style>
+  </style>
   <script>
   /* ── A4 Scaler: ย่อ memoContent ให้พอดีหน้าจอ โดยไม่กระทบขนาดพิมพ์จริง ── */
   var page1Scale = 1;
@@ -228,7 +227,7 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -269,13 +268,13 @@
 </div>
 
 <!-- Main App -->
-<div id="mainApp" style="display:none;flex-direction:column;flex:1;">
+<div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
+  <div class="page-wrap">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
+    <div class="page-content" id="contentArea">
 
       <!-- ── YEAR & SEMESTER SELECTOR ── -->
       <div class="year-hero" style="margin-bottom:24px;">
@@ -487,7 +486,7 @@
 
             <!-- ลายมือชื่อ -->
             <div style="display:flex;justify-content:flex-end;margin-top:24px;">
-              <div style="text-align:center;min-width:0;flex:1;">
+              <div style="text-align:center;min-width:160px;">
                 <div style="font-size:11px;">ลงชื่อ</div>
                 <div style="height:30px;"></div>
                 <p id="prevSignName"  style="font-size:11px;margin:2px 0 0;line-height:1.5;"></p>
@@ -609,7 +608,7 @@
 
       <!-- ลายมือชื่อ -->
       <div style="display:flex;justify-content:flex-end;margin-top:48px;text-align:center;">
-        <div style="text-align:center;min-width:0;flex:1;">
+        <div style="text-align:center;min-width:200px;">
           <div style="font-size:12pt;">ลงชื่อ</div>
           <div style="height:48px;display:flex;align-items:center;justify-content:center;">
             <img id="memoSignatureImg" src="" style="display:none;max-height:52px;max-width:180px;object-fit:contain;" alt="ลายเซ็น">
@@ -641,7 +640,7 @@
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
         <div id="page2HeadNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <div style="text-align:center;min-width:0;flex:1;">
+          <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;display:flex;align-items:center;justify-content:center;">
               <img id="page2HeadSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
@@ -657,7 +656,7 @@
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มวิชาการ</p>
         <div id="page2AssistantNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <div style="text-align:center;min-width:0;flex:1;">
+          <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;display:flex;align-items:center;justify-content:center;">
               <img id="page2AssistantSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
@@ -668,7 +667,7 @@
         </div>
         <div id="page2DeputyNote" style="min-height:60px;padding-bottom:4px;margin-top:20px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <div style="text-align:center;min-width:0;flex:1;">
+          <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;display:flex;align-items:center;justify-content:center;">
               <img id="page2DeputySignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
@@ -684,7 +683,7 @@
         <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
         <div id="page2DirectorNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <div style="text-align:center;min-width:0;flex:1;">
+          <div style="text-align:center;min-width:240px;">
             <div style="font-size:12pt;">ลงชื่อ</div>
             <div style="height:40px;display:flex;align-items:center;justify-content:center;">
               <img id="page2DirectorSignImg" src="" style="display:none;max-height:44px;max-width:160px;object-fit:contain;">
@@ -983,7 +982,7 @@ auth.onAuthStateChanged(function(u) {
       currentUser      = u;
       currentStaffData = snap.docs[0].data();
       document.getElementById('loginGate').style.display = 'none';
-      document.getElementById('mainApp').style.display   = 'flex';
+      document.getElementById('mainApp').style.display   = 'block';
       buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
       updateNavUser(u);
       buildSidebar('portfolio-teacher');
@@ -2634,7 +2633,9 @@ function formatDate(ts) {
   var d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
-/* closeModal ใช้จาก shared/common.js */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
 
 /* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
 function switchMemoTab(tab) {

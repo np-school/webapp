@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="shared/styles.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@0.561.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -127,14 +127,9 @@
     .sum-booking-row .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
     .sum-toggle{font-size:10px;color:#7c3aed;font-weight:700;cursor:pointer;background:none;border:none;padding:0;margin-left:auto;}
     .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
-  body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
-
-    @media(max-width:540px){
-      .charts-section{grid-template-columns:1fr!important;}
-    }
-</style>
+  </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -153,15 +148,15 @@
   <!-- Navbar -->
   <nav id="navbar" class="navbar"></nav>
 
-  <div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
+  <div class="page-wrap">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" id="sidebarInner"></div>
+      <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
     </div>
 
     <!-- Main content -->
-    <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+    <div class="page-content" style="display:flex;flex-direction:column;gap:24px;">
 
       <!-- Charts Panel -->
       <div id="chartsPanel">
@@ -197,7 +192,7 @@
       </div>
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
         <div class="stat-card"><div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:#d97706;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:#16a34a;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">อนุมัติแล้ว</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statApproved">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:20px;height:20px;color:#dc2626;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">ไม่อนุมัติ</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statRejected">0</p></div></div>
@@ -260,7 +255,7 @@
           <div id="sumPeriodLabel" style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:14px;"></div>
 
           <!-- Grand totals -->
-          <div id="sumTotals" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px;"></div>
+          <div id="sumTotals" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;"></div>
 
           <!-- Grouped bar chart: all rooms side-by-side -->
           <div class="chart-card" style="margin-bottom:20px;">
@@ -274,7 +269,7 @@
               <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#ef4444;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">ไม่อนุมัติ</span></div>
             </div>
             <div style="overflow-x:auto;">
-              <canvas id="sumBarChart" height="220" style="display:block;width:100%;min-width:0;"></canvas>
+              <canvas id="sumBarChart" height="220" style="display:block;min-width:300px;"></canvas>
             </div>
             <p id="sumBarEmpty" style="display:none;text-align:center;padding:40px;font-size:12px;color:#94a3b8;font-style:italic;">ไม่มีข้อมูลในช่วงเวลานี้</p>
           </div>
@@ -288,7 +283,7 @@
               <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#22c55e;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">อนุมัติ</span></div>
             </div>
             <div style="overflow-x:auto;">
-              <canvas id="sumTrendChart" height="160" style="display:block;width:100%;min-width:0;"></canvas>
+              <canvas id="sumTrendChart" height="160" style="display:block;min-width:300px;"></canvas>
             </div>
             <p id="sumTrendEmpty" style="display:none;text-align:center;padding:40px;font-size:12px;color:#94a3b8;font-style:italic;">ไม่มีข้อมูลในช่วงเวลานี้</p>
           </div>

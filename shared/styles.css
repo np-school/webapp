@@ -3,24 +3,6 @@
    โรงเรียนหนองกี่พิทยาคม – Shared Stylesheet
    ═══════════════════════════════════════════════ */
 
-/* ── Cross-browser normalization
-   ล็อก base font-size ให้ทุกเบราว์เซอร์ใช้ค่าเดียวกัน
-   ป้องกัน Zen (Firefox), Brave (Chromium), Safari ขนาดต่างกัน ── */
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden; /* ป้องกัน content ล้นแนวนอนในทุกหน้า */
-}
-
-body {
-  overflow-x: hidden; /* รองรับ Safari ที่ต้องการ body แยกต่างหาก */
-  max-width: 100vw;
-}
-
 * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Loading Overlay ── */
@@ -41,10 +23,7 @@ body {
 .sidebar-wrap { width: 272px; flex-shrink: 0; transition: transform .3s ease; }
 .sidebar-inner {
   background: #f8fafc; border-right: 1px solid #e2e8f0;
-  height: 100vh;        /* ล็อกความสูงเท่าจอ */
-  position: sticky;     /* ติดอยู่กับที่ขณะ content scroll */
-  top: 0;
-  padding: 20px 12px;
+  min-height: 100vh; height: 100vh; padding: 20px 12px;
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -54,16 +33,7 @@ body {
   padding: 13px 16px; border-radius: 14px; font-weight: 700;
   color: #64748b; width: 100%; background: none; border: none;
   cursor: pointer; text-decoration: none; transition: all .2s;
-  /* lock ขนาดเป็น px ป้องกัน Brave/Chrome inherit UA stylesheet ต่างจาก Firefox */
-  font-size: 14px; line-height: 20px; min-height: 46px;
-  font-family: 'Sarabun', sans-serif;
-  box-sizing: border-box;
-  white-space: nowrap; overflow: hidden;
-}
-/* reset สำหรับ <a> tag — Brave มี UA font-size:medium ที่ override ได้ */
-a.sidebar-btn {
-  font-size: 14px; line-height: 20px;
-  font-family: 'Sarabun', sans-serif;
+  font-size: 14px; white-space: nowrap; overflow: hidden;
 }
 .sidebar-btn span {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
@@ -74,7 +44,7 @@ a.sidebar-btn {
 .sidebar-btn.admin-btn:hover { background: #faf5ff; }
 .sidebar-btn.admin-btn.active { background: #7c3aed; color: white; box-shadow: 0 8px 15px -3px rgba(124,58,237,.25); }
 .sec-label {
-  padding: 14px 16px 8px; font-size: 0.625rem; font-weight: 800; /* 10px */
+  padding: 14px 16px 8px; font-size: 10px; font-weight: 800;
   color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;
 }
 
@@ -90,12 +60,12 @@ a.sidebar-btn {
     overflow: hidden;
   }
   .sidebar-wrap.open { transform: translateX(0); }
-  #mainGrid { flex-direction: column; }
-  #contentArea { width: 100%; }
+  /* รองรับทั้ง class ใหม่ (.page-wrap) และ id เดิม (#mainGrid) */
+  .page-wrap, #mainGrid { flex-direction: column; }
+  .page-content, #contentArea { width: 100%; }
 }
 @media (min-width: 1024px) {
   #hamburgerBtn { display: none !important; }
-  #sidebarCloseRow { display: none !important; }
   .sidebar-inner { border-right: none; }
 }
 
@@ -135,7 +105,7 @@ a.sidebar-btn {
 /* ── Form Inputs ── */
 input[type=text], input[type=number], input[type=date], select, textarea {
   border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 10px;
-  outline: none; font-size: 0.875rem; width: 100%; color: #1e293b; /* 14px */
+  outline: none; font-size: 14px; width: 100%; color: #1e293b;
   transition: border-color .15s; font-family: 'Sarabun', sans-serif;
 }
 input:focus, select:focus, textarea:focus {
@@ -251,7 +221,6 @@ input:focus, select:focus, textarea:focus {
   position: sticky; top: 0; z-index: 150;
   background: #1d4ed8; padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,.12);
-  font-size: 1rem; /* ป้องกัน Firefox/Zen inherit ผิด */
 }
 .navbar.purple { background: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
 .navbar-inner {
@@ -279,63 +248,136 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ══════════════════════════════════════════════
-   Mobile Overflow Fix
-   ป้องกัน content ทะลุขอบจอบนมือถือ
+   Main Layout – ใช้ร่วมกันทุกหน้า
+   wrapper ด้านนอก: .page-wrap
+   content area:   .page-content
    ══════════════════════════════════════════════ */
 
-/* Global safe-guard — ล็อก box-sizing เท่านั้น; ไม่ตั้ง max-width:100% บน * เพราะทำลาย flex/grid */
-*, *::before, *::after {
-  box-sizing: border-box;
+/* ── Navbar height token (เปลี่ยนที่นี่ที่เดียว) ── */
+:root {
+  --navbar-h: 69px;
+  --content-px: 24px;
+  --content-py: 28px;
+  --max-w: 1280px;
 }
-/* ป้องกัน replaced content ล้น viewport */
-img, video, iframe, embed, object { max-width: 100%; height: auto; }
-svg, canvas { max-width: none; }
 
-@media (max-width: 640px) {
-  /* ทุก grid ที่มีหลายคอลัมน์ fixed → พับเป็น 1 คอลัมน์ */
-  /* จับทุก repeat(N) inline style ที่ fixed */
-  [style*="grid-template-columns:repeat(5"],
-  [style*="grid-template-columns:repeat(4"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  [style*="grid-template-columns:repeat(3"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  /* 268px fixed sidebar layout */
-  [style*="grid-template-columns:268px"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* contentArea padding ลดลงบนมือถือ */
-  #contentArea {
-    padding: 14px 12px !important;
-  }
-  /* ป้องกัน card ล้น */
-  .card, [class*="card"] {
-    max-width: 100%;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    overflow-x: hidden;
-  }
-  /* modal กว้างสุดจอบนมือถือ */
-  .modal-box {
-    max-width: 100% !important;
-    margin: 8px !important;
-    width: calc(100% - 16px) !important;
-  }
+/* ── Outer flex wrapper (sidebar + content) ── */
+.page-wrap {
+  display: flex;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  min-height: calc(100vh - var(--navbar-h));
 }
-@media (max-width: 480px) {
-  [style*="grid-template-columns:repeat(2"],
-  [style*="grid-template-columns:repeat(5"],
-  [style*="grid-template-columns:repeat(4"],
-  [style*="grid-template-columns:repeat(3"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* 2 คอลัมน์ inline style */
-  [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* stat-cards-grid ให้ 2 col บนมือถือเล็ก */
-  .stat-cards-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+.page-wrap.wide { max-width: 1400px; }
+
+/* ── Content area ── */
+.page-content {
+  flex: 1;
+  min-width: 0;
+  padding: var(--content-py) var(--content-px);
+}
+
+/* ── Mobile: stack vertically, reduce padding ── */
+@media (max-width: 1023px) {
+  .page-wrap   { flex-direction: column; }
+  .page-content { width: 100%; padding: 20px 14px; }
+}
+
+/* ── Buttons (shared) ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 22px; background: #1d4ed8; color: white;
+  font-size: 14px; font-weight: 800; border: none;
+  border-radius: 14px; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(29,78,216,.3);
+  transition: all .2s;
+}
+.btn-primary:hover { background: #1e40af; transform: translateY(-1px); }
+.btn-primary.purple { background: #7c3aed; box-shadow: 0 6px 18px rgba(124,58,237,.3); }
+.btn-primary.purple:hover { background: #6d28d9; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; background: #f1f5f9; color: #475569;
+  font-size: 13px; font-weight: 700; border: 1.5px solid #e2e8f0;
+  border-radius: 10px; cursor: pointer; transition: all .2s;
+}
+.btn-secondary:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+.btn-delete {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 7px 10px; background: #fee2e2; color: #b91c1c;
+  font-size: 13px; font-weight: 700; border: none;
+  border-radius: 10px; cursor: pointer; transition: all .2s;
+}
+.btn-delete:hover { background: #fecaca; }
+
+/* ── Page header row ── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 14px; margin-bottom: 24px;
+}
+.page-title       { font-size: 22px; font-weight: 800; color: #0f172a; }
+.page-subtitle    { font-size: 13px; color: #64748b; margin-top: 3px; }
+
+/* ── Section label (like .sec-label but inline) ── */
+.section-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; letter-spacing: .4px;
+}
+
+/* ── List item (generic row) ── */
+.list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+}
+.list-item:last-child  { border-bottom: none; }
+.list-item:hover       { background: #f8fafc; }
+
+/* ── Overflow table wrapper ── */
+.tbl-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+.tbl-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl-wrap th {
+  padding: 10px 14px; background: #f8fafc;
+  font-size: 11px; font-weight: 800; color: #64748b;
+  text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+}
+.tbl-wrap td {
+  padding: 12px 14px; border-bottom: 1px solid #f1f5f9;
+  color: #1e293b; vertical-align: middle;
+}
+.tbl-wrap tr:last-child td { border-bottom: none; }
+.tbl-wrap tr:hover td      { background: #f8fafc; }
+
+/* ── KPI / Stat card ── */
+.kpi-card {
+  background: white; border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  padding: 20px; position: relative; overflow: hidden;
+}
+
+/* ── Responsive grids ── */
+.grid-auto-sm  { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 14px; }
+.grid-auto-md  { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
+.grid-auto-lg  { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 20px; }
+.grid-2col     { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .grid-2col { grid-template-columns: 1fr; } }
+.grid-3col     { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+@media (max-width: 900px) { .grid-3col { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .grid-3col { grid-template-columns: 1fr; } }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center; padding: 56px 20px;
+  color: #cbd5e1; font-size: 14px; font-style: italic;
 }

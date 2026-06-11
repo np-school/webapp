@@ -6,7 +6,6 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1d4ed8">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
@@ -15,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="shared/styles.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@0.561.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -27,7 +26,9 @@
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
     /* Sidebar */
-    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
+    
+    }
+
     /* Card */
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     /* Calendar */
@@ -116,53 +117,9 @@
     /* File viewer modal */
     #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
     #fileViewModal.open{display:flex;}
-  body{overflow-x:hidden;max-width:100vw;}
-  #contentArea,#mainGrid{max-width:100%;overflow-x:hidden;}
-  img,table,pre,canvas{max-width:100%;}
-
-    /* ══ Mobile Fix ══ */
-    @media(max-width:640px){
-      #contentArea { padding: 12px 10px !important; gap: 14px !important; }
-      /* room tabs: scroll แนวนอน */
-      #roomTabsWrap {
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-        max-width: 100%;
-        scrollbar-width: none;
-      }
-      #roomTabsWrap::-webkit-scrollbar { display: none; }
-      .room-tab { flex-shrink: 0 !important; font-size: 11px !important; padding: 5px 10px !important; }
-      /* calendar layout */
-      .cal-content-grid { grid-template-columns: 1fr !important; overflow: hidden; }
-      /* history table: ให้ scroll */
-      .card { overflow: hidden; }
-      table { font-size: 10px !important; }
-      th, td { padding: 7px 6px !important; }
-      /* day detail card */
-      #todayBookingsList { max-height: 280px !important; }
-    }
-    @media(max-width:540px){
-      /* form grids พับเป็น 1 col */
-      .form-group[style*="grid-template-columns:repeat(auto-fill"] {
-        grid-template-columns: 1fr !important;
-      }
-      /* time slot 2-col */
-      #timeSlotGrid { grid-template-columns: repeat(2,1fr) !important; }
-      .modal-box { border-radius: 16px !important; }
-      #bookingForm { padding: 14px 12px !important; }
-      /* สรุปวันจอง + tag */
-      .mdp-tags { flex-wrap: wrap !important; }
-    }
-    @media(max-width:380px){
-      #timeSlotGrid { grid-template-columns: repeat(2,1fr) !important; }
-      .time-slot-btn { font-size: 11px !important; padding: 7px 3px !important; }
-      .room-tab { font-size: 10px !important; padding: 4px 8px !important; }
-    }
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
+<body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังเตรียมข้อมูล...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -170,15 +127,15 @@
 <!-- Navbar -->
 <nav id="navbar" class="navbar"></nav>
 
-<div id="mainGrid" style="display:flex;max-width:1400px;margin:0 auto;flex:1;">
+<div id="mainContent" class="page-wrap" style="display:none;">
 
   <!-- Sidebar -->
   <div class="sidebar-wrap" id="sidebar">
-    <div class="sidebar-inner" id="sidebarInner"></div>
+    <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
   </div>
 
   <!-- Content -->
-  <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-x:hidden;max-width:100%;box-sizing:border-box;">
+  <div class="page-content" style="display:flex;flex-direction:column;gap:20px;">
     <!-- Booking button top + Room image banner -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div style="flex:1;min-width:0;" id="roomBannerInlineWrap"></div>
@@ -191,12 +148,12 @@
     <!-- Room tabs -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>
-      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:nowrap;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">
+      <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="room-tab active" onclick="selectRoomFilter('all',this)">ทุกห้อง</button>
       </div>
     </div>
 
-    <div class="cal-content-grid" style="max-width:100%;">
+    <div class="cal-content-grid">
       <!-- Calendar -->
       <div style="display:flex;flex-direction:column;gap:18px;">
         <div class="card" style="overflow:hidden;">
@@ -252,7 +209,7 @@
           </button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <div style="position:relative;flex:1;min-width:0;">
+          <div style="position:relative;flex:1;min-width:160px;">
             <i data-lucide="search" style="width:13px;height:13px;position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;"></i>
             <input type="text" id="historySearch" placeholder="ค้นหาห้อง, ชื่อ, วัตถุประสงค์..." onkeyup="filterHistoryTable()" style="padding:8px 10px 8px 30px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;width:100%;outline:none;">
           </div>
@@ -333,13 +290,13 @@
       </div>
       <div id="timePickerWrap">
         <p style="font-size:11px;color:#64748b;margin-bottom:9px;">คลิกเลือกชั่วโมงเริ่มต้น แล้วคลิกชั่วโมงสิ้นสุด — <span style="color:#ef4444;font-weight:700;">สีแดง = ถูกจองแล้ว</span></p>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:100%;box-sizing:border-box;" id="timeSlotGrid"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;" id="timeSlotGrid"></div>
       </div>
       <div id="timeSummary" style="display:none;margin-top:11px;padding:10px 14px;background:#eff6ff;border-radius:10px;border:1.5px solid #bfdbfe;text-align:center;font-size:13px;font-weight:700;color:#1d4ed8;"></div>
 
       <!-- 3. ข้อมูลผู้จอง -->
       <div class="section-divider" style="margin-top:20px;"><i data-lucide="user" style="width:14px;height:14px;"></i> ข้อมูลผู้จอง</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
         <div>
           <label class="form-label">ประเภทบุคคล <span style="color:#ef4444;">*</span></label>
           <select id="personType" required>
@@ -350,18 +307,18 @@
         </div>
         <div><label class="form-label">ชื่อ-นามสกุล <span style="color:#ef4444;">*</span></label><input type="text" id="fullName" placeholder="ระบุชื่อ-นามสกุล" required></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
         <div><label class="form-label">ตำแหน่ง</label><input type="text" id="position" placeholder="เช่น ครู, นักเรียน"></div>
         <div><label class="form-label">เบอร์โทรศัพท์ <span style="color:#ef4444;">*</span></label><input type="text" id="phone" placeholder="เช่น 0812345678" required inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
         <div><label class="form-label">จำนวนผู้เข้าร่วม</label><input type="number" id="attendees" placeholder="ระบุจำนวน" min="1" required style="max-width:100%;"></div>
         <div><label class="form-label">วัตถุประสงค์ <span style="color:#ef4444;">*</span></label><input type="text" id="purpose" placeholder="ระบุวัตถุประสงค์" required></div>
       </div>
 
       <!-- 4. อุปกรณ์ -->
       <div class="section-divider"><i data-lucide="package" style="width:14px;height:14px;"></i> อุปกรณ์ที่ต้องใช้</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:5px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;" class="form-group">
         <div class="equip-row" id="eq-sound" onclick="toggleEquip('sound',this)"><input type="checkbox" id="cb-sound" class="equip-cb" onclick="event.stopPropagation();toggleEquip('sound',document.getElementById('eq-sound'))"><span class="equip-label">ชุดเครื่องเสียง</span></div>
         <div class="equip-row" id="eq-projector" onclick="toggleEquip('projector',this)"><input type="checkbox" id="cb-projector" class="equip-cb" onclick="event.stopPropagation();toggleEquip('projector',document.getElementById('eq-projector'))"><span class="equip-label">เครื่องฉายโปรเจคเตอร์</span></div>
         <div class="equip-row" id="eq-signal" onclick="toggleEquip('signal',this)"><input type="checkbox" id="cb-signal" class="equip-cb" onclick="event.stopPropagation();toggleEquip('signal',document.getElementById('eq-signal'))"><span class="equip-label">สัญญาณเสียงเพื่อต่อพ่วงกับอุปกรณ์</span></div>
@@ -428,7 +385,7 @@
   /* ── Sidebar ── */
 
   /* ── Toast (from common.js) ── */
-  function hideLoading(){var ov=document.getElementById('loadingOverlay');if(ov)ov.style.display='none';}
+  function hideLoading(){document.getElementById('loadingOverlay').style.display='none';document.getElementById('mainContent').style.display='flex';}
   // Safety: force-hide loading after 8s in case of Firestore error
   setTimeout(function(){var ov=document.getElementById('loadingOverlay');if(ov&&ov.style.display!=='none'){hideLoading();showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ','warn');}},8000);
 
