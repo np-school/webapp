@@ -23,7 +23,7 @@
   <script src="shared/common.js?v=5"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: #1e293b; }
+    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: #1e293b; }
 
     /* ── Hero ── */
     .hero {
@@ -240,7 +240,7 @@
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
   </style>
 </head>
-<body style="background:#f1f5f9;min-height:100vh;overflow-x:hidden;">
+<body style="background:#f8fafc;min-height:100vh">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -249,11 +249,11 @@
 <nav id="navbar" class="navbar"></nav>
 
 <!-- Main App -->
-<div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+<div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
   <div class="sidebar-wrap" id="sidebar">
     <div class="sidebar-inner" id="sidebarInner"></div>
   </div>
-  <div style="flex:1;min-width:0;">
+  <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
 
 <!-- ══ HERO ══ -->
 <div class="hero">

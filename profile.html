@@ -120,7 +120,7 @@
     .admin-note{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 9px;margin-top:4px;}
 
     /* summary strip */
-    .sum-strip{display:flex;gap:0;background:#f1f5f9;border-top:1px solid #f1f5f9;}
+    .sum-strip{display:flex;gap:0;background:#f8fafc;border-top:1px solid #f1f5f9;}
     .sum-item{flex:1;text-align:center;padding:10px 6px;border-right:1px solid #f1f5f9;}
     .sum-item:last-child{border-right:none;}
     .sum-val{font-size:18px;font-weight:800;line-height:1;}
@@ -171,7 +171,7 @@
     @media(max-width:639px){.info-grid{grid-template-columns:1fr!important;}}
     .info-field{display:flex;flex-direction:column;gap:5px;}
     .info-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;}
-    .info-val{font-size:14px;font-weight:600;color:#0f172a;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;}
+    .info-val{font-size:14px;font-weight:600;color:#0f172a;background:#f8fafc;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;}
     .info-val.empty{color:#cbd5e1;font-style:italic;}
     .edit-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
     .edit-btn:hover{background:#1e40af;box-shadow:0 4px 12px rgba(29,78,216,.25);}
@@ -261,7 +261,7 @@
     .ct-node{position:relative;margin-bottom:22px;}
     .ct-node:last-child{margin-bottom:0;}
     .ct-dot{position:absolute;left:-25px;top:13px;width:16px;height:16px;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 2.5px currentColor;display:flex;align-items:center;justify-content:center;}
-    .ct-card{background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;transition:box-shadow .2s;}
+    .ct-card{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;transition:box-shadow .2s;}
     .ct-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);border-color:#cbd5e1;}
     .ct-period{font-size:10px;font-weight:800;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
     .ct-school{font-size:14px;font-weight:800;color:#0f172a;margin-bottom:3px;line-height:1.3;}
@@ -280,7 +280,7 @@
     .port-doc-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .port-doc-info { flex:1; min-width:0; }
     .port-doc-title { font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px; }
-    .port-course-chip { display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:5px 10px; margin:3px 4px 3px 0; cursor:pointer; transition:all .15s; text-decoration:none; }
+    .port-course-chip { display:inline-flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:5px 10px; margin:3px 4px 3px 0; cursor:pointer; transition:all .15s; text-decoration:none; }
     .port-course-chip:hover { border-color:#93c5fd; background:#eff6ff; box-shadow:0 2px 6px rgba(29,78,216,.08); }
     .port-course-chip.has-files { border-color:#86efac; background:#f0fdf4; }
     .port-course-chip.revision  { border-color:#fde68a; background:#fffbeb; }
@@ -298,7 +298,7 @@
     .ch-add-btn:hover{background:#ede9fe;border-color:#a78bfa;}
   </style>
 </head>
-<body style="background:#f1f5f9;min-height:100vh;">
+<body style="background:#f8fafc;min-height:100vh">
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
@@ -334,11 +334,11 @@
     </div>
     <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#92400e;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> กลับรายชื่อบุคลากร</a>
   </div>
-  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:28px 20px;" id="contentArea">
+    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
 
       <!-- Hero -->
       <div class="profile-hero">
@@ -517,7 +517,7 @@
             <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:#7c3aed;"></i> ประวัติโรงเรียน</div>
             <button class="edit-btn edit-only" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
           </div>
-          <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;padding:8px 12px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;gap:6px;">
+          <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px;display:flex;align-items:center;gap:6px;">
             <i data-lucide="info" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>
             เพิ่มทุกโรงเรียนตามลำดับ — โรงเรียนแรกสุด = แรกบรรจุ · โรงเรียนที่ไม่มีวันสิ้นสุด = ปัจจุบัน
           </div>
@@ -537,7 +537,7 @@
           <!-- View mode -->
           <div id="personalView">
             <!-- Admin-owned section -->
-            <div style="background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
                 <i data-lucide="shield-check" style="width:13px;height:13px;color:#7c3aed;flex-shrink:0;"></i>
                 <span style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase;">จัดการโดย Admin</span>
@@ -555,7 +555,7 @@
               <div class="info-field"><div class="info-label">วันเกิด</div><div class="info-val" id="v_birthday">—</div></div>
               <div class="info-field"><div class="info-label">อายุ</div><div class="info-val" id="v_age">—</div></div>
               <div class="info-field"><div class="info-label">สัญชาติ</div><div class="info-val" id="v_nationality">—</div></div>
-              <div class="info-field"><div class="info-label">เชื้อชาติ</div><div class="info-label2" id="v_ethnicity" style="font-size:14px;font-weight:600;color:#0f172a;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;">—</div></div>
+              <div class="info-field"><div class="info-label">เชื้อชาติ</div><div class="info-label2" id="v_ethnicity" style="font-size:14px;font-weight:600;color:#0f172a;background:#f8fafc;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;">—</div></div>
               <div class="info-field"><div class="info-label">ศาสนา</div><div class="info-val" id="v_religion">—</div></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><div class="info-val" id="v_phone">—</div></div>
               <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
@@ -577,7 +577,7 @@
           <!-- Edit mode -->
           <div id="personalEdit" style="display:none;">
             <!-- Admin fields — read only -->
-            <div style="background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
                 <i data-lucide="lock" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>
                 <span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase;">ข้อมูลที่จัดการโดย Admin — ไม่สามารถแก้ไขได้</span>
@@ -618,7 +618,7 @@
             <button class="edit-btn edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
           </div>
           <!-- header -->
-          <div class="teach-header-row" style="display:flex;align-items:center;gap:10px;padding:9px 16px;background:#f1f5f9;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;">
+          <div class="teach-header-row" style="display:flex;align-items:center;gap:10px;padding:9px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;">
             <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;width:80px;">รหัสวิชา</div>
             <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;flex:1;">ชื่อวิชา</div>
             <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;width:70px;text-align:center;">คาบ/สัปดาห์</div>
@@ -626,7 +626,7 @@
             <div style="width:32px;"></div>
           </div>
           <div id="teachingList"><div class="empty-block">ยังไม่มีข้อมูลภาระงานสอน</div></div>
-          <div style="padding:10px 16px;background:#f1f5f9;border-top:1px solid #f1f5f9;">
+          <div style="padding:10px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;">
             <span id="teachTotal" style="font-size:13px;font-weight:800;color:#f97316;"></span>
           </div>
         </div>
@@ -1300,7 +1300,7 @@ function renderSarMedia(){
   if(!mediaItems.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">' +
     mediaItems.map(function(item){
-      return '<div style="background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:9px;">' +
+      return '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:9px;">' +
         '<div class="sar-media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:15px;height:15px;color:#06b6d4;"></i></div>' +
         '<div style="min-width:0;"><div class="sar-media-name">'+esc(item.name||'')+'</div>' +
           (item.subject?'<div class="sar-media-sub">'+esc(item.subject)+'</div>':'') +
@@ -1800,7 +1800,7 @@ function buildCareerTimelineHTML(c){
         '<div class="ct-chips">' +
           '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f1f5f9;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
         '</div>' +
         (svc1?'<div class="ct-service-bar"></div><div class="ct-service-lbl">ระยะเวลา '+svc1+'</div>':'') +
       '</div>' +
@@ -1827,7 +1827,7 @@ function buildCareerTimelineHTML(c){
           '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
           (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f1f5f9;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
         '</div>' +
         (svcNow?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+calcService(c.start_date)+(svcNow?' · โรงเรียนนี้ '+svcNow:'')+'</div>':'') +
       '</div>' +
@@ -1850,7 +1850,7 @@ function buildCareerTimelineHTML(c){
           '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
           (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f1f5f9;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
         '</div>' +
         (svcNow2?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+svcNow2+'</div>':'') +
       '</div>' +

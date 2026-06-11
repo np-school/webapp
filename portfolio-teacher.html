@@ -54,6 +54,8 @@
     #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
     .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
+    
+    }
     @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
     .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
@@ -225,7 +227,7 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body style="background:#f8fafc;min-height:100vh">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -268,11 +270,11 @@
 <!-- Main App -->
 <div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
-  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+  <div style="display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 69px);">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div style="flex:1;min-width:0;padding:28px 20px;" id="contentArea">
+    <div style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;" id="contentArea">
 
       <!-- ── YEAR & SEMESTER SELECTOR ── -->
       <div class="year-hero" style="margin-bottom:24px;">
