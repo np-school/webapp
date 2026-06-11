@@ -899,6 +899,7 @@ var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
 var currentDocFilter = 'all'; /* doc type filter */
 var availableGroups = []; /* กลุ่มสาระที่มีอยู่จริงใน staff (สร้าง dynamic) */
+var _staffSkeletonCache = null; /* cache teacherMap skeleton + availableGroups จาก staff collection (ไม่เปลี่ยนตามปี/เทอม) */
 
 /* กลุ่มสาระที่นับเป็น "ครู" (ไม่รวมผู้บริหาร/เจ้าหน้าที่) */
 var NON_TEACHER_GROUPS = ['ผู้บริหาร', 'เจ้าหน้าที่'];
@@ -1044,34 +1045,62 @@ function loadAllSubmissions() {
   currentDocFilter = 'all';
   buildDocFilterBar();
 
-  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
-  db.collection('staff').orderBy('name').get().then(function(staffSnap) {
+  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ──
+     (cache ผลลัพธ์ไว้ — staff ไม่เปลี่ยนตามปี/เทอม จึงดึงครั้งแรกครั้งเดียวพอ) */
+  var staffSkeletonPromise;
+  if (_staffSkeletonCache) {
+    staffSkeletonPromise = Promise.resolve(_staffSkeletonCache);
+  } else {
+    staffSkeletonPromise = db.collection('staff').orderBy('name').get().then(function(staffSnap) {
+      var skTeacherMap = {};
+      var skAvailableGroups = [];
+      var groupSet = {};
+
+      staffSnap.forEach(function(d) {
+        var s = Object.assign({ id: d.id }, d.data());
+        if (!s.email) return;
+        var eKey = s.email.toLowerCase();
+        var grp  = normaliseGroup(s.group);
+        var isTeacher = NON_TEACHER_GROUPS.indexOf(grp) === -1;
+
+        /* เก็บกลุ่มสาระที่เป็นครูจริง ๆ */
+        if (isTeacher && grp && !groupSet[grp]) {
+          groupSet[grp] = true;
+          skAvailableGroups.push(grp);
+        }
+
+        skTeacherMap[eKey] = {
+          uid:          eKey,          /* ใช้ email เป็น key เหมือนเดิม */
+          email:        eKey,
+          staffName:    s.name  || '', /* ชื่อจริงจาก staff */
+          displayName:  s.name  || eKey,
+          position:     s.position || '',
+          staffGroup:   grp,
+          isTeacher:    isTeacher
+        };
+      });
+
+      _staffSkeletonCache = { teacherMap: skTeacherMap, availableGroups: skAvailableGroups };
+      return _staffSkeletonCache;
+    });
+  }
+
+  return staffSkeletonPromise.then(function(skeleton) {
     allSubs = [];
     teacherMap = {};
-    availableGroups = [];
-    var groupSet = {};
+    availableGroups = skeleton.availableGroups.slice();
 
-    staffSnap.forEach(function(d) {
-      var s = Object.assign({ id: d.id }, d.data());
-      if (!s.email) return;
-      var eKey = s.email.toLowerCase();
-      var grp  = normaliseGroup(s.group);
-      var isTeacher = NON_TEACHER_GROUPS.indexOf(grp) === -1;
-
-      /* เก็บกลุ่มสาระที่เป็นครูจริง ๆ */
-      if (isTeacher && grp && !groupSet[grp]) {
-        groupSet[grp] = true;
-        availableGroups.push(grp);
-      }
-
+    /* clone skeleton ใหม่ทุกครั้ง พร้อม subs:{} ว่าง — ไม่ให้ข้อมูลเทอมก่อนค้างอยู่ */
+    Object.keys(skeleton.teacherMap).forEach(function(eKey) {
+      var base = skeleton.teacherMap[eKey];
       teacherMap[eKey] = {
-        uid:          eKey,          /* ใช้ email เป็น key เหมือนเดิม */
-        email:        eKey,
-        staffName:    s.name  || '', /* ชื่อจริงจาก staff */
-        displayName:  s.name  || eKey,
-        position:     s.position || '',
-        staffGroup:   grp,
-        isTeacher:    isTeacher,
+        uid:          base.uid,
+        email:        base.email,
+        staffName:    base.staffName,
+        displayName:  base.displayName,
+        position:     base.position,
+        staffGroup:   base.staffGroup,
+        isTeacher:    base.isTeacher,
         subs:         {}
       };
     });
