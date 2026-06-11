@@ -1011,7 +1011,7 @@ var GROUP_DEFS = [
   {
     key: 'general',
     label: 'กลุ่มบริหารทั่วไป',
-    subtitle: 'ดูแลระบบจองห้อง และจัดการห้องสถานที่',
+    subtitle: 'ดูแลระบบจองห้อง และบัญชีรายได้ Food Court',
     icon: 'building-2',
     color: '#2563eb',
     bg: '#dbeafe',
@@ -1019,7 +1019,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.bookings;
+      return !!p.bookings || !!p.foodcourt;
     }
   },
   {
@@ -1215,7 +1215,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+      return !p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
     }
   }
 ];
@@ -1234,7 +1234,7 @@ auth.onAuthStateChanged(function(user){
     currentUser = user;
     document.getElementById('adminRoleApp').style.display='block';
     updateNavUser(user);
-    buildSidebar('admin-role');
+    buildSidebarCustom();
     checkAdminAccess(user.email);
     updateSidebarProfile(user);
     subscribeAdmins();
@@ -1269,7 +1269,7 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.bookings&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+    return !p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
