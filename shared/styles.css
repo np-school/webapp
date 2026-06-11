@@ -293,11 +293,21 @@ svg, canvas { max-width: none; }
 
 @media (max-width: 640px) {
   /* ทุก grid ที่มีหลายคอลัมน์ fixed → พับเป็น 1 คอลัมน์ */
+  /* จับทุก repeat(N) inline style ที่ fixed */
+  [style*="grid-template-columns:repeat(5"],
   [style*="grid-template-columns:repeat(4"] {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   [style*="grid-template-columns:repeat(3"] {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* 268px fixed sidebar layout */
+  [style*="grid-template-columns:268px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* contentArea padding ลดลงบนมือถือ */
+  #contentArea {
+    padding: 14px 12px !important;
   }
   /* ป้องกัน flex item ล้นออกข้าง */
   .card, [class*="card"] {
@@ -322,11 +332,18 @@ svg, canvas { max-width: none; }
   }
 }
 @media (max-width: 480px) {
-  [style*="grid-template-columns:repeat(2"] {
+  [style*="grid-template-columns:repeat(2"],
+  [style*="grid-template-columns:repeat(5"],
+  [style*="grid-template-columns:repeat(4"],
+  [style*="grid-template-columns:repeat(3"] {
     grid-template-columns: 1fr !important;
   }
-  /* 2 คอลัมน์ inline style ที่ไม่มี media query */
+  /* 2 คอลัมน์ inline style */
   [style*="grid-template-columns:1fr 1fr"] {
     grid-template-columns: 1fr !important;
+  }
+  /* stat-cards-grid ให้ 2 col บนมือถือเล็ก */
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }

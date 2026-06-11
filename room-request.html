@@ -115,40 +115,49 @@
     /* File viewer modal */
     #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
     #fileViewModal.open{display:flex;}
-  body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
+  body{overflow-x:hidden;max-width:100vw;}
+  #contentArea,#mainGrid{max-width:100%;overflow-x:hidden;}
+  img,table,pre,canvas{max-width:100%;}
 
-    @media(max-width:540px){
-      .cal-content-grid{grid-template-columns:1fr!important;}
-      .form-group{grid-template-columns:1fr!important;}
-      /* time slot grid 4-col → 2-col บนมือถือ */
-      #timeSlotGrid{grid-template-columns:repeat(2,1fr)!important;}
-      /* modal ไม่ล้นจอ */
-      .modal-box{border-radius:16px!important;}
-    }
-
-    @media(max-width:360px){
-      /* จอเล็กมาก time slot 1-col */
-      #timeSlotGrid{grid-template-columns:1fr!important;}
-      .time-slot-btn{font-size:11px;padding:8px 4px;}
-    }
-
-    @media(max-width:600px){
-      .room-tab { font-size:11px !important; padding:5px 10px !important; white-space:nowrap; }
-      #roomTabsWrap { flex-wrap:nowrap !important; }
-    }
-
-    /* room tabs mobile: scroll แนวนอนแทน wrap */
+    /* ══ Mobile Fix ══ */
     @media(max-width:640px){
+      #contentArea { padding: 12px 10px !important; gap: 14px !important; }
+      /* room tabs: scroll แนวนอน */
       #roomTabsWrap {
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
         padding-bottom: 4px;
         max-width: 100%;
+        scrollbar-width: none;
       }
-      .room-tab { flex-shrink: 0; font-size: 11px; padding: 5px 10px; }
-      /* calendar card ไม่ล้น */
-      .cal-content-grid { max-width: 100%; overflow: hidden; }
+      #roomTabsWrap::-webkit-scrollbar { display: none; }
+      .room-tab { flex-shrink: 0 !important; font-size: 11px !important; padding: 5px 10px !important; }
+      /* calendar layout */
+      .cal-content-grid { grid-template-columns: 1fr !important; overflow: hidden; }
+      /* history table: ให้ scroll */
+      .card { overflow: hidden; }
+      table { font-size: 10px !important; }
+      th, td { padding: 7px 6px !important; }
+      /* day detail card */
+      #todayBookingsList { max-height: 280px !important; }
+    }
+    @media(max-width:540px){
+      /* form grids พับเป็น 1 col */
+      .form-group[style*="grid-template-columns:repeat(auto-fill"] {
+        grid-template-columns: 1fr !important;
+      }
+      /* time slot 2-col */
+      #timeSlotGrid { grid-template-columns: repeat(2,1fr) !important; }
+      .modal-box { border-radius: 16px !important; }
+      #bookingForm { padding: 14px 12px !important; }
+      /* สรุปวันจอง + tag */
+      .mdp-tags { flex-wrap: wrap !important; }
+    }
+    @media(max-width:380px){
+      #timeSlotGrid { grid-template-columns: repeat(2,1fr) !important; }
+      .time-slot-btn { font-size: 11px !important; padding: 7px 3px !important; }
+      .room-tab { font-size: 10px !important; padding: 4px 8px !important; }
     }
   </style>
 </head>
@@ -168,7 +177,7 @@
   </div>
 
   <!-- Content -->
-  <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;">
+  <div id="contentArea" style="flex:1;min-width:0;padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-x:hidden;max-width:100%;box-sizing:border-box;">
     <!-- Booking button top + Room image banner -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div style="flex:1;min-width:0;" id="roomBannerInlineWrap"></div>
@@ -242,7 +251,7 @@
           </button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <div style="position:relative;flex:1;min-width:160px;">
+          <div style="position:relative;flex:1;min-width:0;">
             <i data-lucide="search" style="width:13px;height:13px;position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;"></i>
             <input type="text" id="historySearch" placeholder="ค้นหาห้อง, ชื่อ, วัตถุประสงค์..." onkeyup="filterHistoryTable()" style="padding:8px 10px 8px 30px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;width:100%;outline:none;">
           </div>
@@ -323,13 +332,13 @@
       </div>
       <div id="timePickerWrap">
         <p style="font-size:11px;color:#64748b;margin-bottom:9px;">คลิกเลือกชั่วโมงเริ่มต้น แล้วคลิกชั่วโมงสิ้นสุด — <span style="color:#ef4444;font-weight:700;">สีแดง = ถูกจองแล้ว</span></p>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:100%;" id="timeSlotGrid"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:100%;box-sizing:border-box;" id="timeSlotGrid"></div>
       </div>
       <div id="timeSummary" style="display:none;margin-top:11px;padding:10px 14px;background:#eff6ff;border-radius:10px;border:1.5px solid #bfdbfe;text-align:center;font-size:13px;font-weight:700;color:#1d4ed8;"></div>
 
       <!-- 3. ข้อมูลผู้จอง -->
       <div class="section-divider" style="margin-top:20px;"><i data-lucide="user" style="width:14px;height:14px;"></i> ข้อมูลผู้จอง</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
         <div>
           <label class="form-label">ประเภทบุคคล <span style="color:#ef4444;">*</span></label>
           <select id="personType" required>
@@ -340,18 +349,18 @@
         </div>
         <div><label class="form-label">ชื่อ-นามสกุล <span style="color:#ef4444;">*</span></label><input type="text" id="fullName" placeholder="ระบุชื่อ-นามสกุล" required></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
         <div><label class="form-label">ตำแหน่ง</label><input type="text" id="position" placeholder="เช่น ครู, นักเรียน"></div>
         <div><label class="form-label">เบอร์โทรศัพท์ <span style="color:#ef4444;">*</span></label><input type="text" id="phone" placeholder="เช่น 0812345678" required inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:12px;" class="form-group">
         <div><label class="form-label">จำนวนผู้เข้าร่วม</label><input type="number" id="attendees" placeholder="ระบุจำนวน" min="1" required style="max-width:100%;"></div>
         <div><label class="form-label">วัตถุประสงค์ <span style="color:#ef4444;">*</span></label><input type="text" id="purpose" placeholder="ระบุวัตถุประสงค์" required></div>
       </div>
 
       <!-- 4. อุปกรณ์ -->
       <div class="section-divider"><i data-lucide="package" style="width:14px;height:14px;"></i> อุปกรณ์ที่ต้องใช้</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;" class="form-group">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:5px;" class="form-group">
         <div class="equip-row" id="eq-sound" onclick="toggleEquip('sound',this)"><input type="checkbox" id="cb-sound" class="equip-cb" onclick="event.stopPropagation();toggleEquip('sound',document.getElementById('eq-sound'))"><span class="equip-label">ชุดเครื่องเสียง</span></div>
         <div class="equip-row" id="eq-projector" onclick="toggleEquip('projector',this)"><input type="checkbox" id="cb-projector" class="equip-cb" onclick="event.stopPropagation();toggleEquip('projector',document.getElementById('eq-projector'))"><span class="equip-label">เครื่องฉายโปรเจคเตอร์</span></div>
         <div class="equip-row" id="eq-signal" onclick="toggleEquip('signal',this)"><input type="checkbox" id="cb-signal" class="equip-cb" onclick="event.stopPropagation();toggleEquip('signal',document.getElementById('eq-signal'))"><span class="equip-label">สัญญาณเสียงเพื่อต่อพ่วงกับอุปกรณ์</span></div>
@@ -418,7 +427,7 @@
   /* ── Sidebar ── */
 
   /* ── Toast (from common.js) ── */
-  function hideLoading(){document.getElementById('loadingOverlay').style.display='none';document.getElementById('mainContent').style.display='flex';}
+  function hideLoading(){var ov=document.getElementById('loadingOverlay');if(ov)ov.style.display='none';}
   // Safety: force-hide loading after 8s in case of Firestore error
   setTimeout(function(){var ov=document.getElementById('loadingOverlay');if(ov&&ov.style.display!=='none'){hideLoading();showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ','warn');}},8000);
 
