@@ -273,3 +273,32 @@ input:focus, select:focus, textarea:focus {
 }
 
 }
+
+/* ══════════════════════════════════════════════
+   Mobile Overflow Fix
+   ป้องกัน content ทะลุขอบจอบนมือถือ
+   ══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* ทุก grid ที่มีหลายคอลัมน์ fixed → พับเป็น 1 คอลัมน์ */
+  [style*="grid-template-columns:repeat(4"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  [style*="grid-template-columns:repeat(3"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* ป้องกัน flex item ล้นออกข้าง */
+  .card, [class*="card"] {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  /* ป้องกัน image/element กว้างเกิน viewport */
+  img, canvas, iframe {
+    max-width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  [style*="grid-template-columns:repeat(2"] {
+    grid-template-columns: 1fr !important;
+  }
+}

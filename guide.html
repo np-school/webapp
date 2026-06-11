@@ -167,7 +167,7 @@
     .wf-div    { width: 1px; background: rgba(0,0,0,.08); align-self: stretch; flex-shrink: 0; }
 
     /* ── Overview grid ── */
-    .sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .sys-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; margin-bottom: 18px; }
     @media(max-width:540px){ .sys-grid { grid-template-columns: 1fr; } }
     .sys-card {
       border-radius: 12px; padding: 16px;

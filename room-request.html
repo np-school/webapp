@@ -118,6 +118,10 @@
     #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
     #fileViewModal.open{display:flex;}
   body{overflow-x:hidden;}#contentArea,#mainGrid{max-width:100%;}
+
+    @media(max-width:540px){
+      .cal-content-grid{grid-template-columns:1fr!important;}
+    }
 </style>
 </head>
 <body style="background:#f8fafc;min-height:100vh;display:flex;flex-direction:column;">
@@ -291,7 +295,7 @@
       </div>
       <div id="timePickerWrap">
         <p style="font-size:11px;color:#64748b;margin-bottom:9px;">คลิกเลือกชั่วโมงเริ่มต้น แล้วคลิกชั่วโมงสิ้นสุด — <span style="color:#ef4444;font-weight:700;">สีแดง = ถูกจองแล้ว</span></p>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;" id="timeSlotGrid"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:100%;" id="timeSlotGrid"></div>
       </div>
       <div id="timeSummary" style="display:none;margin-top:11px;padding:10px 14px;background:#eff6ff;border-radius:10px;border:1.5px solid #bfdbfe;text-align:center;font-size:13px;font-weight:700;color:#1d4ed8;"></div>
 
