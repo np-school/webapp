@@ -1614,7 +1614,8 @@ function renderPersonalView(){
   setValEl('v_phone',       p.phone||'');
   setValEl('v_address',     p.address||'');
 
-  loadEducation();
+  /* loadEducation() ถูกเรียกแล้วจาก switchSubtab() ตอนเปิดแท็บ
+     ไม่ต้องเรียกซ้ำที่นี่ — ป้องกัน query ซ้ำซ้อน */
   lucide.createIcons();
 }
 function editSection(section){
