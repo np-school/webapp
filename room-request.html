@@ -21,40 +21,37 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
-/* ══════════════════════════════════════════════
-     PAGE-SPECIFIC STYLES ONLY
-     Shared styles (spinner, toast, modal, card, navbar, sidebar,
-     filter-pill, stat-card, pbar, chart, etc.)
-     → อยู่ใน shared/styles.css แล้ว อย่าเขียนซ้ำที่นี่
-     ══════════════════════════════════════════════ */
-    }
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
     /* Sidebar */
     
     }
-    }
+    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
     /* Card */
-    
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
     /* Calendar */
-    
-    
+    .cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;transition:all .15s;position:relative;font-size:11px;font-weight:600;border:1px solid transparent;}
+    .cal-day:hover:not(.empty){background:#f1f5f9;}
     .cal-day.has-booking::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;background:#eab308;border-radius:50%;}
-    
-    
-    
-    
-    
+    .cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;border-color:#fecaca;}
+    .cal-day.is-today{background:#1d4ed8!important;color:white!important;box-shadow:0 4px 10px rgba(29,78,216,.35);}
+    .cal-day.is-today::after{background:white!important;}
+    .cal-day.is-selected{border:2px solid #1d4ed8;background:#eff6ff;}
+    .cal-day.empty{cursor:default;}
     /* Modal */
-    
-    
-    
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:620px;overflow:hidden;display:flex;flex-direction:column;max-height:94vh;box-shadow:0 25px 60px rgba(0,0,0,.2);}
     /* Toast */
-    
-    
-    to{transform:translateX(0);opacity:1;}}
-    to{transform:translateX(400px);opacity:0;}}
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
     /* Inputs */
-    
-    
+    input[type=text],input[type=number],input[type=date],select,textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;transition:border-color .15s;font-family:'Sarabun',sans-serif;}
+    input:focus,select:focus,textarea:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
     .form-label{font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;}
     .form-group{margin-bottom:18px;}
     .section-divider{font-size:12px;font-weight:800;color:#1d4ed8;margin:6px 0 14px;padding-bottom:9px;border-bottom:2px solid #eff6ff;display:flex;align-items:center;gap:7px;}
@@ -92,17 +89,17 @@
     .mdp-tags{display:flex;flex-wrap:wrap;gap:5px;padding:6px 10px 8px;border-top:1px solid #f1f5f9;min-height:32px;}
     .mdp-tag{display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid #bfdbfe;}
     .mdp-tag button{background:none;border:none;cursor:pointer;color:#1d4ed8;font-size:13px;line-height:1;padding:0;margin:0;}
-    
-    
-    
+    .upload-area{border:2px dashed #bfdbfe;border-radius:12px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
+    .upload-area:hover{border-color:#1d4ed8;background:#eff6ff;}
+    .upload-area.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
     /* Table */
     table{width:100%;border-collapse:collapse;font-size:11px;}
     th,td{padding:11px 14px;text-align:left;}
     td{border-bottom:1px solid #f8fafc;}
     tr:hover td{background:#f8fafc;cursor:pointer;}
-    
-    
-    
+    .badge-g{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
+    .badge-a{background:#fef9c3;color:#b45309;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
+    .badge-r{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
     .badge-d{background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;}
     .cal-content-grid{display:grid;grid-template-columns:268px 1fr;gap:20px;}
     @media(max-width:768px){.cal-content-grid{grid-template-columns:1fr;}}
@@ -115,8 +112,8 @@
     .room-img-wrap img{width:100%;height:100%;object-fit:cover;}
     .room-img-placeholder{width:100%;height:110px;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px 12px 0 0;}
     /* Stat bar */
-    
-    
+    .stat-bar-bg{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
+    .stat-bar-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s ease;}
     /* File viewer modal */
     #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
     #fileViewModal.open{display:flex;}
@@ -250,7 +247,7 @@
 
 <!-- ══ Booking Modal ══ -->
 <div id="bookingModal" class="modal-bg">
-  <div class="modal-box-lg">
+  <div class="modal-box">
     <div style="background:#1d4ed8;padding:17px 22px;color:white;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
       <span style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;" id="modalTitle">
         <i data-lucide="calendar" style="width:19px;height:19px;"></i> แบบฟอร์มการจอง
