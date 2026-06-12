@@ -5,6 +5,37 @@
 
 * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ══════════════════════════════════════════════
+   Design Tokens — แก้ไขที่นี่ที่เดียว ใช้ได้ทุกหน้า
+   ══════════════════════════════════════════════ */
+:root {
+  /* Layout */
+  --navbar-h:   69px;
+  --content-px: 24px;
+  --content-py: 28px;
+  --max-w:      1280px;
+  --max-w-wide: 1280px;
+
+  /* Color tokens */
+  --blue:       #1d4ed8;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --green:      #16a34a;
+  --green-lt:   #f0fdf4;
+  --green-mid:  #86efac;
+  --red:        #dc2626;
+  --red-lt:     #fff1f2;
+  --red-mid:    #fecaca;
+  --amber:      #d97706;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --slate:      #64748b;
+  --slate-lt:   #f8fafc;
+  --border:     #e2e8f0;
+  --text:       #1e293b;
+  --text2:      #64748b;
+}
+
 /* ── Loading Overlay ── */
 #loadingOverlay {
   display: flex; position: fixed; inset: 0;
@@ -274,14 +305,7 @@ input:focus, select:focus, textarea:focus {
    content area:   .page-content
    ══════════════════════════════════════════════ */
 
-/* ── Navbar height token (เปลี่ยนที่นี่ที่เดียว) ── */
-:root {
-  --navbar-h:   69px;
-  --content-px: 24px;
-  --content-py: 28px;
-  --max-w:      1280px;  /* ← ความกว้างหลักทุกหน้า */
-  --max-w-wide: 1280px;  /* ← admin หน้ากว้าง (foodcourt, portfolio-admin) เท่ากันเลย */
-}
+/* ── Layout & color tokens: ดูได้ที่ :root บนสุด ── */
 
 /* ── Outer flex wrapper (sidebar + content) ── */
 .page-wrap {
@@ -403,3 +427,119 @@ input:focus, select:focus, textarea:focus {
   text-align: center; padding: 56px 20px;
   color: #cbd5e1; font-size: 14px; font-style: italic;
 }
+
+/* ══════════════════════════════════════════════
+   Shared Components
+   (ย้ายจาก HTML inline <style> เข้ามาที่นี่)
+   ══════════════════════════════════════════════ */
+
+/* ── Buttons (base + modifiers) ── */
+.btn {
+  padding: 9px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  border: none; cursor: pointer;
+  transition: all .2s;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Sarabun', sans-serif;
+}
+.btn-sm  { padding: 6px 12px; font-size: 12px; }
+.btn-xs  { padding: 3px 9px;  font-size: 11px; }
+
+/* btn-primary — base (blue), overridden by .purple modifier */
+/* หมายเหตุ: styles.css มี .btn-primary อยู่แล้ว — ที่นี่เพิ่ม modifier */
+.btn-primary.blue   { background: var(--blue);   box-shadow: 0 6px 18px rgba(29,78,216,.3); }
+.btn-primary.purple { background: #7c3aed;        box-shadow: 0 6px 18px rgba(124,58,237,.3); }
+.btn-primary.green  { background: var(--green);   box-shadow: 0 6px 18px rgba(22,163,74,.25); }
+
+.btn-blue  { background: var(--blue);   color: white; box-shadow: 0 4px 12px rgba(29,78,216,.25); }
+.btn-ghost { background: var(--slate-lt); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--border); }
+
+/* btn-icon: small square icon button */
+.btn-icon {
+  background: #f1f5f9; border: none; border-radius: 8px;
+  padding: 6px 9px; cursor: pointer;
+  display: inline-flex; align-items: center;
+  color: #64748b; transition: all .15s;
+}
+.btn-icon:hover          { background: #e2e8f0; color: var(--text); }
+.btn-icon.danger:hover   { background: #fee2e2; color: #b91c1c; }
+
+/* ── Sub-tab bar ── */
+.sub-tab-bar {
+  display: flex; gap: 4px; padding: 4px;
+  background: #f1f5f9; border-radius: 14px;
+  width: fit-content; margin-bottom: 20px;
+}
+.sub-tab {
+  padding: 8px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  border: none; background: transparent;
+  color: #64748b; cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Sarabun', sans-serif;
+}
+.sub-tab:hover:not(.active) { background: rgba(255,255,255,.6); color: var(--text); }
+/* active color — blue (default) or purple via page modifier */
+.sub-tab.active             { background: white; color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.theme-purple .sub-tab.active { color: #7c3aed; }
+
+/* ── Filter pills ── */
+.filter-pill {
+  padding: 6px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  font-size: 12px; font-weight: 700;
+  color: #64748b; cursor: pointer;
+  background: white; transition: all .15s;
+}
+/* blue theme (default: room-admin, staff) */
+.filter-pill.active         { background: var(--blue); border-color: var(--blue); color: white; }
+/* purple theme override */
+.theme-purple .filter-pill.active { background: #7c3aed; border-color: #7c3aed; }
+
+/* ── Modal header / title ── */
+.modal-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 20px;
+}
+.modal-title { font-size: 16px; font-weight: 800; }
+
+/* ── Stat card ── */
+.stat-card {
+  padding: 18px; border-radius: 16px;
+  display: flex; align-items: center; gap: 13px;
+  background: white; border: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+
+/* ── Chart card ── */
+.chart-card {
+  background: white; border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  padding: 18px 20px;
+}
+
+/* ── Donut chart components ── */
+.donut-wrap   { position: relative; display: flex; align-items: center; justify-content: center; }
+.donut-center { position: absolute; text-align: center; pointer-events: none; }
+.donut-big    { font-size: 26px; font-weight: 800; color: #0f172a; line-height: 1; }
+.donut-label  { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+
+/* ── Horizontal bar chart ── */
+.hbar-row   { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+.hbar-label { display: flex; justify-content: space-between; align-items: center; }
+.hbar-name  { font-size: 11px; font-weight: 700; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.hbar-pct   { font-size: 11px; font-weight: 800; color: var(--blue); }
+.theme-purple .hbar-pct { color: #7c3aed; }
+.hbar-track { background: #f1f5f9; border-radius: 6px; height: 8px; overflow: hidden; }
+/* hbar-fill: ไม่ hardcode สี — ปล่อยให้ inline style กำหนด background */
+.hbar-fill  { height: 100%; border-radius: 6px; transition: width .5s ease; }
+
+/* ── Legend row ── */
+.legend-row   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.legend-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { font-size: 11px; color: #475569; font-weight: 600; flex: 1; }
+.legend-val   { font-size: 12px; font-weight: 800; color: #0f172a; }
