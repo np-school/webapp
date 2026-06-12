@@ -21,7 +21,13 @@
 <script src="shared/common.js"></script>
 <link href="shared/styles.css" rel="stylesheet">
 <style>
-/* ── foodcourt-admin เฉพาะหน้า ── */
+    /* ══════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES ONLY
+     Shared styles (spinner, toast, modal, card, navbar, sidebar,
+     filter-pill, stat-card, pbar, chart, etc.)
+     → อยู่ใน shared/styles.css แล้ว อย่าเขียนซ้ำที่นี่
+     ══════════════════════════════════════════════ */
+    /* ── foodcourt-admin เฉพาะหน้า ── */
 body { background: var(--slate-mid); }
 
 /* Layout */
@@ -34,15 +40,12 @@ body { background: var(--slate-mid); }
 .page-sub    { font-size:12px; color:var(--text2); margin-top:2px; }
 
 /* Sub tabs */
-.sub-tab-bar { display:flex; gap:4px; padding:4px; background:var(--slate-mid); border-radius:14px; width:fit-content; margin-bottom:20px; }
-.sub-tab     { padding:8px 18px; border-radius:10px; font-size:13px; font-weight:700; border:none; background:transparent; color:var(--text2); cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px; font-family:'Sarabun',sans-serif; }
-.sub-tab.active { background:white; color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,.08); }
-.sub-tab:hover:not(.active) { background:rgba(255,255,255,.6); color:var(--text); }
+
 .sub-panel { display:none; }
 .sub-panel.active { display:block; }
 
 /* Card (override ของ styles.css — เพิ่ม padding) */
-.card { padding: 20px; }
+
 .card-title { font-size:11px; font-weight:800; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
 
 /* KPI */
@@ -92,7 +95,7 @@ body { background: var(--slate-mid); }
 /* Shop count input */
 .shop-count-wrap  { display:flex; align-items:center; gap:6px; margin-left:auto; flex-shrink:0; }
 .shop-count-input { width:52px; padding:4px 8px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; font-weight:700; text-align:center; font-family:'Sarabun',sans-serif; color:var(--text); outline:none; }
-.shop-count-input:focus { border-color:var(--primary); box-shadow:0 0 0 2px rgba(29,78,216,.1); }
+.shop-count-
 .shop-count-preview { font-size:11px; color:var(--text2); white-space:nowrap; }
 
 /* Daily table */
@@ -175,7 +178,6 @@ input[type=month] { border:1.5px solid var(--border); padding:9px 12px; border-r
 /* Donut legend */
 .legend-list { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
 .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
-.legend-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
 /* Empty state */
 .empty      { text-align:center; padding:36px; color:var(--text2); }
@@ -194,7 +196,7 @@ input[type=month] { border:1.5px solid var(--border); padding:9px 12px; border-r
 .manage-rec-card.income-type  { border-left:4px solid var(--green); }
 .manage-rec-card.expense-type { border-left:4px solid var(--red); }
 .manage-rec-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.07); }
-</style>
+  </style>
 </head>
 <body>
 

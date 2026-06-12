@@ -33,20 +33,23 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
-    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
+    /* ══════════════════════════════════════════════
+     PAGE-SPECIFIC STYLES ONLY
+     Shared styles (spinner, toast, modal, card, navbar, sidebar,
+     filter-pill, stat-card, pbar, chart, etc.)
+     → อยู่ใน shared/styles.css แล้ว อย่าเขียนซ้ำที่นี่
+     ══════════════════════════════════════════════ */
+    }
 
     /* Sidebar */
     
     }
 
     /* ── Embed mode: ซ่อน chrome ทั้งหมดเมื่อโหลดใน iframe ── */
-    body.embed-mode #loadingOverlay { display: none !important; }
+    body.embed-mode 
     body.embed-mode #navbar         { display: none !important; }
     body.embed-mode #sidebarOverlay { display: none !important; }
-    body.embed-mode .sidebar-wrap   { display: none !important; }
+    body.embed-mode 
     body.embed-mode #viewModeBar    { display: none !important; }
     body.embed-mode #loginGate      { display: none !important; }
     body.embed-mode { background: white; overflow-y: auto; -webkit-overflow-scrolling: touch; }
