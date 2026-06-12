@@ -1,4 +1,4 @@
-var CACHE_NAME = 'np-origins-v8';
+var CACHE_NAME = 'np-origins-v7';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
 var ALL_FILES = [
@@ -14,9 +14,8 @@ var ALL_FILES = [
   '/webapp/portfolio-admin.html'
 ];
 
-/* ไฟล์ HTML/JS ของแอป — ใช้ stale-while-revalidate
-   (ตอบจาก cache ทันทีถ้ามี แล้วค่อยอัปเดต cache เบื้องหลัง) */
-function isAppShell(url) {
+/* ไฟล์ที่ต้องใช้ network-first (HTML, JS) เพื่อให้ได้ version ล่าสุดเสมอ */
+function isNetworkFirst(url) {
   return url.endsWith('.html') || url.endsWith('.js');
 }
 
@@ -65,28 +64,20 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  /* Stale-While-Revalidate สำหรับ HTML และ JS
-     → ตอบจาก cache ทันที (เร็ว, ไม่ต้องรอ network)
-     → พร้อมกันนั้น fetch ของใหม่จาก network มาอัปเดต cache ไว้สำหรับครั้งถัดไป
-     → ถ้าไม่มี cache เลย (เปิดครั้งแรก) ค่อย fallback ไป network */
-  if (isAppShell(url)) {
+  /* Network-first สำหรับ HTML และ JS — ได้ของใหม่ทันที */
+  if (isNetworkFirst(url)) {
     e.respondWith(
-      caches.open(CACHE_NAME).then(function(cache) {
-        return cache.match(e.request).then(function(cached) {
-          var fetchPromise = fetch(e.request).then(function(response) {
-            if (response && response.status === 200) {
-              cache.put(e.request, response.clone());
-            }
-            return response;
-          }).catch(function() {
-            /* ออฟไลน์ และไม่มีของใหม่ → ใช้ cache เดิม (ถ้ามี) */
-            return cached;
+      fetch(e.request).then(function(response) {
+        if (response && response.status === 200) {
+          var clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(e.request, clone);
           });
-
-          /* มี cache → ตอบทันที, อัปเดตเบื้องหลัง
-             ไม่มี cache → รอ network */
-          return cached || fetchPromise;
-        });
+        }
+        return response;
+      }).catch(function() {
+        /* offline fallback → ใช้ cache แทน */
+        return caches.match(e.request);
       })
     );
     return;

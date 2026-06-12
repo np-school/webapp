@@ -20,10 +20,19 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+
     /* ── Loading ── */
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.97);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
     /* ── Cards ── */
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 
     /* ── View tabs ── */
+    .view-tab{padding:9px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
+    .view-tab.active{color:#7c3aed;border-bottom-color:#7c3aed;}
 
     /* ── Admin card ── */
     .admin-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;transition:all .2s;position:relative;}
@@ -37,12 +46,22 @@
     .group-header{border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:13px;}
 
     /* ── Buttons ── */
+    .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+    .btn-primary:hover{background:#6d28d9;}
+    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
+    .btn-secondary:hover{background:#e2e8f0;}
+    .btn-icon{background:#f1f5f9;border:none;border-radius:8px;padding:6px 9px;cursor:pointer;display:inline-flex;align-items:center;color:#64748b;transition:all .15s;}
+    .btn-icon:hover{background:#e2e8f0;}
+    .btn-icon.danger:hover{background:#fee2e2;color:#b91c1c;}
 
     /* ── Modal ── */
-
-    
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:500px;padding:28px;box-shadow:0 25px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
 
     /* ── Inputs ── */
+    input[type=text],textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;transition:border-color .15s;}
+    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
 
     /* ── Perm row ── */
     .perm-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;transition:border-color .15s;}
@@ -51,6 +70,10 @@
     .perm-row.disabled{opacity:.5;cursor:not-allowed;}
 
     /* ── Toast ── */
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
 
     /* ── Search ── */
     .search-box{border:1.5px solid #e2e8f0;padding:9px 14px;border-radius:10px;outline:none;font-size:13px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
@@ -59,10 +82,12 @@
     /* ── Staff Picker ── */
     .staff-picker-wrap{position:relative;}
     .staff-picker-input{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;cursor:pointer;background:white;transition:border-color .15s;}
+    .staff-picker-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
     .staff-picker-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #c4b5fd;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;max-height:220px;overflow-y:auto;display:none;}
     .staff-picker-dropdown.open{display:block;}
     .staff-picker-search{padding:10px 12px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:white;}
     .staff-picker-search input{border:1.5px solid #e2e8f0;padding:7px 12px;border-radius:8px;font-size:13px;width:100%;font-family:'Sarabun',sans-serif;outline:none;}
+    .staff-picker-search input:focus{border-color:#7c3aed;}
     .staff-picker-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .12s;}
     .staff-picker-item:hover{background:#faf5ff;}
     .staff-picker-item.selected{background:#ede9fe;}
@@ -74,6 +99,7 @@
     #headOfGroupPanel.show{display:block;}
 
     /* ── Empty state ── */
+    .empty-state{text-align:center;padding:52px 20px;color:#94a3b8;}
 
     /* ── Group view grid ── */
     .group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;}
@@ -84,18 +110,18 @@
     }
   </style>
 </head>
-<body class="theme-purple" style="background:#f8fafc;min-height:100vh;">
+<body style="background:#f8fafc;min-height:100vh;">
 
 <!-- Loading -->
 <div id="loadingOverlay">
-  <div class="spinner purple"></div>
+  <div class="spinner"></div>
   <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
 </div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Access Denied -->
-<div id="accessDenied" class="access-denied">
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
   <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
     <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
@@ -112,7 +138,7 @@
   <!-- Navbar -->
   <nav id="navbar" class="navbar"></nav>
 
-  <div class="page-wrap">
+  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
@@ -120,7 +146,7 @@
     </div>
 
     <!-- Content -->
-    <div class="page-content">
+    <div style="flex:1;min-width:0;padding:28px 24px;">
 
       <!-- Page header -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;">
@@ -210,7 +236,7 @@
 
 <!-- ══════════════ Modal: Add/Edit Admin ══════════════ -->
 <div id="adminModal" class="modal-bg">
-  <div class="modal-box sm pad">
+  <div class="modal-box">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
       <div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="user-cog" style="width:18px;height:18px;color:#7c3aed;"></i>
@@ -509,7 +535,7 @@
 
 <!-- ══════════════ Modal: Confirm Delete ══════════════ -->
 <div id="deleteModal" class="modal-bg">
-  <div class="modal-box sm pad" style="max-width:420px;">
+  <div class="modal-box" style="max-width:420px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i>
@@ -531,7 +557,7 @@
 
 <!-- ══════════════ Modal: Quick Permission Toggle ══════════════ -->
 <div id="quickPermModal" class="modal-bg">
-  <div class="modal-box sm pad" style="max-width:420px;">
+  <div class="modal-box" style="max-width:420px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
       <div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="toggle-right" style="width:18px;height:18px;color:#7c3aed;"></i>

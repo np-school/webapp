@@ -21,8 +21,226 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js?v=5"></script>
   <script src="shared/common.js?v=5"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: #1e293b; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+      padding: 48px 24px 64px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .hero-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 20px; padding: 5px 14px; margin-bottom: 16px;
+      font-size: 12px; font-weight: 700; color: #93c5fd;
+    }
+    .hero h1 { font-size: clamp(22px,4vw,30px); font-weight: 800; color: white; margin-bottom: 10px; line-height: 1.35; }
+    .hero p  { font-size: 14px; color: #bfdbfe; max-width: 500px; margin: 0 auto; }
+
+    /* ── System pills (overview) ── */
+    .sys-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+    .sys-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 24px; padding: 7px 16px; color: white; font-size: 13px; font-weight: 700;
+    }
+
+    /* ── Main layout ── */
+    .main-wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    /* ── Primary tabs (ระบบ) ── */
+    .ptab-bar {
+      display: flex; gap: 6px; background: white; border-radius: 16px;
+      padding: 6px; margin-bottom: 20px;
+      border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .ptab-bar::-webkit-scrollbar { height: 0; }
+    .ptab-btn {
+      flex: 1; min-width: 120px; padding: 11px 16px; border: none;
+      border-radius: 11px; font-family: 'Sarabun', sans-serif; font-size: 13px;
+      font-weight: 700; color: #64748b; cursor: pointer; background: none;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: all .2s; white-space: nowrap;
+    }
+    .ptab-btn:hover { background: #f1f5f9; color: #1e293b; }
+    .ptab-btn.active-blue { background: #1d4ed8; color: white; box-shadow: 0 4px 14px rgba(29,78,216,.3); }
+    .ptab-btn.active-purple { background: #7c3aed; color: white; box-shadow: 0 4px 14px rgba(124,58,237,.3); }
+    .ptab-btn.active-slate { background: #0f172a; color: white; box-shadow: 0 4px 14px rgba(15,23,42,.3); }
+
+    .ptab-pane { display: none; }
+    .ptab-pane.active { display: block; }
+
+    /* ── Sub-tab bar ── */
+    .stab-bar {
+      display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto;
+      -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+    }
+    .stab-bar::-webkit-scrollbar { height: 0; }
+    .stab-btn {
+      padding: 8px 16px; border: none; background: none; font-family: 'Sarabun', sans-serif;
+      font-size: 12px; font-weight: 700; color: #94a3b8; cursor: pointer;
+      border-bottom: 2.5px solid transparent; transition: all .18s; white-space: nowrap;
+    }
+    .stab-btn:hover { color: #475569; }
+    .stab-btn.active-blue  { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .stab-btn.active-purple{ color: #7c3aed; border-bottom-color: #7c3aed; }
+    .stab-btn.active-slate { color: #0f172a; border-bottom-color: #0f172a; }
+
+    .stab-pane { display: none; }
+    .stab-pane.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: white; border-radius: 18px; border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.05); padding: 24px 26px; margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 800; color: #1e293b;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    }
+    .card-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── Steps ── */
+    .step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+    .step:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-num {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; flex-shrink: 0;
+    }
+    .step-title { font-weight: 700; color: #1e293b; font-size: 14px; margin-bottom: 4px; }
+    .step-desc  { font-size: 13px; color: #64748b; line-height: 1.7; }
+
+    /* ── Alert boxes ── */
+    .alert {
+      border-radius: 12px; padding: 13px 15px;
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; line-height: 1.65; margin-top: 14px;
+    }
+    .alert-yellow { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .alert-blue   { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+    .alert-green  { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+    .alert-red    { background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; }
+
+    /* ── Status badges ── */
+    .sbadge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .sb-pending  { background: #fef3c7; color: #b45309; }
+    .sb-approved { background: #dcfce7; color: #15803d; }
+    .sb-rejected { background: #fee2e2; color: #b91c1c; }
+    .sb-done     { background: #f1f5f9; color: #64748b; }
+    .sb-submitted { background: #dcfce7; color: #15803d; }
+    .sb-head_reviewed { background: #e0f2fe; color: #0369a1; }
+    .sb-reviewed  { background: #eff6ff; color: #1e40af; }
+    .sb-asst_reviewed { background: #fef3c7; color: #92400e; }
+    .sb-deputy_reviewed { background: #ede9fe; color: #6d28d9; }
+    .sb-final_approved { background: #f0fdf4; color: #065f46; border: 1px solid #86efac; }
+    .sb-revision  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+    /* ── Workflow bar ── */
+    .wf-bar { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; margin: 16px 0; }
+    .wf-step {
+      flex: 1; padding: 8px 4px; text-align: center; font-size: 9px; font-weight: 800;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; line-height: 1.3;
+    }
+    .wf-done   { background: #16a34a; color: white; }
+    .wf-active { background: #eab308; color: #713f12; }
+    .wf-pend   { background: #f1f5f9; color: #94a3b8; }
+    .wf-final  { background: #7c3aed; color: white; }
+    .wf-div    { width: 1px; background: rgba(0,0,0,.08); align-self: stretch; flex-shrink: 0; }
+
+    /* ── Overview grid ── */
+    .sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    @media(max-width:540px){ .sys-grid { grid-template-columns: 1fr; } }
+    .sys-card {
+      border-radius: 12px; padding: 16px;
+      border: 1px solid; font-size: 13px;
+    }
+    .sys-card-blue   { background: #eff6ff; border-color: #bfdbfe; }
+    .sys-card-purple { background: #f5f3ff; border-color: #c4b5fd; }
+    .sys-card-gray   { background: #f8fafc; border-color: #e2e8f0; opacity: .6; }
+    .sys-card-title  { font-weight: 700; color: #1e293b; margin: 6px 0 4px; font-size: 14px; }
+    .sys-card-desc   { color: #64748b; line-height: 1.5; }
+    .sys-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
+
+    /* ── Role table ── */
+    .role-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+    .role-table th { background: #f8fafc; font-weight: 700; color: #475569; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    .role-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; line-height: 1.6; }
+    .role-table tr:last-child td { border-bottom: none; }
+    .role-table tr:hover td { background: #f8fafc; }
+
+    /* ── FAQ ── */
+    .faq-item { border-bottom: 1px solid #f1f5f9; }
+    .faq-q {
+      width: 100%; text-align: left; padding: 14px 0; background: none; border: none; font-family: 'Sarabun', sans-serif;
+      font-weight: 700; font-size: 14px; color: #1e293b; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .faq-a { font-size: 13px; color: #64748b; line-height: 1.7; padding-bottom: 14px; display: none; }
+    .faq-a.open { display: block; }
+
+    /* ── CTA buttons ── */
+    .cta-wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 8px 0 16px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 13px 26px; color: white; font-weight: 800; border-radius: 14px;
+      text-decoration: none; font-size: 14px; transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .9; }
+    .cta-blue   { background: #1d4ed8; box-shadow: 0 6px 18px rgba(29,78,216,.3); }
+    .cta-purple { background: #7c3aed; box-shadow: 0 6px 18px rgba(124,58,237,.3); }
+
+    /* ── User flow diagram ── */
+    .flow-row { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 12px 0; }
+    .flow-box {
+      padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 700;
+      text-align: center; flex-shrink: 0;
+    }
+    .flow-arrow { font-size: 16px; color: #94a3b8; padding: 0 6px; flex-shrink: 0; }
+    .fb-blue   { background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; }
+    .fb-green  { background: #f0fdf4; color: #15803d; border: 1.5px solid #bbf7d0; }
+    .fb-yellow { background: #fffbeb; color: #92400e; border: 1.5px solid #fde68a; }
+    .fb-purple { background: #f5f3ff; color: #7c3aed; border: 1.5px solid #c4b5fd; }
+    .fb-red    { background: #fff1f2; color: #b91c1c; border: 1.5px solid #fecdd3; }
+
+    /* ── Section divider ── */
+    .sdiv { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .sdiv::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+    .note { font-size: 12px; color: #94a3b8; font-weight: 600; margin-top: 4px; }
+
+    /* sticky sub tab on scroll */
+    .stab-sticky { position: sticky; top: 0; z-index: 10; background: #f1f5f9; padding: 8px 0 4px; margin-bottom: 8px; }
+
+    @media(max-width:600px){
+      .card { padding: 18px 16px; }
+      .hero { padding: 36px 16px 52px; }
+      .ptab-btn { min-width: 100px; font-size: 12px; padding: 9px 10px; }
+    }
+    
+    }
+    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
+  </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;overflow-x:hidden;">
+<body style="background:#f1f5f9;min-height:100vh;overflow-x:hidden;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="margin-top:14px;color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -31,11 +249,11 @@
 <nav id="navbar" class="navbar"></nav>
 
 <!-- Main App -->
-<div class="page-wrap">
+<div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
   <div class="sidebar-wrap" id="sidebar">
     <div class="sidebar-inner" id="sidebarInner"></div>
   </div>
-  <div class="page-content">
+  <div style="flex:1;min-width:0;">
 
 <!-- ══ HERO ══ -->
 <div class="hero">
@@ -612,7 +830,7 @@
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:#f8fafc;border-radius:12px;">
-            <span class="sbadge" style="background:#f8fafc;color:#64748b;white-space:nowrap;flex-shrink:0;">— ยังไม่ส่ง</span>
+            <span class="sbadge" style="background:#f1f5f9;color:#64748b;white-space:nowrap;flex-shrink:0;">— ยังไม่ส่ง</span>
             <div style="font-size:13px;color:#475569;line-height:1.6;">ยังไม่มีการอัปโหลดไฟล์ การ์ดมีขอบซ้ายสีเทา</div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:#f8fafc;border-radius:12px;">

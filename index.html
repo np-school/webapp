@@ -83,9 +83,21 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    /* ── Loading ── */
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:9999;align-items:center;justify-content:center;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @media(min-width:1024px){
+      #hamburgerBtn{display:none!important;}
+      .sidebar-inner{border-right:none;}
+    }
+    /* ── Tab content ── */
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
     /* ── Public calendar ── */
     .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
-    .pub-cal-day:hover:not(.empty){background:#f8fafc;}
+    .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
     .pub-cal-day.empty{cursor:default;}
     .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
     .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
@@ -97,7 +109,7 @@
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
     @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
     @media(max-width:900px){.dash-two-col{grid-template-columns:1fr!important;}}
-
+    @media(max-width:640px){#contentArea{padding:20px 14px!important;}}
     /* ── New Public UI ── */
     .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;}
     .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
@@ -109,7 +121,7 @@
     .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
     @media(max-width:640px){.services-grid{grid-template-columns:repeat(2,1fr);gap:12px;}.service-card{padding:18px 14px;}}
     @media(max-width:360px){.services-grid{grid-template-columns:1fr;}}
-    .pub-section{max-width:1280px;margin:0 auto;padding:0 20px;}
+    .pub-section{max-width:1200px;margin:0 auto;padding:0 20px;}
     @media(max-width:480px){.pub-section{padding:0 14px;}}
     .login-gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
     .login-gate.open{display:flex;}
@@ -142,7 +154,7 @@
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       เข้าสู่ระบบด้วย Google
     </button>
-    <button onclick="closeLoginGate()" style="width:100%;padding:11px;background:#f8fafc;color:#64748b;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
+    <button onclick="closeLoginGate()" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
   </div>
 </div>
 
@@ -236,7 +248,7 @@
           </div>
           <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">เอกสารและรายงาน</div>
           <div style="font-size:12px;color:#64748b;line-height:1.5;">ดาวน์โหลดเอกสารและรายงานต่างๆ</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#94a3b8;background:#f8fafc;padding:4px 10px;border-radius:999px;">
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:4px 10px;border-radius:999px;">
             <i data-lucide="wrench" style="width:11px;height:11px;"></i> เร็วๆนี้
           </div>
         </div>
@@ -316,15 +328,15 @@
 
 <!-- ── Private Dashboard ── -->
 <div id="privateView" style="display:none;">
-  <div id="mainGrid" class="page-wrap">
+  <div id="mainGrid" style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 73px);">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" id="sidebarInner"></div>
+      <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
     </div>
 
     <!-- Content -->
-    <div id="contentArea" class="page-content">
+    <div id="contentArea" style="flex:1;min-width:0;padding:32px 24px;">
 
       <!-- Dashboard tab -->
       <div id="tab-dashboard" class="tab-content active">

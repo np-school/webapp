@@ -21,9 +21,27 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    
+    }
+
     /* ── Cards ── */
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    .stat-card{padding:18px;border-radius:16px;display:flex;align-items:center;gap:13px;background:white;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,.04);}
 
     /* ── Buttons ── */
+    .btn-primary{background:#1d4ed8;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;}
+    .btn-primary:hover{background:#1e40af;}
+    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:background .15s;}
+    .btn-secondary:hover{background:#e2e8f0;}
+    .btn-danger{background:#dc2626;color:white;border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s;}
+    .btn-danger:hover{background:#b91c1c;}
+    .btn-icon{background:#f1f5f9;color:#64748b;border:none;padding:7px;border-radius:8px;cursor:pointer;display:flex;align-items:center;transition:all .15s;}
+    .btn-icon:hover{background:#e2e8f0;}
+    .btn-icon.red:hover{background:#fee2e2;color:#b91c1c;}
 
     /* ── Table ── */
     .staff-table{width:100%;border-collapse:collapse;}
@@ -34,14 +52,22 @@
     .staff-table tbody tr:hover{background:#f8faff;}
 
     /* ── Filter pills ── */
+    .filter-pill{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
+    .filter-pill.active{background:#1d4ed8;border-color:#1d4ed8;color:white;}
 
     /* ── Upload area ── */
+    .upload-area{border:2px dashed #bfdbfe;border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
+    .upload-area:hover{border-color:#1d4ed8;background:#eff6ff;}
+    .upload-area.dragging{border-color:#1d4ed8;background:#eff6ff;transform:scale(1.01);}
+    .upload-area.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
 
     /* ── Modal ── */
-
-    
-
-    
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:520px;padding:28px;box-shadow:0 25px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+    .modal-box.wide{max-width:760px;}
+    input[type=text],input[type=email],input[type=tel],select,textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;transition:border-color .15s;font-family:'Sarabun',sans-serif;}
+    input:focus,select:focus,textarea:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
 
     /* ── Group badge ── */
     .group-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
@@ -62,6 +88,10 @@
     .pos-tag{background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;}
 
     /* ── Toast ── */
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
 
     /* ── Avatar ── */
     .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;flex-shrink:0;}
@@ -74,6 +104,7 @@
     .preview-table tbody tr:nth-child(even){background:#f8fafc;}
 
     /* ── Access Denied ── */
+    #accessDenied{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
 
     @media(max-width:768px){
       .hide-mobile{display:none!important;}
@@ -108,7 +139,7 @@
 <div id="staffApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
 
-  <div class="page-wrap">
+  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
 
     <!-- Sidebar -->
     <div class="sidebar-wrap" id="sidebar">
@@ -116,7 +147,7 @@
     </div>
 
     <!-- Content -->
-    <div class="page-content" style="display:flex;flex-direction:column;gap:20px;">
+    <div style="flex:1;min-width:0;padding:28px 24px;display:flex;flex-direction:column;gap:20px;">
 
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
@@ -231,7 +262,7 @@
 
 <!-- ══ Modal: Add/Edit Staff ══ -->
 <div id="staffModal" class="modal-bg" onclick="if(event.target===this)closeModal('staffModal')">
-  <div class="modal-box md pad">
+  <div class="modal-box">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
       <div style="width:40px;height:40px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="user-cog" style="width:18px;height:18px;color:#1d4ed8;"></i>
@@ -405,7 +436,7 @@
 
 <!-- ══ Modal: Delete ══ -->
 <div id="deleteModal" class="modal-bg" onclick="if(event.target===this)closeModal('deleteModal')">
-  <div class="modal-box md pad" style="max-width:400px;">
+  <div class="modal-box" style="max-width:400px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i>
@@ -1053,12 +1084,12 @@ lucide.createIcons();
 </div>
 
 <style>
-    /* บน desktop ให้ modal ลอยกลางจอแทน bottom-sheet */
+/* บน desktop ให้ modal ลอยกลางจอแทน bottom-sheet */
 @media(min-width:768px){
   #sarModal{ align-items:center !important; padding:20px !important; }
   #sarModalBox{ border-radius:20px !important; height:90dvh; max-height:90dvh; }
 }
-  </style>
+</style>
 
 </body>
 </html>

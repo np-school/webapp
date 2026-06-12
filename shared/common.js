@@ -162,8 +162,8 @@ function buildNavbar(subtitle, isPurple) {
   nav.className = 'navbar' + (isPurple ? ' purple' : '');
   nav.innerHTML =
     '<div class="navbar-inner">' +
-      '<div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;">' +
-        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;flex-shrink:0;">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
           '<i data-lucide="menu" style="width:20px;height:20px;"></i>' +
         '</button>' +
         '<a href="https://2022.nongki.ac.th/" target="_blank" rel="noopener" style="display:flex;align-items:center;flex-shrink:0;">' +
@@ -172,12 +172,12 @@ function buildNavbar(subtitle, isPurple) {
         '<a href="index.html" style="display:flex;align-items:center;flex-shrink:0;">' +
           '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);">' +
         '</a>' +
-        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;min-width:0;overflow:hidden;">' +
-          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">โรงเรียนหนองกี่พิทยาคม</div>' +
-          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + subtitle + '</div>' +
+        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">' +
+          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>' +
+          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';">' + subtitle + '</div>' +
         '</div>' +
       '</div>' +
-      '<div id="userNavSection" style="flex-shrink:0;"></div>' +
+      '<div id="userNavSection"></div>' +
     '</div>';
   lucide.createIcons();
 }
@@ -359,7 +359,7 @@ function buildSidebar(activePage) {
 
   /* ── close button ── */
   var html =
-    '<div id="sidebarCloseRow" style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
       '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
         '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>' +
       '</button>' +

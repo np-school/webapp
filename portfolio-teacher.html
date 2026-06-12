@@ -50,6 +50,24 @@
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client"></script>
   <style>
+    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    
+    }
+    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
+    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
+    .toast.hide{animation:toastOut .3s ease forwards;}
+    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2);}
+    input[type=text],input[type=url],select,textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;transition:border-color .15s;font-family:'Sarabun',sans-serif;}
+    input:focus,select:focus,textarea:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
+
     /* ── Progress Ring ── */
     .prog-ring{transform:rotate(-90deg);}
     .prog-ring circle{transition:stroke-dashoffset .5s ease;}
@@ -96,7 +114,7 @@
     .file-entry-del:hover{background:#fee2e2;color:#dc2626;}
     .file-entry-link{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#1d4ed8;flex-shrink:0;display:flex;align-items:center;text-decoration:none;}
     .file-entry-link:hover{background:#eff6ff;}
-    .file-slot-badge{font-size:11px;font-weight:800;color:#64748b;background:#f8fafc;border-radius:6px;padding:2px 8px;flex-shrink:0;}
+    .file-slot-badge{font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;border-radius:6px;padding:2px 8px;flex-shrink:0;}
     .file-entry-replace{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#f59e0b;flex-shrink:0;display:flex;align-items:center;}
     .file-entry-replace:hover{background:#fffbeb;}
     .file-entry.replacing{border-color:#f59e0b;background:#fffbeb;}
@@ -209,7 +227,7 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body class="theme-purple" style="background:#f8fafc;min-height:100vh;">
+<body style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -228,7 +246,7 @@
       <button onclick="auth.signOut().then(function(){window.location.reload();})" style="width:100%;padding:13px;background:#dc2626;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;">
         ออกจากระบบ
       </button>
-      <a href="index.html" style="display:block;padding:13px;background:#f8fafc;color:#475569;font-weight:700;border-radius:14px;text-decoration:none;font-size:14px;">
+      <a href="index.html" style="display:block;padding:13px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:14px;text-decoration:none;font-size:14px;">
         ← กลับหน้าแรก
       </a>
     </div>
@@ -252,11 +270,11 @@
 <!-- Main App -->
 <div id="mainApp" style="display:none;">
   <nav id="navbar" class="navbar"></nav>
-  <div class="page-wrap">
+  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
     <div class="sidebar-wrap" id="sidebar">
       <div class="sidebar-inner" id="sidebarInner"></div>
     </div>
-    <div class="page-content" id="contentArea">
+    <div style="flex:1;min-width:0;padding:28px 20px;" id="contentArea">
 
       <!-- ── YEAR & SEMESTER SELECTOR ── -->
       <div class="year-hero" style="margin-bottom:24px;">
@@ -322,14 +340,14 @@
 
 <!-- ── Upload / Edit Modal ── -->
 <div id="uploadModal" class="modal-bg" onclick="if(event.target===this)closeUploadModal()">
-  <div class="modal-box lg pad">
+  <div class="modal-box">
     <div style="padding:24px 24px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div>
           <h3 id="modalTitle" style="font-size:17px;font-weight:800;color:#0f172a;">ส่งงาน</h3>
           <p id="modalSemLabel" style="font-size:12px;color:#64748b;margin-top:2px;"></p>
         </div>
-        <button onclick="closeUploadModal()" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;">
+        <button onclick="closeUploadModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
           <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
         </button>
       </div>
@@ -421,7 +439,7 @@
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ลายมือชื่อผู้ส่ง <span style="color:#ef4444;">*</span> <span style="color:#94a3b8;font-weight:600;">(วาดลายเซ็นในกล่องด้านล่าง)</span></label>
             <canvas id="signatureCanvas" width="420" height="100" style="border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:crosshair;touch-action:none;width:100%;max-width:100%;display:block;"></canvas>
             <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-              <button type="button" onclick="clearSignature()" style="padding:4px 12px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">ล้างลายเซ็น</button>
+              <button type="button" onclick="clearSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">ล้างลายเซ็น</button>
             </div>
           </div>
         </div>
@@ -497,7 +515,7 @@
       </div>
 
       <div style="display:flex;gap:10px;padding-bottom:24px;">
-        <button onclick="closeUploadModal()" style="flex:1;padding:12px;background:#f8fafc;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
+        <button onclick="closeUploadModal()" style="flex:1;padding:12px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
         <button id="submitBtn" onclick="submitDoc()" style="flex:2;padding:12px;background:#1d4ed8;color:white;font-weight:800;border-radius:12px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
           <i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน
         </button>
@@ -520,7 +538,7 @@
         <button class="memo-print-btn" onclick="window.print()">
           <i data-lucide="printer" style="width:13px;height:13px;"></i> พิมพ์
         </button>
-        <button onclick="closeMemoModal()" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
+        <button onclick="closeMemoModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
           <i data-lucide="x" style="width:15px;height:15px;color:#64748b;"></i>
         </button>
       </div>
@@ -691,7 +709,7 @@
     <h3 style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:8px;">ลบไฟล์นี้?</h3>
     <p id="deleteFileName" style="font-size:13px;color:#64748b;margin-bottom:20px;word-break:break-all;"></p>
     <div style="display:flex;gap:10px;">
-      <button onclick="closeDeleteModal()" style="flex:1;padding:11px;background:#f8fafc;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
+      <button onclick="closeDeleteModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
       <button id="confirmDeleteBtn" onclick="confirmDelete()" style="flex:1;padding:11px;background:#dc2626;color:white;font-weight:800;border-radius:12px;border:none;cursor:pointer;">ลบไฟล์</button>
     </div>
   </div>
@@ -708,7 +726,7 @@
     <p style="font-size:12px;color:#64748b;margin-bottom:6px;">ระบบจะลบไฟล์ทุกไฟล์ใน Google Drive และลายเซ็นที่เกี่ยวข้องออกทั้งหมด</p>
     <p style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:20px;">⚠️ ไม่สามารถกู้คืนได้</p>
     <div style="display:flex;gap:10px;">
-      <button onclick="closeDeleteSubModal()" style="flex:1;padding:11px;background:#f8fafc;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
+      <button onclick="closeDeleteSubModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#475569;font-weight:700;border-radius:12px;border:none;cursor:pointer;">ยกเลิก</button>
       <button id="confirmDeleteSubBtn" onclick="confirmDeleteSubmission()" style="flex:1;padding:11px;background:#dc2626;color:white;font-weight:800;border-radius:12px;border:none;cursor:pointer;">ลบงาน</button>
     </div>
   </div>
@@ -965,7 +983,7 @@ auth.onAuthStateChanged(function(u) {
       currentStaffData = snap.docs[0].data();
       document.getElementById('loginGate').style.display = 'none';
       document.getElementById('mainApp').style.display   = 'block';
-      buildNavbar('ระบบส่งงานประจำภาคเรียน', true);
+      buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
       updateNavUser(u);
       buildSidebar('portfolio-teacher');
       checkAdminAccess(u.email);
@@ -1172,7 +1190,7 @@ function renderDocList() {
                           '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
                           '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
                           '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
-                          '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f8fafc;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+                          '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
                         '</div>' +
                         (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc(sub.note) + '</p>' : '') +
                         (status === 'revision' && sub.adminNote
@@ -1352,7 +1370,7 @@ function renderCourseFilePanels() {
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
           '<span style="font-size:13px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:3px 10px;border-radius:8px;">' + esc(sub ? sub.courseCode : '') + '</span>' +
           '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc(sub ? sub.courseName : '') + '</span>' +
-          '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f8fafc;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+          '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
         '</div>' +
         '<div id="existFileList_' + idx + '">' +
           files.map(function(f, fi) {
