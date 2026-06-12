@@ -88,7 +88,7 @@
     .wf-step.done{background:#16a34a;color:white;}
     .wf-step.active{background:#eab308;color:#713f12;}
     .wf-step.revision{background:#dc2626;color:white;}
-    .wf-step.pending{background:#f1f5f9;color:#94a3b8;}
+    .wf-step.pending{background:#f8fafc;color:#94a3b8;}
     .wf-step.final{background:#7c3aed;color:white;}
     .wf-divider{width:1px;background:rgba(0,0,0,.08);align-self:stretch;flex-shrink:0;}
 
@@ -98,7 +98,7 @@
     .matrix-table td{text-align:center;padding:5px 4px;border-bottom:1px solid #f8fafc;}
     .matrix-table tr:hover td{background:#faf5ff;}
     .matrix-cell{width:22px;height:22px;border-radius:6px;margin:0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;}
-    .cell-none{background:#f1f5f9;}
+    .cell-none{background:#f8fafc;}
     .cell-submitted{background:#dcfce7;}
     .cell-head_reviewed{background:#bae6fd;}
     .cell-reviewed{background:#dbeafe;}
@@ -233,21 +233,21 @@
     .hbar-label{display:flex;justify-content:space-between;align-items:center;}
     .hbar-name{font-size:11px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
     .hbar-pct{font-size:11px;font-weight:800;color:#7c3aed;}
-    .hbar-track{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;}
+    .hbar-track{background:#f8fafc;border-radius:6px;height:8px;overflow:hidden;}
     .hbar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .5s ease;}
 
     /* Doc type mini bars */
     .docbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
     .docbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .docbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .docbar-track{width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
+    .docbar-track{width:80px;background:#f8fafc;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
     .docbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
     .docbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
 
     #chartsPanel{display:block;}
 
     /* ── Sub Tabs ── */
-    .sub-tab-bar{display:flex;gap:4px;padding:4px;background:#f1f5f9;border-radius:14px;width:fit-content;}
+    .sub-tab-bar{display:flex;gap:4px;padding:4px;background:#f8fafc;border-radius:14px;width:fit-content;}
     .sub-tab{padding:8px 20px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:#64748b;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
     .sub-tab.active{background:white;color:#7c3aed;box-shadow:0 2px 8px rgba(0,0,0,.08);}
     .sub-tab:hover:not(.active){background:rgba(255,255,255,.6);color:#334155;}
@@ -257,7 +257,7 @@
     .dt-row:hover{border-color:#c4b5fd;}
     .dt-icon-preview{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .dt-drag-handle{cursor:grab;color:#cbd5e1;display:flex;align-items:center;padding:4px;border-radius:6px;flex-shrink:0;}
-    .dt-drag-handle:hover{background:#f1f5f9;color:#7c3aed;}
+    .dt-drag-handle:hover{background:#f8fafc;color:#7c3aed;}
     .dt-drag-handle:active{cursor:grabbing;}
     .dt-row.drag-over{border-color:#7c3aed;border-style:dashed;background:#faf5ff;}
     .dt-row.dragging{opacity:.45;border-style:dashed;}
@@ -265,7 +265,7 @@
     .color-swatch.selected{border-color:#0f172a;}
   </style>
 </head>
-<body class="theme-purple" style="background:#f8fafc;min-height:100vh;" data-theme="purple">
+<body class="theme-purple" style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner purple"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -649,7 +649,7 @@
             <p id="notesModalSub" style="font-size:11px;color:#64748b;margin-top:1px;"></p>
           </div>
         </div>
-        <button onclick="closeModal('notesModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+        <button onclick="closeModal('notesModal')" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;">
           <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
         </button>
       </div>
@@ -666,7 +666,7 @@
           <h3 id="dtModalTitle" style="font-size:17px;font-weight:800;color:#0f172a;">เพิ่มหัวข้องาน</h3>
           <p style="font-size:12px;color:#64748b;margin-top:2px;">กรอกรายละเอียดหัวข้องานที่ต้องการ</p>
         </div>
-        <button onclick="closeModal('docTypeModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+        <button onclick="closeModal('docTypeModal')" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;">
           <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
         </button>
       </div>
@@ -704,7 +704,7 @@
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ไอคอน (Lucide icon name)</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" id="dtIcon" placeholder="เช่น file-text, book-open, star" style="flex:1;" oninput="previewDtIcon()">
-            <div id="dtIconPreview" style="width:36px;height:36px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div id="dtIconPreview" style="width:36px;height:36px;background:#f8fafc;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i id="dtIconPreviewIcon" data-lucide="file" style="width:18px;height:18px;color:#7c3aed;"></i>
             </div>
           </div>
@@ -776,7 +776,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span id="reviewRoleBadge" style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;"></span>
-          <button onclick="closeModal('reviewModal')" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">
+          <button onclick="closeModal('reviewModal')" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;">
             <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
           </button>
         </div>
@@ -831,7 +831,7 @@
           </div>
           <canvas id="adminSigCanvas" class="admin-sig-canvas" width="420" height="90" style="height:90px;"></canvas>
           <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-            <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
+            <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
           </div>
         </div>
       </div>
@@ -1388,7 +1388,7 @@ function renderListView() {
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
               '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.staffName || t.displayName) + '</p>' +
-              (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
+              (t.position ? '<span style="font-size:10px;font-weight:700;background:#f8fafc;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
               (pendingCount   ? '<span class="review-badge waiting">📤 รอตรวจ ' + pendingCount + ' รายการ</span>' : '') +
               (headRevCount   ? '<span class="review-badge head-wait">👤 รอ ผช.ผอ. ' + headRevCount + ' รายการ</span>' : '') +
               (assistRevCount ? '<span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">🏅 รอรอง ผอ. ' + assistRevCount + '</span>' : '') +
@@ -2159,13 +2159,13 @@ function fillSingleFileInfo(sub) {
     } else if (curStatus === 'assistant_reviewed') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#92400e;padding:10px;background:#fef3c7;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ตรวจแล้ว — รอรอง ผอ.วิชาการตรวจ</p>';
     } else if (curStatus === 'submitted' || curStatus === 'revision') {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f8fafc;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
     } else if (curStatus === 'deputy_reviewed') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#6d28d9;padding:10px;background:#ede9fe;border-radius:10px;width:100%;text-align:center;font-weight:700;">✓ ผ่านรอง ผอ.แล้ว — รอผู้อำนวยการอนุมัติ</p>';
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f8fafc;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอหัวหน้ากลุ่มสาระตรวจก่อน</p>';
     }
 
   /* ── รองผู้อำนวยการฝ่ายวิชาการ ── */
@@ -2181,7 +2181,7 @@ function fillSingleFileInfo(sub) {
     } else if (curStatus === 'final_approved') {
       btnBox.innerHTML = '<p style="font-size:12px;color:#065f46;padding:10px;background:#d1fae5;border-radius:10px;width:100%;text-align:center;font-weight:700;">✅ ผู้อำนวยการอนุมัติแล้ว</p>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอ ผช.ผอ.วิชาการตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f8fafc;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอ ผช.ผอ.วิชาการตรวจก่อน</p>';
     }
 
   /* ── ผู้อำนวยการ ── */
@@ -2199,7 +2199,7 @@ function fillSingleFileInfo(sub) {
           '<i data-lucide="pencil" style="width:13px;height:13px;"></i> ยกเลิก / ให้แก้ไข' +
         '</button>';
     } else {
-      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f1f5f9;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอรอง ผอ.วิชาการตรวจก่อน</p>';
+      btnBox.innerHTML = '<p style="font-size:12px;color:#64748b;padding:10px;background:#f8fafc;border-radius:10px;width:100%;text-align:center;font-weight:700;">⏳ รอรอง ผอ.วิชาการตรวจก่อน</p>';
     }
 
   /* ── portfolio (ฝ่ายวิชาการ) — ดูได้อย่างเดียว ไม่มีสิทธิ์ตรวจ ── */
@@ -2838,7 +2838,7 @@ function renderGroupBarChart(groups) {
         '<p style="font-size:10px;color:#94a3b8;">' + d.teachers.length + ' คน</p>' +
       '</div>' +
       /* bar */
-      '<div style="flex:1;display:flex;height:' + barH + 'px;border-radius:8px;overflow:hidden;background:#f1f5f9;">' +
+      '<div style="flex:1;display:flex;height:' + barH + 'px;border-radius:8px;overflow:hidden;background:#f8fafc;">' +
         bars +
       '</div>' +
       /* pct */
@@ -2929,7 +2929,7 @@ function renderGroupDetail() {
     }).join('');
 
     var noneBar = counts.none > 0
-      ? '<div style="height:20px;width:' + Math.round((counts.none/d.teachers.length)*100) + '%;background:#f1f5f9;"></div>'
+      ? '<div style="height:20px;width:' + Math.round((counts.none/d.teachers.length)*100) + '%;background:#f8fafc;"></div>'
       : '';
 
     return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
@@ -2963,7 +2963,7 @@ function renderGroupDetail() {
       '<div style="flex:1;min-width:0;">' +
         '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t.staffName||t.email) + '</p>' +
         '<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">' +
-          '<div style="flex:1;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;">' +
+          '<div style="flex:1;height:4px;background:#f8fafc;border-radius:4px;overflow:hidden;">' +
             '<div style="width:' + pctT + '%;height:100%;background:' + barColor + ';border-radius:4px;"></div>' +
           '</div>' +
           '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:32px;text-align:right;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
@@ -3531,7 +3531,7 @@ function renderDocTypeRows(docs) {
     var deptKey = dt.department || 'academic';
     var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'#f1f5f9') + ';color:' + (DEPT_COLORS[deptKey]||'#64748b') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';
     var activeLabel = dt.active === false
-      ? '<span style="background:#f1f5f9;color:#94a3b8;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ซ่อน</span>'
+      ? '<span style="background:#f8fafc;color:#94a3b8;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ซ่อน</span>'
       : '<span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ใช้งาน</span>';
     return '<div class="dt-row" draggable="true" data-index="' + i + '" data-docid="' + esc(dt._id) + '" ' +
         'ondragstart="dtDragStart(event,' + i + ')" ondragover="dtDragOver(event)" ondrop="dtDrop(event,' + i + ',\'' + esc(dt._id) + '\')" ondragleave="dtDragLeave(event)" ondragend="dtDragEnd()">' +
@@ -3544,7 +3544,7 @@ function renderDocTypeRows(docs) {
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
           '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
-          (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
+          (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f8fafc;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
           deptBadge +
           activeLabel +
         '</div>' +
@@ -4054,7 +4054,7 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         <button onclick="window.print()" style="padding:8px 18px;background:#7c3aed;color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;">
           <i data-lucide="printer" style="width:13px;height:13px;"></i> พิมพ์
         </button>
-        <button onclick="closeAdminMemoModal()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
+        <button onclick="closeAdminMemoModal()" style="padding:7px;background:#f8fafc;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;">
           <i data-lucide="x" style="width:15px;height:15px;color:#64748b;"></i>
         </button>
       </div>

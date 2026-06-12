@@ -43,11 +43,11 @@
     .btn-approve:hover{background:#15803d;}
     .btn-reject{background:#dc2626;color:white;border:none;padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;}
     .btn-reject:hover{background:#b91c1c;}
-    .btn-delete{background:#f1f5f9;color:#64748b;border:none;padding:7px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;}
+    .btn-delete{background:#f8fafc;color:#64748b;border:none;padding:7px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;}
     .btn-delete:hover{background:#fee2e2;color:#b91c1c;}
     .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
     .btn-primary:hover{background:#6d28d9;}
-    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
+    .btn-secondary{background:#f8fafc;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
     .btn-secondary:hover{background:#e2e8f0;}
     
     
@@ -94,7 +94,7 @@
     .tbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
     .tbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .tbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .tbar-track{width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
+    .tbar-track{width:80px;background:#f8fafc;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
     .tbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
     .tbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
 
@@ -117,7 +117,7 @@
     .sum-room-body{padding:14px 18px;}
     .sum-bar-wrap{margin-bottom:8px;}
     .sum-bar-label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#334155;margin-bottom:3px;}
-    .sum-bar-track{background:#f1f5f9;border-radius:6px;height:10px;overflow:hidden;}
+    .sum-bar-track{background:#f8fafc;border-radius:6px;height:10px;overflow:hidden;}
     .sum-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
     .sum-booking-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
     .sum-booking-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border-radius:9px;font-size:11px;color:#475569;}
@@ -126,7 +126,7 @@
     .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
   </style>
 </head>
-<body class="theme-purple" style="background:#f8fafc;min-height:100vh;" data-theme="purple">
+<body class="theme-purple" style="background:#f8fafc;min-height:100vh;">
 
 <div id="loadingOverlay"><div class="spinner purple"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -355,7 +355,7 @@
   <div style="background:white;border-radius:20px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.3);">
     <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
       <span style="font-weight:800;color:#1e293b;font-size:14px;">📎 ไฟล์แนบ — ผังการจัดโต๊ะ</span>
-      <button onclick="closeFileView()" style="background:#f1f5f9;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
+      <button onclick="closeFileView()" style="background:#f8fafc;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
     </div>
     <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:#f8fafc;">
       <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
@@ -1027,7 +1027,7 @@
       var pct=Math.round((m.count/max)*100);
       return '<div class="tbar-row" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
         '<span style="font-size:10px;font-weight:700;color:#64748b;min-width:44px;flex-shrink:0;">'+m.label+'</span>'+
-        '<div style="flex:1;background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">'+
+        '<div style="flex:1;background:#f8fafc;border-radius:4px;height:8px;overflow:hidden;">'+
           '<div style="height:100%;border-radius:4px;width:'+pct+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .5s ease;"></div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:24px;text-align:right;">'+m.count+'</span>'+
