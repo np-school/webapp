@@ -8,12 +8,12 @@
 /* ── Loading Overlay ── */
 #loadingOverlay {
   display: flex; position: fixed; inset: 0;
-  background: rgba(255,255,255,.92); z-index: 9999;
+  background: rgba(255,255,255,.95); z-index: 9999;
   flex-direction: column; align-items: center; justify-content: center; gap: 14px;
 }
 .spinner {
   border: 3px solid #e2e8f0; border-top: 3px solid #1d4ed8;
-  border-radius: 50%; width: 48px; height: 48px;
+  border-radius: 50%; width: 46px; height: 46px;
   animation: spin .8s linear infinite;
 }
 .spinner.purple { border-top-color: #7c3aed; }
@@ -96,14 +96,22 @@
   padding: 16px; backdrop-filter: blur(4px);
 }
 .modal-bg.open { display: flex; }
+/* base: shared structure — each page overrides max-width only */
 .modal-box {
   background: white; border-radius: 20px; width: 100%;
-  max-width: 480px; padding: 26px;
+  max-width: 520px; max-height: 92vh; overflow-y: auto;
   box-shadow: 0 25px 60px rgba(0,0,0,.2);
 }
+/* size modifiers */
+.modal-box.sm  { max-width: 420px; }
+.modal-box.md  { max-width: 520px; }
+.modal-box.lg  { max-width: 620px; }
+.modal-box.wide { max-width: 760px; }
+.modal-box.pad { padding: 26px; }
 
 /* ── Form Inputs ── */
-input[type=text], input[type=number], input[type=date], select, textarea {
+input[type=text], input[type=number], input[type=date],
+input[type=url], select, textarea {
   border: 1.5px solid #e2e8f0; padding: 10px 14px; border-radius: 10px;
   outline: none; font-size: 14px; width: 100%; color: #1e293b;
   transition: border-color .15s; font-family: 'Sarabun', sans-serif;
@@ -111,6 +119,16 @@ input[type=text], input[type=number], input[type=date], select, textarea {
 input:focus, select:focus, textarea:focus {
   border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.1);
 }
+/* purple-theme pages override focus color */
+.theme-purple input:focus,
+.theme-purple select:focus,
+.theme-purple textarea:focus {
+  border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+}
+/* form helpers */
+.form-label  { font-size: 13px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px; }
+.form-group  { margin-bottom: 18px; }
+.form-hint   { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 
 /* ── Badges ── */
 .badge-g { background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; }

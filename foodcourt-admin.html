@@ -21,8 +21,7 @@
 <script src="shared/common.js"></script>
 <link href="shared/styles.css" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Sarabun',sans-serif}
-:root{
+    :root{
   --blue:#1d4ed8;--blue-lt:#eff6ff;--blue-mid:#bfdbfe;
   --green:#16a34a;--green-lt:#f0fdf4;--green-mid:#86efac;
   --red:#dc2626;--red-lt:#fff1f2;--red-mid:#fecaca;
@@ -53,7 +52,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 .sub-panel.active{display:block}
 
 /* ── CARD ── */
-.card{background:white;border-radius:16px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04);padding:20px}
+
 .card-title{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
 
 /* ── KPI GRID ── */
@@ -102,7 +101,7 @@ body{background:#f1f5f9;color:var(--text);min-height:100vh}
 /* ── SHOP COUNT INPUT ── */
 .shop-count-wrap{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 .shop-count-input{width:52px;padding:4px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;text-align:center;font-family:'Sarabun',sans-serif;color:var(--text);outline:none}
-.shop-count-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(29,78,216,.1)}
+.shop-count-
 .shop-count-preview{font-size:11px;color:var(--text2);white-space:nowrap}
 
 /* ── DAILY TABLE ── */
@@ -142,12 +141,6 @@ tr:hover td{background:#fafbfd}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}}
 .form-group{display:flex;flex-direction:column;gap:5px}
 label{font-size:12px;font-weight:700;color:var(--text2)}
-input[type=text],input[type=number],input[type=date],input[type=month],select,textarea{
-  border:1.5px solid var(--border);padding:9px 12px;border-radius:10px;
-  font-size:14px;color:var(--text);font-family:'Sarabun',sans-serif;
-  outline:none;transition:border-color .15s;width:100%
-}
-input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
 
 /* ── TYPE TOGGLE ── */
 .type-toggle{display:flex;border-radius:10px;overflow:hidden;border:1.5px solid var(--border)}
@@ -166,9 +159,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .btn-xs{padding:3px 9px;font-size:11px}
 
 /* ── MODAL ── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:900;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
-.modal-bg.open{display:flex}
-.modal-box{background:white;border-radius:20px;width:100%;max-width:520px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
+
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .modal-title{font-size:16px;font-weight:800}
 
@@ -200,8 +191,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .rec-manage-item:last-child{border-bottom:none}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:10px;color:white;font-weight:700;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;animation:tIn .3s ease}
-.toast.hide{animation:tOut .3s ease forwards}
+
 @keyframes tIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes tOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
 
@@ -230,11 +220,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .manage-rec-card.income-type{border-left:4px solid var(--green)}
 .manage-rec-card.expense-type{border-left:4px solid var(--red)}
 .manage-rec-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.07)}
-</style>
+  </style>
 </head>
-<body style="background:#f1f5f9;min-height:100vh;">
+<body style="background:#f1f5f9;min-height:100vh;" data-theme="purple">
 
-<div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="loadingOverlay"><div class="spinner purple"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Access Denied -->
@@ -540,7 +530,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 
 <!-- ═══ MODAL: เพิ่มรายการ (daily-entry style) ═══ -->
 <div class="modal-bg" id="addModal">
-  <div class="modal-box" style="max-width:600px;max-height:92vh;overflow-y:auto">
+  <div class="modal-box md pad" style="max-width:600px;max-height:92vh;overflow-y:auto">
     <div class="modal-header" style="position:sticky;top:0;background:white;z-index:10;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px">
       <div class="modal-title">เพิ่มรายการ</div>
       <button class="btn btn-ghost btn-sm" onclick="closeAddModal()">✕</button>
@@ -587,7 +577,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 
 <!-- ═══ MODAL: บันทึกรายการประจำ (ร้าน*50) ═══ -->
 <div class="modal-bg" id="shopCountModal">
-  <div class="modal-box" style="max-width:420px">
+  <div class="modal-box md pad" style="max-width:420px">
     <div class="modal-header">
       <div class="modal-title">นำเข้ารายได้โรงเรียน</div>
       <button class="btn btn-ghost btn-sm" onclick="closeShopCountModal()">✕</button>
@@ -620,7 +610,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 
 <!-- ═══ MODAL: Quick Log รายการประจำ ═══ -->
 <div class="modal-bg" id="quickLogModal">
-  <div class="modal-box" style="max-width:420px">
+  <div class="modal-box md pad" style="max-width:420px">
     <div class="modal-header">
       <div>
         <div class="modal-title" id="quickLogTitle">บันทึกรายการ</div>

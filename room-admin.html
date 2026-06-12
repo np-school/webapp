@@ -21,15 +21,12 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
-    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-    .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
+    }
     /* Sidebar */
     
     }
     /* Cards / UI */
-    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    
     .tab-btn{padding:12px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
     .tab-btn.active{color:#7c3aed;border-bottom-color:#7c3aed;}
     .tab-pane{display:none;}
@@ -52,15 +49,15 @@
     .btn-primary:hover{background:#6d28d9;}
     .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
     .btn-secondary:hover{background:#e2e8f0;}
-    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
-    .modal-bg.open{display:flex;}
-    .modal-box{background:white;border-radius:20px;width:100%;max-width:480px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);}
-    input[type=text],textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
-    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
-    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
-    .toast.hide{animation:toastOut .3s ease forwards;}
-    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
-    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
+    
+    
+    
+    
+    
+    
+    
+    to{transform:translateX(0);opacity:1;}}
+    to{transform:translateX(400px);opacity:0;}}
     .filter-pill{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
     .filter-pill.active{background:#7c3aed;border-color:#7c3aed;color:white;}
     .list-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:12px;transition:all .15s;gap:12px;}
@@ -129,9 +126,9 @@
     .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
   </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body class="theme-purple" style="background:#f8fafc;min-height:100vh;" data-theme="purple">
 
-<div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="loadingOverlay"><div class="spinner purple"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Access Denied -->
@@ -299,7 +296,7 @@
 
 <!-- Modal: Approve -->
 <div id="approveModal" class="modal-bg">
-  <div class="modal-box">
+  <div class="modal-box sm pad">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
       <div style="width:40px;height:40px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:18px;height:18px;color:#16a34a;"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="approveModalSub"></p></div>
@@ -311,7 +308,7 @@
 
 <!-- Modal: Reject -->
 <div id="rejectModal" class="modal-bg">
-  <div class="modal-box">
+  <div class="modal-box sm pad">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:18px;height:18px;color:#dc2626;"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ไม่อนุมัติคำขอ</h3><p style="font-size:12px;color:#64748b;" id="rejectModalSub"></p></div>
@@ -323,7 +320,7 @@
 
 <!-- Modal: Delete -->
 <div id="deleteModal" class="modal-bg">
-  <div class="modal-box">
+  <div class="modal-box sm pad">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:#1e293b;">ลบคำขอ</h3><p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p></div>
@@ -335,7 +332,7 @@
 
 <!-- Modal: Room -->
 <div id="roomModal" class="modal-bg">
-  <div class="modal-box" style="max-width:520px;">
+  <div class="modal-box sm pad" style="max-width:520px;">
     <h3 style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:18px;" id="roomModalTitle">เพิ่มห้องใหม่</h3>
     <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อห้อง/สถานที่ <span style="color:#dc2626;">*</span></label><input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2"></div>
     <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ความจุ (คน)</label><input type="text" id="roomCapacity" placeholder="เช่น 50"></div>
