@@ -154,27 +154,35 @@ function _toggleAdminItem(id, show) {
 
 /* ════════════════════════════════
    Navbar Builder
-   buildNavbar(subtitle, isPurple)
+   buildNavbar(subtitle, theme)
+   theme: 'blue' (ผู้ใช้ทั่วไป, default) | 'dark' (เจ้าหน้าที่) | 'purple' (legacy)
+   backward compat: buildNavbar(subtitle, true) → 'purple'
    ════════════════════════════════ */
-function buildNavbar(subtitle, isPurple) {
+function buildNavbar(subtitle, theme) {
   var nav = document.getElementById('navbar');
   if (!nav) return;
-  nav.className = 'navbar' + (isPurple ? ' purple' : '');
+
+  /* backward-compat: isPurple=true → 'purple' */
+  if (theme === true)  theme = 'purple';
+  if (!theme)          theme = 'blue';
+
+  nav.className = 'navbar ' + theme;
+
   nav.innerHTML =
     '<div class="navbar-inner">' +
       '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<button id="hamburgerBtn" onclick="openSidebar()" style="padding:8px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
+        '<button id="hamburgerBtn" onclick="openSidebar()" class="navbar-hamburger">' +
           '<i data-lucide="menu" style="width:20px;height:20px;"></i>' +
         '</button>' +
         '<a href="https://2022.nongki.ac.th/" target="_blank" rel="noopener" style="display:flex;align-items:center;flex-shrink:0;">' +
-          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="โรงเรียนหนองกี่พิทยาคม" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="โรงเรียนหนองกี่พิทยาคม" class="navbar-logo">' +
         '</a>' +
         '<a href="index.html" style="display:flex;align-items:center;flex-shrink:0;">' +
-          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" class="navbar-logo">' +
         '</a>' +
-        '<div style="border-left:1px solid rgba(255,255,255,.25);padding-left:12px;">' +
-          '<div style="font-size:15px;font-weight:800;color:white;line-height:1.2;">โรงเรียนหนองกี่พิทยาคม</div>' +
-          '<div style="font-size:11px;color:' + (isPurple ? '#ddd6fe' : '#bfdbfe') + ';">' + subtitle + '</div>' +
+        '<div class="navbar-divider">' +
+          '<div class="navbar-title">โรงเรียนหนองกี่พิทยาคม</div>' +
+          '<div class="navbar-subtitle">' + subtitle + '</div>' +
         '</div>' +
       '</div>' +
       '<div id="userNavSection"></div>' +
@@ -191,8 +199,8 @@ function updateNavUser(user) {
   var ph = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'U') + '&background=1d4ed8&color=fff';
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;">' +
-      '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);">' +
-      '<button onclick="handleLogout()" style="padding:7px;background:rgba(255,255,255,.15);border:none;border-radius:8px;cursor:pointer;color:white;display:flex;">' +
+      '<img src="' + ph + '" class="navbar-user-avatar">' +
+      '<button onclick="handleLogout()" class="navbar-logout-btn">' +
         '<i data-lucide="log-out" style="width:18px;height:18px;"></i>' +
       '</button>' +
     '</div>';
@@ -203,7 +211,7 @@ function resetNavUI() {
   var el = document.getElementById('userNavSection');
   if (!el) return;
   el.innerHTML =
-    '<button onclick="handleLogin()" style="padding:9px 18px;background:white;color:#1d4ed8;font-weight:700;border-radius:10px;border:none;cursor:pointer;font-size:13px;">เข้าสู่ระบบด้วย Google</button>';
+    '<button onclick="handleLogin()" class="navbar-login-btn">เข้าสู่ระบบด้วย Google</button>';
   lucide.createIcons();
 }
 

@@ -50,6 +50,17 @@
   --purple-mid:  #c4b5fd;
   --purple-ring: rgba(124,58,237,.1);
 
+  /* ── Navbar Themes ── */
+  --navbar-bg:            #1d4ed8;          /* blue  — ผู้ใช้ทั่วไป */
+  --navbar-shadow:        rgba(0,0,0,.12);
+  --navbar-btn-bg:        rgba(255,255,255,.15);
+  --navbar-logo-border:   rgba(255,255,255,.30);
+  --navbar-divider:       rgba(255,255,255,.25);
+  --navbar-title-color:   #ffffff;
+  --navbar-sub-color:     #bfdbfe;          /* blue subtitle */
+  --navbar-login-bg:      #ffffff;
+  --navbar-login-color:   #1d4ed8;
+
   /* Status */
   --green:       #16a34a;
   --green-light: #f0fdf4;
@@ -161,13 +172,91 @@ body {
   position: sticky;
   top: 0;
   z-index: 150;
-  background: var(--blue);
+  background: var(--navbar-bg);
   padding: 12px 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  box-shadow: 0 4px 12px var(--navbar-shadow);
 }
+
+/* ── Navbar: Blue (ผู้ใช้ทั่วไป) — default ── */
+.navbar.blue {
+  --navbar-bg:          #1d4ed8;
+  --navbar-shadow:      rgba(29,78,216,.25);
+  --navbar-sub-color:   #bfdbfe;
+  --navbar-login-color: #1d4ed8;
+}
+
+/* ── Navbar: Dark (เจ้าหน้าที่/Admin) ── */
+.navbar.dark {
+  --navbar-bg:          #0f172a;
+  --navbar-shadow:      rgba(0,0,0,.35);
+  --navbar-btn-bg:      rgba(255,255,255,.10);
+  --navbar-logo-border: rgba(255,255,255,.20);
+  --navbar-divider:     rgba(255,255,255,.15);
+  --navbar-sub-color:   #94a3b8;
+  --navbar-login-bg:    #1e293b;
+  --navbar-login-color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+}
+
+/* ── (legacy) Purple theme — ยังรองรับ backward compat ── */
 .navbar.purple {
   background: var(--purple);
   box-shadow: 0 4px 16px rgba(124,58,237,.3);
+}
+
+/* ── Navbar sub-elements (ใช้ CSS vars แทน hardcode) ── */
+.navbar-hamburger {
+  padding: 8px;
+  background: var(--navbar-btn-bg);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--navbar-title-color);
+  display: flex;
+}
+.navbar-logo {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--navbar-logo-border);
+}
+.navbar-divider {
+  border-left: 1px solid var(--navbar-divider);
+  padding-left: 12px;
+}
+.navbar-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navbar-title-color);
+  line-height: 1.2;
+}
+.navbar-subtitle {
+  font-size: 11px;
+  color: var(--navbar-sub-color);
+}
+.navbar-user-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--navbar-logo-border);
+}
+.navbar-logout-btn {
+  padding: 7px;
+  background: var(--navbar-btn-bg);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--navbar-title-color);
+  display: flex;
+}
+.navbar-login-btn {
+  padding: 9px 18px;
+  background: var(--navbar-login-bg);
+  color: var(--navbar-login-color);
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
 }
 .navbar-inner {
   max-width: 1280px;
