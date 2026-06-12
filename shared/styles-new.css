@@ -44,11 +44,12 @@
   --blue-mid:    #bfdbfe;
   --blue-ring:   rgba(29,78,216,.1);
 
-  --purple:      #0f172a;
-  --purple-dark: #020617;
-  --purple-light:#f1f5f9;
-  --purple-mid:  #94a3b8;
-  --purple-ring: rgba(15,23,42,.1);
+  --purple:      #0d1b2a;   /* Ink Black */
+  --purple-dark: #1b263b;   /* Prussian Blue */
+  --purple-light:#e0e1dd;   /* Alabaster Grey */
+  --purple-mid:  #415a77;   /* Dusk Blue */
+  --purple-accent:#778da9;  /* Lavender Grey */
+  --purple-ring: rgba(13,27,42,.1);
 
   /* ── Navbar Themes ── */
   --navbar-bg:            #1d4ed8;          /* blue  — ผู้ใช้ทั่วไป */
@@ -187,14 +188,14 @@ body {
 
 /* ── Navbar: Dark (เจ้าหน้าที่/Admin) ── */
 .navbar.dark {
-  --navbar-bg:          #0f172a;
+  --navbar-bg:          #0d1b2a;
   --navbar-shadow:      rgba(0,0,0,.35);
   --navbar-btn-bg:      rgba(255,255,255,.10);
   --navbar-logo-border: rgba(255,255,255,.20);
   --navbar-divider:     rgba(255,255,255,.15);
-  --navbar-sub-color:   #94a3b8;
-  --navbar-login-bg:    #1e293b;
-  --navbar-login-color: #e2e8f0;
+  --navbar-sub-color:   #778da9;
+  --navbar-login-bg:    #1b263b;
+  --navbar-login-color: #e0e1dd;
   box-shadow: 0 4px 16px rgba(0,0,0,.35);
 }
 
@@ -319,13 +320,13 @@ body {
   box-shadow: 0 8px 15px -3px rgba(30,64,175,.25);
 }
 
-/* Admin variant — ใช้โทนเดียวกับ navbar.dark (#0f172a) */
-.sidebar-btn.admin-btn { color: #475569; }
-.sidebar-btn.admin-btn:hover { background: #f1f5f9; }
+/* Admin variant — ใช้โทนเดียวกับ navbar.dark (#0d1b2a) */
+.sidebar-btn.admin-btn { color: #415a77; }
+.sidebar-btn.admin-btn:hover { background: #e0e1dd; }
 .sidebar-btn.admin-btn.active {
-  background: #0f172a;
+  background: #0d1b2a;
   color: white;
-  box-shadow: 0 8px 15px -3px rgba(15,23,42,.35);
+  box-shadow: 0 8px 15px -3px rgba(13,27,42,.35);
 }
 
 /* Section label */
@@ -1194,8 +1195,8 @@ tr:hover td { background: #fafbfd; }
   transition: all .2s;
   position: relative;
 }
-.admin-card:hover    { border-color: #94a3b8; box-shadow: 0 4px 12px rgba(15,23,42,.08); }
-.admin-card.superadmin { border-color: #94a3b8; background: linear-gradient(135deg,#f8fafc,#e2e8f0); }
+.admin-card:hover    { border-color: #778da9; box-shadow: 0 4px 12px rgba(13,27,42,.08); }
+.admin-card.superadmin { border-color: #778da9; background: linear-gradient(135deg,#e0e1dd,#778da9); }
 
 /* Permission badge */
 .perm-badge {
@@ -1229,7 +1230,7 @@ tr:hover td { background: #fafbfd; }
   transition: border-color .15s;
 }
 .perm-row:hover,
-.perm-row.active  { border-color: #94a3b8; background: var(--bg-alt); }
+.perm-row.active  { border-color: #778da9; background: var(--bg-alt); }
 .perm-row.disabled { opacity: .5; cursor: not-allowed; }
 
 /* Staff picker */
@@ -1247,13 +1248,13 @@ tr:hover td { background: #fafbfd; }
   transition: border-color .15s;
   font-family: 'Sarabun', sans-serif;
 }
-.staff-picker-input:focus { border-color: #475569; box-shadow: 0 0 0 3px rgba(15,23,42,.1); }
+.staff-picker-input:focus { border-color: #415a77; box-shadow: 0 0 0 3px rgba(13,27,42,.1); }
 .staff-picker-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0; right: 0;
   background: var(--white);
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #778da9;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,.12);
   z-index: 200;
@@ -1267,7 +1268,7 @@ tr:hover td { background: #fafbfd; }
 .staff-picker-search input:focus { border-color: var(--purple); }
 .staff-picker-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background .12s; }
 .staff-picker-item:hover    { background: var(--bg-alt); }
-.staff-picker-item.selected { background: #e2e8f0; }
+.staff-picker-item.selected { background: #e0e1dd; }
 .staff-picker-empty,
 .staff-picker-loading { padding: 16px; text-align: center; font-size: 12px; color: var(--text3); }
 
