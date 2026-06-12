@@ -34,6 +34,33 @@
   --border:     #e2e8f0;
   --text:       #1e293b;
   --text2:      #64748b;
+
+  /* ── Accent (per-page theme) ──
+     ดีฟอลต์ = blue. แต่ละหน้า override ได้ผ่าน class บน <body>
+     เช่น <body class="theme-purple"> → ใช้ --accent ม่วงทั้งหน้า
+     ห้าม hardcode #7c3aed/#16a34a ฯลฯ ใน component ใหม่ ให้ใช้ var(--accent) แทน */
+  --accent:     var(--blue);
+  --accent-lt:  var(--blue-lt);
+  --accent-mid: var(--blue-mid);
+}
+
+/* ── Theme overrides ──
+   ใช้กับ <body class="theme-xxx">
+   เพิ่มธีมใหม่ได้ที่นี่ที่เดียว ไม่ต้องไปแก้ component ใดๆ */
+body.theme-purple {
+  --accent:     #7c3aed;
+  --accent-lt:  #f5f3ff;
+  --accent-mid: #c4b5fd;
+}
+body.theme-green {
+  --accent:     var(--green);
+  --accent-lt:  var(--green-lt);
+  --accent-mid: var(--green-mid);
+}
+body.theme-amber {
+  --accent:     var(--amber);
+  --accent-lt:  var(--amber-lt);
+  --accent-mid: var(--amber-mid);
 }
 
 /* ── Loading Overlay ── */
@@ -157,7 +184,7 @@ input:focus, select:focus, textarea:focus {
 .theme-purple input:focus,
 .theme-purple select:focus,
 .theme-purple textarea:focus {
-  border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.1);
 }
 /* form helpers */
 .form-label  { font-size: 13px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 6px; }
@@ -483,7 +510,7 @@ input:focus, select:focus, textarea:focus {
 .sub-tab:hover:not(.active) { background: rgba(255,255,255,.6); color: var(--text); }
 /* active color — blue (default) or purple via page modifier */
 .sub-tab.active             { background: white; color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-.theme-purple .sub-tab.active { color: #7c3aed; }
+.theme-purple .sub-tab.active { color: var(--accent); }
 
 /* ── Filter pills ── */
 .filter-pill {
@@ -496,7 +523,7 @@ input:focus, select:focus, textarea:focus {
 /* blue theme (default: room-admin, staff) */
 .filter-pill.active         { background: var(--blue); border-color: var(--blue); color: white; }
 /* purple theme override */
-.theme-purple .filter-pill.active { background: #7c3aed; border-color: #7c3aed; }
+.theme-purple .filter-pill.active { background: var(--accent); border-color: var(--accent); }
 
 /* ── Modal header / title ── */
 .modal-header {
@@ -533,7 +560,7 @@ input:focus, select:focus, textarea:focus {
 .hbar-label { display: flex; justify-content: space-between; align-items: center; }
 .hbar-name  { font-size: 11px; font-weight: 700; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
 .hbar-pct   { font-size: 11px; font-weight: 800; color: var(--blue); }
-.theme-purple .hbar-pct { color: #7c3aed; }
+.theme-purple .hbar-pct { color: var(--accent); }
 .hbar-track { background: #f1f5f9; border-radius: 6px; height: 8px; overflow: hidden; }
 /* hbar-fill: ไม่ hardcode สี — ปล่อยให้ inline style กำหนด background */
 .hbar-fill  { height: 100%; border-radius: 6px; transition: width .5s ease; }
