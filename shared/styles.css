@@ -220,6 +220,9 @@ input:focus, select:focus, textarea:focus {
   text-align: center; cursor: pointer; transition: all .2s; background: #f8faff;
 }
 .upload-area:hover { border-color: #1d4ed8; background: #eff6ff; }
+.upload-area.dragging { border-color: var(--accent); background: var(--accent-lt); transform: scale(1.01); }
+.theme-purple .upload-area { border-color: var(--accent-mid); background: var(--accent-lt); }
+.theme-purple .upload-area:hover { border-color: var(--accent); background: #f5f3ff; }
 .upload-area.has-file { border-color: #22c55e; background: #f0fdf4; border-style: solid; }
 
 /* ── File View Modal ── */
@@ -366,6 +369,8 @@ input:focus, select:focus, textarea:focus {
   transition: all .2s;
 }
 .btn-primary:hover { background: #1e40af; transform: translateY(-1px); }
+.theme-purple .btn-primary:not(.blue):not(.green) { background: var(--accent); box-shadow: 0 6px 18px rgba(124,58,237,.3); }
+.theme-purple .btn-primary:not(.blue):not(.green):hover { background: #6d28d9; }
 .btn-primary.purple { background: #7c3aed; box-shadow: 0 6px 18px rgba(124,58,237,.3); }
 .btn-primary.purple:hover { background: #6d28d9; }
 
@@ -384,6 +389,43 @@ input:focus, select:focus, textarea:focus {
   border-radius: 10px; cursor: pointer; transition: all .2s;
 }
 .btn-delete:hover { background: #fecaca; }
+
+.btn-danger {
+  background: #dc2626; color: white; border: none;
+  padding: 7px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: background .15s;
+}
+.btn-danger:hover { background: #b91c1c; }
+
+
+/* ── Common tabs / pills ── */
+.tab-btn,
+.view-tab {
+  padding: 9px 18px; border: none; background: none;
+  font-weight: 700; font-size: 13px; color: #64748b;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all .15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Sarabun', sans-serif;
+}
+.tab-btn.active,
+.view-tab.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+
+/* ── Status badges ── */
+.badge-pending  { background: #fef9c3; color: #b45309; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-approved { background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-rejected { background: #fee2e2; color: #b91c1c; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+
+/* ── Access denied shell ── */
+.access-denied {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+}
 
 /* ── Page header row ── */
 .page-header {

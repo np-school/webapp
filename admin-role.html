@@ -21,16 +21,9 @@
   <script src="shared/common.js"></script>
   <style>
     /* ── Loading ── */
-    
-    
-    }
-
     /* ── Cards ── */
-    
 
     /* ── View tabs ── */
-    .view-tab{padding:9px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
-    .view-tab.active{color:#7c3aed;border-bottom-color:#7c3aed;}
 
     /* ── Admin card ── */
     .admin-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;transition:all .2s;position:relative;}
@@ -44,22 +37,12 @@
     .group-header{border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:13px;}
 
     /* ── Buttons ── */
-    .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
-    .btn-primary:hover{background:#6d28d9;}
-    .btn-secondary{background:#f8fafc;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
-    .btn-secondary:hover{background:#e2e8f0;}
-    
-    .btn-icon:hover{background:#e2e8f0;}
-    .btn-icon.danger:hover{background:#fee2e2;color:#b91c1c;}
 
     /* ── Modal ── */
-    
-    
+
     
 
     /* ── Inputs ── */
-    
-    
 
     /* ── Perm row ── */
     .perm-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;user-select:none;transition:border-color .15s;}
@@ -68,10 +51,6 @@
     .perm-row.disabled{opacity:.5;cursor:not-allowed;}
 
     /* ── Toast ── */
-    
-    
-    to{transform:translateX(0);opacity:1;}}
-    to{transform:translateX(400px);opacity:0;}}
 
     /* ── Search ── */
     .search-box{border:1.5px solid #e2e8f0;padding:9px 14px;border-radius:10px;outline:none;font-size:13px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
@@ -80,12 +59,10 @@
     /* ── Staff Picker ── */
     .staff-picker-wrap{position:relative;}
     .staff-picker-input{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;cursor:pointer;background:white;transition:border-color .15s;}
-    .staff-picker-
     .staff-picker-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #c4b5fd;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;max-height:220px;overflow-y:auto;display:none;}
     .staff-picker-dropdown.open{display:block;}
     .staff-picker-search{padding:10px 12px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:white;}
     .staff-picker-search input{border:1.5px solid #e2e8f0;padding:7px 12px;border-radius:8px;font-size:13px;width:100%;font-family:'Sarabun',sans-serif;outline:none;}
-    .staff-picker-search 
     .staff-picker-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .12s;}
     .staff-picker-item:hover{background:#faf5ff;}
     .staff-picker-item.selected{background:#ede9fe;}
@@ -97,7 +74,6 @@
     #headOfGroupPanel.show{display:block;}
 
     /* ── Empty state ── */
-    .empty-state{text-align:center;padding:52px 20px;color:#94a3b8;}
 
     /* ── Group view grid ── */
     .group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;}
@@ -119,7 +95,7 @@
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Access Denied -->
-<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+<div id="accessDenied" class="access-denied">
   <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
     <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
