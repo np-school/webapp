@@ -49,6 +49,141 @@
 <!-- App shell — buildPage() injects .app-shell here -->
 <div id="myApp" style="display:none;"></div>
 
+<!-- ─── Page Content (inject เข้า contentEl ใน onAuth) ─────────────────── -->
+<template id="roomRequestContent">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title-row">
+        <div class="page-icon blue">
+          <i data-lucide="calendar" style="width:20px;height:20px;color:white;"></i>
+        </div>
+        <h1 class="page-title">ระบบขอใช้ห้อง/สถานที่</h1>
+      </div>
+      <p class="page-sub">ตรวจสอบตารางการจองและยื่นคำขอใช้สถานที่ภายในโรงเรียน</p>
+    </div>
+    <button onclick="toggleModal()" class="btn-primary" style="padding:11px 22px;font-size:14px;font-weight:800;box-shadow:0 6px 18px rgba(29,78,216,.35);">
+      <i data-lucide="plus-circle" style="width:18px;height:18px;"></i> จองห้อง / สถานที่
+    </button>
+  </div>
+
+  <!-- Room banner -->
+  <div class="card" id="roomBanner" style="padding:0;overflow:hidden;margin-bottom:4px;"></div>
+
+  <!-- Room tabs -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>
+    <div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="room-tab active" onclick="selectRoomFilter('all',this)">ทุกห้อง</button>
+    </div>
+  </div>
+
+  <!-- Calendar + Day detail -->
+  <div class="cal-content-grid">
+
+    <!-- Left column -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <!-- Calendar card -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:13px 15px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">
+          <span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="calendar" style="width:15px;height:15px;"></i> ปฏิทิน</span>
+          <div style="display:flex;gap:2px;">
+            <button onclick="changeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>
+            <button onclick="changeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>
+          </div>
+        </div>
+        <div class="cal-card-body">
+          <div style="margin-bottom:9px;font-weight:700;font-size:13px;color:#334155;text-align:center;" id="currentMonthLabel"></div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;text-align:center;">
+            <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;" id="calendarDaysGrid"></div>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid var(--border-soft);padding-top:10px;">
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block;"></span>วันนี้</span>
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#eab308;display:inline-block;"></span>มีจอง</span>
+            <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--red-mid);border:1px solid var(--red-mid);display:inline-block;"></span>จองเต็ม</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today summary -->
+      <div class="card">
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">สรุปวันนี้</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+          <div style="width:36px;height:36px;background:#dcfce7;color:#16a34a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check" style="width:18px;height:18px;"></i></div>
+          <div><div style="font-size:10px;color:#64748b;">อนุมัติ</div><div style="font-size:18px;font-weight:800;" id="approvedToday">0</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;background:#fef9c3;color:#d97706;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
+          <div><div style="font-size:10px;color:#64748b;">รอตรวจ</div><div style="font-size:18px;font-weight:800;" id="pendingToday">0</div></div>
+        </div>
+      </div>
+
+      <!-- Monthly room stats -->
+      <div class="card">
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:13px;height:13px;color:var(--blue);"></i> สถิติการจองรายเดือน</div>
+        <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:10px;" id="statsMonthLabel"></div>
+        <div id="roomStatsWrap" style="display:flex;flex-direction:column;gap:9px;"></div>
+      </div>
+
+    </div>
+
+    <!-- Right column — Day detail -->
+    <div class="card" style="padding:0;display:flex;flex-direction:column;min-height:280px;">
+      <div style="padding:13px 15px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="info" style="width:15px;height:15px;"></i> รายละเอียดการจองในวันที่เลือก</span>
+        <span id="selectedDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
+      </div>
+      <div id="todayBookingsList" style="flex:1;padding:20px;overflow-y:auto;max-height:520px;"><div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div></div>
+    </div>
+
+  </div><!-- /cal-content-grid -->
+
+  <!-- History table -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:13px 15px;border-bottom:1px solid var(--border-soft);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="layout-list" style="width:15px;height:15px;"></i> ประวัติการขอใช้บริการทั้งหมด</span>
+        <button onclick="toggleModal()" class="btn-primary btn-sm"><i data-lucide="plus" style="width:12px;height:12px;"></i> จองใหม่</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div style="position:relative;flex:1;min-width:160px;">
+          <i data-lucide="search" style="width:13px;height:13px;position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;"></i>
+          <input type="text" id="historySearch" placeholder="ค้นหาห้อง, ชื่อ, วัตถุประสงค์..." onkeyup="filterHistoryTable()" style="padding:8px 10px 8px 30px;font-size:12px;">
+        </div>
+        <select id="historyStatusFilter" onchange="filterHistoryTable()" style="padding:8px 10px;font-size:12px;color:#475569;width:auto;">
+          <option value="">สถานะทั้งหมด</option>
+          <option value="pending">⏳ รอตรวจ</option>
+          <option value="approved">✅ อนุมัติ</option>
+          <option value="rejected">❌ ไม่อนุมัติ</option>
+        </select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead style="background:var(--blue);color:white;">
+          <tr>
+            <th style="padding:11px 14px;width:44px;text-align:center;border-right:1px solid rgba(255,255,255,.15);">ที่</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">วันที่</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">สถานที่</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">เวลา</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">ผู้จอง</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">ประเภท</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">วัตถุประสงค์</th>
+            <th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">สถานะ</th>
+            <th style="padding:11px 14px;text-align:center;border-right:1px solid rgba(255,255,255,.15);">ไฟล์แนบ</th>
+            <th style="padding:11px 14px;text-align:center;">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="mainBookingTableBody"><tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:40px;">กำลังเชื่อมต่อข้อมูล...</td></tr></tbody>
+      </table>
+    </div>
+    <div id="bookingPagination"></div>
+  </div>
+
+</template><!-- #roomRequestContent -->
+
 <!-- ══════════ Booking Modal ══════════ -->
 <div id="bookingModal" class="modal-bg">
   <div class="modal-box wide" style="padding:0;display:flex;flex-direction:column;max-height:94vh;">
@@ -197,7 +332,10 @@ buildPage({
     updateSidebarProfile(user);
     checkAdminAccess(user.email);
 
-    contentEl.innerHTML = renderPage();
+    /* inject page content จาก <template> */
+    var tpl = document.getElementById('roomRequestContent');
+    if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
     lucide.createIcons();
     renderCalendar();      /* แสดงเลขวันทันที ก่อนข้อมูลมา */
     renderRoomStats();
@@ -215,141 +353,6 @@ var selectedFile = null, selectedFileDataURL = null, selectedFileBlob = null;
 var activeRoomFilter = 'all';
 var bookingPage = 0;
 var PAGE_SIZE = 20;
-
-/* ══ Render page skeleton ══ */
-function renderPage() {
-  return (
-    '<div class="page-header">' +
-      '<div>' +
-        '<div class="page-title-row">' +
-          '<div class="page-icon blue">' +
-            '<i data-lucide="calendar" style="width:20px;height:20px;color:white;"></i>' +
-          '</div>' +
-          '<h1 class="page-title">ระบบขอใช้ห้อง/สถานที่</h1>' +
-        '</div>' +
-        '<p class="page-sub">ตรวจสอบตารางการจองและยื่นคำขอใช้สถานที่ภายในโรงเรียน</p>' +
-      '</div>' +
-      '<button onclick="toggleModal()" class="btn-primary" style="padding:11px 22px;font-size:14px;font-weight:800;box-shadow:0 6px 18px rgba(29,78,216,.35);">' +
-        '<i data-lucide="plus-circle" style="width:18px;height:18px;"></i> จองห้อง / สถานที่' +
-      '</button>' +
-    '</div>' +
-
-    /* Room banner */
-    '<div class="card" id="roomBanner" style="padding:0;overflow:hidden;margin-bottom:4px;"></div>' +
-
-    /* Room tabs */
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-      '<span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;">ห้อง:</span>' +
-      '<div id="roomTabsWrap" style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        '<button class="room-tab active" onclick="selectRoomFilter(\'all\',this)">ทุกห้อง</button>' +
-      '</div>' +
-    '</div>' +
-
-    /* Calendar + Day detail */
-    '<div class="cal-content-grid">' +
-
-      /* Left column */
-      '<div style="display:flex;flex-direction:column;gap:18px;">' +
-
-        /* Calendar card */
-        '<div class="card" style="padding:0;overflow:hidden;">' +
-          '<div style="padding:13px 15px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">' +
-            '<span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="calendar" style="width:15px;height:15px;"></i> ปฏิทิน</span>' +
-            '<div style="display:flex;gap:2px;">' +
-              '<button onclick="changeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>' +
-              '<button onclick="changeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="cal-card-body">' +
-            '<div style="margin-bottom:9px;font-weight:700;font-size:13px;color:#334155;text-align:center;" id="currentMonthLabel"></div>' +
-            '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;text-align:center;">' +
-              '<div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>' +
-            '</div>' +
-            '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;" id="calendarDaysGrid"></div>' +
-            '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid var(--border-soft);padding-top:10px;">' +
-              '<span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block;"></span>วันนี้</span>' +
-              '<span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#eab308;display:inline-block;"></span>มีจอง</span>' +
-              '<span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--red-mid);border:1px solid var(--red-mid);display:inline-block;"></span>จองเต็ม</span>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        /* Today summary */
-        '<div class="card">' +
-          '<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">สรุปวันนี้</div>' +
-          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">' +
-            '<div style="width:36px;height:36px;background:#dcfce7;color:#16a34a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check" style="width:18px;height:18px;"></i></div>' +
-            '<div><div style="font-size:10px;color:#64748b;">อนุมัติ</div><div style="font-size:18px;font-weight:800;" id="approvedToday">0</div></div>' +
-          '</div>' +
-          '<div style="display:flex;align-items:center;gap:10px;">' +
-            '<div style="width:36px;height:36px;background:#fef9c3;color:#d97706;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>' +
-            '<div><div style="font-size:10px;color:#64748b;">รอตรวจ</div><div style="font-size:18px;font-weight:800;" id="pendingToday">0</div></div>' +
-          '</div>' +
-        '</div>' +
-
-        /* Monthly room stats */
-        '<div class="card">' +
-          '<div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:13px;height:13px;color:var(--blue);"></i> สถิติการจองรายเดือน</div>' +
-          '<div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:10px;" id="statsMonthLabel"></div>' +
-          '<div id="roomStatsWrap" style="display:flex;flex-direction:column;gap:9px;"></div>' +
-        '</div>' +
-
-      '</div>' +
-
-      /* Right column — Day detail */
-      '<div class="card" style="padding:0;display:flex;flex-direction:column;min-height:280px;">' +
-        '<div style="padding:13px 15px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;">' +
-          '<span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="info" style="width:15px;height:15px;"></i> รายละเอียดการจองในวันที่เลือก</span>' +
-          '<span id="selectedDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>' +
-        '</div>' +
-        '<div id="todayBookingsList" style="flex:1;padding:20px;overflow-y:auto;max-height:520px;"><div style="text-align:center;padding:60px 0;color:#cbd5e1;font-style:italic;font-size:14px;">เลือกวันที่ในปฏิทินเพื่อดูรายการจอง</div></div>' +
-      '</div>' +
-
-    '</div>' + /* end cal-content-grid */
-
-    /* History table */
-    '<div class="card" style="padding:0;overflow:hidden;">' +
-      '<div style="padding:13px 15px;border-bottom:1px solid var(--border-soft);">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">' +
-          '<span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="layout-list" style="width:15px;height:15px;"></i> ประวัติการขอใช้บริการทั้งหมด</span>' +
-          '<button onclick="toggleModal()" class="btn-primary btn-sm"><i data-lucide="plus" style="width:12px;height:12px;"></i> จองใหม่</button>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
-          '<div style="position:relative;flex:1;min-width:160px;">' +
-            '<i data-lucide="search" style="width:13px;height:13px;position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;"></i>' +
-            '<input type="text" id="historySearch" placeholder="ค้นหาห้อง, ชื่อ, วัตถุประสงค์..." onkeyup="filterHistoryTable()" style="padding:8px 10px 8px 30px;font-size:12px;">' +
-          '</div>' +
-          '<select id="historyStatusFilter" onchange="filterHistoryTable()" style="padding:8px 10px;font-size:12px;color:#475569;width:auto;">' +
-            '<option value="">สถานะทั้งหมด</option>' +
-            '<option value="pending">⏳ รอตรวจ</option>' +
-            '<option value="approved">✅ อนุมัติ</option>' +
-            '<option value="rejected">❌ ไม่อนุมัติ</option>' +
-          '</select>' +
-        '</div>' +
-      '</div>' +
-      '<div style="overflow-x:auto;">' +
-        '<table style="width:100%;border-collapse:collapse;font-size:11px;">' +
-          '<thead style="background:var(--blue);color:white;">' +
-            '<tr>' +
-              '<th style="padding:11px 14px;width:44px;text-align:center;border-right:1px solid rgba(255,255,255,.15);">ที่</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">วันที่</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">สถานที่</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">เวลา</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">ผู้จอง</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">ประเภท</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">วัตถุประสงค์</th>' +
-              '<th style="padding:11px 14px;border-right:1px solid rgba(255,255,255,.15);">สถานะ</th>' +
-              '<th style="padding:11px 14px;text-align:center;border-right:1px solid rgba(255,255,255,.15);">ไฟล์แนบ</th>' +
-              '<th style="padding:11px 14px;text-align:center;">จัดการ</th>' +
-            '</tr>' +
-          '</thead>' +
-          '<tbody id="mainBookingTableBody"><tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:40px;">กำลังเชื่อมต่อข้อมูล...</td></tr></tbody>' +
-        '</table>' +
-      '</div>' +
-      '<div id="bookingPagination"></div>' +
-    '</div>'
-  );
-}
 
 /* ══════════════════════════════════════════════════════════════
    Multi-Date Picker
