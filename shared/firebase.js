@@ -15,6 +15,10 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
 var auth    = firebase.auth();
 var db      = firebase.firestore();
+/* บังคับใช้ long-polling แทน WebChannel streaming
+   ช่วยลด error "Could not reach Cloud Firestore backend / transport errored"
+   ที่เกิดบ่อยบนเครือข่ายที่บล็อก/ไม่รองรับ HTTP/2 streaming (เช่น เครือข่ายโรงเรียน, proxy) */
+db.settings({ experimentalAutoDetectLongPolling: true });
 /* storage SDK optional — โหลดเฉพาะหน้าที่ต้องการ */
 var storage = (typeof firebase.storage === 'function') ? firebase.storage() : null;
 
