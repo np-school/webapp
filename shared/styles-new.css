@@ -1059,7 +1059,7 @@ tr:hover td { background: #fafbfd; }
 /* ── 16. Calendar ─────────────────────────────────────────────── */
 .cal-day {
   min-width: 0;
-  min-height: 30px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
