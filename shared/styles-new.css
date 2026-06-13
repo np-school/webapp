@@ -259,6 +259,8 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  /* ป้องกัน child overflow ถูกตัดบน mobile */
+  box-sizing: border-box;
 }
 
 /* Inner content max-width + fade-in */
@@ -1082,6 +1084,13 @@ tr:hover td { background: #fafbfd; }
 .cal-day.is-today::after { background: white !important; }
 .cal-day.is-selected { border: 2px solid var(--blue); background: var(--blue-light); }
 .cal-day.empty       { cursor: default; }
+.cal-card-body { padding: 13px; }
+@media (max-width: 480px) { .cal-card-body { padding: 8px 6px; } }
+
+/* Mobile calendar: ลดขนาดให้พอดีหน้าจอ */
+@media (max-width: 480px) {
+  .cal-day { font-size: 10px; border-radius: 6px; }
+}
 
 /* Multi-date picker */
 .mdp-wrap     { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--white); }

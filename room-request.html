@@ -196,6 +196,8 @@ buildPage({
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
+    renderCalendar();      /* แสดงเลขวันทันที ก่อนข้อมูลมา */
+    renderRoomStats();
 
     initData();
   }
@@ -255,7 +257,7 @@ function renderPage() {
               '<button onclick="changeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>' +
             '</div>' +
           '</div>' +
-          '<div style="padding:13px;">' +
+          '<div class="cal-card-body">' +
             '<div style="margin-bottom:9px;font-weight:700;font-size:13px;color:#334155;text-align:center;" id="currentMonthLabel"></div>' +
             '<div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;text-align:center;">' +
               '<div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>' +
@@ -583,6 +585,7 @@ function toggleModal(editId) {
   var m = document.getElementById('bookingModal');
   if (!m.classList.contains('open')) {
     editingBookingId = editId || null;
+    closeSidebar();  /* ปิด sidebar ก่อนเปิด modal */
     m.classList.add('open'); document.body.style.overflow = 'hidden';
     populateRooms();
     document.getElementById('termsCheck').checked = false;
