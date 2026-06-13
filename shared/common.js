@@ -154,134 +154,52 @@ function _toggleAdminItem(id, show) {
 
 /* ════════════════════════════════
    Navbar Builder
-/* ════════════════════════════════════════════════════════════════
-   buildPageShell(config)
-   ──────────────────────────────────────────────────────────────
-   สร้าง HTML shell ทั้งหน้า (app-shell + navbar + main-grid +
-   sidebar + content-area) แล้ว inject เข้า container ที่กำหนด
-
-   config: {
-     appId        {string}   id ของ app wrapper div (required)
-     navSubtitle  {string}   subtitle ที่แสดงใน navbar
-     navTheme     {string}   'blue' | 'dark' | 'purple' (default: 'blue')
-     activePage   {string}   activePage ส่งต่อไป buildSidebar()
-     onReady      {function} callback(contentEl) เรียกหลัง shell พร้อม
-   }
-
-   วิธีใช้ใน HTML:
-     <!-- โครงสร้างที่ต้องมีใน body -->
-     <div id="loadingOverlay"><div class="spinner"></div></div>
-     <div id="sidebarOverlay" onclick="closeSidebar()"></div>
-     <div id="myApp" style="display:none;"></div>
-
-     <!-- ใน script (หลัง auth check) -->
-     buildPageShell({
-       appId:       'myApp',
-       navSubtitle: 'ชื่อหน้า',
-       navTheme:    'dark',
-       activePage:  'my-page',
-       onReady: function(contentEl) {
-         contentEl.innerHTML = '<p>เนื้อหาหน้านี้</p>';
-         lucide.createIcons();
-       }
-     });
-
-   หมายเหตุ:
-   - ถ้า onReady ไม่ได้ส่งมา จะได้ contentEl ที่ว่างเปล่า
-   - shell ใช้ .app-shell / .main-grid / .main-grid-inner / .content-area
-     ที่ define ไว้ใน styles-new.css แล้ว
-   ════════════════════════════════════════════════════════════════ */
-
+   buildNavbar(subtitle, theme)
+   theme: 'blue' (ผู้ใช้ทั่วไป, default) | 'dark' (เจ้าหน้าที่) | 'purple' (legacy)
+   backward compat: buildNavbar(subtitle, true) → 'purple'
+   ════════════════════════════════ */
 function buildPageShell(config) {
   config = config || {};
-  var appId      = config.appId      || 'appShell';
+  var appId      = config.appId       || 'appShell';
   var subtitle   = config.navSubtitle || '';
   var theme      = config.navTheme    || 'blue';
   var activePage = config.activePage  || '';
   var onReady    = typeof config.onReady === 'function' ? config.onReady : null;
 
   var appEl = document.getElementById(appId);
-  if (!appEl) { console.warn('buildPageShell: ไม่พบ element id="' + appId + '"'); return; }
+  if (!appEl) { console.warn('buildPageShell: no element id=' + appId); return; }
 
-  /* ── ใส่ class app-shell ── */
   appEl.classList.add('app-shell');
-
-  /* ── Inject structure ── */
   appEl.innerHTML =
     '<nav id="navbar" class="navbar"></nav>' +
-
-    '<div class="main-grid">' +
-      '<div class="main-grid-inner">' +
-
-        '<div class="sidebar-wrap" id="sidebar">' +
-          '<div class="sidebar-inner" id="sidebarInner"></div>' +
-        '</div>' +
-
-        '<div class="content-area" id="pageContent"></div>' +
-
+    '<div class="main-grid"><div class="main-grid-inner">' +
+      '<div class="sidebar-wrap" id="sidebar">' +
+        '<div class="sidebar-inner" id="sidebarInner"></div>' +
       '</div>' +
-    '</div>';
+      '<div class="content-area" id="pageContent"></div>' +
+    '</div></div>';
 
-  /* ── Build shared components ── */
   buildNavbar(subtitle, theme);
   buildSidebar(activePage);
 
-  /* ── Call onReady with contentEl ── */
   var contentEl = document.getElementById('pageContent');
   if (onReady && contentEl) onReady(contentEl);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   buildPage(config)
-   ──────────────────────────────────────────────────────────────
-   Convenience wrapper: buildPageShell + auth guard ในก้าวเดียว
-
-   config (extends buildPageShell config):
-     requireAdmin  {string|boolean}
-       - false (default) : ทุกคน login แล้วเข้าได้
-       - 'superadmin'    : เฉพาะ SuperAdmin
-       - 'admin'         : มี permission อย่างน้อย 1 อย่าง
-
-     accessDeniedEl {string}  id ของ access-denied div (default: 'accessDenied')
-     onAuth         {function(user, contentEl)} เรียกหลัง auth pass แล้ว
-
-   วิธีใช้:
-     buildPage({
-       appId:        'myApp',
-       navSubtitle:  'ชื่อหน้า',
-       navTheme:     'dark',
-       activePage:   'my-page',
-       requireAdmin: false,
-       onAuth: function(user, contentEl) {
-         updateNavUser(user);
-         updateSidebarProfile(user);
-         checkAdminAccess(user.email);
-         contentEl.innerHTML = '<p>สวัสดี ' + user.displayName + '</p>';
-         lucide.createIcons();
-       }
-     });
-   ════════════════════════════════════════════════════════════════ */
-
 function buildPage(config) {
   config = config || {};
-  var appId         = config.appId          || 'appShell';
-  var requireAdmin  = config.requireAdmin   || false;
-  var deniedId      = config.accessDeniedEl || 'accessDenied';
-  var onAuth        = typeof config.onAuth === 'function' ? config.onAuth : null;
+  var appId        = config.appId          || 'appShell';
+  var requireAdmin = config.requireAdmin   || false;
+  var deniedId     = config.accessDeniedEl || 'accessDenied';
+  var onAuth       = typeof config.onAuth === 'function' ? config.onAuth : null;
 
   auth.onAuthStateChanged(function(user) {
     var loadEl = document.getElementById('loadingOverlay');
 
-    /* ── ไม่ได้ login → redirect ── */
-    if (!user) {
-      window.location.href = 'index.html';
-      return;
-    }
+    if (!user) { window.location.href = 'index.html'; return; }
 
-    /* ── ตรวจ admin access ─────────────────────── */
-    function _proceed(contentEl) {
+    function _show(contentEl) {
       var appEl = document.getElementById(appId);
-      /* ลบ display:none ออก ให้ CSS class .app-shell จัดการ flex display เอง */
       if (appEl) appEl.style.removeProperty('display');
       if (loadEl) loadEl.style.display = 'none';
       if (onAuth) onAuth(user, contentEl);
@@ -289,66 +207,40 @@ function buildPage(config) {
 
     function _deny() {
       if (loadEl) loadEl.style.display = 'none';
-      var deniedEl = document.getElementById(deniedId);
-      if (deniedEl) { deniedEl.style.display = 'flex'; lucide.createIcons(); }
+      var el = document.getElementById(deniedId);
+      if (el) { el.style.display = 'flex'; lucide.createIcons(); }
     }
 
-    if (!requireAdmin) {
-      /* ไม่ต้องการ admin — build shell แล้วโทร onAuth ทันที */
+    function _build() {
       buildPageShell({
-        appId:       appId,
-        navSubtitle: config.navSubtitle,
-        navTheme:    config.navTheme,
-        activePage:  config.activePage,
+        appId: appId, navSubtitle: config.navSubtitle,
+        navTheme: config.navTheme, activePage: config.activePage
       });
-      var appEl2 = document.getElementById(appId);
-      if (appEl2) appEl2.style.removeProperty('display');
-      if (loadEl) loadEl.style.display = 'none';
-      if (onAuth) onAuth(user, document.getElementById('pageContent'));
-      return;
+      _show(document.getElementById('pageContent'));
     }
 
-    /* ตรวจสิทธิ์จาก Firestore */
+    if (!requireAdmin) { _build(); return; }
+
     var lEmail = user.email.toLowerCase();
     var isSA   = lEmail === SUPERADMIN_EMAIL;
 
     db.collection('admins').doc(lEmail).get()
       .then(function(doc) {
-        var hasAccess = false;
-
+        var ok = false;
         if (requireAdmin === 'superadmin') {
-          hasAccess = isSA;
+          ok = isSA;
         } else if (requireAdmin === 'admin') {
-          hasAccess = doc.exists;
+          ok = doc.exists;
         } else {
-          /* requireAdmin เป็น permission key เช่น 'bookings' */
-          if (isSA) {
-            hasAccess = true;
-          } else if (doc.exists) {
-            var p = doc.data().permissions || {};
-            hasAccess = !!p[requireAdmin];
-          }
+          ok = isSA || (doc.exists && !!(doc.data().permissions || {})[requireAdmin]);
         }
-
-        if (!hasAccess) { _deny(); return; }
-
-        buildPageShell({
-          appId:       appId,
-          navSubtitle: config.navSubtitle,
-          navTheme:    config.navTheme,
-          activePage:  config.activePage,
-        });
-        _proceed(document.getElementById('pageContent'));
+        if (!ok) { _deny(); return; }
+        _build();
       })
       .catch(function() { _deny(); });
   });
 }
 
-/* ════════════════════════════════
-   buildNavbar(subtitle, theme)
-   theme: 'blue' (ผู้ใช้ทั่วไป, default) | 'dark' (เจ้าหน้าที่) | 'purple' (legacy)
-   backward compat: buildNavbar(subtitle, true) → 'purple'
-   ════════════════════════════════ */
 function buildNavbar(subtitle, theme) {
   var nav = document.getElementById('navbar');
   if (!nav) return;
