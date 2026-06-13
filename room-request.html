@@ -690,7 +690,10 @@ function renderCalendar() {
     (function(k) { el.onclick = function() { selectedDate = k; renderCalendar(); updateDayView(k, getFilteredBookings(k)); }; })(dk);
     grid.appendChild(el);
   }
-}
+  /* trailing empty cells to complete last row */
+  var total = first + days;
+  var trailing = Math.ceil(total / 7) * 7 - total;
+  for (var j = 0; j < trailing; j++) { var t = document.createElement('div'); t.className = 'cal-day empty'; grid.appendChild(t); }
 
 function getFilteredBookings(dateKey) {
   return allBookings.filter(function(b) {
