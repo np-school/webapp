@@ -204,17 +204,49 @@
 body {
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  /* viewport lock — ป้องกัน body scroll */
+  height: 100vh;
+  overflow: hidden;
 }
 
-
 /* ── 3. Layout ────────────────────────────────────────────────── */
+
+/*
+  app-shell: กล่องครอบทั้งหน้า
+  navbar อยู่บนสุด (flex-shrink:0)
+  main-grid อยู่ล่าง (flex:1, min-h:0)
+  ทั้งคู่ไม่ scroll — scroll เกิดในลูกแต่ละตัวแทน
+*/
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* navbar ใน app-shell จะไม่ sticky อีกต่อไป — ใช้ flex-shrink:0 แทน */
+.app-shell > .navbar {
+  position: static;
+  flex-shrink: 0;
+}
+
 /* Main flex wrapper (sidebar + content) */
 .main-grid {
   display: flex;
+  flex: 1;
+  min-height: 0;          /* สำคัญ: ให้ flex child หด/ขยายได้ */
+  overflow: hidden;
+  /* max-width + centering ทำใน inner wrapper แทน */
+}
+
+/* ── Inner wrapper สำหรับ centering ใน desktop ── */
+.main-grid-inner {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  min-height: calc(100vh - 69px);
 }
 
 /* Content area next to sidebar */
@@ -222,6 +254,9 @@ body {
   flex: 1;
   min-width: 0;
   padding: 28px 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Inner content max-width + fade-in */
@@ -274,6 +309,8 @@ body {
 
 /* ── 4. Navbar ────────────────────────────────────────────────── */
 .navbar {
+  /* ใน app-shell ใช้ flex-shrink:0 แทน sticky
+     ถ้าใช้นอก app-shell (legacy) ยังคง sticky ไว้ก่อน */
   position: sticky;
   top: 0;
   z-index: 150;
@@ -382,8 +419,8 @@ body {
 .sidebar-inner {
   background: var(--bg);
   border-right: 1px solid var(--border);
-  min-height: 100vh;
-  height: 100vh;
+  /* ใน app-shell: ความสูงเต็ม main-grid อัตโนมัติ ไม่ต้อง 100vh */
+  height: 100%;
   padding: 20px 12px;
   display: flex;
   flex-direction: column;
@@ -484,14 +521,16 @@ body {
   .sidebar-wrap {
     position: fixed;
     top: 0; left: 0;
-    height: 100vh;
+    height: 100vh;        /* mobile drawer ยังคง 100vh เพราะ fixed */
     z-index: 200;
     transform: translateX(-100%);
     box-shadow: 4px 0 24px rgba(0,0,0,.12);
     overflow: hidden;
   }
   .sidebar-wrap.open { transform: translateX(0); }
+  /* mobile: content เต็มกว้าง ไม่มี sidebar ขวา */
   .main-grid { flex-direction: column; }
+  .main-grid-inner { flex-direction: column; }
   .content-area { width: 100%; }
 }
 @media (min-width: 1024px) {
