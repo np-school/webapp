@@ -250,6 +250,21 @@ function buildPage(config) {
 }
 
 function buildNavbar(subtitle, theme) {
+  /* ── inject favicon ── */
+  (function() {
+    var FAVICON_URL = 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins_favicon.png?alt=media&token=be05fb30-25d2-403b-b5e7-d915fd5c9c72';
+    var existing = document.querySelector('link[rel~="icon"]');
+    if (existing) {
+      existing.href = FAVICON_URL;
+    } else {
+      var link = document.createElement('link');
+      link.rel  = 'icon';
+      link.type = 'image/png';
+      link.href = FAVICON_URL;
+      document.head.appendChild(link);
+    }
+  })();
+
   var nav = document.getElementById('navbar');
   if (!nav) return;
 
@@ -269,7 +284,7 @@ function buildNavbar(subtitle, theme) {
           '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="โรงเรียนหนองกี่พิทยาคม" class="navbar-logo">' +
         '</a>' +
         '<a href="index.html" style="display:flex;align-items:center;flex-shrink:0;">' +
-          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins.png?alt=media&token=b399f218-b8c6-49a8-8c7b-3aa69ae3c88a" alt="NP Origins" class="navbar-logo">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins_logo.png?alt=media&token=3157d091-5d41-40c3-85e7-e0772c00e991" alt="NP Origins" class="navbar-logo">' +
         '</a>' +
         '<div class="navbar-divider">' +
           '<div class="navbar-title">โรงเรียนหนองกี่พิทยาคม</div>' +
