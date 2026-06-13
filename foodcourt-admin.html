@@ -191,6 +191,284 @@
   </div>
 </div>
 
+
+<template id="foodcourtShell">
+<div class="page-inner" style="padding-bottom:0">
+        <div class="page-header" style="margin-bottom:14px">
+          <div>
+            <div class="page-title">บัญชีรายได้ Food Court</div>
+            <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
+          </div>
+        </div>
+        <div class="sub-tab-bar" style="margin-bottom:0">
+          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
+          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
+          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">จัดการ</button>
+        </div>
+      </div>
+
+    <!-- ═══════════ DASHBOARD ═══════════ -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="page-inner" style="padding-top:14px">
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">ภาพรวมบัญชี Food Court</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+              <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
+              <div id="lastUpdatedChip" class="chip" style="display:none;">บันทึกล่าสุด: <span id="lastUpdated"></span></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button>
+            <button class="btn btn-blue" onclick="openAddModal()">+ เพิ่มรายการ</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <!-- Charts -->
+        <div style="margin-bottom:18px">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+              <div class="card-title" style="margin-bottom:0">กราฟรายรับ – รายจ่ายรายวัน</div>
+              <div class="period-tabs">
+                <button class="ptab active" onclick="setPeriod('week',this)">สัปดาห์นี้</button>
+                <button class="ptab" onclick="setPeriod('month',this)">เดือนนี้</button>
+                <button class="ptab" onclick="setPeriod('all',this)">ทั้งหมด</button>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="card">
+            <div class="card-title">รายได้สุทธิรายวัน</div>
+            <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">สัดส่วนรายรับแต่ละร้าน</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <div style="flex:1;min-width:130px"><div class="chart-wrap" style="height:190px"><canvas id="donutChart"></canvas></div></div>
+              <div class="legend-list" id="donutLegend" style="min-width:130px;justify-content:center;display:flex;flex-direction:column"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECURRING SUMMARY SECTION ON DASHBOARD -->
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+            <div>
+              <div class="card-title" style="margin-bottom:2px">สรุปรายการประจำ</div>
+              <div style="font-size:11px;color:var(--text2)">รายรับ – รายจ่ายจากรายการประจำตามช่วงเวลา</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <div class="period-tabs" id="recPeriodTabs">
+                <button class="ptab active" onclick="setRecPeriod('day',this)">วันนี้</button>
+                <button class="ptab" onclick="setRecPeriod('week',this)">สัปดาห์นี้</button>
+                <button class="ptab" onclick="setRecPeriod('month',this)">เดือนนี้</button>
+                <button class="ptab" onclick="setRecPeriod('year',this)">ปีนี้</button>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('manage',document.getElementById('sb-manage'),true)">จัดการรายการ</button>
+            </div>
+          </div>
+
+          <!-- KPI Summary row -->
+          <div id="recSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+
+          <!-- Income list -->
+          <div class="rec-section-grid">
+            <div>
+              <div class="rec-col-label" style="color:var(--green);margin-bottom:10px">
+                <div class="rec-col-ico" style="background:var(--green-lt);font-size:13px">+</div>
+                รายรับประจำ
+              </div>
+              <div id="dashRecIncome"></div>
+            </div>
+            <div>
+              <div class="rec-col-label" style="color:var(--red);margin-bottom:10px">
+                <div class="rec-col-ico" style="background:var(--red-lt);font-size:13px">−</div>
+                รายจ่ายประจำ
+              </div>
+              <div id="dashRecExpense"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════ DAILY (รายการทั้งหมด) – with subtabs ═══════════ -->
+    <div class="tab-content" id="tab-daily">
+      <div class="page-inner" style="padding-top:14px">
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">รายการทั้งหมด</div>
+            <div class="page-sub">รายรับ – รายจ่าย แบ่งตามวัน</div>
+          </div>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
+        </div>
+
+        <!-- Sub Tab Bar -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">ทุกรายการ</button>
+          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">รายรับ</button>
+          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">รายจ่าย</button>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="sum-bar" id="sumBar"></div>
+
+        <!-- Filters -->
+        <div class="filter-row">
+          <select id="filterMonth" style="width:180px" onchange="renderDaily()">
+            <option value="">ทุกเดือน</option>
+          </select>
+          <input type="text" id="filterSearch" placeholder="ค้นหารายการ..." style="flex:1;min-width:160px" oninput="renderDaily()">
+        </div>
+
+        <!-- Monthly Chart (แสดงเมื่อเลือกเดือน) -->
+        <div id="monthlyChartWrap" style="display:none;margin-bottom:16px">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+              <div class="card-title" style="margin-bottom:0" id="monthlyChartTitle">สรุปรายได้เดือนนี้</div>
+              <div id="monthlyChartKpi" style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px"></div>
+            </div>
+            <div style="height:200px;position:relative"><canvas id="monthlyBarChart"></canvas></div>
+          </div>
+        </div>
+
+        <div id="dailyList"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ MANAGE (จัดการรายการ) – with subtabs ═══════════ -->
+    <div class="tab-content" id="tab-manage">
+      <div class="page-inner" style="padding-top:14px">
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">จัดการรายการ</div>
+            <div class="page-sub">บันทึกรายวันและรายการประจำ</div>
+          </div>
+          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
+        </div>
+
+        <!-- Sub Tab Bar -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subMgmtEntry" onclick="switchManageSub('entry',this)">บันทึกรายวัน</button>
+          <button class="sub-tab" id="subMgmtRec" onclick="switchManageSub('recurring',this)">รายการประจำ</button>
+          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">เพิ่มรายการประจำ</button>
+        </div>
+
+        <!-- Panel: Daily Entry -->
+        <div class="sub-panel active" id="panelMgmtEntry">
+          <div class="card" style="max-width:680px">
+            <div class="form-group" style="margin-bottom:18px">
+              <label>วันที่</label>
+              <input type="date" id="entryDate">
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span class="badge badge-in">ประจำ</span>
+              <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับประจำ</span>
+            </div>
+            <div id="entryRecIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
+              <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับอื่นๆ</span>
+            </div>
+            <div id="entryExtraIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
+            <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('income')">+ เพิ่มรายรับอื่นๆ</button>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span class="badge badge-out">ประจำ</span>
+              <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
+            </div>
+            <div id="entryRecExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
+              <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายอื่นๆ</span>
+            </div>
+            <div id="entryExtraExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
+            <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
+
+            <div class="sum-bar" id="entrySumBar" style="margin-bottom:0"></div>
+            <div style="display:flex;justify-content:flex-end;margin-top:18px">
+              <button class="btn btn-blue" onclick="saveDailyEntry()">บันทึกรายวัน</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel: Recurring -->
+        <div class="sub-panel" id="panelMgmtRecurring">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
+            </div>
+            <button class="btn btn-blue btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">+ เพิ่มรายการประจำ</button>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%"></span>รายรับประจำ</div>
+            <div class="manage-rec-grid" id="manageRecIncome"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%"></span>รายจ่ายประจำ</div>
+            <div class="manage-rec-grid" id="manageRecExpense"></div>
+          </div>
+        </div>
+
+        <!-- Panel: Add New Recurring -->
+        <div class="sub-panel" id="panelMgmtAddnew">
+          <div class="card" style="max-width:560px">
+            <div class="modal-title" style="margin-bottom:18px">เพิ่มรายการประจำใหม่</div>
+
+            <div style="margin-bottom:14px">
+              <label style="margin-bottom:8px;display:block">ประเภท</label>
+              <div style="display:flex;gap:10px">
+                <div class="modal-type-card active income" id="recCardIn" onclick="setRecType('income')">
+                  <div class="type-ico">💰</div>
+                  <div class="type-lbl">รายรับ</div>
+                </div>
+                <div class="modal-type-card expense" id="recCardOut" onclick="setRecType('expense')">
+                  <div class="type-ico">💸</div>
+                  <div class="type-lbl">รายจ่าย</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>ชื่อรายการ</label>
+                <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
+              </div>
+              <div class="form-group">
+                <label>จำนวนเงินปกติ (0=ไม่แน่นอน)</label>
+                <input type="number" id="recAmount" placeholder="0" min="0">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:18px">
+              <label>คำอธิบาย</label>
+              <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn btn-blue" onclick="saveRecurring()">บันทึก</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+</template>
+
+
 <script>
 // ══════════════════════════════════════
 // DATA
@@ -1113,279 +1391,7 @@ buildPage({
 });
 
 function renderShell() {
-  return `<div class="page-inner" style="padding-bottom:0">
-        <div class="page-header" style="margin-bottom:14px">
-          <div>
-            <div class="page-title">บัญชีรายได้ Food Court</div>
-            <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
-          </div>
-        </div>
-        <div class="sub-tab-bar" style="margin-bottom:0">
-          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
-          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
-          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">จัดการ</button>
-        </div>
-      </div>
-
-    <!-- ═══════════ DASHBOARD ═══════════ -->
-    <div class="tab-content active" id="tab-dashboard">
-      <div class="page-inner" style="padding-top:14px">
-
-        <div class="page-header">
-          <div>
-            <div class="page-title">ภาพรวมบัญชี Food Court</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
-              <div class="page-sub">โรงเรียนหนองกี่พิทยาคม</div>
-              <div id="lastUpdatedChip" class="chip" style="display:none;">บันทึกล่าสุด: <span id="lastUpdated"></span></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button>
-            <button class="btn btn-blue" onclick="openAddModal()">+ เพิ่มรายการ</button>
-          </div>
-        </div>
-
-        <!-- KPIs -->
-        <div class="kpi-grid" id="kpiGrid"></div>
-
-        <!-- Charts -->
-        <div style="margin-bottom:18px">
-          <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-              <div class="card-title" style="margin-bottom:0">กราฟรายรับ – รายจ่ายรายวัน</div>
-              <div class="period-tabs">
-                <button class="ptab active" onclick="setPeriod('week',this)">สัปดาห์นี้</button>
-                <button class="ptab" onclick="setPeriod('month',this)">เดือนนี้</button>
-                <button class="ptab" onclick="setPeriod('all',this)">ทั้งหมด</button>
-              </div>
-            </div>
-            <div class="chart-wrap"><canvas id="barChart"></canvas></div>
-          </div>
-        </div>
-
-        <div class="chart-grid">
-          <div class="card">
-            <div class="card-title">รายได้สุทธิรายวัน</div>
-            <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-title">สัดส่วนรายรับแต่ละร้าน</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              <div style="flex:1;min-width:130px"><div class="chart-wrap" style="height:190px"><canvas id="donutChart"></canvas></div></div>
-              <div class="legend-list" id="donutLegend" style="min-width:130px;justify-content:center;display:flex;flex-direction:column"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RECURRING SUMMARY SECTION ON DASHBOARD -->
-        <div class="card" style="margin-bottom:18px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-            <div>
-              <div class="card-title" style="margin-bottom:2px">สรุปรายการประจำ</div>
-              <div style="font-size:11px;color:var(--text2)">รายรับ – รายจ่ายจากรายการประจำตามช่วงเวลา</div>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <div class="period-tabs" id="recPeriodTabs">
-                <button class="ptab active" onclick="setRecPeriod('day',this)">วันนี้</button>
-                <button class="ptab" onclick="setRecPeriod('week',this)">สัปดาห์นี้</button>
-                <button class="ptab" onclick="setRecPeriod('month',this)">เดือนนี้</button>
-                <button class="ptab" onclick="setRecPeriod('year',this)">ปีนี้</button>
-              </div>
-              <button class="btn btn-ghost btn-sm" onclick="switchTab('manage',document.getElementById('sb-manage'),true)">จัดการรายการ</button>
-            </div>
-          </div>
-
-          <!-- KPI Summary row -->
-          <div id="recSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
-
-          <!-- Income list -->
-          <div class="rec-section-grid">
-            <div>
-              <div class="rec-col-label" style="color:var(--green);margin-bottom:10px">
-                <div class="rec-col-ico" style="background:var(--green-lt);font-size:13px">+</div>
-                รายรับประจำ
-              </div>
-              <div id="dashRecIncome"></div>
-            </div>
-            <div>
-              <div class="rec-col-label" style="color:var(--red);margin-bottom:10px">
-                <div class="rec-col-ico" style="background:var(--red-lt);font-size:13px">−</div>
-                รายจ่ายประจำ
-              </div>
-              <div id="dashRecExpense"></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ═══════════ DAILY (รายการทั้งหมด) – with subtabs ═══════════ -->
-    <div class="tab-content" id="tab-daily">
-      <div class="page-inner" style="padding-top:14px">
-
-        <div class="page-header">
-          <div>
-            <div class="page-title">รายการทั้งหมด</div>
-            <div class="page-sub">รายรับ – รายจ่าย แบ่งตามวัน</div>
-          </div>
-          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
-        </div>
-
-        <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">ทุกรายการ</button>
-          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">รายรับ</button>
-          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">รายจ่าย</button>
-        </div>
-
-        <!-- Summary bar -->
-        <div class="sum-bar" id="sumBar"></div>
-
-        <!-- Filters -->
-        <div class="filter-row">
-          <select id="filterMonth" style="width:180px" onchange="renderDaily()">
-            <option value="">ทุกเดือน</option>
-          </select>
-          <input type="text" id="filterSearch" placeholder="ค้นหารายการ..." style="flex:1;min-width:160px" oninput="renderDaily()">
-        </div>
-
-        <!-- Monthly Chart (แสดงเมื่อเลือกเดือน) -->
-        <div id="monthlyChartWrap" style="display:none;margin-bottom:16px">
-          <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-              <div class="card-title" style="margin-bottom:0" id="monthlyChartTitle">สรุปรายได้เดือนนี้</div>
-              <div id="monthlyChartKpi" style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px"></div>
-            </div>
-            <div style="height:200px;position:relative"><canvas id="monthlyBarChart"></canvas></div>
-          </div>
-        </div>
-
-        <div id="dailyList"></div>
-      </div>
-    </div>
-
-    <!-- ═══════════ MANAGE (จัดการรายการ) – with subtabs ═══════════ -->
-    <div class="tab-content" id="tab-manage">
-      <div class="page-inner" style="padding-top:14px">
-
-        <div class="page-header">
-          <div>
-            <div class="page-title">จัดการรายการ</div>
-            <div class="page-sub">บันทึกรายวันและรายการประจำ</div>
-          </div>
-          <button class="btn btn-blue" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
-        </div>
-
-        <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subMgmtEntry" onclick="switchManageSub('entry',this)">บันทึกรายวัน</button>
-          <button class="sub-tab" id="subMgmtRec" onclick="switchManageSub('recurring',this)">รายการประจำ</button>
-          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">เพิ่มรายการประจำ</button>
-        </div>
-
-        <!-- Panel: Daily Entry -->
-        <div class="sub-panel active" id="panelMgmtEntry">
-          <div class="card" style="max-width:680px">
-            <div class="form-group" style="margin-bottom:18px">
-              <label>วันที่</label>
-              <input type="date" id="entryDate">
-            </div>
-
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <span class="badge badge-in">ประจำ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับประจำ</span>
-            </div>
-            <div id="entryRecIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
-
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับอื่นๆ</span>
-            </div>
-            <div id="entryExtraIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
-            <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('income')">+ เพิ่มรายรับอื่นๆ</button>
-
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <span class="badge badge-out">ประจำ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
-            </div>
-            <div id="entryRecExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
-
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายอื่นๆ</span>
-            </div>
-            <div id="entryExtraExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
-            <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
-
-            <div class="sum-bar" id="entrySumBar" style="margin-bottom:0"></div>
-            <div style="display:flex;justify-content:flex-end;margin-top:18px">
-              <button class="btn btn-blue" onclick="saveDailyEntry()">บันทึกรายวัน</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel: Recurring -->
-        <div class="sub-panel" id="panelMgmtRecurring">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-            <div>
-              <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
-              <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
-            </div>
-            <button class="btn btn-blue btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">+ เพิ่มรายการประจำ</button>
-          </div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%"></span>รายรับประจำ</div>
-            <div class="manage-rec-grid" id="manageRecIncome"></div>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%"></span>รายจ่ายประจำ</div>
-            <div class="manage-rec-grid" id="manageRecExpense"></div>
-          </div>
-        </div>
-
-        <!-- Panel: Add New Recurring -->
-        <div class="sub-panel" id="panelMgmtAddnew">
-          <div class="card" style="max-width:560px">
-            <div class="modal-title" style="margin-bottom:18px">เพิ่มรายการประจำใหม่</div>
-
-            <div style="margin-bottom:14px">
-              <label style="margin-bottom:8px;display:block">ประเภท</label>
-              <div style="display:flex;gap:10px">
-                <div class="modal-type-card active income" id="recCardIn" onclick="setRecType('income')">
-                  <div class="type-ico">💰</div>
-                  <div class="type-lbl">รายรับ</div>
-                </div>
-                <div class="modal-type-card expense" id="recCardOut" onclick="setRecType('expense')">
-                  <div class="type-ico">💸</div>
-                  <div class="type-lbl">รายจ่าย</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>ชื่อรายการ</label>
-                <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
-              </div>
-              <div class="form-group">
-                <label>จำนวนเงินปกติ (0=ไม่แน่นอน)</label>
-                <input type="number" id="recAmount" placeholder="0" min="0">
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom:18px">
-              <label>คำอธิบาย</label>
-              <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
-            </div>
-            <div style="display:flex;justify-content:flex-end">
-              <button class="btn btn-blue" onclick="saveRecurring()">บันทึก</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>\`;
+  return document.getElementById('foodcourtShell').innerHTML;
 }
 </script>
 </body>
