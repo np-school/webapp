@@ -535,6 +535,34 @@ body {
   .main-grid-inner { flex-direction: column; }
   .content-area { width: 100%; }
 }
+
+/* ── Mobile padding & layout fixes ──────────────────────────── */
+@media (max-width: 768px) {
+  .content-area {
+    padding: 14px 12px;
+  }
+  .page-header {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .page-title { font-size: 18px; }
+  /* Modal wider on mobile */
+  .modal-box { max-width: 100% !important; margin: 8px !important; border-radius: 16px !important; }
+  /* Booking form: 2-column grids → 1-column on mobile */
+  #bookingForm [style*="grid-template-columns:1fr 1fr"],
+  #bookingForm [style*="grid-template-columns: 1fr 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+@media (max-width: 480px) {
+  .content-area { padding: 10px 8px; }
+  .room-tab { font-size: 11px; padding: 5px 10px; }
+  /* History table horizontal scroll */
+  #mainBookingTableBody tr td:nth-child(7) {
+    max-width: 70px;
+  }
+}
 @media (min-width: 1024px) {
   #hamburgerBtn { display: none !important; }
   .sidebar-inner { border-right: none; }
@@ -1554,8 +1582,11 @@ tr:hover td { background: #fafbfd; }
   grid-template-columns: 268px 1fr;
   gap: 20px;
 }
+@media (max-width: 900px) {
+  .cal-content-grid { grid-template-columns: 240px 1fr; gap: 14px; }
+}
 @media (max-width: 768px) {
-  .cal-content-grid { grid-template-columns: 1fr; }
+  .cal-content-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 
 /* Multi-date picker day states (missing from above .mdp-dow block) */
@@ -1699,6 +1730,10 @@ tr:hover td { background: #fafbfd; }
 /* Form row (food court) */
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 @media (max-width:600px) { .form-row { grid-template-columns: 1fr; } }
+
+/* Booking modal 2-col form rows — collapse on mobile */
+.form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .form-row-2col { grid-template-columns: 1fr !important; } }
 
 /* Type toggle */
 .type-toggle { display: flex; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }

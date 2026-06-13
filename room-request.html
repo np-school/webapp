@@ -100,9 +100,7 @@
 
       <!-- 3. ข้อมูลผู้จอง -->
       <div class="section-divider" style="margin-top:20px;"><i data-lucide="user" style="width:14px;height:14px;"></i> ข้อมูลผู้จอง</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
-        <div>
-          <label class="form-label">ประเภทบุคคล <span style="color:#ef4444;">*</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group form-row-2col">
           <select id="personType" required>
             <option value="">เลือกประเภท...</option>
             <option value="internal">บุคคลภายใน</option>
@@ -111,11 +109,11 @@
         </div>
         <div><label class="form-label">ชื่อ-นามสกุล <span style="color:#ef4444;">*</span></label><input type="text" id="fullName" placeholder="ระบุชื่อ-นามสกุล" required></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group form-row-2col">
         <div><label class="form-label">ตำแหน่ง</label><input type="text" id="position" placeholder="เช่น ครู, นักเรียน"></div>
         <div><label class="form-label">เบอร์โทรศัพท์ <span style="color:#ef4444;">*</span></label><input type="text" id="phone" placeholder="เช่น 0812345678" required inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="form-group form-row-2col">
         <div><label class="form-label">จำนวนผู้เข้าร่วม</label><input type="number" id="attendees" placeholder="ระบุจำนวน" min="1" required></div>
         <div><label class="form-label">วัตถุประสงค์ <span style="color:#ef4444;">*</span></label><input type="text" id="purpose" placeholder="ระบุวัตถุประสงค์" required></div>
       </div>
@@ -198,14 +196,6 @@ buildPage({
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
-
-    setTimeout(function() {
-      var ov = document.getElementById('loadingOverlay');
-      if (ov && ov.style.display !== 'none') {
-        ov.style.display = 'none';
-        showToast('โหลดข้อมูลช้า — ตรวจสอบการเชื่อมต่อ', 'warn');
-      }
-    }, 8000);
 
     initData();
   }
@@ -819,25 +809,41 @@ function cancelBooking(id) {
 
 function initData() {
   function safeRun(fn, lbl) { try { fn(); } catch(e) { console.error(lbl + ':', e); } }
-  function loadRooms() {
-    return db.collection('rooms').get().then(function(snap) {
-      allRooms = []; snap.forEach(function(d) { var rm = Object.assign({id: d.id}, d.data()); rm.name = normalizeRoomName(rm.name || ''); allRooms.push(rm); });
-      allRooms.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
-      safeRun(renderRoomTabs, 'tabs'); safeRun(renderRoomBanner, 'banner');
-    }).catch(function(e) { console.error('rooms:', e); });
+
+  var roomsReady = false, bookingsReady = false;
+
+  function hideLoadingWhenReady() {
+    if (!roomsReady || !bookingsReady) return;
+    var ov = document.getElementById('loadingOverlay');
+    if (ov) ov.style.display = 'none';
+    safeRun(function() { lucide.createIcons(); }, 'lucide');
   }
-  function loadBookings() {
-    return db.collection('bookings').get().then(function(snap) { safeRun(function() { processBookings(snap); }, 'bookings'); }).catch(function(e) { console.error('bookings:', e); });
-  }
-  Promise.all([loadRooms(), loadBookings()]).catch(function(e) { console.error('init:', e); }).finally(function() { safeRun(function() { lucide.createIcons(); }, 'lucide'); });
-  setTimeout(function() {
-    db.collection('bookings').onSnapshot(function(snap) { safeRun(function() { processBookings(snap); }, 'rt'); }, function() {});
-    db.collection('rooms').onSnapshot(function(snap) {
-      allRooms = []; snap.forEach(function(d) { var rm = Object.assign({id: d.id}, d.data()); rm.name = normalizeRoomName(rm.name || ''); allRooms.push(rm); });
-      allRooms.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
-      safeRun(renderRoomTabs, 'rt-tabs'); safeRun(renderRoomBanner, 'rt-banner');
-    }, function() {});
-  }, 2000);
+
+  /* ── Rooms: onSnapshot เป็น primary source ── */
+  db.collection('rooms').onSnapshot(function(snap) {
+    allRooms = [];
+    snap.forEach(function(d) {
+      var rm = Object.assign({id: d.id}, d.data());
+      rm.name = normalizeRoomName(rm.name || '');
+      allRooms.push(rm);
+    });
+    allRooms.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    safeRun(renderRoomTabs,   'rt-tabs');
+    safeRun(renderRoomBanner, 'rt-banner');
+    if (!roomsReady) { roomsReady = true; hideLoadingWhenReady(); }
+  }, function(e) {
+    console.error('rooms onSnapshot:', e);
+    if (!roomsReady) { roomsReady = true; hideLoadingWhenReady(); }
+  });
+
+  /* ── Bookings: onSnapshot เป็น primary source ── */
+  db.collection('bookings').onSnapshot(function(snap) {
+    safeRun(function() { processBookings(snap); }, 'rt');
+    if (!bookingsReady) { bookingsReady = true; hideLoadingWhenReady(); }
+  }, function(e) {
+    console.error('bookings onSnapshot:', e);
+    if (!bookingsReady) { bookingsReady = true; hideLoadingWhenReady(); }
+  });
 }
 
 function viewDate(d) { var p = d.split('-'); viewYear = +p[0]; viewMonth = +p[1] - 1; selectedDate = d; renderCalendar(); updateDayView(d, getFilteredBookings(d)); }
