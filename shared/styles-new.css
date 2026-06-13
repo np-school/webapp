@@ -255,11 +255,11 @@ body {
 .content-area {
   flex: 1;
   min-width: 0;
+  width: 0;            /* force flex child to shrink properly */
   padding: 28px 24px;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  /* ป้องกัน child overflow ถูกตัดบน mobile */
   box-sizing: border-box;
 }
 
@@ -540,16 +540,10 @@ body {
 
 /* ── Mobile padding & layout fixes ──────────────────────────── */
 @media (max-width: 768px) {
-  .content-area {
-    padding: 14px 12px;
-  }
-  .page-header {
-    gap: 10px;
-    margin-bottom: 16px;
-  }
+  .content-area { padding: 14px 12px; }
+  .page-header { gap: 10px; margin-bottom: 16px; }
   .page-title { font-size: 18px; }
-  /* Modal wider on mobile */
-  .modal-box { max-width: 100% !important; margin: 8px !important; border-radius: 16px !important; }
+  .modal-box { max-width: calc(100vw - 32px) !important; margin: 16px auto !important; border-radius: 16px !important; }
   /* Booking form: 2-column grids → 1-column on mobile */
   #bookingForm [style*="grid-template-columns:1fr 1fr"],
   #bookingForm [style*="grid-template-columns: 1fr 1fr"] {
@@ -560,7 +554,6 @@ body {
 @media (max-width: 480px) {
   .content-area { padding: 10px 8px; }
   .room-tab { font-size: 11px; padding: 5px 10px; }
-  /* History table horizontal scroll */
   #mainBookingTableBody tr td:nth-child(7) {
     max-width: 70px;
   }
@@ -1590,9 +1583,13 @@ tr:hover td { background: #fafbfd; }
   display: grid;
   grid-template-columns: 268px 1fr;
   gap: 20px;
+  min-width: 0;
+  width: 100%;
 }
+/* ทุก direct child ต้อง min-width:0 เพื่อป้องกัน grid overflow */
+.cal-content-grid > * { min-width: 0; }
 @media (max-width: 900px) {
-  .cal-content-grid { grid-template-columns: 240px 1fr; gap: 14px; }
+  .cal-content-grid { grid-template-columns: 230px 1fr; gap: 12px; }
 }
 @media (max-width: 768px) {
   .cal-content-grid { grid-template-columns: 1fr; gap: 14px; }
@@ -1742,7 +1739,12 @@ tr:hover td { background: #fafbfd; }
 
 /* Booking modal 2-col form rows — collapse on mobile */
 .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 560px) { .form-row-2col { grid-template-columns: 1fr !important; } }
+@media (max-width: 560px) {
+  .form-row-2col {
+    grid-template-columns: 1fr !important;
+    /* inline style: display:grid ยังคงอยู่ → 1 column grid = OK */
+  }
+}
 
 /* Type toggle */
 .type-toggle { display: flex; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }

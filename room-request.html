@@ -813,16 +813,24 @@ function cancelBooking(id) {
 function initData() {
   function safeRun(fn, lbl) { try { fn(); } catch(e) { console.error(lbl + ':', e); } }
 
-  var roomsReady = false, bookingsReady = false;
+  /* ── Rooms ── */
+  /* get() ทันที เพื่อโหลดข้อมูลเร็วที่สุด */
+  db.collection('rooms').get()
+    .then(function(snap) {
+      allRooms = [];
+      snap.forEach(function(d) {
+        var rm = Object.assign({id: d.id}, d.data());
+        rm.name = normalizeRoomName(rm.name || '');
+        allRooms.push(rm);
+      });
+      allRooms.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+      safeRun(renderRoomTabs,   'tabs');
+      safeRun(renderRoomBanner, 'banner');
+      safeRun(function() { lucide.createIcons(); }, 'lucide');
+    })
+    .catch(function(e) { console.error('rooms get:', e); });
 
-  function hideLoadingWhenReady() {
-    if (!roomsReady || !bookingsReady) return;
-    var ov = document.getElementById('loadingOverlay');
-    if (ov) ov.style.display = 'none';
-    safeRun(function() { lucide.createIcons(); }, 'lucide');
-  }
-
-  /* ── Rooms: onSnapshot เป็น primary source ── */
+  /* onSnapshot ทันที (ไม่ต้อง setTimeout) เพื่อ real-time update */
   db.collection('rooms').onSnapshot(function(snap) {
     allRooms = [];
     snap.forEach(function(d) {
@@ -833,20 +841,18 @@ function initData() {
     allRooms.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
     safeRun(renderRoomTabs,   'rt-tabs');
     safeRun(renderRoomBanner, 'rt-banner');
-    if (!roomsReady) { roomsReady = true; hideLoadingWhenReady(); }
-  }, function(e) {
-    console.error('rooms onSnapshot:', e);
-    if (!roomsReady) { roomsReady = true; hideLoadingWhenReady(); }
-  });
+  }, function() {});
 
-  /* ── Bookings: onSnapshot เป็น primary source ── */
+  /* ── Bookings ── */
+  db.collection('bookings').get()
+    .then(function(snap) {
+      safeRun(function() { processBookings(snap); }, 'bookings');
+    })
+    .catch(function(e) { console.error('bookings get:', e); });
+
   db.collection('bookings').onSnapshot(function(snap) {
     safeRun(function() { processBookings(snap); }, 'rt');
-    if (!bookingsReady) { bookingsReady = true; hideLoadingWhenReady(); }
-  }, function(e) {
-    console.error('bookings onSnapshot:', e);
-    if (!bookingsReady) { bookingsReady = true; hideLoadingWhenReady(); }
-  });
+  }, function() {});
 }
 
 function viewDate(d) { var p = d.split('-'); viewYear = +p[0]; viewMonth = +p[1] - 1; selectedDate = d; renderCalendar(); updateDayView(d, getFilteredBookings(d)); }
