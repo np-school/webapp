@@ -344,7 +344,7 @@ function buildPage(config) {
   });
 }
 
-
+/* ════════════════════════════════
    buildNavbar(subtitle, theme)
    theme: 'blue' (ผู้ใช้ทั่วไป, default) | 'dark' (เจ้าหน้าที่) | 'purple' (legacy)
    backward compat: buildNavbar(subtitle, true) → 'purple'
