@@ -18,6 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
 </head>
@@ -264,12 +265,12 @@
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
-  var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null;
+  var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null,roomImageBlob=null;
 
   /* ── Normalize legacy room names → current names ── */
   var ROOM_NAME_ALIAS={'ห้องประชุมปาริชาติ':'ห้องประชุมปาริชาต'};
   function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
-  var currentPage=1,PAGE_SIZE=100;
+  var currentPage=1,PAGE_SIZE=20;
 
   /* ══════════════════════ INIT ══════════════════════ */
   buildPage({
@@ -310,11 +311,19 @@
   function switchTab(name, btn) { switchSubTab(name, btn); }
 
   function initListeners(){
-    db.collection('bookings').orderBy('createdAt','desc').onSnapshot(function(snap){
+    db.collection('bookings').orderBy('createdAt','desc').limit(500).onSnapshot(function(snap){
       allBookings=[];snap.forEach(function(d){var bk=Object.assign({id:d.id},d.data());bk.room=normalizeRoomName(bk.room||'');allBookings.push(bk);});
       updateStats();renderBookings();renderCharts();
+    },function(err){
+      console.error('bookings onSnapshot error:',err);
+      showToast('โหลดรายการคำขอไม่สำเร็จ: '+err.message,'error');
     });
-    db.collection('rooms').orderBy('name').onSnapshot(function(snap){allRooms=[];snap.forEach(function(d){var rm=Object.assign({id:d.id},d.data());rm.name=normalizeRoomName(rm.name||'');allRooms.push(rm);});renderRooms();});
+    db.collection('rooms').orderBy('name').onSnapshot(function(snap){
+      allRooms=[];snap.forEach(function(d){var rm=Object.assign({id:d.id},d.data());rm.name=normalizeRoomName(rm.name||'');allRooms.push(rm);});renderRooms();
+    },function(err){
+      console.error('rooms onSnapshot error:',err);
+      showToast('โหลดรายการห้องไม่สำเร็จ: '+err.message,'error');
+    });
   }
 
   function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
@@ -431,7 +440,7 @@
     lucide.createIcons();
   }
   function openRoomModal(){
-    editRoomId=null;roomImageDataURL=null;
+    editRoomId=null;roomImageDataURL=null;roomImageBlob=null;
     document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่';
     document.getElementById('roomName').value='';document.getElementById('roomCapacity').value='';document.getElementById('roomDetail').value='';
     clearRoomImageUI();
@@ -439,7 +448,7 @@
   }
   function openRoomEdit(id){
     var r=allRooms.find(function(x){return x.id===id;});if(!r)return;
-    editRoomId=id;roomImageDataURL=r.imageUrl||null;
+    editRoomId=id;roomImageDataURL=r.imageUrl||null;roomImageBlob=null;
     document.getElementById('roomModalTitle').textContent='แก้ไขห้อง';
     document.getElementById('roomName').value=r.name||'';document.getElementById('roomCapacity').value=r.capacity||'';document.getElementById('roomDetail').value=r.detail||'';
     if(r.imageUrl){document.getElementById('roomPreviewImg').src=r.imageUrl;document.getElementById('roomFileName').textContent='รูปภาพที่บันทึกไว้';document.getElementById('roomFileSize').textContent='';document.getElementById('roomUploadDefault').style.display='none';document.getElementById('roomUploadPreview').style.display='block';document.getElementById('roomUploadArea').classList.add('has-file');}
@@ -447,7 +456,7 @@
     openModal('roomModal');
   }
   function clearRoomImageUI(){document.getElementById('roomImageFile').value='';document.getElementById('roomUploadDefault').style.display='block';document.getElementById('roomUploadPreview').style.display='none';document.getElementById('roomUploadArea').classList.remove('has-file');}
-  function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;}
+  function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;roomImageBlob=null;}
   function handleRoomImage(input){
     var file=input.files[0];if(!file)return;
     if(file.size>15*1024*1024){showToast('ไฟล์ใหญ่เกิน 15MB','warn');input.value='';return;}
@@ -479,6 +488,11 @@
         // Fallback: use last result even if still slightly over (better than nothing)
         if(!dataUrl)dataUrl=canvas.toDataURL('image/jpeg',0.3);
         roomImageDataURL=dataUrl;
+        // convert dataUrl -> Blob for Storage upload
+        var byteStr=atob(dataUrl.split(',')[1]);
+        var bytes=new Uint8Array(byteStr.length);
+        for(var bi=0;bi<byteStr.length;bi++)bytes[bi]=byteStr.charCodeAt(bi);
+        roomImageBlob=new Blob([bytes],{type:'image/jpeg'});
         var kb=(dataUrl.length*0.75/1024).toFixed(0);
         document.getElementById('roomPreviewImg').src=dataUrl;
         document.getElementById('roomFileName').textContent=file.name;
@@ -495,9 +509,27 @@
     var name=document.getElementById('roomName').value.trim();
     if(!name){showToast('กรุณาระบุชื่อห้อง','warn');return;}
     var data={name:name,capacity:document.getElementById('roomCapacity').value.trim(),detail:document.getElementById('roomDetail').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    if(roomImageDataURL)data.imageUrl=roomImageDataURL;
-    var p=editRoomId?db.collection('rooms').doc(editRoomId).update(data):db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    p.then(function(){closeModal('roomModal');showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
+
+    function finishSave(){
+      var p=editRoomId?db.collection('rooms').doc(editRoomId).update(data):db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
+      p.then(function(){closeModal('roomModal');showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
+    }
+
+    if(roomImageBlob){
+      if(!storage){showToast('Storage ยังไม่พร้อมใช้งาน','error');return;}
+      var path='room-images/'+(editRoomId||'new_'+Date.now())+'_'+Date.now()+'.jpg';
+      var ref=storage.ref().child(path);
+      showToast('กำลังอัปโหลดรูปภาพ...');
+      ref.put(roomImageBlob,{contentType:'image/jpeg'}).then(function(snap){
+        return snap.ref.getDownloadURL();
+      }).then(function(url){
+        data.imageUrl=url;
+        finishSave();
+      }).catch(function(e){showToast('อัปโหลดรูปไม่สำเร็จ: '+e.message,'error');});
+    } else {
+      if(roomImageDataURL)data.imageUrl=roomImageDataURL;
+      finishSave();
+    }
   }
   function deleteRoom(id,name){if(!confirm('ต้องการลบห้อง "'+name+'" ใช่หรือไม่?'))return;db.collection('rooms').doc(id).delete().then(function(){showToast('ลบห้องแล้ว');}).catch(function(e){showToast(e.message,'error');});}
 
@@ -509,7 +541,8 @@
     var img=document.getElementById('fileViewImg');
     var errEl=document.getElementById('fileViewError');
     document.getElementById('fileViewName').textContent=b.layoutName||'ไฟล์แนบ';
-    if(b.layoutDataURL){img.src=b.layoutDataURL;img.style.display='block';errEl.style.display='none';}
+    if(b.layoutUrl){img.src=b.layoutUrl;img.style.display='block';errEl.style.display='none';}
+    else if(b.layoutDataURL){img.src=b.layoutDataURL;img.style.display='block';errEl.style.display='none';}
     else{img.style.display='none';errEl.style.display='block';errEl.innerHTML='<p style="font-size:13px;color:var(--text3);">ไฟล์ชื่อ: <b>'+(b.layoutName||'-')+'</b><br><span style="font-size:11px;">ไม่มีข้อมูล URL ของรูปภาพ</span></p>';}
     modal.classList.add('open');document.body.style.overflow='hidden';
   }

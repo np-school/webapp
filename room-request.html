@@ -18,6 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
@@ -379,7 +380,7 @@
   var currentUser=null,allBookings=[],allRooms=[],listenerStarted=false;
   var viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth();
   var selectedDate=new Date().toISOString().split('T')[0];
-  var selectedFile=null,selectedFileDataURL=null;
+  var selectedFile=null,selectedFileDataURL=null,selectedFileBlob=null;
   var activeRoomFilter='all'; // 'all' or room name
 
   /* ── Sidebar ── */
@@ -677,6 +678,10 @@
         }
         selectedFileDataURL=dataUrl;
         selectedFile={name:file.name,size:file.size};
+        var byteStr=atob(dataUrl.split(',')[1]);
+        var bytes=new Uint8Array(byteStr.length);
+        for(var bi=0;bi<byteStr.length;bi++)bytes[bi]=byteStr.charCodeAt(bi);
+        selectedFileBlob=new Blob([bytes],{type:'image/jpeg'});
         var kb=(dataUrl.length*0.75/1024).toFixed(0);
         document.getElementById('previewImg').src=dataUrl;
         document.getElementById('fileName').textContent=file.name;
@@ -689,7 +694,7 @@
     };
     reader.readAsDataURL(file);
   }
-  function clearFile(ev){if(ev)ev.stopPropagation();document.getElementById('layoutFile').value='';document.getElementById('uploadDefault').style.display='block';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadArea').classList.remove('has-file');selectedFile=null;selectedFileDataURL=null;}
+  function clearFile(ev){if(ev)ev.stopPropagation();document.getElementById('layoutFile').value='';document.getElementById('uploadDefault').style.display='block';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadArea').classList.remove('has-file');selectedFile=null;selectedFileDataURL=null;selectedFileBlob=null;}
 
   /* ── Modal open/close ── */
   function toggleModal(editId){
@@ -1014,41 +1019,63 @@
       room:document.getElementById('roomSelect').value,
       startTime:tr.start,endTime:tr.end,
       purpose:document.getElementById('purpose').value,
-      equipment:getEquipment(),hasLayout:!!selectedFile,
-      layoutName:selectedFile?selectedFile.name:null,
-      layoutDataURL:selectedFileDataURL||null,
+      equipment:getEquipment(),
     };
 
-    var p;
-    if(editId){
-      /* edit = update single doc, use first selected date */
-      var data=Object.assign({},baseData,{
-        date:selectedDates[0],
-        status:'pending',
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        approveNote:'',approvedBy:'',rejectReason:'',rejectedBy:'',
-      });
-      p=db.collection('bookings').doc(editId).update(data);
-    }else{
-      /* create = one doc per date via batch */
-      var batch=db.batch();
-      selectedDates.forEach(function(ds){
-        var ref=db.collection('bookings').doc();
-        batch.set(ref,Object.assign({},baseData,{
-          date:ds,
+    function doSave(){
+      var p;
+      if(editId){
+        /* edit = update single doc, use first selected date */
+        var data=Object.assign({},baseData,{
+          date:selectedDates[0],
           status:'pending',
-          createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        }));
-      });
-      p=batch.commit();
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          approveNote:'',approvedBy:'',rejectReason:'',rejectedBy:'',
+        });
+        p=db.collection('bookings').doc(editId).update(data);
+      }else{
+        /* create = one doc per date via batch */
+        var batch=db.batch();
+        selectedDates.forEach(function(ds){
+          var ref=db.collection('bookings').doc();
+          batch.set(ref,Object.assign({},baseData,{
+            date:ds,
+            status:'pending',
+            createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+          }));
+        });
+        p=batch.commit();
+      }
+      p.then(function(){
+        toggleModal();
+        var n=selectedDates.length;
+        showToast(editId?'แก้ไขคำขอแล้ว ✓':(n>1?'บันทึก '+n+' วันสำเร็จ ✓':'บันทึกข้อมูลสำเร็จ ✓'));
+      })
+      .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
+      .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
     }
-    p.then(function(){
-      toggleModal();
-      var n=selectedDates.length;
-      showToast(editId?'แก้ไขคำขอแล้ว ✓':(n>1?'บันทึก '+n+' วันสำเร็จ ✓':'บันทึกข้อมูลสำเร็จ ✓'));
-    })
-    .catch(function(err){showToast('เกิดข้อผิดพลาด: '+err.message,'error');})
-    .finally(function(){btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';});
+
+    if(selectedFileBlob){
+      if(!storage){showToast('Storage ยังไม่พร้อมใช้งาน','error');btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';return;}
+      var path='booking-attachments/'+currentUser.uid+'/'+Date.now()+'_'+selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      var ref=storage.ref().child(path);
+      showToast('กำลังอัปโหลดไฟล์แนบ...');
+      ref.put(selectedFileBlob,{contentType:'image/jpeg'}).then(function(snap){
+        return snap.ref.getDownloadURL();
+      }).then(function(url){
+        baseData.hasLayout=true;
+        baseData.layoutName=selectedFile.name;
+        baseData.layoutUrl=url;
+        doSave();
+      }).catch(function(err){
+        showToast('อัปโหลดไฟล์ไม่สำเร็จ: '+err.message,'error');
+        btn.disabled=false;btn.textContent=editId?'บันทึกการแก้ไข':'ยืนยันข้อมูลการจอง';
+      });
+    } else {
+      baseData.hasLayout=false;
+      baseData.layoutName=null;
+      doSave();
+    }
   }
 
   /* ── Room Tabs ── */
@@ -1142,7 +1169,8 @@
     var nameEl=document.getElementById('fileViewName');
     img.style.display='block';errEl.style.display='none';
     nameEl.textContent=b.layoutName||'ไฟล์แนบ';
-    if(b.layoutDataURL){img.src=b.layoutDataURL;}
+    if(b.layoutUrl){img.src=b.layoutUrl;}
+    else if(b.layoutDataURL){img.src=b.layoutDataURL;}
     else{img.style.display='none';errEl.style.display='block';errEl.innerHTML='<i data-lucide="image-off" style="width:40px;height:40px;margin:0 auto 10px;display:block;color:#cbd5e1;"></i><p style="font-size:13px;">ไฟล์ชื่อ: <b>'+(b.layoutName||'-')+'</b></p><p style="font-size:11px;margin-top:4px;color:#94a3b8;">(ไม่มีข้อมูล URL ของรูป)</p>';lucide.createIcons();}
     modal.classList.add('open');document.body.style.overflow='hidden';
     lucide.createIcons();
