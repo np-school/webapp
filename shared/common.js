@@ -360,7 +360,6 @@ function updateSidebarProfile(user) {
    Sidebar Builder
    buildSidebar(activePage)
 
-/*
    activePage:
      'index'            → หน้าแรก
      'profile'          → My Portfolio (โปรไฟล์บุคลากร)
