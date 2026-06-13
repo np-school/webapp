@@ -1059,7 +1059,8 @@ tr:hover td { background: #fafbfd; }
 /* ── 16. Calendar ─────────────────────────────────────────────── */
 .cal-day {
   min-width: 0;
-  height: 32px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1083,7 +1084,7 @@ tr:hover td { background: #fafbfd; }
 
 /* Mobile calendar: ลดขนาดให้พอดีหน้าจอ */
 @media (max-width: 480px) {
-  .cal-day { font-size: 10px; border-radius: 6px; }
+  .cal-day { font-size: 10px; border-radius: 6px; aspect-ratio: 1 / 1; }
 }
 
 /* Multi-date picker */
