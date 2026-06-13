@@ -281,7 +281,8 @@ function buildPage(config) {
     /* ── ตรวจ admin access ─────────────────────── */
     function _proceed(contentEl) {
       var appEl = document.getElementById(appId);
-      if (appEl) appEl.style.display = '';  /* show */
+      /* ลบ display:none ออก ให้ CSS class .app-shell จัดการ flex display เอง */
+      if (appEl) appEl.style.removeProperty('display');
       if (loadEl) loadEl.style.display = 'none';
       if (onAuth) onAuth(user, contentEl);
     }
@@ -300,7 +301,10 @@ function buildPage(config) {
         navTheme:    config.navTheme,
         activePage:  config.activePage,
       });
-      _proceed(document.getElementById('pageContent'));
+      var appEl2 = document.getElementById(appId);
+      if (appEl2) appEl2.style.removeProperty('display');
+      if (loadEl) loadEl.style.display = 'none';
+      if (onAuth) onAuth(user, document.getElementById('pageContent'));
       return;
     }
 

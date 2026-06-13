@@ -194,6 +194,8 @@
 
 
 /* ── 2. Base / Reset ──────────────────────────────────────────── */
+html { height: 100%; }
+
 *, *::before, *::after {
   font-family: 'Sarabun', sans-serif;
   box-sizing: border-box;

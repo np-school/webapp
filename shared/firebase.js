@@ -15,7 +15,8 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
 var auth    = firebase.auth();
 var db      = firebase.firestore();
-var storage = firebase.storage();
+/* storage SDK optional — โหลดเฉพาะหน้าที่ต้องการ */
+var storage = (typeof firebase.storage === 'function') ? firebase.storage() : null;
 
 /* ── LINE Config ── */
 var LINE_CH        = '2009342857';
