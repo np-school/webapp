@@ -51,7 +51,7 @@
 
 <!-- ══════════ Booking Modal ══════════ -->
 <div id="bookingModal" class="modal-bg">
-  <div class="modal-box wide" style="max-width:620px;padding:0;display:flex;flex-direction:column;max-height:94vh;">
+  <div class="modal-box wide" style="padding:0;display:flex;flex-direction:column;max-height:94vh;">
     <div style="background:var(--blue);padding:17px 22px;color:white;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-radius:20px 20px 0 0;">
       <span style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;" id="modalTitle">
         <i data-lucide="calendar" style="width:19px;height:19px;"></i> แบบฟอร์มการจอง
@@ -63,7 +63,7 @@
 
       <!-- 1. สถานที่+วันที่ -->
       <div class="section-divider"><i data-lucide="map-pin" style="width:14px;height:14px;"></i> สถานที่และวันที่</div>
-      <div class="form-group" style="margin-bottom:14px;">
+      <div class="form-group">
         <label class="form-label">ห้องที่ต้องการจอง</label>
         <select id="roomSelect" required onchange="onRoomOrDateChange()">
           <option value="">เลือกห้อง...</option>
@@ -77,10 +77,8 @@
             <span id="mdpMonthLabel" style="font-size:13px;font-weight:700;color:#1e293b;"></span>
             <button type="button" class="mdp-nav" onclick="mdpChangeMonth(1)">›</button>
           </div>
-          <div class="mdp-grid">
-            <div class="mdp-dow">อา</div><div class="mdp-dow">จ</div><div class="mdp-dow">อ</div>
-            <div class="mdp-dow">พ</div><div class="mdp-dow">พฤ</div><div class="mdp-dow">ศ</div><div class="mdp-dow">ส</div>
-            <div id="mdpDays" style="display:contents;"></div>
+          <div class="mdp-grid" id="mdpDays">
+            <!-- JS renders DOW headers + day cells together via mdpRender() -->
           </div>
           <div class="mdp-tags" id="mdpTags"><span style="font-size:11px;color:#94a3b8;font-style:italic;padding:2px 0;">ยังไม่ได้เลือกวันที่</span></div>
         </div>
@@ -376,7 +374,12 @@ function mdpRender() {
       if (parseInt(p[0]) === mdpYear && parseInt(p[1]) - 1 === mdpMonth) bookedDates[b.date] = true;
     });
   }
-  var html = '';
+  /* Render DOW headers first, then day cells — all in one grid */
+  var dowLabels = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var dowColors = ['#f87171', 'var(--text3)', 'var(--text3)', 'var(--text3)', 'var(--text3)', 'var(--text3)', '#60a5fa'];
+  var html = dowLabels.map(function(d, i) {
+    return '<div class="mdp-dow" style="color:' + dowColors[i] + ';">' + d + '</div>';
+  }).join('');
   for (var i = 0; i < first; i++) html += '<div class="mdp-day mdp-other">' + (daysInPrev - first + i + 1) + '</div>';
   for (var d = 1; d <= daysInMonth; d++) {
     var ds   = mdpDateStr(mdpYear, mdpMonth, d);

@@ -819,7 +819,7 @@ label {
   max-height: 90vh;
   overflow-y: auto;
 }
-.modal-box.wide  { max-width: 600px; }
+.modal-box.wide  { max-width: 620px; }
 .modal-box.wider { max-width: 760px; }
 
 .modal-header {
@@ -1093,8 +1093,7 @@ tr:hover td { background: #fafbfd; }
 .mdp-nav:hover { background: var(--blue-light); }
 .mdp-grid     { display: grid; grid-template-columns: repeat(7,1fr); padding: 8px; }
 .mdp-dow      { text-align: center; font-size: 9px; font-weight: 800; color: var(--text3); padding: 3px 0 5px; }
-.mdp-dow:first-child { color: #f87171; }
-.mdp-dow:last-child  { color: #60a5fa; }
+/* DOW day colors rendered inline by mdpRender() — Sun=#f87171, Sat=#60a5fa */
 
 
 /* ── 17. Upload Area ──────────────────────────────────────────── */
