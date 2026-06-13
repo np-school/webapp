@@ -727,10 +727,10 @@ function updateDayView(dateKey, dayBookings) {
     return '<div style="padding:14px 16px;background:' + cardBg + ';border-radius:14px;margin-bottom:10px;border:1.5px solid ' + cardBorder + ';">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
         '<div style="flex:1;min-width:0;">' +
-          '<div style="font-weight:800;font-size:14px;color:' + cardText + ';margin-bottom:5px;">' + b.room + '</div>' +
-          '<div style="font-size:11px;color:' + cardText + ';opacity:.75;margin-bottom:2px;">⏰ ' + (b.startTime || '?') + ' – ' + (b.endTime || '?') + ' · 👤 ' + (b.fullName || b.userName || '-') + '</div>' +
-          '<div style="font-size:11px;color:' + cardText + ';background:' + purposeBg + ';padding:4px 8px;border-radius:6px;margin-top:5px;">📌 ' + (b.purpose || '-') + '</div>' +
-          (b.attendees ? '<div style="font-size:10px;color:' + cardText + ';opacity:.7;margin-top:3px;">👥 ' + b.attendees + ' คน</div>' : '') +
+          '<div style="font-weight:800;font-size:14px;color:' + cardText + ';margin-bottom:5px;">' + esc2(b.room) + '</div>' +
+          '<div style="font-size:11px;color:' + cardText + ';opacity:.75;margin-bottom:2px;">⏰ ' + esc2(b.startTime || '?') + ' – ' + esc2(b.endTime || '?') + ' · 👤 ' + esc2(b.fullName || b.userName || '-') + '</div>' +
+          '<div style="font-size:11px;color:' + cardText + ';background:' + purposeBg + ';padding:4px 8px;border-radius:6px;margin-top:5px;">📌 ' + esc2(b.purpose || '-') + '</div>' +
+          (b.attendees ? '<div style="font-size:10px;color:' + cardText + ';opacity:.7;margin-top:3px;">👥 ' + esc2(b.attendees) + ' คน</div>' : '') +
           fileBtn +
         '</div>' +
         '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:' + badgeBg + ';color:white;">' + statusTxt + '</span>' +
@@ -815,14 +815,14 @@ function renderBookingTable() {
       if (canEdit) actionBtns += '<button onclick="event.stopPropagation();toggleModal(this.dataset.id)" data-id="' + b.id + '" style="background:var(--blue-light);border:1.5px solid var(--blue-mid);color:var(--blue);border-radius:8px;padding:4px 8px;font-weight:700;font-size:11px;cursor:pointer;margin-bottom:3px;">✏️ แก้ไข</button> ';
       if (canEdit) actionBtns += '<button onclick="event.stopPropagation();cancelBooking(this.dataset.id)" data-id="' + b.id + '" style="background:#fff1f2;border:1.5px solid #fecdd3;color:#be123c;border-radius:8px;padding:4px 8px;font-weight:700;font-size:11px;cursor:pointer;">✕ ยกเลิก</button>';
       if (!actionBtns) actionBtns = '—';
-      tbl += '<tr onclick="viewDate(this.dataset.date)" data-date="' + b.date + '" style="border-left:3px solid ' + rp.accent + ';cursor:pointer;">' +
+      tbl += '<tr onclick="viewDate(this.dataset.date)" data-date="' + esc(b.date) + '" style="border-left:3px solid ' + rp.accent + ';cursor:pointer;">' +
         '<td style="text-align:center;color:#94a3b8;font-family:monospace;padding:11px 14px;">' + globalIdx + '</td>' +
-        '<td style="font-weight:700;padding:11px 14px;">' + b.date + '</td>' +
-        '<td style="padding:11px 14px;"><span style="display:inline-flex;align-items:center;gap:4px;background:' + rp.bg + ';color:' + rp.text + ';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid ' + rp.border + ';">' + b.room + '</span></td>' +
-        '<td style="padding:11px 14px;">' + (b.startTime || '-') + '-' + (b.endTime || '-') + '</td>' +
-        '<td style="font-size:11px;padding:11px 14px;">' + (b.fullName || b.userName || '-') + '</td>' +
+        '<td style="font-weight:700;padding:11px 14px;">' + esc2(b.date) + '</td>' +
+        '<td style="padding:11px 14px;"><span style="display:inline-flex;align-items:center;gap:4px;background:' + rp.bg + ';color:' + rp.text + ';font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid ' + rp.border + ';">' + esc2(b.room) + '</span></td>' +
+        '<td style="padding:11px 14px;">' + esc2(b.startTime || '-') + '-' + esc2(b.endTime || '-') + '</td>' +
+        '<td style="font-size:11px;padding:11px 14px;">' + esc2(b.fullName || b.userName || '-') + '</td>' +
         '<td style="padding:11px 14px;">' + personLabel + '</td>' +
-        '<td style="max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:11px 14px;">' + b.purpose + '</td>' +
+        '<td style="max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:11px 14px;">' + esc2(b.purpose || '') + '</td>' +
         '<td style="text-align:center;padding:11px 14px;"><span class="' + badgeCls + '">' + badgeLabel + '</span></td>' +
         '<td style="text-align:center;padding:11px 14px;">' + fileBtn + '</td>' +
         '<td style="white-space:nowrap;padding:11px 14px;">' + actionBtns + '</td>' +
@@ -972,9 +972,9 @@ function renderRoomBanner() {
   if (!room) { banner.innerHTML = ''; return; }
   var rp = getRoomPastel(room.name);
   if (room.imageUrl) {
-    banner.innerHTML = '<div id="roomBannerInner" style="position:relative;height:140px;border-radius:16px;overflow:hidden;background:' + rp.accent + ';background-image:url(\'' + room.imageUrl + '\');background-size:cover;background-position:center;"><div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px;background:linear-gradient(to top,rgba(15,23,42,.75),transparent);"><div style="font-weight:800;color:white;font-size:15px;">' + room.name + '</div><div style="font-size:11px;color:rgba(255,255,255,.8);">' + (room.capacity ? 'ความจุ ' + room.capacity + ' คน' : '') + (room.detail ? ' · ' + room.detail : '') + '</div></div></div>';
+    banner.innerHTML = '<div id="roomBannerInner" style="position:relative;height:140px;border-radius:16px;overflow:hidden;background:' + rp.accent + ';background-image:url(\'' + esc(room.imageUrl) + '\');background-size:cover;background-position:center;"><div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px;background:linear-gradient(to top,rgba(15,23,42,.75),transparent);"><div style="font-weight:800;color:white;font-size:15px;">' + esc2(room.name) + '</div><div style="font-size:11px;color:rgba(255,255,255,.8);">' + (room.capacity ? 'ความจุ ' + esc2(room.capacity) + ' คน' : '') + (room.detail ? ' · ' + esc2(room.detail) : '') + '</div></div></div>';
   } else {
-    banner.innerHTML = '<div style="padding:14px 18px;background:' + rp.bg + ';display:flex;align-items:center;gap:12px;border-radius:16px;border-left:4px solid ' + rp.border + ';"><div style="width:44px;height:44px;background:' + rp.accent + ';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="door-open" style="width:22px;height:22px;color:white;"></i></div><div><div style="font-weight:800;color:#1e293b;font-size:14px;">' + room.name + '</div><div style="font-size:12px;color:#64748b;">' + (room.capacity ? 'ความจุ ' + room.capacity + ' คน · ' : '') + (room.detail || '') + '</div></div></div>';
+    banner.innerHTML = '<div style="padding:14px 18px;background:' + rp.bg + ';display:flex;align-items:center;gap:12px;border-radius:16px;border-left:4px solid ' + rp.border + ';"><div style="width:44px;height:44px;background:' + rp.accent + ';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="door-open" style="width:22px;height:22px;color:white;"></i></div><div><div style="font-weight:800;color:#1e293b;font-size:14px;">' + esc2(room.name) + '</div><div style="font-size:12px;color:#64748b;">' + (room.capacity ? 'ความจุ ' + esc2(room.capacity) + ' คน · ' : '') + esc2(room.detail || '') + '</div></div></div>';
   }
   lucide.createIcons();
 }
@@ -993,7 +993,7 @@ function renderRoomStats() {
   var max = 0; rooms.forEach(function(r) { if ((counts[r.name] || 0) > max) max = (counts[r.name] || 0); });
   wrap.innerHTML = rooms.map(function(r) {
     var c = counts[r.name] || 0, pct = max > 0 ? (c / max * 100) : 0;
-    return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">' + r.name + '</span><span style="color:var(--blue);flex-shrink:0;">' + c + ' ครั้ง</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:' + pct + '%;"></div></div></div>';
+    return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">' + esc2(r.name) + '</span><span style="color:var(--blue);flex-shrink:0;">' + c + ' ครั้ง</span></div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:' + pct + '%;"></div></div></div>';
   }).join('');
 }
 

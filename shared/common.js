@@ -50,6 +50,14 @@ function openModal(id)  { document.getElementById(id).classList.add('open');    
 function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
 
 /* ════════════════════════════════
+   Escape helpers
+   - esc()  : สำหรับค่าที่ใส่ใน inline-JS string เช่น onclick="fn('...')"
+   - esc2() : สำหรับค่าที่ insert เป็น HTML text (กัน XSS)
+   ════════════════════════════════ */
+function esc(s)  { return (s || '').toString().replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+function esc2(s) { return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+/* ════════════════════════════════
    Room Pastel Color System
    ════════════════════════════════ */
 var ROOM_PASTEL_MAP = {
