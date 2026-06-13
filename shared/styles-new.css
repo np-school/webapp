@@ -1080,7 +1080,7 @@ tr:hover td { background: #fafbfd; }
 .cal-day.is-today    { background: var(--blue) !important; color: white !important; box-shadow: 0 4px 10px rgba(29,78,216,.35); }
 .cal-day.is-today::after { background: white !important; }
 .cal-day.is-selected { border: 2px solid var(--blue); background: var(--blue-light); }
-.cal-day.empty       { cursor: default; }
+.cal-day.empty       { cursor: default; padding: 0; }
 .cal-card-body { padding: 13px; }
 @media (max-width: 480px) { .cal-card-body { padding: 8px 6px; } }
 
