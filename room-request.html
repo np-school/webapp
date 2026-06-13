@@ -77,9 +77,11 @@
             <span id="mdpMonthLabel" style="font-size:13px;font-weight:700;color:#1e293b;"></span>
             <button type="button" class="mdp-nav" onclick="mdpChangeMonth(1)">›</button>
           </div>
-          <div class="mdp-grid" id="mdpDays">
-            <!-- JS renders DOW headers + day cells together via mdpRender() -->
+          <div class="mdp-dow-row">
+            <div class="mdp-dow" style="color:#f87171;">อา</div><div class="mdp-dow">จ</div><div class="mdp-dow">อ</div>
+            <div class="mdp-dow">พ</div><div class="mdp-dow">พฤ</div><div class="mdp-dow">ศ</div><div class="mdp-dow" style="color:#60a5fa;">ส</div>
           </div>
+          <div class="mdp-grid" id="mdpDays"></div>
           <div class="mdp-tags" id="mdpTags"><span style="font-size:11px;color:#94a3b8;font-style:italic;padding:2px 0;">ยังไม่ได้เลือกวันที่</span></div>
         </div>
       </div>
@@ -374,12 +376,10 @@ function mdpRender() {
       if (parseInt(p[0]) === mdpYear && parseInt(p[1]) - 1 === mdpMonth) bookedDates[b.date] = true;
     });
   }
-  /* Render DOW headers first, then day cells — all in one grid */
+  /* Render day cells only — DOW header is static HTML above */
   var dowLabels = ['อา','จ','อ','พ','พฤ','ศ','ส'];
   var dowColors = ['#f87171', 'var(--text3)', 'var(--text3)', 'var(--text3)', 'var(--text3)', 'var(--text3)', '#60a5fa'];
-  var html = dowLabels.map(function(d, i) {
-    return '<div class="mdp-dow" style="color:' + dowColors[i] + ';">' + d + '</div>';
-  }).join('');
+  var html = '';
   for (var i = 0; i < first; i++) html += '<div class="mdp-day mdp-other">' + (daysInPrev - first + i + 1) + '</div>';
   for (var d = 1; d <= daysInMonth; d++) {
     var ds   = mdpDateStr(mdpYear, mdpMonth, d);
