@@ -86,6 +86,110 @@
   --bg:          #f8fafc;
   --bg-alt:      #f1f5f9;
   --white:       #ffffff;
+
+  /* ── Role / Group Colors (admin-role) ─────────────────────────
+     เปลี่ยนสีได้ที่นี่ที่เดียว — ทุก component จะอัปเดตพร้อมกัน
+     ──────────────────────────────────────────────────────────── */
+
+  /* SuperAdmin */
+  --role-super-color:   #0d1b2a;
+  --role-super-bg:      #e0e1dd;
+  --role-super-border:  #778da9;
+  --role-super-badge-bg: linear-gradient(135deg,#0d1b2a,#415a77);
+
+  /* กลุ่มบริหารทั่วไป */
+  --role-general-color:  #2563eb;
+  --role-general-bg:     #dbeafe;
+  --role-general-border: #93c5fd;
+
+  /* กลุ่มวิชาการ */
+  --role-academic-color:  #16a34a;
+  --role-academic-bg:     #dcfce7;
+  --role-academic-border: #86efac;
+
+  /* กลุ่มบริหารงานบุคคล */
+  --role-hr-color:  #0369a1;
+  --role-hr-bg:     #e0f2fe;
+  --role-hr-border: #7dd3fc;
+
+  /* หัวหน้ากลุ่มสาระ */
+  --role-hog-color:  #d97706;
+  --role-hog-bg:     #fef3c7;
+  --role-hog-border: #fcd34d;
+
+  /* ผู้ช่วย ผอ.ฝ่ายวิชาการ */
+  --role-asst-academic-color:  #0891b2;
+  --role-asst-academic-bg:     #cffafe;
+  --role-asst-academic-border: #67e8f9;
+
+  /* ผู้ช่วย ผอ.ฝ่ายบริหารงบประมาณ */
+  --role-asst-budget-color:  #0e7490;
+  --role-asst-budget-bg:     #e0f7fa;
+  --role-asst-budget-border: #67e8f9;
+
+  /* ผู้ช่วย ผอ.ฝ่ายบริหารทั่วไป */
+  --role-asst-general-color:  #0369a1;
+  --role-asst-general-bg:     #e0f2fe;
+  --role-asst-general-border: #7dd3fc;
+
+  /* ผู้ช่วย ผอ.ฝ่ายบริหารงานบุคคล */
+  --role-asst-personnel-color:  #1d4ed8;
+  --role-asst-personnel-bg:     #dbeafe;
+  --role-asst-personnel-border: #93c5fd;
+
+  /* ผู้ช่วย ผอ.ฝ่ายกิจการนักเรียน */
+  --role-asst-student-color:  #0d1b2a;
+  --role-asst-student-bg:     #e0e1dd;
+  --role-asst-student-border: #778da9;
+
+  /* รองผู้อำนวยการฝ่ายวิชาการ */
+  --role-dep-academic-color:  #7e22ce;
+  --role-dep-academic-bg:     #e0e1dd;
+  --role-dep-academic-border: #778da9;
+
+  /* รองผู้อำนวยการฝ่ายบริหารงบประมาณ */
+  --role-dep-budget-color:  #1b263b;
+  --role-dep-budget-bg:     #e0e1dd;
+  --role-dep-budget-border: #d8b4fe;
+
+  /* รองผู้อำนวยการฝ่ายบริหารทั่วไป */
+  --role-dep-general-color:  #0d1b2a;
+  --role-dep-general-bg:     #fdf4ff;
+  --role-dep-general-border: #e9d5ff;
+
+  /* รองผู้อำนวยการฝ่ายบริหารงานบุคคล */
+  --role-dep-personnel-color:  #0a1622;
+  --role-dep-personnel-bg:     #fdf4ff;
+  --role-dep-personnel-border: #f0abfc;
+
+  /* ผู้อำนวยการ */
+  --role-director-color:  #b45309;
+  --role-director-bg:     #fef3c7;
+  --role-director-border: #fcd34d;
+
+  /* ยังไม่มีสิทธิ์ */
+  --role-none-color:  #94a3b8;
+  --role-none-bg:     #f8fafc;
+  --role-none-border: #e2e8f0;
+
+  /* Matrix header colors (ตาราง Permissions) */
+  --matrix-general-color:       #2563eb;
+  --matrix-foodcourt-color:     #0284c7;
+  --matrix-academic-color:      #16a34a;
+  --matrix-hr-color:            #0369a1;
+  --matrix-hog-color:           #d97706;
+  --matrix-asst-academic-color: #0891b2;
+  --matrix-asst-budget-color:   #0e7490;
+  --matrix-asst-general-color:  #0369a1;
+  --matrix-asst-personnel-color:#1d4ed8;
+  --matrix-asst-student-color:  #0d1b2a;
+  --matrix-dep-academic-color:  #7e22ce;
+  --matrix-dep-budget-color:    #1b263b;
+  --matrix-dep-general-color:   #0d1b2a;
+  --matrix-dep-personnel-color: #0a1622;
+  --matrix-director-color:      #b45309;
+  --matrix-admin-color:         #0d1b2a;
+  --matrix-action-color:        #64748b;
 }
 
 
