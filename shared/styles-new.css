@@ -1060,6 +1060,7 @@ tr:hover td { background: #fafbfd; }
 .cal-day {
   min-width: 0;
   width: 100%;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1072,7 +1073,6 @@ tr:hover td { background: #fafbfd; }
   border: 1px solid transparent;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 8px 0;
 }
 .cal-day:hover:not(.empty) { background: #f1f5f9; }
 .cal-day.has-booking::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: #eab308; border-radius: 50%; }
@@ -1086,7 +1086,7 @@ tr:hover td { background: #fafbfd; }
 
 /* Mobile calendar: ลดขนาดให้พอดีหน้าจอ */
 @media (max-width: 480px) {
-  .cal-day { font-size: 10px; border-radius: 6px; padding: 6px 0; }
+  .cal-day { font-size: 10px; border-radius: 6px; aspect-ratio: 1 / 1; }
 }
 
 /* Multi-date picker */
