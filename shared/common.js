@@ -269,7 +269,7 @@ function buildNavbar(subtitle, theme) {
           '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_np.gif?alt=media&token=caa0869b-c98f-4ad3-8ee9-930e8789602e" alt="โรงเรียนหนองกี่พิทยาคม" class="navbar-logo">' +
         '</a>' +
         '<a href="index.html" style="display:flex;align-items:center;flex-shrink:0;">' +
-          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Flogo_nporigins.png?alt=media&token=7ad2b246-5cd4-40f8-b28f-69d47ae16e70" alt="NP Origins" class="navbar-logo">' +
+          '<img src="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins.png?alt=media&token=b399f218-b8c6-49a8-8c7b-3aa69ae3c88a" alt="NP Origins" class="navbar-logo">' +
         '</a>' +
         '<div class="navbar-divider">' +
           '<div class="navbar-title">โรงเรียนหนองกี่พิทยาคม</div>' +
