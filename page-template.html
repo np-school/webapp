@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1b2a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+
+  <!-- ── ✏️ แก้ title ── -->
+  <title>ชื่อหน้า – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Access Denied (ใช้เมื่อ requireAdmin ไม่ผ่าน) -->
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:#1d4ed8;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<!--
+  App wrapper — buildPage() จะ inject .app-shell ให้อัตโนมัติ
+  ไม่ต้องเขียน navbar / main-grid / sidebar เอง
+-->
+<div id="myApp" style="display:none;"></div>
+
+<!-- ══════════════════ Modals, Dialogs ══════════════════ -->
+<!-- วาง modal ที่นี่ นอก #myApp เพื่อไม่ให้ถูก scroll ของ content-area ปิดบัง -->
+
+
+<!-- ══════════════════════════════ SCRIPT ══════════════════════════════ -->
+<script>
+
+/* ══════════════════════════════════════════════════════════════
+   buildPage() — auth guard + shell builder ในก้าวเดียว
+
+   ✏️ ตัวเลือกที่ต้องแก้:
+     appId        → id ของ <div id="myApp">
+     navSubtitle  → ข้อความบรรทัดที่ 2 ใน navbar
+     navTheme     → 'blue' (ผู้ใช้ทั่วไป) | 'dark' (เจ้าหน้าที่)
+     activePage   → ชื่อหน้า สำหรับ highlight เมนู sidebar
+                    ดูค่าที่รองรับใน buildSidebar() ใน common.js
+     requireAdmin → false           : ทุกคนที่ login แล้วเข้าได้
+                    'admin'         : ต้องมีในตาราง admins
+                    'superadmin'    : SuperAdmin เท่านั้น
+                    'bookings'      : ต้องมีสิทธิ์ bookings
+                    'staff'         : ต้องมีสิทธิ์ staff
+                    (permission key อื่นๆ ตามที่ define ใน Firestore)
+   ══════════════════════════════════════════════════════════════ */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ชื่อหน้า',        /* ✏️ */
+  navTheme:     'dark',             /* ✏️ 'blue' | 'dark' */
+  activePage:   'my-page',          /* ✏️ */
+  requireAdmin: false,              /* ✏️ */
+
+  onAuth: function(user, contentEl) {
+    /* user  — Firebase user object (email, displayName, photoURL, ...)
+       contentEl — <div class="content-area"> ที่พร้อมรับ HTML */
+
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    /* ── render page content ── */
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+
+    /* ── โหลดข้อมูล ── */
+    loadData();
+  }
+});
+
+/* ══ Page State ══ */
+var currentUser = null;
+
+/* ══ Render ══ */
+function renderPage() {
+  return (
+    /* Page header */
+    '<div class="page-header">' +
+      '<div>' +
+        '<div class="page-title-row">' +
+          '<div class="page-icon blue">' +
+            '<i data-lucide="home" style="width:20px;height:20px;color:white;"></i>' +  /* ✏️ icon */
+          '</div>' +
+          '<h1 class="page-title">ชื่อหน้า</h1>' +  /* ✏️ */
+        '</div>' +
+        '<p class="page-sub">คำอธิบายหน้านี้</p>' +  /* ✏️ */
+      '</div>' +
+      /* ปุ่มด้านขวา (ถ้ามี) */
+      /* '<button class="btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>' */
+    '</div>' +
+
+    /* เนื้อหา */
+    '<div class="card" id="mainContent">' +
+      '<p style="padding:40px;text-align:center;color:#94a3b8;">กำลังโหลด...</p>' +
+    '</div>'
+  );
+}
+
+/* ══ Data ══ */
+function loadData() {
+  /* TODO: ดึงข้อมูลจาก Firestore และ render */
+}
+
+</script>
+</body>
+</html>

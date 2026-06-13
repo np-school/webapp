@@ -43,23 +43,11 @@
   <a href="index.html" style="padding:10px 24px;background:var(--role-super-color);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
-<!-- Main App -->
-<div id="adminRoleApp" style="display:none;" class="app-shell">
+<!-- Main App — buildPage() จะ inject app-shell + navbar + sidebar ให้อัตโนมัติ -->
+<div id="adminRoleApp" style="display:none;"></div>
 
-  <!-- Navbar: flex-shrink:0 ใน app-shell -->
-  <nav id="navbar" class="navbar"></nav>
-
-  <!-- main-grid: flex:1, min-h:0 → sidebar + content scroll อิสระ -->
-  <div class="main-grid">
-    <div class="main-grid-inner">
-
-      <!-- Sidebar -->
-      <div class="sidebar-wrap" id="sidebar">
-        <div class="sidebar-inner" id="sidebarInner"></div>
-      </div>
-
-      <!-- Content -->
-      <div class="content-area">
+<!-- ─── Page Content (inject เข้า contentEl ใน onAuth) ─────────────────── -->
+<template id="adminRoleContent">
 
       <!-- Page header -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;">
@@ -143,11 +131,7 @@
         </div>
 
       </div><!-- /card -->
-    </div><!-- /.content-area -->
-
-    </div><!-- /.main-grid-inner -->
-  </div><!-- /.main-grid -->
-</div><!-- /.app-shell #adminRoleApp -->
+</template><!-- #adminRoleContent -->
 
 <!-- ══════════════ Modal: Add/Edit Admin ══════════════ -->
 <div id="adminModal" class="modal-bg">
@@ -1141,30 +1125,27 @@ var GROUP_DEFS = [
 ];
 
 /* ══════════════════════ INIT ══════════════════════ */
-buildNavbar('NP Origins · จัดการสิทธิ์ Admin', 'dark');
+buildPage({
+  appId:        'adminRoleApp',
+  navSubtitle:  'NP Origins · จัดการสิทธิ์ Admin',
+  navTheme:     'dark',
+  activePage:   'admin-role',
+  requireAdmin: 'superadmin',
 
-auth.onAuthStateChanged(function(user){
-  if(!user){ window.location.href='index.html'; return; }
-  db.collection('admins').doc(user.email.toLowerCase()).get().then(function(doc){
-    document.getElementById('loadingOverlay').style.display='none';
-    if(!doc.exists||user.email.toLowerCase()!==SUPER_ADMIN){
-      document.getElementById('accessDenied').style.display='flex';
-      lucide.createIcons(); return;
-    }
+  onAuth: function(user, contentEl) {
     currentUser = user;
-    document.getElementById('adminRoleApp').style.display='block';
     updateNavUser(user);
-    buildSidebar('admin-role');
-    checkAdminAccess(user.email);
     updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    /* inject page content จาก <template> */
+    var tpl = document.getElementById('adminRoleContent');
+    if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+    lucide.createIcons();
     subscribeAdmins();
     loadStaffList();
-    lucide.createIcons();
-  }).catch(function(){
-    document.getElementById('loadingOverlay').style.display='none';
-    document.getElementById('accessDenied').style.display='flex';
-    lucide.createIcons();
-  });
+  }
 });
 
 /* ══════════════════════ DATA ══════════════════════ */
