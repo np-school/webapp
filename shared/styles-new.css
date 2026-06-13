@@ -1091,8 +1091,8 @@ tr:hover td { background: #fafbfd; }
 .mdp-header   { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border); }
 .mdp-nav      { background: none; border: none; cursor: pointer; color: var(--blue); padding: 4px 8px; border-radius: 6px; font-size: 14px; font-weight: 700; }
 .mdp-nav:hover { background: var(--blue-light); }
-.mdp-grid     { display: grid; grid-template-columns: repeat(7,1fr); padding: 8px; }
-.mdp-dow      { text-align: center; font-size: 9px; font-weight: 800; color: var(--text3); padding: 3px 0 5px; }
+.mdp-grid     { display: grid; grid-template-columns: repeat(7,1fr); padding: 8px; gap: 2px; }
+.mdp-dow      { text-align: center; font-size: 9px; font-weight: 800; color: var(--text3); padding: 5px 2px; }
 /* DOW day colors rendered inline by mdpRender() — Sun=#f87171, Sat=#60a5fa */
 
 
