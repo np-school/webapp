@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="#0d1b2a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
@@ -13,123 +13,15 @@
   <title>Admin Dashboard - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="shared/styles.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
-  <style>
-    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-    .spinner{border:3px solid #e2e8f0;border-top:3px solid #7c3aed;border-radius:50%;width:44px;height:44px;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    /* Sidebar */
-    
-    }
-    /* Cards / UI */
-    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-    .tab-btn{padding:12px 18px;border:none;background:none;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;}
-    .tab-btn.active{color:#7c3aed;border-bottom-color:#7c3aed;}
-    .tab-pane{display:none;}
-    .tab-pane.active{display:block;}
-    .badge-pending{background:#fef9c3;color:#b45309;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
-    .badge-approved{background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
-    .badge-rejected{background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
-    .booking-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;transition:border-color .15s;}
-    .booking-card:hover{border-color:#c4b5fd;}
-    .booking-card.status-pending{border-left:4px solid #f59e0b;}
-    .booking-card.status-approved{border-left:4px solid #22c55e;}
-    .booking-card.status-rejected{border-left:4px solid #ef4444;}
-    .btn-approve{background:#16a34a;color:white;border:none;padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;}
-    .btn-approve:hover{background:#15803d;}
-    .btn-reject{background:#dc2626;color:white;border:none;padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;}
-    .btn-reject:hover{background:#b91c1c;}
-    .btn-delete{background:#f1f5f9;color:#64748b;border:none;padding:7px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;}
-    .btn-delete:hover{background:#fee2e2;color:#b91c1c;}
-    .btn-primary{background:#7c3aed;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
-    .btn-primary:hover{background:#6d28d9;}
-    .btn-secondary{background:#f1f5f9;color:#475569;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
-    .btn-secondary:hover{background:#e2e8f0;}
-    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
-    .modal-bg.open{display:flex;}
-    .modal-box{background:white;border-radius:20px;width:100%;max-width:480px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,.2);}
-    input[type=text],textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;font-family:'Sarabun',sans-serif;}
-    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
-    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
-    .toast.hide{animation:toastOut .3s ease forwards;}
-    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
-    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
-    .filter-pill{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
-    .filter-pill.active{background:#7c3aed;border-color:#7c3aed;color:white;}
-    .list-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:12px;transition:all .15s;gap:12px;}
-    .list-item:hover{border-color:#c4b5fd;background:#faf5ff;}
-    .stat-card{padding:18px;border-radius:16px;display:flex;align-items:center;gap:13px;background:white;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,.04);}
-    .upload-area{border:2px dashed #c4b5fd;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:#faf5ff;}
-    .upload-area:hover{border-color:#7c3aed;background:#f5f3ff;}
-    .upload-area.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
-    #fileViewModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:2000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
-    #fileViewModal.open{display:flex;}
-
-    /* ── Charts ── */
-    .charts-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:0;}
-    @media(max-width:1100px){.charts-section{grid-template-columns:1fr 1fr;}}
-    @media(max-width:640px){.charts-section{grid-template-columns:1fr;}}
-    .chart-card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:18px 20px;}
-    .chart-title{font-size:13px;font-weight:800;color:#1e293b;margin-bottom:4px;}
-    .chart-sub{font-size:11px;color:#94a3b8;margin-bottom:14px;}
-    .donut-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
-    .donut-center{position:absolute;text-align:center;pointer-events:none;}
-    .donut-big{font-size:26px;font-weight:800;color:#0f172a;line-height:1;}
-    .donut-label{font-size:10px;color:#94a3b8;font-weight:700;margin-top:2px;}
-    .donut-legend{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
-    .legend-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-    .legend-label{font-size:11px;color:#475569;font-weight:600;flex:1;}
-    .legend-val{font-size:12px;font-weight:800;color:#0f172a;}
-    .hbar-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
-    .hbar-label{display:flex;justify-content:space-between;align-items:center;}
-    .hbar-name{font-size:11px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
-    .hbar-pct{font-size:11px;font-weight:800;color:#1d4ed8;}
-    .hbar-track{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;}
-    .hbar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
-    .tbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-    .tbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .tbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .tbar-track{width:80px;background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
-    .tbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
-    .tbar-num{font-size:10px;font-weight:800;color:#64748b;min-width:28px;text-align:right;}
-
-    /* ── Pagination ── */
-    .page-btn{padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;background:white;transition:all .15s;}
-    .page-btn:hover{border-color:#a78bfa;color:#7c3aed;}
-    .page-btn.active{background:#7c3aed;border-color:#7c3aed;color:white;}
-    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
-    /* ── Summary ── */
-    .sum-room-card{background:white;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:border-color .15s;}
-    .sum-room-card:hover{border-color:#c4b5fd;}
-    .sum-room-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#faf5ff;border-bottom:1px solid #ede9fe;gap:10px;flex-wrap:wrap;cursor:pointer;user-select:none;}
-    .sum-room-title{font-size:14px;font-weight:800;color:#1e293b;}
-    .sum-room-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-    .sum-badge{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;}
-    .sum-badge-total{background:#ede9fe;color:#6d28d9;}
-    .sum-badge-approved{background:#dcfce7;color:#15803d;}
-    .sum-badge-pending{background:#fef9c3;color:#b45309;}
-    .sum-badge-rejected{background:#fee2e2;color:#b91c1c;}
-    .sum-room-body{padding:14px 18px;}
-    .sum-bar-wrap{margin-bottom:8px;}
-    .sum-bar-label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#334155;margin-bottom:3px;}
-    .sum-bar-track{background:#f1f5f9;border-radius:6px;height:10px;overflow:hidden;}
-    .sum-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
-    .sum-booking-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
-    .sum-booking-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border-radius:9px;font-size:11px;color:#475569;}
-    .sum-booking-row .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-    .sum-toggle{font-size:10px;color:#7c3aed;font-weight:700;cursor:pointer;background:none;border:none;padding:0;margin-left:auto;}
-    .sum-grand-card{padding:16px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;border:1.5px solid #e2e8f0;background:white;}
-  </style>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body>
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -143,23 +35,22 @@
   <a href="index.html" style="padding:10px 24px;background:#7c3aed;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
-<!-- Main App -->
-<div id="adminApp" style="display:none;">
-  <!-- Navbar -->
-  <nav id="navbar" class="navbar"></nav>
+<!-- Main App — buildPage() จะ inject app-shell + navbar + sidebar ให้อัตโนมัติ -->
+<div id="roomAdminApp" style="display:none;"></div>
 
-  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
+<!-- ─── Page Content (inject เข้า contentEl ใน onAuth) ─────────────────── -->
+<template id="roomAdminContent">
 
-    <!-- Sidebar -->
-    <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" id="sidebarInner" style="display:flex;flex-direction:column;height:100%;"></div>
-    </div>
-
-    <!-- Main content -->
-    <div style="flex:1;min-width:0;padding:28px 24px;display:flex;flex-direction:column;gap:24px;">
+      <!-- Page header -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+        <div class="page-icon purple" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="calendar-cog" style="width:20px;height:20px;color:white;"></i>
+        </div>
+        <h1 style="font-size:22px;font-weight:800;color:#1e293b;">จัดการระบบขอใช้ห้อง/สถานที่</h1>
+      </div>
 
       <!-- Charts Panel -->
-      <div id="chartsPanel">
+      <div id="chartsPanel" style="margin-bottom:24px;">
         <div class="charts-section">
           <!-- Donut: สถานะคำขอ -->
           <div class="chart-card">
@@ -192,7 +83,7 @@
       </div>
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
         <div class="stat-card"><div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:#d97706;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:#16a34a;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">อนุมัติแล้ว</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statApproved">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:20px;height:20px;color:#dc2626;"></i></div><div><p style="font-size:10px;color:#64748b;font-weight:700;">ไม่อนุมัติ</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statRejected">0</p></div></div>
@@ -203,7 +94,7 @@
       <div class="card" style="overflow:hidden;flex:1;display:flex;flex-direction:column;">
 
         <!-- Sub-tab bar -->
-        <div style="display:flex;border-bottom:1px solid #e2e8f0;padding:0 20px;background:white;flex-shrink:0;">
+        <div style="display:flex;border-bottom:1px solid var(--border);padding:0 20px;background:var(--white);flex-shrink:0;">
           <button class="tab-btn active" id="subtab-btn-bookings" onclick="switchSubTab('bookings',this)">
             <i data-lucide="layout-list" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>คำขอทั้งหมด
           </button>
@@ -293,9 +184,7 @@
         </div>
 
       </div>
-    </div>
-  </div>
-</div>
+</template><!-- #roomAdminContent -->
 
 <!-- Modal: Approve -->
 <div id="approveModal" class="modal-bg">
@@ -355,12 +244,12 @@
 
 <!-- File View Modal -->
 <div id="fileViewModal">
-  <div style="background:white;border-radius:20px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.3);">
-    <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+  <div style="background:var(--white);border-radius:20px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.3);">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
       <span style="font-weight:800;color:#1e293b;font-size:14px;">📎 ไฟล์แนบ — ผังการจัดโต๊ะ</span>
-      <button onclick="closeFileView()" style="background:#f1f5f9;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
+      <button onclick="closeFileView()" style="background:var(--bg-alt);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:#64748b;">✕ ปิด</button>
     </div>
-    <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:#f8fafc;">
+    <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:var(--bg);">
       <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
       <div id="fileViewError" style="display:none;padding:40px;color:#94a3b8;"></div>
       <p id="fileViewName" style="font-size:12px;color:#64748b;margin-top:10px;font-weight:600;"></p>
@@ -371,7 +260,6 @@
 <script>
 
   // LINE handled by Cloud Functions
-  var SUPER_ADMIN = 'nattapol@nongki.ac.th';
   var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null;
 
   /* ── Normalize legacy room names → current names ── */
@@ -379,32 +267,28 @@
   function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
   var currentPage=1,PAGE_SIZE=100;
 
-  function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';lucide.createIcons();}
-  function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+  /* ══════════════════════ INIT ══════════════════════ */
+  buildPage({
+    appId:        'roomAdminApp',
+    navSubtitle:  'NP Origins · Admin Dashboard',
+    navTheme:     'dark',
+    activePage:   'room-admin',
+    requireAdmin: 'bookings',
 
-  /* build navbar immediately (purple for admin); sidebar built after permissions load */
-  buildNavbar('NP Origins · Admin Dashboard', true);
-
-  auth.onAuthStateChanged(function(user){
-    if(!user){window.location.href='index.html';return;}
-    db.collection('admins').doc(user.email.toLowerCase()).get().then(function(doc){
-      document.getElementById('loadingOverlay').style.display='none';
-      if(!doc.exists){document.getElementById('accessDenied').style.display='flex';lucide.createIcons();return;}
-      currentAdmin=user;
-      var d=doc.data()||{};
-      currentAdmin._perms=d.permissions||{};
-      var isSA=user.email.toLowerCase()===SUPER_ADMIN;
-      if(!isSA&&!currentAdmin._perms.bookings){document.getElementById('accessDenied').style.display='flex';lucide.createIcons();return;}
-      if(user.email.toLowerCase()===SUPER_ADMIN){
-        currentAdmin._perms={bookings:true,rooms:true,portfolio:true,staff:true,admins:true};
-      }
-      document.getElementById('adminApp').style.display='block';
+    onAuth: function(user, contentEl) {
+      currentAdmin = user;
       updateNavUser(user);
       buildSidebar('room-admin');
       checkAdminAccess(user.email);
       updateSidebarProfile(user);
-      initListeners();lucide.createIcons();
-    }).catch(function(e){console.error(e);document.getElementById('loadingOverlay').style.display='none';document.getElementById('accessDenied').style.display='flex';lucide.createIcons();});
+
+      /* inject page content จาก <template> */
+      var tpl = document.getElementById('roomAdminContent');
+      if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+      initListeners();
+      lucide.createIcons();
+    }
   });
 
   /* ════════════════════════════════
@@ -923,14 +807,6 @@
       });
       setTimeout(function(){drawTrendChart('mini-'+cardId,bks,100);},30);
     }
-  }
-
-  function switchTab(name,btn){
-    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
-    document.querySelectorAll('.sidebar-btn.admin-btn').forEach(function(b){b.classList.remove('active');b.style.color='#7c3aed';});
-    document.getElementById('tab-'+name).classList.add('active');
-    if(btn){btn.classList.add('active');btn.style.color='white';}
-    closeSidebar();
   }
 
   /* ══════════════════════════════════════
