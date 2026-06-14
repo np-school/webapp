@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1b2a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2Ficon-192.png?alt=media&token=ef7cdd3f-88b4-4fb1-b565-5cb0226a3fe8">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+  <title>ตั้งค่า – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+
+  <style>
+    /* ── Theme Picker ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+    }
+    .theme-card {
+      border: 2.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, transform .15s;
+      background: var(--white);
+      position: relative;
+    }
+    .theme-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.10);
+    }
+    .theme-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-tint), 0 6px 20px rgba(0,0,0,.10);
+    }
+    /* checkmark badge */
+    .theme-card .check-badge {
+      display: none;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      z-index: 1;
+    }
+    .theme-card.selected .check-badge { display: flex; }
+    .check-badge svg { width: 12px; height: 12px; color: white; }
+
+    /* Navbar preview strip */
+    .theme-preview-bar {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+    .preview-dot  { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); }
+    .preview-line { height: 7px; border-radius: 4px; background: rgba(255,255,255,.35); }
+
+    /* Content section preview */
+    .theme-preview-content {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .preview-btn {
+      height: 22px;
+      border-radius: 7px;
+      width: 60%;
+    }
+    .preview-card-line { height: 6px; border-radius: 3px; background: var(--border); }
+    .preview-card-line.short { width: 50%; }
+
+    /* Theme label */
+    .theme-label {
+      padding: 8px 12px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .theme-label-name { font-size: 12px; font-weight: 800; color: var(--text); }
+    .theme-label-desc { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+    /* Section card */
+    .settings-section { margin-bottom: 28px; }
+    .settings-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+
+    /* Preview panel (live) */
+    .live-preview-wrap {
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .live-preview-navbar {
+      padding: 11px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .live-preview-logo {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .live-preview-title { font-size: 13px; font-weight: 800; color: white; }
+    .live-preview-sub   { font-size: 10px; color: rgba(255,255,255,.7); }
+    .live-preview-body  {
+      padding: 14px;
+      background: var(--bg);
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 10px;
+      min-height: 90px;
+    }
+    .live-preview-sidebar {
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .live-sidebar-item {
+      height: 16px;
+      border-radius: 5px;
+      background: var(--border);
+    }
+    .live-sidebar-item.active {
+      background: var(--accent);
+    }
+    .live-preview-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .live-content-btn {
+      height: 26px;
+      border-radius: 8px;
+      width: 80px;
+      align-self: flex-end;
+    }
+    .live-content-line { height: 8px; border-radius: 4px; background: var(--border); }
+    .live-content-line.short { width: 60%; }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:#1d4ed8;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<div id="settingsApp" style="display:none;"></div>
+
+<script>
+
+/* ══════════════════════════════════════════════════════════
+   THEME DEFINITIONS
+   key        → ชื่อที่บันทึกใน localStorage
+   navTheme   → 'blue' | 'dark'  (ส่งให้ buildPage)
+   label      → ชื่อที่แสดง
+   desc       → คำอธิบายสั้น
+   navbar     → สีพื้น navbar สำหรับ preview
+   navbarSub  → สี subtitle
+   accent     → --accent token (ปุ่ม, active sidebar)
+   accentDark → --accent-dark
+   accentTint → --accent-tint
+   ══════════════════════════════════════════════════════════ */
+var THEMES = [
+  {
+    key: 'blue',
+    navTheme: 'blue',
+    label: 'Ocean Blue',
+    desc: 'ธีมเริ่มต้น · สีน้ำเงิน',
+    navbar:     '#1d4ed8',
+    navbarSub:  '#93c5fd',
+    accent:     '#1d4ed8',
+    accentDark: '#1e40af',
+    accentMid:  '#60a5fa',
+    accentLight:'#93c5fd',
+    accentTint: '#eff6ff',
+  },
+  {
+    key: 'ink',
+    navTheme: 'dark',
+    label: 'Ink Black',
+    desc: 'ธีมเจ้าหน้าที่ · สีดำเข้ม',
+    navbar:     '#0d1b2a',
+    navbarSub:  '#778da9',
+    accent:     '#0d1b2a',
+    accentDark: '#1b263b',
+    accentMid:  '#415a77',
+    accentLight:'#778da9',
+    accentTint: '#e0e1dd',
+  },
+  {
+    key: 'emerald',
+    navTheme: 'blue',
+    label: 'Emerald',
+    desc: 'สดชื่น · สีเขียวมรกต',
+    navbar:     '#059669',
+    navbarSub:  '#6ee7b7',
+    accent:     '#059669',
+    accentDark: '#047857',
+    accentMid:  '#34d399',
+    accentLight:'#6ee7b7',
+    accentTint: '#ecfdf5',
+  },
+  {
+    key: 'violet',
+    navTheme: 'blue',
+    label: 'Violet',
+    desc: 'สร้างสรรค์ · สีม่วง',
+    navbar:     '#7c3aed',
+    navbarSub:  '#c4b5fd',
+    accent:     '#7c3aed',
+    accentDark: '#6d28d9',
+    accentMid:  '#a78bfa',
+    accentLight:'#c4b5fd',
+    accentTint: '#ede9fe',
+  },
+  {
+    key: 'rose',
+    navTheme: 'blue',
+    label: 'Rose',
+    desc: 'อบอุ่น · สีชมพูแดง',
+    navbar:     '#e11d48',
+    navbarSub:  '#fda4af',
+    accent:     '#e11d48',
+    accentDark: '#be123c',
+    accentMid:  '#fb7185',
+    accentLight:'#fda4af',
+    accentTint: '#fff1f2',
+  },
+  {
+    key: 'amber',
+    navTheme: 'blue',
+    label: 'Amber',
+    desc: 'สดใส · สีทองส้ม',
+    navbar:     '#d97706',
+    navbarSub:  '#fcd34d',
+    accent:     '#d97706',
+    accentDark: '#b45309',
+    accentMid:  '#fbbf24',
+    accentLight:'#fcd34d',
+    accentTint: '#fffbeb',
+  },
+  {
+    key: 'sky',
+    navTheme: 'blue',
+    label: 'Sky',
+    desc: 'โปร่งใส · สีฟ้าอ่อน',
+    navbar:     '#0284c7',
+    navbarSub:  '#7dd3fc',
+    accent:     '#0284c7',
+    accentDark: '#0369a1',
+    accentMid:  '#38bdf8',
+    accentLight:'#7dd3fc',
+    accentTint: '#e0f2fe',
+  },
+  {
+    key: 'slate',
+    navTheme: 'dark',
+    label: 'Slate',
+    desc: 'เรียบหรู · สีเทาเข้ม',
+    navbar:     '#334155',
+    navbarSub:  '#94a3b8',
+    accent:     '#334155',
+    accentDark: '#1e293b',
+    accentMid:  '#64748b',
+    accentLight:'#94a3b8',
+    accentTint: '#f1f5f9',
+  },
+];
+
+var STORAGE_KEY = 'np_theme';
+var currentThemeKey = localStorage.getItem(STORAGE_KEY) || 'blue';
+
+/* ── Apply theme tokens to :root ── */
+function applyTheme(key, save) {
+  var t = THEMES.find(function(th) { return th.key === key; });
+  if (!t) return;
+  currentThemeKey = t.key;
+  var root = document.documentElement.style;
+  root.setProperty('--accent',       t.accent);
+  root.setProperty('--accent-dark',  t.accentDark);
+  root.setProperty('--accent-mid',   t.accentMid);
+  root.setProperty('--accent-light', t.accentLight);
+  root.setProperty('--accent-tint',  t.accentTint);
+  /* navbar vars */
+  root.setProperty('--navbar-bg',       t.navbar);
+  root.setProperty('--navbar-sub-color',t.navbarSub);
+
+  /* body class for theme-staff vs theme-blue */
+  document.body.classList.remove('theme-staff', 'theme-blue');
+  document.body.classList.add(t.navTheme === 'dark' ? 'theme-staff' : 'theme-blue');
+
+  if (save) localStorage.setItem(STORAGE_KEY, key);
+}
+
+/* Apply on load immediately (ก่อน buildPage เพื่อป้องกัน flash) */
+applyTheme(currentThemeKey, false);
+
+/* ══ Render ══ */
+function renderPage() {
+  return (
+    '<div class="page-header">' +
+      '<div>' +
+        '<div class="page-title-row">' +
+          '<div class="page-icon blue">' +
+            '<i data-lucide="settings-2" style="width:20px;height:20px;color:white;"></i>' +
+          '</div>' +
+          '<h1 class="page-title">ตั้งค่า</h1>' +
+        '</div>' +
+        '<p class="page-sub">ปรับธีมสีและการแสดงผลของระบบ</p>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="max-width:860px;">' +
+
+      /* ── Live Preview ── */
+      '<div class="settings-section">' +
+        '<div class="settings-section-title">ตัวอย่างธีม</div>' +
+        '<div class="live-preview-wrap">' +
+          '<div class="live-preview-navbar" id="liveNavbar">' +
+            '<div class="live-preview-logo">' +
+              '<i data-lucide="school" style="width:14px;height:14px;color:rgba(255,255,255,.8);"></i>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div class="live-preview-title">NP Origins</div>' +
+              '<div class="live-preview-sub" id="liveNavSub">ตั้งค่า</div>' +
+            '</div>' +
+            '<div style="width:28px;height:28px;background:rgba(255,255,255,.15);border-radius:8px;"></div>' +
+          '</div>' +
+          '<div class="live-preview-body">' +
+            '<div class="live-preview-sidebar">' +
+              '<div class="live-sidebar-item active" id="liveSidebarActive"></div>' +
+              '<div class="live-sidebar-item"></div>' +
+              '<div class="live-sidebar-item"></div>' +
+            '</div>' +
+            '<div class="live-preview-content">' +
+              '<div class="live-content-btn" id="liveBtn"></div>' +
+              '<div class="live-content-line"></div>' +
+              '<div class="live-content-line short"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── Theme Picker ── */
+      '<div class="settings-section">' +
+        '<div class="settings-section-title">ธีมสี</div>' +
+        '<div class="theme-grid" id="themeGrid"></div>' +
+      '</div>' +
+
+      /* ── Reset ── */
+      '<div class="settings-section">' +
+        '<div class="settings-section-title">รีเซ็ต</div>' +
+        '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);">กลับสู่ธีมเริ่มต้น</div>' +
+            '<div style="font-size:12px;color:var(--text2);margin-top:2px;">คืนค่าธีมเป็น Ocean Blue</div>' +
+          '</div>' +
+          '<button class="btn-secondary" onclick="resetTheme()" style="white-space:nowrap;">' +
+            '<i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> รีเซ็ต' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+
+    '</div>'
+  );
+}
+
+/* ── Build theme card HTML ── */
+function buildThemeGrid() {
+  var grid = document.getElementById('themeGrid');
+  if (!grid) return;
+  grid.innerHTML = THEMES.map(function(t) {
+    var isSelected = t.key === currentThemeKey;
+    return (
+      '<div class="theme-card' + (isSelected ? ' selected' : '') + '" ' +
+           'id="themeCard-' + t.key + '" ' +
+           'onclick="selectTheme(\'' + t.key + '\')" ' +
+           'title="' + t.label + '">' +
+        '<div class="check-badge">' +
+          '<i data-lucide="check" style="width:12px;height:12px;color:white;"></i>' +
+        '</div>' +
+        /* Navbar strip */
+        '<div class="theme-preview-bar" style="background:' + t.navbar + ';">' +
+          '<div class="preview-dot"></div>' +
+          '<div class="preview-line" style="width:36px;"></div>' +
+          '<div style="flex:1;"></div>' +
+          '<div class="preview-dot"></div>' +
+        '</div>' +
+        /* Content mockup */
+        '<div class="theme-preview-content">' +
+          '<div class="preview-btn" style="background:' + t.accent + ';opacity:.85;"></div>' +
+          '<div class="preview-card-line"></div>' +
+          '<div class="preview-card-line short"></div>' +
+        '</div>' +
+        /* Label */
+        '<div class="theme-label">' +
+          '<div class="theme-label-name">' + t.label + '</div>' +
+          '<div class="theme-label-desc">' + t.desc + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+  lucide.createIcons();
+  updateLivePreview(currentThemeKey);
+}
+
+/* ── Select & apply ── */
+function selectTheme(key) {
+  /* update cards */
+  document.querySelectorAll('.theme-card').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  var card = document.getElementById('themeCard-' + key);
+  if (card) card.classList.add('selected');
+
+  applyTheme(key, true);
+  updateLivePreview(key);
+
+  /* Update navbar class live */
+  var navbar = document.querySelector('.navbar');
+  if (navbar) {
+    navbar.classList.remove('blue', 'dark');
+    var t = THEMES.find(function(th) { return th.key === key; });
+    if (t) navbar.classList.add(t.navTheme);
+  }
+
+  showToast('เปลี่ยนธีมเป็น ' + (THEMES.find(function(th){return th.key===key;}) || {}).label, 'success');
+}
+
+/* ── Live preview panel ── */
+function updateLivePreview(key) {
+  var t = THEMES.find(function(th) { return th.key === key; });
+  if (!t) return;
+  var nav = document.getElementById('liveNavbar');
+  var btn = document.getElementById('liveBtn');
+  var sideActive = document.getElementById('liveSidebarActive');
+  if (nav) nav.style.background = t.navbar;
+  if (btn) btn.style.background = t.accent;
+  if (sideActive) sideActive.style.background = t.accent;
+}
+
+/* ── Reset ── */
+function resetTheme() {
+  selectTheme('blue');
+}
+
+/* ══ Boot ══ */
+buildPage({
+  appId:        'settingsApp',
+  navSubtitle:  'ตั้งค่า',
+  navTheme:     'blue',
+  activePage:   'settings',
+  requireAdmin: false,
+
+  onAuth: function(user, contentEl) {
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    /* re-apply saved theme after buildPage (buildPage resets body class) */
+    applyTheme(currentThemeKey, false);
+
+    /* patch navbar class to match saved theme */
+    var savedTheme = THEMES.find(function(t) { return t.key === currentThemeKey; });
+    if (savedTheme) {
+      var navbar = document.querySelector('.navbar');
+      if (navbar) {
+        navbar.classList.remove('blue', 'dark');
+        navbar.classList.add(savedTheme.navTheme);
+      }
+    }
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+    buildThemeGrid();
+  }
+});
+
+</script>
+</body>
+</html>
