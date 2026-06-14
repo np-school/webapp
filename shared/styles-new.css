@@ -881,9 +881,16 @@ label {
   justify-content: center;
   flex-shrink: 0;
 }
-.modal-title-icon i { width: 18px; height: 18px; }
-.modal-title-group h3 { font-size: 16px; font-weight: 800; color: var(--text); }
-.modal-title-group p  { font-size: 12px; color: var(--text2); }
+/* Lucide injects <svg> replacing <i> — target both */
+.modal-title-icon i,
+.modal-title-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+}
+.modal-title-group h3 { font-size: 16px; font-weight: 800; color: var(--text); margin: 0; }
+.modal-title-group p  { font-size: 12px; color: var(--text2); margin: 0; }
 
 /* ปุ่มปิด X ทรงกลม — ใช้กับ modal แบบฟอร์ม/รายการ
    (modal แบบ confirm เช่น อนุมัติ/ลบ ไม่ต้องใช้ เพราะมีปุ่ม "ยกเลิก" อยู่แล้ว) */
@@ -902,7 +909,8 @@ label {
   transition: background .15s, color .15s;
 }
 .modal-close:hover { background: var(--border); color: var(--text); }
-.modal-close i { width: 16px; height: 16px; }
+.modal-close i,
+.modal-close svg { width: 16px; height: 16px; display: block; }
 
 /* File view modal */
 #fileViewModal {
