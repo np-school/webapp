@@ -12,7 +12,7 @@
   <title>ระบบส่งงานประจำภาคเรียน - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="shared/styles.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -50,35 +50,11 @@
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client"></script>
   <style>
-    *{font-family:'Sarabun',sans-serif;box-sizing:border-box;margin:0;padding:0;}
-    #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-    .spinner{border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;width:48px;height:48px;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    
-    }
-    @media(min-width:1024px){#hamburgerBtn{display:none!important;}}
-    .card{background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-    .toast{position:fixed;bottom:20px;right:20px;padding:13px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;animation:toastIn .3s ease;}
-    .toast.hide{animation:toastOut .3s ease forwards;}
-    @keyframes toastIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
-    @keyframes toastOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
-    .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
-    .modal-bg.open{display:flex;}
-    .modal-box{background:white;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2);}
-    input[type=text],input[type=url],select,textarea{border:1.5px solid #e2e8f0;padding:10px 14px;border-radius:10px;outline:none;font-size:14px;width:100%;color:#1e293b;transition:border-color .15s;font-family:'Sarabun',sans-serif;}
-    input:focus,select:focus,textarea:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
-
     /* ── Progress Ring ── */
     .prog-ring{transform:rotate(-90deg);}
     .prog-ring circle{transition:stroke-dashoffset .5s ease;}
 
-    /* ── Document Item Card ── */
-    .doc-item{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 18px;transition:all .2s;display:flex;align-items:center;gap:14px;}
-    .doc-item:hover{border-color:#bfdbfe;box-shadow:0 4px 12px rgba(29,78,216,.06);}
-    .doc-item.submitted{border-left:4px solid #22c55e;}
-    .doc-item.pending{border-left:4px solid #e2e8f0;}
-    .doc-item.reviewed{border-left:4px solid #3b82f6;}
-    .doc-item.revision{border-left:4px solid #f59e0b;}
+    /* ── Document Item Card (icon / status dot) ── */
     .doc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
     .dot-none{background:#d1d5db;}
@@ -86,19 +62,11 @@
     .dot-reviewed{background:#3b82f6;}
     .dot-revision{background:#f59e0b;}
 
-    /* ── Semester Selector ── */
-    .sem-pill{padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .2s;}
-    .sem-pill.active{background:#1d4ed8;border-color:#1d4ed8;color:white;box-shadow:0 4px 12px rgba(29,78,216,.25);}
-
     /* ── Upload Zone ── */
     .upload-zone{border:2px dashed #bfdbfe;border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
     .upload-zone:hover{border-color:#1d4ed8;background:#eff6ff;}
     .upload-zone.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
     .upload-zone.dragging{border-color:#1d4ed8;background:#dbeafe;border-style:solid;}
-
-    /* ── Progress bar ── */
-    .pbar-bg{background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;}
-    .pbar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#1d4ed8,#3b82f6);transition:width .6s ease;}
 
     /* ── Year header ── */
     .year-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%);border-radius:20px;padding:28px 28px 24px;position:relative;overflow:hidden;}
@@ -227,9 +195,15 @@
   document.addEventListener('DOMContentLoaded', initA4Scaler);
   </script>
 </head>
-<body style="background:#f8fafc;min-height:100vh;">
+<body>
 
-<div id="loadingOverlay"><div class="spinner"></div><p style="color:#64748b;font-size:14px;font-weight:700;">กำลังโหลด...</p></div>
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Staff Not Found Gate -->
@@ -253,28 +227,13 @@
   </div>
 </div>
 
-<div id="loginGate" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:2000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);">
-  <div style="background:white;border-radius:24px;width:100%;max-width:380px;padding:36px 28px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);">
-    <div style="width:64px;height:64px;border-radius:20px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-      <i data-lucide="lock" style="width:28px;height:28px;color:#1d4ed8;"></i>
-    </div>
-    <h3 style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">เข้าสู่ระบบก่อนใช้งาน</h3>
-    <p style="font-size:14px;color:#64748b;margin-bottom:24px;">กรุณาเข้าสู่ระบบด้วยบัญชี Google</p>
-    <button onclick="handleLogin()" style="width:100%;padding:14px;background:#1d4ed8;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
-      เข้าสู่ระบบด้วย Google
-    </button>
-  </div>
-</div>
+<!--
+  App wrapper — buildPage() จะ inject .app-shell ให้อัตโนมัติ
+-->
+<div id="myApp" style="display:none;"></div>
 
-<!-- Main App -->
-<div id="mainApp" style="display:none;">
-  <nav id="navbar" class="navbar"></nav>
-  <div style="display:flex;max-width:1280px;margin:0 auto;min-height:calc(100vh - 69px);">
-    <div class="sidebar-wrap" id="sidebar">
-      <div class="sidebar-inner" id="sidebarInner"></div>
-    </div>
-    <div style="flex:1;min-width:0;padding:28px 20px;" id="contentArea">
+<!-- ─── Page Content (inject เข้า contentEl ใน onAuth) ─────────────────── -->
+<template id="portfolioContent">
 
       <!-- ── YEAR & SEMESTER SELECTOR ── -->
       <div class="year-hero" style="margin-bottom:24px;">
@@ -334,9 +293,7 @@
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
+</template><!-- #portfolioContent -->
 
 <!-- ── Upload / Edit Modal ── -->
 <div id="uploadModal" class="modal-bg" onclick="if(event.target===this)closeUploadModal()">
@@ -967,45 +924,51 @@ window.onload = function() {
   if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
 };
 
-/* ─── AUTH ─── */
-auth.onAuthStateChanged(function(u) {
-  var ov = document.getElementById('loadingOverlay');
-  if (!u) {
-    if (ov) ov.style.display = 'none';
-    document.getElementById('loginGate').style.display = 'flex';
-    return;
-  }
-  db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
-    .then(function(snap) {
-      if (ov) ov.style.display = 'none';
-      if (snap.empty) { showStaffDenied(u.email); return; }
-      currentUser      = u;
-      currentStaffData = snap.docs[0].data();
-      document.getElementById('loginGate').style.display = 'none';
-      document.getElementById('mainApp').style.display   = 'block';
-      buildNavbar('ระบบส่งงานประจำภาคเรียน', false);
-      updateNavUser(u);
-      buildSidebar('portfolio-teacher');
-      checkAdminAccess(u.email);
-      renderStaffInfoBadge();
-      initYearSemUI();
-      loadAdminRoles();
-      /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
-      loadDocTypesFromFirestore(function() {
-        loadSubmissions();
+/* ─── AUTH / PAGE SHELL ───
+   buildPage() จะ handle auth guard + navbar/sidebar shell ให้
+   (theme 'blue' = ผู้ใช้ทั่วไป/ครู) จากนั้นตรวจสอบ staff collection เพิ่มเอง */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ระบบส่งงานประจำภาคเรียน',
+  navTheme:     'blue',
+  activePage:   'portfolio-teacher',
+  requireAdmin: false,
+
+  onAuth: function(u, contentEl) {
+    db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
+      .then(function(snap) {
+        if (snap.empty) { showStaffDenied(u.email); return; }
+        currentUser      = u;
+        currentStaffData = snap.docs[0].data();
+
+        updateNavUser(u);
+        updateSidebarProfile(u);
+        checkAdminAccess(u.email);
+
+        /* inject page content จาก <template> */
+        var tpl = document.getElementById('portfolioContent');
+        if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+        renderStaffInfoBadge();
+        initYearSemUI();
+        loadAdminRoles();
+        /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
+        loadDocTypesFromFirestore(function() {
+          loadSubmissions();
+        });
+        lucide.createIcons();
+        /* init Google auth after user confirmed */
+        setTimeout(initGoogleAuth, 500);
+      })
+      .catch(function(e) {
+        showStaffDenied(u.email);
       });
-      lucide.createIcons();
-      /* init Google auth after user confirmed */
-      setTimeout(initGoogleAuth, 500);
-    })
-    .catch(function(e) {
-      if (ov) ov.style.display = 'none';
-      showStaffDenied(u.email);
-    });
+  }
 });
 
 function showStaffDenied(email) {
-  document.getElementById('loginGate').style.display = 'none';
+  var loadEl = document.getElementById('loadingOverlay');
+  if (loadEl) loadEl.style.display = 'none';
   var denied = document.getElementById('staffDenied');
   if (denied) {
     document.getElementById('staffDeniedEmail').textContent = email || '';
