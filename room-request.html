@@ -189,11 +189,14 @@
 <!-- ══════════ Booking Modal ══════════ -->
 <div id="bookingModal" class="modal-bg">
   <div class="modal-box wide" style="padding:0;display:flex;flex-direction:column;max-height:94vh;">
-    <div style="background:var(--blue);padding:17px 22px;color:white;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-radius:20px 20px 0 0;">
-      <span style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;" id="modalTitle">
-        <i data-lucide="calendar" style="width:19px;height:19px;"></i> แบบฟอร์มการจอง
-      </span>
-      <button onclick="toggleModal()" style="background:none;border:none;color:white;cursor:pointer;opacity:.75;display:flex;"><i data-lucide="x" style="width:21px;height:21px;"></i></button>
+    <div class="modal-header" style="padding:20px 22px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--blue-lt);">
+          <i data-lucide="calendar" style="width:18px;height:18px;color:var(--blue);"></i>
+        </div>
+        <div class="modal-title" id="modalTitle">แบบฟอร์มการจอง</div>
+      </div>
+      <button class="modal-close" onclick="toggleModal()"><i data-lucide="x"></i></button>
     </div>
     <form id="bookingForm" style="padding:22px;overflow-y:auto;flex:1;" onsubmit="submitBooking(event)">
       <input type="hidden" id="editBookingId">
