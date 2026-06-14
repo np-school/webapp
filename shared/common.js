@@ -177,6 +177,10 @@ function buildPageShell(config) {
   var appEl = document.getElementById(appId);
   if (!appEl) { console.warn('buildPageShell: no element id=' + appId); return; }
 
+  /* ── inject body theme class (ใช้กับ accent tokens ใน styles-new.css) ── */
+  document.body.classList.remove('theme-staff', 'theme-blue');
+  document.body.classList.add(theme === 'dark' ? 'theme-staff' : 'theme-blue');
+
   appEl.classList.add('app-shell');
   appEl.innerHTML =
     '<nav id="navbar" class="navbar"></nav>' +

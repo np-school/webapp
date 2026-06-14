@@ -62,6 +62,16 @@
   --navbar-login-bg:      #ffffff;
   --navbar-login-color:   #1d4ed8;
 
+  /* ── Theme Accent Tokens (เปลี่ยนค่าตาม body.theme-staff / body.theme-blue) ──
+     default = theme-blue (สมาชิกทั่วไป) */
+  --accent:        #1d4ed8;
+  --accent-dark:   #1e40af;
+  --accent-mid:    #60a5fa;
+  --accent-light:  #93c5fd;
+  --accent-tint:   #eff6ff;
+  --accent-warn:   #f59e0b;
+  --text-heading:  #374151;
+
   /* Status */
   --green:       #16a34a;
   --green-light: #f0fdf4;
@@ -190,6 +200,16 @@
   --matrix-director-color:      #b45309;
   --matrix-admin-color:         #0d1b2a;
   --matrix-action-color:        #64748b;
+}
+
+
+/* ── body.theme-staff (navTheme: 'dark' — เจ้าหน้าที่) override accent tokens ── */
+body.theme-staff {
+  --accent:        #0d1b2a;   /* Ink Black */
+  --accent-dark:   #1b263b;   /* Prussian Blue */
+  --accent-mid:    #415a77;   /* Dusk Blue */
+  --accent-light:  #778da9;   /* Lavender Grey */
+  --accent-tint:   #e0e1dd;   /* Alabaster Grey */
 }
 
 
@@ -325,22 +345,22 @@ body {
 
 /* ── Navbar: Blue (ผู้ใช้ทั่วไป) — default ── */
 .navbar.blue {
-  --navbar-bg:          #1d4ed8;
+  --navbar-bg:          var(--accent);
   --navbar-shadow:      rgba(29,78,216,.25);
-  --navbar-sub-color:   #bfdbfe;
-  --navbar-login-color: #1d4ed8;
+  --navbar-sub-color:   var(--accent-light);
+  --navbar-login-color: var(--accent);
 }
 
 /* ── Navbar: Dark (เจ้าหน้าที่/Admin) ── */
 .navbar.dark {
-  --navbar-bg:          #0d1b2a;
+  --navbar-bg:          var(--accent);
   --navbar-shadow:      rgba(0,0,0,.35);
   --navbar-btn-bg:      rgba(255,255,255,.10);
   --navbar-logo-border: rgba(255,255,255,.20);
   --navbar-divider:     rgba(255,255,255,.15);
-  --navbar-sub-color:   #778da9;
-  --navbar-login-bg:    #1b263b;
-  --navbar-login-color: #e0e1dd;
+  --navbar-sub-color:   var(--accent-light);
+  --navbar-login-bg:    var(--accent-dark);
+  --navbar-login-color: var(--accent-tint);
   box-shadow: 0 4px 16px rgba(0,0,0,.35);
 }
 
@@ -623,7 +643,7 @@ body {
 
 /* Primary — Blue (default) */
 .btn-primary {
-  background: var(--blue);
+  background: var(--accent);
   color: white;
   border: none;
   padding: 9px 16px;
@@ -637,7 +657,7 @@ body {
   transition: background .15s;
   font-family: 'Sarabun', sans-serif;
 }
-.btn-primary:hover { background: var(--blue-dark); }
+.btn-primary:hover { background: var(--accent-dark); }
 
 /* Primary — Purple */
 .btn-primary.purple { background: var(--purple); }
@@ -1015,7 +1035,7 @@ label {
   transition: all .15s;
   font-family: 'Sarabun', sans-serif;
 }
-.filter-pill.active         { background: var(--purple); border-color: var(--purple); color: white; }
+.filter-pill.active         { background: var(--accent); border-color: var(--accent); color: white; }
 .filter-pill.active.blue    { background: var(--blue);   border-color: var(--blue); }
 
 
