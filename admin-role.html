@@ -1312,7 +1312,7 @@ function renderListView(){
     var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#0d1b2a,#415a77);color:white;padding:2px 8px;border-radius:8px;font-weight:800;">⭐ SuperAdmin</span>':'';
     var actions=isSA?'':
       '<div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">' +
-        '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" style="background:#eff6ff;color:#1d4ed8;"><i data-lucide="settings-2" style="width:13px;height:13px;"></i><span style="font-size:11px;font-weight:700;margin-left:3px;">แก้ไขสิทธิ์</span></button>' +
+        '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" style="background:var(--accent-tint);color:var(--accent);"><i data-lucide="settings-2" style="width:13px;height:13px;"></i><span style="font-size:11px;font-weight:700;margin-left:3px;">แก้ไขสิทธิ์</span></button>' +
         '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
