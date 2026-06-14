@@ -239,7 +239,7 @@
     <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:var(--gap-tight);">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาต</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--purple);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
@@ -287,7 +287,7 @@
         </div>
         <button class="modal-close" onclick="closeModal('docTypeModal')"><i data-lucide="x"></i></button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:var(--gap-card);">
         <div>
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ชื่อหัวข้อ <span style="color:#ef4444;">*</span></label>
           <input type="text" id="dtLabel" placeholder="เช่น แผนการจัดการเรียนรู้" maxlength="80">
@@ -313,7 +313,7 @@
         </div>
         <div>
           <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">ไอคอน (Lucide icon name)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:var(--gap-tight);align-items:center;">
             <input type="text" id="dtIcon" placeholder="เช่น file-text, book-open, star" style="flex:1;" oninput="previewDtIcon()">
             <div id="dtIconPreview" style="width:36px;height:36px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i id="dtIconPreviewIcon" data-lucide="file" style="width:18px;height:18px;color:var(--purple);"></i>
@@ -336,8 +336,8 @@
           </div>
         </div>
         <div>
-          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:8px;">สี</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="dtColorPicker">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:var(--gap-tight);">สี</label>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight);" id="dtColorPicker">
             <div class="color-swatch selected" style="background:#3b82f6;" data-color="#3b82f6" onclick="selectDtColor('#3b82f6',this)"></div>
             <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectDtColor('#8b5cf6',this)"></div>
             <div class="color-swatch" style="background:#22c55e;" data-color="#22c55e" onclick="selectDtColor('#22c55e',this)"></div>
@@ -365,7 +365,7 @@
           </label>
         </div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:20px;">
+      <div style="display:flex;gap:var(--gap-item);margin-top:20px;">
         <button onclick="closeModal('docTypeModal')" class="btn-secondary" style="flex:1;">ยกเลิก</button>
         <button onclick="saveDocType()" class="btn-primary" style="flex:2;background:var(--purple);">บันทึก</button>
       </div>
@@ -377,7 +377,7 @@
 <div id="reviewModal" class="modal-bg" onclick="if(event.target===this)closeModal('reviewModal')">
   <div class="modal-box" style="max-width:640px;">
     <div style="padding:24px;">
-      <div class="modal-header" style="margin-bottom:16px;">
+      <div class="modal-header" style="margin-bottom:var(--gap-section);">
         <div class="modal-title-group">
           <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--purple-light);">
             <i data-lucide="eye" style="width:18px;height:18px;color:var(--purple);"></i>
@@ -387,19 +387,19 @@
             <p id="reviewModalSub" style="font-size:12px;color:#64748b;margin-top:2px;"></p>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:var(--gap-tight);">
           <span id="reviewRoleBadge" style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;"></span>
           <button class="modal-close" onclick="closeModal('reviewModal')"><i data-lucide="x"></i></button>
         </div>
       </div>
-      <div id="multiFileSection" style="display:none;margin-bottom:14px;">
-        <p style="font-size:12px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">รายวิชาที่ส่งมา — เลือกรายวิชาเพื่อตรวจ</p>
+      <div id="multiFileSection" style="display:none;margin-bottom:var(--gap-card);">
+        <p style="font-size:12px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--gap-tight);">รายวิชาที่ส่งมา — เลือกรายวิชาเพื่อตรวจ</p>
         <div id="multiFileList"></div>
       </div>
-      <div id="reviewWorkflowBar" style="margin-bottom:14px;"></div>
-      <div id="reviewFileInfo" style="margin-bottom:14px;padding:12px 14px;background:var(--bg);border-radius:12px;border:1px solid var(--border);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+      <div id="reviewWorkflowBar" style="margin-bottom:var(--gap-card);"></div>
+      <div id="reviewFileInfo" style="margin-bottom:var(--gap-card);padding:12px 14px;background:var(--bg);border-radius:12px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--gap-tight);">
+          <div style="display:flex;align-items:center;gap:var(--gap-tight);min-width:0;">
             <i data-lucide="file" style="width:16px;height:16px;color:#64748b;flex-shrink:0;"></i>
             <span style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="reviewFileName">-</span>
           </div>
@@ -413,7 +413,7 @@
           <p style="font-size:12px;color:#92400e;font-weight:600;" id="reviewNoteText"></p>
         </div>
       </div>
-      <div style="margin-bottom:14px;" id="reviewNoteSection">
+      <div style="margin-bottom:var(--gap-card);" id="reviewNoteSection">
         <label style="font-size:13px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px;">
           ความคิดเห็น / หมายเหตุ
           <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องกรอกก่อนกดยืนยัน</span>
@@ -424,7 +424,7 @@
             ลายมือชื่อผู้ตรวจ
             <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องเซ็นก่อนกดยืนยัน</span>
           </label>
-          <div id="existingSigPreview" style="display:none;margin-bottom:8px;padding:8px 12px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;">
+          <div id="existingSigPreview" style="display:none;margin-bottom:var(--gap-tight);padding:8px 12px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;">
             <p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:6px;">✓ ลายเซ็นที่เซ็นไว้แล้ว</p>
             <img id="existingSigImg" src="" style="max-height:52px;object-fit:contain;display:block;">
             <p style="font-size:10px;color:#64748b;margin-top:4px;">เซ็นใหม่ด้านล่างเพื่อแทนที่</p>
@@ -435,7 +435,7 @@
           </div>
         </div>
       </div>
-      <div style="display:flex;gap:10px;" id="reviewActionButtons"></div>
+      <div style="display:flex;gap:var(--gap-item);" id="reviewActionButtons"></div>
     </div>
   </div>
 </div>
@@ -455,7 +455,7 @@
       <p class="page-sub">ภาพรวมการส่งเอกสารประจำภาคเรียน</p>
     </div>
     <!-- Year & Sem -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:var(--gap-item);flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:6px 10px;">
         <button onclick="changeYear(-1)" style="background:none;border:none;cursor:pointer;color:var(--purple);display:flex;padding:2px;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
         <span id="yearLabel" style="font-size:14px;font-weight:800;color:#0f172a;min-width:40px;text-align:center;"></span>
@@ -467,7 +467,7 @@
   </div>
 
   <!-- Sub Tab Bar -->
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
     <div class="sub-tab-bar">
       <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
         <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
@@ -486,11 +486,11 @@
   </div>
 
   <!-- ══ SUB TAB: OVERVIEW ══ -->
-  <div id="panelOverview" style="display:flex;flex-direction:column;gap:20px;">
+  <div id="panelOverview" style="display:flex;flex-direction:column;gap:var(--gap-section);">
 
     <!-- Charts Panel -->
     <div id="chartsPanel">
-      <div style="display:grid;grid-template-columns:280px 1fr 1fr;gap:14px;align-items:start;" class="charts-section-grid">
+      <div style="display:grid;grid-template-columns:280px 1fr 1fr;gap:var(--gap-card);align-items:start;" class="charts-section-grid">
         <div class="chart-card" style="display:flex;flex-direction:column;">
           <p class="chart-title">สถานะงานทั้งหมด</p>
           <p class="chart-sub">สัดส่วนสถานะเอกสารทุกประเภท</p>
@@ -501,7 +501,7 @@
               <div class="donut-label" style="font-size:12px;">รายการ</div>
             </div>
           </div>
-          <div id="donutLegend" style="display:flex;flex-direction:column;gap:10px;margin-top:20px;padding:0 4px;"></div>
+          <div id="donutLegend" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-top:20px;padding:0 4px;"></div>
         </div>
         <div class="chart-card">
           <p class="chart-title">ความคืบหน้าแต่ละกลุ่มสาระ</p>
@@ -521,7 +521,7 @@
     </div>
 
     <!-- Stat Cards -->
-    <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+    <div class="stat-cards-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap-card);">
       <div class="stat-card">
         <div style="width:40px;height:40px;border-radius:12px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i data-lucide="users" style="width:20px;height:20px;color:var(--purple);"></i>
@@ -542,7 +542,7 @@
       </div>
       <div class="stat-card">
         <div style="width:40px;height:40px;border-radius:12px;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i data-lucide="eye" style="width:20px;height:20px;color:var(--accent);"></i>
+          <i data-lucide="eye" style="width:20px;height:20px;color:#3b82f6;"></i>
         </div>
         <div>
           <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statReviewed">-</p>
@@ -571,14 +571,14 @@
 
     <!-- Controls -->
     <div class="card" style="padding:16px 18px;">
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-item);justify-content:space-between;">
+        <div style="display:flex;gap:var(--gap-tight);flex-wrap:wrap;">
           <button class="filter-pill active" id="filterAll" onclick="setFilter('all')">ทั้งหมด</button>
           <button class="filter-pill" id="filterIncomplete" onclick="setFilter('incomplete')">ยังไม่ครบ</button>
           <button class="filter-pill" id="filterComplete" onclick="setFilter('complete')">ส่งครบแล้ว</button>
           <button class="filter-pill" id="filterPending" onclick="setFilter('pending')">รอตรวจ</button>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:var(--gap-tight);">
           <button class="view-btn active" id="viewList" onclick="setView('list')">
             <i data-lucide="layout-list" style="width:14px;height:14px;"></i> รายครู
           </button>
@@ -612,18 +612,18 @@
   <!-- ══ SUB TAB: GROUP SUMMARY ══ -->
   <div id="panelGroup" style="display:none;flex-direction:column;gap:16px;">
     <div class="card" style="padding:20px 22px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-section);">
         <div>
           <h2 style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:2px;">เปรียบเทียบรายกลุ่มสาระ</h2>
           <p style="font-size:12px;color:#64748b;">จำนวนงานที่ส่ง แยกตามสถานะ</p>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;" id="groupChartLegend"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight);align-items:center;" id="groupChartLegend"></div>
       </div>
       <div id="groupBarChart" style="overflow-x:auto;"></div>
     </div>
     <div class="card" style="padding:20px 22px;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
-        <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
+        <div style="display:flex;align-items:center;gap:var(--gap-tight);">
           <i data-lucide="layers" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>
           <label style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;">เลือกกลุ่มสาระ:</label>
         </div>
@@ -643,7 +643,7 @@
   <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
   <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
     <div class="card" style="padding:20px 22px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
         <div>
           <h2 style="font-size:17px;font-weight:800;color:#0f172a;">จัดการหัวข้อการส่งงาน</h2>
           <p style="font-size:12px;color:#64748b;margin-top:2px;">เพิ่ม / แก้ไข / ลบ หัวข้องานที่ครูต้องส่งในแต่ละภาคเรียน · ลากเพื่อเรียงลำดับ</p>
@@ -652,14 +652,14 @@
           <i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มหัวข้องาน
         </button>
       </div>
-      <div id="docTypeList" style="display:flex;flex-direction:column;gap:8px;">
+      <div id="docTypeList" style="display:flex;flex-direction:column;gap:var(--gap-tight);">
         <div style="text-align:center;padding:40px;color:var(--text3);">
-          <i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;margin-bottom:8px;"></i>
+          <i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;margin-bottom:var(--gap-tight);"></i>
           <p style="font-size:13px;">กำลังโหลด...</p>
         </div>
       </div>
     </div>
-    <div style="padding:14px 16px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;display:flex;gap:10px;">
+    <div style="padding:14px 16px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;display:flex;gap:var(--gap-item);">
       <i data-lucide="info" style="width:16px;height:16px;color:#0369a1;flex-shrink:0;margin-top:1px;"></i>
       <div>
         <p style="font-size:13px;font-weight:700;color:#0369a1;">หมายเหตุ</p>
@@ -671,7 +671,7 @@
   <!-- ══ SUB TAB: INDIVIDUAL TEACHER ══ -->
   <div id="panelTeacher" style="display:none;flex-direction:column;gap:16px;">
     <div class="card" style="padding:18px 20px;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;">
         <div style="flex:1;min-width:220px;position:relative;">
           <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text3);pointer-events:none;"></i>
           <input type="text" id="teacherSearchInput" placeholder="พิมพ์ชื่อครู หรืออีเมล เพื่อค้นหา..." style="padding-left:36px;width:100%;" oninput="renderTeacherDropdown()">
@@ -680,7 +680,7 @@
           <div id="teacherDropdown" style="position:absolute;top:0;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:200;max-height:280px;overflow-y:auto;"></div>
         </div>
       </div>
-      <div id="selectedTeacherPill" style="display:none;margin-top:12px;padding:10px 14px;background:var(--purple-light);border:1.5px solid var(--purple-mid);border-radius:12px;align-items:center;gap:10px;">
+      <div id="selectedTeacherPill" style="display:none;margin-top:12px;padding:10px 14px;background:var(--purple-light);border:1.5px solid var(--purple-mid);border-radius:12px;align-items:center;gap:var(--gap-item);">
         <img id="selectedTeacherAvatar" src="" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
         <div style="flex:1;min-width:0;">
           <p id="selectedTeacherName" style="font-size:14px;font-weight:800;color:#0f172a;"></p>
@@ -693,7 +693,7 @@
     </div>
 
     <div id="teacherDetailPanel" style="display:none;flex-direction:column;gap:16px;">
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;" id="teacherStatCards">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap-item);" id="teacherStatCards">
         <div class="stat-card" style="flex-direction:column;gap:4px;padding:14px 16px;">
           <p style="font-size:11px;color:#64748b;font-weight:600;">ส่งงานแล้ว</p>
           <p id="ts_submitted" style="font-size:28px;font-weight:800;color:#22c55e;">-</p>
@@ -716,7 +716,7 @@
           <p id="ts_missing" style="font-size:28px;font-weight:800;color:#ef4444;">-</p>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px;" id="teacherChartsRow">
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--gap-card);" id="teacherChartsRow">
         <div class="chart-card">
           <p class="chart-title">สัดส่วนสถานะงานทั้งหมด</p>
           <p class="chart-sub" id="teacherChartSub">ครู: -</p>
@@ -736,7 +736,7 @@
         </div>
       </div>
       <div class="card" style="padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-card);flex-wrap:wrap;gap:var(--gap-tight);">
           <h3 style="font-size:15px;font-weight:800;color:#0f172a;">รายละเอียดการส่งงาน & บันทึกข้อความ</h3>
           <span id="teacherSubCount" style="font-size:12px;color:var(--purple);font-weight:700;background:var(--purple-light);padding:3px 12px;border-radius:20px;"></span>
         </div>
@@ -1260,7 +1260,7 @@ function renderListView() {
 
   var summaryHtml = '';
   if (waitCount || headWaitCount || assistWaitCount || deputyWaitCount) {
-    summaryHtml = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:#fffdf5;border:1.5px solid #fde68a;border-radius:12px;align-items:center;">' +
+    summaryHtml = '<div style="display:flex;gap:var(--gap-item);flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:#fffdf5;border:1.5px solid #fde68a;border-radius:12px;align-items:center;">' +
       '<i data-lucide="bell-ring" style="width:16px;height:16px;color:#b45309;flex-shrink:0;"></i>' +
       '<span style="font-size:13px;font-weight:700;color:#92400e;">มีงานรอตรวจ:</span>' +
       (waitCount       ? '<span class="review-badge waiting">📤 รอหัวหน้าฯ ' + waitCount + ' คน</span>' : '') +
@@ -1270,7 +1270,7 @@ function renderListView() {
     '</div>';
   }
 
-  var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:10px;">';
+  var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:var(--gap-item);">';
   teachers.forEach(function(t) {
     var subCount = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
     var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
@@ -1304,7 +1304,7 @@ function renderListView() {
         '<div class="teacher-header" onclick="toggleTeacher(\'' + t.uid + '\')">' +
           '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=40" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
           '<div style="flex:1;min-width:0;">' +
-            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
               '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.staffName || t.displayName) + '</p>' +
               (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
               (pendingCount   ? '<span class="review-badge waiting">📤 รอตรวจ ' + pendingCount + ' รายการ</span>' : '') +
@@ -1319,7 +1319,7 @@ function renderListView() {
               '<p style="font-size:11px;color:#94a3b8;">' + esc(t.email) + '</p>' +
               latestLabel +
             '</div>' +
-            '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
+            '<div style="display:flex;align-items:center;gap:var(--gap-tight);margin-top:6px;">' +
               '<div class="pbar-bg" style="flex:1;max-width:200px;"><div class="pbar-fill" style="width:' + pct + '%;"></div></div>' +
               '<span style="font-size:11px;font-weight:700;color:var(--purple);">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
               '<span style="font-size:10px;color:#94a3b8;">(' + (currentYear===2568 ? subCount : finalCount) + ' ผอ.อนุมัติ)</span>' +
@@ -1391,7 +1391,7 @@ function renderListView() {
                     return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + cDocIdForClick + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
                       '<div style="display:flex;align-items:center;gap:4px;">' +
                         '<span style="font-size:10px;font-weight:800;color:' + cColor + ';">' + cIcon + '</span>' +
-                        '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
+                        '<span style="font-size:9px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
                         (cName ? '<span style="font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc(cName) + '</span>' : '') +
                       '</div>' +
                       buildWorkflowBar(cStatus) +
@@ -1540,7 +1540,7 @@ function renderMatrixView() {
     var count = Object.keys(t.subs).length;
     var reviewPriority = getNeedsReviewPriority(t);
     var rowStyle = reviewPriority === 2 ? 'background:#f0f9ff;' : reviewPriority === 1 ? 'background:#fffdf0;' : '';
-    html += '<tr style="' + rowStyle + '"><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:8px;">' +
+    html += '<tr style="' + rowStyle + '"><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:var(--gap-tight);">' +
       '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
       '<div style="overflow:hidden;">' +
         '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.staffName || t.displayName) + '</p>' +
@@ -1780,7 +1780,7 @@ function renderCourseFileList(sub, courseMap, activeCourseKey) {
       '<i data-lucide="book-open" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>' +
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(courseCode) + '</span>' +
+          '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(courseCode) + '</span>' +
           '<span style="font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">' + esc(courseName) + '</span>' +
         '</div>' +
         '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">' + files.length + ' ไฟล์</p>' +
@@ -1927,7 +1927,7 @@ function fillSingleFileInfo(sub) {
     var fileListHtml = courseFiles.map(function(f, i) {
       var fStatus = f.status || curStatus;
       var borderColor = {submitted:'#22c55e',head_reviewed:'#0ea5e9',reviewed:'#3b82f6',final_approved:'var(--purple)',revision:'#f59e0b'}[fStatus] || '#e2e8f0';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;border-left:3px solid ' + borderColor + ';">' +
+      return '<div style="display:flex;align-items:center;gap:var(--gap-tight);padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;border-left:3px solid ' + borderColor + ';">' +
         '<i data-lucide="file-text" style="width:13px;height:13px;color:#64748b;flex-shrink:0;"></i>' +
         '<span style="font-size:11px;font-weight:600;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.fileName || f.name || 'ไฟล์ที่ ' + (i+1)) + '</span>' +
         '<a href="' + esc(f.url || f.fileUrl || '#') + '" target="_blank" style="font-size:10px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 7px;background:var(--purple-light);border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
@@ -1985,7 +1985,7 @@ function fillSingleFileInfo(sub) {
     var cGroup = displayFile.subjectGroup || sub.subjectGroup;
     var cCode  = displayFile.courseCode   || sub.courseCode;
     var cName  = displayFile.courseName   || sub.courseName;
-    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:var(--accent-tint);color:var(--accent);padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
+    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
     if (cCode)  cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + esc(cCode) + '</span> ';
     if (cName)  cText += '<span style="font-size:12px;color:#64748b;">· ' + esc(cName) + '</span>';
     courseInfoBox.style.display = cText ? 'flex' : 'none';
@@ -2142,7 +2142,7 @@ function fillSingleFileInfo(sub) {
     };
     var sc = statusColors[curStatus] || { bg:'#f1f5f9', color:'#64748b' };
     btnBox.innerHTML =
-      '<div style="width:100%;padding:10px 14px;border-radius:10px;background:' + sc.bg + ';display:flex;align-items:center;gap:8px;">' +
+      '<div style="width:100%;padding:10px 14px;border-radius:10px;background:' + sc.bg + ';display:flex;align-items:center;gap:var(--gap-tight);">' +
         '<i data-lucide="eye" style="width:14px;height:14px;color:' + sc.color + ';flex-shrink:0;"></i>' +
         '<p style="font-size:12px;font-weight:700;color:' + sc.color + ';margin:0;">' +
           (viewOnlyStatusLabels[curStatus] || curStatus) +
@@ -2530,7 +2530,7 @@ function renderDonutChart() {
   leg.innerHTML = statusConfig.map(function(s) {
     var pct = total > 0 ? Math.round((counts[s.key] / total) * 100) : 0;
     var isZero = counts[s.key] === 0;
-    return '<div style="display:flex;align-items:center;gap:10px;">' +
+    return '<div style="display:flex;align-items:center;gap:var(--gap-item);">' +
       '<div style="width:12px;height:12px;border-radius:50%;background:' + s.color + ';flex-shrink:0;' + (isZero?'opacity:.45;':'') + '"></div>' +
       '<span style="font-size:13px;font-weight:600;color:' + (isZero?'#94a3b8':'#475569') + ';flex:1;">' + s.label + '</span>' +
       '<span style="font-size:13px;font-weight:800;color:' + (isZero?'#94a3b8':'#0f172a') + ';">' + counts[s.key] +
@@ -2725,7 +2725,7 @@ function renderGroupBarChart(groups) {
   var numW   = 52;
   var chartW = 'calc(100% - ' + (labelW + numW) + 'px)';
 
-  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  var html = '<div style="display:flex;flex-direction:column;gap:var(--gap-tight);">';
 
   /* header row */
   html += '<div style="display:flex;align-items:center;gap:0;padding-bottom:6px;border-bottom:1px solid #f1f5f9;">' +
@@ -2850,7 +2850,7 @@ function renderGroupDetail() {
       ? '<div style="height:20px;width:' + Math.round((counts.none/d.teachers.length)*100) + '%;background:#f1f5f9;"></div>'
       : '';
 
-    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+    return '<div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:var(--gap-tight);">' +
       '<div style="width:28px;height:28px;border-radius:8px;background:' + (dt.color+'22') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
@@ -2876,7 +2876,7 @@ function renderGroupDetail() {
       return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc(dt.label) + '"></div>';
     }).join('');
 
-    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f8fafc;">' +
+    return '<div style="display:flex;align-items:center;gap:var(--gap-item);padding:8px 0;border-bottom:1px solid #f8fafc;">' +
       '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.email) + '&background=7c3aed&color=fff&size=28" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">' +
       '<div style="flex:1;min-width:0;">' +
         '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t.staffName||t.email) + '</p>' +
@@ -2893,16 +2893,16 @@ function renderGroupDetail() {
 
   det.innerHTML =
     /* stat cards */
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;" class="group-stat-cards">' + statCards + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap-item);margin-bottom:var(--gap-section);" class="group-stat-cards">' + statCards + '</div>' +
     '<style>.group-stat-cards{} @media(max-width:640px){.group-stat-cards{grid-template-columns:repeat(3,1fr)!important;}}</style>' +
     /* doc bars */
-    '<div style="margin-bottom:20px;">' +
+    '<div style="margin-bottom:var(--gap-section);">' +
       '<p style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:12px;">การส่งงานแยกตามประเภท</p>' +
       docBars +
     '</div>' +
     /* teacher list */
     '<div>' +
-      '<p style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:8px;">รายชื่อครูในกลุ่ม (' + d.teachers.length + ' คน)</p>' +
+      '<p style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:var(--gap-tight);">รายชื่อครูในกลุ่ม (' + d.teachers.length + ' คน)</p>' +
       teacherRows +
     '</div>';
 
@@ -2941,10 +2941,10 @@ function openNotesModal(uid, docTypeId) {
 
     var dSt = doc.status || 'submitted';
     var courseLabel = doc.courseCode
-      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
+      ? '<span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
       : '<span style="font-size:11px;color:#64748b;font-weight:600;">รายการเดียว</span>';
 
-    html += '<div style="margin-bottom:18px;">';
+    html += '<div style="margin-bottom:var(--gap-section);">';
     html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">' +
       courseLabel + '</div>';
 
@@ -3328,10 +3328,10 @@ function renderTeacherSubTable(t) {
         var dLbl = STATUS_LABEL[dSt] || dSt;
 
         html += '<div class="course-sub-row">' +
-          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+          '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">';
 
         if (doc.courseCode) {
-          html += '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
+          html += '<span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
         }
         if (doc.courseName) {
           html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc(doc.courseName) + '</span>';
@@ -3339,7 +3339,7 @@ function renderTeacherSubTable(t) {
         html += '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:' + dBg + ';color:' + dClr + ';margin-left:auto;">' + dLbl + '</span>';
         /* ปุ่มบันทึกข้อความรายวิชา */
         if (doc.id) {
-          html += '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(doc.id) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;border:1.5px solid #bfdbfe;background:var(--accent-tint);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:10px;height:10px;"></i> บันทึกข้อความ</button>';
+          html += '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(doc.id) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:10px;height:10px;"></i> บันทึกข้อความ</button>';
         }
 
         /* file link */
@@ -3421,7 +3421,7 @@ function loadDocTypeList() {
             '<i data-lucide="list-plus" style="width:28px;height:28px;color:var(--purple);"></i>' +
           '</div>' +
           '<p style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:6px;">ยังไม่มีหัวข้องานใน Firestore</p>' +
-          '<p style="font-size:13px;color:#64748b;margin-bottom:18px;">คลิก "นำเข้าค่าเริ่มต้น" เพื่อเพิ่มหัวข้อที่ใช้อยู่ปัจจุบันทั้งหมด หรือเพิ่มทีละรายการ</p>' +
+          '<p style="font-size:13px;color:#64748b;margin-bottom:var(--gap-section);">คลิก "นำเข้าค่าเริ่มต้น" เพื่อเพิ่มหัวข้อที่ใช้อยู่ปัจจุบันทั้งหมด หรือเพิ่มทีละรายการ</p>' +
           '<button onclick="seedDefaultDocTypes()" style="padding:10px 20px;background:var(--purple);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-right:8px;">นำเข้าค่าเริ่มต้น (' + DOCUMENT_TYPES.length + ' รายการ)</button>' +
           '<button onclick="openDocTypeModal(null)" style="padding:10px 20px;background:white;color:var(--purple);border:1.5px solid var(--purple);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">+ เพิ่มใหม่</button>' +
         '</div>';
@@ -3444,7 +3444,7 @@ function renderDocTypeRows(docs) {
 
   list.innerHTML = docs.map(function(dt, i) {
     var DEPT_LABELS = { academic:'ฝ่ายวิชาการ', budget:'ฝ่ายงบประมาณ', personnel:'ฝ่ายบริหารงานบุคคล', general:'ฝ่ายบริหารทั่วไป' };
-    var DEPT_COLORS = { academic:'var(--accent)', budget:'#16a34a', personnel:'var(--purple)', general:'#ea580c' };
+    var DEPT_COLORS = { academic:'#1d4ed8', budget:'#16a34a', personnel:'var(--purple)', general:'#ea580c' };
     var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'#fff7ed' };
     var deptKey = dt.department || 'academic';
     var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'#f1f5f9') + ';color:' + (DEPT_COLORS[deptKey]||'#64748b') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';
@@ -3460,7 +3460,7 @@ function renderDocTypeRows(docs) {
         '<i data-lucide="' + (dt.icon||'file') + '" style="width:18px;height:18px;color:' + (dt.color||'var(--purple)') + ';"></i>' +
       '</div>' +
       '<div style="flex:1;min-width:0;">' +
-        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+        '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
           '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
           (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
           deptBadge +
@@ -3468,7 +3468,7 @@ function renderDocTypeRows(docs) {
         '</div>' +
         '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc(dt.id||dt._id) + ' · ไอคอน: ' + esc(dt.icon||'-') + '</p>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+      '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-shrink:0;">' +
         '<button onclick="openDocTypeModal(\'' + esc(dt._id) + '\')" style="padding:7px 14px;border:1.5px solid #e2e8f0;background:white;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--purple);display:flex;align-items:center;gap:5px;">' +
           '<i data-lucide="pencil" style="width:13px;height:13px;"></i> แก้ไข' +
         '</button>' +
@@ -3964,11 +3964,11 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
 
     <!-- Toolbar -->
     <div class="memo-no-print" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:4px 4px 0 0;">
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:var(--gap-tight);">
         <i data-lucide="file-signature" style="width:15px;height:15px;color:var(--purple);"></i>
         <span style="font-size:13px;font-weight:800;color:#1e293b;">บันทึกข้อความราชการ</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:var(--gap-tight);align-items:center;">
         <button onclick="window.print()" style="padding:8px 18px;background:var(--purple);color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;">
           <i data-lucide="printer" style="width:13px;height:13px;"></i> พิมพ์
         </button>
@@ -4050,8 +4050,8 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       color:#000;
       box-sizing:border-box;
     ">
-      <div style="margin-bottom:24px;">
-        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
+      <div style="margin-bottom:var(--gap-section);">
+        <p style="font-size:14pt;font-weight:800;margin-bottom:var(--gap-tight);">ความเห็นหัวหน้ากลุ่มสาระการเรียนรู้</p>
         <div id="adminPage2HeadNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
@@ -4065,8 +4065,8 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
         </div>
       </div>
 
-      <div style="margin-bottom:24px;">
-        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นของกลุ่มวิชาการ</p>
+      <div style="margin-bottom:var(--gap-section);">
+        <p style="font-size:14pt;font-weight:800;margin-bottom:var(--gap-tight);">ความคิดเห็นของกลุ่มวิชาการ</p>
         <div id="adminPage2AssistantNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">
@@ -4092,7 +4092,7 @@ document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
       </div>
 
       <div>
-        <p style="font-size:14pt;font-weight:800;margin-bottom:8px;">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
+        <p style="font-size:14pt;font-weight:800;margin-bottom:var(--gap-tight);">ความคิดเห็นผู้อำนวยการโรงเรียน</p>
         <div id="adminPage2DirectorNote" style="min-height:60px;padding-bottom:4px;font-size:12pt;white-space:pre-wrap;"></div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <div style="text-align:center;min-width:240px;">

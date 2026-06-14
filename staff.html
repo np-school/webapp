@@ -50,7 +50,7 @@
     <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:var(--gap-tight);">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาต</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
@@ -63,12 +63,12 @@
 <template id="staffContent">
 
       <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);">
         <div>
           <h2 style="font-size:20px;font-weight:800;color:#0f172a;">จัดการข้อมูลบุคลากร</h2>
           <p style="font-size:13px;color:#64748b;margin-top:3px;">รายชื่อครูและบุคลากรโรงเรียนหนองกี่พิทยาคม</p>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;gap:var(--gap-item);flex-wrap:wrap;">
           <button class="btn-secondary write-gated" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:6px;" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV">
             <i data-lucide="file-down" style="width:14px;height:14px;"></i> <span class="hide-mobile">Template</span> CSV
           </button>
@@ -82,10 +82,10 @@
       </div>
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;" class="stat-grid">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--gap-card);" class="stat-grid">
         <div class="stat-card">
           <div style="width:42px;height:42px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="users" style="width:20px;height:20px;color:var(--accent);"></i>
+            <i data-lucide="users" style="width:20px;height:20px;color:#1d4ed8;"></i>
           </div>
           <div><p style="font-size:10px;color:#64748b;font-weight:700;">บุคลากรทั้งหมด</p><p id="statTotal" style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">0</p></div>
         </div>
@@ -110,8 +110,8 @@
       </div>
 
       <!-- Search & Filter -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);">
+        <div style="display:flex;gap:var(--gap-tight);flex-wrap:wrap;">
           <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
           <button class="filter-pill" onclick="setFilter('วิทยาศาสตร์',this)">วิทยาศาสตร์</button>
           <button class="filter-pill" onclick="setFilter('เทคโนโลยี',this)">เทคโนโลยี</button>
@@ -126,7 +126,7 @@
           <button class="filter-pill" onclick="setFilter('ผู้บริหาร',this)">ผู้บริหาร</button>
           <button class="filter-pill" onclick="setFilter('เจ้าหน้าที่',this)">เจ้าหน้าที่</button>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:var(--gap-tight);align-items:center;">
           <div style="position:relative;">
             <i data-lucide="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#94a3b8;"></i>
             <input type="text" id="searchInput" placeholder="ค้นหาชื่อ อีเมล ตำแหน่ง..." oninput="renderStaff()"
@@ -186,7 +186,7 @@
       </div>
       <button class="modal-close" onclick="closeModal('staffModal')"><i data-lucide="x"></i></button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-card);">
       <div style="grid-column:1/-1;">
         <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อ-นามสกุล <span style="color:#dc2626;">*</span></label>
         <input type="text" id="fName" placeholder="นาย/นาง/นางสาว ชื่อ นามสกุล">
@@ -252,7 +252,7 @@
         <textarea id="fNote" rows="2" placeholder="ข้อมูลเพิ่มเติม (ไม่บังคับ)"></textarea>
       </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:22px;">
+    <div style="display:flex;gap:var(--gap-item);margin-top:22px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('staffModal')">ยกเลิก</button>
       <button class="btn-primary" style="flex:2;justify-content:center;" onclick="saveStaff()">
         <i data-lucide="save" style="width:14px;height:14px;"></i>
@@ -265,7 +265,7 @@
 <!-- ══ Modal: Import CSV ══ -->
 <div id="importModal" class="modal-bg" onclick="if(event.target===this)closeModal('importModal')">
   <div class="modal-box wide">
-    <div class="modal-header" style="margin-bottom:20px;">
+    <div class="modal-header" style="margin-bottom:var(--gap-section);">
       <div class="modal-title-group">
         <div class="modal-title-icon" style="background:var(--accent-tint);">
           <i data-lucide="file-spreadsheet" style="color:var(--accent);"></i>
@@ -280,8 +280,8 @@
 
     <!-- Step 1: Instructions -->
     <div id="importStep1">
-      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
-        <p style="font-size:12px;font-weight:800;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;margin-bottom:var(--gap-section);">
+        <p style="font-size:12px;font-weight:800;color:#1d4ed8;margin-bottom:var(--gap-tight);display:flex;align-items:center;gap:5px;">
           <i data-lucide="info" style="width:13px;height:13px;"></i> รูปแบบคอลัมน์ที่รองรับ
         </p>
         <p style="font-size:12px;color:#1e40af;line-height:1.8;">
@@ -292,8 +292,8 @@
       </div>
 
       <!-- Tabs: file vs paste -->
-      <div style="display:flex;border-bottom:1.5px solid #e2e8f0;margin-bottom:16px;gap:0;">
-        <button id="tabFileBtn" onclick="switchImportTab('file')" style="padding:9px 18px;background:none;border:none;border-bottom:2px solid var(--accent);font-weight:700;font-size:13px;color:var(--accent);cursor:pointer;">
+      <div style="display:flex;border-bottom:1.5px solid #e2e8f0;margin-bottom:var(--gap-section);gap:0;">
+        <button id="tabFileBtn" onclick="switchImportTab('file')" style="padding:9px 18px;background:none;border:none;border-bottom:2px solid #1d4ed8;font-weight:700;font-size:13px;color:#1d4ed8;cursor:pointer;">
           📁 อัปโหลดไฟล์ CSV
         </button>
         <button id="tabPasteBtn" onclick="switchImportTab('paste')" style="padding:9px 18px;background:none;border:none;border-bottom:2px solid transparent;font-weight:700;font-size:13px;color:#64748b;cursor:pointer;">
@@ -307,7 +307,7 @@
           ondragover="event.preventDefault();this.classList.add('dragging');"
           ondragleave="this.classList.remove('dragging');"
           ondrop="handleCsvDrop(event)">
-          <i data-lucide="cloud-upload" style="width:36px;height:36px;color:var(--accent);margin:0 auto 10px;display:block;"></i>
+          <i data-lucide="cloud-upload" style="width:36px;height:36px;color:#1d4ed8;margin:0 auto 10px;display:block;"></i>
           <p style="font-weight:700;color:#1e293b;font-size:14px;margin-bottom:4px;">คลิกเพื่อเลือกไฟล์ หรือลากมาวาง</p>
           <p style="font-size:12px;color:#64748b;">รองรับไฟล์ .csv (บันทึกจาก Excel หรือ Google Sheets)</p>
           <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleCsvFile(this.files[0])">
@@ -341,7 +341,7 @@
     </div>
 
     <!-- Actions -->
-    <div style="display:flex;gap:10px;margin-top:20px;">
+    <div style="display:flex;gap:var(--gap-item);margin-top:20px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('importModal')">ยกเลิก</button>
       <button id="importConfirmBtn" class="btn-primary" style="flex:2;justify-content:center;opacity:.5;cursor:not-allowed;" disabled onclick="confirmImport()">
         <i data-lucide="check" style="width:14px;height:14px;"></i>
@@ -354,7 +354,7 @@
 <!-- ══ Modal: Delete ══ -->
 <div id="deleteModal" class="modal-bg" onclick="if(event.target===this)closeModal('deleteModal')">
   <div class="modal-box" style="max-width:400px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:var(--gap-card);margin-bottom:var(--gap-section);">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i>
       </div>
@@ -363,8 +363,8 @@
         <p id="deleteModalSub" style="font-size:12px;color:#94a3b8;"></p>
       </div>
     </div>
-    <p style="font-size:13px;color:#64748b;margin-bottom:20px;">การดำเนินการนี้ไม่สามารถกู้คืนได้</p>
-    <div style="display:flex;gap:10px;">
+    <p style="font-size:13px;color:#64748b;margin-bottom:var(--gap-section);">การดำเนินการนี้ไม่สามารถกู้คืนได้</p>
+    <div style="display:flex;gap:var(--gap-item);">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button>
       <button class="btn-danger" style="flex:2;justify-content:center;padding:10px;" onclick="confirmDelete()">
         <i data-lucide="trash-2" style="width:13px;height:13px;"></i> ยืนยันลบ
@@ -481,12 +481,12 @@ function renderStaff() {
     return '<tr>' +
       '<td style="color:#94a3b8;font-size:12px;">' + (idx + 1) + '</td>' +
       '<td>' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="display:flex;align-items:center;gap:var(--gap-item);">' +
           '<div class="avatar-initials" style="background:' + avatarColor + ';">' + initials + '</div>' +
           '<div>' +
             '<a href="javascript:void(0)" onclick="openSarModal(\'' + s.id + '\',\'' + esc(s.email||'') + '\')" ' +
               'style="font-weight:700;color:#0f172a;font-size:13px;text-decoration:none;cursor:pointer;" ' +
-              'onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'#0f172a\'">' +
+              'onmouseover="this.style.color=\'#1d4ed8\'" onmouseout="this.style.color=\'#0f172a\'">' +
               esc(s.name || '') +
             '</a>' +
             (s.subject ? '<p style="font-size:11px;color:#94a3b8;">วิชา: ' + esc(s.subject) + '</p>' : '') +
@@ -494,14 +494,14 @@ function renderStaff() {
         '</div>' +
       '</td>' +
       '<td><span class="pos-tag">' + esc(s.position || '-') + '</span>' +
-        (s.role ? '<br><span style="font-size:10px;color:var(--accent);font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc(s.role) + '</span>' : '') +
+        (s.role ? '<br><span style="font-size:10px;color:#7c3aed;font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc(s.role) + '</span>' : '') +
       '</td>' +
       '<td><span class="group-badge" data-group="' + esc(s.group||'') + '">' + esc(groupLabel) + '</span></td>' +
       '<td class="hide-mobile">' +
-        (s.email ? '<a href="mailto:' + esc(s.email) + '" style="color:var(--accent);font-weight:600;font-size:12px;text-decoration:none;">' + esc(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.email ? '<a href="mailto:' + esc(s.email) + '" style="color:#1d4ed8;font-weight:600;font-size:12px;text-decoration:none;">' + esc(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
       '</td>' +
       '<td class="hide-mobile" style="font-size:12px;">' +
-        (s.phone ? '<a href="tel:' + esc(s.phone) + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' + esc(s.phone) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.phone ? '<a href="tel:' + esc(s.phone) + '" style="color:#1d4ed8;text-decoration:none;font-weight:600;">' + esc(s.phone) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
       '</td>' +
       '<td>' +
         '<div style="display:flex;gap:5px;justify-content:center;">' +
@@ -666,11 +666,10 @@ function switchImportTab(tab) {
   importTab = tab;
   document.getElementById('importFilePanel').style.display = tab === 'file' ? '' : 'none';
   document.getElementById('importPastePanel').style.display = tab === 'paste' ? '' : 'none';
-  var accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#0d1b2a';
-  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? accentColor : 'transparent';
-  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? accentColor : 'transparent';
-  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? accentColor : '#64748b';
-  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? accentColor : '#64748b';
+  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? '#1d4ed8' : 'transparent';
+  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? '#1d4ed8' : 'transparent';
+  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? '#1d4ed8' : '#64748b';
+  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? '#1d4ed8' : '#64748b';
 }
 
 function handleCsvDrop(e) {
@@ -956,7 +955,7 @@ lucide.createIcons();
   <div id="sarModalBox" style="width:100%;max-width:680px;height:92dvh;display:flex;flex-direction:column;background:white;border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.2);margin:0 auto;">
 
     <!-- Header -->
-    <div style="flex-shrink:0;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-mid) 100%);border-radius:20px 20px 0 0;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+    <div style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);border-radius:20px 20px 0 0;padding:14px 16px;display:flex;align-items:center;gap:var(--gap-card);">
       <!-- avatar initials -->
       <div style="width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <span id="sarModalInitials" style="font-size:15px;font-weight:800;color:rgba(255,255,255,.9);">?</span>
@@ -983,8 +982,8 @@ lucide.createIcons();
     </div>
 
     <!-- Loading -->
-    <div id="sarModalLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#f8fafc;">
-      <div style="width:34px;height:34px;border:3px solid #e2e8f0;border-top:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;"></div>
+    <div id="sarModalLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--gap-card);background:#f8fafc;">
+      <div style="width:34px;height:34px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin .8s linear infinite;"></div>
       <p style="font-size:13px;font-weight:700;color:#64748b;">กำลังโหลดข้อมูล...</p>
     </div>
 

@@ -37,7 +37,7 @@
     <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:var(--gap-tight);">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">เฉพาะ SuperAdmin เท่านั้นที่สามารถเข้าหน้านี้ได้</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--role-super-color);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
@@ -50,9 +50,9 @@
 <template id="adminRoleContent">
 
       <!-- Page header -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">
         <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
             <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--role-super-color),var(--role-super-border));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="shield-check" style="width:20px;height:20px;color:white;"></i>
             </div>
@@ -67,13 +67,13 @@
       </div>
 
       <!-- Stats row -->
-      <div id="statsRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>
+      <div id="statsRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);"></div>
 
       <!-- Main card -->
       <div class="card" style="overflow:hidden;">
 
         <!-- Toolbar -->
-        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;">
           <!-- View tabs -->
           <div style="display:flex;border-bottom:none;gap:0;">
             <button class="view-tab active" id="vbtn-group" onclick="switchView('group',this)">
@@ -98,7 +98,7 @@
 
         <!-- View: List -->
         <div id="view-list" style="display:none;padding:20px;">
-          <div id="adminListEl" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <div id="adminListEl" style="display:flex;flex-direction:column;gap:var(--gap-item);"></div>
         </div>
 
         <!-- View: Matrix -->
@@ -173,19 +173,19 @@
     </div>
 
     <!-- Email (add only) -->
-    <div style="margin-bottom:16px;" id="emailWrap">
+    <div style="margin-bottom:var(--gap-section);" id="emailWrap">
       <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">Email (Google) <span style="color:#dc2626;">*</span></label>
       <input type="text" id="fEmail" placeholder="example@nongki.ac.th">
     </div>
 
     <!-- Permissions — จัดตามกลุ่มงาน -->
-    <div style="margin-bottom:20px;">
+    <div style="margin-bottom:var(--gap-section);">
       <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:10px;">สิทธิ์ตามกลุ่มงาน</label>
       <div style="display:flex;flex-direction:column;gap:6px;">
 
         <!-- กลุ่มบริหารทั่วไป -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#dbeafe;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="building-2" style="width:13px;height:13px;color:#2563eb;"></i>
             </div>
@@ -213,7 +213,7 @@
 
         <!-- กลุ่มวิชาการ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#dcfce7;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="graduation-cap" style="width:13px;height:13px;color:#16a34a;"></i>
             </div>
@@ -233,7 +233,7 @@
 
         <!-- กลุ่มบริหารงานบุคคล -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#e0f2fe;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="users" style="width:13px;height:13px;color:#0369a1;"></i>
             </div>
@@ -253,7 +253,7 @@
 
         <!-- หัวหน้ากลุ่มสาระ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#fef3c7;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="star" style="width:13px;height:13px;color:#d97706;"></i>
             </div>
@@ -294,7 +294,7 @@
 
         <!-- ผู้ช่วยผู้อำนวยการ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#cffafe;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="medal" style="width:13px;height:13px;color:#0891b2;"></i>
             </div>
@@ -346,7 +346,7 @@
 
         <!-- รองผู้อำนวยการ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#e0e1dd;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="crown" style="width:13px;height:13px;color:#7e22ce;"></i>
             </div>
@@ -390,7 +390,7 @@
 
         <!-- ผู้อำนวยการ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
             <div style="width:26px;height:26px;background:#fef3c7;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="gem" style="width:13px;height:13px;color:#b45309;"></i>
             </div>
@@ -410,7 +410,7 @@
 
         <!-- SuperAdmin only -->
         <div style="border:1.5px dashed #e2e8f0;border-radius:12px;overflow:hidden;opacity:.6;">
-          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:8px;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);">
             <div style="width:26px;height:26px;background:#e0e1dd;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="shield" style="width:13px;height:13px;color:#0d1b2a;"></i>
             </div>
@@ -425,7 +425,7 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;position:sticky;bottom:-28px;margin:0 -28px -28px;padding:16px 28px;background:white;border-top:1px solid #f1f5f9;margin-top:20px;">
+    <div style="display:flex;gap:var(--gap-item);position:sticky;bottom:-28px;margin:0 -28px -28px;padding:16px 28px;background:white;border-top:1px solid #f1f5f9;margin-top:20px;">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('adminModal')">ยกเลิก</button>
       <button class="btn-primary purple" style="flex:2;justify-content:center;padding:11px;" onclick="saveAdmin()">
         <i data-lucide="save" style="width:14px;height:14px;"></i>
@@ -438,7 +438,7 @@
 <!-- ══════════════ Modal: Confirm Delete ══════════════ -->
 <div id="deleteModal" class="modal-bg">
   <div class="modal-box" style="max-width:420px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:var(--gap-card);margin-bottom:var(--gap-card);">
       <div style="width:40px;height:40px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626;"></i>
       </div>
@@ -447,8 +447,8 @@
         <p style="font-size:12px;color:#64748b;">ไม่สามารถกู้คืนได้</p>
       </div>
     </div>
-    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
-    <div style="display:flex;gap:10px;">
+    <p style="font-size:14px;color:#475569;margin-bottom:var(--gap-section);padding:12px;background:#f8fafc;border-radius:10px;" id="deleteModalText"></p>
+    <div style="display:flex;gap:var(--gap-item);">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button>
       <button style="flex:2;background:#dc2626;color:white;border:none;padding:11px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="confirmDelete()">
         <i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ
@@ -460,7 +460,7 @@
 <!-- ══════════════ Modal: Quick Permission Toggle ══════════════ -->
 <div id="quickPermModal" class="modal-bg">
   <div class="modal-box" style="max-width:420px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <div style="display:flex;align-items:center;gap:var(--gap-card);margin-bottom:var(--gap-section);">
       <div style="width:40px;height:40px;background:var(--role-super-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i data-lucide="toggle-right" style="width:18px;height:18px;color:var(--role-super-color);"></i>
       </div>
@@ -469,8 +469,8 @@
         <p style="font-size:12px;color:#64748b;" id="quickPermSub"></p>
       </div>
     </div>
-    <p style="font-size:14px;color:#475569;margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:10px;" id="quickPermText"></p>
-    <div style="display:flex;gap:10px;">
+    <p style="font-size:14px;color:#475569;margin-bottom:var(--gap-section);padding:12px;background:#f8fafc;border-radius:10px;" id="quickPermText"></p>
+    <div style="display:flex;gap:var(--gap-item);">
       <button class="btn-secondary" style="flex:1;" onclick="closeModal('quickPermModal')">ยกเลิก</button>
       <button class="btn-primary purple" style="flex:2;justify-content:center;padding:11px;" onclick="confirmQuickPerm()">
         <i data-lucide="check" style="width:14px;height:14px;"></i> ยืนยัน
@@ -1183,7 +1183,7 @@ function renderStats(){
     {label:'กลุ่มงาน',      val:15, icon:'layout-grid',         get color(){return cssVar('--role-hr-color');},       get bg(){return cssVar('--role-hr-bg');}},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
-    return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
+    return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:var(--gap-item);box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
       '<div style="width:38px;height:38px;background:'+s.bg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="'+s.icon+'" style="width:17px;height:17px;color:'+s.color+';"></i>' +
       '</div>' +
@@ -1236,7 +1236,7 @@ function renderGroupView(){
     var isEmpty=members.length===0;
     html+='<div style="border:1.5px solid '+g.border+';border-radius:14px;overflow:hidden;">';
     /* Group header */
-    html+='<div style="background:'+g.bg+';padding:14px 18px;border-bottom:1px solid '+g.border+';display:flex;align-items:center;gap:10px;">';
+    html+='<div style="background:'+g.bg+';padding:14px 18px;border-bottom:1px solid '+g.border+';display:flex;align-items:center;gap:var(--gap-item);">';
     html+='<div style="width:34px;height:34px;background:'+g.color+'22;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
     html+='<i data-lucide="'+g.icon+'" style="width:16px;height:16px;color:'+g.color+';"></i></div>';
     html+='<div style="flex:1;min-width:0;">';
@@ -1245,7 +1245,7 @@ function renderGroupView(){
     html+='<span style="font-size:11px;font-weight:800;background:'+g.color+';color:white;padding:2px 9px;border-radius:20px;flex-shrink:0;">'+members.length+' คน</span>';
     html+='</div>';
     /* Members */
-    html+='<div style="padding:12px;display:flex;flex-direction:column;gap:8px;">';
+    html+='<div style="padding:12px;display:flex;flex-direction:column;gap:var(--gap-tight);">';
     if(isEmpty){
       html+='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-style:italic;">ไม่มี Admin ในกลุ่มนี้</div>';
     } else {
@@ -1281,7 +1281,7 @@ function renderAdminMiniCard(a, isSuperCard){
       '</div>';
   }
 
-  return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
+  return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
     '<img src="'+ph+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
     '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px;">' +
@@ -1319,7 +1319,7 @@ function renderListView(){
         '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
-    return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
+    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
       '<img src="'+ph+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#778da9':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+

@@ -31,7 +31,7 @@
     .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
     .kpi.income::before { background: var(--green); }
     .kpi.expense::before { background: var(--red); }
-    .kpi.balance::before { background: var(--accent); }
+    .kpi.balance::before { background: var(--blue); }
     .kpi.avg::before { background: var(--amber); }
     .kpi-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
     .kpi-value { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1.1; }
@@ -39,7 +39,7 @@
     .kpi-icon { position: absolute; right: 14px; top: 14px; font-size: 22px; opacity: .1; }
     .period-tabs { display: flex; gap: 4px; }
     .ptab { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--text2); cursor: pointer; transition: all .15s; font-family: 'Sarabun', sans-serif; }
-    .ptab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .ptab.active { background: var(--blue); color: white; border-color: var(--blue); }
     .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
     @media(max-width:900px) { .chart-grid { grid-template-columns: 1fr; } }
     .chart-wrap { position: relative; height: 250px; }
@@ -79,7 +79,7 @@
 <!-- ═══ MODAL: เพิ่มรายการ (daily-entry style) ═══ -->
 <div class="modal-bg" id="addModal">
   <div class="modal-box" style="max-width:600px;max-height:92vh;overflow-y:auto">
-    <div class="modal-header" style="position:sticky;top:0;background:white;z-index:10;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px">
+    <div class="modal-header" style="position:sticky;top:0;background:white;z-index:10;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:var(--gap-section)">
       <div class="modal-title-group">
         <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--green-lt);">
           <i data-lucide="plus-circle" style="width:18px;height:18px;color:var(--green);"></i>
@@ -89,39 +89,39 @@
       <button class="modal-close" onclick="closeAddModal()"><i data-lucide="x"></i></button>
     </div>
 
-    <div class="form-group" style="margin-bottom:18px">
+    <div class="form-group" style="margin-bottom:var(--gap-section)">
       <label>วันที่</label>
       <input type="date" id="addDate">
     </div>
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge badge-in">ประจำ</span>
       <span style="font-size:13px;font-weight:800;color:var(--text)">รายรับประจำ</span>
     </div>
-    <div id="modalEntryRecIncome" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
+    <div id="modalEntryRecIncome" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
       <span style="font-size:13px;font-weight:800;color:var(--text)">รายรับอื่นๆ</span>
     </div>
-    <div id="modalExtraIncome" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-    <button class="upload-area" style="margin-bottom:20px;padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('income')">+ เพิ่มรายรับอื่นๆ</button>
+    <div id="modalExtraIncome" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-tight)"></div>
+    <button class="upload-area" style="margin-bottom:var(--gap-section);padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('income')">+ เพิ่มรายรับอื่นๆ</button>
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge badge-out">ประจำ</span>
       <span style="font-size:13px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
     </div>
-    <div id="modalEntryRecExpense" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
+    <div id="modalEntryRecExpense" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
       <span style="font-size:13px;font-weight:800;color:var(--text)">รายจ่ายอื่นๆ</span>
     </div>
-    <div id="modalExtraExpense" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-    <button class="upload-area" style="margin-bottom:20px;padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
+    <div id="modalExtraExpense" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-tight)"></div>
+    <button class="upload-area" style="margin-bottom:var(--gap-section);padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
 
     <div class="sum-bar" id="modalSumBar" style="margin-bottom:0"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+    <div style="display:flex;gap:var(--gap-tight);justify-content:flex-end;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeAddModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveModalEntry()">บันทึก</button>
     </div>
@@ -133,17 +133,17 @@
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--accent-tint);">
-          <i data-lucide="store" style="width:18px;height:18px;color:var(--accent);"></i>
+        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--blue-lt);">
+          <i data-lucide="store" style="width:18px;height:18px;color:var(--blue);"></i>
         </div>
         <div class="modal-title">นำเข้ารายได้โรงเรียน</div>
       </div>
       <button class="modal-close" onclick="closeShopCountModal()"><i data-lucide="x"></i></button>
     </div>
-    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--text2)">
+    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:var(--gap-section);font-size:13px;color:var(--text2)">
       คำนวณจากจำนวนร้านค้า × <strong style="color:var(--text)">50 บาท/ร้าน</strong>
     </div>
-    <div class="form-group" style="margin-bottom:14px">
+    <div class="form-group" style="margin-bottom:var(--gap-card)">
       <label>วันที่</label>
       <input type="date" id="shopCountDate">
     </div>
@@ -155,11 +155,11 @@
       <div class="preview-amount">฿0</div>
       <div class="preview-label">= 0 ร้าน × 50 บาท</div>
     </div>
-    <div class="form-group" style="margin-bottom:20px">
+    <div class="form-group" style="margin-bottom:var(--gap-section)">
       <label>หมายเหตุ (ถ้ามี)</label>
       <input type="text" id="shopCountNote" placeholder="หมายเหตุ...">
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div style="display:flex;gap:var(--gap-tight);justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeShopCountModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveShopCount()">บันทึก</button>
     </div>
@@ -183,7 +183,7 @@
     </div>
 
     <!-- Big amount -->
-    <div class="form-group" style="margin-bottom:14px">
+    <div class="form-group" style="margin-bottom:var(--gap-card)">
       <label>จำนวนเงิน</label>
       <div class="amount-input-wrap">
         <span class="currency">฿</span>
@@ -191,15 +191,15 @@
       </div>
     </div>
 
-    <div class="form-group" style="margin-bottom:14px">
+    <div class="form-group" style="margin-bottom:var(--gap-card)">
       <label>วันที่</label>
       <input type="date" id="quickLogDate">
     </div>
-    <div class="form-group" style="margin-bottom:20px">
+    <div class="form-group" style="margin-bottom:var(--gap-section)">
       <label>หมายเหตุ</label>
       <input type="text" id="quickLogNote" placeholder="หมายเหตุ...">
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div style="display:flex;gap:var(--gap-tight);justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeQuickLogModal()">ยกเลิก</button>
       <button class="btn btn-primary" id="quickLogSaveBtn" onclick="saveQuickLog()">บันทึก</button>
     </div>
@@ -209,9 +209,9 @@
 
 <template id="foodcourtShell">
 <div class="page-inner" style="padding-bottom:0">
-        <div class="page-header" style="margin-bottom:14px">
+        <div class="page-header" style="margin-bottom:var(--gap-card)">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
               <div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#86efac);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="utensils" style="width:20px;height:20px;color:white;"></i>
               </div>
@@ -233,18 +233,18 @@
 
         <div class="page-header">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
               <div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#86efac);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="chart-bar" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">ภาพรวมบัญชี Food Court</h1>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;padding-left:50px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:var(--gap-tight);padding-left:50px;flex-wrap:wrap;">
               <p style="font-size:13px;color:#64748b;">โรงเรียนหนองกี่พิทยาคม</p>
               <div id="lastUpdatedChip" class="chip" style="display:none;">บันทึกล่าสุด: <span id="lastUpdated"></span></div>
             </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:var(--gap-tight);flex-wrap:wrap">
             <button class="btn btn-ghost" onclick="exportCSV()">ส่งออก CSV</button>
             <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
           </div>
@@ -254,9 +254,9 @@
         <div class="kpi-grid" id="kpiGrid"></div>
 
         <!-- Charts -->
-        <div style="margin-bottom:18px">
+        <div style="margin-bottom:var(--gap-section)">
           <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-tight);margin-bottom:var(--gap-card)">
               <div class="card-title" style="margin-bottom:0">กราฟรายรับ – รายจ่ายรายวัน</div>
               <div class="period-tabs">
                 <button class="ptab active" onclick="setPeriod('week',this)">สัปดาห์นี้</button>
@@ -275,7 +275,7 @@
           </div>
           <div class="card">
             <div class="card-title">สัดส่วนรายรับแต่ละร้าน</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight)">
               <div style="flex:1;min-width:130px"><div class="chart-wrap" style="height:190px"><canvas id="donutChart"></canvas></div></div>
               <div class="legend-list" id="donutLegend" style="min-width:130px;justify-content:center;display:flex;flex-direction:column"></div>
             </div>
@@ -283,8 +283,8 @@
         </div>
 
         <!-- RECURRING SUMMARY SECTION ON DASHBOARD -->
-        <div class="card" style="margin-bottom:18px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        <div class="card" style="margin-bottom:var(--gap-section)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-section)">
             <div>
               <div class="card-title" style="margin-bottom:2px">สรุปรายการประจำ</div>
               <div style="font-size:11px;color:var(--text2)">รายรับ – รายจ่ายจากรายการประจำตามช่วงเวลา</div>
@@ -301,7 +301,7 @@
           </div>
 
           <!-- KPI Summary row -->
-          <div id="recSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+          <div id="recSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-item);margin-bottom:var(--gap-section)"></div>
 
           <!-- Income list -->
           <div class="rec-section-grid">
@@ -331,8 +331,8 @@
 
         <div class="page-header">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#2563eb,#93c5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="list" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายการทั้งหมด</h1>
@@ -361,9 +361,9 @@
         </div>
 
         <!-- Monthly Chart (แสดงเมื่อเลือกเดือน) -->
-        <div id="monthlyChartWrap" style="display:none;margin-bottom:16px">
+        <div id="monthlyChartWrap" style="display:none;margin-bottom:var(--gap-section)">
           <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-card);flex-wrap:wrap;gap:var(--gap-tight)">
               <div class="card-title" style="margin-bottom:0" id="monthlyChartTitle">สรุปรายได้เดือนนี้</div>
               <div id="monthlyChartKpi" style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px"></div>
             </div>
@@ -381,8 +381,8 @@
 
         <div class="page-header">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#c4b5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="settings-2" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">จัดการรายการ</h1>
@@ -402,35 +402,35 @@
         <!-- Panel: Daily Entry -->
         <div class="sub-panel active" id="panelMgmtEntry">
           <div class="card" style="max-width:680px">
-            <div class="form-group" style="margin-bottom:18px">
+            <div class="form-group" style="margin-bottom:var(--gap-section)">
               <label>วันที่</label>
               <input type="date" id="entryDate">
             </div>
 
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge badge-in">ประจำ</span>
               <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับประจำ</span>
             </div>
-            <div id="entryRecIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
+            <div id="entryRecIncome" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
 
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
               <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับอื่นๆ</span>
             </div>
-            <div id="entryExtraIncome" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
+            <div id="entryExtraIncome" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:10px"></div>
             <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('income')">+ เพิ่มรายรับอื่นๆ</button>
 
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge badge-out">ประจำ</span>
               <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
             </div>
-            <div id="entryRecExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px"></div>
+            <div id="entryRecExpense" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
 
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
               <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายอื่นๆ</span>
             </div>
-            <div id="entryExtraExpense" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
+            <div id="entryExtraExpense" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:10px"></div>
             <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('expense')">+ เพิ่มรายจ่ายอื่นๆ</button>
 
             <div class="sum-bar" id="entrySumBar" style="margin-bottom:0"></div>
@@ -442,7 +442,7 @@
 
         <!-- Panel: Recurring -->
         <div class="sub-panel" id="panelMgmtRecurring">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-section);flex-wrap:wrap;gap:var(--gap-item)">
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
               <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
@@ -450,7 +450,7 @@
             <button class="btn btn-primary btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">+ เพิ่มรายการประจำ</button>
           </div>
 
-          <div style="margin-bottom:14px">
+          <div style="margin-bottom:var(--gap-card)">
             <div style="font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%"></span>รายรับประจำ</div>
             <div class="manage-rec-grid" id="manageRecIncome"></div>
           </div>
@@ -463,11 +463,11 @@
         <!-- Panel: Add New Recurring -->
         <div class="sub-panel" id="panelMgmtAddnew">
           <div class="card" style="max-width:560px">
-            <div class="modal-title" style="margin-bottom:18px">เพิ่มรายการประจำใหม่</div>
+            <div class="modal-title" style="margin-bottom:var(--gap-section)">เพิ่มรายการประจำใหม่</div>
 
-            <div style="margin-bottom:14px">
-              <label style="margin-bottom:8px;display:block">ประเภท</label>
-              <div style="display:flex;gap:10px">
+            <div style="margin-bottom:var(--gap-card)">
+              <label style="margin-bottom:var(--gap-tight);display:block">ประเภท</label>
+              <div style="display:flex;gap:var(--gap-item)">
                 <div class="modal-type-card active income" id="recCardIn" onclick="setRecType('income')">
                   <div class="type-ico">💰</div>
                   <div class="type-lbl">รายรับ</div>
@@ -489,7 +489,7 @@
                 <input type="number" id="recAmount" placeholder="0" min="0">
               </div>
             </div>
-            <div class="form-group" style="margin-bottom:18px">
+            <div class="form-group" style="margin-bottom:var(--gap-section)">
               <label>คำอธิบาย</label>
               <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
             </div>
@@ -829,7 +829,7 @@ function renderLineChart(){
   const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDate);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#0d1b2a',backgroundColor:'rgba(13,27,42,.08)',fill:true,tension:.35,pointBackgroundColor:getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#0d1b2a',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
@@ -885,9 +885,9 @@ function renderDashboardRecurring() {
       <div style="font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">รายจ่าย</div>
       <div style="font-size:20px;font-weight:800;color:var(--red)">฿${fmt(totalOut)}</div>
     </div>
-    <div style="background:${net>=0?'var(--accent-tint)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--accent-light)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
-      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
-      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'}">฿${fmt(net)}</div>
+    <div style="background:${net>=0?'var(--blue-lt)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--blue-mid)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
+      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">฿${fmt(net)}</div>
     </div>
   `;
 
@@ -962,7 +962,7 @@ function renderDailyEntry(){
 
 function entryRow(r){
   if(r.shopCount){
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
+    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
       <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
       <div class="shop-count-wrap" style="margin-left:0">
         <input class="shop-count-input" type="number" id="entryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateEntrySumBar()">
@@ -970,7 +970,7 @@ function entryRow(r){
       </div>
     </div>`;
   }
-  return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
+  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
     <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
     <div style="display:flex;align-items:center;gap:6px">
       <input type="number" id="entryAmt-${r.id}" min="0" placeholder="0" style="width:130px;text-align:right" value="${r.amount>0?'':''}" oninput="updateEntrySumBar()">
@@ -992,7 +992,7 @@ function removeExtraEntryRow(type,id){
 function renderExtraEntryRows(type){
   const wrap=document.getElementById(type==='income'?'entryExtraIncome':'entryExtraExpense');
   wrap.innerHTML=extraEntryRows[type].length ? extraEntryRows[type].map(r=>`
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
       <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="entryExtraName-${r.id}" value="${r.name}">
       <input type="number" min="0" placeholder="0" style="width:120px;text-align:right" id="entryExtraAmt-${r.id}" value="${r.amount}" oninput="updateEntrySumBar()">
       <span style="font-size:14px;font-weight:800;color:var(--text2)">฿</span>
@@ -1115,7 +1115,7 @@ function saveShopCount(){
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount));
+  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
 }
 
 // ── ADD MODAL (daily-entry style) ──
@@ -1141,7 +1141,7 @@ function renderModalEntryRows(){
 
 function modalEntryRow(r){
   if(r.shopCount){
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
       <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
       <div class="shop-count-wrap" style="margin-left:0">
         <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
@@ -1149,7 +1149,7 @@ function modalEntryRow(r){
       </div>
     </div>`;
   }
-  return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
     <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
     <div style="display:flex;align-items:center;gap:6px">
       <input type="number" id="mEntryAmt-${r.id}" min="0" placeholder="0" style="width:120px;text-align:right" oninput="updateModalSumBar()">
@@ -1171,7 +1171,7 @@ function removeModalExtraRow(type,id){
 function renderModalExtraRows(type){
   const wrap=document.getElementById(type==='income'?'modalExtraIncome':'modalExtraExpense');
   wrap.innerHTML=modalExtraRows[type].map(r=>`
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
       <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="mExtraName-${r.id}" value="${r.name}">
       <input type="number" min="0" placeholder="0" style="width:110px;text-align:right" id="mExtraAmt-${r.id}" value="${r.amount}" oninput="updateModalSumBar()">
       <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
@@ -1284,7 +1284,7 @@ function renderMonthlyChart(month){
     <span style="color:var(--text2)">|</span>
     <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
     <span style="color:var(--text2)">|</span>
-    <span style="font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
+    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
   `;
 
   // Group by date
