@@ -439,6 +439,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 13px 16px;
+  min-height: 44px;     /* กัน layout ยุบถ้า lucide icon ยังไม่ render เป็น svg */
   border-radius: 14px;
   font-weight: 700;
   color: var(--text2);
@@ -451,6 +452,15 @@ body {
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
+  box-sizing: border-box;
+}
+/* fallback ก่อน lucide.createIcons() แปลง <i> เป็น <svg>
+   (display:inline ไม่รับ width/height — ทำให้แถวยุบบนบางอุปกรณ์/บราวเซอร์) */
+.sidebar-inner i[data-lucide] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .sidebar-btn span {
   overflow: hidden;
