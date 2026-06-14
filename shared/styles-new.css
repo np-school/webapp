@@ -860,9 +860,47 @@ label {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 20px;
 }
 .modal-title { font-size: 16px; font-weight: 800; }
+
+/* กลุ่ม icon + title (+ subtitle) ฝั่งซ้ายของ modal-header */
+.modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.modal-title-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-title-group h3 { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-title-group p  { font-size: 12px; color: var(--text2); }
+
+/* ปุ่มปิด X ทรงกลม — ใช้กับ modal แบบฟอร์ม/รายการ
+   (modal แบบ confirm เช่น อนุมัติ/ลบ ไม่ต้องใช้ เพราะมีปุ่ม "ยกเลิก" อยู่แล้ว) */
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-alt);
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.modal-close:hover { background: var(--border); color: var(--text); }
 
 /* File view modal */
 #fileViewModal {
