@@ -159,12 +159,7 @@
     .info-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;}
     .info-val{font-size:14px;font-weight:600;color:#0f172a;background:#f8fafc;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;}
     .info-val.empty{color:#cbd5e1;font-style:italic;}
-    .edit-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
-    .edit-btn:hover{background:#1e40af;box-shadow:0 4px 12px rgba(29,78,216,.25);}
-    .save-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#22c55e;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
-    .save-btn:hover{background:#16a34a;}
-    .cancel-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
-    .cancel-btn:hover{background:#e2e8f0;}
+    /* edit-btn / save-btn / cancel-btn → ใช้ .btn-primary / .btn-approve / .btn-secondary จาก styles-new.css แทน */
 
     /* ── Teaching table ── */
     .teach-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #f1f5f9;}
@@ -485,7 +480,7 @@
         <div class="info-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:#7c3aed;"></i> ประวัติโรงเรียน</div>
-            <button class="edit-btn edit-only" style="background:#7c3aed;" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
+            <button class="btn-primary purple edit-only" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
           </div>
           <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px;display:flex;align-items:center;gap:6px;">
             <i data-lucide="info" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>
@@ -501,7 +496,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div class="info-card-title"><i data-lucide="user-circle" style="width:18px;height:18px;color:#1d4ed8;"></i> ข้อมูลส่วนตัว</div>
             <div id="personalActions" style="display:flex;gap:8px;">
-              <button class="edit-btn edit-only" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
+              <button class="btn-primary edit-only" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
             </div>
           </div>
           <!-- View mode -->
@@ -537,7 +532,7 @@
               <div style="font-size:13px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;">
                 <i data-lucide="graduation-cap" style="width:16px;height:16px;color:#7c3aed;"></i> ประวัติการศึกษา
               </div>
-              <button class="edit-btn edit-only" style="background:#7c3aed;padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
+              <button class="btn-primary purple edit-only" style="padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
                 <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่ม
               </button>
             </div>
@@ -585,7 +580,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="book-open" style="width:18px;height:18px;color:#1d4ed8;"></i> ภาระงานสอนตามตาราง</div>
-            <button class="edit-btn edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
+            <button class="btn-primary edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
           </div>
           <!-- header -->
           <div class="teach-header-row" style="display:flex;align-items:center;gap:10px;padding:9px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;">
@@ -607,7 +602,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="clipboard-list" style="width:18px;height:18px;color:#7c3aed;"></i> ภาระงานที่ได้รับหมายมอบ</div>
-            <button class="edit-btn edit-only" style="background:#7c3aed;" onclick="addDutyRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มงาน</button>
+            <button class="btn-primary purple edit-only" onclick="addDutyRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มงาน</button>
           </div>
           <div id="dutiesList"><div class="empty-block">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div></div>
         </div>
@@ -618,7 +613,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="award" style="width:18px;height:18px;color:#f59e0b;"></i> การพัฒนาตนเอง / อบรม / สัมมนา</div>
-            <button class="edit-btn edit-only" style="background:#f59e0b;" onclick="addDevItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายการ</button>
+            <button class="btn-primary amber edit-only" onclick="addDevItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายการ</button>
           </div>
           <div id="devList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div></div>
         </div>
@@ -629,7 +624,7 @@
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
             <div class="info-card-title" style="margin:0;"><i data-lucide="layout-grid" style="width:18px;height:18px;color:#06b6d4;"></i> สื่อนวัตกรรมการเรียนรู้</div>
-            <button class="edit-btn edit-only" style="background:#06b6d4;" onclick="addMediaItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มสื่อ</button>
+            <button class="btn-primary edit-only" style="background:#06b6d4;" onclick="addMediaItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มสื่อ</button>
           </div>
           <div id="mediaList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div></div>
         </div>
@@ -1376,8 +1371,8 @@ function addEducationItem(editId, prefill){
         '<input type="text" id="em_grad_year" value="'+esc(prefill.grad_year||'')+'" placeholder="เช่น 2558" maxlength="4"></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">' +
-      '<button class="cancel-btn" onclick="document.getElementById(\'eduModal\').remove()">ยกเลิก</button>' +
-      '<button class="save-btn" style="background:#7c3aed;" onclick="saveEducationItem(\''+( editId||'')+'\')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
+      '<button class="btn-secondary" onclick="document.getElementById(\'eduModal\').remove()">ยกเลิก</button>' +
+      '<button class="btn-primary purple" onclick="saveEducationItem(\''+( editId||'')+'\')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
     '</div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend', html);
@@ -1642,18 +1637,18 @@ function editSection(section){
   }
   /* replace edit button with save/cancel */
   var actionsEl=document.getElementById(section+'Actions') ||
-    document.querySelector('#panel-'+section+' .edit-btn')?.parentElement;
+    document.querySelector('#panel-'+section+' .btn-primary')?.parentElement;
   /* inject save/cancel inline */
   var editBar=editEl.nextElementSibling || editEl;
   /* simpler: swap button in header */
   var hdr=document.querySelector('#panel-'+section+' .info-card > div:first-child');
-  hdr.querySelector('.edit-btn').style.display='none';
+  hdr.querySelector('.btn-primary').style.display='none';
   var sc=document.createElement('div');
   sc.id='sc_'+section;
   sc.style.display='flex'; sc.style.gap='8px';
-  sc.innerHTML='<button class="save-btn" onclick="saveSection(\''+section+'\')">' +
+  sc.innerHTML='<button class="btn-approve" onclick="saveSection(\''+section+'\')">' +
     '<i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
-    '<button class="cancel-btn" onclick="cancelSection(\''+section+'\')">' +
+    '<button class="btn-secondary" onclick="cancelSection(\''+section+'\')">' +
     '<i data-lucide="x" style="width:14px;height:14px;"></i> ยกเลิก</button>';
   hdr.appendChild(sc);
   lucide.createIcons();
@@ -1663,7 +1658,7 @@ function cancelSection(section){
   document.getElementById(section+'Edit').style.display='none';
   var sc=document.getElementById('sc_'+section); if(sc) sc.remove();
   var hdr=document.querySelector('#panel-'+section+' .info-card > div:first-child');
-  var eb=hdr.querySelector('.edit-btn'); if(eb) eb.style.display='';
+  var eb=hdr.querySelector('.btn-primary'); if(eb) eb.style.display='';
 }
 function saveSection(section){
   if(!_assertNotViewMode()) return;
@@ -1995,8 +1990,8 @@ function addCareerHistoryItem(editId, prefill){
 
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">' +
-    '<button class="cancel-btn" onclick="document.getElementById(\''+modalId+'\').remove()">ยกเลิก</button>' +
-    '<button class="save-btn" style="background:#7c3aed;" onclick="saveCareerHistoryItem('+(editId?'\''+editId+'\'':'null')+')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
+    '<button class="btn-secondary" onclick="document.getElementById(\''+modalId+'\').remove()">ยกเลิก</button>' +
+    '<button class="btn-primary purple" onclick="saveCareerHistoryItem('+(editId?'\''+editId+'\'':'null')+')"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button>' +
     '</div></div></div>';
 
   document.body.insertAdjacentHTML('beforeend', html);
@@ -2094,8 +2089,8 @@ function addTeachRow(){
       '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ระดับชั้น</div><input type="text" id="tm_level" placeholder="เช่น ม.5/10"></div>' +
     '</div></div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
-    '<button class="cancel-btn" onclick="document.getElementById(\'teachModal\').remove()">ยกเลิก</button>' +
-    '<button class="save-btn" onclick="saveTeachRow()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
+    '<button class="btn-secondary" onclick="document.getElementById(\'teachModal\').remove()">ยกเลิก</button>' +
+    '<button class="btn-approve" onclick="saveTeachRow()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend',html);
   lucide.createIcons();
@@ -2152,8 +2147,8 @@ function addDutyRow(){
     '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">รายละเอียดงาน</div><textarea id="dm_task" rows="3" placeholder="อธิบายงานที่ได้รับมอบหมาย"></textarea></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
-    '<button class="cancel-btn" onclick="document.getElementById(\'dutyModal\').remove()">ยกเลิก</button>' +
-    '<button class="save-btn" style="background:#7c3aed;" onclick="saveDutyRow()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
+    '<button class="btn-secondary" onclick="document.getElementById(\'dutyModal\').remove()">ยกเลิก</button>' +
+    '<button class="btn-primary purple" onclick="saveDutyRow()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend',html);
   lucide.createIcons();
@@ -2213,8 +2208,8 @@ function addDevItem(){
       '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">จำนวนชั่วโมง</div><input type="number" id="dv_hours" placeholder="0" min="0"></div>' +
     '</div></div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
-    '<button class="cancel-btn" onclick="document.getElementById(\'devModal\').remove()">ยกเลิก</button>' +
-    '<button class="save-btn" style="background:#f59e0b;" onclick="saveDevItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
+    '<button class="btn-secondary" onclick="document.getElementById(\'devModal\').remove()">ยกเลิก</button>' +
+    '<button class="btn-primary amber" onclick="saveDevItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend',html);
   lucide.createIcons();
@@ -2276,8 +2271,8 @@ function addMediaItem(){
     '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ประเภทสื่อ</div><select id="mm_icon"><option value="layout-grid">ทั่วไป</option><option value="youtube">YouTube</option><option value="image">รูปภาพ/Infographic</option><option value="video">วิดีโอ</option><option value="file-text">เอกสาร/ใบงาน</option><option value="globe">เว็บไซต์</option><option value="code-2">แอปพลิเคชัน</option><option value="music">เสียง/Podcast</option></select></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
-    '<button class="cancel-btn" onclick="document.getElementById(\'mediaModal\').remove()">ยกเลิก</button>' +
-    '<button class="save-btn" style="background:#06b6d4;" onclick="saveMediaItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
+    '<button class="btn-secondary" onclick="document.getElementById(\'mediaModal\').remove()">ยกเลิก</button>' +
+    '<button class="btn-approve" style="background:#06b6d4;" onclick="saveMediaItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend',html);
   lucide.createIcons();

@@ -643,6 +643,10 @@ body {
 .btn-primary.purple { background: var(--purple); }
 .btn-primary.purple:hover { background: var(--purple-dark); }
 
+/* Primary — Amber */
+.btn-primary.amber { background: var(--amber); }
+.btn-primary.amber:hover { background: #b45309; }
+
 /* Secondary */
 .btn-secondary {
   background: var(--bg-alt);
