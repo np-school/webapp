@@ -22,150 +22,100 @@
   <script src="shared/common.js"></script>
 
   <style>
-    /* ── Theme Picker ── */
-    .theme-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-      gap: 12px;
-    }
-    .theme-card {
-      border: 2.5px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: border-color .18s, box-shadow .18s, transform .15s;
-      background: var(--white);
-      position: relative;
-    }
-    .theme-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,.10);
-    }
-    .theme-card.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-tint), 0 6px 20px rgba(0,0,0,.10);
-    }
-    /* checkmark badge */
-    .theme-card .check-badge {
-      display: none;
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--accent);
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
-      z-index: 1;
-    }
-    .theme-card.selected .check-badge { display: flex; }
-    .check-badge svg { width: 12px; height: 12px; color: white; }
-
-    /* Navbar preview strip */
-    .theme-preview-bar {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      gap: 8px;
-    }
-    .preview-dot  { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); }
-    .preview-line { height: 7px; border-radius: 4px; background: rgba(255,255,255,.35); }
-
-    /* Content section preview */
-    .theme-preview-content {
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-    .preview-btn {
-      height: 22px;
-      border-radius: 7px;
-      width: 60%;
-    }
-    .preview-card-line { height: 6px; border-radius: 3px; background: var(--border); }
-    .preview-card-line.short { width: 50%; }
-
-    /* Theme label */
-    .theme-label {
-      padding: 8px 12px 10px;
-      border-top: 1px solid var(--border);
-    }
-    .theme-label-name { font-size: 12px; font-weight: 800; color: var(--text); }
-    .theme-label-desc { font-size: 11px; color: var(--text2); margin-top: 1px; }
-
-    /* Section card */
-    .settings-section { margin-bottom: 28px; }
     .settings-section-title {
       font-size: 11px;
       font-weight: 800;
       color: var(--text3);
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
-    /* Preview panel (live) */
-    .live-preview-wrap {
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
+    /* ── Theme Cards ── */
+    .theme-cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 560px;
     }
-    .live-preview-navbar {
-      padding: 11px 18px;
+    @media (max-width: 480px) { .theme-cards-row { grid-template-columns: 1fr; } }
+
+    .theme-card {
+      border: 2.5px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, transform .15s;
+      background: var(--white);
+      position: relative;
+    }
+    .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.10); }
+    .theme-card.selected-blue  { border-color: #1d4ed8; box-shadow: 0 0 0 3px #eff6ff, 0 8px 24px rgba(29,78,216,.15); }
+    .theme-card.selected-staff { border-color: #0d1b2a; box-shadow: 0 0 0 3px #e0e1dd, 0 8px 24px rgba(13,27,42,.18); }
+
+    .check-badge {
+      display: none;
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      z-index: 1;
+    }
+    .theme-card.selected-blue  .check-badge { display: flex; background: #1d4ed8; }
+    .theme-card.selected-staff .check-badge { display: flex; background: #0d1b2a; }
+    .check-badge svg { width: 13px; height: 13px; color: white; }
+
+    /* Navbar mockup strip */
+    .theme-navbar-strip {
+      height: 44px;
       display: flex;
       align-items: center;
-      gap: 12px;
-    }
-    .live-preview-logo {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.3);
-      background: rgba(255,255,255,.2);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .live-preview-title { font-size: 13px; font-weight: 800; color: white; }
-    .live-preview-sub   { font-size: 10px; color: rgba(255,255,255,.7); }
-    .live-preview-body  {
-      padding: 14px;
-      background: var(--bg);
-      display: grid;
-      grid-template-columns: 80px 1fr;
+      padding: 0 14px;
       gap: 10px;
-      min-height: 90px;
     }
-    .live-preview-sidebar {
-      background: var(--white);
-      border-right: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .live-sidebar-item {
-      height: 16px;
-      border-radius: 5px;
-      background: var(--border);
-    }
-    .live-sidebar-item.active {
-      background: var(--accent);
-    }
-    .live-preview-content {
-      display: flex;
-      flex-direction: column;
+    .strip-circle { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.22); flex-shrink: 0; }
+    .strip-lines  { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .strip-line   { height: 6px; border-radius: 3px; background: rgba(255,255,255,.32); }
+    .strip-line.short { width: 55%; }
+    .strip-btn    { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.16); flex-shrink: 0; }
+
+    /* App body mockup */
+    .theme-body-mock {
+      display: grid;
+      grid-template-columns: 52px 1fr;
       gap: 8px;
+      padding: 10px;
+      background: #f8fafc;
     }
-    .live-content-btn {
-      height: 26px;
-      border-radius: 8px;
-      width: 80px;
-      align-self: flex-end;
+    .mock-sidebar { display: flex; flex-direction: column; gap: 5px; }
+    .mock-sb-item { height: 14px; border-radius: 5px; background: #e2e8f0; }
+    .mock-content { display: flex; flex-direction: column; gap: 7px; }
+    .mock-btn     { height: 20px; border-radius: 6px; width: 64px; align-self: flex-end; }
+    .mock-line    { height: 7px; border-radius: 3px; background: #e2e8f0; }
+    .mock-line.s  { width: 55%; }
+
+    /* Swatch row */
+    .swatch-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      align-items: center;
     }
-    .live-content-line { height: 8px; border-radius: 4px; background: var(--border); }
-    .live-content-line.short { width: 60%; }
+    .swatch {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,.08);
+      flex-shrink: 0;
+    }
+    .swatch-label { font-size: 10px; color: var(--text3); font-weight: 700; margin-left: 4px; }
+
+    /* Theme name / desc */
+    .theme-label { padding: 10px 14px 12px; }
+    .theme-label-name { font-size: 13px; font-weight: 800; color: var(--text); }
+    .theme-label-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -191,153 +141,58 @@
 <div id="settingsApp" style="display:none;"></div>
 
 <script>
-
-/* ══════════════════════════════════════════════════════════
-   THEME DEFINITIONS
-   key        → ชื่อที่บันทึกใน localStorage
-   navTheme   → 'blue' | 'dark'  (ส่งให้ buildPage)
-   label      → ชื่อที่แสดง
-   desc       → คำอธิบายสั้น
-   navbar     → สีพื้น navbar สำหรับ preview
-   navbarSub  → สี subtitle
-   accent     → --accent token (ปุ่ม, active sidebar)
-   accentDark → --accent-dark
-   accentTint → --accent-tint
-   ══════════════════════════════════════════════════════════ */
-var THEMES = [
-  {
-    key: 'blue',
-    navTheme: 'blue',
-    label: 'Ocean Blue',
-    desc: 'ธีมเริ่มต้น · สีน้ำเงิน',
-    navbar:     '#1d4ed8',
-    navbarSub:  '#93c5fd',
-    accent:     '#1d4ed8',
-    accentDark: '#1e40af',
-    accentMid:  '#60a5fa',
-    accentLight:'#93c5fd',
-    accentTint: '#eff6ff',
+/* ══════════════════════════════════════
+   2 ธีมที่มีอยู่จริงใน styles-new.css
+   ══════════════════════════════════════ */
+var THEMES = {
+  blue: {
+    key:         'blue',
+    bodyClass:   'theme-blue',
+    navClass:    'blue',
+    navTheme:    'blue',              /* ส่งให้ buildPage */
+    label:       'Ocean Blue',
+    desc:        'ธีมเริ่มต้น · ผู้ใช้ทั่วไป',
+    navbar:      '#1d4ed8',
+    swatches:    ['#1d4ed8','#1e40af','#60a5fa','#93c5fd','#eff6ff'],
+    activeClass: 'selected-blue',
+    mockBtn:     '#1d4ed8',
+    mockSb:      '#1d4ed8',
   },
-  {
-    key: 'ink',
-    navTheme: 'dark',
-    label: 'Ink Black',
-    desc: 'ธีมเจ้าหน้าที่ · สีดำเข้ม',
-    navbar:     '#0d1b2a',
-    navbarSub:  '#778da9',
-    accent:     '#0d1b2a',
-    accentDark: '#1b263b',
-    accentMid:  '#415a77',
-    accentLight:'#778da9',
-    accentTint: '#e0e1dd',
+  staff: {
+    key:         'staff',
+    bodyClass:   'theme-staff',
+    navClass:    'dark',
+    navTheme:    'dark',
+    label:       'Ink Black',
+    desc:        'ธีมเจ้าหน้าที่ · Admin',
+    navbar:      '#0d1b2a',
+    swatches:    ['#0d1b2a','#1b263b','#415a77','#778da9','#e0e1dd'],
+    activeClass: 'selected-staff',
+    mockBtn:     '#0d1b2a',
+    mockSb:      '#0d1b2a',
   },
-  {
-    key: 'emerald',
-    navTheme: 'blue',
-    label: 'Emerald',
-    desc: 'สดชื่น · สีเขียวมรกต',
-    navbar:     '#059669',
-    navbarSub:  '#6ee7b7',
-    accent:     '#059669',
-    accentDark: '#047857',
-    accentMid:  '#34d399',
-    accentLight:'#6ee7b7',
-    accentTint: '#ecfdf5',
-  },
-  {
-    key: 'violet',
-    navTheme: 'blue',
-    label: 'Violet',
-    desc: 'สร้างสรรค์ · สีม่วง',
-    navbar:     '#7c3aed',
-    navbarSub:  '#c4b5fd',
-    accent:     '#7c3aed',
-    accentDark: '#6d28d9',
-    accentMid:  '#a78bfa',
-    accentLight:'#c4b5fd',
-    accentTint: '#ede9fe',
-  },
-  {
-    key: 'rose',
-    navTheme: 'blue',
-    label: 'Rose',
-    desc: 'อบอุ่น · สีชมพูแดง',
-    navbar:     '#e11d48',
-    navbarSub:  '#fda4af',
-    accent:     '#e11d48',
-    accentDark: '#be123c',
-    accentMid:  '#fb7185',
-    accentLight:'#fda4af',
-    accentTint: '#fff1f2',
-  },
-  {
-    key: 'amber',
-    navTheme: 'blue',
-    label: 'Amber',
-    desc: 'สดใส · สีทองส้ม',
-    navbar:     '#d97706',
-    navbarSub:  '#fcd34d',
-    accent:     '#d97706',
-    accentDark: '#b45309',
-    accentMid:  '#fbbf24',
-    accentLight:'#fcd34d',
-    accentTint: '#fffbeb',
-  },
-  {
-    key: 'sky',
-    navTheme: 'blue',
-    label: 'Sky',
-    desc: 'โปร่งใส · สีฟ้าอ่อน',
-    navbar:     '#0284c7',
-    navbarSub:  '#7dd3fc',
-    accent:     '#0284c7',
-    accentDark: '#0369a1',
-    accentMid:  '#38bdf8',
-    accentLight:'#7dd3fc',
-    accentTint: '#e0f2fe',
-  },
-  {
-    key: 'slate',
-    navTheme: 'dark',
-    label: 'Slate',
-    desc: 'เรียบหรู · สีเทาเข้ม',
-    navbar:     '#334155',
-    navbarSub:  '#94a3b8',
-    accent:     '#334155',
-    accentDark: '#1e293b',
-    accentMid:  '#64748b',
-    accentLight:'#94a3b8',
-    accentTint: '#f1f5f9',
-  },
-];
+};
 
 var STORAGE_KEY = 'np_theme';
-var currentThemeKey = localStorage.getItem(STORAGE_KEY) || 'blue';
+var currentKey  = localStorage.getItem(STORAGE_KEY) || 'blue';
 
-/* ── Apply theme tokens to :root ── */
+/* Apply body class + navbar class ── ไม่ต้อง setProperty เพราะ
+   styles-new.css กำหนด accent tokens ผ่าน body.theme-blue / body.theme-staff */
 function applyTheme(key, save) {
-  var t = THEMES.find(function(th) { return th.key === key; });
-  if (!t) return;
-  currentThemeKey = t.key;
-  var root = document.documentElement.style;
-  root.setProperty('--accent',       t.accent);
-  root.setProperty('--accent-dark',  t.accentDark);
-  root.setProperty('--accent-mid',   t.accentMid);
-  root.setProperty('--accent-light', t.accentLight);
-  root.setProperty('--accent-tint',  t.accentTint);
-  /* navbar vars */
-  root.setProperty('--navbar-bg',       t.navbar);
-  root.setProperty('--navbar-sub-color',t.navbarSub);
+  var t = THEMES[key] || THEMES.blue;
+  currentKey = t.key;
 
-  /* body class for theme-staff vs theme-blue */
-  document.body.classList.remove('theme-staff', 'theme-blue');
-  document.body.classList.add(t.navTheme === 'dark' ? 'theme-staff' : 'theme-blue');
+  document.body.classList.remove('theme-blue', 'theme-staff');
+  document.body.classList.add(t.bodyClass);
 
-  if (save) localStorage.setItem(STORAGE_KEY, key);
+  var navbar = document.querySelector('.navbar');
+  if (navbar) { navbar.classList.remove('blue','dark'); navbar.classList.add(t.navClass); }
+
+  if (save) localStorage.setItem(STORAGE_KEY, t.key);
 }
 
-/* Apply on load immediately (ก่อน buildPage เพื่อป้องกัน flash) */
-applyTheme(currentThemeKey, false);
+/* Apply ก่อน buildPage เพื่อป้องกัน flash */
+applyTheme(currentKey, false);
 
 /* ══ Render ══ */
 function renderPage() {
@@ -350,93 +205,60 @@ function renderPage() {
           '</div>' +
           '<h1 class="page-title">ตั้งค่า</h1>' +
         '</div>' +
-        '<p class="page-sub">ปรับธีมสีและการแสดงผลของระบบ</p>' +
+        '<p class="page-sub">ปรับธีมสีของระบบ</p>' +
       '</div>' +
     '</div>' +
 
-    '<div style="max-width:860px;">' +
-
-      /* ── Live Preview ── */
-      '<div class="settings-section">' +
-        '<div class="settings-section-title">ตัวอย่างธีม</div>' +
-        '<div class="live-preview-wrap">' +
-          '<div class="live-preview-navbar" id="liveNavbar">' +
-            '<div class="live-preview-logo">' +
-              '<i data-lucide="school" style="width:14px;height:14px;color:rgba(255,255,255,.8);"></i>' +
-            '</div>' +
-            '<div style="flex:1;">' +
-              '<div class="live-preview-title">NP Origins</div>' +
-              '<div class="live-preview-sub" id="liveNavSub">ตั้งค่า</div>' +
-            '</div>' +
-            '<div style="width:28px;height:28px;background:rgba(255,255,255,.15);border-radius:8px;"></div>' +
-          '</div>' +
-          '<div class="live-preview-body">' +
-            '<div class="live-preview-sidebar">' +
-              '<div class="live-sidebar-item active" id="liveSidebarActive"></div>' +
-              '<div class="live-sidebar-item"></div>' +
-              '<div class="live-sidebar-item"></div>' +
-            '</div>' +
-            '<div class="live-preview-content">' +
-              '<div class="live-content-btn" id="liveBtn"></div>' +
-              '<div class="live-content-line"></div>' +
-              '<div class="live-content-line short"></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-
-      /* ── Theme Picker ── */
-      '<div class="settings-section">' +
-        '<div class="settings-section-title">ธีมสี</div>' +
-        '<div class="theme-grid" id="themeGrid"></div>' +
-      '</div>' +
-
-      /* ── Reset ── */
-      '<div class="settings-section">' +
-        '<div class="settings-section-title">รีเซ็ต</div>' +
-        '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">' +
-          '<div>' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);">กลับสู่ธีมเริ่มต้น</div>' +
-            '<div style="font-size:12px;color:var(--text2);margin-top:2px;">คืนค่าธีมเป็น Ocean Blue</div>' +
-          '</div>' +
-          '<button class="btn-secondary" onclick="resetTheme()" style="white-space:nowrap;">' +
-            '<i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> รีเซ็ต' +
-          '</button>' +
-        '</div>' +
-      '</div>' +
-
+    '<div style="max-width:640px;">' +
+      '<div class="settings-section-title">ธีมสี</div>' +
+      '<div class="theme-cards-row">' + renderCards() + '</div>' +
     '</div>'
   );
 }
 
-/* ── Build theme card HTML ── */
-function buildThemeGrid() {
-  var grid = document.getElementById('themeGrid');
-  if (!grid) return;
-  grid.innerHTML = THEMES.map(function(t) {
-    var isSelected = t.key === currentThemeKey;
+function renderCards() {
+  return Object.values(THEMES).map(function(t) {
+    var sel = currentKey === t.key;
     return (
-      '<div class="theme-card' + (isSelected ? ' selected' : '') + '" ' +
-           'id="themeCard-' + t.key + '" ' +
-           'onclick="selectTheme(\'' + t.key + '\')" ' +
-           'title="' + t.label + '">' +
-        '<div class="check-badge">' +
-          '<i data-lucide="check" style="width:12px;height:12px;color:white;"></i>' +
+      '<div class="theme-card' + (sel ? ' ' + t.activeClass : '') + '" ' +
+           'id="themeCard-' + t.key + '" onclick="selectTheme(\'' + t.key + '\')">' +
+
+        /* checkmark */
+        '<div class="check-badge"><i data-lucide="check"></i></div>' +
+
+        /* navbar strip */
+        '<div class="theme-navbar-strip" style="background:' + t.navbar + ';">' +
+          '<div class="strip-circle"></div>' +
+          '<div class="strip-lines">' +
+            '<div class="strip-line"></div>' +
+            '<div class="strip-line short"></div>' +
+          '</div>' +
+          '<div class="strip-btn"></div>' +
         '</div>' +
-        /* Navbar strip */
-        '<div class="theme-preview-bar" style="background:' + t.navbar + ';">' +
-          '<div class="preview-dot"></div>' +
-          '<div class="preview-line" style="width:36px;"></div>' +
-          '<div style="flex:1;"></div>' +
-          '<div class="preview-dot"></div>' +
+
+        /* app body mockup */
+        '<div class="theme-body-mock">' +
+          '<div class="mock-sidebar">' +
+            '<div class="mock-sb-item" style="background:' + t.mockSb + ';opacity:.85;"></div>' +
+            '<div class="mock-sb-item"></div>' +
+            '<div class="mock-sb-item"></div>' +
+          '</div>' +
+          '<div class="mock-content">' +
+            '<div class="mock-btn" style="background:' + t.mockBtn + ';"></div>' +
+            '<div class="mock-line"></div>' +
+            '<div class="mock-line s"></div>' +
+          '</div>' +
         '</div>' +
-        /* Content mockup */
-        '<div class="theme-preview-content">' +
-          '<div class="preview-btn" style="background:' + t.accent + ';opacity:.85;"></div>' +
-          '<div class="preview-card-line"></div>' +
-          '<div class="preview-card-line short"></div>' +
+
+        /* 5 swatches — สะท้อน 5 accent tokens จริง */
+        '<div class="swatch-row">' +
+          t.swatches.map(function(c) {
+            return '<div class="swatch" style="background:' + c + ';"></div>';
+          }).join('') +
+          '<span class="swatch-label">5 สี</span>' +
         '</div>' +
-        /* Label */
+
+        /* label */
         '<div class="theme-label">' +
           '<div class="theme-label-name">' + t.label + '</div>' +
           '<div class="theme-label-desc">' + t.desc + '</div>' +
@@ -444,55 +266,28 @@ function buildThemeGrid() {
       '</div>'
     );
   }).join('');
-  lucide.createIcons();
-  updateLivePreview(currentThemeKey);
 }
 
-/* ── Select & apply ── */
 function selectTheme(key) {
-  /* update cards */
-  document.querySelectorAll('.theme-card').forEach(function(c) {
-    c.classList.remove('selected');
+  var t = THEMES[key]; if (!t) return;
+
+  /* ล้าง selected class ทุก card */
+  Object.values(THEMES).forEach(function(th) {
+    var c = document.getElementById('themeCard-' + th.key);
+    if (c) { c.classList.remove('selected-blue', 'selected-staff'); }
   });
   var card = document.getElementById('themeCard-' + key);
-  if (card) card.classList.add('selected');
+  if (card) card.classList.add(t.activeClass);
 
   applyTheme(key, true);
-  updateLivePreview(key);
-
-  /* Update navbar class live */
-  var navbar = document.querySelector('.navbar');
-  if (navbar) {
-    navbar.classList.remove('blue', 'dark');
-    var t = THEMES.find(function(th) { return th.key === key; });
-    if (t) navbar.classList.add(t.navTheme);
-  }
-
-  showToast('เปลี่ยนธีมเป็น ' + (THEMES.find(function(th){return th.key===key;}) || {}).label, 'success');
-}
-
-/* ── Live preview panel ── */
-function updateLivePreview(key) {
-  var t = THEMES.find(function(th) { return th.key === key; });
-  if (!t) return;
-  var nav = document.getElementById('liveNavbar');
-  var btn = document.getElementById('liveBtn');
-  var sideActive = document.getElementById('liveSidebarActive');
-  if (nav) nav.style.background = t.navbar;
-  if (btn) btn.style.background = t.accent;
-  if (sideActive) sideActive.style.background = t.accent;
-}
-
-/* ── Reset ── */
-function resetTheme() {
-  selectTheme('blue');
+  showToast('เปลี่ยนธีมเป็น ' + t.label);
 }
 
 /* ══ Boot ══ */
 buildPage({
   appId:        'settingsApp',
   navSubtitle:  'ตั้งค่า',
-  navTheme:     'blue',
+  navTheme:     (THEMES[currentKey] || THEMES.blue).navTheme,
   activePage:   'settings',
   requireAdmin: false,
 
@@ -501,25 +296,13 @@ buildPage({
     updateSidebarProfile(user);
     checkAdminAccess(user.email);
 
-    /* re-apply saved theme after buildPage (buildPage resets body class) */
-    applyTheme(currentThemeKey, false);
-
-    /* patch navbar class to match saved theme */
-    var savedTheme = THEMES.find(function(t) { return t.key === currentThemeKey; });
-    if (savedTheme) {
-      var navbar = document.querySelector('.navbar');
-      if (navbar) {
-        navbar.classList.remove('blue', 'dark');
-        navbar.classList.add(savedTheme.navTheme);
-      }
-    }
+    /* buildPage reset body class → apply คืน */
+    applyTheme(currentKey, false);
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
-    buildThemeGrid();
   }
 });
-
 </script>
 </body>
 </html>
