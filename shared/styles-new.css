@@ -37,6 +37,12 @@
 
 /* ── 1. CSS Variables ─────────────────────────────────────────── */
 :root {
+  /* ── Spacing Tokens ── */
+  --gap-card:    16px;   /* ระยะห่างระหว่าง card ใน grid หลัก */
+  --gap-section: 18px;   /* margin-bottom ระหว่าง section / card กลุ่ม */
+  --gap-item:    10px;   /* ระยะห่างระหว่าง list item / row */
+  --gap-tight:    8px;   /* ระยะห่างแคบ (doc chips, badges) */
+
   /* Brand */
   --blue:        #1d4ed8;
   --blue-dark:   #1e40af;
@@ -1327,13 +1333,13 @@ tr:hover td { background: #fafbfd; }
 .charts-section {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
+  gap: var(--gap-card);
   margin-bottom: 0;
 }
 @media (max-width:1100px) { .charts-section { grid-template-columns: 1fr 1fr; } }
 @media (max-width:640px)  { .charts-section { grid-template-columns: 1fr; } }
 
-.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
+.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-card); margin-bottom: var(--gap-section); }
 @media (max-width:900px) { .chart-grid { grid-template-columns: 1fr; } }
 .chart-wrap { position: relative; height: 250px; }
 
@@ -1379,7 +1385,7 @@ tr:hover td { background: #fafbfd; }
 .stat-bar-fill { height: 100%; border-radius: 4px; background: var(--blue); transition: width .4s ease; }
 
 /* KPI cards (food court) */
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 12px; margin-bottom: 18px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: var(--gap-card); margin-bottom: var(--gap-section); }
 .kpi {
   background: var(--white);
   border-radius: 14px;
@@ -1560,7 +1566,7 @@ tr:hover td { background: #fafbfd; }
 .teacher-docs.open { display: block; }
 
 /* Doc grid */
-.doc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 8px; margin-top: 12px; }
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: var(--gap-tight); margin-top: 12px; }
 
 /* Matrix cell */
 .matrix-cell          { width: 22px; height: 22px; border-radius: 6px; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -1601,7 +1607,7 @@ tr:hover td { background: #fafbfd; }
 .group-header { border-radius: 14px; padding: 16px 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 13px; }
 
 /* Group grid */
-.group-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 18px; }
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: var(--gap-card); }
 @media (max-width:640px) { .group-grid { grid-template-columns: 1fr; } }
 
 /* Permission row (modal) */
@@ -1729,7 +1735,7 @@ tr:hover td { background: #fafbfd; }
 .sum-bar-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 3px; }
 .sum-bar-track { background: var(--bg-alt); border-radius: 6px; height: 10px; overflow: hidden; }
 .sum-bar-fill  { height: 100%; border-radius: 6px; transition: width .5s ease; }
-.sum-booking-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.sum-booking-list { margin-top: 10px; display: flex; flex-direction: column; gap: var(--gap-tight); max-height: 260px; overflow-y: auto; }
 .sum-booking-row  { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--bg); border-radius: 9px; font-size: 11px; color: #475569; }
 .sum-booking-row .sdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .sum-toggle    { font-size: 10px; color: var(--purple); font-weight: 700; cursor: pointer; background: none; border: none; padding: 0; margin-left: auto; }
@@ -1930,7 +1936,7 @@ tr:hover td { background: #fafbfd; }
 
 /* ── 27. Page — Food Court ────────────────────────────────────── */
 /* Day section */
-.day-section { margin-bottom: 18px; }
+.day-section { margin-bottom: var(--gap-section); }
 .day-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 10px 14px; background: var(--white); border-radius: 12px; border: 1px solid var(--border); }
 .day-title   { font-weight: 800; font-size: 14px; }
 .day-stats   { display: flex; gap: 14px; font-size: 12px; }
@@ -1947,11 +1953,11 @@ tr:hover td { background: #fafbfd; }
 .filter-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
 
 /* Form row (food court) */
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-item); margin-bottom: 12px; }
 @media (max-width:600px) { .form-row { grid-template-columns: 1fr; } }
 
 /* Booking modal 2-col form rows — collapse on mobile */
-.form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-card); }
 @media (max-width: 560px) {
   .form-row-2col {
     grid-template-columns: 1fr !important;
@@ -1966,7 +1972,7 @@ tr:hover td { background: #fafbfd; }
 .type-btn.active.expense { background: var(--red); color: white; }
 
 /* Recurring items */
-.rec-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.rec-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-card); margin-bottom: var(--gap-section); }
 @media (max-width:700px) { .rec-section-grid { grid-template-columns: 1fr; } }
 .rec-col-label { font-size: 12px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
 .rec-col-ico   { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
@@ -2041,7 +2047,7 @@ tr:hover td { background: #fafbfd; }
 /* Manage items */
 .rec-manage-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .rec-manage-item:last-child { border-bottom: none; }
-.manage-rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.manage-rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-item); margin-bottom: var(--gap-section); }
 @media (max-width:640px) { .manage-rec-grid { grid-template-columns: 1fr; } }
 .manage-rec-card { background: #fafbfd; border: 1.5px solid var(--border); border-radius: 12px; padding: 13px 14px; display: flex; align-items: flex-start; gap: 10px; transition: all .18s; }
 
