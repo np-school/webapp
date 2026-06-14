@@ -31,7 +31,7 @@
     .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
     .kpi.income::before { background: var(--green); }
     .kpi.expense::before { background: var(--red); }
-    .kpi.balance::before { background: var(--blue); }
+    .kpi.balance::before { background: var(--accent); }
     .kpi.avg::before { background: var(--amber); }
     .kpi-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
     .kpi-value { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1.1; }
@@ -39,7 +39,7 @@
     .kpi-icon { position: absolute; right: 14px; top: 14px; font-size: 22px; opacity: .1; }
     .period-tabs { display: flex; gap: 4px; }
     .ptab { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--text2); cursor: pointer; transition: all .15s; font-family: 'Sarabun', sans-serif; }
-    .ptab.active { background: var(--blue); color: white; border-color: var(--blue); }
+    .ptab.active { background: var(--accent); color: white; border-color: var(--accent); }
     .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
     @media(max-width:900px) { .chart-grid { grid-template-columns: 1fr; } }
     .chart-wrap { position: relative; height: 250px; }
@@ -133,8 +133,8 @@
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--blue-lt);">
-          <i data-lucide="store" style="width:18px;height:18px;color:var(--blue);"></i>
+        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--accent-tint);">
+          <i data-lucide="store" style="width:18px;height:18px;color:var(--accent);"></i>
         </div>
         <div class="modal-title">นำเข้ารายได้โรงเรียน</div>
       </div>
@@ -332,7 +332,7 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#2563eb,#93c5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="list" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายการทั้งหมด</h1>
@@ -382,7 +382,7 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#c4b5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="settings-2" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">จัดการรายการ</h1>
@@ -829,7 +829,7 @@ function renderLineChart(){
   const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDate);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#0d1b2a',backgroundColor:'rgba(13,27,42,.08)',fill:true,tension:.35,pointBackgroundColor:getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#0d1b2a',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
@@ -885,9 +885,9 @@ function renderDashboardRecurring() {
       <div style="font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">รายจ่าย</div>
       <div style="font-size:20px;font-weight:800;color:var(--red)">฿${fmt(totalOut)}</div>
     </div>
-    <div style="background:${net>=0?'var(--blue-lt)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--blue-mid)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
-      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
-      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">฿${fmt(net)}</div>
+    <div style="background:${net>=0?'var(--accent-tint)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--accent-light)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
+      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'}">฿${fmt(net)}</div>
     </div>
   `;
 
@@ -1115,7 +1115,7 @@ function saveShopCount(){
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
+  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount));
 }
 
 // ── ADD MODAL (daily-entry style) ──
@@ -1284,7 +1284,7 @@ function renderMonthlyChart(month){
     <span style="color:var(--text2)">|</span>
     <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
     <span style="color:var(--text2)">|</span>
-    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
+    <span style="font-weight:800;color:${net>=0?'var(--accent)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
   `;
 
   // Group by date
