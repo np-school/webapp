@@ -542,7 +542,7 @@
       </div>
       <div class="stat-card">
         <div style="width:40px;height:40px;border-radius:12px;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i data-lucide="eye" style="width:20px;height:20px;color:#3b82f6;"></i>
+          <i data-lucide="eye" style="width:20px;height:20px;color:var(--accent);"></i>
         </div>
         <div>
           <p style="font-size:22px;font-weight:800;color:#0f172a;" id="statReviewed">-</p>
@@ -1391,7 +1391,7 @@ function renderListView() {
                     return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + cDocIdForClick + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
                       '<div style="display:flex;align-items:center;gap:4px;">' +
                         '<span style="font-size:10px;font-weight:800;color:' + cColor + ';">' + cIcon + '</span>' +
-                        '<span style="font-size:9px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
+                        '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
                         (cName ? '<span style="font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc(cName) + '</span>' : '') +
                       '</div>' +
                       buildWorkflowBar(cStatus) +
@@ -1780,7 +1780,7 @@ function renderCourseFileList(sub, courseMap, activeCourseKey) {
       '<i data-lucide="book-open" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>' +
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-          '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(courseCode) + '</span>' +
+          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(courseCode) + '</span>' +
           '<span style="font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">' + esc(courseName) + '</span>' +
         '</div>' +
         '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">' + files.length + ' ไฟล์</p>' +
@@ -1985,7 +1985,7 @@ function fillSingleFileInfo(sub) {
     var cGroup = displayFile.subjectGroup || sub.subjectGroup;
     var cCode  = displayFile.courseCode   || sub.courseCode;
     var cName  = displayFile.courseName   || sub.courseName;
-    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
+    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:var(--accent-tint);color:var(--accent);padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
     if (cCode)  cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + esc(cCode) + '</span> ';
     if (cName)  cText += '<span style="font-size:12px;color:#64748b;">· ' + esc(cName) + '</span>';
     courseInfoBox.style.display = cText ? 'flex' : 'none';
@@ -2941,7 +2941,7 @@ function openNotesModal(uid, docTypeId) {
 
     var dSt = doc.status || 'submitted';
     var courseLabel = doc.courseCode
-      ? '<span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
+      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
       : '<span style="font-size:11px;color:#64748b;font-weight:600;">รายการเดียว</span>';
 
     html += '<div style="margin-bottom:18px;">';
@@ -3331,7 +3331,7 @@ function renderTeacherSubTable(t) {
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
 
         if (doc.courseCode) {
-          html += '<span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
+          html += '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
         }
         if (doc.courseName) {
           html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc(doc.courseName) + '</span>';
@@ -3339,7 +3339,7 @@ function renderTeacherSubTable(t) {
         html += '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:' + dBg + ';color:' + dClr + ';margin-left:auto;">' + dLbl + '</span>';
         /* ปุ่มบันทึกข้อความรายวิชา */
         if (doc.id) {
-          html += '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(doc.id) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:10px;height:10px;"></i> บันทึกข้อความ</button>';
+          html += '<button onclick="event.stopPropagation();openAdminMemoModal(\'' + esc(doc.id) + '\',\'' + esc(t.email) + '\',\'' + esc(dt.id) + '\')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;border:1.5px solid #bfdbfe;background:var(--accent-tint);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;font-family:\'Sarabun\',sans-serif;"><i data-lucide="file-text" style="width:10px;height:10px;"></i> บันทึกข้อความ</button>';
         }
 
         /* file link */
@@ -3444,7 +3444,7 @@ function renderDocTypeRows(docs) {
 
   list.innerHTML = docs.map(function(dt, i) {
     var DEPT_LABELS = { academic:'ฝ่ายวิชาการ', budget:'ฝ่ายงบประมาณ', personnel:'ฝ่ายบริหารงานบุคคล', general:'ฝ่ายบริหารทั่วไป' };
-    var DEPT_COLORS = { academic:'#1d4ed8', budget:'#16a34a', personnel:'var(--purple)', general:'#ea580c' };
+    var DEPT_COLORS = { academic:'var(--accent)', budget:'#16a34a', personnel:'var(--purple)', general:'#ea580c' };
     var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'#fff7ed' };
     var deptKey = dt.department || 'academic';
     var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'#f1f5f9') + ';color:' + (DEPT_COLORS[deptKey]||'#64748b') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';

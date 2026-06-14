@@ -375,7 +375,7 @@
               '<span><b style="color:var(--text);">เวลา:</b> '+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span>' +
               '<span><b style="color:var(--text);">ผู้จอง:</b> '+(b.fullName||b.userName||'-')+'</span>' +
               '<span><b style="color:var(--text);">ตำแหน่ง:</b> '+(b.position||'-')+'</span>' +
-              '<span><b style="color:var(--text);">เบอร์โทร:</b> '+(b.phone?'<a href="tel:'+b.phone+'" style="color:var(--blue);font-weight:700;text-decoration:none;">'+b.phone+'</a>':'-')+'</span>' +
+              '<span><b style="color:var(--text);">เบอร์โทร:</b> '+(b.phone?'<a href="tel:'+b.phone+'" style="color:var(--accent);font-weight:700;text-decoration:none;">'+b.phone+'</a>':'-')+'</span>' +
               '<span><b style="color:var(--text);">ผู้เข้าร่วม:</b> '+(b.attendees||'-')+' คน</span>' +
               '<span><b style="color:var(--text);">วัตถุประสงค์:</b> '+b.purpose+'</span>' +
             '</div>' +
@@ -917,7 +917,7 @@
     container.innerHTML=sorted.map(function(room){
       var cnt=roomCount[room];
       var pct=Math.round((cnt/max)*100);
-      var color=pct>=80?'linear-gradient(90deg,var(--blue),#60a5fa)':pct>=50?'linear-gradient(90deg,var(--purple),var(--purple-accent))':'linear-gradient(90deg,#0ea5e9,var(--sky-mid))';
+      var color=pct>=80?'linear-gradient(90deg,var(--accent),var(--accent-mid))':pct>=50?'linear-gradient(90deg,var(--purple),var(--purple-accent))':'linear-gradient(90deg,#0ea5e9,var(--sky-mid))';
       return '<div class="hbar-row">'+
         '<div class="hbar-label">'+
           '<span class="hbar-name" title="'+room+'">'+room+'</span>'+
