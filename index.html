@@ -642,6 +642,7 @@
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
       resetNavUI();
+      loadPublicAnnouncements();
     }
     document.getElementById('loadingOverlay').style.display='none';
     lucide.createIcons();
@@ -1201,8 +1202,7 @@
       .limit(30)
       .get()
       .then(function(snap) {
-        if (snap.empty) { console.log('[ann] snap empty'); return; }
-        console.log('[ann] docs total:', snap.size);
+        if (snap.empty) return;
 
         /* เรียง createdAt desc ฝั่ง client */
         var docs = [];
@@ -1216,7 +1216,6 @@
         var html = '';
         docs.forEach(function(doc) {
           var d    = doc.data();
-          console.log('[ann] doc:', doc.id, 'scope:', d.scope, 'active:', d.active, 'title:', d.title);
           var type = d.type || 'info';
 
           /* กรอง scope: แสดงเฉพาะ external หรือไม่มี scope field (ข้อมูลเก่า) */
@@ -1259,8 +1258,6 @@
       })
       .catch(function(e) { console.warn('ann load error:', e); });
   }
-  loadPublicAnnouncements();
-
   lineHandleCb();
 
   lucide.createIcons();
