@@ -1201,7 +1201,8 @@
       .limit(30)
       .get()
       .then(function(snap) {
-        if (snap.empty) return;
+        if (snap.empty) { console.log('[ann] snap empty'); return; }
+        console.log('[ann] docs total:', snap.size);
 
         /* เรียง createdAt desc ฝั่ง client */
         var docs = [];
@@ -1215,11 +1216,12 @@
         var html = '';
         docs.forEach(function(doc) {
           var d    = doc.data();
+          console.log('[ann] doc:', doc.id, 'scope:', d.scope, 'active:', d.active, 'title:', d.title);
           var type = d.type || 'info';
 
-          /* กรอง scope: แสดงเฉพาะ external หรือไม่มี scope (ข้อมูลเก่า) */
-          var scope = d.scope || 'external';
-          if (scope !== 'external') return;
+          /* กรอง scope: แสดงเฉพาะ external หรือไม่มี scope field (ข้อมูลเก่า) */
+          var scope = (d.scope !== undefined && d.scope !== null) ? d.scope : 'external';
+          if (scope === 'internal') return;
 
           /* กรองตามช่วงวันที่ */
           if (!d.noExpiry) {

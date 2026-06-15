@@ -340,7 +340,7 @@ function openAnnModal(id) {
     document.getElementById('annDeptOther').style.display = 'none';
     toggleNoExpiry(false);
     setAnnType('info');
-    setAnnScope('internal');
+    setAnnScope('external');
     resetAnnImage();
     annImgExistUrl = '';
   } else {
@@ -351,7 +351,7 @@ function openAnnModal(id) {
       document.getElementById('annBody').value     = d.body   || '';
       document.getElementById('annActive').checked = d.active !== false;
       setAnnType(d.type   || 'info');
-      setAnnScope(d.scope || 'internal');
+      setAnnScope(d.scope || 'external');
 
       var noExpiry = d.noExpiry === true || (!d.startDate && !d.endDate);
       document.getElementById('annNoExpiry').checked = noExpiry;
@@ -471,7 +471,7 @@ function saveAnn() {
   var typeEl    = document.querySelector('[name="annType"]:checked');
   var type      = typeEl ? typeEl.value : 'info';
   var scopeEl   = document.querySelector('[name="annScope"]:checked');
-  var scope     = scopeEl ? scopeEl.value : 'internal';
+  var scope     = scopeEl ? scopeEl.value : 'external';
   var deptSel   = document.getElementById('annDeptSelect').value;
   var department = (deptSel === 'other')
     ? (document.getElementById('annDeptOther').value || '').trim()
@@ -790,15 +790,15 @@ buildPage({
     <div class="form-group">
       <label class="form-label">ประเภทประกาศ <span style="color:#ef4444;">*</span></label>
       <div class="ann-scope-row" id="annScopeRow">
-        <label class="ann-scope-opt sel-internal" data-scope="internal">
-          <input type="radio" name="annScope" value="internal" checked>
-          <i data-lucide="building-2" style="width:15px;height:15px;flex-shrink:0;"></i>
-          ภายใน
-        </label>
-        <label class="ann-scope-opt" data-scope="external">
+        <label class="ann-scope-opt sel-external" data-scope="external">
           <input type="radio" name="annScope" value="external">
           <i data-lucide="globe-2" style="width:15px;height:15px;flex-shrink:0;"></i>
           ภายนอก
+        </label>
+        <label class="ann-scope-opt" data-scope="internal">
+          <input type="radio" name="annScope" value="internal" checked>
+          <i data-lucide="building-2" style="width:15px;height:15px;flex-shrink:0;"></i>
+          ภายใน
         </label>
       </div>
     </div>
