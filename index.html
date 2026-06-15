@@ -101,6 +101,18 @@
     .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;border-radius:28px;}
     .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
     .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;}
+    /* ── Hero illustration mosaic ── */
+    .hero-mosaic{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .hero-mosaic-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(6px);animation:heroFloat 6s ease-in-out infinite;}
+    .hero-mosaic-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hero-mosaic-title{font-size:13px;font-weight:800;color:white;line-height:1.3;}
+    .hero-mosaic-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
+    .mc-1{animation-delay:0s;}
+    .mc-2{animation-delay:.5s;}
+    .mc-3{animation-delay:1s;}
+    .mc-4{animation-delay:1.5s;}
+    @keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    @media(max-width:768px){.hero-img-block{display:none;}}
     .service-card{background:white;border-radius:20px;border:1px solid #e2e8f0;padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
     .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:#bfdbfe;}
     .service-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .2s;}
@@ -108,7 +120,10 @@
     .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
     @media(max-width:640px){.services-grid{grid-template-columns:repeat(2,1fr);gap:12px;}.service-card{padding:18px 14px;}}
     @media(max-width:360px){.services-grid{grid-template-columns:1fr;}}
-    .pub-section{margin:0 auto;}
+    .pub-section{margin:0 auto;max-width:1180px;}
+    /* ── Guest mode: ซ่อนเมนูเจ้าหน้าที่/แฮมเบอร์เกอร์เมื่อยังไม่ล็อกอิน ── */
+    body.guest-mode .sidebar-wrap,
+    body.guest-mode .navbar-hamburger{display:none!important;}
     .login-gate{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
     .login-gate.open{display:flex;}
     .login-gate-box{background:white;border-radius:24px;width:100%;max-width:400px;padding:36px 32px;text-align:center;box-shadow:0 32px 64px rgba(0,0,0,.2);animation:popIn .25s cubic-bezier(.4,0,.2,1);}
@@ -161,14 +176,41 @@
           </h1>
           <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:420px;margin-bottom:28px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
 
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+            <button onclick="handleLogin()" style="padding:13px 24px;background:white;color:#1d4ed8;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(15,23,42,.25);">
+              <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+              เข้าสู่ระบบด้วย Google
+            </button>
+            <a href="guide.html" style="padding:13px 22px;background:rgba(255,255,255,.08);color:white;font-weight:700;border-radius:14px;border:1px solid rgba(255,255,255,.22);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:8px;">
+              <i data-lucide="book-open" style="width:16px;height:16px;"></i> วิธีใช้งานระบบ
+            </a>
+          </div>
+
           <div class="pub-stats-row" id="heroStatsRow">
             <div class="pub-stat-pill"><i data-lucide="building-2" style="width:12px;height:12px;"></i> <span id="heroRoomCount">...</span> ห้อง/สถานที่</div>
             <div class="pub-stat-pill"><i data-lucide="calendar-check" style="width:12px;height:12px;"></i> <span id="heroBookingCount">...</span> คำขอจองเดือนนี้</div>
           </div>
         </div>
-        <!-- Hero image -->
-        <div style="flex:1;min-width:220px;max-width:480px;display:none;" id="heroImgWrap" class="hero-img-block">
-          <img src="https://nongki.ac.th/np2019/img/home/logo_np.gif" alt="NP" style="width:100%;max-width:320px;display:block;margin:0 auto;filter:brightness(0) invert(1);opacity:.15;">
+        <!-- Hero visual: floating service icon cards -->
+        <div style="flex:1;min-width:240px;max-width:420px;" id="heroImgWrap" class="hero-img-block">
+          <div class="hero-mosaic">
+            <div class="hero-mosaic-card mc-1">
+              <div class="hero-mosaic-icon" style="background:#dcfce7;"><i data-lucide="book-open" style="width:20px;height:20px;color:#16a34a;"></i></div>
+              <div><div class="hero-mosaic-title">คู่มือการใช้งาน</div><div class="hero-mosaic-sub">อ่านได้ทันที</div></div>
+            </div>
+            <div class="hero-mosaic-card mc-2">
+              <div class="hero-mosaic-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:20px;height:20px;color:#7c3aed;"></i></div>
+              <div><div class="hero-mosaic-title">ส่งงานประจำภาคเรียน</div><div class="hero-mosaic-sub">ติดตามสถานะได้ทันที</div></div>
+            </div>
+            <div class="hero-mosaic-card mc-3">
+              <div class="hero-mosaic-icon" style="background:#dbeafe;"><i data-lucide="calendar" style="width:20px;height:20px;color:#1d4ed8;"></i></div>
+              <div><div class="hero-mosaic-title">ขอใช้ห้อง/สถานที่</div><div class="hero-mosaic-sub">จองง่าย เห็นผลทันที</div></div>
+            </div>
+            <div class="hero-mosaic-card mc-4">
+              <div class="hero-mosaic-icon" style="background:#dcfce7;"><svg width="20" height="20" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg></div>
+              <div><div class="hero-mosaic-title">แจ้งเตือนผ่าน LINE</div><div class="hero-mosaic-sub">ไม่พลาดทุกการอัปเดต</div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -521,6 +563,7 @@
 
   auth.onAuthStateChanged(function(user){
     if(user){
+      document.body.classList.remove('guest-mode');
       document.getElementById('publicView').style.display='none';
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
@@ -528,6 +571,7 @@
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
       pfInit(user.uid, user.email);
     }else{
+      document.body.classList.add('guest-mode');
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
       resetNavUI();
@@ -651,7 +695,7 @@
     if(!grid||!label)return;
     grid.innerHTML='';
     label.textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(pubYear,pubMonth));
-    var first=new Date(pubYear,pubMonth,1).getDay();
+    var first=new Date(pubYear,pubMonth,1).getDay(); // 0=อา ... 6=ส
     var days=new Date(pubYear,pubMonth+1,0).getDate();
     var today=new Date().toISOString().split('T')[0];
     var bmap={};
@@ -660,8 +704,10 @@
       if(!bmap[b.date])bmap[b.date]=[];
       bmap[b.date].push(b);
     });
-    for(var i=0;i<first;i++){var e=document.createElement('div');e.className='pub-cal-day empty';grid.appendChild(e);}
     for(var d=1;d<=days;d++){
+      var idx=first+(d-1);          // ตำแหน่งช่องที่ d (0-based) นับจากช่องแรกของตาราง
+      var row=Math.floor(idx/7)+1;  // แถวที่ (1-based)
+      var col=(idx%7)+1;            // คอลัมน์ที่ (1-based) ต้องตรงกับ อา จ อ พ พฤ ศ ส
       var dk=pubYear+'-'+String(pubMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       var db=bmap[dk]||[];
       var el=document.createElement('div');
@@ -671,6 +717,8 @@
       if(db.length>=3)cls+=' is-full';
       if(dk===pubSelectedDate)cls+=' is-selected';
       el.className=cls;el.textContent=d;
+      el.style.gridRow=row;
+      el.style.gridColumn=col;
       (function(k,bk){el.onclick=function(){pubSelectedDate=k;pubRenderCalendar();pubUpdateDayView(k,bk);};})(dk,db);
       grid.appendChild(el);
     }
