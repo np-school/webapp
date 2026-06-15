@@ -116,6 +116,78 @@
     .theme-label { padding: 10px 14px 12px; }
     .theme-label-name { font-size: 13px; font-weight: 800; color: var(--text); }
     .theme-label-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    /* ── Settings subtabs ── */
+    .settings-tabbar {
+      display: flex; gap: 4px; margin-bottom: 28px;
+      border-bottom: 2px solid var(--border); padding-bottom: 0;
+    }
+    .settings-tab {
+      padding: 10px 18px; border: none; background: none;
+      font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--text2); cursor: pointer; border-bottom: 2.5px solid transparent;
+      margin-bottom: -2px; transition: all .18s; display: flex; align-items: center; gap: 7px;
+    }
+    .settings-tab:hover { color: var(--text); }
+    .settings-tab.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .settings-pane { display: none; }
+    .settings-pane.active { display: block; }
+
+    /* ── Announcement cards ── */
+    .ann-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px 18px; display: flex;
+      gap: 14px; align-items: flex-start; transition: box-shadow .15s;
+    }
+    .ann-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+    .ann-icon-wrap {
+      width: 40px; height: 40px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ann-type-info    { background: #eff6ff; }
+    .ann-type-warning { background: #fffbeb; }
+    .ann-type-success { background: #f0fdf4; }
+    .ann-type-urgent  { background: #fff1f2; }
+    .ann-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
+    }
+    .ann-badge-info    { background: #dbeafe; color: #1e40af; }
+    .ann-badge-warning { background: #fef3c7; color: #92400e; }
+    .ann-badge-success { background: #dcfce7; color: #15803d; }
+    .ann-badge-urgent  { background: #fee2e2; color: #b91c1c; }
+    .ann-modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.55); z-index: 200;
+      align-items: center; justify-content: center; padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .ann-modal-bg.open { display: flex; }
+    .ann-modal {
+      background: white; border-radius: 20px; width: 100%;
+      max-width: 520px; padding: 28px; box-shadow: 0 24px 64px rgba(0,0,0,.18);
+    }
+    .ann-field { margin-bottom: 16px; }
+    .ann-label { font-size: 11px; font-weight: 800; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .8px; }
+    .ann-input {
+      width: 100%; padding: 10px 13px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: 'Sarabun', sans-serif;
+      font-size: 14px; color: var(--text); background: white;
+      transition: border-color .15s; outline: none; box-sizing: border-box;
+    }
+    .ann-input:focus { border-color: #1d4ed8; }
+    textarea.ann-input { resize: vertical; min-height: 80px; }
+    .ann-type-radio { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ann-type-opt {
+      display: flex; align-items: center; gap: 6px; padding: 7px 13px;
+      border: 1.5px solid var(--border); border-radius: 9px; cursor: pointer;
+      font-size: 12px; font-weight: 700; color: var(--text2); transition: all .15s;
+    }
+    .ann-type-opt input { display: none; }
+    .ann-type-opt.sel-info    { border-color: #1d4ed8; background: #eff6ff; color: #1e40af; }
+    .ann-type-opt.sel-warning { border-color: #d97706; background: #fffbeb; color: #92400e; }
+    .ann-type-opt.sel-success { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
+    .ann-type-opt.sel-urgent  { border-color: #dc2626; background: #fff1f2; color: #b91c1c; }
   </style>
 </head>
 <body>
@@ -194,8 +266,139 @@ function applyTheme(key, save) {
 /* Apply ก่อน buildPage เพื่อป้องกัน flash */
 applyTheme(currentKey, false);
 
+/* ══ Announcement helpers ══ */
+var ANN_TYPES = {
+  info:    { label: 'ข้อมูล',   icon: 'info',           iconColor: '#1d4ed8', badgeClass: 'ann-badge-info',    wrapClass: 'ann-type-info' },
+  warning: { label: 'แจ้งเตือน', icon: 'alert-triangle', iconColor: '#d97706', badgeClass: 'ann-badge-warning', wrapClass: 'ann-type-warning' },
+  success: { label: 'ข่าวดี',   icon: 'check-circle-2', iconColor: '#16a34a', badgeClass: 'ann-badge-success', wrapClass: 'ann-type-success' },
+  urgent:  { label: 'ด่วน',     icon: 'bell-ring',       iconColor: '#dc2626', badgeClass: 'ann-badge-urgent',  wrapClass: 'ann-type-urgent' },
+};
+var annEditId = null;
+var currentUserEmail = null;
+var isAdmin = false;
+
+function openAnnModal(id) {
+  annEditId = id || null;
+  var modal = document.getElementById('annModal');
+  document.getElementById('annModalTitle').textContent = id ? 'แก้ไขประกาศ' : 'เพิ่มประกาศใหม่';
+  if (!id) {
+    document.getElementById('annTitle').value = '';
+    document.getElementById('annBody').value = '';
+    document.getElementById('annActive').checked = true;
+    setAnnType('info');
+  } else {
+    db.collection('announcements').doc(id).get().then(function(doc) {
+      if (!doc.exists) return;
+      var d = doc.data();
+      document.getElementById('annTitle').value = d.title || '';
+      document.getElementById('annBody').value = d.body || '';
+      document.getElementById('annActive').checked = d.active !== false;
+      setAnnType(d.type || 'info');
+    });
+  }
+  modal.classList.add('open');
+  lucide.createIcons();
+}
+function closeAnnModal() { document.getElementById('annModal').classList.remove('open'); }
+
+function setAnnType(type) {
+  document.querySelectorAll('[name="annType"]').forEach(function(r) { r.checked = r.value === type; });
+  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
+    el.className = 'ann-type-opt' + (el.dataset.type === type ? ' sel-' + type : '');
+  });
+}
+
+function saveAnn() {
+  var title = (document.getElementById('annTitle').value || '').trim();
+  var body  = (document.getElementById('annBody').value  || '').trim();
+  var type  = document.querySelector('[name="annType"]:checked') ? document.querySelector('[name="annType"]:checked').value : 'info';
+  var active = document.getElementById('annActive').checked;
+  if (!title) { showToast('กรุณากรอกหัวข้อ','error'); return; }
+  var btn = document.getElementById('annSaveBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  var data = { title: title, body: body, type: type, active: active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+  var p = annEditId
+    ? db.collection('announcements').doc(annEditId).update(data)
+    : db.collection('announcements').add(Object.assign(data, { createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUserEmail }));
+  p.then(function() {
+    showToast(annEditId ? 'แก้ไขประกาศแล้ว' : 'เพิ่มประกาศแล้ว');
+    closeAnnModal();
+    loadAnnouncements();
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); })
+    .finally(function() { btn.disabled = false; btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก'; lucide.createIcons(); });
+}
+
+function deleteAnn(id) {
+  if (!confirm('ลบประกาศนี้?')) return;
+  db.collection('announcements').doc(id).delete()
+    .then(function() { showToast('ลบประกาศแล้ว'); loadAnnouncements(); })
+    .catch(function(e) { showToast('เกิดข้อผิดพลาด','error'); });
+}
+
+function toggleAnnActive(id, current) {
+  db.collection('announcements').doc(id).update({ active: !current, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(function() { showToast(!current ? 'เปิดใช้งานแล้ว' : 'ปิดการแสดงผลแล้ว'); loadAnnouncements(); });
+}
+
+function loadAnnouncements() {
+  var wrap = document.getElementById('annListWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:32px 0;color:#94a3b8;font-size:13px;">กำลังโหลด...</div>';
+  db.collection('announcements').orderBy('createdAt','desc').limit(50).get()
+    .then(function(snap) {
+      if (snap.empty) {
+        wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8;font-size:13px;">ยังไม่มีประกาศ</div>';
+        return;
+      }
+      wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">';
+      var html = '';
+      snap.forEach(function(doc) {
+        var d = doc.data(); var t = ANN_TYPES[d.type] || ANN_TYPES.info;
+        var date = '';
+        try { date = (d.createdAt.toDate()).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); } catch(e){}
+        html += '<div class="ann-card" style="' + (d.active ? '' : 'opacity:.5;') + '">' +
+          '<div class="ann-icon-wrap ' + t.wrapClass + '">' +
+            '<i data-lucide="' + t.icon + '" style="width:18px;height:18px;color:' + t.iconColor + ';"></i>' +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
+              '<span class="ann-badge ' + t.badgeClass + '">' + t.label + '</span>' +
+              (d.active ? '' : '<span class="ann-badge" style="background:#f1f5f9;color:#94a3b8;">ซ่อนอยู่</span>') +
+              '<span style="font-size:11px;color:#94a3b8;margin-left:auto;">' + date + '</span>' +
+            '</div>' +
+            '<div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">' + (d.title||'') + '</div>' +
+            (d.body ? '<div style="font-size:13px;color:#64748b;line-height:1.6;">' + (d.body||'') + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+            '<button onclick="openAnnModal(\'' + doc.id + '\')" style="padding:6px 10px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#475569;font-family:Sarabun,sans-serif;">' +
+              '<i data-lucide="edit-3" style="width:12px;height:12px;"></i> แก้ไข' +
+            '</button>' +
+            '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? '#fff7ed' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? '#92400e' : '#15803d') + ';font-family:Sarabun,sans-serif;">' +
+              '<i data-lucide="' + (d.active ? 'eye-off' : 'eye') + '" style="width:12px;height:12px;"></i> ' + (d.active ? 'ซ่อน' : 'แสดง') +
+            '</button>' +
+            '<button onclick="deleteAnn(\'' + doc.id + '\')" style="padding:6px 10px;background:#fee2e2;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#b91c1c;font-family:Sarabun,sans-serif;">' +
+              '<i data-lucide="trash-2" style="width:12px;height:12px;"></i> ลบ' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      });
+      wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">' + html + '</div>';
+      lucide.createIcons();
+    })
+    .catch(function() { wrap.innerHTML = '<div style="text-align:center;padding:32px;color:#ef4444;font-size:13px;">โหลดข้อมูลไม่ได้</div>'; });
+}
+
+function switchSettingsTab(name) {
+  document.querySelectorAll('.settings-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.settings-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('stab-'+name).classList.add('active');
+  document.getElementById('spane-'+name).classList.add('active');
+  if (name === 'announcements') loadAnnouncements();
+}
+
 /* ══ Render ══ */
 function renderPage() {
+  var showAnnTab = isAdmin;
   return (
     '<div class="page-header">' +
       '<div>' +
@@ -205,14 +408,35 @@ function renderPage() {
           '</div>' +
           '<h1 class="page-title">ตั้งค่า</h1>' +
         '</div>' +
-        '<p class="page-sub">ปรับธีมสีของระบบ</p>' +
+        '<p class="page-sub">จัดการการตั้งค่าระบบ</p>' +
       '</div>' +
     '</div>' +
 
-    '<div style="max-width:640px;">' +
+    '<div class="settings-tabbar">' +
+      '<button class="settings-tab active" id="stab-theme" onclick="switchSettingsTab(\'theme\')">' +
+        '<i data-lucide="palette" style="width:14px;height:14px;"></i> ธีมสี' +
+      '</button>' +
+      (showAnnTab ?
+        '<button class="settings-tab" id="stab-announcements" onclick="switchSettingsTab(\'announcements\')">' +
+          '<i data-lucide="bell" style="width:14px;height:14px;"></i> ประกาศข่าว' +
+        '</button>' : '') +
+    '</div>' +
+
+    '<div class="settings-pane active" id="spane-theme">' +
       '<div class="settings-section-title">ธีมสี</div>' +
       '<div class="theme-cards-row">' + renderCards() + '</div>' +
-    '</div>'
+    '</div>' +
+
+    (showAnnTab ?
+      '<div class="settings-pane" id="spane-announcements">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+          '<div class="settings-section-title" style="margin-bottom:0;">ประกาศข่าวสำหรับ Admin</div>' +
+          '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:#1d4ed8;color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
+            '<i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มประกาศ' +
+          '</button>' +
+        '</div>' +
+        '<div id="annListWrap"><div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">คลิกแท็บนี้เพื่อโหลดประกาศ</div></div>' +
+      '</div>' : '')
   );
 }
 
@@ -295,14 +519,82 @@ buildPage({
     updateNavUser(user);
     updateSidebarProfile(user);
     checkAdminAccess(user.email);
+    currentUserEmail = user.email;
 
     /* buildPage reset body class → apply คืน */
     applyTheme(currentKey, false);
 
-    contentEl.innerHTML = renderPage();
-    lucide.createIcons();
+    /* ตรวจสอบ admin เพื่อแสดง/ซ่อน tab ประกาศ */
+    var lEmail = user.email.toLowerCase();
+    var isSA = lEmail === (typeof SUPERADMIN_EMAIL !== 'undefined' ? SUPERADMIN_EMAIL : '');
+    db.collection('admins').doc(lEmail).get()
+      .then(function(doc) {
+        isAdmin = isSA || doc.exists;
+        contentEl.innerHTML = renderPage();
+        lucide.createIcons();
+        /* init type radio click handlers */
+        document.querySelectorAll('.ann-type-opt').forEach(function(el) {
+          el.addEventListener('click', function() { setAnnType(el.dataset.type); });
+        });
+      })
+      .catch(function() {
+        isAdmin = false;
+        contentEl.innerHTML = renderPage();
+        lucide.createIcons();
+      });
   }
 });
 </script>
+
+<!-- ── Announcement Modal ── -->
+<div class="ann-modal-bg" id="annModal">
+  <div class="ann-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 id="annModalTitle" style="font-size:17px;font-weight:800;color:#1e293b;"></h3>
+      <button onclick="closeAnnModal()" style="padding:6px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
+        <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+      </button>
+    </div>
+    <div class="ann-field">
+      <label class="ann-label">ประเภท</label>
+      <div class="ann-type-radio" id="annTypeRadio">
+        <label class="ann-type-opt sel-info" data-type="info">
+          <input type="radio" name="annType" value="info" checked> ข้อมูล
+        </label>
+        <label class="ann-type-opt" data-type="warning">
+          <input type="radio" name="annType" value="warning"> แจ้งเตือน
+        </label>
+        <label class="ann-type-opt" data-type="success">
+          <input type="radio" name="annType" value="success"> ข่าวดี
+        </label>
+        <label class="ann-type-opt" data-type="urgent">
+          <input type="radio" name="annType" value="urgent"> ด่วน
+        </label>
+      </div>
+    </div>
+    <div class="ann-field">
+      <label class="ann-label">หัวข้อ</label>
+      <input type="text" id="annTitle" class="ann-input" placeholder="หัวข้อประกาศ">
+    </div>
+    <div class="ann-field">
+      <label class="ann-label">เนื้อหา</label>
+      <textarea id="annBody" class="ann-input" placeholder="รายละเอียดประกาศ..."></textarea>
+    </div>
+    <div class="ann-field" style="display:flex;align-items:center;gap:10px;margin-bottom:0;">
+      <label class="ann-label" style="margin:0;">แสดงผล</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);">
+        <input type="checkbox" id="annActive" checked style="width:16px;height:16px;accent-color:#1d4ed8;">
+        เปิดใช้งาน
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button onclick="closeAnnModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:14px;">ยกเลิก</button>
+      <button onclick="saveAnn()" id="annSaveBtn" style="flex:2;padding:11px;background:#1d4ed8;color:white;font-weight:800;border:none;border-radius:12px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
