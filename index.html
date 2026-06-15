@@ -601,6 +601,22 @@
           </div>
         </div>
 
+        <!-- ══ Announcements Section (Dashboard) ══ -->
+        <div id="annDashSection" style="display:none;margin-top:20px;background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">
+          <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:9px;">
+            <div style="width:34px;height:34px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="megaphone" style="width:16px;height:16px;color:#ea580c;"></i>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;">ประกาศและข่าวสาร</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:1px;">ข่าวสารล่าสุดจากโรงเรียน</div>
+            </div>
+          </div>
+          <div id="annDashList" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:32px 0;color:#cbd5e1;font-size:13px;font-style:italic;">กำลังโหลด...</div>
+          </div>
+        </div>
+
       </div>
 
       <!-- CCTV tab -->
@@ -637,6 +653,7 @@
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
       pfInit(user.uid, user.email);
+      loadDashboardAnnouncements();
     }else{
       document.body.classList.add('guest-mode');
       document.getElementById('publicView').style.display='block';
@@ -1258,6 +1275,77 @@
       })
       .catch(function(e) { console.warn('ann load error:', e); });
   }
+  /* ── Dashboard Announcements (after login) ── */
+  function loadDashboardAnnouncements() {
+    var TODAY = new Date().toISOString().slice(0, 10);
+    var ANN_ICON  = { info:'info', warning:'alert-triangle', success:'check-circle-2', urgent:'bell-ring' };
+    var ANN_LABEL = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
+    var ANN_CLR   = { info:'#3b82f6', warning:'#f59e0b', success:'#10b981', urgent:'#ef4444' };
+    var ANN_BG    = { info:'#eff6ff', warning:'#fffbeb', success:'#f0fdf4', urgent:'#fef2f2' };
+    var ANN_BORDER= { info:'#bfdbfe', warning:'#fde68a', success:'#bbf7d0', urgent:'#fecaca' };
+    var ANN_TEXT  = { info:'#1e40af', warning:'#92400e', success:'#065f46', urgent:'#991b1b' };
+    var ANN_BADGE_BG  = { info:'#dbeafe', warning:'#fef3c7', success:'#d1fae5', urgent:'#fee2e2' };
+
+    db.collection('announcements')
+      .where('active', '==', true)
+      .limit(30)
+      .get()
+      .then(function(snap) {
+        var box  = document.getElementById('annDashList');
+        var sec  = document.getElementById('annDashSection');
+        if (!box || !sec) return;
+        if (snap.empty) { sec.style.display = 'none'; return; }
+
+        var docs = [];
+        snap.forEach(function(doc) { docs.push(doc); });
+        docs.sort(function(a, b) {
+          var ta = a.data().createdAt ? a.data().createdAt.seconds : 0;
+          var tb = b.data().createdAt ? b.data().createdAt.seconds : 0;
+          return tb - ta;
+        });
+
+        var html = '';
+        docs.forEach(function(doc) {
+          var d    = doc.data();
+          var type = d.type || 'info';
+          /* กรองวันที่ */
+          if (!d.noExpiry) {
+            if (d.startDate && TODAY < d.startDate) return;
+            if (d.endDate   && TODAY > d.endDate)   return;
+          }
+          var dateStr = '';
+          try { dateStr = d.createdAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); } catch(e){}
+
+          html +=
+            '<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 4px;border-bottom:1px solid #f8fafc;">' +
+              '<div style="width:42px;height:42px;background:' + (ANN_BG[type]||'#eff6ff') + ';border-radius:11px;' +
+                'border:1.5px solid ' + (ANN_BORDER[type]||'#bfdbfe') + ';' +
+                'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                '<i data-lucide="' + (ANN_ICON[type]||'info') + '" style="width:18px;height:18px;color:' + (ANN_CLR[type]||'#3b82f6') + ';"></i>' +
+              '</div>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:5px;">' +
+                  '<span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;' +
+                    'background:' + (ANN_BADGE_BG[type]||'#dbeafe') + ';color:' + (ANN_TEXT[type]||'#1e40af') + ';">' +
+                    (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
+                  (d.department ? '<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#f1f5f9;color:#64748b;">' + esc2(d.department) + '</span>' : '') +
+                  (dateStr ? '<span style="font-size:10px;color:#94a3b8;font-weight:600;margin-left:auto;white-space:nowrap;">' + dateStr + '</span>' : '') +
+                '</div>' +
+                '<div style="font-size:13px;font-weight:800;color:#0f172a;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(d.title||'') + '</div>' +
+                (d.body ? '<div style="font-size:12px;color:#64748b;line-height:1.6;margin-top:4px;">' + esc2(d.body) + '</div>' : '') +
+                (d.imageUrl ? '<img src="' + esc2(d.imageUrl) + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:10px;border:1px solid #e2e8f0;" alt="ภาพประกาศ" loading="lazy">' : '') +
+              '</div>' +
+            '</div>';
+        });
+
+        if (!html) { sec.style.display = 'none'; return; }
+        box.innerHTML = html;
+        sec.style.display = 'block';
+        lucide.createIcons();
+      })
+      .catch(function(e) { console.warn('ann dash error:', e); });
+  }
+
   lineHandleCb();
 
   lucide.createIcons();
