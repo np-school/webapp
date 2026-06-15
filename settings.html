@@ -135,7 +135,7 @@
 
     /* ── Announcement cards ── */
     .ann-card {
-      background: white; border: 1px solid var(--border);
+      background: var(--white); border: 1px solid var(--border);
       border-radius: 16px; padding: 16px 18px; display: flex;
       gap: 14px; align-items: flex-start; transition: box-shadow .15s;
     }
@@ -156,38 +156,75 @@
     .ann-badge-warning { background: #fef3c7; color: #92400e; }
     .ann-badge-success { background: #dcfce7; color: #15803d; }
     .ann-badge-urgent  { background: #fee2e2; color: #b91c1c; }
-    .ann-modal-bg {
-      display: none; position: fixed; inset: 0;
-      background: rgba(15,23,42,.55); z-index: 200;
-      align-items: center; justify-content: center; padding: 16px;
-      backdrop-filter: blur(4px);
-    }
-    .ann-modal-bg.open { display: flex; }
-    .ann-modal {
-      background: white; border-radius: 20px; width: 100%;
-      max-width: 520px; padding: 28px; box-shadow: 0 24px 64px rgba(0,0,0,.18);
-    }
-    .ann-field { margin-bottom: 16px; }
-    .ann-label { font-size: 11px; font-weight: 800; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .8px; }
-    .ann-input {
-      width: 100%; padding: 10px 13px; border: 1.5px solid var(--border);
-      border-radius: 10px; font-family: 'Sarabun', sans-serif;
-      font-size: 14px; color: var(--text); background: white;
-      transition: border-color .15s; outline: none; box-sizing: border-box;
-    }
-    .ann-input:focus { border-color: #1d4ed8; }
-    textarea.ann-input { resize: vertical; min-height: 80px; }
+
+    /* ── Ann type radio pills ── */
     .ann-type-radio { display: flex; gap: 8px; flex-wrap: wrap; }
     .ann-type-opt {
       display: flex; align-items: center; gap: 6px; padding: 7px 13px;
       border: 1.5px solid var(--border); border-radius: 9px; cursor: pointer;
       font-size: 12px; font-weight: 700; color: var(--text2); transition: all .15s;
+      font-family: 'Sarabun', sans-serif; user-select: none;
     }
     .ann-type-opt input { display: none; }
     .ann-type-opt.sel-info    { border-color: #1d4ed8; background: #eff6ff; color: #1e40af; }
     .ann-type-opt.sel-warning { border-color: #d97706; background: #fffbeb; color: #92400e; }
     .ann-type-opt.sel-success { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
     .ann-type-opt.sel-urgent  { border-color: #dc2626; background: #fff1f2; color: #b91c1c; }
+
+    /* ── Ann scope pills (ภายใน / ภายนอก) ── */
+    .ann-scope-row { display: flex; gap: 8px; }
+    .ann-scope-opt {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px; border: 1.5px solid var(--border); border-radius: 10px;
+      cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text2);
+      font-family: 'Sarabun', sans-serif; transition: all .15s; user-select: none;
+    }
+    .ann-scope-opt input { display: none; }
+    .ann-scope-opt.sel-internal { border-color: var(--accent); background: var(--accent-tint,#eff6ff); color: var(--accent); }
+    .ann-scope-opt.sel-external { border-color: #7c3aed; background: #faf5ff; color: #6d28d9; }
+
+    /* ── Date row ── */
+    .ann-date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width:480px){ .ann-date-row { grid-template-columns: 1fr; } }
+    .ann-noexpiry-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 8px;
+      font-size: 13px; font-weight: 700; color: var(--text); cursor: pointer; user-select: none;
+    }
+    .ann-noexpiry-row input { width:16px; height:16px; accent-color: var(--accent,#1d4ed8); cursor:pointer; }
+
+    /* ── Image drop zone ── */
+    .ann-img-drop {
+      border: 2px dashed var(--border); border-radius: 12px; padding: 20px;
+      text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+      position: relative; min-height: 88px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    }
+    .ann-img-drop:hover { border-color: var(--accent,#1d4ed8); background: var(--accent-tint,#eff6ff); }
+    .ann-img-drop.has-file { border-style: solid; border-color: var(--accent,#1d4ed8); background: var(--accent-tint,#eff6ff); }
+    .ann-img-drop input[type="file"] { display: none; }
+    .ann-img-preview { width:100%; max-height:120px; object-fit:contain; border-radius:8px; display:none; }
+    .ann-img-drop.has-file .ann-img-preview { display:block; }
+    .ann-img-drop.has-file .ann-img-placeholder { display:none; }
+    .ann-img-placeholder { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .ann-img-remove {
+      position:absolute; top:8px; right:8px; width:22px; height:22px;
+      background:#ef4444; border:none; border-radius:50%; color:white;
+      font-size:12px; cursor:pointer; display:none; align-items:center; justify-content:center;
+      line-height:1; z-index:2;
+    }
+    .ann-img-drop.has-file .ann-img-remove { display:flex; }
+
+    /* ── 2-col grid: order + หมวดหมู่ ── */
+    .ann-row-2 { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: start; }
+    @media(max-width:480px){ .ann-row-2 { grid-template-columns: 1fr; } }
+
+    /* ── form-group override for ann modal labels ── */
+    .ann-modal-box .form-label-sm {
+      font-size: 11px; font-weight: 800; color: var(--text2);
+      display: block; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: .8px;
+    }
+    .ann-modal-box .form-label-sm .req { color: #ef4444; }
   </style>
 </head>
 <body>
@@ -273,60 +310,244 @@ var ANN_TYPES = {
   success: { label: 'ข่าวดี',   icon: 'check-circle-2', iconColor: '#16a34a', badgeClass: 'ann-badge-success', wrapClass: 'ann-type-success' },
   urgent:  { label: 'ด่วน',     icon: 'bell-ring',       iconColor: '#dc2626', badgeClass: 'ann-badge-urgent',  wrapClass: 'ann-type-urgent' },
 };
-var annEditId = null;
 var currentUserEmail = null;
-var isAdmin = false;
+var isAdmin          = false;
 
+/* ══ Announcement Modal (extended) ══
+   ฟิลด์ใหม่: scope, order, startDate, endDate, noExpiry, department, imageUrl */
+
+var annEditId      = null;
+var annImgFile_obj = null;   /* File รอ upload */
+var annImgExistUrl = '';     /* URL เดิม (กรณี edit) */
+
+/* ─── openAnnModal ─── */
 function openAnnModal(id) {
-  annEditId = id || null;
-  var modal = document.getElementById('annModal');
+  annEditId      = id || null;
+  annImgFile_obj = null;
+
   document.getElementById('annModalTitle').textContent = id ? 'แก้ไขประกาศ' : 'เพิ่มประกาศใหม่';
+  document.getElementById('annModalSub').textContent   = id ? 'แก้ไขข้อมูลประกาศที่มีอยู่' : 'กรอกข้อมูลและบันทึกประกาศใหม่';
+
   if (!id) {
-    document.getElementById('annTitle').value = '';
-    document.getElementById('annBody').value = '';
-    document.getElementById('annActive').checked = true;
+    document.getElementById('annTitle').value     = '';
+    document.getElementById('annBody').value      = '';
+    document.getElementById('annOrder').value     = '1';
+    document.getElementById('annActive').checked  = true;
+    document.getElementById('annStartDate').value = '';
+    document.getElementById('annEndDate').value   = '';
+    document.getElementById('annNoExpiry').checked = false;
+    document.getElementById('annDeptSelect').value = '';
+    document.getElementById('annDeptOther').value  = '';
+    document.getElementById('annDeptOther').style.display = 'none';
+    toggleNoExpiry(false);
     setAnnType('info');
+    setAnnScope('internal');
+    resetAnnImage();
+    annImgExistUrl = '';
   } else {
     db.collection('announcements').doc(id).get().then(function(doc) {
       if (!doc.exists) return;
       var d = doc.data();
-      document.getElementById('annTitle').value = d.title || '';
-      document.getElementById('annBody').value = d.body || '';
+      document.getElementById('annTitle').value    = d.title  || '';
+      document.getElementById('annBody').value     = d.body   || '';
+      document.getElementById('annOrder').value    = d.order  != null ? d.order : 1;
       document.getElementById('annActive').checked = d.active !== false;
-      setAnnType(d.type || 'info');
+      setAnnType(d.type   || 'info');
+      setAnnScope(d.scope || 'internal');
+
+      var noExpiry = d.noExpiry === true || (!d.startDate && !d.endDate);
+      document.getElementById('annNoExpiry').checked = noExpiry;
+      toggleNoExpiry(noExpiry);
+      if (!noExpiry) {
+        document.getElementById('annStartDate').value = d.startDate || '';
+        document.getElementById('annEndDate').value   = d.endDate   || '';
+      }
+
+      var dept    = d.department || '';
+      var stdOpts = ['ฝ่ายบริหาร','งานวิชาการ','งานบุคคล','งานการเงิน','งานพัสดุ','งานอาคารสถานที่','งานปกครอง','งานแนะแนว','งานสัมพันธ์ชุมชน','งานสารสนเทศ'];
+      if (dept && stdOpts.indexOf(dept) === -1) {
+        document.getElementById('annDeptSelect').value = 'other';
+        document.getElementById('annDeptOther').value  = dept;
+        document.getElementById('annDeptOther').style.display = 'block';
+      } else {
+        document.getElementById('annDeptSelect').value = dept;
+        document.getElementById('annDeptOther').style.display = 'none';
+      }
+
+      annImgExistUrl = d.imageUrl || '';
+      if (annImgExistUrl) {
+        document.getElementById('annImgPreview').src = annImgExistUrl;
+        document.getElementById('annImgPreview').style.display = 'block';
+        document.getElementById('annImgDrop').classList.add('has-file');
+        document.getElementById('annImgName').textContent    = 'รูปภาพที่มีอยู่';
+        document.getElementById('annImgName').style.display  = 'block';
+      } else {
+        resetAnnImage();
+      }
+      lucide.createIcons();
     });
   }
-  modal.classList.add('open');
+
+  openModal('annModal');
   lucide.createIcons();
 }
-function closeAnnModal() { document.getElementById('annModal').classList.remove('open'); }
 
+function closeAnnModal() { closeModal('annModal'); }
+
+/* ─── setAnnType ─── */
 function setAnnType(type) {
-  document.querySelectorAll('[name="annType"]').forEach(function(r) { r.checked = r.value === type; });
+  document.querySelectorAll('[name="annType"]').forEach(function(r) { r.checked = (r.value === type); });
   document.querySelectorAll('.ann-type-opt').forEach(function(el) {
     el.className = 'ann-type-opt' + (el.dataset.type === type ? ' sel-' + type : '');
   });
 }
 
-function saveAnn() {
-  var title = (document.getElementById('annTitle').value || '').trim();
-  var body  = (document.getElementById('annBody').value  || '').trim();
-  var type  = document.querySelector('[name="annType"]:checked') ? document.querySelector('[name="annType"]:checked').value : 'info';
-  var active = document.getElementById('annActive').checked;
-  if (!title) { showToast('กรุณากรอกหัวข้อ','error'); return; }
-  var btn = document.getElementById('annSaveBtn');
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-  var data = { title: title, body: body, type: type, active: active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-  var p = annEditId
-    ? db.collection('announcements').doc(annEditId).update(data)
-    : db.collection('announcements').add(Object.assign(data, { createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUserEmail }));
-  p.then(function() {
-    showToast(annEditId ? 'แก้ไขประกาศแล้ว' : 'เพิ่มประกาศแล้ว');
-    closeAnnModal();
-    loadAnnouncements();
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); })
-    .finally(function() { btn.disabled = false; btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก'; lucide.createIcons(); });
+/* ─── setAnnScope ─── */
+function setAnnScope(scope) {
+  document.querySelectorAll('[name="annScope"]').forEach(function(r) { r.checked = (r.value === scope); });
+  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
+    el.className = 'ann-scope-opt' + (el.dataset.scope === scope ? ' sel-' + scope : '');
+  });
 }
+
+/* ─── toggleNoExpiry ─── */
+function toggleNoExpiry(checked) {
+  var row = document.getElementById('annDateRow');
+  if (!row) return;
+  row.style.opacity      = checked ? '.35' : '1';
+  row.style.pointerEvents = checked ? 'none' : '';
+  if (checked) {
+    document.getElementById('annStartDate').value = '';
+    document.getElementById('annEndDate').value   = '';
+  }
+}
+
+/* ─── onDeptChange ─── */
+function onDeptChange(val) {
+  var other = document.getElementById('annDeptOther');
+  other.style.display = (val === 'other') ? 'block' : 'none';
+  if (val !== 'other') other.value = '';
+}
+
+/* ─── Image helpers ─── */
+function handleAnnImage(evt) {
+  var file = evt.target.files && evt.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('รูปภาพต้องไม่เกิน 5 MB', 'error'); return; }
+  annImgFile_obj = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('annImgPreview').src = e.target.result;
+    document.getElementById('annImgPreview').style.display = 'block';
+    document.getElementById('annImgDrop').classList.add('has-file');
+    document.getElementById('annImgName').textContent   = file.name;
+    document.getElementById('annImgName').style.display = 'block';
+    annImgExistUrl = '';
+    lucide.createIcons();
+  };
+  reader.readAsDataURL(file);
+}
+function removeAnnImage(evt) {
+  evt.stopPropagation();
+  resetAnnImage();
+  annImgExistUrl = '';
+  annImgFile_obj = null;
+}
+function resetAnnImage() {
+  document.getElementById('annImgFile').value = '';
+  document.getElementById('annImgPreview').src = '';
+  document.getElementById('annImgPreview').style.display = 'none';
+  document.getElementById('annImgDrop').classList.remove('has-file');
+  document.getElementById('annImgName').style.display = 'none';
+  document.getElementById('annImgName').textContent = '';
+}
+
+/* ─── saveAnn ─── */
+function saveAnn() {
+  var title     = (document.getElementById('annTitle').value    || '').trim();
+  var body      = (document.getElementById('annBody').value     || '').trim();
+  var order     = parseInt(document.getElementById('annOrder').value, 10) || 1;
+  var active    = document.getElementById('annActive').checked;
+  var noExpiry  = document.getElementById('annNoExpiry').checked;
+  var startDate = noExpiry ? '' : (document.getElementById('annStartDate').value || '');
+  var endDate   = noExpiry ? '' : (document.getElementById('annEndDate').value   || '');
+  var typeEl    = document.querySelector('[name="annType"]:checked');
+  var type      = typeEl ? typeEl.value : 'info';
+  var scopeEl   = document.querySelector('[name="annScope"]:checked');
+  var scope     = scopeEl ? scopeEl.value : 'internal';
+  var deptSel   = document.getElementById('annDeptSelect').value;
+  var department = (deptSel === 'other')
+    ? (document.getElementById('annDeptOther').value || '').trim()
+    : deptSel;
+
+  if (!title)      { showToast('กรุณากรอกชื่อเรื่อง', 'error'); return; }
+  if (!department) { showToast('กรุณาเลือกฝ่าย/หน่วยงาน', 'error'); return; }
+  if (!noExpiry && startDate && endDate && endDate < startDate) {
+    showToast('วันที่สิ้นสุดต้องอยู่หลังวันที่เริ่ม', 'error'); return;
+  }
+
+  var btn = document.getElementById('annSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader-2" style="width:15px;height:15px;"></i> กำลังบันทึก...';
+  lucide.createIcons();
+
+  var data = {
+    title: title, body: body, order: order, type: type,
+    scope: scope, active: active, noExpiry: noExpiry,
+    startDate: startDate, endDate: endDate, department: department,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  function doSave(imageUrl) {
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    else if (annImgExistUrl)   data.imageUrl = annImgExistUrl;
+
+    var p = annEditId
+      ? db.collection('announcements').doc(annEditId).update(data)
+      : db.collection('announcements').add(Object.assign({}, data, {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: (typeof currentUserEmail !== 'undefined' ? currentUserEmail : '')
+        }));
+    p.then(function() {
+      showToast(annEditId ? 'แก้ไขประกาศแล้ว' : 'เพิ่มประกาศใหม่แล้ว');
+      closeAnnModal();
+      loadAnnouncements();
+    }).catch(function(e) {
+      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    }).finally(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
+      lucide.createIcons();
+    });
+  }
+
+  if (annImgFile_obj && storage) {
+    var ext   = annImgFile_obj.name.split('.').pop();
+    var fname = 'announcements/' + Date.now() + '.' + ext;
+    var ref   = storage.ref(fname);
+    ref.put(annImgFile_obj)
+      .then(function() { return ref.getDownloadURL(); })
+      .then(function(url) { doSave(url); })
+      .catch(function(e) {
+        showToast('อัปโหลดรูปไม่ได้: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
+        lucide.createIcons();
+      });
+  } else {
+    doSave(undefined);
+  }
+}
+
+/* ─── Click handlers (scope + type radios) ─── */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
+    el.addEventListener('click', function() { setAnnType(el.dataset.type); });
+  });
+  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
+    el.addEventListener('click', function() { setAnnScope(el.dataset.scope); });
+  });
+});
 
 function deleteAnn(id) {
   if (!confirm('ลบประกาศนี้?')) return;
@@ -546,53 +767,163 @@ buildPage({
 });
 </script>
 
-<!-- ── Announcement Modal ── -->
-<div class="ann-modal-bg" id="annModal">
-  <div class="ann-modal">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h3 id="annModalTitle" style="font-size:17px;font-weight:800;color:#1e293b;"></h3>
-      <button onclick="closeAnnModal()" style="padding:6px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">
-        <i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>
+<!-- ══════════════════════════════════════════════════════════
+     Announcement Modal — ใช้ class ระบบ: modal-bg / modal-box
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="annModal">
+  <div class="modal-box wide ann-modal-box" style="max-height:92vh;overflow-y:auto;">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--accent-tint,#eff6ff);">
+          <i data-lucide="bell-plus" style="color:var(--accent,#1d4ed8);"></i>
+        </div>
+        <div>
+          <h3 id="annModalTitle">เพิ่มประกาศใหม่</h3>
+          <p id="annModalSub" style="font-size:11px;color:var(--text2);">กรอกข้อมูลและบันทึก</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeAnnModal()">
+        <i data-lucide="x"></i>
       </button>
     </div>
-    <div class="ann-field">
-      <label class="ann-label">ประเภท</label>
-      <div class="ann-type-radio" id="annTypeRadio">
-        <label class="ann-type-opt sel-info" data-type="info">
-          <input type="radio" name="annType" value="info" checked> ข้อมูล
+
+    <!-- ① ประเภทประกาศ ภายใน / ภายนอก -->
+    <div class="form-group">
+      <label class="form-label">ประเภทประกาศ <span style="color:#ef4444;">*</span></label>
+      <div class="ann-scope-row" id="annScopeRow">
+        <label class="ann-scope-opt sel-internal" data-scope="internal">
+          <input type="radio" name="annScope" value="internal" checked>
+          <i data-lucide="building-2" style="width:15px;height:15px;flex-shrink:0;"></i>
+          ภายใน
         </label>
-        <label class="ann-type-opt" data-type="warning">
-          <input type="radio" name="annType" value="warning"> แจ้งเตือน
-        </label>
-        <label class="ann-type-opt" data-type="success">
-          <input type="radio" name="annType" value="success"> ข่าวดี
-        </label>
-        <label class="ann-type-opt" data-type="urgent">
-          <input type="radio" name="annType" value="urgent"> ด่วน
+        <label class="ann-scope-opt" data-scope="external">
+          <input type="radio" name="annScope" value="external">
+          <i data-lucide="globe-2" style="width:15px;height:15px;flex-shrink:0;"></i>
+          ภายนอก
         </label>
       </div>
     </div>
-    <div class="ann-field">
-      <label class="ann-label">หัวข้อ</label>
-      <input type="text" id="annTitle" class="ann-input" placeholder="หัวข้อประกาศ">
+
+    <!-- ② ลำดับ + หมวดหมู่สี -->
+    <div class="ann-row-2">
+      <!-- ลำดับ -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">ลำดับที่</label>
+        <input type="number" id="annOrder" min="1" max="999" value="1" style="text-align:center;">
+        <p style="font-size:10px;color:var(--text3,#94a3b8);margin-top:4px;font-weight:600;">น้อย = แสดงก่อน</p>
+      </div>
+      <!-- หมวดหมู่สี -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">หมวดหมู่ <span style="color:#ef4444;">*</span></label>
+        <div class="ann-type-radio" id="annTypeRadio">
+          <label class="ann-type-opt sel-info" data-type="info">
+            <input type="radio" name="annType" value="info" checked> ข้อมูล
+          </label>
+          <label class="ann-type-opt" data-type="warning">
+            <input type="radio" name="annType" value="warning"> แจ้งเตือน
+          </label>
+          <label class="ann-type-opt" data-type="success">
+            <input type="radio" name="annType" value="success"> ข่าวดี
+          </label>
+          <label class="ann-type-opt" data-type="urgent">
+            <input type="radio" name="annType" value="urgent"> ด่วน
+          </label>
+        </div>
+      </div>
     </div>
-    <div class="ann-field">
-      <label class="ann-label">เนื้อหา</label>
-      <textarea id="annBody" class="ann-input" placeholder="รายละเอียดประกาศ..."></textarea>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+
+    <!-- ③ ชื่อเรื่อง -->
+    <div class="form-group">
+      <label class="form-label">ชื่อเรื่อง / หัวข้อประกาศ <span style="color:#ef4444;">*</span></label>
+      <input type="text" id="annTitle" placeholder="เช่น ประกาศรับสมัครนักเรียน ปีการศึกษา 2568" maxlength="200">
     </div>
-    <div class="ann-field" style="display:flex;align-items:center;gap:10px;margin-bottom:0;">
-      <label class="ann-label" style="margin:0;">แสดงผล</label>
+
+    <!-- ④ เนื้อหา -->
+    <div class="form-group">
+      <label class="form-label">รายละเอียด / เนื้อหา</label>
+      <textarea id="annBody" rows="4" placeholder="รายละเอียดของประกาศ..." style="resize:vertical;min-height:86px;"></textarea>
+    </div>
+
+    <!-- ⑤ แนบรูปภาพ -->
+    <div class="form-group">
+      <label class="form-label">รูปภาพประกอบ <span style="font-size:11px;font-weight:600;color:var(--text2);">(ถ้ามี · PNG/JPG ≤ 5 MB)</span></label>
+      <div class="ann-img-drop" id="annImgDrop" onclick="document.getElementById('annImgFile').click()">
+        <input type="file" id="annImgFile" accept="image/*" onchange="handleAnnImage(event)">
+        <button class="ann-img-remove" id="annImgRemove" onclick="removeAnnImage(event)">✕</button>
+        <div class="ann-img-placeholder">
+          <div style="width:40px;height:40px;background:var(--bg-alt,#f1f5f9);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="image-plus" style="width:20px;height:20px;color:var(--text3,#94a3b8);"></i>
+          </div>
+          <p style="font-size:12px;color:var(--text2);margin:0;font-weight:700;">คลิกเพื่อเลือกรูปภาพ</p>
+        </div>
+        <img id="annImgPreview" class="ann-img-preview" alt="preview">
+        <p id="annImgName" style="font-size:11px;color:var(--accent,#1d4ed8);font-weight:700;margin:4px 0 0;display:none;"></p>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+
+    <!-- ⑥ ช่วงเวลาแสดงผล -->
+    <div class="form-group">
+      <label class="form-label">ช่วงเวลาที่แสดง</label>
+      <div class="ann-date-row" id="annDateRow">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">วันที่เริ่ม</label>
+          <input type="date" id="annStartDate">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">วันที่สิ้นสุด</label>
+          <input type="date" id="annEndDate">
+        </div>
+      </div>
+      <label class="ann-noexpiry-row">
+        <input type="checkbox" id="annNoExpiry" onchange="toggleNoExpiry(this.checked)">
+        ไม่ระบุช่วงเวลา (แสดงตลอดไป)
+      </label>
+    </div>
+
+    <!-- ⑦ ฝ่าย/หน่วยงาน -->
+    <div class="form-group">
+      <label class="form-label">ฝ่าย / หน่วยงานที่ประกาศ <span style="color:#ef4444;">*</span></label>
+      <select id="annDeptSelect" onchange="onDeptChange(this.value)">
+        <option value="">— เลือกฝ่าย/หน่วยงาน —</option>
+        <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
+        <option value="งานวิชาการ">งานวิชาการ</option>
+        <option value="งานบุคคล">งานบุคคล</option>
+        <option value="งานการเงิน">งานการเงิน</option>
+        <option value="งานพัสดุ">งานพัสดุ</option>
+        <option value="งานอาคารสถานที่">งานอาคารสถานที่</option>
+        <option value="งานปกครอง">งานปกครอง</option>
+        <option value="งานแนะแนว">งานแนะแนว</option>
+        <option value="งานสัมพันธ์ชุมชน">งานสัมพันธ์ชุมชน</option>
+        <option value="งานสารสนเทศ">งานสารสนเทศ</option>
+        <option value="other">อื่นๆ (ระบุเอง)</option>
+      </select>
+      <input type="text" id="annDeptOther" placeholder="ระบุฝ่าย/หน่วยงาน..."
+             style="margin-top:8px;display:none;">
+    </div>
+
+    <!-- สถานะแสดงผล -->
+    <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:0;">
+      <label class="form-label" style="margin:0;">สถานะ</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);">
-        <input type="checkbox" id="annActive" checked style="width:16px;height:16px;accent-color:#1d4ed8;">
+        <input type="checkbox" id="annActive" checked style="width:16px;height:16px;accent-color:var(--accent,#1d4ed8);">
         เปิดใช้งาน
       </label>
     </div>
+
+    <!-- Action buttons -->
     <div style="display:flex;gap:10px;margin-top:22px;">
-      <button onclick="closeAnnModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:14px;">ยกเลิก</button>
-      <button onclick="saveAnn()" id="annSaveBtn" style="flex:2;padding:11px;background:#1d4ed8;color:white;font-weight:800;border:none;border-radius:12px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <button onclick="closeAnnModal()" class="btn-secondary" style="flex:1;padding:12px;font-size:14px;">ยกเลิก</button>
+      <button onclick="saveAnn()" id="annSaveBtn" class="btn-primary" style="flex:2;padding:12px;font-size:14px;justify-content:center;">
         <i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก
       </button>
     </div>
+
   </div>
 </div>
 
