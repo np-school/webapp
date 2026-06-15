@@ -202,13 +202,28 @@ function buildPage(config) {
   config = config || {};
   var appId        = config.appId          || 'appShell';
   var requireAdmin = config.requireAdmin   || false;
+  var requireAuth  = config.requireAuth !== false; /* default: true (บังคับ login) */
   var deniedId     = config.accessDeniedEl || 'accessDenied';
   var onAuth       = typeof config.onAuth === 'function' ? config.onAuth : null;
 
   auth.onAuthStateChanged(function(user) {
     var loadEl = document.getElementById('loadingOverlay');
 
-    if (!user) { window.location.href = 'index.html'; return; }
+    if (!user) {
+      /* ถ้าหน้านี้ไม่บังคับ login → build shell แล้วเรียก onAuth(null) เลย */
+      if (!requireAuth) {
+        buildPageShell({
+          appId: appId, navSubtitle: config.navSubtitle,
+          navTheme: config.navTheme, activePage: config.activePage
+        });
+        if (loadEl) loadEl.style.display = 'none';
+        var contentEl = document.getElementById('pageContent');
+        if (onAuth && contentEl) onAuth(null, contentEl);
+        return;
+      }
+      window.location.href = 'index.html';
+      return;
+    }
 
     function _show(contentEl) {
       var appEl = document.getElementById(appId);

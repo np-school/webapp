@@ -218,11 +218,14 @@ buildPage({
   navTheme:     'blue',
   activePage:   'guide',
   requireAdmin: false,
+  requireAuth:  false,
 
   onAuth: function(user, contentEl) {
-    updateNavUser(user);
-    updateSidebarProfile(user);
-    checkAdminAccess(user.email);
+    if (user) {
+      updateNavUser(user);
+      updateSidebarProfile(user);
+      checkAdminAccess(user.email);
+    }
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
