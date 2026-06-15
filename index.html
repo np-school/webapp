@@ -1193,18 +1193,26 @@
     var ANN_LABEL = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
     var ANN_CLR   = { info:'#60a5fa', warning:'#fbbf24', success:'#34d399', urgent:'#f87171' };
 
-    /* ── query เฉพาะ active=true, เรียงตาม createdAt ──
-       กรอง scope / วันที่ ฝั่ง client เพื่อหลีกเลี่ยง composite index */
+    /* ── ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index ──
+       ดึง active=true ทั้งหมด แล้วเรียงและกรองฝั่ง client */
     db.collection('announcements')
       .where('active', '==', true)
-      .orderBy('createdAt', 'desc')
-      .limit(20)
+      .limit(30)
       .get()
       .then(function(snap) {
         if (snap.empty) return;
 
+        /* เรียง createdAt desc ฝั่ง client */
+        var docs = [];
+        snap.forEach(function(doc) { docs.push(doc); });
+        docs.sort(function(a, b) {
+          var ta = a.data().createdAt ? a.data().createdAt.seconds : 0;
+          var tb = b.data().createdAt ? b.data().createdAt.seconds : 0;
+          return tb - ta;
+        });
+
         var html = '';
-        snap.forEach(function(doc) {
+        docs.forEach(function(doc) {
           var d    = doc.data();
           var type = d.type || 'info';
 
