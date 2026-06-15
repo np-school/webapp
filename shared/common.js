@@ -572,6 +572,10 @@ function buildSidebar(activePage) {
           '<span>จัดการสิทธิ์ Admin</span>' +
           '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
         '</a>' +
+        '<a href="settings.html" class="sidebar-btn admin-btn' + (activePage === 'settings' ? ' active' : '') + '" style="padding-left:28px;">' +
+          '<i data-lucide="bell" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'settings' ? '' : 'color:#7c3aed;') + '"></i>' +
+          '<span>จัดการประกาศข่าว</span>' +
+        '</a>' +
       '</div>' +
     '</div>';
 

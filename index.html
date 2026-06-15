@@ -133,17 +133,59 @@
     .pub-stats-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;}
     @media(max-width:480px){.nav-school-name{font-size:13px!important;}.nav-subtitle{display:none;}}
     @media(max-width:768px){#pubCalGrid{grid-template-columns:1fr!important;}}
-    /* ── Announcement box (public) ── */
-    .ann-pub-card {
-      background: white; border-radius: 14px; padding: 14px 16px;
-      display: flex; gap: 12px; align-items: flex-start;
-      border-left: 4px solid #e2e8f0; border: 1px solid #e2e8f0;
-      border-left-width: 4px;
+    /* ── Announcement section (dark theme) ── */
+    #annSection {
+      background: #0f172a;
+      padding: 28px 0;
     }
-    .ann-pub-card.type-info    { border-left-color: #1d4ed8; }
-    .ann-pub-card.type-warning { border-left-color: #d97706; }
-    .ann-pub-card.type-success { border-left-color: #16a34a; }
-    .ann-pub-card.type-urgent  { border-left-color: #dc2626; background: #fff8f8; }
+    #annSection h2 { color: #f1f5f9 !important; }
+    .ann-acc-bar  { width: 4px; height: 26px; background: #f59e0b; border-radius: 4px; flex-shrink: 0; }
+
+    .ann-pub-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      border-left: 4px solid rgba(255,255,255,.15);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: background .15s;
+    }
+    .ann-pub-card:hover { background: rgba(255,255,255,.09); }
+    .ann-pub-card.type-info    { border-left-color: #60a5fa; }
+    .ann-pub-card.type-warning { border-left-color: #fbbf24; }
+    .ann-pub-card.type-success { border-left-color: #34d399; }
+    .ann-pub-card.type-urgent  { border-left-color: #f87171; background: rgba(239,68,68,.08); }
+
+    /* ป้ายหมวดสี */
+    .ann-pub-badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 800; letter-spacing: .3px;
+    }
+    .ann-pub-badge.info    { background: rgba(96,165,250,.18); color: #93c5fd; }
+    .ann-pub-badge.warning { background: rgba(251,191,36,.18);  color: #fcd34d; }
+    .ann-pub-badge.success { background: rgba(52,211,153,.18);  color: #6ee7b7; }
+    .ann-pub-badge.urgent  { background: rgba(248,113,113,.18); color: #fca5a5; }
+
+    /* badge ฝ่าย */
+    .ann-pub-dept {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 700;
+      background: rgba(255,255,255,.08); color: rgba(255,255,255,.55);
+    }
+
+    /* รูปภาพใน card */
+    .ann-pub-img {
+      width: 100%; max-height: 200px; object-fit: cover;
+      border-radius: 10px; margin-top: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    /* ช่วงเวลา */
+    .ann-pub-date { font-size: 10px; color: rgba(255,255,255,.35); font-weight: 600; margin-left: auto; white-space: nowrap; }
 
   </style>
 </head>
@@ -230,11 +272,11 @@
 
 
   <!-- ══ ANNOUNCEMENTS ══ -->
-  <section id="annSection" style="background:#f8fafc;padding:24px 0 0;display:none;">
+  <section id="annSection" style="display:none;">
     <div class="pub-section">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <div style="width:4px;height:26px;background:#d97706;border-radius:4px;"></div>
-        <h2 style="font-size:17px;font-weight:800;color:#0f172a;">ประกาศข่าวสาร</h2>
+        <div class="ann-acc-bar"></div>
+        <h2 style="font-size:17px;font-weight:800;">ประกาศข่าวสาร</h2>
       </div>
       <div id="annBoxList" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
@@ -1145,38 +1187,66 @@
 
   /* ── Public Announcements ── */
   function loadPublicAnnouncements() {
-    var ANN_BORDER = { info:'#1d4ed8', warning:'#d97706', success:'#16a34a', urgent:'#dc2626' };
-    var ANN_ICON   = { info:'info', warning:'alert-triangle', success:'check-circle-2', urgent:'bell-ring' };
-    var ANN_LABEL  = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
+    var TODAY = new Date().toISOString().slice(0, 10); /* YYYY-MM-DD */
+
+    var ANN_ICON  = { info:'info', warning:'alert-triangle', success:'check-circle-2', urgent:'bell-ring' };
+    var ANN_LABEL = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
+    var ANN_CLR   = { info:'#60a5fa', warning:'#fbbf24', success:'#34d399', urgent:'#f87171' };
+
+    /* ── query เฉพาะ active=true, เรียงตาม createdAt ──
+       กรอง scope / วันที่ ฝั่ง client เพื่อหลีกเลี่ยง composite index */
     db.collection('announcements')
       .where('active', '==', true)
       .orderBy('createdAt', 'desc')
-      .limit(5)
+      .limit(20)
       .get()
       .then(function(snap) {
         if (snap.empty) return;
+
         var html = '';
         snap.forEach(function(doc) {
-          var d = doc.data();
+          var d    = doc.data();
           var type = d.type || 'info';
-          html += '<div class="ann-pub-card type-' + type + '">' +
-            '<i data-lucide="' + (ANN_ICON[type]||'info') + '" style="width:18px;height:18px;color:' + (ANN_BORDER[type]||'#1d4ed8') + ';flex-shrink:0;margin-top:2px;"></i>' +
-            '<div style="flex:1;">' +
-              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
-                '<span style="font-size:10px;font-weight:800;color:' + (ANN_BORDER[type]||'#1d4ed8') + ';">' + (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
+
+          /* กรอง scope: แสดงเฉพาะ external หรือไม่มี scope (ข้อมูลเก่า) */
+          var scope = d.scope || 'external';
+          if (scope !== 'external') return;
+
+          /* กรองตามช่วงวันที่ */
+          if (!d.noExpiry) {
+            if (d.startDate && TODAY < d.startDate) return;
+            if (d.endDate   && TODAY > d.endDate)   return;
+          }
+
+          /* วันที่สร้าง */
+          var dateStr = '';
+          try { dateStr = d.createdAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); } catch(e){}
+
+          html +=
+            '<div class="ann-pub-card type-' + esc2(type) + '">' +
+              '<i data-lucide="' + (ANN_ICON[type]||'info') + '" ' +
+                'style="width:18px;height:18px;flex-shrink:0;margin-top:3px;color:' + (ANN_CLR[type]||'#60a5fa') + ';"></i>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;">' +
+                  '<span class="ann-pub-badge ' + esc2(type) + '">' + (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
+                  (d.department ? '<span class="ann-pub-dept"><i data-lucide="building-2" style="width:10px;height:10px;"></i>' + esc2(d.department) + '</span>' : '') +
+                  (dateStr ? '<span class="ann-pub-date">' + dateStr + '</span>' : '') +
+                '</div>' +
+                '<div style="font-size:14px;font-weight:800;color:#f1f5f9;line-height:1.4;">' + esc2(d.title||'') + '</div>' +
+                (d.body ? '<div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;margin-top:5px;">' + esc2(d.body) + '</div>' : '') +
+                (d.imageUrl ? '<img src="' + esc2(d.imageUrl) + '" class="ann-pub-img" alt="ภาพประกาศ" loading="lazy">' : '') +
               '</div>' +
-              '<div style="font-size:14px;font-weight:700;color:#0f172a;">' + (d.title||'') + '</div>' +
-              (d.body ? '<div style="font-size:13px;color:#64748b;line-height:1.6;margin-top:3px;">' + (d.body||'') + '</div>' : '') +
-            '</div>' +
-          '</div>';
+            '</div>';
         });
+
+        if (!html) return;
         var box = document.getElementById('annBoxList');
         var sec = document.getElementById('annSection');
         if (box) box.innerHTML = html;
         if (sec) sec.style.display = 'block';
         lucide.createIcons();
       })
-      .catch(function() {});
+      .catch(function(e) { console.warn('ann load error:', e); });
   }
   loadPublicAnnouncements();
 
