@@ -214,9 +214,8 @@
     }
     .ann-img-drop.has-file .ann-img-remove { display:flex; }
 
-    /* ── 2-col grid: order + หมวดหมู่ ── */
-    .ann-row-2 { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: start; }
-    @media(max-width:480px){ .ann-row-2 { grid-template-columns: 1fr; } }
+    /* ── หมวดหมู่ (เดิมเป็น 2-col กับลำดับ แต่เอาลำดับออกแล้ว) ── */
+    .ann-row-2 { display: block; }
 
     /* ── form-group override for ann modal labels ── */
     .ann-modal-box .form-label-sm {
@@ -314,7 +313,8 @@ var currentUserEmail = null;
 var isAdmin          = false;
 
 /* ══ Announcement Modal (extended) ══
-   ฟิลด์ใหม่: scope, order, startDate, endDate, noExpiry, department, imageUrl */
+   ฟิลด์: scope, startDate, endDate, noExpiry, department, imageUrl
+   (order ไม่แสดง UI — ใช้ createdAt เรียงลำดับเบื้องหลัง) */
 
 var annEditId      = null;
 var annImgFile_obj = null;   /* File รอ upload */
@@ -331,7 +331,6 @@ function openAnnModal(id) {
   if (!id) {
     document.getElementById('annTitle').value     = '';
     document.getElementById('annBody').value      = '';
-    document.getElementById('annOrder').value     = '1';
     document.getElementById('annActive').checked  = true;
     document.getElementById('annStartDate').value = '';
     document.getElementById('annEndDate').value   = '';
@@ -350,7 +349,6 @@ function openAnnModal(id) {
       var d = doc.data();
       document.getElementById('annTitle').value    = d.title  || '';
       document.getElementById('annBody').value     = d.body   || '';
-      document.getElementById('annOrder').value    = d.order  != null ? d.order : 1;
       document.getElementById('annActive').checked = d.active !== false;
       setAnnType(d.type   || 'info');
       setAnnScope(d.scope || 'internal');
@@ -466,7 +464,6 @@ function resetAnnImage() {
 function saveAnn() {
   var title     = (document.getElementById('annTitle').value    || '').trim();
   var body      = (document.getElementById('annBody').value     || '').trim();
-  var order     = parseInt(document.getElementById('annOrder').value, 10) || 1;
   var active    = document.getElementById('annActive').checked;
   var noExpiry  = document.getElementById('annNoExpiry').checked;
   var startDate = noExpiry ? '' : (document.getElementById('annStartDate').value || '');
@@ -492,7 +489,7 @@ function saveAnn() {
   lucide.createIcons();
 
   var data = {
-    title: title, body: body, order: order, type: type,
+    title: title, body: body, type: type,
     scope: scope, active: active, noExpiry: noExpiry,
     startDate: startDate, endDate: endDate, department: department,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -806,15 +803,8 @@ buildPage({
       </div>
     </div>
 
-    <!-- ② ลำดับ + หมวดหมู่สี -->
+    <!-- ② หมวดหมู่สี -->
     <div class="ann-row-2">
-      <!-- ลำดับ -->
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">ลำดับที่</label>
-        <input type="number" id="annOrder" min="1" max="999" value="1" style="text-align:center;">
-        <p style="font-size:10px;color:var(--text3,#94a3b8);margin-top:4px;font-weight:600;">น้อย = แสดงก่อน</p>
-      </div>
-      <!-- หมวดหมู่สี -->
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label">หมวดหมู่ <span style="color:#ef4444;">*</span></label>
         <div class="ann-type-radio" id="annTypeRadio">
