@@ -2467,10 +2467,11 @@ function renderDonutChart() {
   teacherList.forEach(function(t) {
     DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
-      var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
+      /* อ่าน status จริง ไม่ผ่าน fakeStatus เพื่อให้กราฟสะท้อนข้อมูลจริง */
+      var st = sub ? (sub.status || 'submitted') : 'none';
       if (st === 'reviewed') st = 'head_reviewed';
       if (counts[st] !== undefined) counts[st]++;
-      else counts['final_approved']++;
+      else counts['submitted']++;
     });
   });
 
