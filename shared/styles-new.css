@@ -2096,3 +2096,9 @@ tr:hover td { background: #fafbfd; }
 @keyframes fadeIn  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toastIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes toastOut{ from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+
+/* ══ 31. Hide Scrollbar ═══════════════════════════════════════════ */
+/* ซ่อนแถบ scroll ทุก element แต่ยังเลื่อนได้เหมือนเดิม */
+::-webkit-scrollbar { display: none; }          /* Chrome, Safari, Edge */
+* { scrollbar-width: none; }                    /* Firefox */
+* { -ms-overflow-style: none; }                 /* IE / Edge เก่า */
