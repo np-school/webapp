@@ -2099,6 +2099,15 @@ tr:hover td { background: #fafbfd; }
 
 /* ══ 31. Hide Scrollbar ═══════════════════════════════════════════ */
 /* ซ่อนแถบ scroll ทุก element แต่ยังเลื่อนได้เหมือนเดิม */
-::-webkit-scrollbar { display: none; }          /* Chrome, Safari, Edge */
-* { scrollbar-width: none; }                    /* Firefox */
-* { -ms-overflow-style: none; }                 /* IE / Edge เก่า */
+html, body, *,
+*::before, *::after {
+  scrollbar-width: none !important;      /* Firefox */
+  -ms-overflow-style: none !important;   /* IE / Edge เก่า */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;             /* Chrome, Safari, Edge */
+}
