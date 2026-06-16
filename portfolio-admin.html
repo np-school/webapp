@@ -2478,31 +2478,31 @@ function renderDonutChart() {
   var canvas = document.getElementById('donutChart');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
   var size = 220;
+  canvas.width  = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(dpr, dpr);
   var cx = size/2, cy = size/2, r = 90, thick = 28;
   ctx.clearRect(0, 0, size, size);
 
-  /* วาด background ring (สีเทาอ่อน) */
+  /* วาด background ring = none (ยังไม่ส่ง) */
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
-  ctx.fillStyle = '#f1f5f9';
+  ctx.fillStyle = '#e2e8f0';
   ctx.fill();
 
-  /* วาด slices */
+  /* วาด slices เฉพาะ status ที่ไม่ใช่ none — สัดส่วนจาก total จริง */
   var startAngle = -Math.PI / 2;
   var gap = 0.018;
   var hasData = statusConfig.some(function(s){ return counts[s.key] > 0 && s.key !== 'none'; });
 
-  if (!hasData) {
-    /* ถ้าไม่มีข้อมูลเลย วาด ring เทาทั้งหมด */
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fill();
-  } else {
+  if (hasData) {
     statusConfig.forEach(function(s) {
+      if (s.key === 'none') return; /* none คือ background แล้ว ไม่ต้องวาดซ้ำ */
       if (!counts[s.key]) return;
       var slice = (counts[s.key] / total) * (2 * Math.PI);
       if (slice < 0.001) return;
@@ -3200,7 +3200,14 @@ function renderTeacherDonut(counts) {
   var canvas = document.getElementById('teacherDonutChart');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height;
+  var dpr = window.devicePixelRatio || 1;
+  var logicalW = 160, logicalH = 160;
+  canvas.width  = logicalW * dpr;
+  canvas.height = logicalH * dpr;
+  canvas.style.width  = logicalW + 'px';
+  canvas.style.height = logicalH + 'px';
+  ctx.scale(dpr, dpr);
+  var w = logicalW, h = logicalH;
   var cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 8, ri = R * 0.55;
   ctx.clearRect(0,0,w,h);
 
