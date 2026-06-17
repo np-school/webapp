@@ -2501,39 +2501,32 @@ function renderDonutChart() {
   var cx = size/2, cy = size/2, r = 90, thick = 28;
   ctx.clearRect(0, 0, size, size);
 
-  /* วาด background ring = none (ยังไม่ส่ง) */
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI, true);
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fill();
+  /* วาด donut ด้วย strokeArc — ไม่มีปัญหา winding rule */
+  var lw = thick;
+  var rMid = r - thick / 2;
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'butt';
 
-  /* วาด slices เฉพาะ status ที่ไม่ใช่ none — สัดส่วนจาก total จริง */
+  /* background ring (none / ยังไม่ส่ง) */
+  ctx.beginPath();
+  ctx.arc(cx, cy, rMid, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.stroke();
+
+  /* slices */
   var startAngle = -Math.PI / 2;
-  var gap = 0.018;
-  var hasData = statusConfig.some(function(s){ return counts[s.key] > 0 && s.key !== 'none'; });
-
-  if (hasData) {
-    statusConfig.forEach(function(s) {
-      if (s.key === 'none') return; /* none คือ background แล้ว ไม่ต้องวาดซ้ำ */
-      if (!counts[s.key]) return;
-      var slice = (counts[s.key] / total) * (2 * Math.PI);
-      if (slice < 0.001) return;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, startAngle + gap/2, startAngle + slice - gap/2);
-      ctx.arc(cx, cy, r - thick, startAngle + slice - gap/2, startAngle + gap/2, true);
-      ctx.closePath();
-      ctx.fillStyle = s.color;
-      ctx.fill();
-      startAngle += slice;
-    });
-  }
-
-  /* Center hole — วาด white circle */
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - thick, 0, 2 * Math.PI);
-  ctx.fillStyle = 'white';
-  ctx.fill();
+  var gap = 0.012;
+  statusConfig.forEach(function(s) {
+    if (s.key === 'none') return;
+    if (!counts[s.key]) return;
+    var slice = (counts[s.key] / total) * (2 * Math.PI);
+    if (slice < 0.002) return;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rMid, startAngle + gap, startAngle + slice - gap);
+    ctx.strokeStyle = s.color;
+    ctx.stroke();
+    startAngle += slice;
+  });
 
   /* Center label */
   console.log('[Donut] total='+total+' counts='+JSON.stringify(counts)+' allSubs='+allSubs.length);
