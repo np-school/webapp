@@ -801,7 +801,6 @@ var currentSem  = window._defaultSem  || 1;
 
 /* ── แสดงสถานะ submitted ให้ทุกคนเมื่อปีการศึกษา 2568 ── */
 function fakeStatus(s) {
-  if (currentYear === 2568) return 'final_approved';
   return s || 'none';
 }
 
@@ -1120,11 +1119,11 @@ function setDocFilter(d) {
 function updateStats() {
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
   var teachers  = teacherList.length;
-  var submitted = allSubs.filter(function(s){ return fakeStatus(s.status) !== 'none'; }).length;
+  var submitted = allSubs.filter(function(s){ return (s.status || 'submitted') !== 'none'; }).length;
   var reviewed  = allSubs.filter(function(s){ return s.status === 'head_reviewed' || s.status === 'reviewed' || s.status === 'assistant_reviewed' || s.status === 'deputy_reviewed'; }).length;
-  var finalApproved = currentYear === 2568 ? Object.values(teacherMap).filter(function(t){ return t.isTeacher; }).length * DOCUMENT_TYPES.length : allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
+  var finalApproved = allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
   var totalPossible = teachers * DOCUMENT_TYPES.length;
-  var pending   = currentYear === 2568 ? 0 : totalPossible - submitted;
+  var pending   = Math.max(0, totalPossible - submitted);
 
   document.getElementById('statTeachers').textContent = teachers;
   document.getElementById('statSubmitted').textContent = submitted;
@@ -1179,7 +1178,7 @@ function getFilteredTeachers() {
     if (currentGroup !== 'all') {
       if (normaliseGroup(t.staffGroup) !== normaliseGroup(currentGroup)) return false;
     }
-    var count = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
+    var count = Object.keys(t.subs).length;
     if (currentFilter === 'complete')   return count === DOCUMENT_TYPES.length;
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
     if (currentFilter === 'pending')    return currentYear !== 2568 && Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
@@ -1211,7 +1210,6 @@ function getLatestSubmitTime(t) {
 }
 
 function getNeedsReviewPriority(t) {
-  if (currentYear === 2568) return 0;
   /* 0=ไม่มีรอ, 1=รอหัวหน้าตรวจ, 2=รอผช.ผอ., 3=รอรอง ผอ., 4=รอ ผอ.อนุมัติ
      อ่านจาก doc.status ใน _courses โดยตรง */
   var hasSubmitted       = false;
@@ -1272,7 +1270,7 @@ function renderListView() {
 
   var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:var(--gap-item);">';
   teachers.forEach(function(t) {
-    var subCount = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
+    var subCount = Object.keys(t.subs).length;
     var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     /* นับจาก doc จริงใน _courses (ไม่ใช่ merged status ของ container) */
     var finalCount = 0, headRevCount = 0, assistRevCount = 0, deputyRevCount = 0, pendingCount = 0, revisionCount = 0;
@@ -2599,8 +2597,8 @@ function renderDocTypeBars() {
   if (!teacherCount) { container.innerHTML = ''; return; }
 
   container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
-    var submitted     = currentYear === 2568 ? teacherCount : allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
-    var finalApproved = currentYear === 2568 ? teacherCount : allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
+    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
+    var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
     var pct = Math.round((submitted / teacherCount) * 100);
     var pctFinal = Math.round((finalApproved / teacherCount) * 100);
 
@@ -2867,7 +2865,7 @@ function renderGroupDetail() {
 
   /* รายชื่อครู */
   var teacherRows = d.teachers.slice().sort(function(a,b){ return (b.subs ? Object.keys(b.subs).length : 0) - (a.subs ? Object.keys(a.subs).length : 0); }).map(function(t) {
-    var subCount = currentYear === 2568 ? DOCUMENT_TYPES.length : Object.keys(t.subs).length;
+    var subCount = Object.keys(t.subs).length;
     var pctT = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
     var barColor = pctT >= 100 ? '#16a34a' : pctT >= 60 ? 'var(--purple)' : pctT >= 30 ? '#f59e0b' : '#ef4444';
     var docChips = DOCUMENT_TYPES.map(function(dt) {
