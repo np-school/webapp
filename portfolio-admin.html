@@ -2464,10 +2464,10 @@ function renderDonutChart() {
   var counts = {};
   statusConfig.forEach(function(s){ counts[s.key] = 0; });
 
+  /* นับแบบ teacherList × DOCUMENT_TYPES เพื่อให้ total ตรง */
   teacherList.forEach(function(t) {
     DOCUMENT_TYPES.forEach(function(dt) {
       var sub = t.subs[dt.id];
-      /* อ่าน status จริง ไม่ผ่าน fakeStatus เพื่อให้กราฟสะท้อนข้อมูลจริง */
       var st = sub ? (sub.status || 'submitted') : 'none';
       if (st === 'reviewed') st = 'head_reviewed';
       if (counts[st] !== undefined) counts[st]++;
