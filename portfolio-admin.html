@@ -2462,11 +2462,25 @@ function renderDonutChart() {
   var counts = {};
   statusConfig.forEach(function(s){ counts[s.key] = 0; });
 
-  /* นับแบบ teacherList × DOCUMENT_TYPES เพื่อให้ total ตรง */
+  /* สร้าง lookup จาก allSubs (filter year+sem แล้ว) */
+  var subsLookup = {};
+  var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+  allSubs.forEach(function(sub) {
+    var key = (sub.email || sub.teacherEmail) + '|' + sub.docTypeId;
+    var st = sub.status || 'submitted';
+    if (!subsLookup[key]) {
+      subsLookup[key] = st;
+    } else {
+      var prev = subsLookup[key];
+      subsLookup[key] = (ORDER[st] !== undefined && ORDER[prev] !== undefined && ORDER[st] < ORDER[prev]) ? st : prev;
+    }
+  });
+
+  /* นับแบบ teacherList × DOCUMENT_TYPES */
   teacherList.forEach(function(t) {
     DOCUMENT_TYPES.forEach(function(dt) {
-      var sub = t.subs[dt.id];
-      var st = sub ? (sub.status || 'submitted') : 'none';
+      var key = t.email + '|' + dt.id;
+      var st = subsLookup[key] || 'none';
       if (st === 'reviewed') st = 'head_reviewed';
       if (counts[st] !== undefined) counts[st]++;
       else counts['submitted']++;
@@ -2522,6 +2536,7 @@ function renderDonutChart() {
   ctx.fill();
 
   /* Center label */
+  console.log('[Donut] total='+total+' counts='+JSON.stringify(counts)+' allSubs='+allSubs.length);
   document.getElementById('donutTotal').textContent = total;
 
   /* Legend — แสดงทุก status (รวม 0) */
