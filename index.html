@@ -84,7 +84,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
-  <script type="module" src="firebase-init.js"></script>
   <style>
     /* ── Public calendar ── */
     .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
@@ -455,6 +454,20 @@
           </div>
         </div>
 
+        <!-- ══ Notification Permission Banner ══ -->
+        <div id="notifPermBanner" style="display:none;margin-bottom:20px;background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="bell-ring" style="width:20px;height:20px;color:#1d4ed8;"></i>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#1e293b;">เปิดการแจ้งเตือน</div>
+              <div style="font-size:12px;color:#64748b;">รับแจ้งเตือนทันทีเมื่อสถานะการจองห้องหรือส่งงานมีการเปลี่ยนแปลง</div>
+            </div>
+          </div>
+          <button id="notifPermBtn" onclick="enableNotifPermission()" style="padding:10px 20px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">เปิดการแจ้งเตือน</button>
+        </div>
+
         <!-- ══ Announcements Section (Dashboard) ══ -->
         <div id="annDashSection" style="display:none;margin-bottom:20px;background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">
           <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:9px;">
@@ -647,18 +660,60 @@
     }
   });
 
+  var npCurrentUser = null;
+
+  /* แสดง banner เฉพาะตอน browser รองรับ Notification API และยังไม่เคยตอบ allow/block
+     (Safari บน iOS ที่ไม่รองรับ หรือยังไม่ได้ add to home screen จะไม่มี Notification ใน window เลย
+     ทำให้ banner ไม่โชว์ไปเอง — ไม่ต้องเช็ค iOS แยก) */
+  function checkNotifPermBanner() {
+    var banner = document.getElementById('notifPermBanner');
+    if (!banner) return;
+    if ('Notification' in window && Notification.permission === 'default') {
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  /* เรียกตรงนี้จาก onclick ของปุ่ม (user gesture) เท่านั้น — ห้ามเรียกอัตโนมัติ
+     เพราะ Safari/iOS จะไม่โชว์ prompt ขอ permission ถ้าไม่ได้มาจาก tap ของผู้ใช้โดยตรง */
+  function enableNotifPermission() {
+    if (!npCurrentUser || typeof setupPushNotification !== 'function') return;
+    var btn = document.getElementById('notifPermBtn');
+    btn.disabled = true;
+    btn.textContent = 'กำลังเปิด...';
+    setupPushNotification(npCurrentUser).then(function(token) {
+      var banner = document.getElementById('notifPermBanner');
+      if (token) {
+        showToast('เปิดการแจ้งเตือนสำเร็จ ✓');
+        banner.style.display = 'none';
+      } else {
+        /* ผู้ใช้กด block หรือ requestPermission ล้มเหลว */
+        btn.disabled = false;
+        btn.textContent = 'เปิดการแจ้งเตือน';
+        if (Notification.permission === 'denied') {
+          banner.style.display = 'none'; /* บล็อกแล้ว ต้องไปแก้ที่ตั้งค่าเบราว์เซอร์เอง โชว์ปุ่มต่อไปไม่มีประโยชน์ */
+        }
+      }
+    });
+  }
+
   auth.onAuthStateChanged(function(user){
     if(user){
+      npCurrentUser = user;
       document.body.classList.remove('guest-mode');
       document.getElementById('publicView').style.display='none';
       document.getElementById('privateView').style.display='block';
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
-      if (typeof setupPushNotification === 'function') setupPushNotification(user.uid, user.email);
+      /* ไม่เรียก setupPushNotification อัตโนมัติตรงนี้ — Safari/iOS บล็อก requestPermission()
+         ถ้าไม่ได้มาจาก user gesture (เช่น tap ปุ่ม) ต้องให้ผู้ใช้กดปุ่มเองในแบนเนอร์ด้านล่างแทน */
+      checkNotifPermBanner();
       pfInit(user.uid, user.email);
       loadDashboardAnnouncements();
     }else{
+      npCurrentUser = null;
       document.body.classList.add('guest-mode');
       document.getElementById('publicView').style.display='block';
       document.getElementById('privateView').style.display='none';
