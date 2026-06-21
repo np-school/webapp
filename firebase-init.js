@@ -34,7 +34,10 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
+// ตั้งชื่อ app แยก ("messaging") ไม่ใช้ชื่อ default
+// เพราะหน้าเว็บ initializeApp() ของ [DEFAULT] ไปแล้วผ่าน compat SDK ใน shared/firebase.js
+// ถ้าเรียก initializeApp() ซ้ำชื่อ default จะ error "Firebase App named '[DEFAULT]' already exists"
+const app = initializeApp(firebaseConfig, "messaging");
 const messaging = getMessaging(app);
 const db = getFirestore(app);
 
@@ -42,10 +45,11 @@ const db = getFirestore(app);
  * ขอ permission แจ้งเตือนจากผู้ใช้ และถ้าอนุญาต ให้ขอ FCM token
  * แล้วบันทึก token นั้นลง Firestore (collection "fcmTokens")
  *
- * @param {string} userId - id ของผู้ใช้/เจ้าหน้าที่ที่ login อยู่ในระบบของคุณ
+ * @param {string} userId - uid ของผู้ใช้ (user.uid)
+ * @param {string} email - อีเมลผู้ใช้ (user.email) ใช้สำหรับแจ้งเตือนตาม permission
  * @param {string} role - เช่น "staff" หรือ "customer" เผื่อใช้กรองตอนส่ง
  */
-export async function setupPushNotification(userId, role = "customer") {
+export async function setupPushNotification(userId, email, role = "customer") {
   try {
     // ขอ permission จากเบราว์เซอร์
     const permission = await Notification.requestPermission();
@@ -77,6 +81,7 @@ export async function setupPushNotification(userId, role = "customer") {
     // โครงสร้าง: fcmTokens/{token} = { userId, role, updatedAt }
     await setDoc(doc(db, "fcmTokens", token), {
       userId,
+      email,
       role,
       updatedAt: serverTimestamp(),
     });
@@ -101,3 +106,8 @@ export async function setupPushNotification(userId, role = "customer") {
     return null;
   }
 }
+
+// expose เป็น global function เพราะหน้า .html อื่นเรียกใช้แบบ
+// `if (typeof setupPushNotification === 'function') setupPushNotification(...)`
+// ไม่ได้ import แบบ ES module
+window.setupPushNotification = setupPushNotification;

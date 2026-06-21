@@ -84,6 +84,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
+  <script type="module" src="firebase-init.js"></script>
   <style>
     /* ── Public calendar ── */
     .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
@@ -654,7 +655,7 @@
       document.getElementById('welcomeText').textContent='สวัสดี, '+user.displayName;
       updateNavUser(user);updateSidebarProfile(user);
       fetchUserStats(user.uid);checkAdminAccess(user.email);lineLoadStatus(user.uid);lineListenBookings(user.uid);
-      if (typeof setupPushNotification === 'function') setupPushNotification(user);
+      if (typeof setupPushNotification === 'function') setupPushNotification(user.uid, user.email);
       pfInit(user.uid, user.email);
       loadDashboardAnnouncements();
     }else{
