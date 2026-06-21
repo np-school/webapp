@@ -1,4 +1,51 @@
-var CACHE_NAME = 'np-origins-v7';
+/* ═══════════════════════════════════════════════
+   Firebase Cloud Messaging (Push Notification)
+   ทำงานคู่กับ caching logic ด้านล่าง — ไม่กระทบกัน
+   ═══════════════════════════════════════════════ */
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey:        'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
+  authDomain:    'np-webapp-74616.firebaseapp.com',
+  projectId:     'np-webapp-74616',
+  storageBucket: 'np-webapp-74616.firebasestorage.app',
+  messagingSenderId: '275537025660',
+  appId:         '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
+});
+
+var messaging = firebase.messaging();
+
+/* แจ้งเตือนตอนแท็บปิด/อยู่เบื้องหลัง */
+messaging.onBackgroundMessage(function(payload) {
+  var notif = payload.notification || {};
+  var title = notif.title || 'NP Origins';
+  var options = {
+    body: notif.body || '',
+    icon: 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f',
+    badge: 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f',
+    data: payload.data || {}
+  };
+  self.registration.showNotification(title, options);
+});
+
+/* คลิกแจ้งเตือน → เปิด/โฟกัสหน้าที่เกี่ยวข้อง */
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var targetUrl = (event.notification.data && event.notification.data.url) || '/webapp/index.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(function(clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        if (clientList[i].url.indexOf(targetUrl) !== -1 && 'focus' in clientList[i]) {
+          return clientList[i].focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+    })
+  );
+});
+
+var CACHE_NAME = 'np-origins-v8';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
 var ALL_FILES = [

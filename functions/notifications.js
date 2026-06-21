@@ -1,0 +1,161 @@
+// ===========================================
+// functions/notifications.js
+// Push Notification triggers สำหรับระบบจองห้อง (NP Origins)
+// ===========================================
+//
+// อ้างอิงโครงสร้าง Firestore จริงจากระบบ:
+//
+//   bookings/{bookingId}
+//     - userId, userName, userPhoto
+//     - room, date, startTime, endTime, purpose
+//     - status: 'pending' | 'approved' | 'rejected'
+//     - createdAt, updatedAt
+//
+//   admins/{email}              (email เป็น lowercase, ใช้เป็น doc id)
+//     - permissions: { bookings: true, staff: true, portfolio: true, foodcourt: true, ... }
+//
+//   fcmTokens/{token}
+//     - userId, email, updatedAt
+//
+// SUPERADMIN_EMAIL ถูกกำหนดไว้ใน common.js ฝั่ง frontend
+// ในฝั่ง Cloud Functions ต้องกำหนดซ้ำที่นี่ (แก้ค่าด้านล่างให้ตรงกับของจริง)
+
+const { getFirestore } = require("firebase-admin/firestore");
+const { getMessaging } = require("firebase-admin/messaging");
+const {
+  onDocumentUpdated,
+  onDocumentCreated,
+} = require("firebase-functions/v2/firestore");
+
+// SUPERADMIN_EMAIL เดียวกับที่กำหนดไว้ใน common.js (บรรทัด var SUPERADMIN_EMAIL = ...)
+const SUPERADMIN_EMAIL = "nattapol@nongki.ac.th";
+
+const db = getFirestore();
+const messaging = getMessaging();
+
+/**
+ * ส่งแจ้งเตือนไปยังผู้ใช้ตาม userId (ทุก token ที่เคยลงทะเบียนไว้)
+ */
+async function sendToUser(userId, title, body, data = {}) {
+  const tokensSnap = await db
+    .collection("fcmTokens")
+    .where("userId", "==", userId)
+    .get();
+
+  if (tokensSnap.empty) return;
+
+  const tokens = tokensSnap.docs.map((doc) => doc.id);
+  await sendAndCleanup(tokens, title, body, data);
+}
+
+/**
+ * ส่งแจ้งเตือนไปยังเจ้าหน้าที่ทุกคนที่มี permission ที่กำหนด (เช่น "bookings")
+ * รวม SuperAdmin ด้วยเสมอ
+ */
+async function sendToPermission(permissionKey, title, body, data = {}) {
+  const adminsSnap = await db.collection("admins").get();
+
+  const targetEmails = [];
+  adminsSnap.forEach((doc) => {
+    const perms = doc.data().permissions || {};
+    if (perms[permissionKey]) {
+      targetEmails.push(doc.id); // doc id คือ email (lowercase)
+    }
+  });
+
+  // SuperAdmin ได้รับแจ้งเตือนทุก permission เสมอ ไม่ต้องมี doc ใน admins ก็ได้
+  if (!targetEmails.includes(SUPERADMIN_EMAIL)) {
+    targetEmails.push(SUPERADMIN_EMAIL);
+  }
+
+  if (targetEmails.length === 0) return;
+
+  // ดึง token ของทุก email ที่เกี่ยวข้อง (Firestore 'in' query รับสูงสุด 30 ค่า/ครั้ง)
+  const tokens = [];
+  for (let i = 0; i < targetEmails.length; i += 30) {
+    const chunk = targetEmails.slice(i, i + 30);
+    const snap = await db
+      .collection("fcmTokens")
+      .where("email", "in", chunk)
+      .get();
+    snap.forEach((doc) => tokens.push(doc.id));
+  }
+
+  if (tokens.length === 0) return;
+  await sendAndCleanup(tokens, title, body, data);
+}
+
+/**
+ * Helper: ส่งจริง + ลบ token ที่ใช้ไม่ได้แล้วออกจาก Firestore
+ */
+async function sendAndCleanup(tokens, title, body, data) {
+  const response = await messaging.sendEachForMulticast({
+    notification: { title, body },
+    data,
+    tokens,
+  });
+
+  console.log(
+    `ส่งแจ้งเตือน: สำเร็จ ${response.successCount}, ล้มเหลว ${response.failureCount}`
+  );
+
+  const deletions = [];
+  response.responses.forEach((res, idx) => {
+    if (!res.success) {
+      const code = res.error?.code;
+      if (
+        code === "messaging/invalid-registration-token" ||
+        code === "messaging/registration-token-not-registered"
+      ) {
+        deletions.push(db.collection("fcmTokens").doc(tokens[idx]).delete());
+      }
+    }
+  });
+  await Promise.all(deletions);
+}
+
+// ===========================================
+// 1) สถานะ booking เปลี่ยน (pending -> approved/rejected) -> แจ้งผู้จอง
+// ===========================================
+exports.onBookingStatusChanged = onDocumentUpdated(
+  "bookings/{bookingId}",
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    if (before.status === after.status) return;
+
+    const statusText =
+      after.status === "approved"
+        ? "ได้รับการอนุมัติแล้ว ✅"
+        : after.status === "rejected"
+        ? "ถูกปฏิเสธ ❌"
+        : after.status;
+
+    await sendToUser(
+      after.userId,
+      "สถานะการจองห้องอัปเดต",
+      `การจอง "${after.room || ""}" วันที่ ${after.date || ""} ${statusText}`,
+      { url: "/webapp/room-request.html" }
+    );
+  }
+);
+
+// ===========================================
+// 2) มีคำขอจองห้องใหม่ -> แจ้งเจ้าหน้าที่ที่มี permission "bookings"
+// ===========================================
+exports.onNewBookingCreated = onDocumentCreated(
+  "bookings/{bookingId}",
+  async (event) => {
+    const data = event.data.data();
+
+    await sendToPermission(
+      "bookings",
+      "มีคำขอจองห้องใหม่",
+      `${data.userName || "ผู้ใช้"} ขอจอง "${data.room || ""}" วันที่ ${
+        data.date || ""
+      }`,
+      { url: "/webapp/room-admin.html" }
+    );
+  }
+);

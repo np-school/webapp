@@ -229,6 +229,7 @@ function buildPage(config) {
       var appEl = document.getElementById(appId);
       if (appEl) appEl.style.removeProperty('display');
       if (loadEl) loadEl.style.display = 'none';
+      if (typeof setupPushNotification === 'function') setupPushNotification(user);
       if (onAuth) onAuth(user, contentEl);
     }
 
