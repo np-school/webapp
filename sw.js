@@ -18,13 +18,13 @@ var messaging = firebase.messaging();
 
 /* แจ้งเตือนตอนแท็บปิด/อยู่เบื้องหลัง */
 messaging.onBackgroundMessage(function(payload) {
-  var notif = payload.notification || {};
-  var title = notif.title || 'NP Origins';
+  var data = payload.data || {};
+  var title = data.title || 'NP Origins';
   var options = {
-    body: notif.body || '',
+    body: data.body || '',
     icon: 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f',
     badge: 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f',
-    data: payload.data || {}
+    data: data
   };
   self.registration.showNotification(title, options);
 });
@@ -45,7 +45,7 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-var CACHE_NAME = 'np-origins-v8';
+var CACHE_NAME = 'np-origins-v9';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
 var ALL_FILES = [

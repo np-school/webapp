@@ -87,11 +87,11 @@ function setupPushNotification(user) {
 if (typeof firebase.messaging === 'function') {
   try {
     firebase.messaging().onMessage(function(payload) {
-      var notif = payload.notification || {};
-      if (notif.title && Notification.permission === 'granted') {
-        var n = new Notification(notif.title, { body: notif.body || '' });
+      var data = payload.data || {};
+      if (data.title && Notification.permission === 'granted') {
+        var n = new Notification(data.title, { body: data.body || '' });
         n.onclick = function() {
-          var url = (payload.data && payload.data.url) || '/webapp/index.html';
+          var url = data.url || '/webapp/index.html';
           window.open(url, '_blank');
         };
       }

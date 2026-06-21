@@ -89,9 +89,15 @@ async function sendToPermission(permissionKey, title, body, data = {}) {
  * Helper: ส่งจริง + ลบ token ที่ใช้ไม่ได้แล้วออกจาก Firestore
  */
 async function sendAndCleanup(tokens, title, body, data) {
+  /* ส่งแบบ data-only (ไม่มี field "notification") โดยเจตนา —
+     ถ้าใส่ทั้ง notification + data พร้อมกัน บางเบราว์เซอร์ (เช่น Chrome บน Android)
+     จะ auto-display แจ้งเตือนจาก field notification เองอัตโนมัติ
+     ซ้ำกับที่ onBackgroundMessage ใน sw.js แสดงเองอีกที → ขึ้นแจ้งเตือนซ้อนกัน 2 อัน
+     (อันนึงไม่มีโลโก้เพราะเป็น default ของระบบ, อีกอันมีโลโก้จากโค้ดเรา)
+     data-only message ทำให้ onBackgroundMessage เป็นคนคุมการแสดงผลทั้งหมดแต่ผู้เดียว
+     ⚠️ ค่าทุกตัวใน data ต้องเป็น string เท่านั้น (ข้อจำกัดของ FCM data payload) */
   const response = await messaging.sendEachForMulticast({
-    notification: { title, body },
-    data,
+    data: Object.assign({ title, body }, data),
     tokens,
   });
 
