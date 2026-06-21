@@ -58,10 +58,20 @@ function setupPushNotification(user) {
         return null;
       }
 
-      return db.collection('fcmTokens').doc(token).set({
-        userId: user.uid,
-        email: (user.email || '').toLowerCase(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      /* ลบ token เก่าของ userId เดิมทิ้งก่อน (กันมี token ซ้ำหลายตัว → แจ้งเตือนซ้ำ)
+         เก็บไว้แค่ token ตัวล่าสุด (ตัวที่กำลังจะบันทึกนี้) */
+      return db.collection('fcmTokens').where('userId', '==', user.uid).get().then(function(snap) {
+        var batch = db.batch();
+        snap.forEach(function(doc) {
+          if (doc.id !== token) batch.delete(doc.ref);
+        });
+        return batch.commit();
+      }).then(function() {
+        return db.collection('fcmTokens').doc(token).set({
+          userId: user.uid,
+          email: (user.email || '').toLowerCase(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
       }).then(function() {
         console.log('FCM token บันทึกแล้ว');
         return token;
