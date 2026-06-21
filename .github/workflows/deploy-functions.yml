@@ -1,0 +1,33 @@
+name: Deploy Cloud Functions
+
+# รันอัตโนมัติทุกครั้งที่ push ขึ้น main ที่มีการแก้ไขในโฟลเดอร์ functions/
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/deploy-functions.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install function dependencies
+        working-directory: ./functions
+        run: npm install
+
+      - name: Deploy to Firebase
+        run: npx firebase-tools deploy --only functions --project np-webapp-74616 --token "$FIREBASE_TOKEN"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
