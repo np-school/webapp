@@ -2513,17 +2513,10 @@ function renderDonutChart() {
   ctx.lineWidth = lw;
   ctx.lineCap = 'butt';
 
-  /* background ring (none / ยังไม่ส่ง) */
-  ctx.beginPath();
-  ctx.arc(cx, cy, rMid, 0, 2 * Math.PI);
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.stroke();
-
-  /* slices */
+  /* วาดทุก slice รวม none — ใช้ counts จริงทั้งหมด */
   var startAngle = -Math.PI / 2;
   var gap = 0.012;
   statusConfig.forEach(function(s) {
-    if (s.key === 'none') return;
     if (!counts[s.key]) return;
     var slice = (counts[s.key] / total) * (2 * Math.PI);
     if (slice < 0.002) return;
