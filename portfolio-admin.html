@@ -1117,20 +1117,43 @@ function setDocFilter(d) {
   renderView();
 }
 
+/* ── helper: สร้าง merged-status map (email|docTypeId → status) จาก teacherMap ──
+   ใช้ merged status เดียวกับที่ teacherMap.subs[docTypeId].status คำนวณไว้แล้ว
+   (ต่ำสุดของทุก course ใน docType นั้น) เพื่อให้ stat cards, donut chart
+   และกราฟอื่น ๆ นับจากฐานเดียวกัน ไม่นับ raw docs ซ้ำกัน */
+function buildMergedStatusMap() {
+  var map = {};
+  Object.values(teacherMap).forEach(function(t) {
+    if (!t.isTeacher) return;
+    DOCUMENT_TYPES.forEach(function(dt) {
+      var sub = t.subs[dt.id];
+      var st  = sub ? (sub.status || 'submitted') : 'none';
+      if (st === 'reviewed') st = 'head_reviewed';
+      map[t.email + '|' + dt.id] = st;
+    });
+  });
+  return map;
+}
+
 function updateStats() {
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
   var teachers  = teacherList.length;
-  var submitted = allSubs.filter(function(s){ return (s.status || 'submitted') !== 'none'; }).length;
-  var reviewed  = allSubs.filter(function(s){ return s.status === 'head_reviewed' || s.status === 'reviewed' || s.status === 'assistant_reviewed' || s.status === 'deputy_reviewed'; }).length;
-  var finalApproved = allSubs.filter(function(s){ return s.status === 'final_approved'; }).length;
-  var totalPossible = teachers * DOCUMENT_TYPES.length;
-  var pending   = Math.max(0, totalPossible - submitted);
+
+  /* นับจาก merged status (1 ครู × 1 docType = 1 slot) แทนการนับ raw docs */
+  var mergedMap     = buildMergedStatusMap();
+  var statuses      = Object.values(mergedMap);
+  var submitted     = statuses.filter(function(s){ return s !== 'none'; }).length;
+  var reviewed      = statuses.filter(function(s){
+    return s === 'head_reviewed' || s === 'assistant_reviewed' || s === 'deputy_reviewed';
+  }).length;
+  var finalApproved = statuses.filter(function(s){ return s === 'final_approved'; }).length;
+  var pending       = statuses.filter(function(s){ return s === 'none'; }).length;
 
   document.getElementById('statTeachers').textContent = teachers;
   document.getElementById('statSubmitted').textContent = submitted;
   document.getElementById('statReviewed').textContent = reviewed;
   document.getElementById('statFinalApproved').textContent = finalApproved;
-  document.getElementById('statPending').textContent = Math.max(0, pending);
+  document.getElementById('statPending').textContent = pending;
 
   /* อัปเดตกราฟเสมอ */
   renderCharts();
@@ -2463,29 +2486,11 @@ function renderDonutChart() {
   var counts = {};
   statusConfig.forEach(function(s){ counts[s.key] = 0; });
 
-  /* สร้าง lookup จาก allSubs (filter year+sem แล้ว) */
-  var subsLookup = {};
-  var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
-  allSubs.forEach(function(sub) {
-    var key = (sub.email || sub.teacherEmail) + '|' + sub.docTypeId;
-    var st = sub.status || 'submitted';
-    if (!subsLookup[key]) {
-      subsLookup[key] = st;
-    } else {
-      var prev = subsLookup[key];
-      subsLookup[key] = (ORDER[st] !== undefined && ORDER[prev] !== undefined && ORDER[st] < ORDER[prev]) ? st : prev;
-    }
-  });
-
-  /* นับแบบ teacherList × DOCUMENT_TYPES */
-  teacherList.forEach(function(t) {
-    DOCUMENT_TYPES.forEach(function(dt) {
-      var key = t.email + '|' + dt.id;
-      var st = subsLookup[key] || 'none';
-      if (st === 'reviewed') st = 'head_reviewed';
-      if (counts[st] !== undefined) counts[st]++;
-      else counts['submitted']++;
-    });
+  /* ใช้ merged-status map เดียวกับ updateStats() เพื่อให้กราฟตรงกับ stat cards */
+  var mergedMap = buildMergedStatusMap();
+  Object.values(mergedMap).forEach(function(st) {
+    if (counts[st] !== undefined) counts[st]++;
+    else counts['submitted']++;
   });
 
   /* Draw donut */
