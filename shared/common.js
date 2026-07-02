@@ -44,6 +44,42 @@ function showToast(msg, type) {
 }
 
 /* ════════════════════════════════
+   Push Permission Banner
+   เรียกจาก firebase.js เมื่อยังไม่เคยขอ permission แจ้งเตือน
+   (window.onPushPermissionNeeded) — ต้องให้ผู้ใช้แตะปุ่มเองเสมอ
+   เพราะ iOS Safari ต้องการ user gesture ตรงๆ ถึงจะเด้ง permission dialog
+   ════════════════════════════════ */
+function onPushPermissionNeeded(user) {
+  if (document.getElementById('pushPermBanner')) return; /* กันซ้ำ */
+
+  var el = document.createElement('div');
+  el.id = 'pushPermBanner';
+  el.style.cssText =
+    'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;' +
+    'max-width:420px;margin:0 auto;background:#0d1b2a;color:#fff;' +
+    'padding:14px 14px;border-radius:16px;display:flex;align-items:center;' +
+    'gap:10px;box-shadow:0 10px 28px rgba(0,0,0,.3);';
+  el.innerHTML =
+    '<i data-lucide="bell" style="width:20px;height:20px;flex-shrink:0;color:#facc15;"></i>' +
+    '<span style="flex:1;font-size:12.5px;font-weight:600;line-height:1.4;">เปิดการแจ้งเตือน เพื่อไม่พลาดคำขอ/อัปเดตสถานะการจอง</span>' +
+    '<button id="pushPermBtn" style="background:#fff;color:#0d1b2a;border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
+    '<button id="pushPermClose" style="background:transparent;border:none;color:#94a3b8;flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>';
+  document.body.appendChild(el);
+  if (window.lucide) lucide.createIcons();
+
+  document.getElementById('pushPermBtn').onclick = function() {
+    /* เรียกตรงนี้ทันที ไม่มี await/then คั่นก่อนหน้า — เป็น user gesture จริง */
+    if (typeof requestPushPermission === 'function') {
+      requestPushPermission(user).finally(function() { el.remove(); });
+    } else {
+      el.remove();
+    }
+  };
+  document.getElementById('pushPermClose').onclick = function() { el.remove(); };
+}
+window.onPushPermissionNeeded = onPushPermissionNeeded;
+
+/* ════════════════════════════════
    Modal helpers
    ════════════════════════════════ */
 function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }

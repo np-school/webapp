@@ -1,24 +1,27 @@
 /* ═══════════════════════════════════════════════
-   Firebase Cloud Messaging (Push Notification)
-   ทำงานคู่กับ caching logic ด้านล่าง — ไม่กระทบกัน
+   Push Notification
+   ═══════════════════════════════════════════════
+   ดัก 'push' event ของ Web Push API ตรงๆ แทนการพึ่ง
+   firebase.messaging().onBackgroundMessage() ของ FCM compat SDK
+
+   เหตุผล: บน iOS Safari พบว่า onBackgroundMessage() บางครั้งไม่ทำงาน
+   กับ data-only payload (SDK internal ตรวจจับไม่ได้ว่าเป็น FCM message
+   บน WebKit) ทำให้ไม่มีการแจ้งเตือนขึ้นเลยแบบเงียบๆ ไม่มี error
+   ส่วน raw 'push' event เป็น web standard ธรรมดา ทำงานเหมือนกันทุก
+   browser ที่รองรับ Web Push (รวม Safari 16.4+) จึงไม่ต้อง import
+   firebase SDK เข้ามาใน service worker เลย
    ═══════════════════════════════════════════════ */
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+self.addEventListener('push', function(event) {
+  var payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (e) {
+    console.warn('SW push: แปลง payload ไม่ได้', e);
+  }
 
-firebase.initializeApp({
-  apiKey:        'AIzaSyDBtM8x62v2KafPuGtiE29gRF7IxM2pITU',
-  authDomain:    'np-webapp-74616.firebaseapp.com',
-  projectId:     'np-webapp-74616',
-  storageBucket: 'np-webapp-74616.firebasestorage.app',
-  messagingSenderId: '275537025660',
-  appId:         '1:275537025660:web:4fdc11e0fe22e679f6c7f9'
-});
-
-var messaging = firebase.messaging();
-
-/* แจ้งเตือนตอนแท็บปิด/อยู่เบื้องหลัง */
-messaging.onBackgroundMessage(function(payload) {
-  var data = payload.data || {};
+  /* FCM ส่ง data-only message มาในรูปแบบ { data: { title, body, ... } }
+     รองรับทั้งกรณีมี wrapper "data" และกรณี flat object เผื่อ format เปลี่ยน */
+  var data  = payload.data || payload;
   var title = data.title || 'NP Origins';
   var options = {
     body: data.body || '',
@@ -26,7 +29,8 @@ messaging.onBackgroundMessage(function(payload) {
     badge: 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f',
     data: data
   };
-  self.registration.showNotification(title, options);
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 /* คลิกแจ้งเตือน → เปิด/โฟกัสหน้าที่เกี่ยวข้อง */
