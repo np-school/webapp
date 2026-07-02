@@ -83,63 +83,110 @@ function setupPushNotification(user) {
   return Promise.resolve(null);
 }
 
+/* helper: ครอบ promise ด้วย timeout กัน getToken()/getRegistration() ค้างตลอดไป
+   (พบว่า Firebase Messaging SDK บางเวอร์ชันค้างเงียบๆ ไม่ resolve/reject บน
+   iOS Safari — ต้องมี timeout เพื่อให้รู้ว่าค้างที่ไหน แทนที่จะรอไม่มีกำหนด) */
+function _withTimeout(promise, ms, label) {
+  return new Promise(function(resolve, reject) {
+    var timer = setTimeout(function() {
+      reject(new Error('TIMEOUT: ' + label + ' ใช้เวลาเกิน ' + (ms / 1000) + ' วินาที'));
+    }, ms);
+    promise.then(function(v) { clearTimeout(timer); resolve(v); },
+                 function(e) { clearTimeout(timer); reject(e); });
+  });
+}
+
 /**
  * เรียกจาก onclick ของปุ่ม "เปิดการแจ้งเตือน" เท่านั้น
  * ต้องอยู่ใน synchronous call stack ของการแตะปุ่มโดยตรง ห้ามมี await/then
  * คั่นก่อนเรียก Notification.requestPermission() ไม่งั้น iOS จะไม่เด้ง dialog
+ * @param {Function} [onStatus] - callback(text) รายงานสถานะทีละขั้น สำหรับโชว์บนจอ
  */
-function requestPushPermission(user) {
-  if (!user || !('Notification' in window)) return Promise.resolve(null);
+function requestPushPermission(user, onStatus) {
+  function status(s) {
+    console.log('[push]', s);
+    if (typeof onStatus === 'function') onStatus(s);
+  }
 
+  if (!user || !('Notification' in window)) {
+    status('เบราว์เซอร์นี้ไม่รองรับ Notification API');
+    return Promise.resolve(null);
+  }
+
+  status('กำลังขอ permission...');
   return Notification.requestPermission().then(function(permission) {
+    status('permission = ' + permission);
     if (permission !== 'granted') {
       console.warn('ผู้ใช้ไม่ได้อนุญาตการแจ้งเตือน');
       return null;
     }
-    return _requestAndSaveToken(user);
+    return _requestAndSaveToken(user, status);
   }).catch(function(err) {
+    status('เกิดข้อผิดพลาด: ' + (err && err.message ? err.message : err));
     console.error('requestPushPermission error:', err);
     return null;
   });
 }
 window.requestPushPermission = requestPushPermission;
 
-function _requestAndSaveToken(user) {
-  return navigator.serviceWorker.getRegistration('/webapp/').then(function(reg) {
-    /* sw.js ลงทะเบียนไว้แล้วใน page-template.html — ใช้ตัวเดิม ไม่ลงทะเบียนซ้ำ */
-    var messaging = firebase.messaging();
-    return messaging.getToken({
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: reg
-    });
-  }).then(function(token) {
-    if (!token) {
-      console.warn('ไม่สามารถขอ FCM token ได้');
-      return null;
-    }
+function _requestAndSaveToken(user, status) {
+  status = status || function() {};
 
-    /* ลบ token เก่าของ userId เดิมทิ้งก่อน (กันมี token ซ้ำหลายตัว → แจ้งเตือนซ้ำ)
-       เก็บไว้แค่ token ตัวล่าสุด (ตัวที่กำลังจะบันทึกนี้) */
-    return db.collection('fcmTokens').where('userId', '==', user.uid).get().then(function(snap) {
-      var batch = db.batch();
-      snap.forEach(function(doc) {
-        if (doc.id !== token) batch.delete(doc.ref);
+  /* เช็คก่อนว่า browser นี้รองรับ Firebase Messaging จริงไหม (compat SDK มี
+     firebase.messaging.isSupported() ให้เช็คแบบ sync) กัน error ที่ไม่ชัดเจน */
+  if (firebase.messaging.isSupported && !firebase.messaging.isSupported()) {
+    status('เบราว์เซอร์นี้ไม่รองรับ Firebase Messaging (isSupported = false)');
+    return Promise.resolve(null);
+  }
+
+  status('กำลังเช็ค service worker registration...');
+  return _withTimeout(navigator.serviceWorker.getRegistration('/webapp/'), 8000, 'getRegistration')
+    .then(function(reg) {
+      if (!reg) {
+        status('ไม่พบ service worker ที่ scope /webapp/');
+        throw new Error('ไม่มี SW registration ที่ scope /webapp/');
+      }
+      status('พบ SW แล้ว (' + (reg.active ? 'active' : 'ยังไม่ active') + ') กำลังขอ FCM token...');
+      /* sw.js ลงทะเบียนไว้แล้วใน page-template.html — ใช้ตัวเดิม ไม่ลงทะเบียนซ้ำ */
+      var messaging = firebase.messaging();
+      return _withTimeout(
+        messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg }),
+        12000,
+        'getToken'
+      );
+    })
+    .then(function(token) {
+      if (!token) {
+        status('ไม่ได้ token กลับมา (ค่าว่าง)');
+        return null;
+      }
+      status('ได้ token แล้ว กำลังบันทึกลง Firestore...');
+
+      /* ลบ token เก่าของ userId เดิมทิ้งก่อน (กันมี token ซ้ำหลายตัว → แจ้งเตือนซ้ำ)
+         เก็บไว้แค่ token ตัวล่าสุด (ตัวที่กำลังจะบันทึกนี้) */
+      return db.collection('fcmTokens').where('userId', '==', user.uid).get().then(function(snap) {
+        var batch = db.batch();
+        snap.forEach(function(doc) {
+          if (doc.id !== token) batch.delete(doc.ref);
+        });
+        return batch.commit();
+      }).then(function() {
+        return db.collection('fcmTokens').doc(token).set({
+          userId: user.uid,
+          email: (user.email || '').toLowerCase(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(function() {
+        status('บันทึก token สำเร็จ ✅ เปิดแจ้งเตือนแล้ว');
+        console.log('FCM token บันทึกแล้ว:', token);
+        return token;
       });
-      return batch.commit();
-    }).then(function() {
-      return db.collection('fcmTokens').doc(token).set({
-        userId: user.uid,
-        email: (user.email || '').toLowerCase(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }).then(function() {
-      console.log('FCM token บันทึกแล้ว');
-      return token;
+    })
+    .catch(function(err) {
+      status('ล้มเหลว: ' + (err && err.message ? err.message : err));
+      console.error('_requestAndSaveToken error:', err);
+      return null;
     });
-  }).catch(function(err) {
-    console.error('_requestAndSaveToken error:', err);
-    return null;
-  });
 }
 
 /* แสดงแจ้งเตือนตอนเปิดหน้าเว็บอยู่ (foreground) */

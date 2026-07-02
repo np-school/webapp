@@ -57,24 +57,52 @@ function onPushPermissionNeeded(user) {
   el.style.cssText =
     'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;' +
     'max-width:420px;margin:0 auto;background:#0d1b2a;color:#fff;' +
-    'padding:14px 14px;border-radius:16px;display:flex;align-items:center;' +
-    'gap:10px;box-shadow:0 10px 28px rgba(0,0,0,.3);';
+    'padding:14px 14px;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.3);';
   el.innerHTML =
-    '<i data-lucide="bell" style="width:20px;height:20px;flex-shrink:0;color:#facc15;"></i>' +
-    '<span style="flex:1;font-size:12.5px;font-weight:600;line-height:1.4;">เปิดการแจ้งเตือน เพื่อไม่พลาดคำขอ/อัปเดตสถานะการจอง</span>' +
-    '<button id="pushPermBtn" style="background:#fff;color:#0d1b2a;border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
-    '<button id="pushPermClose" style="background:transparent;border:none;color:#94a3b8;flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>';
+    '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<i data-lucide="bell" style="width:20px;height:20px;flex-shrink:0;color:#facc15;"></i>' +
+      '<span style="flex:1;font-size:12.5px;font-weight:600;line-height:1.4;">เปิดการแจ้งเตือน เพื่อไม่พลาดคำขอ/อัปเดตสถานะการจอง</span>' +
+      '<button id="pushPermBtn" style="background:#fff;color:#0d1b2a;border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
+      '<button id="pushPermClose" style="background:transparent;border:none;color:#94a3b8;flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
+    '</div>' +
+    '<div id="pushPermStatus" style="font-size:10.5px;color:#94a3b8;margin-top:6px;padding-left:30px;min-height:14px;"></div>';
   document.body.appendChild(el);
   if (window.lucide) lucide.createIcons();
 
-  document.getElementById('pushPermBtn').onclick = function() {
+  var btn      = document.getElementById('pushPermBtn');
+  var statusEl = document.getElementById('pushPermStatus');
+
+  btn.onclick = function() {
     /* เรียกตรงนี้ทันที ไม่มี await/then คั่นก่อนหน้า — เป็น user gesture จริง */
-    if (typeof requestPushPermission === 'function') {
-      requestPushPermission(user).finally(function() { el.remove(); });
-    } else {
-      el.remove();
-    }
+    if (typeof requestPushPermission !== 'function') { el.remove(); return; }
+
+    var settled = false;
+    btn.disabled = true;
+    btn.textContent = 'กำลังเปิด...';
+
+    requestPushPermission(user, function(text) {
+      if (statusEl) statusEl.textContent = text;
+    }).then(function(token) {
+      settled = true;
+      if (token) {
+        setTimeout(function() { el.remove(); }, 900); /* เห็นข้อความ "สำเร็จ" แป๊บนึงก่อนหาย */
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'ลองอีกครั้ง';
+      }
+    });
+
+    /* กันปุ่มค้างตลอดไปถ้า promise ไม่ยอม settle เลยจริงๆ (สำรองซ้อนจาก
+       timeout ที่มีอยู่แล้วใน firebase.js) */
+    setTimeout(function() {
+      if (!settled && document.body.contains(btn)) {
+        btn.disabled = false;
+        btn.textContent = 'ลองอีกครั้ง';
+        if (statusEl) statusEl.textContent = 'หมดเวลารอ — แตะ "ลองอีกครั้ง" หรือดู Console เพื่อดูรายละเอียด';
+      }
+    }, 16000);
   };
+
   document.getElementById('pushPermClose').onclick = function() { el.remove(); };
 }
 window.onPushPermissionNeeded = onPushPermissionNeeded;
