@@ -222,6 +222,38 @@
   </div>
 </div>
 
+<!-- Modal: แก้ไขข้อมูลนักเรียน -->
+<div class="modal-bg" id="modalEditStudent">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="pencil" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div><h3>แก้ไขข้อมูลนักเรียน</h3><p id="editStudentSub"></p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalEditStudent')"><i data-lucide="x"></i></button>
+    </div>
+    <input type="hidden" id="editStuDocId">
+    <div style="display:flex;gap:10px;">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">ชื่อ</label>
+        <input type="text" id="editStuFirstName" placeholder="เช่น สมชาย">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">นามสกุล</label>
+        <input type="text" id="editStuLastName" placeholder="เช่น ใจดี">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ห้อง</label>
+      <input type="text" id="editStuRoom" placeholder="เช่น 1">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('modalEditStudent')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEditStudent()">บันทึกการแก้ไข</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: เพิ่มไอแพด (manual) -->
 <div class="modal-bg" id="modalDevice">
   <div class="modal-box">
@@ -819,7 +851,8 @@ function renderStudentsPanel() {
           '<button class="filter-pill" onclick="filterStudents(\'ม.5\', this)">ม.5</button>' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.6\', this)">ม.6</button>' +
         '</div>' +
-        '<div style="display:flex;gap:8px;">' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button class="btn-secondary" onclick="promoteAcademicYear()"><i data-lucide="arrow-up-circle" style="width:16px;height:16px;"></i> เลื่อนชั้นปีการศึกษา</button>' +
           '<button class="btn-secondary" onclick="openModal(\'modalImportStudents\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
           '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
         '</div>' +
@@ -895,7 +928,10 @@ function renderStudentsTable() {
         '<td>' + esc2(s.grade) + '</td>' +
         '<td>' + esc2(s.room) + '</td>' +
         '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
-        '<td><button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
+        '<td style="white-space:nowrap;">' +
+          '<button class="btn-icon" title="แก้ไข" onclick="openEditStudent(\'' + s.id + '\')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button> ' +
+          '<button class="btn-icon danger" title="ลบ" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+        '</td>' +
       '</tr>'
     );
   }).join('');
@@ -930,6 +966,91 @@ function deleteStudent(id) {
   db.collection('ipad_students').doc(id).delete()
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+/* ── แก้ไขข้อมูลนักเรียน (ชื่อ / นามสกุล / ห้อง) ── */
+function openEditStudent(id) {
+  var s = STUDENTS.find(function(x) { return x.id === id; });
+  if (!s) { showToast('ไม่พบข้อมูลนักเรียนนี้', 'warn'); return; }
+  document.getElementById('editStuDocId').value = id;
+  document.getElementById('editStuFirstName').value = s.firstName || '';
+  document.getElementById('editStuLastName').value  = s.lastName  || '';
+  document.getElementById('editStuRoom').value      = s.room      || '';
+  document.getElementById('editStudentSub').textContent =
+    'เลขประจำตัว ' + s.studentId + ' — ชั้น ' + s.grade;
+  openModal('modalEditStudent');
+}
+
+function saveEditStudent() {
+  var id        = document.getElementById('editStuDocId').value;
+  var firstName = document.getElementById('editStuFirstName').value.trim();
+  var lastName  = document.getElementById('editStuLastName').value.trim();
+  var room      = document.getElementById('editStuRoom').value.trim();
+  if (!id) return;
+  if (!firstName || !lastName || !room) { showToast('กรอกข้อมูลให้ครบ', 'warn'); return; }
+  db.collection('ipad_students').doc(id).update({
+    firstName: firstName, lastName: lastName, room: room
+  }).then(function() {
+    showToast('บันทึกการแก้ไขสำเร็จ ✅');
+    closeModal('modalEditStudent');
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   เลื่อนชั้นปีการศึกษา
+   ม.4 → ม.5, ม.5 → ม.6, ม.6 → นำออกจากระบบ (จบการศึกษา)
+   ══════════════════════════════════════════════════════════════ */
+function promoteAcademicYear() {
+  if (!STUDENTS.length) { showToast('ไม่มีข้อมูลนักเรียนในระบบ', 'warn'); return; }
+
+  var countM4 = STUDENTS.filter(function(s) { return s.grade === 'ม.4'; }).length;
+  var countM5 = STUDENTS.filter(function(s) { return s.grade === 'ม.5'; }).length;
+  var countM6 = STUDENTS.filter(function(s) { return s.grade === 'ม.6'; }).length;
+
+  var msg = 'ยืนยันเลื่อนชั้นปีการศึกษาใหม่?\n\n' +
+    '• ม.4 (' + countM4 + ' คน) → เลื่อนเป็น ม.5\n' +
+    '• ม.5 (' + countM5 + ' คน) → เลื่อนเป็น ม.6\n' +
+    '• ม.6 (' + countM6 + ' คน) → นำรายชื่อออกจากระบบ (จบการศึกษา)\n\n' +
+    'การดำเนินการนี้ไม่สามารถย้อนกลับได้';
+  if (!confirm(msg)) return;
+  if (!confirm('ยืนยันอีกครั้ง: ต้องการเลื่อนชั้นทั้งโรงเรียนตอนนี้เลยใช่หรือไม่?')) return;
+
+  var toUpdate = STUDENTS.filter(function(s) { return s.grade === 'ม.4' || s.grade === 'ม.5'; });
+  var toRemove = STUDENTS.filter(function(s) { return s.grade === 'ม.6'; });
+  var ops = toUpdate.slice().concat(toRemove.slice());
+
+  if (!ops.length) { showToast('ไม่มีนักเรียนที่ต้องเลื่อนชั้น', 'warn'); return; }
+
+  /* Firestore batch จำกัด 500 operations ต่อ batch — แบ่งเป็นชุดละ 400 กันเผื่อ */
+  var CHUNK = 400;
+  var chunks = [];
+  for (var i = 0; i < ops.length; i += CHUNK) chunks.push(ops.slice(i, i + CHUNK));
+
+  showToast('กำลังเลื่อนชั้น...');
+
+  var chain = Promise.resolve();
+  chunks.forEach(function(chunk) {
+    chain = chain.then(function() {
+      var batch = db.batch();
+      chunk.forEach(function(s) {
+        var ref = db.collection('ipad_students').doc(s.id);
+        if (s.grade === 'ม.4') {
+          batch.update(ref, { grade: 'ม.5' });
+        } else if (s.grade === 'ม.5') {
+          batch.update(ref, { grade: 'ม.6' });
+        } else if (s.grade === 'ม.6') {
+          batch.delete(ref);
+        }
+      });
+      return batch.commit();
+    });
+  });
+
+  chain.then(function() {
+    showToast('เลื่อนชั้นปีการศึกษาสำเร็จ ✅ (ม.6 เดิม ' + countM6 + ' คนถูกนำออกจากระบบ)');
+  }).catch(function(e) {
+    showToast('เกิดข้อผิดพลาดระหว่างเลื่อนชั้น: ' + e.message, 'error');
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
