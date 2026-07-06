@@ -23,10 +23,12 @@
   <script src="shared/common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;margin-bottom:3px;}
-    .acc-badge.no{background:#f1f5f9;color:#94a3b8;}      /* เทา = ไม่ได้ยืมอุปกรณ์นี้ */
-    .acc-badge.yes{background:var(--green-light);color:var(--green);}  /* เขียว = กำลังถูกยืมอยู่ */
-    .acc-badge.warn{background:var(--red-light);color:var(--red);}     /* แดง = คืนไอแพดแล้วแต่อุปกรณ์นี้ยังไม่คืน/คืนไม่ครบ */
+    .acc-sq-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+    .acc-sq{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .acc-sq i{width:15px;height:15px;}
+    .acc-sq.no{background:#eef1f5;color:#a3adba;}      /* เทา = ไม่ได้ยืมอุปกรณ์นี้ */
+    .acc-sq.yes{background:var(--green-light);color:var(--green);}  /* เขียว = กำลังถูกยืมอยู่ */
+    .acc-sq.warn{background:var(--red-light);color:var(--red);}     /* แดง = คืนไอแพดแล้วแต่อุปกรณ์นี้ยังไม่คืน/คืนไม่ครบ */
     .ipad-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px;}
     .ipad-stats-grid .card{padding:14px 16px;}
     .ipad-stats-grid canvas{max-height:150px;}
@@ -463,26 +465,27 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมแยกเป็น badge 3 สถานะ:
+/* แสดงอุปกรณ์เสริมเป็นกล่องสี่เหลี่ยมไอคอน 3 สถานะ:
    - เทา (no)   = ไม่ได้ยืมอุปกรณ์ชิ้นนี้
    - เขียว (yes)  = กำลังถูกยืมอยู่ (เครื่องยังไม่คืน)
    - แดง (warn) = คืนเครื่องไอแพดแล้ว แต่อุปกรณ์เสริมชิ้นนี้ยังไม่คืน/คืนไม่ครบ
    เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส
    @param {boolean} deviceReturned - true เมื่อ b.status === 'in' (เครื่องคืนแล้ว) */
 var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
+var ACC_ICON  = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
 function accBadges(accessories, deviceReturned) {
   accessories = accessories || [];
-  var html = ACC_ORDER.map(function(name) {
+  var html = '<div class="acc-sq-wrap">' + ACC_ORDER.map(function(name) {
     var has = accessories.indexOf(name) !== -1;
     var cls = !has ? 'no' : (deviceReturned ? 'warn' : 'yes');
-    var icon = !has ? '✕' : (deviceReturned ? '⚠' : '✓');
-    return '<span class="acc-badge ' + cls + '">' + name + ' ' + icon + '</span>';
+    return '<span class="acc-sq ' + cls + '" title="' + name + (has ? (deviceReturned ? ' (ยังไม่คืน)' : ' (กำลังยืมอยู่)') : ' (ไม่ได้ยืม)') + '"><i data-lucide="' + ACC_ICON[name] + '"></i></span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
   if (other.length) {
     var clsOther = deviceReturned ? 'warn' : 'yes';
-    html += '<span class="acc-badge ' + clsOther + '">' + esc2(other.join(', ')) + '</span>';
+    html += '<span class="acc-sq ' + clsOther + '" title="' + esc2(other.join(', ')) + '"><i data-lucide="package-plus"></i></span>';
   }
+  html += '</div>';
   return html;
 }
 
@@ -1478,6 +1481,7 @@ function renderHistoryTable() {
       '</tr>'
     );
   }).join('');
+  lucide.createIcons();
 }
 
 function exportHistoryCsv() {
