@@ -33,6 +33,7 @@
     .ipad-search-row input[type=text]{max-width:340px;}
     .borrow-badge-yes{background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .borrow-badge-no{background:var(--red-light);color:var(--red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .badge-claim{background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
   </style>
 </head>
 <body>
@@ -113,6 +114,8 @@
     <div class="form-group">
       <label class="form-label">อุปกรณ์เสริมที่ยืมเพิ่ม (ถ้ามี)</label>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCharger" style="width:auto;"> หัวชาร์จ</label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCable" style="width:auto;"> สายชาร์จ</label>
         <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accPen" style="width:auto;"> ปากกา</label>
         <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCase" style="width:auto;"> เคส</label>
       </div>
@@ -127,6 +130,38 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="closeModal('modalBorrow')">ยกเลิก</button>
       <button class="btn-primary" onclick="saveBorrow()">บันทึกการยืม</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: คืนอุปกรณ์ -->
+<div class="modal-bg" id="modalReturn">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="corner-down-left" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div><h3>บันทึกการคืนอุปกรณ์</h3><p id="returnModalSub"></p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalReturn')"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">เลือกสิ่งที่คืนในครั้งนี้</label>
+      <div id="returnItemsList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
+      <p style="font-size:11.5px;color:#94a3b8;margin-top:6px;">รายการที่ไม่ได้ติ๊ก จะยังถือว่ายืมอยู่ต่อไป</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สภาพเครื่อง/อุปกรณ์ที่คืน</label>
+      <div style="display:flex;gap:16px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked style="width:auto;"> สภาพสมบูรณ์</label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" style="width:auto;"> ส่งเคลม</label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('modalReturn')">ยกเลิก</button>
+      <button class="btn-primary" onclick="confirmReturn()">บันทึกการคืน</button>
     </div>
   </div>
 </div>
@@ -380,14 +415,16 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย */
+/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย
+   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
+var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
 function accBadges(accessories) {
   accessories = accessories || [];
-  var hasPen  = accessories.indexOf('ปากกา') !== -1;
-  var hasCase = accessories.indexOf('เคส') !== -1;
-  var other = accessories.filter(function(a){ return a !== 'ปากกา' && a !== 'เคส'; });
-  var html = '<span class="acc-badge ' + (hasPen ? 'yes' : 'no') + '">ปากกา ' + (hasPen ? '✓' : '✕') + '</span>' +
-             '<span class="acc-badge ' + (hasCase ? 'yes' : 'no') + '">เคส ' + (hasCase ? '✓' : '✕') + '</span>';
+  var html = ACC_ORDER.map(function(name) {
+    var has = accessories.indexOf(name) !== -1;
+    return '<span class="acc-badge ' + (has ? 'yes' : 'no') + '">' + name + ' ' + (has ? '✓' : '✕') + '</span>';
+  }).join('');
+  var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
   if (other.length) html += '<span class="acc-badge yes">' + esc2(other.join(', ')) + '</span>';
   return html;
 }
@@ -436,7 +473,7 @@ function renderBorrowOutTable() {
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
-        '<td><button class="btn-secondary btn-sm" onclick="returnBorrow(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนแล้ว</button></td>' +
+        '<td><button class="btn-secondary btn-sm" onclick="openReturnModal(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนอุปกรณ์</button></td>' +
       '</tr>'
     );
   }).join('');
@@ -448,6 +485,8 @@ function openBorrowModal() {
   document.getElementById('borrowDeviceInput').value = '';
   document.getElementById('deviceInfoHint').textContent = '';
   document.getElementById('newStudentHint').style.display = 'none';
+  document.getElementById('accCharger').checked = false;
+  document.getElementById('accCable').checked = false;
   document.getElementById('accPen').checked = false;
   document.getElementById('accCase').checked = false;
   document.getElementById('accOther').value = '';
@@ -488,7 +527,7 @@ function refreshDeviceDatalist() {
   var dl = document.getElementById('deviceDatalist');
   var borrowedIds = {};
   BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
-  dl.innerHTML = DEVICES.filter(function(d) { return !borrowedIds[d.id]; }).map(function(d) {
+  dl.innerHTML = DEVICES.filter(function(d) { return !borrowedIds[d.id] && d.condition !== 'claim'; }).map(function(d) {
     return '<option value="' + esc2(d.serialNumber) + '">' + esc2(d.friendlyName) + '</option>';
   }).join('');
 }
@@ -536,6 +575,8 @@ function saveBorrow() {
   var serial       = document.getElementById('borrowDeviceInput').value.trim();
   var borrowDate   = document.getElementById('borrowDate').value;
   var accessories  = [];
+  if (document.getElementById('accCharger').checked) accessories.push('หัวชาร์จ');
+  if (document.getElementById('accCable').checked) accessories.push('สายชาร์จ');
   if (document.getElementById('accPen').checked) accessories.push('ปากกา');
   if (document.getElementById('accCase').checked) accessories.push('เคส');
   var other = document.getElementById('accOther').value.trim();
@@ -585,13 +626,57 @@ function saveBorrow() {
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
-function returnBorrow(id) {
-  if (!confirm('ยืนยันว่าคืนอุปกรณ์นี้แล้ว?')) return;
-  db.collection('ipad_borrows').doc(id).update({
-    status: 'in',
-    returnDate: todayStr()
+var currentReturnBorrowId = null;
+
+function openReturnModal(id) {
+  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
+  if (!b) return;
+  currentReturnBorrowId = id;
+  document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
+  var accs = b.accessories || [];
+  var html = '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
+    '<input type="checkbox" id="returnItemDevice" checked style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ')</label>';
+  html += accs.map(function(name) {
+    return '<label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;">' +
+      '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked style="width:auto;"> ' + esc2(name) + '</label>';
+  }).join('');
+  if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
+  document.getElementById('returnItemsList').innerHTML = html;
+  document.getElementById('returnConditionOk').checked = true;
+  openModal('modalReturn');
+}
+
+function confirmReturn() {
+  var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
+  if (!b) { closeModal('modalReturn'); return; }
+
+  var deviceReturned = document.getElementById('returnItemDevice').checked;
+  var condition = document.getElementById('returnConditionClaim').checked ? 'claim' : 'ok';
+  var checkedAccs = Array.prototype.map.call(
+    document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
+    function(el) { return el.value; }
+  );
+  var allAccs = b.accessories || [];
+  var remainingAccs = allAccs.filter(function(a) { return checkedAccs.indexOf(a) === -1; });
+
+  if (!deviceReturned && !checkedAccs.length) {
+    showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
+  }
+
+  var updates = { accessories: remainingAccs };
+  if (deviceReturned) {
+    updates.status = 'in';
+    updates.returnDate = todayStr();
+    updates.returnCondition = condition;
+  }
+
+  db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
+    if (deviceReturned) {
+      return db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition });
+    }
   }).then(function() {
-    showToast('บันทึกการคืนแล้ว ✅');
+    showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
+    closeModal('modalReturn');
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -819,12 +904,15 @@ function renderDevicesTable() {
   }
   tbody.innerHTML = filtered.map(function(d) {
     var out = borrowedIds[d.id];
+    var isClaim = d.condition === 'claim' && !out;
+    var statusBadge = out ? '<span class="badge-out">ถูกยืมอยู่</span>' :
+      (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="badge-in">ว่าง</span>');
     return (
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
         '<td>' + esc2(d.assetNumber) + '</td>' +
         '<td>' + esc2(d.serialNumber) + '</td>' +
-        '<td>' + (out ? '<span class="badge-out">ถูกยืมอยู่</span>' : '<span class="badge-in">ว่าง</span>') + '</td>' +
+        '<td>' + statusBadge + '</td>' +
         '<td><button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
       '</tr>'
     );
@@ -1130,7 +1218,7 @@ function renderHistoryTable() {
         '<td>' + accBadges(b.accessories) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td>' + (b.status === 'in' ? fmtDate(b.returnDate) : '-') + '</td>' +
-        '<td>' + (b.status === 'in' ? '<span class="badge-in">คืนแล้ว</span>' : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
+        '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
   }).join('');
