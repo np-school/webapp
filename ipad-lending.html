@@ -34,6 +34,18 @@
     .borrow-badge-yes{background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .borrow-badge-no{background:var(--red-light);color:var(--red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .badge-claim{background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    /* ── Custom autocomplete dropdown (แทน <datalist> ซึ่ง Safari/iPad/iPhone ไม่รองรับการแสดงผล) ── */
+    .ac-wrap{position:relative;}
+    .ac-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;max-height:230px;overflow-y:auto;
+      background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.14);
+      z-index:200;display:none;}
+    .ac-list.show{display:block;}
+    .ac-item{padding:10px 12px;cursor:pointer;font-size:13.5px;color:var(--text,#1e293b);
+      display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #f1f5f9;}
+    .ac-item:last-child{border-bottom:none;}
+    .ac-item:hover,.ac-item.ac-active{background:#eff6ff;}
+    .ac-item .ac-sub{font-size:11.5px;color:#94a3b8;white-space:nowrap;flex-shrink:0;}
+    .ac-empty{padding:11px 12px;font-size:12.5px;color:#94a3b8;}
   </style>
 </head>
 <body>
@@ -84,9 +96,10 @@
 
     <div class="form-group">
       <label class="form-label" id="borrowStudentLabel">นักเรียน</label>
-      <input type="text" id="borrowStudentInput" list="studentDatalist" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." oninput="onBorrowStudentInput()">
-      <datalist id="studentDatalist"></datalist>
-      <datalist id="staffDatalist"></datalist>
+      <div class="ac-wrap">
+        <input type="text" id="borrowStudentInput" autocomplete="off" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." oninput="onBorrowStudentInput()" onfocus="onBorrowStudentInput()">
+        <div class="ac-list" id="borrowStudentList"></div>
+      </div>
       <div id="newStudentHint" style="display:none;margin-top:8px;padding:10px 12px;background:#eff6ff;border-radius:10px;font-size:12.5px;color:#1e40af;">
         ไม่พบข้อมูลนี้ในระบบ — กรอกข้อมูลเพื่อเพิ่มนักเรียนใหม่
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
@@ -106,8 +119,10 @@
 
     <div class="form-group">
       <label class="form-label">Serial Number เครื่อง</label>
-      <input type="text" id="borrowDeviceInput" list="deviceDatalist" placeholder="พิมพ์หรือเลือก Serial Number..." oninput="onBorrowDeviceInput()">
-      <datalist id="deviceDatalist"></datalist>
+      <div class="ac-wrap">
+        <input type="text" id="borrowDeviceInput" autocomplete="off" placeholder="พิมพ์หรือเลือก Serial Number..." oninput="onBorrowDeviceInput()" onfocus="onBorrowDeviceInput()">
+        <div class="ac-list" id="borrowDeviceList"></div>
+      </div>
       <p id="deviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
     </div>
 
@@ -503,10 +518,8 @@ function openBorrowModal() {
   document.getElementById('borrowerTypeStudent').checked = true;
   document.getElementById('borrowerTypeStudent').disabled = false;
   document.getElementById('borrowerTypeStaff').disabled = false;
+  editingBorrowOriginalSerial = null;
   onBorrowerTypeChange();
-  refreshStudentDatalist();
-  refreshStaffDatalist();
-  refreshDeviceDatalist();
   openModal('modalBorrow');
 }
 
@@ -528,12 +541,8 @@ function openEditBorrowModal(id) {
   document.getElementById('borrowerTypeStaff').disabled = true;
   onBorrowerTypeChange();
 
-  refreshStudentDatalist();
-  refreshStaffDatalist();
-  refreshDeviceDatalist();
-  /* เติม option เครื่องปัจจุบันกลับเข้าไปใน datalist ด้วย เผื่อถูกกรองออกเพราะถือว่า "ถูกยืมอยู่แล้ว" (คือรายการนี้เอง) */
-  var dl = document.getElementById('deviceDatalist');
-  dl.innerHTML += '<option value="' + esc2(b.serialNumber) + '">' + esc2(b.friendlyName) + '</option>';
+  /* เก็บ serial ของเครื่องเดิมไว้ เผื่อถูกกรองออกจากลิสต์เพราะถือว่า "ถูกยืมอยู่แล้ว" (คือรายการนี้เอง) */
+  editingBorrowOriginalSerial = b.serialNumber;
 
   document.getElementById('borrowStudentInput').value = b.studentName;
   document.getElementById('borrowDeviceInput').value = b.serialNumber;
@@ -552,46 +561,79 @@ function openEditBorrowModal(id) {
 
 function onBorrowerTypeChange() {
   var isStaff = document.getElementById('borrowerTypeStaff').checked;
-  document.getElementById('borrowStudentInput').setAttribute('list', isStaff ? 'staffDatalist' : 'studentDatalist');
   document.getElementById('borrowStudentInput').placeholder = isStaff ? 'พิมพ์ชื่อ-นามสกุลบุคลากร...' : 'พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน...';
   document.getElementById('borrowStudentLabel').textContent = isStaff ? 'บุคลากร' : 'นักเรียน';
   document.getElementById('borrowStudentInput').value = '';
   document.getElementById('newStudentHint').style.display = 'none';
+  hideAcList('borrowStudentList');
 }
 
 function staffLabel(s) { return (s.name || ''); }
 
-function refreshStudentDatalist() {
-  var dl = document.getElementById('studentDatalist');
-  dl.innerHTML = STUDENTS.map(function(s) {
-    return '<option value="' + esc2(studentLabel(s)) + '">' + esc2(s.grade) + '/' + esc2(s.room) + '</option>';
-  }).join('');
+/* Custom autocomplete dropdown: แทนที่ input[list] + datalist เดิม
+   เพราะ Safari บน iPad/iPhone ไม่แสดง dropdown ของ datalist เลย
+   ทำให้พิมพ์ค้นหาแล้วไม่เห็นรายชื่อ ใช้ dropdown ที่สร้างเองแทน */
+var editingBorrowOriginalSerial = null;
+
+function renderAcList(listId, items) {
+  var list = document.getElementById(listId);
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = '<div class="ac-empty">ไม่พบรายการที่ตรงกัน</div>';
+  } else {
+    list.innerHTML = items.slice(0, 50).map(function(it) {
+      return '<div class="ac-item" onmousedown="event.preventDefault();' + it.onPick + '">' +
+        '<span>' + esc2(it.label) + '</span>' +
+        (it.sub ? '<span class="ac-sub">' + esc2(it.sub) + '</span>' : '') +
+        '</div>';
+    }).join('');
+  }
+  list.classList.add('show');
 }
-function refreshStaffDatalist() {
-  var dl = document.getElementById('staffDatalist');
-  if (!dl) return;
-  dl.innerHTML = STAFF.map(function(s) {
-    return '<option value="' + esc2(staffLabel(s)) + '">' + esc2(s.position || '') + '</option>';
-  }).join('');
+function hideAcList(listId) {
+  var list = document.getElementById(listId);
+  if (list) list.classList.remove('show');
 }
-function refreshDeviceDatalist() {
-  var dl = document.getElementById('deviceDatalist');
-  var borrowedIds = {};
-  BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
-  dl.innerHTML = DEVICES.filter(function(d) { return !borrowedIds[d.id] && d.condition !== 'claim'; }).map(function(d) {
-    return '<option value="' + esc2(d.serialNumber) + '">' + esc2(d.friendlyName) + '</option>';
-  }).join('');
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.ac-list.show').forEach(function(list) {
+    var wrap = list.closest('.ac-wrap');
+    if (wrap && !wrap.contains(e.target)) list.classList.remove('show');
+  });
+});
+
+function pickBorrowStudent(value) {
+  document.getElementById('borrowStudentInput').value = value;
+  hideAcList('borrowStudentList');
+  onBorrowStudentInput();
+}
+function pickBorrowDevice(value) {
+  document.getElementById('borrowDeviceInput').value = value;
+  hideAcList('borrowDeviceList');
+  onBorrowDeviceInput();
 }
 
 function onBorrowStudentInput() {
   var isStaff = document.getElementById('borrowerTypeStaff').checked;
   var v = document.getElementById('borrowStudentInput').value.trim();
+  var q = v.toLowerCase();
+
   if (isStaff) {
     document.getElementById('newStudentHint').style.display = 'none'; /* บุคลากรต้องมีอยู่แล้วในระบบ ไม่เปิดให้เพิ่มจากตรงนี้ */
+    var staffMatches = STAFF.filter(function(s) { return staffLabel(s).toLowerCase().indexOf(q) !== -1; });
+    renderAcList('borrowStudentList', staffMatches.map(function(s) {
+      return { label: staffLabel(s), sub: s.position || '', onPick: "pickBorrowStudent('" + staffLabel(s).replace(/'/g, "\\'") + "')" };
+    }));
     return;
   }
+
   var match = STUDENTS.some(function(s) { return studentLabel(s) === v; });
   document.getElementById('newStudentHint').style.display = (v && !match) ? 'block' : 'none';
+
+  var studentMatches = STUDENTS.filter(function(s) { return studentLabel(s).toLowerCase().indexOf(q) !== -1; });
+  renderAcList('borrowStudentList', studentMatches.map(function(s) {
+    var lbl = studentLabel(s);
+    return { label: lbl, sub: s.grade + '/' + s.room, onPick: "pickBorrowStudent('" + lbl.replace(/'/g, "\\'") + "')" };
+  }));
 }
 
 function addNewStudentInline() {
@@ -613,6 +655,20 @@ function addNewStudentInline() {
 
 function onBorrowDeviceInput() {
   var v = document.getElementById('borrowDeviceInput').value.trim();
+  var q = v.toLowerCase();
+
+  var borrowedIds = {};
+  BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
+  var available = DEVICES.filter(function(x) {
+    return x.condition !== 'claim' && (!borrowedIds[x.id] || x.serialNumber === editingBorrowOriginalSerial);
+  });
+  var matches = available.filter(function(x) {
+    return (x.serialNumber || '').toLowerCase().indexOf(q) !== -1 || (x.friendlyName || '').toLowerCase().indexOf(q) !== -1;
+  });
+  renderAcList('borrowDeviceList', matches.map(function(x) {
+    return { label: x.serialNumber, sub: x.friendlyName, onPick: "pickBorrowDevice('" + x.serialNumber.replace(/'/g, "\\'") + "')" };
+  }));
+
   var d = DEVICES.find(function(x) { return x.serialNumber === v; });
   var hint = document.getElementById('deviceInfoHint');
   if (!d) { hint.textContent = v ? 'ไม่พบ Serial Number นี้ในระบบ' : ''; return; }
@@ -926,7 +982,6 @@ function loadStaff() {
   db.collection('staff').orderBy('name').onSnapshot(function(snap) {
     STAFF = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStaffTable();
-    refreshStaffDatalist();
     renderStatsCharts();
   }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
 }
@@ -1324,7 +1379,6 @@ function loadStudents() {
   db.collection('ipad_students').onSnapshot(function(snap) {
     STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStudentsTable();
-    refreshStudentDatalist();
   }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -1332,7 +1386,6 @@ function loadDevices() {
   db.collection('ipad_devices').onSnapshot(function(snap) {
     DEVICES = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderDevicesTable();
-    refreshDeviceDatalist();
     var header = document.querySelector('#subpanel-devices .section-divider');
     if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการไอแพดทั้งหมด (' + DEVICES.length + ')';
     renderStatsCharts();
@@ -1346,7 +1399,6 @@ function loadBorrows() {
     BORROWS_OUT = BORROWS_ALL.filter(function(b) { return b.status === 'out'; });
     renderBorrowOutTable();
     renderHistoryTable();
-    refreshDeviceDatalist();
     renderDevicesTable();
     renderStudentsTable();
     renderStaffTable();
