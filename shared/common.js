@@ -209,6 +209,7 @@ function checkAdminAccess(email) {
       _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
       _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
+      _toggleAdminItem('adminMenuItem-ipad',       isSA || !!p.ipad);
 
       /* SuperAdmin-only */
       if (isSA) {
@@ -546,6 +547,7 @@ var ADMIN_GROUP_MENU = [
     items: [
       { id: 'adminMenuItem-booking',    label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'room-admin.html' },
       { id: 'adminMenuItem-foodcourt',  label: 'บัญชีรายได้ Food Court',       icon: 'utensils',     href: 'foodcourt-admin.html' },
+      { id: 'adminMenuItem-ipad',       label: 'ระบบยืม-คืนไอแพด',            icon: 'tablet-smartphone', href: 'ipad-lending.html' },
     ],
   },
 ];

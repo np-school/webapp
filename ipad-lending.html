@@ -62,10 +62,15 @@
 
     <div class="form-group">
       <label class="form-label">นักเรียน</label>
-      <input type="text" id="borrowStudentInput" list="studentDatalist" placeholder="พิมพ์ชื่อนักเรียน..." oninput="onBorrowStudentInput()">
+      <input type="text" id="borrowStudentInput" list="studentDatalist" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." oninput="onBorrowStudentInput()">
       <datalist id="studentDatalist"></datalist>
       <div id="newStudentHint" style="display:none;margin-top:8px;padding:10px 12px;background:#eff6ff;border-radius:10px;font-size:12.5px;color:#1e40af;">
-        ไม่พบชื่อนี้ในระบบ —
+        ไม่พบข้อมูลนี้ในระบบ — กรอกข้อมูลเพื่อเพิ่มนักเรียนใหม่
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <input type="text" id="newStudentId" placeholder="เลขประจำตัว" style="width:auto;flex:1;min-width:100px;">
+          <input type="text" id="newStudentFirstName" placeholder="ชื่อ" style="width:auto;flex:1;min-width:100px;">
+          <input type="text" id="newStudentLastName" placeholder="นามสกุล" style="width:auto;flex:1;min-width:100px;">
+        </div>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
           <select id="newStudentGrade" style="width:auto;flex:1;min-width:90px;">
             <option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option>
@@ -115,8 +120,18 @@
       <button class="modal-close" onclick="closeModal('modalStudent')"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
-      <label class="form-label">ชื่อ-นามสกุล</label>
-      <input type="text" id="stuName" placeholder="เช่น เด็กชายสมชาย ใจดี">
+      <label class="form-label">เลขประจำตัวนักเรียน</label>
+      <input type="text" id="stuId" placeholder="เช่น 12345">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">ชื่อ</label>
+        <input type="text" id="stuFirstName" placeholder="เช่น สมชาย">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">นามสกุล</label>
+        <input type="text" id="stuLastName" placeholder="เช่น ใจดี">
+      </div>
     </div>
     <div style="display:flex;gap:10px;">
       <div class="form-group" style="flex:1;">
@@ -195,7 +210,7 @@ buildPage({
   navSubtitle:  'ระบบยืม-คืนไอแพด',
   navTheme:     'dark',
   activePage:   'ipad-lending',
-  requireAdmin: false,     /* ✏️ เปลี่ยนเป็น 'staff' หรือ permission key อื่นถ้าต้องการจำกัดสิทธิ์ */
+  requireAdmin: 'ipad',    /* เฉพาะแอดมินที่มีสิทธิ์ permissions.ipad == true (หรือ SuperAdmin) เท่านั้นที่เข้าได้ */
 
   onAuth: function(user, contentEl) {
     currentUser = user;
@@ -267,6 +282,13 @@ function fmtDate(v) {
   var d = (v.toDate) ? v.toDate() : new Date(v);
   return d.toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' });
 }
+/* label ที่ใช้ค้นหา/แสดงในช่องเลือกนักเรียน เช่น "12345 - สมชาย ใจดี" */
+function studentLabel(s) {
+  return s.studentId + ' - ' + s.firstName + ' ' + s.lastName;
+}
+function studentFullName(s) {
+  return s.firstName + ' ' + s.lastName;
+}
 
 /* ══════════════════════════════════════════════════════════════
    PANEL 1: ยืม-คืนอุปกรณ์
@@ -327,7 +349,7 @@ function openBorrowModal() {
 function refreshStudentDatalist() {
   var dl = document.getElementById('studentDatalist');
   dl.innerHTML = STUDENTS.map(function(s) {
-    return '<option value="' + esc2(s.name) + '">' + esc2(s.grade) + '/' + esc2(s.room) + '</option>';
+    return '<option value="' + esc2(studentLabel(s)) + '">' + esc2(s.grade) + '/' + esc2(s.room) + '</option>';
   }).join('');
 }
 function refreshDeviceDatalist() {
@@ -341,21 +363,24 @@ function refreshDeviceDatalist() {
 
 function onBorrowStudentInput() {
   var v = document.getElementById('borrowStudentInput').value.trim();
-  var match = STUDENTS.some(function(s) { return s.name === v; });
+  var match = STUDENTS.some(function(s) { return studentLabel(s) === v; });
   document.getElementById('newStudentHint').style.display = (v && !match) ? 'block' : 'none';
 }
 
 function addNewStudentInline() {
-  var name  = document.getElementById('borrowStudentInput').value.trim();
-  var grade = document.getElementById('newStudentGrade').value;
-  var room  = document.getElementById('newStudentRoom').value.trim();
-  if (!name || !room) { showToast('กรอกชื่อและห้องให้ครบ', 'warn'); return; }
+  var studentId = document.getElementById('newStudentId').value.trim();
+  var firstName = document.getElementById('newStudentFirstName').value.trim();
+  var lastName  = document.getElementById('newStudentLastName').value.trim();
+  var grade     = document.getElementById('newStudentGrade').value;
+  var room      = document.getElementById('newStudentRoom').value.trim();
+  if (!studentId || !firstName || !lastName || !room) { showToast('กรอกข้อมูลนักเรียนให้ครบ', 'warn'); return; }
   db.collection('ipad_students').add({
-    name: name, grade: grade, room: room,
+    studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
+  }).then(function(ref) {
     showToast('เพิ่มนักเรียนแล้ว ✅');
     document.getElementById('newStudentHint').style.display = 'none';
+    document.getElementById('borrowStudentInput').value = studentId + ' - ' + firstName + ' ' + lastName;
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -380,7 +405,7 @@ function saveBorrow() {
 
   if (!studentName || !serial || !borrowDate) { showToast('กรอกข้อมูลให้ครบก่อนบันทึก', 'warn'); return; }
 
-  var student = STUDENTS.find(function(s) { return s.name === studentName; });
+  var student = STUDENTS.find(function(s) { return studentLabel(s) === studentName; });
   var device  = DEVICES.find(function(d) { return d.serialNumber === serial; });
   if (!student) { showToast('ไม่พบนักเรียนนี้ในระบบ กรุณาเพิ่มนักเรียนก่อน', 'warn'); return; }
   if (!device)  { showToast('ไม่พบ Serial Number นี้ในระบบ', 'warn'); return; }
@@ -389,7 +414,7 @@ function saveBorrow() {
   }
 
   db.collection('ipad_borrows').add({
-    studentId: student.id, studentName: student.name, grade: student.grade, room: student.room,
+    studentId: student.id, studentIdNum: student.studentId, studentName: studentFullName(student), grade: student.grade, room: student.room,
     deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
     accessories: accessories,
     borrowDate: borrowDate,
@@ -429,9 +454,9 @@ function renderStudentsPanel() {
         '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
       '</div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>ชื่อ-นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th></th>' +
+        '<th>เลขประจำตัว</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th></th>' +
       '</tr></thead><tbody id="studentsTbody">' +
-        '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -448,15 +473,17 @@ function renderStudentsTable() {
   var tbody = document.getElementById('studentsTbody');
   if (!tbody) return;
   var list = STUDENTS.filter(function(s) { return studentFilterGrade === 'all' || s.grade === studentFilterGrade; })
-    .sort(function(a,b) { return (a.grade+a.room+a.name).localeCompare(b.grade+b.room+b.name, 'th'); });
+    .sort(function(a,b) { return (a.grade+a.room+a.studentId).localeCompare(b.grade+b.room+b.studentId, 'th'); });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีข้อมูลนักเรียน</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีข้อมูลนักเรียน</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(s) {
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
+        '<td>' + esc2(s.studentId) + '</td>' +
+        '<td style="font-weight:700;">' + esc2(s.firstName) + '</td>' +
+        '<td style="font-weight:700;">' + esc2(s.lastName) + '</td>' +
         '<td>' + esc2(s.grade) + '</td>' +
         '<td>' + esc2(s.room) + '</td>' +
         '<td><button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
@@ -467,17 +494,24 @@ function renderStudentsTable() {
 }
 
 function saveStudent() {
-  var name  = document.getElementById('stuName').value.trim();
-  var grade = document.getElementById('stuGrade').value;
-  var room  = document.getElementById('stuRoom').value.trim();
-  if (!name || !room) { showToast('กรอกข้อมูลให้ครบ', 'warn'); return; }
+  var studentId = document.getElementById('stuId').value.trim();
+  var firstName = document.getElementById('stuFirstName').value.trim();
+  var lastName  = document.getElementById('stuLastName').value.trim();
+  var grade     = document.getElementById('stuGrade').value;
+  var room      = document.getElementById('stuRoom').value.trim();
+  if (!studentId || !firstName || !lastName || !room) { showToast('กรอกข้อมูลให้ครบ', 'warn'); return; }
+  if (STUDENTS.some(function(s) { return s.studentId === studentId; })) {
+    showToast('เลขประจำตัวนี้มีอยู่แล้วในระบบ', 'warn'); return;
+  }
   db.collection('ipad_students').add({
-    name: name, grade: grade, room: room,
+    studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
     showToast('เพิ่มนักเรียนสำเร็จ ✅');
     closeModal('modalStudent');
-    document.getElementById('stuName').value = '';
+    document.getElementById('stuId').value = '';
+    document.getElementById('stuFirstName').value = '';
+    document.getElementById('stuLastName').value = '';
     document.getElementById('stuRoom').value = '';
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
@@ -679,7 +713,7 @@ function renderHistoryPanel() {
   return (
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<input type="text" id="historySearch" placeholder="ค้นหาชื่อนักเรียน / Serial Number..." style="max-width:320px;" oninput="renderHistoryTable()">' +
+        '<input type="text" id="historySearch" placeholder="ค้นหาเลขประจำตัว / ชื่อนักเรียน / Serial Number..." style="max-width:340px;" oninput="renderHistoryTable()">' +
         '<button class="btn-secondary" onclick="exportHistoryCsv()"><i data-lucide="download" style="width:16px;height:16px;"></i> ส่งออกเป็น CSV</button>' +
       '</div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
@@ -697,7 +731,8 @@ function renderHistoryTable() {
   var q = (document.getElementById('historySearch') ? document.getElementById('historySearch').value : '').trim().toLowerCase();
   var list = BORROWS_ALL.filter(function(b) {
     if (!q) return true;
-    return (b.studentName || '').toLowerCase().indexOf(q) !== -1 ||
+    return (b.studentName  || '').toLowerCase().indexOf(q) !== -1 ||
+           (b.studentIdNum || '').toLowerCase().indexOf(q) !== -1 ||
            (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
   });
   if (!list.length) {
@@ -722,12 +757,12 @@ function renderHistoryTable() {
 
 function exportHistoryCsv() {
   if (!BORROWS_ALL.length) { showToast('ยังไม่มีข้อมูลให้ส่งออก', 'warn'); return; }
-  var header = ['ชื่อนักเรียน','ชั้น','ห้อง','Friendly Name','Serial Number','อุปกรณ์เสริม','วันที่ยืม','วันที่คืน','สถานะ'];
+  var header = ['เลขประจำตัว','ชื่อนักเรียน','ชั้น','ห้อง','Friendly Name','Serial Number','อุปกรณ์เสริม','วันที่ยืม','วันที่คืน','สถานะ'];
   function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
   var lines = [header.map(csvCell).join(',')];
   BORROWS_ALL.forEach(function(b) {
     lines.push([
-      b.studentName, b.grade, b.room, b.friendlyName, b.serialNumber,
+      b.studentIdNum, b.studentName, b.grade, b.room, b.friendlyName, b.serialNumber,
       (b.accessories || []).join('; '), b.borrowDate || '',
       b.status === 'in' ? (b.returnDate || '') : '',
       b.status === 'in' ? 'คืนแล้ว' : 'ยังไม่คืน'
