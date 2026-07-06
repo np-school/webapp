@@ -200,6 +200,30 @@
   </div>
 </div>
 
+<!-- Modal: นำเข้าไฟล์ CSV นักเรียน -->
+<div class="modal-bg" id="modalImportStudents">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div><h3>นำเข้ารายชื่อนักเรียน (CSV)</h3><p>คอลัมน์ที่ต้องมี: เลขประจำตัว, ชื่อ, นามสกุล, ชั้น, ห้อง</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalImportStudents')"><i data-lucide="x"></i></button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <button type="button" class="btn-secondary btn-sm" onclick="downloadStudentCsvTemplate()"><i data-lucide="file-down" style="width:14px;height:14px;"></i> ดาวน์โหลดไฟล์ตัวอย่าง</button>
+    </div>
+    <div class="form-group">
+      <input type="file" id="csvStudentFileInput" accept=".csv" onchange="handleStudentCsvFile(event)">
+    </div>
+    <div id="importStudentPreview" style="font-size:13px;color:#64748b;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn-secondary" onclick="closeModal('modalImportStudents')">ยกเลิก</button>
+      <button class="btn-primary" id="importStudentConfirmBtn" onclick="confirmStudentImport()" disabled>นำเข้าข้อมูล</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 /* ══════════════════════════════════════════════════════════════
@@ -234,6 +258,7 @@ var DEVICES      = [];   /* {id, friendlyName, assetNumber, serialNumber, status
 var BORROWS_OUT  = [];   /* currently borrowed (status = 'out') */
 var BORROWS_ALL  = [];   /* full history */
 var parsedCsvRows = [];
+var parsedStudentCsvRows = [];
 var studentFilterGrade = 'all';
 
 /* ══════════════════════════════════════════════════════════════
@@ -451,7 +476,10 @@ function renderStudentsPanel() {
           '<button class="filter-pill" onclick="filterStudents(\'ม.5\', this)">ม.5</button>' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.6\', this)">ม.6</button>' +
         '</div>' +
-        '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn-secondary" onclick="openModal(\'modalImportStudents\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
+          '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
+        '</div>' +
       '</div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>เลขประจำตัว</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th></th>' +
@@ -700,6 +728,125 @@ function confirmImport() {
     document.getElementById('csvFileInput').value = '';
     btn.textContent = 'นำเข้าข้อมูล'; btn.disabled = true;
     parsedCsvRows = [];
+  }).catch(function(e) {
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    btn.textContent = 'นำเข้าข้อมูล'; btn.disabled = false;
+  });
+}
+
+/* ── CSV Import: นักเรียน (เลขประจำตัว / ชื่อ / นามสกุล / ชั้น / ห้อง) ── */
+function _findCol(header, aliases) {
+  for (var i = 0; i < header.length; i++) {
+    var h = header[i].trim().toLowerCase();
+    for (var j = 0; j < aliases.length; j++) {
+      if (h === aliases[j]) return i;
+    }
+  }
+  return -1;
+}
+function _normalizeGrade(v) {
+  v = (v || '').toString().trim().replace(/\s+/g, '');
+  if (/^ม\.?4$/.test(v) || v === '4') return 'ม.4';
+  if (/^ม\.?5$/.test(v) || v === '5') return 'ม.5';
+  if (/^ม\.?6$/.test(v) || v === '6') return 'ม.6';
+  return v;
+}
+
+function downloadStudentCsvTemplate() {
+  var csvContent = '\uFEFF' + 'เลขประจำตัว,ชื่อ,นามสกุล,ชั้น,ห้อง\r\n' + '12345,สมชาย,ใจดี,ม.4,1\r\n';
+  var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'student-import-template.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleStudentCsvFile(evt) {
+  var file = evt.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var rows = parseCsv(e.target.result);
+    if (!rows.length) { showToast('อ่านไฟล์ไม่สำเร็จ', 'error'); return; }
+    var header = rows[0];
+    var idxId    = _findCol(header, ['เลขประจำตัว','เลขประจำตัวนักเรียน','studentid','student_id','id']);
+    var idxFirst = _findCol(header, ['ชื่อ','firstname','first_name','ชื่อจริง']);
+    var idxLast  = _findCol(header, ['นามสกุล','lastname','last_name']);
+    var idxGrade = _findCol(header, ['ชั้น','grade','class']);
+    var idxRoom  = _findCol(header, ['ห้อง','room']);
+
+    if (idxId === -1 || idxFirst === -1 || idxLast === -1 || idxGrade === -1 || idxRoom === -1) {
+      showToast('ไม่พบคอลัมน์ครบตามที่ต้องการ (เลขประจำตัว/ชื่อ/นามสกุล/ชั้น/ห้อง) — ลองดาวน์โหลดไฟล์ตัวอย่าง', 'error');
+      return;
+    }
+
+    var existingIds = {};
+    STUDENTS.forEach(function(s) { existingIds[s.studentId] = true; });
+
+    parsedStudentCsvRows = [];
+    var seen = {};
+    var skippedInvalidGrade = 0;
+    for (var i = 1; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r || !r.length) continue;
+      var sid = (r[idxId] || '').trim();
+      if (!sid || seen[sid]) continue;
+      var grade = _normalizeGrade(r[idxGrade]);
+      if (['ม.4','ม.5','ม.6'].indexOf(grade) === -1) { skippedInvalidGrade++; continue; }
+      seen[sid] = true;
+      parsedStudentCsvRows.push({
+        studentId: sid,
+        firstName: (r[idxFirst] || '').trim(),
+        lastName:  (r[idxLast]  || '').trim(),
+        grade: grade,
+        room: (r[idxRoom] || '').trim(),
+        isNew: !existingIds[sid]
+      });
+    }
+    var newCount = parsedStudentCsvRows.filter(function(x) { return x.isNew; }).length;
+    document.getElementById('importStudentPreview').innerHTML =
+      'พบนักเรียนทั้งหมด <b>' + parsedStudentCsvRows.length + '</b> รายการในไฟล์ — ' +
+      '<span style="color:#15803d;font-weight:700;">' + newCount + ' รายการใหม่</span> จะถูกเพิ่มเข้าระบบ ' +
+      '(รายการที่มีเลขประจำตัวซ้ำกับที่มีอยู่แล้วจะถูกข้าม' +
+      (skippedInvalidGrade ? ', ' + skippedInvalidGrade + ' แถวถูกข้ามเพราะชั้นไม่ถูกต้อง' : '') + ')';
+    document.getElementById('importStudentConfirmBtn').disabled = (newCount === 0);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function confirmStudentImport() {
+  var toAdd = parsedStudentCsvRows.filter(function(x) { return x.isNew; });
+  if (!toAdd.length) return;
+  var btn = document.getElementById('importStudentConfirmBtn');
+  btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
+
+  var batchSize = 400;
+  var batches = [];
+  for (var i = 0; i < toAdd.length; i += batchSize) batches.push(toAdd.slice(i, i + batchSize));
+
+  var chain = Promise.resolve();
+  batches.forEach(function(chunk) {
+    chain = chain.then(function() {
+      var batch = db.batch();
+      chunk.forEach(function(s) {
+        var ref = db.collection('ipad_students').doc();
+        batch.set(ref, {
+          studentId: s.studentId, firstName: s.firstName, lastName: s.lastName, grade: s.grade, room: s.room,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      return batch.commit();
+    });
+  });
+
+  chain.then(function() {
+    showToast('นำเข้ารายชื่อนักเรียนสำเร็จ ✅ (' + toAdd.length + ' รายการ)');
+    closeModal('modalImportStudents');
+    document.getElementById('importStudentPreview').innerHTML = '';
+    document.getElementById('csvStudentFileInput').value = '';
+    btn.textContent = 'นำเข้าข้อมูล'; btn.disabled = true;
+    parsedStudentCsvRows = [];
   }).catch(function(e) {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
     btn.textContent = 'นำเข้าข้อมูล'; btn.disabled = false;
