@@ -69,7 +69,7 @@
     <div class="modal-header">
       <div class="modal-title-group">
         <div class="modal-title-icon"><i data-lucide="tablet-smartphone" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3>บันทึกการยืมไอแพด</h3><p>เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
+        <div><h3 id="borrowModalTitle">บันทึกการยืมไอแพด</h3><p id="borrowModalSub">เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalBorrow')"><i data-lucide="x"></i></button>
     </div>
@@ -129,7 +129,7 @@
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="closeModal('modalBorrow')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveBorrow()">บันทึกการยืม</button>
+      <button class="btn-primary" id="borrowSaveBtn" onclick="saveBorrow()">บันทึกการยืม</button>
     </div>
   </div>
 </div>
@@ -473,14 +473,23 @@ function renderBorrowOutTable() {
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
-        '<td><button class="btn-secondary btn-sm" onclick="openReturnModal(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนอุปกรณ์</button></td>' +
+        '<td><div style="display:flex;gap:6px;">' +
+          '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
+          '<button class="btn-secondary btn-sm" onclick="openReturnModal(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนอุปกรณ์</button>' +
+        '</div></td>' +
       '</tr>'
     );
   }).join('');
   lucide.createIcons();
 }
 
+var editingBorrowId = null;
+
 function openBorrowModal() {
+  editingBorrowId = null;
+  document.getElementById('borrowModalTitle').textContent = 'บันทึกการยืมไอแพด';
+  document.getElementById('borrowModalSub').textContent = 'เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม';
+  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการยืม';
   document.getElementById('borrowStudentInput').value = '';
   document.getElementById('borrowDeviceInput').value = '';
   document.getElementById('deviceInfoHint').textContent = '';
@@ -492,10 +501,52 @@ function openBorrowModal() {
   document.getElementById('accOther').value = '';
   document.getElementById('borrowDate').value = todayStr();
   document.getElementById('borrowerTypeStudent').checked = true;
+  document.getElementById('borrowerTypeStudent').disabled = false;
+  document.getElementById('borrowerTypeStaff').disabled = false;
   onBorrowerTypeChange();
   refreshStudentDatalist();
   refreshStaffDatalist();
   refreshDeviceDatalist();
+  openModal('modalBorrow');
+}
+
+/* แก้ไขข้อมูลการยืมที่มีอยู่แล้ว (เปลี่ยนเครื่อง/อุปกรณ์เสริม/วันที่ยืมได้ — ไม่เปลี่ยนตัวผู้ยืม) */
+function openEditBorrowModal(id) {
+  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
+  if (!b) return;
+  editingBorrowId = id;
+  document.getElementById('borrowModalTitle').textContent = 'แก้ไขข้อมูลการยืม';
+  document.getElementById('borrowModalSub').textContent = 'แก้ไขเครื่อง / อุปกรณ์เสริม / วันที่ยืม';
+  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('newStudentHint').style.display = 'none';
+
+  var isStaff = b.borrowerType === 'staff';
+  document.getElementById('borrowerTypeStaff').checked = isStaff;
+  document.getElementById('borrowerTypeStudent').checked = !isStaff;
+  /* ล็อกประเภทผู้ยืมไว้ตอนแก้ไข เพื่อไม่ให้สลับ list แล้วข้อมูลผู้ยืมเดิมหาย */
+  document.getElementById('borrowerTypeStudent').disabled = true;
+  document.getElementById('borrowerTypeStaff').disabled = true;
+  onBorrowerTypeChange();
+
+  refreshStudentDatalist();
+  refreshStaffDatalist();
+  refreshDeviceDatalist();
+  /* เติม option เครื่องปัจจุบันกลับเข้าไปใน datalist ด้วย เผื่อถูกกรองออกเพราะถือว่า "ถูกยืมอยู่แล้ว" (คือรายการนี้เอง) */
+  var dl = document.getElementById('deviceDatalist');
+  dl.innerHTML += '<option value="' + esc2(b.serialNumber) + '">' + esc2(b.friendlyName) + '</option>';
+
+  document.getElementById('borrowStudentInput').value = b.studentName;
+  document.getElementById('borrowDeviceInput').value = b.serialNumber;
+  document.getElementById('deviceInfoHint').textContent = b.friendlyName;
+  var accs = b.accessories || [];
+  document.getElementById('accCharger').checked = accs.indexOf('หัวชาร์จ') !== -1;
+  document.getElementById('accCable').checked  = accs.indexOf('สายชาร์จ') !== -1;
+  document.getElementById('accPen').checked    = accs.indexOf('ปากกา') !== -1;
+  document.getElementById('accCase').checked   = accs.indexOf('เคส') !== -1;
+  var other = accs.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
+  document.getElementById('accOther').value = other.join(', ');
+  document.getElementById('borrowDate').value = b.borrowDate || todayStr();
+
   openModal('modalBorrow');
 }
 
@@ -586,8 +637,24 @@ function saveBorrow() {
 
   var device = DEVICES.find(function(d) { return d.serialNumber === serial; });
   if (!device)  { showToast('ไม่พบ Serial Number นี้ในระบบ', 'warn'); return; }
-  if (BORROWS_OUT.some(function(b) { return b.deviceId === device.id; })) {
+  var conflict = BORROWS_OUT.some(function(b) { return b.deviceId === device.id && b.id !== editingBorrowId; });
+  if (conflict) {
     showToast('เครื่องนี้ถูกยืมอยู่แล้ว', 'warn'); return;
+  }
+
+  if (editingBorrowId) {
+    /* แก้ไขรายการเดิม — ไม่แตะต้องข้อมูลผู้ยืม (studentId/studentName/grade/room/borrowerType) */
+    var updatePayload = {
+      deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
+      accessories: accessories,
+      borrowDate: borrowDate
+    };
+    db.collection('ipad_borrows').doc(editingBorrowId).update(updatePayload).then(function() {
+      showToast('แก้ไขข้อมูลการยืมสำเร็จ ✅');
+      closeModal('modalBorrow');
+      editingBorrowId = null;
+    }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    return;
   }
 
   var payload = {
@@ -671,12 +738,15 @@ function confirmReturn() {
   }
 
   db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
-    if (deviceReturned) {
-      return db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition });
-    }
-  }).then(function() {
     showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
     closeModal('modalReturn');
+    /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
+       ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
+    if (deviceReturned) {
+      db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition }).catch(function(e) {
+        showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
+      });
+    }
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
