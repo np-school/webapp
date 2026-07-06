@@ -23,9 +23,10 @@
   <script src="shared/common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;}
-    .acc-badge.yes{background:var(--green-light);color:var(--green);}
-    .acc-badge.no{background:var(--red-light);color:var(--red);}
+    .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;margin-bottom:3px;}
+    .acc-badge.no{background:#f1f5f9;color:#94a3b8;}      /* เทา = ไม่ได้ยืมอุปกรณ์นี้ */
+    .acc-badge.yes{background:var(--green-light);color:var(--green);}  /* เขียว = กำลังถูกยืมอยู่ */
+    .acc-badge.warn{background:var(--red-light);color:var(--red);}     /* แดง = คืนไอแพดแล้วแต่อุปกรณ์นี้ยังไม่คืน/คืนไม่ครบ */
     .ipad-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px;}
     .ipad-stats-grid .card{padding:14px 16px;}
     .ipad-stats-grid canvas{max-height:150px;}
@@ -462,17 +463,26 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย
-   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
+/* แสดงอุปกรณ์เสริมแยกเป็น badge 3 สถานะ:
+   - เทา (no)   = ไม่ได้ยืมอุปกรณ์ชิ้นนี้
+   - เขียว (yes)  = กำลังถูกยืมอยู่ (เครื่องยังไม่คืน)
+   - แดง (warn) = คืนเครื่องไอแพดแล้ว แต่อุปกรณ์เสริมชิ้นนี้ยังไม่คืน/คืนไม่ครบ
+   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส
+   @param {boolean} deviceReturned - true เมื่อ b.status === 'in' (เครื่องคืนแล้ว) */
 var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
-function accBadges(accessories) {
+function accBadges(accessories, deviceReturned) {
   accessories = accessories || [];
   var html = ACC_ORDER.map(function(name) {
     var has = accessories.indexOf(name) !== -1;
-    return '<span class="acc-badge ' + (has ? 'yes' : 'no') + '">' + name + ' ' + (has ? '✓' : '✕') + '</span>';
+    var cls = !has ? 'no' : (deviceReturned ? 'warn' : 'yes');
+    var icon = !has ? '✕' : (deviceReturned ? '⚠' : '✓');
+    return '<span class="acc-badge ' + cls + '">' + name + ' ' + icon + '</span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  if (other.length) html += '<span class="acc-badge yes">' + esc2(other.join(', ')) + '</span>';
+  if (other.length) {
+    var clsOther = deviceReturned ? 'warn' : 'yes';
+    html += '<span class="acc-badge ' + clsOther + '">' + esc2(other.join(', ')) + '</span>';
+  }
   return html;
 }
 
@@ -518,7 +528,7 @@ function renderBorrowOutTable() {
         '<td>' + (isStaff ? '<span style="color:#f59e0b;font-weight:700;">บุคลากร</span>' : '<span style="color:#1d4ed8;font-weight:700;">นักเรียน</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories) + '</td>' +
+        '<td>' + accBadges(b.accessories, false) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
@@ -1461,7 +1471,7 @@ function renderHistoryTable() {
         '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories) + '</td>' +
+        '<td>' + accBadges(b.accessories, b.status === 'in') + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td>' + (b.status === 'in' ? fmtDate(b.returnDate) : '-') + '</td>' +
         '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
