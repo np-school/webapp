@@ -23,7 +23,7 @@
   <script src="shared/common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    .acc-sq-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+    .acc-sq-wrap{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;}
     .acc-sq{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
     .acc-sq i{width:15px;height:15px;}
     .acc-sq.no{background:#eef1f5;color:#a3adba;}      /* เทา = ไม่ได้ยืมอุปกรณ์นี้ */
@@ -530,8 +530,9 @@ function renderBorrowOutTable() {
         '<td style="font-weight:700;">' + esc2(b.studentName) + '</td>' +
         '<td>' + (isStaff ? '<span style="color:#f59e0b;font-weight:700;">บุคลากร</span>' : '<span style="color:#1d4ed8;font-weight:700;">นักเรียน</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories, false) + '</td>' +
+        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span>' +
+          (b.deviceReturned ? '<br><span style="font-size:11px;color:#16a34a;font-weight:700;">✓ คืนเครื่องแล้ว</span>' : '') + '</td>' +
+        '<td>' + accBadges(b.accessories, !!b.deviceReturned) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
@@ -802,7 +803,11 @@ function openReturnModal(id) {
   currentReturnBorrowId = id;
   document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
   var accs = b.accessories || [];
-  var html = '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
+  var deviceAlreadyBack = !!b.deviceReturned;
+  var html = deviceAlreadyBack ?
+    '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#f1f5f9;border-radius:10px;color:#94a3b8;">' +
+    '<input type="checkbox" id="returnItemDevice" checked disabled style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ') — คืนแล้ว</label>' :
+    '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
     '<input type="checkbox" id="returnItemDevice" checked style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ')</label>';
   html += accs.map(function(name) {
     return '<label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;">' +
@@ -818,7 +823,10 @@ function confirmReturn() {
   var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
   if (!b) { closeModal('modalReturn'); return; }
 
-  var deviceReturned = document.getElementById('returnItemDevice').checked;
+  var deviceAlreadyBack = !!b.deviceReturned;
+  /* ถ้าคืนเครื่องไปแล้วในรอบก่อนหน้า checkbox เครื่องจะถูก disable+checked ไว้
+     ต้องถือว่าเครื่อง "คืนแล้ว" อยู่ดี ไม่ต้องอ่านค่า checked จาก DOM ซ้ำ */
+  var deviceReturnedNow = deviceAlreadyBack || document.getElementById('returnItemDevice').checked;
   var condition = document.getElementById('returnConditionClaim').checked ? 'claim' : 'ok';
   var checkedAccs = Array.prototype.map.call(
     document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
@@ -826,24 +834,35 @@ function confirmReturn() {
   );
   var allAccs = b.accessories || [];
   var remainingAccs = allAccs.filter(function(a) { return checkedAccs.indexOf(a) === -1; });
+  var allReturned = deviceReturnedNow && remainingAccs.length === 0;
 
-  if (!deviceReturned && !checkedAccs.length) {
+  if (!deviceAlreadyBack && !document.getElementById('returnItemDevice').checked && !checkedAccs.length) {
     showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
   }
 
   var updates = { accessories: remainingAccs };
-  if (deviceReturned) {
-    updates.status = 'in';
-    updates.returnDate = todayStr();
+  /* คืนครบทั้งเครื่อง + อุปกรณ์เสริมทุกชิ้น เท่านั้น ถึงจะปิดรายการ (status = 'in')
+     ถ้าคืนเครื่องแล้วแต่อุปกรณ์เสริมยังไม่ครบ ให้ยังคงแสดงอยู่ในหน้า "ยืม-คืนอุปกรณ์"
+     โดยบันทึก deviceReturned ไว้แยกต่างหาก เพื่อรู้ว่าตัวเครื่องกลับมาแล้ว รอแค่ของเสริม */
+  if (deviceReturnedNow && !deviceAlreadyBack) {
+    updates.deviceReturned = true;
+    updates.deviceReturnDate = todayStr();
     updates.returnCondition = condition;
+  }
+  if (allReturned) {
+    updates.status = 'in';
+    updates.returnDate = updates.deviceReturnDate || b.deviceReturnDate || todayStr();
+    updates.returnCondition = updates.returnCondition || b.returnCondition || condition;
   }
 
   db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
-    showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
+    showToast(allReturned ? 'บันทึกการคืนเครื่องครบแล้ว ✅' :
+      (deviceReturnedNow && !deviceAlreadyBack ? 'บันทึกการคืนเครื่องแล้ว รออุปกรณ์เสริมคืนอีก ' + remainingAccs.length + ' ชิ้น ✅' :
+      'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅'));
     closeModal('modalReturn');
     /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
        ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
-    if (deviceReturned) {
+    if (deviceReturnedNow && !deviceAlreadyBack) {
       db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition }).catch(function(e) {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
       });
