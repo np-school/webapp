@@ -23,12 +23,9 @@
   <script src="shared/common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    .acc-sq-wrap{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;}
-    .acc-sq{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .acc-sq i{width:15px;height:15px;}
-    .acc-sq.no{background:#eef1f5;color:#a3adba;}      /* เทา = ไม่ได้ยืมอุปกรณ์นี้ */
-    .acc-sq.yes{background:var(--green-light);color:var(--green);}  /* เขียว = กำลังถูกยืมอยู่ */
-    .acc-sq.warn{background:var(--red-light);color:var(--red);}     /* แดง = คืนไอแพดแล้วแต่อุปกรณ์นี้ยังไม่คืน/คืนไม่ครบ */
+    .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;}
+    .acc-badge.yes{background:var(--green-light);color:var(--green);}
+    .acc-badge.no{background:var(--red-light);color:var(--red);}
     .ipad-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px;}
     .ipad-stats-grid .card{padding:14px 16px;}
     .ipad-stats-grid canvas{max-height:150px;}
@@ -37,18 +34,6 @@
     .borrow-badge-yes{background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .borrow-badge-no{background:var(--red-light);color:var(--red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .badge-claim{background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-    /* ── Custom autocomplete dropdown (แทน <datalist> ซึ่ง Safari/iPad/iPhone ไม่รองรับการแสดงผล) ── */
-    .ac-wrap{position:relative;}
-    .ac-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;max-height:230px;overflow-y:auto;
-      background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.14);
-      z-index:200;display:none;}
-    .ac-list.show{display:block;}
-    .ac-item{padding:10px 12px;cursor:pointer;font-size:13.5px;color:var(--text,#1e293b);
-      display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #f1f5f9;}
-    .ac-item:last-child{border-bottom:none;}
-    .ac-item:hover,.ac-item.ac-active{background:#eff6ff;}
-    .ac-item .ac-sub{font-size:11.5px;color:#94a3b8;white-space:nowrap;flex-shrink:0;}
-    .ac-empty{padding:11px 12px;font-size:12.5px;color:#94a3b8;}
   </style>
 </head>
 <body>
@@ -99,10 +84,9 @@
 
     <div class="form-group">
       <label class="form-label" id="borrowStudentLabel">นักเรียน</label>
-      <div class="ac-wrap">
-        <input type="text" id="borrowStudentInput" autocomplete="off" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." oninput="onBorrowStudentInput()" onfocus="onBorrowStudentInput()">
-        <div class="ac-list" id="borrowStudentList"></div>
-      </div>
+      <input type="text" id="borrowStudentInput" list="studentDatalist" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." oninput="onBorrowStudentInput()">
+      <datalist id="studentDatalist"></datalist>
+      <datalist id="staffDatalist"></datalist>
       <div id="newStudentHint" style="display:none;margin-top:8px;padding:10px 12px;background:#eff6ff;border-radius:10px;font-size:12.5px;color:#1e40af;">
         ไม่พบข้อมูลนี้ในระบบ — กรอกข้อมูลเพื่อเพิ่มนักเรียนใหม่
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
@@ -122,10 +106,8 @@
 
     <div class="form-group">
       <label class="form-label">Serial Number เครื่อง</label>
-      <div class="ac-wrap">
-        <input type="text" id="borrowDeviceInput" autocomplete="off" placeholder="พิมพ์หรือเลือก Serial Number..." oninput="onBorrowDeviceInput()" onfocus="onBorrowDeviceInput()">
-        <div class="ac-list" id="borrowDeviceList"></div>
-      </div>
+      <input type="text" id="borrowDeviceInput" list="deviceDatalist" placeholder="พิมพ์หรือเลือก Serial Number..." oninput="onBorrowDeviceInput()">
+      <datalist id="deviceDatalist"></datalist>
       <p id="deviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
     </div>
 
@@ -221,38 +203,6 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="closeModal('modalStudent')">ยกเลิก</button>
       <button class="btn-primary" onclick="saveStudent()">บันทึก</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: แก้ไขข้อมูลนักเรียน -->
-<div class="modal-bg" id="modalEditStudent">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="pencil" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3>แก้ไขข้อมูลนักเรียน</h3><p id="editStudentSub"></p></div>
-      </div>
-      <button class="modal-close" onclick="closeModal('modalEditStudent')"><i data-lucide="x"></i></button>
-    </div>
-    <input type="hidden" id="editStuDocId">
-    <div style="display:flex;gap:10px;">
-      <div class="form-group" style="flex:1;">
-        <label class="form-label">ชื่อ</label>
-        <input type="text" id="editStuFirstName" placeholder="เช่น สมชาย">
-      </div>
-      <div class="form-group" style="flex:1;">
-        <label class="form-label">นามสกุล</label>
-        <input type="text" id="editStuLastName" placeholder="เช่น ใจดี">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">ห้อง</label>
-      <input type="text" id="editStuRoom" placeholder="เช่น 1">
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-secondary" onclick="closeModal('modalEditStudent')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveEditStudent()">บันทึกการแก้ไข</button>
     </div>
   </div>
 </div>
@@ -425,13 +375,15 @@ function renderStatsCharts() {
   if (typeof Chart === 'undefined') return;
   var outCount = BORROWS_OUT.length;
   var freeCount = Math.max(DEVICES.length - outCount, 0);
+  var chargerCount = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('หัวชาร์จ') !== -1; }).length;
+  var cableCount   = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('สายชาร์จ') !== -1; }).length;
   var penCount  = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('ปากกา') !== -1; }).length;
   var caseCount = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('เคส') !== -1; }).length;
   var staffOutCount   = BORROWS_OUT.filter(function(b){ return b.borrowerType === 'staff'; }).length;
   var studentOutCount = outCount - staffOutCount;
 
   _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], ['#dc2626','#16a34a']);
-  _drawChart('chartAccessories', 'bar', ['ปากกา','เคส'], [penCount, caseCount], ['#1d4ed8','#7c3aed']);
+  _drawChart('chartAccessories', 'bar', ['หัวชาร์จ','สายชาร์จ','ปากกา','เคส'], [chargerCount, cableCount, penCount, caseCount], ['#f59e0b','#0891b2','#1d4ed8','#7c3aed']);
   _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['#1d4ed8','#f59e0b']);
 }
 function _drawChart(canvasId, type, labels, data, colors) {
@@ -465,27 +417,17 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมเป็นกล่องสี่เหลี่ยมไอคอน 3 สถานะ:
-   - เทา (no)   = ไม่ได้ยืมอุปกรณ์ชิ้นนี้
-   - เขียว (yes)  = กำลังถูกยืมอยู่ (เครื่องยังไม่คืน)
-   - แดง (warn) = คืนเครื่องไอแพดแล้ว แต่อุปกรณ์เสริมชิ้นนี้ยังไม่คืน/คืนไม่ครบ
-   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส
-   @param {boolean} deviceReturned - true เมื่อ b.status === 'in' (เครื่องคืนแล้ว) */
+/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย
+   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
 var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
-var ACC_ICON  = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
-function accBadges(accessories, deviceReturned) {
+function accBadges(accessories) {
   accessories = accessories || [];
-  var html = '<div class="acc-sq-wrap">' + ACC_ORDER.map(function(name) {
+  var html = ACC_ORDER.map(function(name) {
     var has = accessories.indexOf(name) !== -1;
-    var cls = !has ? 'no' : (deviceReturned ? 'warn' : 'yes');
-    return '<span class="acc-sq ' + cls + '" title="' + name + (has ? (deviceReturned ? ' (ยังไม่คืน)' : ' (กำลังยืมอยู่)') : ' (ไม่ได้ยืม)') + '"><i data-lucide="' + ACC_ICON[name] + '"></i></span>';
+    return '<span class="acc-badge ' + (has ? 'yes' : 'no') + '">' + name + ' ' + (has ? '✓' : '✕') + '</span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  if (other.length) {
-    var clsOther = deviceReturned ? 'warn' : 'yes';
-    html += '<span class="acc-sq ' + clsOther + '" title="' + esc2(other.join(', ')) + '"><i data-lucide="package-plus"></i></span>';
-  }
-  html += '</div>';
+  if (other.length) html += '<span class="acc-badge yes">' + esc2(other.join(', ')) + '</span>';
   return html;
 }
 
@@ -501,9 +443,9 @@ function renderBorrowPanel() {
       '</div>' +
       '<div class="ipad-search-row"><input type="text" id="borrowOutSearch" placeholder="ค้นหาชื่อ / เลขประจำตัว / Serial Number..." oninput="renderBorrowOutTable()"></div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>ผู้ยืม</th><th>ประเภท</th><th>ชั้น/ห้อง หรือ กลุ่มสาระ</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th></th>' +
+        '<th>ผู้ยืม</th><th>ชั้น/ห้อง หรือ กลุ่มสาระ</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th></th>' +
       '</tr></thead><tbody id="borrowOutTbody">' +
-        '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -520,19 +462,17 @@ function renderBorrowOutTable() {
            (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
   });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบรายการที่ถูกยืมอยู่</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบรายการที่ถูกยืมอยู่</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(b) {
     var isStaff = b.borrowerType === 'staff';
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + '</td>' +
-        '<td>' + (isStaff ? '<span style="color:#f59e0b;font-weight:700;">บุคลากร</span>' : '<span style="color:#1d4ed8;font-weight:700;">นักเรียน</span>') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + (isStaff ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : ' <span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span>' +
-          (b.deviceReturned ? '<br><span style="font-size:11px;color:#16a34a;font-weight:700;">✓ คืนเครื่องแล้ว</span>' : '') + '</td>' +
-        '<td>' + accBadges(b.accessories, !!b.deviceReturned) + '</td>' +
+        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
+        '<td>' + accBadges(b.accessories) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
@@ -564,8 +504,10 @@ function openBorrowModal() {
   document.getElementById('borrowerTypeStudent').checked = true;
   document.getElementById('borrowerTypeStudent').disabled = false;
   document.getElementById('borrowerTypeStaff').disabled = false;
-  editingBorrowOriginalSerial = null;
   onBorrowerTypeChange();
+  refreshStudentDatalist();
+  refreshStaffDatalist();
+  refreshDeviceDatalist();
   openModal('modalBorrow');
 }
 
@@ -587,8 +529,12 @@ function openEditBorrowModal(id) {
   document.getElementById('borrowerTypeStaff').disabled = true;
   onBorrowerTypeChange();
 
-  /* เก็บ serial ของเครื่องเดิมไว้ เผื่อถูกกรองออกจากลิสต์เพราะถือว่า "ถูกยืมอยู่แล้ว" (คือรายการนี้เอง) */
-  editingBorrowOriginalSerial = b.serialNumber;
+  refreshStudentDatalist();
+  refreshStaffDatalist();
+  refreshDeviceDatalist();
+  /* เติม option เครื่องปัจจุบันกลับเข้าไปใน datalist ด้วย เผื่อถูกกรองออกเพราะถือว่า "ถูกยืมอยู่แล้ว" (คือรายการนี้เอง) */
+  var dl = document.getElementById('deviceDatalist');
+  dl.innerHTML += '<option value="' + esc2(b.serialNumber) + '">' + esc2(b.friendlyName) + '</option>';
 
   document.getElementById('borrowStudentInput').value = b.studentName;
   document.getElementById('borrowDeviceInput').value = b.serialNumber;
@@ -607,79 +553,46 @@ function openEditBorrowModal(id) {
 
 function onBorrowerTypeChange() {
   var isStaff = document.getElementById('borrowerTypeStaff').checked;
+  document.getElementById('borrowStudentInput').setAttribute('list', isStaff ? 'staffDatalist' : 'studentDatalist');
   document.getElementById('borrowStudentInput').placeholder = isStaff ? 'พิมพ์ชื่อ-นามสกุลบุคลากร...' : 'พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน...';
   document.getElementById('borrowStudentLabel').textContent = isStaff ? 'บุคลากร' : 'นักเรียน';
   document.getElementById('borrowStudentInput').value = '';
   document.getElementById('newStudentHint').style.display = 'none';
-  hideAcList('borrowStudentList');
 }
 
 function staffLabel(s) { return (s.name || ''); }
 
-/* Custom autocomplete dropdown: แทนที่ input[list] + datalist เดิม
-   เพราะ Safari บน iPad/iPhone ไม่แสดง dropdown ของ datalist เลย
-   ทำให้พิมพ์ค้นหาแล้วไม่เห็นรายชื่อ ใช้ dropdown ที่สร้างเองแทน */
-var editingBorrowOriginalSerial = null;
-
-function renderAcList(listId, items) {
-  var list = document.getElementById(listId);
-  if (!list) return;
-  if (!items.length) {
-    list.innerHTML = '<div class="ac-empty">ไม่พบรายการที่ตรงกัน</div>';
-  } else {
-    list.innerHTML = items.slice(0, 50).map(function(it) {
-      return '<div class="ac-item" onmousedown="event.preventDefault();' + it.onPick + '">' +
-        '<span>' + esc2(it.label) + '</span>' +
-        (it.sub ? '<span class="ac-sub">' + esc2(it.sub) + '</span>' : '') +
-        '</div>';
-    }).join('');
-  }
-  list.classList.add('show');
+function refreshStudentDatalist() {
+  var dl = document.getElementById('studentDatalist');
+  dl.innerHTML = STUDENTS.map(function(s) {
+    return '<option value="' + esc2(studentLabel(s)) + '">' + esc2(s.grade) + '/' + esc2(s.room) + '</option>';
+  }).join('');
 }
-function hideAcList(listId) {
-  var list = document.getElementById(listId);
-  if (list) list.classList.remove('show');
+function refreshStaffDatalist() {
+  var dl = document.getElementById('staffDatalist');
+  if (!dl) return;
+  dl.innerHTML = STAFF.map(function(s) {
+    return '<option value="' + esc2(staffLabel(s)) + '">' + esc2(s.position || '') + '</option>';
+  }).join('');
 }
-document.addEventListener('click', function(e) {
-  document.querySelectorAll('.ac-list.show').forEach(function(list) {
-    var wrap = list.closest('.ac-wrap');
-    if (wrap && !wrap.contains(e.target)) list.classList.remove('show');
-  });
-});
-
-function pickBorrowStudent(value) {
-  document.getElementById('borrowStudentInput').value = value;
-  hideAcList('borrowStudentList');
-  onBorrowStudentInput();
-}
-function pickBorrowDevice(value) {
-  document.getElementById('borrowDeviceInput').value = value;
-  hideAcList('borrowDeviceList');
-  onBorrowDeviceInput();
+function refreshDeviceDatalist() {
+  var dl = document.getElementById('deviceDatalist');
+  var borrowedIds = {};
+  BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
+  dl.innerHTML = DEVICES.filter(function(d) { return !borrowedIds[d.id] && d.condition !== 'claim'; }).map(function(d) {
+    return '<option value="' + esc2(d.serialNumber) + '">' + esc2(d.friendlyName) + '</option>';
+  }).join('');
 }
 
 function onBorrowStudentInput() {
   var isStaff = document.getElementById('borrowerTypeStaff').checked;
   var v = document.getElementById('borrowStudentInput').value.trim();
-  var q = v.toLowerCase();
-
   if (isStaff) {
     document.getElementById('newStudentHint').style.display = 'none'; /* บุคลากรต้องมีอยู่แล้วในระบบ ไม่เปิดให้เพิ่มจากตรงนี้ */
-    var staffMatches = STAFF.filter(function(s) { return staffLabel(s).toLowerCase().indexOf(q) !== -1; });
-    renderAcList('borrowStudentList', staffMatches.map(function(s) {
-      return { label: staffLabel(s), sub: s.position || '', onPick: "pickBorrowStudent('" + staffLabel(s).replace(/'/g, "\\'") + "')" };
-    }));
     return;
   }
-
   var match = STUDENTS.some(function(s) { return studentLabel(s) === v; });
   document.getElementById('newStudentHint').style.display = (v && !match) ? 'block' : 'none';
-
-  var studentMatches = STUDENTS.filter(function(s) { return studentLabel(s).toLowerCase().indexOf(q) !== -1; });
-  renderAcList('borrowStudentList', studentMatches.map(function(s) {
-    var lbl = studentLabel(s);
-    return { label: lbl, sub: s.grade + '/' + s.room, onPick: "pickBorrowStudent('" + lbl.replace(/'/g, "\\'") + "')" };
-  }));
 }
 
 function addNewStudentInline() {
@@ -701,20 +614,6 @@ function addNewStudentInline() {
 
 function onBorrowDeviceInput() {
   var v = document.getElementById('borrowDeviceInput').value.trim();
-  var q = v.toLowerCase();
-
-  var borrowedIds = {};
-  BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
-  var available = DEVICES.filter(function(x) {
-    return x.condition !== 'claim' && (!borrowedIds[x.id] || x.serialNumber === editingBorrowOriginalSerial);
-  });
-  var matches = available.filter(function(x) {
-    return (x.serialNumber || '').toLowerCase().indexOf(q) !== -1 || (x.friendlyName || '').toLowerCase().indexOf(q) !== -1;
-  });
-  renderAcList('borrowDeviceList', matches.map(function(x) {
-    return { label: x.serialNumber, sub: x.friendlyName, onPick: "pickBorrowDevice('" + x.serialNumber.replace(/'/g, "\\'") + "')" };
-  }));
-
   var d = DEVICES.find(function(x) { return x.serialNumber === v; });
   var hint = document.getElementById('deviceInfoHint');
   if (!d) { hint.textContent = v ? 'ไม่พบ Serial Number นี้ในระบบ' : ''; return; }
@@ -803,11 +702,7 @@ function openReturnModal(id) {
   currentReturnBorrowId = id;
   document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
   var accs = b.accessories || [];
-  var deviceAlreadyBack = !!b.deviceReturned;
-  var html = deviceAlreadyBack ?
-    '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#f1f5f9;border-radius:10px;color:#94a3b8;">' +
-    '<input type="checkbox" id="returnItemDevice" checked disabled style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ') — คืนแล้ว</label>' :
-    '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
+  var html = '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
     '<input type="checkbox" id="returnItemDevice" checked style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ')</label>';
   html += accs.map(function(name) {
     return '<label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;">' +
@@ -823,10 +718,7 @@ function confirmReturn() {
   var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
   if (!b) { closeModal('modalReturn'); return; }
 
-  var deviceAlreadyBack = !!b.deviceReturned;
-  /* ถ้าคืนเครื่องไปแล้วในรอบก่อนหน้า checkbox เครื่องจะถูก disable+checked ไว้
-     ต้องถือว่าเครื่อง "คืนแล้ว" อยู่ดี ไม่ต้องอ่านค่า checked จาก DOM ซ้ำ */
-  var deviceReturnedNow = deviceAlreadyBack || document.getElementById('returnItemDevice').checked;
+  var deviceReturned = document.getElementById('returnItemDevice').checked;
   var condition = document.getElementById('returnConditionClaim').checked ? 'claim' : 'ok';
   var checkedAccs = Array.prototype.map.call(
     document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
@@ -834,35 +726,24 @@ function confirmReturn() {
   );
   var allAccs = b.accessories || [];
   var remainingAccs = allAccs.filter(function(a) { return checkedAccs.indexOf(a) === -1; });
-  var allReturned = deviceReturnedNow && remainingAccs.length === 0;
 
-  if (!deviceAlreadyBack && !document.getElementById('returnItemDevice').checked && !checkedAccs.length) {
+  if (!deviceReturned && !checkedAccs.length) {
     showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
   }
 
   var updates = { accessories: remainingAccs };
-  /* คืนครบทั้งเครื่อง + อุปกรณ์เสริมทุกชิ้น เท่านั้น ถึงจะปิดรายการ (status = 'in')
-     ถ้าคืนเครื่องแล้วแต่อุปกรณ์เสริมยังไม่ครบ ให้ยังคงแสดงอยู่ในหน้า "ยืม-คืนอุปกรณ์"
-     โดยบันทึก deviceReturned ไว้แยกต่างหาก เพื่อรู้ว่าตัวเครื่องกลับมาแล้ว รอแค่ของเสริม */
-  if (deviceReturnedNow && !deviceAlreadyBack) {
-    updates.deviceReturned = true;
-    updates.deviceReturnDate = todayStr();
-    updates.returnCondition = condition;
-  }
-  if (allReturned) {
+  if (deviceReturned) {
     updates.status = 'in';
-    updates.returnDate = updates.deviceReturnDate || b.deviceReturnDate || todayStr();
-    updates.returnCondition = updates.returnCondition || b.returnCondition || condition;
+    updates.returnDate = todayStr();
+    updates.returnCondition = condition;
   }
 
   db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
-    showToast(allReturned ? 'บันทึกการคืนเครื่องครบแล้ว ✅' :
-      (deviceReturnedNow && !deviceAlreadyBack ? 'บันทึกการคืนเครื่องแล้ว รออุปกรณ์เสริมคืนอีก ' + remainingAccs.length + ' ชิ้น ✅' :
-      'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅'));
+    showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
     closeModal('modalReturn');
     /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
        ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
-    if (deviceReturnedNow && !deviceAlreadyBack) {
+    if (deviceReturned) {
       db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition }).catch(function(e) {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
       });
@@ -883,8 +764,7 @@ function renderStudentsPanel() {
           '<button class="filter-pill" onclick="filterStudents(\'ม.5\', this)">ม.5</button>' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.6\', this)">ม.6</button>' +
         '</div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-          '<button class="btn-secondary" onclick="promoteAcademicYear()"><i data-lucide="arrow-up-circle" style="width:16px;height:16px;"></i> เลื่อนชั้นปีการศึกษา</button>' +
+        '<div style="display:flex;gap:8px;">' +
           '<button class="btn-secondary" onclick="openModal(\'modalImportStudents\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
           '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
         '</div>' +
@@ -960,10 +840,7 @@ function renderStudentsTable() {
         '<td>' + esc2(s.grade) + '</td>' +
         '<td>' + esc2(s.room) + '</td>' +
         '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
-        '<td style="white-space:nowrap;">' +
-          '<button class="btn-icon" title="แก้ไข" onclick="openEditStudent(\'' + s.id + '\')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button> ' +
-          '<button class="btn-icon danger" title="ลบ" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
-        '</td>' +
+        '<td><button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
       '</tr>'
     );
   }).join('');
@@ -998,91 +875,6 @@ function deleteStudent(id) {
   db.collection('ipad_students').doc(id).delete()
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-}
-
-/* ── แก้ไขข้อมูลนักเรียน (ชื่อ / นามสกุล / ห้อง) ── */
-function openEditStudent(id) {
-  var s = STUDENTS.find(function(x) { return x.id === id; });
-  if (!s) { showToast('ไม่พบข้อมูลนักเรียนนี้', 'warn'); return; }
-  document.getElementById('editStuDocId').value = id;
-  document.getElementById('editStuFirstName').value = s.firstName || '';
-  document.getElementById('editStuLastName').value  = s.lastName  || '';
-  document.getElementById('editStuRoom').value      = s.room      || '';
-  document.getElementById('editStudentSub').textContent =
-    'เลขประจำตัว ' + s.studentId + ' — ชั้น ' + s.grade;
-  openModal('modalEditStudent');
-}
-
-function saveEditStudent() {
-  var id        = document.getElementById('editStuDocId').value;
-  var firstName = document.getElementById('editStuFirstName').value.trim();
-  var lastName  = document.getElementById('editStuLastName').value.trim();
-  var room      = document.getElementById('editStuRoom').value.trim();
-  if (!id) return;
-  if (!firstName || !lastName || !room) { showToast('กรอกข้อมูลให้ครบ', 'warn'); return; }
-  db.collection('ipad_students').doc(id).update({
-    firstName: firstName, lastName: lastName, room: room
-  }).then(function() {
-    showToast('บันทึกการแก้ไขสำเร็จ ✅');
-    closeModal('modalEditStudent');
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   เลื่อนชั้นปีการศึกษา
-   ม.4 → ม.5, ม.5 → ม.6, ม.6 → นำออกจากระบบ (จบการศึกษา)
-   ══════════════════════════════════════════════════════════════ */
-function promoteAcademicYear() {
-  if (!STUDENTS.length) { showToast('ไม่มีข้อมูลนักเรียนในระบบ', 'warn'); return; }
-
-  var countM4 = STUDENTS.filter(function(s) { return s.grade === 'ม.4'; }).length;
-  var countM5 = STUDENTS.filter(function(s) { return s.grade === 'ม.5'; }).length;
-  var countM6 = STUDENTS.filter(function(s) { return s.grade === 'ม.6'; }).length;
-
-  var msg = 'ยืนยันเลื่อนชั้นปีการศึกษาใหม่?\n\n' +
-    '• ม.4 (' + countM4 + ' คน) → เลื่อนเป็น ม.5\n' +
-    '• ม.5 (' + countM5 + ' คน) → เลื่อนเป็น ม.6\n' +
-    '• ม.6 (' + countM6 + ' คน) → นำรายชื่อออกจากระบบ (จบการศึกษา)\n\n' +
-    'การดำเนินการนี้ไม่สามารถย้อนกลับได้';
-  if (!confirm(msg)) return;
-  if (!confirm('ยืนยันอีกครั้ง: ต้องการเลื่อนชั้นทั้งโรงเรียนตอนนี้เลยใช่หรือไม่?')) return;
-
-  var toUpdate = STUDENTS.filter(function(s) { return s.grade === 'ม.4' || s.grade === 'ม.5'; });
-  var toRemove = STUDENTS.filter(function(s) { return s.grade === 'ม.6'; });
-  var ops = toUpdate.slice().concat(toRemove.slice());
-
-  if (!ops.length) { showToast('ไม่มีนักเรียนที่ต้องเลื่อนชั้น', 'warn'); return; }
-
-  /* Firestore batch จำกัด 500 operations ต่อ batch — แบ่งเป็นชุดละ 400 กันเผื่อ */
-  var CHUNK = 400;
-  var chunks = [];
-  for (var i = 0; i < ops.length; i += CHUNK) chunks.push(ops.slice(i, i + CHUNK));
-
-  showToast('กำลังเลื่อนชั้น...');
-
-  var chain = Promise.resolve();
-  chunks.forEach(function(chunk) {
-    chain = chain.then(function() {
-      var batch = db.batch();
-      chunk.forEach(function(s) {
-        var ref = db.collection('ipad_students').doc(s.id);
-        if (s.grade === 'ม.4') {
-          batch.update(ref, { grade: 'ม.5' });
-        } else if (s.grade === 'ม.5') {
-          batch.update(ref, { grade: 'ม.6' });
-        } else if (s.grade === 'ม.6') {
-          batch.delete(ref);
-        }
-      });
-      return batch.commit();
-    });
-  });
-
-  chain.then(function() {
-    showToast('เลื่อนชั้นปีการศึกษาสำเร็จ ✅ (ม.6 เดิม ' + countM6 + ' คนถูกนำออกจากระบบ)');
-  }).catch(function(e) {
-    showToast('เกิดข้อผิดพลาดระหว่างเลื่อนชั้น: ' + e.message, 'error');
-  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1135,6 +927,7 @@ function loadStaff() {
   db.collection('staff').orderBy('name').onSnapshot(function(snap) {
     STAFF = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStaffTable();
+    refreshStaffDatalist();
     renderStatsCharts();
   }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
 }
@@ -1493,14 +1286,13 @@ function renderHistoryTable() {
         '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories, b.status === 'in') + '</td>' +
+        '<td>' + accBadges(b.accessories) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td>' + (b.status === 'in' ? fmtDate(b.returnDate) : '-') + '</td>' +
         '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
   }).join('');
-  lucide.createIcons();
 }
 
 function exportHistoryCsv() {
@@ -1533,6 +1325,7 @@ function loadStudents() {
   db.collection('ipad_students').onSnapshot(function(snap) {
     STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStudentsTable();
+    refreshStudentDatalist();
   }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -1540,6 +1333,7 @@ function loadDevices() {
   db.collection('ipad_devices').onSnapshot(function(snap) {
     DEVICES = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderDevicesTable();
+    refreshDeviceDatalist();
     var header = document.querySelector('#subpanel-devices .section-divider');
     if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการไอแพดทั้งหมด (' + DEVICES.length + ')';
     renderStatsCharts();
@@ -1553,6 +1347,7 @@ function loadBorrows() {
     BORROWS_OUT = BORROWS_ALL.filter(function(b) { return b.status === 'out'; });
     renderBorrowOutTable();
     renderHistoryTable();
+    refreshDeviceDatalist();
     renderDevicesTable();
     renderStudentsTable();
     renderStaffTable();
