@@ -78,9 +78,9 @@
 
     <div class="form-group">
       <label class="form-label">ประเภทผู้ยืม</label>
-      <div style="display:flex;gap:16px;">
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="borrowerType" id="borrowerTypeStudent" value="student" checked onclick="onBorrowerTypeChange()" style="width:auto;"> นักเรียน</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="borrowerType" id="borrowerTypeStaff" value="staff" onclick="onBorrowerTypeChange()" style="width:auto;"> บุคลากร</label>
+      <div class="segmented">
+        <label><input type="radio" name="borrowerType" id="borrowerTypeStudent" value="student" checked onclick="onBorrowerTypeChange()"><i data-lucide="graduation-cap"></i> นักเรียน</label>
+        <label><input type="radio" name="borrowerType" id="borrowerTypeStaff" value="staff" onclick="onBorrowerTypeChange()"><i data-lucide="briefcase"></i> บุคลากร</label>
       </div>
     </div>
 
@@ -115,13 +115,13 @@
 
     <div class="form-group">
       <label class="form-label">อุปกรณ์เสริมที่ยืมเพิ่ม (ถ้ามี)</label>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCharger" style="width:auto;"> หัวชาร์จ</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCable" style="width:auto;"> สายชาร์จ</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accPen" style="width:auto;"> ปากกา</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--text);"><input type="checkbox" id="accCase" style="width:auto;"> เคส</label>
+      <div class="chip-toggle">
+        <label><input type="checkbox" id="accCharger"><i data-lucide="plug-zap"></i> หัวชาร์จ</label>
+        <label><input type="checkbox" id="accCable"><i data-lucide="cable"></i> สายชาร์จ</label>
+        <label><input type="checkbox" id="accPen"><i data-lucide="pen-line"></i> ปากกา</label>
+        <label><input type="checkbox" id="accCase"><i data-lucide="briefcase"></i> เคส</label>
       </div>
-      <input type="text" id="accOther" placeholder="อื่นๆ (ระบุ ถ้ามี)" style="margin-top:8px;">
+      <input type="text" id="accOther" placeholder="อื่นๆ (ระบุ ถ้ามี)" style="margin-top:10px;">
     </div>
 
     <div class="form-group">
@@ -155,9 +155,9 @@
 
     <div class="form-group">
       <label class="form-label">สภาพเครื่อง/อุปกรณ์ที่คืน</label>
-      <div style="display:flex;gap:16px;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked style="width:auto;"> สภาพสมบูรณ์</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;"><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" style="width:auto;"> ส่งเคลม</label>
+      <div class="segmented condition">
+        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
+        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
       </div>
     </div>
 
@@ -704,22 +704,30 @@ function saveBorrow() {
 
 var currentReturnBorrowId = null;
 
+var RETURN_ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
+
 function openReturnModal(id) {
   var b = BORROWS_OUT.find(function(x) { return x.id === id; });
   if (!b) return;
   currentReturnBorrowId = id;
   document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
   var accs = b.accessories || [];
-  var html = '<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:8px 10px;background:#eff6ff;border-radius:10px;">' +
-    '<input type="checkbox" id="returnItemDevice" checked style="width:auto;"> เครื่องไอแพด (' + esc2(b.serialNumber) + ')</label>';
+  var html = '<label class="return-item-card is-device">' +
+    '<span class="ri-icon"><i data-lucide="tablet-smartphone"></i></span>' +
+    '<span class="ri-label">เครื่องไอแพด<span>' + esc2(b.serialNumber) + '</span></span>' +
+    '<input type="checkbox" id="returnItemDevice" checked></label>';
   html += accs.map(function(name) {
-    return '<label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;">' +
-      '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked style="width:auto;"> ' + esc2(name) + '</label>';
+    var icon = RETURN_ACC_ICONS[name] || 'package';
+    return '<label class="return-item-card">' +
+      '<span class="ri-icon"><i data-lucide="' + icon + '"></i></span>' +
+      '<span class="ri-label">' + esc2(name) + '</span>' +
+      '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked></label>';
   }).join('');
   if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
   document.getElementById('returnConditionOk').checked = true;
   openModal('modalReturn');
+  lucide.createIcons();
 }
 
 function confirmReturn() {
