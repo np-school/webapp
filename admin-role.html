@@ -108,6 +108,7 @@
             <thead>
               <tr style="border-bottom:2px solid #e2e8f0;background:#f8fafc;">
                 <th style="text-align:left;padding:12px 16px;font-weight:800;color:#374151;">Admin</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-budget-color);">💰 ยืม-คืนไอแพด</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-general-color);">🏫 บริหารทั่วไป</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-foodcourt-color);">🍽️ Food Court</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-academic-color);">📚 วิชาการ</th>
@@ -183,6 +184,26 @@
     <div style="margin-bottom:var(--gap-section);">
       <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:10px;">สิทธิ์ตามกลุ่มงาน</label>
       <div style="display:flex;flex-direction:column;gap:6px;">
+
+        <!-- กลุ่มบริหารงบประมาณ -->
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
+            <div style="width:26px;height:26px;background:#d1fae5;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="banknote" style="width:13px;height:13px;color:#059669;"></i>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#374151;">กลุ่มบริหารงบประมาณ</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:5px;">
+            <label class="perm-row" id="wrap-ipad" style="border-radius:8px;">
+              <input type="checkbox" id="perm-ipad" style="width:15px;height:15px;accent-color:#059669;flex-shrink:0;" onchange="onPermChange('ipad')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">ระบบยืม-คืนไอแพด</div>
+                <div style="font-size:10px;color:#64748b;">อนุมัติ/บันทึกการยืม-คืนไอแพดของโรงเรียน</div>
+              </div>
+              <i data-lucide="tablet-smartphone" style="width:13px;height:13px;color:#6ee7b7;flex-shrink:0;"></i>
+            </label>
+          </div>
+        </div>
 
         <!-- กลุ่มบริหารทั่วไป -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
@@ -743,6 +764,16 @@ function cssVar(name) {
 
 var PERM_DEFS = [
   {
+    key: 'ipad',
+    label: 'ระบบยืม-คืนไอแพด',
+    desc: 'อนุมัติ/บันทึกการยืม-คืนไอแพดของโรงเรียน',
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'tablet-smartphone',
+    get color()  { return cssVar('--role-budget-color');  },
+    get bg()     { return cssVar('--role-budget-bg');     },
+    get border() { return cssVar('--role-budget-border'); }
+  },
+  {
     key: 'bookings',
     label: 'ระบบจองห้อง',
     desc: 'อนุมัติ/ปฏิเสธคำขอ และจัดการห้อง',
@@ -915,6 +946,20 @@ var GROUP_DEFS = [
     get bg()     { return cssVar('--role-super-bg');     },
     get border() { return cssVar('--role-super-border'); },
     filter: function(a){ return a.email.toLowerCase()===SUPER_ADMIN; }
+  },
+  {
+    key: 'budget',
+    label: 'กลุ่มบริหารงบประมาณ',
+    subtitle: 'ดูแลระบบยืม-คืนไอแพด',
+    icon: 'banknote',
+    get color()  { return cssVar('--role-budget-color');  },
+    get bg()     { return cssVar('--role-budget-bg');     },
+    get border() { return cssVar('--role-budget-border'); },
+    filter: function(a){
+      if(a.email.toLowerCase()===SUPER_ADMIN) return false;
+      var p=a.data.permissions||{};
+      return !!p.ipad;
+    }
   },
   {
     key: 'general',
@@ -1123,7 +1168,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+      return !p.ipad&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
     }
   }
 ];
@@ -1174,14 +1219,14 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+    return !p.ipad&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
     {label:'Admin ทั้งหมด', val:total, icon:'users',        get color(){return cssVar('--role-super-color');},    get bg(){return cssVar('--role-super-bg');}},
     {label:'มีสิทธิ์แล้ว',  val:withPerms, icon:'shield-check', get color(){return cssVar('--role-academic-color');}, get bg(){return cssVar('--role-academic-bg');}},
     {label:'ยังไม่มีสิทธิ์', val:noPerms, icon:'shield-off',    get color(){return cssVar('--role-hog-color');},      get bg(){return cssVar('--role-hog-bg');}},
-    {label:'กลุ่มงาน',      val:15, icon:'layout-grid',         get color(){return cssVar('--role-hr-color');},       get bg(){return cssVar('--role-hr-bg');}},
+    {label:'กลุ่มงาน',      val:16, icon:'layout-grid',         get color(){return cssVar('--role-hr-color');},       get bg(){return cssVar('--role-hr-bg');}},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
     return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:var(--gap-item);box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
@@ -1264,7 +1309,7 @@ function renderAdminMiniCard(a, isSuperCard){
   var isSA=a.email.toLowerCase()===SUPER_ADMIN;
   var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
   var perms=a.data.permissions||{};
-  if(isSA) perms={bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true};
+  if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true};
 
   var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
     return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
@@ -1305,7 +1350,7 @@ function renderListView(){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
     var perms=a.data.permissions||{};
-    if(isSA) perms={bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true};
+    if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true};
 
     var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
       return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
@@ -1339,14 +1384,14 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="17" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="18" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var perms=a.data.permissions||{};
-    if(isSA) perms={bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirectorAcademic:true,deputyDirectorBudget:true,deputyDirectorGeneral:true,deputyDirectorPersonnel:true,director:true};
+    if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirectorAcademic:true,deputyDirectorBudget:true,deputyDirectorGeneral:true,deputyDirectorPersonnel:true,director:true};
 
-    var permKeys=['bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director','admins'];
+    var permKeys=['ipad','bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director','admins'];
     var cells=permKeys.map(function(pk){
       var has=!!perms[pk];
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
@@ -1418,7 +1463,7 @@ function openAddModal(){
   resetStaffPicker();
   document.getElementById('headOfGroupPanel').classList.remove('show');
   resetHogPicker();
-  ['bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
+  ['ipad','bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
   });
@@ -1439,7 +1484,7 @@ function openEditModal(email){
   document.getElementById('staffPickerDisplay').value = admin.data.name || '';
   document.getElementById('staffDropdown').classList.remove('open');
   var p=admin.data.permissions||{};
-  ['bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
+  ['ipad','bookings','foodcourt','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
@@ -1459,6 +1504,7 @@ function saveAdmin(){
   var bookings=document.getElementById('perm-bookings').checked;
   var isHeadOfGroup = document.getElementById('perm-headOfGroup').checked;
   var perms={
+    ipad:               document.getElementById('perm-ipad').checked,
     bookings:           bookings,
     rooms:              bookings,
     foodcourt:          document.getElementById('perm-foodcourt').checked,

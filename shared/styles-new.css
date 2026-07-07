@@ -113,6 +113,11 @@
   --role-super-border:  #778da9;
   --role-super-badge-bg: linear-gradient(135deg,#0d1b2a,#415a77);
 
+  /* กลุ่มบริหารงบประมาณ */
+  --role-budget-color:  #059669;
+  --role-budget-bg:     #d1fae5;
+  --role-budget-border: #6ee7b7;
+
   /* กลุ่มบริหารทั่วไป */
   --role-general-color:  #2563eb;
   --role-general-bg:     #dbeafe;
@@ -189,6 +194,7 @@
   --role-none-border: #e2e8f0;
 
   /* Matrix header colors (ตาราง Permissions) */
+  --matrix-budget-color:        #059669;
   --matrix-general-color:       #2563eb;
   --matrix-foodcourt-color:     #0284c7;
   --matrix-academic-color:      #16a34a;
