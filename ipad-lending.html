@@ -23,7 +23,8 @@
   <script src="shared/common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;}
+    .acc-badge-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+    .acc-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;line-height:1.3;}
     .acc-badge.yes{background:var(--green-light);color:var(--green);}
     .acc-badge.no{background:var(--red-light);color:var(--red);}
     .acc-badge.none{background:#f1f5f9;color:#94a3b8;}
@@ -429,11 +430,11 @@ function accBadges(accessories, status) {
     var icon = ACC_ICONS[name] || 'circle';
     /* เขียว = กำลังยืมอยู่ · แดง = คืนเครื่องแล้วแต่ยังไม่คืนอุปกรณ์เสริมชิ้นนี้ · เทา = ไม่ได้ยืม/คืนเรียบร้อยแล้ว */
     var cls = !has ? 'none' : (status === 'in' ? 'no' : 'yes');
-    return '<span class="acc-badge ' + cls + '"><i data-lucide="' + icon + '" style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;"></i>' + name + '</span>';
+    return '<span class="acc-badge ' + cls + '"><i data-lucide="' + icon + '" style="width:13px;height:13px;flex-shrink:0;"></i>' + name + '</span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  if (other.length) html += '<span class="acc-badge ' + (status === 'in' ? 'no' : 'yes') + '"><i data-lucide="package" style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;"></i>' + esc2(other.join(', ')) + '</span>';
-  return html;
+  if (other.length) html += '<span class="acc-badge ' + (status === 'in' ? 'no' : 'yes') + '"><i data-lucide="package" style="width:13px;height:13px;flex-shrink:0;"></i>' + esc2(other.join(', ')) + '</span>';
+  return '<div class="acc-badge-wrap">' + html + '</div>';
 }
 
 /* ══════════════════════════════════════════════════════════════
