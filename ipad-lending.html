@@ -520,6 +520,24 @@ function renderBorrowPanel() {
         '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="list-checks" style="width:16px;height:16px;"></i> รายการที่กำลังถูกยืมอยู่ (<span id="borrowOutCount">' + BORROWS_OUT.length + '</span>)</div>' +
         '<button class="btn-primary" onclick="openBorrowModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มการยืม</button>' +
       '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">' +
+        '<button class="view-btn active" id="borrowFilterTypeAll" onclick="setBorrowFilterType(\'all\')">ทั้งหมด</button>' +
+        '<button class="view-btn" id="borrowFilterTypeStudent" onclick="setBorrowFilterType(\'student\')"><i data-lucide="graduation-cap" style="width:14px;height:14px;"></i> นักเรียน</button>' +
+        '<button class="view-btn" id="borrowFilterTypeStaff" onclick="setBorrowFilterType(\'staff\')"><i data-lucide="briefcase" style="width:14px;height:14px;"></i> ครูและบุคลากร</button>' +
+      '</div>' +
+      '<div id="borrowFilterStudentWrap" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:12px;">' +
+        '<select id="borrowFilterGrade" onchange="onBorrowFilterGradeChange()" style="max-width:150px;">' +
+          '<option value="all">ทุกชั้น</option><option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option>' +
+        '</select>' +
+        '<select id="borrowFilterRoom" onchange="renderBorrowOutTable()" style="max-width:150px;">' +
+          '<option value="all">ทุกห้อง</option>' +
+        '</select>' +
+      '</div>' +
+      '<div id="borrowFilterStaffWrap" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:12px;">' +
+        '<select id="borrowFilterGroup" onchange="renderBorrowOutTable()" style="max-width:260px;">' +
+          '<option value="all">ทุกกลุ่มสาระ/งาน</option>' +
+        '</select>' +
+      '</div>' +
       '<div class="ipad-search-row"><input type="text" id="borrowOutSearch" placeholder="ค้นหาชื่อ / เลขประจำตัว / Serial Number..." oninput="renderBorrowOutTable()"></div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>ผู้ยืม</th><th>ชั้น/ห้อง หรือ กลุ่มสาระ</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th></th>' +
@@ -530,13 +548,82 @@ function renderBorrowPanel() {
   );
 }
 
+var borrowFilterType = 'all';  /* 'all' | 'student' | 'staff' */
+
+function setBorrowFilterType(type) {
+  borrowFilterType = type;
+  document.getElementById('borrowFilterTypeAll').classList.toggle('active', type === 'all');
+  document.getElementById('borrowFilterTypeStudent').classList.toggle('active', type === 'student');
+  document.getElementById('borrowFilterTypeStaff').classList.toggle('active', type === 'staff');
+
+  document.getElementById('borrowFilterStudentWrap').style.display = (type === 'student') ? 'flex' : 'none';
+  document.getElementById('borrowFilterStaffWrap').style.display   = (type === 'staff')   ? 'flex' : 'none';
+
+  if (type === 'student') {
+    document.getElementById('borrowFilterGrade').value = 'all';
+    populateBorrowFilterRoomOptions();
+  } else if (type === 'staff') {
+    populateBorrowFilterGroupOptions();
+  }
+  renderBorrowOutTable();
+}
+
+function onBorrowFilterGradeChange() {
+  populateBorrowFilterRoomOptions();
+  renderBorrowOutTable();
+}
+
+/* เติมตัวเลือก "ห้อง" ตามชั้นที่เลือก (ดึงจากข้อมูลนักเรียนทั้งหมด ไม่ใช่แค่คนที่ยืมอยู่
+   เพื่อให้เลือกดูห้องที่ยังไม่มีใครยืมได้ด้วย) */
+function populateBorrowFilterRoomOptions() {
+  var sel = document.getElementById('borrowFilterRoom');
+  if (!sel) return;
+  var grade = document.getElementById('borrowFilterGrade').value;
+  var roomsSet = {};
+  STUDENTS.forEach(function(s) {
+    if (grade === 'all' || s.grade === grade) roomsSet[s.room] = true;
+  });
+  var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
+  sel.innerHTML = '<option value="all">ทุกห้อง</option>' +
+    rooms.map(function(r) { return '<option value="' + esc2(r) + '">ห้อง ' + esc2(r) + '</option>'; }).join('');
+}
+
+/* เติมตัวเลือก "กลุ่มสาระ/งาน" จากข้อมูลบุคลากรทั้งหมด */
+function populateBorrowFilterGroupOptions() {
+  var sel = document.getElementById('borrowFilterGroup');
+  if (!sel) return;
+  var groupsSet = {};
+  STAFF.forEach(function(s) { groupsSet[s.group || 'ไม่ระบุ'] = true; });
+  var groups = Object.keys(groupsSet).sort(function(a, b) { return a.localeCompare(b, 'th'); });
+  sel.innerHTML = '<option value="all">ทุกกลุ่มสาระ/งาน</option>' +
+    groups.map(function(g) { return '<option value="' + esc2(g) + '">' + esc2(g) + '</option>'; }).join('');
+}
+
 function renderBorrowOutTable() {
   var tbody = document.getElementById('borrowOutTbody');
   if (!tbody) return;
   var countEl = document.getElementById('borrowOutCount');
   if (countEl) countEl.textContent = BORROWS_OUT.length;
   var q = (document.getElementById('borrowOutSearch') ? document.getElementById('borrowOutSearch').value : '').trim().toLowerCase();
+
+  var gradeFilter = document.getElementById('borrowFilterGrade') ? document.getElementById('borrowFilterGrade').value : 'all';
+  var roomFilter  = document.getElementById('borrowFilterRoom')  ? document.getElementById('borrowFilterRoom').value  : 'all';
+  var groupFilter = document.getElementById('borrowFilterGroup') ? document.getElementById('borrowFilterGroup').value : 'all';
+
   var list = BORROWS_OUT.filter(function(b) {
+    var isStaffRow = b.borrowerType === 'staff';
+
+    if (borrowFilterType === 'student' && isStaffRow) return false;
+    if (borrowFilterType === 'staff' && !isStaffRow) return false;
+
+    if (borrowFilterType === 'student') {
+      if (gradeFilter !== 'all' && b.grade !== gradeFilter) return false;
+      if (roomFilter  !== 'all' && b.room  !== roomFilter)  return false;
+    }
+    if (borrowFilterType === 'staff') {
+      if (groupFilter !== 'all' && (b.grade || 'ไม่ระบุ') !== groupFilter) return false;
+    }
+
     if (!q) return true;
     return (b.studentName || '').toLowerCase().indexOf(q) !== -1 ||
            (b.studentIdNum || '').toLowerCase().indexOf(q) !== -1 ||
@@ -1181,6 +1268,7 @@ function loadStaff() {
     refreshStaffDatalist();
     renderStatsCharts();
     renderStudentStatsChart();
+    if (document.getElementById('borrowFilterGroup')) populateBorrowFilterGroupOptions();
   }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -1580,6 +1668,7 @@ function loadStudents() {
     renderStudentsTable();
     refreshStudentDatalist();
     renderStudentStatsChart();
+    if (document.getElementById('borrowFilterRoom')) populateBorrowFilterRoomOptions();
   }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
 }
 
