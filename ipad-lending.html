@@ -26,6 +26,7 @@
     .acc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px;}
     .acc-badge.yes{background:var(--green-light);color:var(--green);}
     .acc-badge.no{background:var(--red-light);color:var(--red);}
+    .acc-badge.none{background:#f1f5f9;color:#94a3b8;}
     .ipad-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px;}
     .ipad-stats-grid .card{padding:14px 16px;}
     .ipad-stats-grid canvas{max-height:150px;}
@@ -420,14 +421,18 @@ function studentFullName(s) {
 /* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย
    เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
 var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
-function accBadges(accessories) {
+var ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-tool', 'เคส': 'package' };
+function accBadges(accessories, status) {
   accessories = accessories || [];
   var html = ACC_ORDER.map(function(name) {
     var has = accessories.indexOf(name) !== -1;
-    return '<span class="acc-badge ' + (has ? 'yes' : 'no') + '">' + name + ' ' + (has ? '✓' : '✕') + '</span>';
+    var icon = ACC_ICONS[name] || 'circle';
+    /* เขียว = กำลังยืมอยู่ · แดง = คืนเครื่องแล้วแต่ยังไม่คืนอุปกรณ์เสริมชิ้นนี้ · เทา = ไม่ได้ยืม/คืนเรียบร้อยแล้ว */
+    var cls = !has ? 'none' : (status === 'in' ? 'no' : 'yes');
+    return '<span class="acc-badge ' + cls + '"><i data-lucide="' + icon + '" style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;"></i>' + name + '</span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  if (other.length) html += '<span class="acc-badge yes">' + esc2(other.join(', ')) + '</span>';
+  if (other.length) html += '<span class="acc-badge ' + (status === 'in' ? 'no' : 'yes') + '"><i data-lucide="package" style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;"></i>' + esc2(other.join(', ')) + '</span>';
   return html;
 }
 
@@ -472,9 +477,7 @@ function renderBorrowOutTable() {
         '<td style="font-weight:700;">' + esc2(b.studentName) + (isStaff ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : ' <span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + '</td>' +
-        '<td><div style="display:flex;gap:6px;">' +
+        '<td>' + accBadges(b.accessories, b.status) + '</td>' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
           '<button class="btn-secondary btn-sm" onclick="openReturnModal(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนอุปกรณ์</button>' +
         '</div></td>' +
@@ -1286,13 +1289,14 @@ function renderHistoryTable() {
         '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories) + '</td>' +
+        '<td>' + accBadges(b.accessories, b.status) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td>' + (b.status === 'in' ? fmtDate(b.returnDate) : '-') + '</td>' +
         '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
   }).join('');
+  lucide.createIcons();
 }
 
 function exportHistoryCsv() {
