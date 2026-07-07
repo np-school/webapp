@@ -341,8 +341,41 @@ function renderPage() {
 
     '<div class="ipad-stats-grid" id="ipadStatsGrid">' +
       '<div class="card"><div class="section-divider" style="margin:0 0 6px;border:none;padding:0;font-size:12.5px;">สถานะเครื่อง</div><canvas id="chartDeviceStatus"></canvas></div>' +
-      '<div class="card"><div class="section-divider" style="margin:0 0 6px;border:none;padding:0;font-size:12.5px;">อุปกรณ์เสริมที่ถูกยืมอยู่</div><canvas id="chartAccessories"></canvas></div>' +
+      '<div class="card"><div class="section-divider" style="margin:0 0 6px;border:none;padding:0;font-size:12.5px;" id="accessoriesChartTitle">อุปกรณ์เสริม (ยืมอยู่ / คงเหลือ)</div><canvas id="chartAccessories"></canvas></div>' +
       '<div class="card"><div class="section-divider" style="margin:0 0 6px;border:none;padding:0;font-size:12.5px;">นักเรียน/บุคลากรที่ยืมอยู่</div><canvas id="chartBorrowerType"></canvas></div>' +
+    '</div>' +
+
+    '<div class="card" style="margin-bottom:18px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน &amp; การยืมไอแพด</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="view-btn active" id="stuStatViewGrade" onclick="setStudentStatMode(\'grade\')">รายชั้น</button>' +
+          '<button class="view-btn" id="stuStatViewRoom" onclick="setStudentStatMode(\'room\')">รายห้อง</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div id="stuStatGradeSelectWrap" style="display:none;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<button class="filter-pill active" onclick="setStudentStatGrade(\'ม.4\', this)">ม.4</button>' +
+        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.5\', this)">ม.5</button>' +
+        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.6\', this)">ม.6</button>' +
+      '</div>' +
+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">' +
+        '<div style="background:var(--bg);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:600;">นักเรียนทั้งหมด</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--text);margin:0;" id="stuStatTotalCount">0</p>' +
+        '</div>' +
+        '<div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--amber);margin:0 0 4px;font-weight:600;">กำลังยืมไอแพดอยู่</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--amber);margin:0;" id="stuStatBorrowingCount">0</p>' +
+        '</div>' +
+        '<div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--blue);margin:0 0 4px;font-weight:600;">สัดส่วนที่กำลังยืม</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--blue);margin:0;" id="stuStatPercent">0%</p>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="position:relative;height:260px;"><canvas id="chartStudentStats"></canvas></div>' +
     '</div>' +
 
     '<div class="sub-tab-bar">' +
@@ -366,7 +399,6 @@ function switchSubTab(name) {
     document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
     document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
   });
-  if (name === 'students') renderStudentStatsChart();
   lucide.createIcons();
 }
 
@@ -378,6 +410,7 @@ function renderStatsCharts() {
   if (typeof Chart === 'undefined') return;
   var outCount = BORROWS_OUT.length;
   var freeCount = Math.max(DEVICES.length - outCount, 0);
+  var totalDevices = DEVICES.length;
   var chargerCount = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('หัวชาร์จ') !== -1; }).length;
   var cableCount   = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('สายชาร์จ') !== -1; }).length;
   var penCount  = BORROWS_OUT.filter(function(b){ return (b.accessories||[]).indexOf('ปากกา') !== -1; }).length;
@@ -386,8 +419,40 @@ function renderStatsCharts() {
   var studentOutCount = outCount - staffOutCount;
 
   _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], ['#dc2626','#16a34a']);
-  _drawChart('chartAccessories', 'bar', ['หัวชาร์จ','สายชาร์จ','ปากกา','เคส'], [chargerCount, cableCount, penCount, caseCount], ['#f59e0b','#0891b2','#1d4ed8','#7c3aed']);
+
+  var accTitle = document.getElementById('accessoriesChartTitle');
+  if (accTitle) accTitle.textContent = 'อุปกรณ์เสริม (ยืมอยู่ / คงเหลือ) — ชุดละ ' + totalDevices + ' ชิ้น';
+  _drawAccessoriesChart(
+    ['หัวชาร์จ','สายชาร์จ','ปากกา','เคส'],
+    [chargerCount, cableCount, penCount, caseCount],
+    totalDevices
+  );
+
   _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['#1d4ed8','#f59e0b']);
+}
+function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
+  var el = document.getElementById('chartAccessories');
+  if (!el) return;
+  var remaining = borrowedCounts.map(function(c) { return Math.max(totalDevices - c, 0); });
+  if (_charts['chartAccessories']) _charts['chartAccessories'].destroy();
+  _charts['chartAccessories'] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'ยืมอยู่',   data: borrowedCounts, backgroundColor: '#f59e0b', borderRadius: 4, maxBarThickness: 26, stack: 'a' },
+        { label: 'คงเหลือ', data: remaining,      backgroundColor: '#e2e8f0', borderRadius: 4, maxBarThickness: 26, stack: 'a' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11, family: 'Sarabun' }, boxWidth: 12 } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11, family: 'Sarabun' } } },
+        y: { stacked: true, beginAtZero: true, max: totalDevices, ticks: { precision: 0 } }
+      }
+    }
+  });
 }
 function _drawChart(canvasId, type, labels, data, colors) {
   var el = document.getElementById(canvasId);
@@ -773,39 +838,6 @@ function confirmReturn() {
    ══════════════════════════════════════════════════════════════ */
 function renderStudentsPanel() {
   return (
-    '<div class="card" style="margin-bottom:14px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน &amp; การยืมไอแพด</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="view-btn active" id="stuStatViewGrade" onclick="setStudentStatMode(\'grade\')">รายชั้น</button>' +
-          '<button class="view-btn" id="stuStatViewRoom" onclick="setStudentStatMode(\'room\')">รายห้อง</button>' +
-        '</div>' +
-      '</div>' +
-
-      '<div id="stuStatGradeSelectWrap" style="display:none;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
-        '<button class="filter-pill active" onclick="setStudentStatGrade(\'ม.4\', this)">ม.4</button>' +
-        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.5\', this)">ม.5</button>' +
-        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.6\', this)">ม.6</button>' +
-      '</div>' +
-
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">' +
-        '<div style="background:var(--bg);border-radius:12px;padding:12px 14px;">' +
-          '<p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:600;">นักเรียนทั้งหมด</p>' +
-          '<p style="font-size:22px;font-weight:800;color:var(--text);margin:0;" id="stuStatTotalCount">0</p>' +
-        '</div>' +
-        '<div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;">' +
-          '<p style="font-size:11.5px;color:var(--amber);margin:0 0 4px;font-weight:600;">กำลังยืมไอแพดอยู่</p>' +
-          '<p style="font-size:22px;font-weight:800;color:var(--amber);margin:0;" id="stuStatBorrowingCount">0</p>' +
-        '</div>' +
-        '<div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;">' +
-          '<p style="font-size:11.5px;color:var(--blue);margin:0 0 4px;font-weight:600;">สัดส่วนที่กำลังยืม</p>' +
-          '<p style="font-size:22px;font-weight:800;color:var(--blue);margin:0;" id="stuStatPercent">0%</p>' +
-        '</div>' +
-      '</div>' +
-
-      '<div style="position:relative;height:260px;"><canvas id="chartStudentStats"></canvas></div>' +
-    '</div>' +
-
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">' +
         '<div id="studentTableFilterWrap" style="display:flex;gap:8px;flex-wrap:wrap;">' +
