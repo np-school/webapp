@@ -444,7 +444,7 @@ function renderBorrowPanel() {
   return (
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="list-checks" style="width:16px;height:16px;"></i> รายการที่กำลังถูกยืมอยู่ (' + BORROWS_OUT.length + ')</div>' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="list-checks" style="width:16px;height:16px;"></i> รายการที่กำลังถูกยืมอยู่ (<span id="borrowOutCount">' + BORROWS_OUT.length + '</span>)</div>' +
         '<button class="btn-primary" onclick="openBorrowModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มการยืม</button>' +
       '</div>' +
       '<div class="ipad-search-row"><input type="text" id="borrowOutSearch" placeholder="ค้นหาชื่อ / เลขประจำตัว / Serial Number..." oninput="renderBorrowOutTable()"></div>' +
@@ -460,6 +460,8 @@ function renderBorrowPanel() {
 function renderBorrowOutTable() {
   var tbody = document.getElementById('borrowOutTbody');
   if (!tbody) return;
+  var countEl = document.getElementById('borrowOutCount');
+  if (countEl) countEl.textContent = BORROWS_OUT.length;
   var q = (document.getElementById('borrowOutSearch') ? document.getElementById('borrowOutSearch').value : '').trim().toLowerCase();
   var list = BORROWS_OUT.filter(function(b) {
     if (!q) return true;
@@ -477,12 +479,12 @@ function renderBorrowOutTable() {
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(b.studentName) + (isStaff ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : ' <span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
+        '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
-          '<button class="btn-secondary btn-sm" onclick="openReturnModal(\'' + b.id + '\')"><i data-lucide="corner-down-left" style="width:13px;height:13px;"></i> คืนอุปกรณ์</button>' +
+          '<button class="btn-icon" onclick="openReturnModal(\'' + b.id + '\')" title="คืนอุปกรณ์"><i data-lucide="corner-down-left" style="width:14px;height:14px;"></i></button>' +
         '</div></td>' +
       '</tr>'
     );
