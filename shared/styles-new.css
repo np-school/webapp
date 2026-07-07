@@ -1354,28 +1354,54 @@ label {
 .data-table tbody tr { transition: background .12s; }
 .data-table tbody tr:hover { background: #f8faff; }
 
-/* ── ตารางยืม-คืน iPad: บังคับ 1 บรรทัด ยกเว้นคอลัมน์ "ชั้น/ห้อง" และ "เครื่อง (Serial)" ── */
-.borrow-out-table { table-layout: fixed; }
-.borrow-out-table th:nth-child(1), .borrow-out-table td:nth-child(1) { width: 19%; }
-.borrow-out-table th:nth-child(2), .borrow-out-table td:nth-child(2) { width: 13%; }
+/* ── ตารางยืม-คืน iPad (รายการที่ยืมอยู่ + ประวัติ) ──
+   - ชื่อแสดงเต็มไม่มีตัด ... / แท็ก (นักเรียน)(บุคลากร) ลงบรรทัดใหม่
+   - คอลัมน์ ชั้น/ห้อง และ เครื่อง (Serial) ขึ้น 2 บรรทัดได้ตามปกติ
+   - อุปกรณ์เสริมจัดเป็นตาราง 2 คอลัมน์ x 2 แถว ให้ลงตัว */
+.borrow-out-table, .history-table { table-layout: fixed; }
+
+.borrow-out-table th:nth-child(1), .borrow-out-table td:nth-child(1) { width: 22%; }
+.borrow-out-table th:nth-child(2), .borrow-out-table td:nth-child(2) { width: 12%; }
 .borrow-out-table th:nth-child(3), .borrow-out-table td:nth-child(3) { width: 24%; }
-.borrow-out-table th:nth-child(4), .borrow-out-table td:nth-child(4) { width: 20%; }
-.borrow-out-table th:nth-child(5), .borrow-out-table td:nth-child(5) { width: 14%; }
-.borrow-out-table th:nth-child(6), .borrow-out-table td:nth-child(6) { width: 10%; }
+.borrow-out-table th:nth-child(4), .borrow-out-table td:nth-child(4) { width: 82px; }
+.borrow-out-table th:nth-child(5), .borrow-out-table td:nth-child(5) { width: 13%; }
+.borrow-out-table th:nth-child(6), .borrow-out-table td:nth-child(6) { width: 80px; }
+
+.history-table th:nth-child(1), .history-table td:nth-child(1) { width: 18%; }
+.history-table th:nth-child(2), .history-table td:nth-child(2) { width: 10%; }
+.history-table th:nth-child(3), .history-table td:nth-child(3) { width: 20%; }
+.history-table th:nth-child(4), .history-table td:nth-child(4) { width: 82px; }
+.history-table th:nth-child(5), .history-table td:nth-child(5) { width: 11%; }
+.history-table th:nth-child(6), .history-table td:nth-child(6) { width: 11%; }
+.history-table th:nth-child(7), .history-table td:nth-child(7) { width: 12%; }
+
 .borrow-out-table td:nth-child(1),
-.borrow-out-table td:nth-child(4),
-.borrow-out-table td:nth-child(5),
-.borrow-out-table td:nth-child(6) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.borrow-out-table td:nth-child(2),
-.borrow-out-table td:nth-child(3) {
+.history-table td:nth-child(1) {
   white-space: normal;
   word-break: break-word;
 }
-.borrow-out-table .acc-badge-wrap { flex-wrap: nowrap; }
+.borrow-out-table td:nth-child(2),
+.borrow-out-table td:nth-child(3),
+.history-table td:nth-child(2),
+.history-table td:nth-child(3) {
+  white-space: normal;
+  word-break: break-word;
+}
+.borrow-out-table td:nth-child(5),
+.borrow-out-table td:nth-child(6),
+.history-table td:nth-child(5),
+.history-table td:nth-child(6),
+.history-table td:nth-child(7) {
+  white-space: nowrap;
+}
+
+.borrow-out-table .acc-badge-wrap,
+.history-table .acc-badge-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, 28px);
+  grid-auto-rows: 28px;
+  gap: 6px;
+}
 
 /* Food-court table header */
 th {

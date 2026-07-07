@@ -637,7 +637,7 @@ function renderBorrowOutTable() {
     var isStaff = b.borrowerType === 'staff';
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + (isStaff ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : ' <span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + '<br>' + (isStaff ? '<span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '<span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
@@ -1597,7 +1597,7 @@ function renderHistoryPanel() {
         '<input type="text" id="historySearch" placeholder="ค้นหาเลขประจำตัว / ชื่อนักเรียน / Serial Number..." style="max-width:340px;" oninput="renderHistoryTable()">' +
         '<button class="btn-secondary" onclick="exportHistoryCsv()"><i data-lucide="download" style="width:16px;height:16px;"></i> ส่งออกเป็น CSV</button>' +
       '</div>' +
-      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+      '<div class="tbl-wrap"><table class="data-table history-table"><thead><tr>' +
         '<th>นักเรียน</th><th>ชั้น/ห้อง</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th>วันที่คืน</th><th>สถานะ</th>' +
       '</tr></thead><tbody id="historyTbody">' +
         '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
@@ -1623,7 +1623,7 @@ function renderHistoryTable() {
   tbody.innerHTML = list.map(function(b) {
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? ' <span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? '<br><span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
