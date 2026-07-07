@@ -347,10 +347,16 @@ function renderPage() {
 
     '<div class="card" style="margin-bottom:18px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน &amp; การยืมไอแพด</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="view-btn active" id="stuStatViewGrade" onclick="setStudentStatMode(\'grade\')">รายชั้น</button>' +
-          '<button class="view-btn" id="stuStatViewRoom" onclick="setStudentStatMode(\'room\')">รายห้อง</button>' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน/บุคลากร &amp; การยืมไอแพด</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="view-btn active" id="stuStatTypeStudent" onclick="setStudentStatType(\'student\')"><i data-lucide="graduation-cap" style="width:14px;height:14px;"></i> นักเรียน</button>' +
+            '<button class="view-btn" id="stuStatTypeStaff" onclick="setStudentStatType(\'staff\')"><i data-lucide="briefcase" style="width:14px;height:14px;"></i> ครูและบุคลากร</button>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;" id="stuStatModeToggleWrap">' +
+            '<button class="view-btn active" id="stuStatViewGrade" onclick="setStudentStatMode(\'grade\')">รายชั้น</button>' +
+            '<button class="view-btn" id="stuStatViewRoom" onclick="setStudentStatMode(\'room\')">รายห้อง</button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
 
@@ -362,7 +368,7 @@ function renderPage() {
 
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">' +
         '<div style="background:var(--bg);border-radius:12px;padding:12px 14px;">' +
-          '<p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:600;">นักเรียนทั้งหมด</p>' +
+          '<p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:600;" id="stuStatTotalLabel">นักเรียนทั้งหมด</p>' +
           '<p style="font-size:22px;font-weight:800;color:var(--text);margin:0;" id="stuStatTotalCount">0</p>' +
         '</div>' +
         '<div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;">' +
@@ -863,8 +869,23 @@ function renderStudentsPanel() {
   );
 }
 
+var studentStatType  = 'student'; /* 'student' | 'staff' */
 var studentStatMode  = 'grade';
 var studentStatGrade = 'ม.4';
+
+function setStudentStatType(type) {
+  studentStatType = type;
+  document.getElementById('stuStatTypeStudent').classList.toggle('active', type === 'student');
+  document.getElementById('stuStatTypeStaff').classList.toggle('active', type === 'staff');
+
+  /* ตัวเลือกรายชั้น/รายห้อง ใช้ได้เฉพาะโหมดนักเรียนเท่านั้น (บุคลากรไม่มีชั้น/ห้อง) */
+  var modeToggleWrap = document.getElementById('stuStatModeToggleWrap');
+  if (modeToggleWrap) modeToggleWrap.style.display = (type === 'student') ? 'flex' : 'none';
+  document.getElementById('stuStatGradeSelectWrap').style.display = (type === 'student' && studentStatMode === 'room') ? 'flex' : 'none';
+
+  document.getElementById('stuStatTotalLabel').textContent = (type === 'student') ? 'นักเรียนทั้งหมด' : 'ครูและบุคลากรทั้งหมด';
+  renderStudentStatsChart();
+}
 
 function setStudentStatMode(mode) {
   studentStatMode = mode;
@@ -886,28 +907,52 @@ function renderStudentStatsChart() {
   var totalEl = document.getElementById('stuStatTotalCount');
   if (!totalEl) return;
 
-  var borrowedIds = {};
-  BORROWS_OUT.forEach(function(b) { if (b.borrowerType !== 'staff') borrowedIds[b.studentId] = true; });
+  var labels, totals, borrowing, datasetLabel1, datasetLabel2;
 
-  var labels, totals, borrowing;
-  if (studentStatMode === 'grade') {
-    var grades = ['ม.4', 'ม.5', 'ม.6'];
-    labels = grades;
-    totals = grades.map(function(g) { return STUDENTS.filter(function(s) { return s.grade === g; }).length; });
-    borrowing = grades.map(function(g) {
-      return STUDENTS.filter(function(s) { return s.grade === g && borrowedIds[s.id]; }).length;
+  if (studentStatType === 'staff') {
+    /* ── โหมดครูและบุคลากร: จัดกลุ่มตาม "กลุ่มสาระ/งาน" (s.group) ─────── */
+    var borrowedStaffIds = {};
+    BORROWS_OUT.forEach(function(b) { if (b.borrowerType === 'staff') borrowedStaffIds[b.studentId] = true; });
+
+    var groupsSet = {};
+    STAFF.forEach(function(s) { groupsSet[s.group || 'ไม่ระบุ'] = true; });
+    var groups = Object.keys(groupsSet).sort(function(a, b) { return a.localeCompare(b, 'th'); });
+
+    labels = groups;
+    totals = groups.map(function(g) {
+      return STAFF.filter(function(s) { return (s.group || 'ไม่ระบุ') === g; }).length;
     });
+    borrowing = groups.map(function(g) {
+      return STAFF.filter(function(s) { return (s.group || 'ไม่ระบุ') === g && borrowedStaffIds[s.id]; }).length;
+    });
+    datasetLabel1 = 'บุคลากรทั้งหมด';
+    datasetLabel2 = 'กำลังยืมไอแพด';
   } else {
-    var roomsSet = {};
-    STUDENTS.forEach(function(s) { if (s.grade === studentStatGrade) roomsSet[s.room] = true; });
-    var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
-    labels = rooms.map(function(r) { return 'ห้อง ' + r; });
-    totals = rooms.map(function(r) {
-      return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r; }).length;
-    });
-    borrowing = rooms.map(function(r) {
-      return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r && borrowedIds[s.id]; }).length;
-    });
+    /* ── โหมดนักเรียน: จัดกลุ่มตามชั้น หรือ ห้อง ──────────────────────── */
+    var borrowedIds = {};
+    BORROWS_OUT.forEach(function(b) { if (b.borrowerType !== 'staff') borrowedIds[b.studentId] = true; });
+
+    if (studentStatMode === 'grade') {
+      var grades = ['ม.4', 'ม.5', 'ม.6'];
+      labels = grades;
+      totals = grades.map(function(g) { return STUDENTS.filter(function(s) { return s.grade === g; }).length; });
+      borrowing = grades.map(function(g) {
+        return STUDENTS.filter(function(s) { return s.grade === g && borrowedIds[s.id]; }).length;
+      });
+    } else {
+      var roomsSet = {};
+      STUDENTS.forEach(function(s) { if (s.grade === studentStatGrade) roomsSet[s.room] = true; });
+      var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
+      labels = rooms.map(function(r) { return 'ห้อง ' + r; });
+      totals = rooms.map(function(r) {
+        return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r; }).length;
+      });
+      borrowing = rooms.map(function(r) {
+        return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r && borrowedIds[s.id]; }).length;
+      });
+    }
+    datasetLabel1 = 'นักเรียนทั้งหมด';
+    datasetLabel2 = 'กำลังยืมไอแพด';
   }
 
   var total = totals.reduce(function(a, b) { return a + b; }, 0);
@@ -924,8 +969,8 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: 'นักเรียนทั้งหมด', data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
-        { label: 'กำลังยืมไอแพด', data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
+        { label: datasetLabel1, data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel2, data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
       ]
     },
     options: {
@@ -1086,6 +1131,7 @@ function loadStaff() {
     renderStaffTable();
     refreshStaffDatalist();
     renderStatsCharts();
+    renderStudentStatsChart();
   }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
 }
 
