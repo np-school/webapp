@@ -526,7 +526,7 @@ var ADMIN_GROUP_MENU = [
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'banknote',
     items: [
-      { id: 'adminMenuItem-ipad', label: 'ระบบยืม-คืนไอแพด', icon: 'tablet-smartphone', href: 'ipad-lending.html' },
+      { id: 'adminMenuItem-ipad', label: 'ระบบยืม-คืน iPad', icon: 'tablet-smartphone', href: 'ipad-lending.html' },
     ],
   },
   {

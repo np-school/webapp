@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
   <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 
-  <title>ระบบยืม-คืนไอแพด – โรงเรียนหนองกี่พิทยาคม</title>
+  <title>ระบบยืม-คืนiPad – โรงเรียนหนองกี่พิทยาคม</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -71,7 +71,7 @@
     <div class="modal-header">
       <div class="modal-title-group">
         <div class="modal-title-icon"><i data-lucide="tablet-smartphone" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3 id="borrowModalTitle">บันทึกการยืมไอแพด</h3><p id="borrowModalSub">เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
+        <div><h3 id="borrowModalTitle">บันทึกการยืมiPad</h3><p id="borrowModalSub">เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalBorrow')"><i data-lucide="x"></i></button>
     </div>
@@ -210,13 +210,13 @@
   </div>
 </div>
 
-<!-- Modal: เพิ่มไอแพด (manual) -->
+<!-- Modal: เพิ่มiPad (manual) -->
 <div class="modal-bg" id="modalDevice">
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
         <div class="modal-title-icon"><i data-lucide="tablet" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3>เพิ่มไอแพด</h3></div>
+        <div><h3>เพิ่มiPad</h3></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalDevice')"><i data-lucide="x"></i></button>
     </div>
@@ -239,13 +239,13 @@
   </div>
 </div>
 
-<!-- Modal: นำเข้าไฟล์ CSV ไอแพด -->
+<!-- Modal: นำเข้าไฟล์ CSV iPad -->
 <div class="modal-bg" id="modalImport">
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
         <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3>นำเข้าไฟล์รายการไอแพด (CSV)</h3><p>ระบบจะดึงเฉพาะคอลัมน์ Friendly Name, Asset Number, Serial Number</p></div>
+        <div><h3>นำเข้าไฟล์รายการiPad (CSV)</h3><p>ระบบจะดึงเฉพาะคอลัมน์ Friendly Name, Asset Number, Serial Number</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalImport')"><i data-lucide="x"></i></button>
     </div>
@@ -291,7 +291,7 @@
    ══════════════════════════════════════════════════════════════ */
 buildPage({
   appId:        'myApp',
-  navSubtitle:  'ระบบยืม-คืนไอแพด',
+  navSubtitle:  'ระบบยืม-คืนiPad',
   navTheme:     'dark',
   activePage:   'ipad-lending',
   requireAdmin: 'ipad',    /* เฉพาะแอดมินที่มีสิทธิ์ permissions.ipad == true (หรือ SuperAdmin) เท่านั้นที่เข้าได้ */
@@ -334,9 +334,9 @@ function renderPage() {
       '<div>' +
         '<div class="page-title-row">' +
           '<div class="page-icon blue"><i data-lucide="tablet-smartphone" style="width:20px;height:20px;color:white;"></i></div>' +
-          '<h1 class="page-title">ระบบยืม-คืนไอแพด</h1>' +
+          '<h1 class="page-title">ระบบยืม-คืนiPad</h1>' +
         '</div>' +
-        '<p class="page-sub">บันทึกการยืม-คืนไอแพดของนักเรียนชั้น ม.4-6</p>' +
+        '<p class="page-sub">บันทึกการยืม-คืนiPadของนักเรียนชั้น ม.4-6</p>' +
       '</div>' +
     '</div>' +
 
@@ -348,7 +348,7 @@ function renderPage() {
 
     '<div class="card" style="margin-bottom:18px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน/บุคลากร &amp; การยืมไอแพด</div>' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน/บุคลากร &amp; การยืมiPad</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<div style="display:flex;gap:8px;">' +
             '<button class="view-btn active" id="stuStatTypeStudent" onclick="setStudentStatType(\'student\')"><i data-lucide="graduation-cap" style="width:14px;height:14px;"></i> นักเรียน</button>' +
@@ -373,7 +373,7 @@ function renderPage() {
           '<p style="font-size:22px;font-weight:800;color:var(--text);margin:0;" id="stuStatTotalCount">0</p>' +
         '</div>' +
         '<div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;">' +
-          '<p style="font-size:11.5px;color:var(--amber);margin:0 0 4px;font-weight:600;">กำลังยืมไอแพดอยู่</p>' +
+          '<p style="font-size:11.5px;color:var(--amber);margin:0 0 4px;font-weight:600;">กำลังยืมiPadอยู่</p>' +
           '<p style="font-size:22px;font-weight:800;color:var(--amber);margin:0;" id="stuStatBorrowingCount">0</p>' +
         '</div>' +
         '<div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;">' +
@@ -387,10 +387,10 @@ function renderPage() {
 
     '<div class="sub-tab-bar">' +
       '<button class="sub-tab active" id="subtab-btn-borrow"   onclick="switchSubTab(\'borrow\')"><i data-lucide="repeat" style="width:14px;height:14px;"></i> ยืม-คืนอุปกรณ์</button>' +
-      '<button class="sub-tab" id="subtab-btn-students" onclick="switchSubTab(\'students\')"><i data-lucide="users" style="width:14px;height:14px;"></i> รายชื่อนักเรียน</button>' +
+      '<button class="sub-tab" id="subtab-btn-students" onclick="switchSubTab(\'students\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ข้อมูลนักเรียน</button>' +
       '<button class="sub-tab" id="subtab-btn-staff" onclick="switchSubTab(\'staff\')"><i data-lucide="id-card" style="width:14px;height:14px;"></i> รายชื่อบุคลากร</button>' +
-      '<button class="sub-tab" id="subtab-btn-devices"  onclick="switchSubTab(\'devices\')"><i data-lucide="tablet" style="width:14px;height:14px;"></i> ข้อมูล iPad</button>' +
-      '<button class="sub-tab" id="subtab-btn-history"  onclick="switchSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติการยืม-คืน iPad ทั้งหมด</button>' +
+      '<button class="sub-tab" id="subtab-btn-devices"  onclick="switchSubTab(\'devices\')"><i data-lucide="tablet" style="width:14px;height:14px;"></i> ข้อมูลiPad</button>' +
+      '<button class="sub-tab" id="subtab-btn-history"  onclick="switchSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
     '</div>' +
 
     '<div class="sub-panel active" id="subpanel-borrow">'   + renderBorrowPanel()   + '</div>' +
@@ -569,7 +569,7 @@ var editingBorrowId = null;
 
 function openBorrowModal() {
   editingBorrowId = null;
-  document.getElementById('borrowModalTitle').textContent = 'บันทึกการยืมไอแพด';
+  document.getElementById('borrowModalTitle').textContent = 'บันทึกการยืมiPad';
   document.getElementById('borrowModalSub').textContent = 'เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม';
   document.getElementById('borrowSaveBtn').textContent = 'บันทึกการยืม';
   document.getElementById('borrowStudentInput').value = '';
@@ -787,7 +787,7 @@ function openReturnModal(id) {
   var accs = b.accessories || [];
   var html = '<label class="return-item-card is-device">' +
     '<span class="ri-icon"><i data-lucide="tablet-smartphone"></i></span>' +
-    '<span class="ri-label">เครื่องไอแพด<span>' + esc2(b.serialNumber) + '</span></span>' +
+    '<span class="ri-label">เครื่องiPad<span>' + esc2(b.serialNumber) + '</span></span>' +
     '<input type="checkbox" id="returnItemDevice" checked></label>';
   html += accs.map(function(name) {
     var icon = RETURN_ACC_ICONS[name] || 'package';
@@ -862,7 +862,7 @@ function renderStudentsPanel() {
         '<select id="studentRoomFilter" onchange="onStudentRoomFilterChange()" style="width:auto;min-width:120px;"><option value="all">ทุกห้อง</option></select>' +
       '</div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>เลขประจำตัว</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>สถานะยืมไอแพด</th><th></th>' +
+        '<th>เลขประจำตัว</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>สถานะยืมiPad</th><th></th>' +
       '</tr></thead><tbody id="studentsTbody">' +
         '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
@@ -927,7 +927,7 @@ function renderStudentStatsChart() {
       return STAFF.filter(function(s) { return (s.group || 'ไม่ระบุ') === g && borrowedStaffIds[s.id]; }).length;
     });
     datasetLabel1 = 'บุคลากรทั้งหมด';
-    datasetLabel2 = 'กำลังยืมไอแพด';
+    datasetLabel2 = 'กำลังยืมiPad';
   } else {
     /* ── โหมดนักเรียน: จัดกลุ่มตามชั้น หรือ ห้อง ──────────────────────── */
     var borrowedIds = {};
@@ -953,7 +953,7 @@ function renderStudentStatsChart() {
       });
     }
     datasetLabel1 = 'นักเรียนทั้งหมด';
-    datasetLabel2 = 'กำลังยืมไอแพด';
+    datasetLabel2 = 'กำลังยืมiPad';
   }
 
   var total = totals.reduce(function(a, b) { return a + b; }, 0);
@@ -1139,7 +1139,7 @@ function renderStaffPanel() {
       '</div>' +
       '<div class="ipad-search-row"><input type="text" id="staffSearch" placeholder="ค้นหาชื่อ / ตำแหน่ง / กลุ่มสาระ..." oninput="renderStaffTable()"></div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>กลุ่มสาระ/งาน</th><th>สถานะยืมไอแพด</th>' +
+        '<th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>กลุ่มสาระ/งาน</th><th>สถานะยืมiPad</th>' +
       '</tr></thead><tbody id="staffTbody">' +
         '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
@@ -1185,16 +1185,16 @@ function loadStaff() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PANEL 3: ข้อมูลไอแพด
+   PANEL 3: ข้อมูลiPad
    ══════════════════════════════════════════════════════════════ */
 function renderDevicesPanel() {
   return (
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการไอแพดทั้งหมด (' + DEVICES.length + ')</div>' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการiPadทั้งหมด (' + DEVICES.length + ')</div>' +
         '<div style="display:flex;gap:8px;">' +
           '<button class="btn-secondary" onclick="openModal(\'modalImport\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
-          '<button class="btn-primary" onclick="openModal(\'modalDevice\')"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มไอแพด</button>' +
+          '<button class="btn-primary" onclick="openModal(\'modalDevice\')"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มiPad</button>' +
         '</div>' +
       '</div>' +
       '<div class="ipad-search-row"><input type="text" id="deviceSearch" placeholder="ค้นหา Friendly Name / Asset / Serial Number..." oninput="renderDevicesTable()"></div>' +
@@ -1211,7 +1211,7 @@ function renderDevicesTable() {
   var tbody = document.getElementById('devicesTbody');
   if (!tbody) return;
   if (!DEVICES.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ยังไม่มีข้อมูลไอแพด — ลองนำเข้าไฟล์ CSV</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ยังไม่มีข้อมูลiPad — ลองนำเข้าไฟล์ CSV</td></tr>';
     return;
   }
   var q = (document.getElementById('deviceSearch') ? document.getElementById('deviceSearch').value : '').trim().toLowerCase();
@@ -1255,7 +1255,7 @@ function saveDevice() {
     friendlyName: friendlyName, assetNumber: assetNumber, serialNumber: serialNumber,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
-    showToast('เพิ่มไอแพดสำเร็จ ✅');
+    showToast('เพิ่มiPadสำเร็จ ✅');
     closeModal('modalDevice');
     document.getElementById('devFriendly').value = '';
     document.getElementById('devAsset').value = '';
@@ -1264,7 +1264,7 @@ function saveDevice() {
 }
 
 function deleteDevice(id) {
-  if (!confirm('ลบไอแพดเครื่องนี้ออกจากระบบ?')) return;
+  if (!confirm('ลบiPadเครื่องนี้ออกจากระบบ?')) return;
   db.collection('ipad_devices').doc(id).delete()
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
@@ -1589,10 +1589,10 @@ function loadDevices() {
     renderDevicesTable();
     refreshDeviceDatalist();
     var header = document.querySelector('#subpanel-devices .section-divider');
-    if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการไอแพดทั้งหมด (' + DEVICES.length + ')';
+    if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการiPadทั้งหมด (' + DEVICES.length + ')';
     renderStatsCharts();
     lucide.createIcons();
-  }, function(e) { showToast('โหลดข้อมูลไอแพดผิดพลาด: ' + e.message, 'error'); });
+  }, function(e) { showToast('โหลดข้อมูลiPadผิดพลาด: ' + e.message, 'error'); });
 }
 
 function loadBorrows() {
