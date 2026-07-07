@@ -366,6 +366,7 @@ function switchSubTab(name) {
     document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
     document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
   });
+  if (name === 'students') renderStudentStatsChart();
   lucide.createIcons();
 }
 
@@ -772,10 +773,42 @@ function confirmReturn() {
    ══════════════════════════════════════════════════════════════ */
 function renderStudentsPanel() {
   return (
+    '<div class="card" style="margin-bottom:14px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;font-size:13px;"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> สถิติจำนวนนักเรียน &amp; การยืมไอแพด</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="view-btn active" id="stuStatViewGrade" onclick="setStudentStatMode(\'grade\')">รายชั้น</button>' +
+          '<button class="view-btn" id="stuStatViewRoom" onclick="setStudentStatMode(\'room\')">รายห้อง</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div id="stuStatGradeSelectWrap" style="display:none;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<button class="filter-pill active" onclick="setStudentStatGrade(\'ม.4\', this)">ม.4</button>' +
+        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.5\', this)">ม.5</button>' +
+        '<button class="filter-pill" onclick="setStudentStatGrade(\'ม.6\', this)">ม.6</button>' +
+      '</div>' +
+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">' +
+        '<div style="background:var(--bg);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:600;">นักเรียนทั้งหมด</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--text);margin:0;" id="stuStatTotalCount">0</p>' +
+        '</div>' +
+        '<div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--amber);margin:0 0 4px;font-weight:600;">กำลังยืมไอแพดอยู่</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--amber);margin:0;" id="stuStatBorrowingCount">0</p>' +
+        '</div>' +
+        '<div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;">' +
+          '<p style="font-size:11.5px;color:var(--blue);margin:0 0 4px;font-weight:600;">สัดส่วนที่กำลังยืม</p>' +
+          '<p style="font-size:22px;font-weight:800;color:var(--blue);margin:0;" id="stuStatPercent">0%</p>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="position:relative;height:260px;"><canvas id="chartStudentStats"></canvas></div>' +
+    '</div>' +
+
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-          '<button class="filter-pill active" onclick="filterStudents(\'all\', this)">ทั้งหมด</button>' +
+        '<div id="studentTableFilterWrap" style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.4\', this)">ม.4</button>' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.5\', this)">ม.5</button>' +
           '<button class="filter-pill" onclick="filterStudents(\'ม.6\', this)">ม.6</button>' +
@@ -798,10 +831,86 @@ function renderStudentsPanel() {
   );
 }
 
+var studentStatMode  = 'grade';
+var studentStatGrade = 'ม.4';
+
+function setStudentStatMode(mode) {
+  studentStatMode = mode;
+  document.getElementById('stuStatViewGrade').classList.toggle('active', mode === 'grade');
+  document.getElementById('stuStatViewRoom').classList.toggle('active', mode === 'room');
+  document.getElementById('stuStatGradeSelectWrap').style.display = (mode === 'room') ? 'flex' : 'none';
+  renderStudentStatsChart();
+}
+
+function setStudentStatGrade(grade, btn) {
+  studentStatGrade = grade;
+  document.querySelectorAll('#stuStatGradeSelectWrap .filter-pill').forEach(function(el) { el.classList.remove('active'); });
+  btn.classList.add('active');
+  renderStudentStatsChart();
+}
+
+function renderStudentStatsChart() {
+  if (typeof Chart === 'undefined') return;
+  var totalEl = document.getElementById('stuStatTotalCount');
+  if (!totalEl) return;
+
+  var borrowedIds = {};
+  BORROWS_OUT.forEach(function(b) { if (b.borrowerType !== 'staff') borrowedIds[b.studentId] = true; });
+
+  var labels, totals, borrowing;
+  if (studentStatMode === 'grade') {
+    var grades = ['ม.4', 'ม.5', 'ม.6'];
+    labels = grades;
+    totals = grades.map(function(g) { return STUDENTS.filter(function(s) { return s.grade === g; }).length; });
+    borrowing = grades.map(function(g) {
+      return STUDENTS.filter(function(s) { return s.grade === g && borrowedIds[s.id]; }).length;
+    });
+  } else {
+    var roomsSet = {};
+    STUDENTS.forEach(function(s) { if (s.grade === studentStatGrade) roomsSet[s.room] = true; });
+    var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
+    labels = rooms.map(function(r) { return 'ห้อง ' + r; });
+    totals = rooms.map(function(r) {
+      return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r; }).length;
+    });
+    borrowing = rooms.map(function(r) {
+      return STUDENTS.filter(function(s) { return s.grade === studentStatGrade && s.room === r && borrowedIds[s.id]; }).length;
+    });
+  }
+
+  var total = totals.reduce(function(a, b) { return a + b; }, 0);
+  var totalBorrowing = borrowing.reduce(function(a, b) { return a + b; }, 0);
+  totalEl.textContent = total;
+  document.getElementById('stuStatBorrowingCount').textContent = totalBorrowing;
+  document.getElementById('stuStatPercent').textContent = total ? Math.round(totalBorrowing / total * 100) + '%' : '0%';
+
+  var el = document.getElementById('chartStudentStats');
+  if (!el) return;
+  if (_charts['chartStudentStats']) _charts['chartStudentStats'].destroy();
+  _charts['chartStudentStats'] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'นักเรียนทั้งหมด', data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
+        { label: 'กำลังยืมไอแพด', data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11, family: 'Sarabun' }, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Sarabun' } } },
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+}
+
 function filterStudents(grade, btn) {
   studentFilterGrade = grade;
   studentFilterRoom = 'all';
-  document.querySelectorAll('#subpanel-students .filter-pill').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('#studentTableFilterWrap .filter-pill').forEach(function(el) { el.classList.remove('active'); });
   btn.classList.add('active');
   refreshStudentRoomFilterOptions();
   renderStudentsTable();
@@ -1343,6 +1452,7 @@ function loadStudents() {
     STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStudentsTable();
     refreshStudentDatalist();
+    renderStudentStatsChart();
   }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -1369,6 +1479,7 @@ function loadBorrows() {
     renderStudentsTable();
     renderStaffTable();
     renderStatsCharts();
+    renderStudentStatsChart();
   }, function(e) { showToast('โหลดประวัติการยืมผิดพลาด: ' + e.message, 'error'); });
 }
 
