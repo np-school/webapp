@@ -168,19 +168,20 @@
   </div>
 </div>
 
-<!-- Modal: เพิ่มนักเรียน -->
+<!-- Modal: เพิ่ม/แก้ไขนักเรียน -->
 <div class="modal-bg" id="modalStudent">
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="user-plus" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
-        <div><h3>เพิ่มนักเรียน</h3></div>
+        <div class="modal-title-icon"><i data-lucide="user-plus" id="studentModalIcon" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div><h3 id="studentModalTitle">เพิ่มนักเรียน</h3></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalStudent')"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <label class="form-label">เลขประจำตัวนักเรียน</label>
       <input type="text" id="stuId" placeholder="เช่น 12345">
+      <p id="stuIdLockHint" style="display:none;font-size:11.5px;color:#94a3b8;margin-top:6px;">แก้ไขเลขประจำตัวไม่ได้ (ใช้เป็นรหัสอ้างอิงในระบบ)</p>
     </div>
     <div style="display:flex;gap:10px;">
       <div class="form-group" style="flex:1;">
@@ -204,7 +205,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="closeModal('modalStudent')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveStudent()">บันทึก</button>
+      <button class="btn-primary" id="studentSaveBtn" onclick="saveStudent()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -853,7 +854,7 @@ function renderStudentsPanel() {
         '</div>' +
         '<div style="display:flex;gap:8px;">' +
           '<button class="btn-secondary" onclick="openModal(\'modalImportStudents\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
-          '<button class="btn-primary" onclick="openModal(\'modalStudent\')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
+          '<button class="btn-primary" onclick="openAddStudentModal()"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> เพิ่มนักเรียน</button>' +
         '</div>' +
       '</div>' +
       '<div class="ipad-search-row">' +
@@ -1042,11 +1043,46 @@ function renderStudentsTable() {
         '<td>' + esc2(s.grade) + '</td>' +
         '<td>' + esc2(s.room) + '</td>' +
         '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
-        '<td><button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
+        '<td><div style="display:flex;gap:6px;">' +
+          '<button class="btn-icon" onclick="openEditStudentModal(\'' + s.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
+          '<button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')" title="ลบ"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+        '</div></td>' +
       '</tr>'
     );
   }).join('');
   lucide.createIcons();
+}
+
+var editingStudentId = null;
+
+function openAddStudentModal() {
+  editingStudentId = null;
+  document.getElementById('studentModalTitle').textContent = 'เพิ่มนักเรียน';
+  document.getElementById('studentSaveBtn').textContent = 'บันทึก';
+  document.getElementById('stuId').value = '';
+  document.getElementById('stuId').disabled = false;
+  document.getElementById('stuIdLockHint').style.display = 'none';
+  document.getElementById('stuFirstName').value = '';
+  document.getElementById('stuLastName').value = '';
+  document.getElementById('stuGrade').value = 'ม.4';
+  document.getElementById('stuRoom').value = '';
+  openModal('modalStudent');
+}
+
+function openEditStudentModal(id) {
+  var s = STUDENTS.find(function(x) { return x.id === id; });
+  if (!s) return;
+  editingStudentId = id;
+  document.getElementById('studentModalTitle').textContent = 'แก้ไขข้อมูลนักเรียน';
+  document.getElementById('studentSaveBtn').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('stuId').value = s.studentId || '';
+  document.getElementById('stuId').disabled = true; /* เลขประจำตัวใช้อ้างอิงในระบบ ห้ามแก้ */
+  document.getElementById('stuIdLockHint').style.display = 'block';
+  document.getElementById('stuFirstName').value = s.firstName || '';
+  document.getElementById('stuLastName').value = s.lastName || '';
+  document.getElementById('stuGrade').value = s.grade || 'ม.4';
+  document.getElementById('stuRoom').value = s.room || '';
+  openModal('modalStudent');
 }
 
 function saveStudent() {
@@ -1056,6 +1092,19 @@ function saveStudent() {
   var grade     = document.getElementById('stuGrade').value;
   var room      = document.getElementById('stuRoom').value.trim();
   if (!studentId || !firstName || !lastName || !room) { showToast('กรอกข้อมูลให้ครบ', 'warn'); return; }
+
+  if (editingStudentId) {
+    /* โหมดแก้ไข: อัปเดตชื่อ/นามสกุล/ชั้น/ห้อง (เลขประจำตัวถูกล็อคไว้ไม่ให้แก้) */
+    db.collection('ipad_students').doc(editingStudentId).update({
+      firstName: firstName, lastName: lastName, grade: grade, room: room
+    }).then(function() {
+      showToast('แก้ไขข้อมูลนักเรียนสำเร็จ ✅');
+      closeModal('modalStudent');
+      editingStudentId = null;
+    }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    return;
+  }
+
   if (STUDENTS.some(function(s) { return s.studentId === studentId; })) {
     showToast('เลขประจำตัวนี้มีอยู่แล้วในระบบ', 'warn'); return;
   }
