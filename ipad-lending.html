@@ -159,9 +159,14 @@
     <div class="form-group">
       <label class="form-label">สภาพเครื่อง/อุปกรณ์ที่คืน</label>
       <div class="segmented condition">
-        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
-        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
+        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked onclick="onReturnConditionChange()"><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
+        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" onclick="onReturnConditionChange()"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
       </div>
+    </div>
+
+    <div class="form-group" id="returnClaimNoteGroup" style="display:none;">
+      <label class="form-label">รายละเอียดปัญหา (ไม่บังคับกรอก)</label>
+      <textarea id="returnClaimNote" rows="3" placeholder="เช่น จอแตก, แบตเสื่อมเร็ว, ปุ่มโฮมกดไม่ติด..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
     </div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -238,6 +243,34 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="closeModal('modalDevice')">ยกเลิก</button>
       <button class="btn-primary" onclick="saveDevice()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ปรับสถานะเคลม -->
+<div class="modal-bg" id="modalClaimStatus">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div><h3>ปรับสถานะเคลม</h3><p id="claimStatusSub"></p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalClaimStatus')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">สถานะเครื่อง</label>
+      <div class="segmented condition">
+        <label><input type="radio" name="claimStatusCondition" id="claimStatusOk" value="ok" checked onclick="onClaimStatusChange()"><i data-lucide="check-circle-2"></i> ปกติ</label>
+        <label><input type="radio" name="claimStatusCondition" id="claimStatusClaim" value="claim" onclick="onClaimStatusChange()"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
+      </div>
+    </div>
+    <div class="form-group" id="claimStatusNoteGroup" style="display:none;">
+      <label class="form-label">รายละเอียดปัญหา (ไม่บังคับกรอก)</label>
+      <textarea id="claimStatusNote" rows="3" placeholder="เช่น จอแตก, แบตเสื่อมเร็ว, ปุ่มโฮมกดไม่ติด..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('modalClaimStatus')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveClaimStatus()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -393,6 +426,7 @@ function renderPage() {
       '<button class="sub-tab" id="subtab-btn-students" onclick="switchSubTab(\'students\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ข้อมูลนักเรียน</button>' +
       '<button class="sub-tab" id="subtab-btn-staff" onclick="switchSubTab(\'staff\')"><i data-lucide="id-card" style="width:14px;height:14px;"></i> รายชื่อบุคลากร</button>' +
       '<button class="sub-tab" id="subtab-btn-devices"  onclick="switchSubTab(\'devices\')"><i data-lucide="tablet" style="width:14px;height:14px;"></i> ข้อมูล iPad</button>' +
+      '<button class="sub-tab" id="subtab-btn-claims"  onclick="switchSubTab(\'claims\')"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i> ส่งเคลม</button>' +
       '<button class="sub-tab" id="subtab-btn-history"  onclick="switchSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
     '</div>' +
 
@@ -400,12 +434,13 @@ function renderPage() {
     '<div class="sub-panel" id="subpanel-students">'        + renderStudentsPanel() + '</div>' +
     '<div class="sub-panel" id="subpanel-staff">'           + renderStaffPanel()    + '</div>' +
     '<div class="sub-panel" id="subpanel-devices">'         + renderDevicesPanel()  + '</div>' +
+    '<div class="sub-panel" id="subpanel-claims">'          + renderClaimsPanel()   + '</div>' +
     '<div class="sub-panel" id="subpanel-history">'         + renderHistoryPanel()  + '</div>'
   );
 }
 
 function switchSubTab(name) {
-  ['borrow','students','staff','devices','history'].forEach(function(k) {
+  ['borrow','students','staff','devices','claims','history'].forEach(function(k) {
     document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
     document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
   });
@@ -919,8 +954,15 @@ function openReturnModal(id) {
   if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
   document.getElementById('returnConditionOk').checked = true;
+  document.getElementById('returnClaimNote').value = '';
+  document.getElementById('returnClaimNoteGroup').style.display = 'none';
   openModal('modalReturn');
   lucide.createIcons();
+}
+
+function onReturnConditionChange() {
+  var isClaim = document.getElementById('returnConditionClaim').checked;
+  document.getElementById('returnClaimNoteGroup').style.display = isClaim ? 'block' : 'none';
 }
 
 function confirmReturn() {
@@ -929,6 +971,7 @@ function confirmReturn() {
 
   var deviceReturned = document.getElementById('returnItemDevice').checked;
   var condition = document.getElementById('returnConditionClaim').checked ? 'claim' : 'ok';
+  var claimNote = document.getElementById('returnClaimNote').value.trim();
   var checkedAccs = Array.prototype.map.call(
     document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
     function(el) { return el.value; }
@@ -945,6 +988,7 @@ function confirmReturn() {
     updates.status = 'in';
     updates.returnDate = todayStr();
     updates.returnCondition = condition;
+    updates.claimNote = condition === 'claim' ? claimNote : '';
   }
 
   db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
@@ -953,7 +997,17 @@ function confirmReturn() {
     /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
        ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
     if (deviceReturned) {
-      db.collection('ipad_devices').doc(b.deviceId).update({ condition: condition }).catch(function(e) {
+      var deviceUpdates = { condition: condition };
+      if (condition === 'claim') {
+        deviceUpdates.claimNote = claimNote;
+        deviceUpdates.claimDate = todayStr();
+        deviceUpdates.claimReportedBy = b.studentName;
+      } else {
+        deviceUpdates.claimNote = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimDate = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimReportedBy = firebase.firestore.FieldValue.delete();
+      }
+      db.collection('ipad_devices').doc(b.deviceId).update(deviceUpdates).catch(function(e) {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
       });
     }
@@ -1356,7 +1410,10 @@ function renderDevicesTable() {
         '<td>' + esc2(d.assetNumber) + '</td>' +
         '<td>' + esc2(d.serialNumber) + '</td>' +
         '<td>' + statusBadge + '</td>' +
-        '<td><button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>' +
+        '<td style="white-space:nowrap;">' +
+          '<button class="btn-icon" onclick="openClaimStatusModal(\'' + d.id + '\')" title="ปรับสถานะเคลม"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i></button> ' +
+          '<button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+        '</td>' +
       '</tr>'
     );
   }).join('');
@@ -1388,6 +1445,103 @@ function deleteDevice(id) {
   db.collection('ipad_devices').doc(id).delete()
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ปรับสถานะเคลม (ใช้ร่วมกันทั้งหน้า "ข้อมูล iPad" และหน้า "ส่งเคลม")
+   ══════════════════════════════════════════════════════════════ */
+var currentClaimDeviceId = null;
+
+function openClaimStatusModal(deviceId) {
+  var d = DEVICES.find(function(x) { return x.id === deviceId; });
+  if (!d) return;
+  currentClaimDeviceId = deviceId;
+  document.getElementById('claimStatusSub').textContent = d.friendlyName + ' (' + d.serialNumber + ')';
+  var isClaim = d.condition === 'claim';
+  document.getElementById('claimStatusOk').checked = !isClaim;
+  document.getElementById('claimStatusClaim').checked = isClaim;
+  document.getElementById('claimStatusNote').value = d.claimNote || '';
+  document.getElementById('claimStatusNoteGroup').style.display = isClaim ? 'block' : 'none';
+  openModal('modalClaimStatus');
+}
+
+function onClaimStatusChange() {
+  var isClaim = document.getElementById('claimStatusClaim').checked;
+  document.getElementById('claimStatusNoteGroup').style.display = isClaim ? 'block' : 'none';
+}
+
+function saveClaimStatus() {
+  if (!currentClaimDeviceId) return;
+  var isClaim = document.getElementById('claimStatusClaim').checked;
+  var note = document.getElementById('claimStatusNote').value.trim();
+  var updates = { condition: isClaim ? 'claim' : 'ok' };
+  if (isClaim) {
+    updates.claimNote = note;
+    updates.claimDate = todayStr();
+  } else {
+    updates.claimNote        = firebase.firestore.FieldValue.delete();
+    updates.claimDate        = firebase.firestore.FieldValue.delete();
+    updates.claimReportedBy  = firebase.firestore.FieldValue.delete();
+  }
+  db.collection('ipad_devices').doc(currentClaimDeviceId).update(updates).then(function() {
+    showToast('ปรับสถานะเรียบร้อย ✅');
+    closeModal('modalClaimStatus');
+  }).catch(function(e) {
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL: ส่งเคลม — รวมเครื่องที่สถานะ condition === 'claim' ทั้งหมด
+   ══════════════════════════════════════════════════════════════ */
+function renderClaimsPanel() {
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="triangle-alert" style="width:16px;height:16px;"></i> รายการส่งเคลม (<span id="claimsCount">0</span>)</div>' +
+      '</div>' +
+      '<div class="ipad-search-row"><input type="text" id="claimsSearch" placeholder="ค้นหา Friendly Name / Serial / รายละเอียด..." oninput="renderClaimsTable()"></div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>เครื่อง</th><th>Serial</th><th>รายละเอียดปัญหา</th><th>วันที่ส่งเคลม</th><th>แจ้งโดย</th><th></th>' +
+      '</tr></thead><tbody id="claimsTbody">' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>'
+  );
+}
+
+function renderClaimsTable() {
+  var tbody = document.getElementById('claimsTbody');
+  if (!tbody) return;
+  var claimed = DEVICES.filter(function(d) { return d.condition === 'claim'; });
+  var countEl = document.getElementById('claimsCount');
+  if (countEl) countEl.textContent = claimed.length;
+
+  var q = (document.getElementById('claimsSearch') ? document.getElementById('claimsSearch').value : '').trim().toLowerCase();
+  var filtered = claimed.filter(function(d) {
+    if (!q) return true;
+    return ((d.friendlyName||'') + (d.serialNumber||'') + (d.claimNote||'') + (d.claimReportedBy||'')).toLowerCase().indexOf(q) !== -1;
+  });
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' +
+      (claimed.length ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีเครื่องที่ส่งเคลมอยู่ในขณะนี้ 🎉') + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(d) {
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
+        '<td>' + esc2(d.serialNumber) + '</td>' +
+        '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td style="white-space:nowrap;">' + (d.claimDate ? fmtDate(d.claimDate) : '-') + '</td>' +
+        '<td>' + esc2(d.claimReportedBy || '-') + '</td>' +
+        '<td><button class="btn-secondary btn-sm" onclick="openClaimStatusModal(\'' + d.id + '\')"><i data-lucide="wrench" style="width:14px;height:14px;"></i> จัดการ</button></td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
 }
 
 /* ── CSV Import (Friendly Name / Asset Number / Serial Number only) ── */
@@ -1707,6 +1861,7 @@ function loadDevices() {
   db.collection('ipad_devices').onSnapshot(function(snap) {
     DEVICES = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderDevicesTable();
+    renderClaimsTable();
     var header = document.querySelector('#subpanel-devices .section-divider');
     if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการ iPad ทั้งหมด (' + DEVICES.length + ')';
     renderStatsCharts();
