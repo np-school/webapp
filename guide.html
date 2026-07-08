@@ -22,6 +22,19 @@
   <script src="shared/common.js"></script>
 
   <style>
+    /* ปุ่มย้อนกลับไปด้านบน (ลอยมุมขวาล่าง) */
+    .scroll-top-btn{
+      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
+      border-radius:50%; border:none; background:var(--accent); color:#fff;
+      display:none; align-items:center; justify-content:center;
+      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
+      opacity:0; transform:translateY(10px);
+      transition:opacity .2s ease, transform .2s ease;
+    }
+    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
+    .scroll-top-btn:hover{background:var(--accent-dark);}
+    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
+
     /* ── Guide-specific styles ── */
 
     /* Primary tab bar */
@@ -210,6 +223,11 @@
 <!-- Main App -->
 <div id="guideApp" style="display:none;"></div>
 
+<!-- ปุ่มย้อนกลับไปด้านบน -->
+<button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
+  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+</button>
+
 <!-- ══════════════════════════════ SCRIPT ══════════════════════════════ -->
 <script>
 
@@ -231,8 +249,23 @@ buildPage({
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
     initTabs();
+    setupScrollTopButton();
   }
 });
+
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ══ Render ══ */
 function renderPage() {
