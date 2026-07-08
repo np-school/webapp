@@ -1359,6 +1359,8 @@ label {
    - คอลัมน์ ชั้น/ห้อง และ เครื่อง (Serial) ขึ้น 2 บรรทัดได้ตามปกติ
    - อุปกรณ์เสริมจัดเป็นตาราง 2 คอลัมน์ x 2 แถว ให้ลงตัว */
 .borrow-out-table, .history-table { table-layout: fixed; }
+.borrow-out-table { min-width: 720px; }
+.history-table { min-width: 760px; }
 
 .borrow-out-table th {
   white-space: normal;
