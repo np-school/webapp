@@ -948,6 +948,34 @@ textarea:focus {
 }
 .form-group { margin-bottom: 18px; }
 
+/* ── กล่องแนะนำรายชื่อ/เครื่อง (แทนที่ native <datalist> ที่ใช้งานไม่ได้ผลบนมือถือ/ไอแพด) ── */
+.ac-wrap { position: relative; }
+.ac-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .14);
+}
+.ac-list.show { display: block; }
+.ac-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item:active { background: #eff6ff; }
+.ac-item .ac-sub { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
+.ac-empty { padding: 10px 14px; font-size: 12.5px; color: #94a3b8; }
+
 .section-divider {
   font-size: 12px;
   font-weight: 800;
