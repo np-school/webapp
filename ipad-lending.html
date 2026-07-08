@@ -1203,7 +1203,7 @@ function renderStudentsTable() {
   refreshStudentRoomFilterOptions();
   var q = (document.getElementById('studentSearch') ? document.getElementById('studentSearch').value : '').trim().toLowerCase();
   var borrowedByStudentId = {};
-  BORROWS_OUT.forEach(function(b) { if (b.borrowerType !== 'staff') borrowedByStudentId[b.studentId] = true; });
+  BORROWS_OUT.forEach(function(b) { if (b.borrowerType !== 'staff') borrowedByStudentId[b.studentId] = b.serialNumber || true; });
   var list = STUDENTS.filter(function(s) {
     if (studentFilterGrade !== 'all' && s.grade !== studentFilterGrade) return false;
     if (studentFilterRoom !== 'all' && s.room !== studentFilterRoom) return false;
@@ -1218,7 +1218,8 @@ function renderStudentsTable() {
     return;
   }
   tbody.innerHTML = list.map(function(s) {
-    var borrowed = !!borrowedByStudentId[s.id];
+    var serial = borrowedByStudentId[s.id];
+    var borrowed = !!serial;
     return (
       '<tr>' +
         '<td>' + esc2(s.studentId) + '</td>' +
@@ -1226,7 +1227,7 @@ function renderStudentsTable() {
         '<td style="font-weight:700;">' + esc2(s.lastName) + '</td>' +
         '<td>' + esc2(s.grade) + '</td>' +
         '<td>' + esc2(s.room) + '</td>' +
-        '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
+        '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม (' + esc2(serial) + ')</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditStudentModal(\'' + s.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
           '<button class="btn-icon danger" onclick="deleteStudent(\'' + s.id + '\')" title="ลบ"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
@@ -1336,7 +1337,7 @@ function renderStaffTable() {
   if (!tbody) return;
   var q = (document.getElementById('staffSearch') ? document.getElementById('staffSearch').value : '').trim().toLowerCase();
   var borrowedByStaffId = {};
-  BORROWS_OUT.forEach(function(b) { if (b.borrowerType === 'staff') borrowedByStaffId[b.studentId] = true; });
+  BORROWS_OUT.forEach(function(b) { if (b.borrowerType === 'staff') borrowedByStaffId[b.studentId] = b.serialNumber || true; });
   var list = STAFF.filter(function(s) {
     if (!q) return true;
     return ((s.name||'') + (s.position||'') + (s.group||'')).toLowerCase().indexOf(q) !== -1;
@@ -1346,13 +1347,14 @@ function renderStaffTable() {
     return;
   }
   tbody.innerHTML = list.map(function(s) {
-    var borrowed = !!borrowedByStaffId[s.id];
+    var serial = borrowedByStaffId[s.id];
+    var borrowed = !!serial;
     return (
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
         '<td>' + esc2(s.position || '-') + '</td>' +
         '<td>' + esc2(s.group || '-') + '</td>' +
-        '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
+        '<td>' + (borrowed ? '<span class="borrow-badge-yes">● กำลังยืม (' + esc2(serial) + ')</span>' : '<span class="borrow-badge-no">● ไม่ได้ยืม</span>') + '</td>' +
       '</tr>'
     );
   }).join('');
@@ -1404,6 +1406,8 @@ function renderDevicesTable() {
   var filtered = DEVICES.filter(function(d) {
     if (!q) return true;
     return ((d.friendlyName||'') + (d.assetNumber||'') + (d.serialNumber||'')).toLowerCase().indexOf(q) !== -1;
+  }).sort(function(a, b) {
+    return (a.assetNumber||'').localeCompare((b.assetNumber||''), 'th', { numeric: true, sensitivity: 'base' });
   });
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
