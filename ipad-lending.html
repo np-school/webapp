@@ -523,6 +523,11 @@ function fmtDate(v) {
   var d = (v.toDate) ? v.toDate() : new Date(v);
   return d.toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' });
 }
+/* ชื่อผู้ใช้ที่ล็อกอินอยู่ตอนนี้ ใช้ประทับอัตโนมัติว่า "บันทึกโดยใคร" ในทุกจุดที่มีการบันทึก/แก้ไขข้อมูล */
+function currentUserLabel() {
+  if (!currentUser) return '';
+  return currentUser.displayName || currentUser.email || '';
+}
 /* label ที่ใช้ค้นหา/แสดงในช่องเลือกนักเรียน เช่น "12345 - สมชาย ใจดี" */
 function studentLabel(s) {
   return s.studentId + ' - ' + s.firstName + ' ' + s.lastName;
@@ -679,7 +684,7 @@ function renderBorrowOutTable() {
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + '</td>' +
+        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
           '<button class="btn-icon" onclick="openReturnModal(\'' + b.id + '\')" title="คืนอุปกรณ์"><i data-lucide="corner-down-left" style="width:14px;height:14px;"></i></button>' +
@@ -884,7 +889,8 @@ function saveBorrow() {
     var updatePayload = {
       deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
       accessories: accessories,
-      borrowDate: borrowDate
+      borrowDate: borrowDate,
+      recordedBy: currentUserLabel()
     };
     db.collection('ipad_borrows').doc(editingBorrowId).update(updatePayload).then(function() {
       showToast('แก้ไขข้อมูลการยืมสำเร็จ ✅');
@@ -901,7 +907,8 @@ function saveBorrow() {
     returnDate: null,
     status: 'out',
     createdBy: currentUser ? currentUser.email : '',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    recordedBy: currentUserLabel()
   };
 
   if (isStaff) {
@@ -989,6 +996,7 @@ function confirmReturn() {
     updates.returnDate = todayStr();
     updates.returnCondition = condition;
     updates.claimNote = condition === 'claim' ? claimNote : '';
+    updates.returnedBy = currentUserLabel();
   }
 
   db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
@@ -1002,10 +1010,12 @@ function confirmReturn() {
         deviceUpdates.claimNote = claimNote;
         deviceUpdates.claimDate = todayStr();
         deviceUpdates.claimReportedBy = b.studentName;
+        deviceUpdates.claimUpdatedBy = currentUserLabel();
       } else {
         deviceUpdates.claimNote = firebase.firestore.FieldValue.delete();
         deviceUpdates.claimDate = firebase.firestore.FieldValue.delete();
         deviceUpdates.claimReportedBy = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimUpdatedBy = firebase.firestore.FieldValue.delete();
       }
       db.collection('ipad_devices').doc(b.deviceId).update(deviceUpdates).catch(function(e) {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
@@ -1478,10 +1488,12 @@ function saveClaimStatus() {
   if (isClaim) {
     updates.claimNote = note;
     updates.claimDate = todayStr();
+    updates.claimUpdatedBy = currentUserLabel();
   } else {
     updates.claimNote        = firebase.firestore.FieldValue.delete();
     updates.claimDate        = firebase.firestore.FieldValue.delete();
     updates.claimReportedBy  = firebase.firestore.FieldValue.delete();
+    updates.claimUpdatedBy   = firebase.firestore.FieldValue.delete();
   }
   db.collection('ipad_devices').doc(currentClaimDeviceId).update(updates).then(function() {
     showToast('ปรับสถานะเรียบร้อย ✅');
@@ -1536,7 +1548,7 @@ function renderClaimsTable() {
         '<td>' + esc2(d.serialNumber) + '</td>' +
         '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
         '<td style="white-space:nowrap;">' + (d.claimDate ? fmtDate(d.claimDate) : '-') + '</td>' +
-        '<td>' + esc2(d.claimReportedBy || '-') + '</td>' +
+        '<td>' + esc2(d.claimReportedBy || '-') + (d.claimUpdatedBy ? '<br><span style="font-size:10px;color:#94a3b8;">บันทึกโดย ' + esc2(d.claimUpdatedBy) + '</span>' : '') + '</td>' +
         '<td><button class="btn-secondary btn-sm" onclick="openClaimStatusModal(\'' + d.id + '\')"><i data-lucide="wrench" style="width:14px;height:14px;"></i> จัดการ</button></td>' +
       '</tr>'
     );
@@ -1813,8 +1825,8 @@ function renderHistoryTable() {
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + '</td>' +
-        '<td>' + (b.status === 'in' ? fmtDate(b.returnDate) : '-') + '</td>' +
+        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
+        '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
         '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
