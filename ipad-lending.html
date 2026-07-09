@@ -50,6 +50,41 @@
     .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
     .scroll-top-btn:hover{background:var(--accent-dark);}
     .scroll-top-btn:active{transform:translateY(0) scale(.94);}
+
+    /* ── Return item row: การ์ดคืนอุปกรณ์แบบใหม่ — แต่ละชิ้นมี 3 สถานะในตัวเอง
+       (ยังไม่คืน / คืน-สภาพดี / คืน-ชำรุด) พร้อมสีพื้นหลังเปลี่ยนตามสถานะ
+       ให้เห็นชัดในทันทีโดยไม่ต้องอ่านตัวหนังสือ ── */
+    .return-row{
+      border:1.5px solid var(--border); border-radius:14px; padding:12px 14px;
+      transition:all .15s ease; background:var(--white);
+    }
+    .return-row[data-state="ok"]{ border-color:var(--green-mid); background:var(--green-light); }
+    .return-row[data-state="claim"]{ border-color:var(--amber-mid); background:var(--amber-light); }
+    .return-row[data-state="none"]{ border-color:var(--border); background:var(--border-soft); opacity:.75; }
+    .return-row-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .return-row .rr-icon{
+      width:32px; height:32px; flex-shrink:0; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+      background:var(--white); color:var(--text2); border:1px solid var(--border);
+    }
+    .return-row .rr-icon i, .return-row .rr-icon svg{ width:16px; height:16px; }
+    .return-row[data-state="ok"] .rr-icon{ background:var(--green); color:#fff; border-color:var(--green); }
+    .return-row[data-state="claim"] .rr-icon{ background:var(--amber); color:#fff; border-color:var(--amber); }
+    .return-row .rr-label{ font-size:13.5px; font-weight:700; color:var(--text); }
+    .return-row .rr-label span{ display:block; font-size:11px; font-weight:500; color:var(--text2); margin-top:1px; }
+    .return-state{ display:flex; gap:4px; background:var(--white); border:1px solid var(--border); border-radius:10px; padding:3px; }
+    .return-state label{
+      flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+      padding:7px 6px; border-radius:7px; font-size:12px; font-weight:700;
+      color:var(--text2); cursor:pointer; transition:all .15s; text-align:center;
+    }
+    .return-state label i, .return-state label svg{ width:13px; height:13px; }
+    .return-state input{ position:absolute; opacity:0; width:0; height:0; }
+    .return-state label:has(input:checked){ box-shadow:0 2px 6px rgba(15,23,42,.1); }
+    .return-state label:nth-child(1):has(input:checked){ background:var(--text2); color:#fff; }
+    .return-state label:nth-child(2):has(input:checked){ background:var(--green); color:#fff; }
+    .return-state label:nth-child(3):has(input:checked){ background:var(--amber); color:#fff; }
+    .return-state label:hover{ color:var(--text); }
   </style>
 </head>
 <body>
@@ -160,7 +195,7 @@
 
 <!-- Modal: คืนอุปกรณ์ -->
 <div class="modal-bg" id="modalReturn">
-  <div class="modal-box">
+  <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
         <div class="modal-title-icon"><i data-lucide="corner-down-left" style="width:18px;height:18px;color:var(--accent);"></i></div>
@@ -170,9 +205,9 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">เลือกสิ่งที่คืนในครั้งนี้ และติ๊ก "ชำรุด" หากชิ้นไหนมีปัญหา</label>
-      <div id="returnItemsList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
-      <p style="font-size:11.5px;color:#94a3b8;margin-top:6px;">รายการที่ไม่ได้ติ๊ก "คืน" จะยังถือว่ายืมอยู่ต่อไป · รายการที่ติ๊ก "ชำรุด" จะถูกส่งเคลมอัตโนมัติ</p>
+      <label class="form-label">แตะเลือกสถานะของแต่ละชิ้น</label>
+      <div id="returnItemsList" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;"></div>
+      <p style="font-size:11.5px;color:#94a3b8;margin-top:8px;">"ชำรุด" จะถูกส่งเข้ารายการเคลมให้อัตโนมัติ</p>
     </div>
 
     <div class="form-group" id="returnClaimNoteGroup" style="display:none;">
@@ -1094,36 +1129,35 @@ var currentReturnBorrowId = null;
 
 var RETURN_ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
 
+/* การ์ด 1 ชิ้น = ไอคอน+ชื่อ ด้านบน แล้วมีปุ่มเลือกสถานะ 3 ทาง ด้านล่าง
+   (ไม่คืน / คืน-สภาพดี / คืน-ชำรุด) พื้นหลังการ์ดจะเปลี่ยนสีตามสถานะที่เลือก
+   ให้เห็นชัดโดยไม่ต้องอ่านตัวหนังสือ ค่าเริ่มต้นของทุกชิ้นคือ "คืน-สภาพดี" */
+function buildReturnRow(radioName, icon, label, sub) {
+  return (
+    '<div class="return-row" id="row_' + radioName + '" data-state="ok">' +
+      '<div class="return-row-head">' +
+        '<span class="rr-icon"><i data-lucide="' + icon + '"></i></span>' +
+        '<span class="rr-label">' + esc2(label) + (sub ? '<span>' + esc2(sub) + '</span>' : '') + '</span>' +
+      '</div>' +
+      '<div class="return-state">' +
+        '<label><input type="radio" name="' + radioName + '" value="none" onchange="onReturnRowChange(\'' + radioName + '\')"><i data-lucide="corner-up-left"></i> ไม่คืน</label>' +
+        '<label><input type="radio" name="' + radioName + '" value="ok" checked onchange="onReturnRowChange(\'' + radioName + '\')"><i data-lucide="check-circle-2"></i> สภาพดี</label>' +
+        '<label><input type="radio" name="' + radioName + '" value="claim" onchange="onReturnRowChange(\'' + radioName + '\')"><i data-lucide="triangle-alert"></i> ชำรุด</label>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
 function openReturnModal(id) {
   var b = BORROWS_OUT.find(function(x) { return x.id === id; });
   if (!b) return;
   currentReturnBorrowId = id;
   document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
   var accs = b.accessories || [];
-  var html = '<div style="display:flex;align-items:center;gap:8px;">' +
-    '<label class="return-item-card is-device" style="flex:1;">' +
-      '<span class="ri-icon"><i data-lucide="tablet-smartphone"></i></span>' +
-      '<span class="ri-label">เครื่อง iPad<span>' + esc2(b.serialNumber) + '</span></span>' +
-      '<input type="checkbox" id="returnItemDevice" checked>' +
-    '</label>' +
-    '<label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#b45309;font-weight:700;flex-shrink:0;cursor:pointer;">' +
-      '<input type="checkbox" id="returnDeviceClaimChk" onchange="updateReturnNoteVisibility()" style="width:18px;height:18px;accent-color:#b45309;cursor:pointer;">' +
-      'ชำรุด' +
-    '</label>' +
-  '</div>';
-  html += accs.map(function(name) {
+  var html = buildReturnRow('retDevice', 'tablet-smartphone', 'เครื่อง iPad', b.serialNumber);
+  html += accs.map(function(name, i) {
     var icon = RETURN_ACC_ICONS[name] || 'package';
-    return '<div style="display:flex;align-items:center;gap:8px;">' +
-      '<label class="return-item-card" style="flex:1;">' +
-        '<span class="ri-icon"><i data-lucide="' + icon + '"></i></span>' +
-        '<span class="ri-label">' + esc2(name) + '</span>' +
-        '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked>' +
-      '</label>' +
-      '<label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#b45309;font-weight:700;flex-shrink:0;cursor:pointer;">' +
-        '<input type="checkbox" class="returnAccClaimChk" value="' + esc2(name) + '" onchange="updateReturnNoteVisibility()" style="width:18px;height:18px;accent-color:#b45309;cursor:pointer;">' +
-        'ชำรุด' +
-      '</label>' +
-    '</div>';
+    return buildReturnRow('retAcc_' + i, icon, name, null);
   }).join('');
   if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
@@ -1133,29 +1167,41 @@ function openReturnModal(id) {
   lucide.createIcons();
 }
 
-function updateReturnNoteVisibility() {
-  var isDeviceClaim = document.getElementById('returnDeviceClaimChk').checked;
-  var anyAccClaim = document.querySelectorAll('#returnItemsList .returnAccClaimChk:checked').length > 0;
-  document.getElementById('returnClaimNoteGroup').style.display = (isDeviceClaim || anyAccClaim) ? 'block' : 'none';
+/* อัปเดตสีพื้นหลังการ์ดตามสถานะที่เลือก + โชว์/ซ่อนช่องกรอกรายละเอียดปัญหา */
+function onReturnRowChange(radioName) {
+  var checked = document.querySelector('input[name="' + radioName + '"]:checked');
+  var row = document.getElementById('row_' + radioName);
+  if (row && checked) row.setAttribute('data-state', checked.value);
+
+  var anyClaim = false;
+  document.querySelectorAll('#returnItemsList .return-row').forEach(function(r) {
+    if (r.getAttribute('data-state') === 'claim') anyClaim = true;
+  });
+  document.getElementById('returnClaimNoteGroup').style.display = anyClaim ? 'block' : 'none';
+}
+
+function getReturnRowState(radioName) {
+  var checked = document.querySelector('input[name="' + radioName + '"]:checked');
+  return checked ? checked.value : 'none';
 }
 
 function confirmReturn() {
   var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
   if (!b) { closeModal('modalReturn'); return; }
 
-  var deviceReturned = document.getElementById('returnItemDevice').checked;
-  var condition = document.getElementById('returnDeviceClaimChk').checked ? 'claim' : 'ok';
+  var deviceState = getReturnRowState('retDevice');
+  var deviceReturned = deviceState !== 'none';
+  var condition = deviceState === 'claim' ? 'claim' : 'ok';
   var claimNote = document.getElementById('returnClaimNote').value.trim();
-  var checkedAccs = Array.prototype.map.call(
-    document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
-    function(el) { return el.value; }
-  );
-  var claimedAccs = Array.prototype.map.call(
-    document.querySelectorAll('#returnItemsList .returnAccClaimChk:checked'),
-    function(el) { return el.value; }
-  );
+
   var allAccs = b.accessories || [];
-  var remainingAccs = allAccs.filter(function(a) { return checkedAccs.indexOf(a) === -1; });
+  var checkedAccs = [], claimedAccs = [], remainingAccs = [];
+  allAccs.forEach(function(name, i) {
+    var state = getReturnRowState('retAcc_' + i);
+    if (state === 'none') { remainingAccs.push(name); return; }
+    checkedAccs.push(name);
+    if (state === 'claim') claimedAccs.push(name);
+  });
 
   if (!deviceReturned && !checkedAccs.length) {
     showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
@@ -1192,7 +1238,7 @@ function confirmReturn() {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
       });
     }
-    /* สร้างรายการเคลมอุปกรณ์เสริมอัตโนมัติ ให้ชิ้นที่ติ๊กว่า "ชำรุด" ตอนคืน ไปโผล่ในหน้าส่งเคลมทันที */
+    /* สร้างรายการเคลมอุปกรณ์เสริมอัตโนมัติ ให้ชิ้นที่เลือก "ชำรุด" ตอนคืน ไปโผล่ในหน้าส่งเคลมทันที */
     claimedAccs.forEach(function(name) {
       db.collection('ipad_accessory_claims').add({
         name: name,
