@@ -637,13 +637,13 @@ body {
   box-shadow: 0 8px 15px -3px rgba(30,64,175,.25);
 }
 
-/* Admin variant — ใช้โทนเดียวกับ navbar.dark (#0d1b2a) */
-.sidebar-btn.admin-btn { color: #415a77; }
-.sidebar-btn.admin-btn:hover { background: #e0e1dd; }
+/* Admin variant — ใช้โทนเดียวกับ navbar.dark (ตาม --accent ของ theme-staff) */
+.sidebar-btn.admin-btn { color: var(--accent-mid, #415a77); }
+.sidebar-btn.admin-btn:hover { background: var(--accent-tint, #e0e1dd); }
 .sidebar-btn.admin-btn.active {
-  background: #0d1b2a;
+  background: var(--accent, #0d1b2a);
   color: white;
-  box-shadow: 0 8px 15px -3px rgba(13,27,42,.35);
+  box-shadow: 0 8px 15px -3px var(--accent-ring, rgba(13,27,42,.35));
 }
 
 /* Section label */

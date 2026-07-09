@@ -64,8 +64,6 @@
       position: relative;
     }
     .theme-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.10); }
-    .theme-card.selected-blue  { border-color: #1d4ed8; box-shadow: 0 0 0 3px #eff6ff, 0 8px 24px rgba(29,78,216,.15); }
-    .theme-card.selected-staff { border-color: #0d1b2a; box-shadow: 0 0 0 3px #e0e1dd, 0 8px 24px rgba(13,27,42,.18); }
 
     .check-badge {
       display: none;
@@ -77,8 +75,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,.25);
       z-index: 1;
     }
-    .theme-card.selected-blue  .check-badge { display: flex; background: #1d4ed8; }
-    .theme-card.selected-staff .check-badge { display: flex; background: #0d1b2a; }
     .check-badge svg { width: 13px; height: 13px; color: white; }
 
     /* Navbar mockup strip */
@@ -143,7 +139,7 @@
       margin-bottom: -2px; transition: all .18s; display: flex; align-items: center; gap: 7px;
     }
     .settings-tab:hover { color: var(--text); }
-    .settings-tab.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .settings-tab.active { color: var(--accent,#1d4ed8); border-bottom-color: var(--accent,#1d4ed8); }
     .settings-pane { display: none; }
     .settings-pane.active { display: block; }
 
@@ -257,7 +253,7 @@
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
-  <a href="index.html" style="padding:10px 24px;background:#1d4ed8;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent,#1d4ed8);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
 <div id="settingsApp" style="display:none;"></div>
@@ -633,7 +629,7 @@ function renderPage() {
       '<div class="settings-pane" id="spane-announcements">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
           '<div class="settings-section-title" style="margin-bottom:0;">ประกาศข่าวสำหรับ Admin</div>' +
-          '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:#1d4ed8;color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
+          '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--accent,#1d4ed8);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
             '<i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มประกาศ' +
           '</button>' +
         '</div>' +
