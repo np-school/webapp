@@ -1498,9 +1498,8 @@ function renderDevicesTable() {
     var out = borrowedMap[d.id];
     var isClaim = d.condition === 'claim' && !out;
     var statusBadge = out ?
-      ('<span class="badge-out">ถูกยืมอยู่</span><br>' +
-       '<span style="font-size:11.5px;font-weight:700;color:#334155;">' + esc2(out.studentName) + '</span><br>' +
-       '<span style="font-size:11px;color:#94a3b8;">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
+      ('<span style="font-size:11.5px;font-weight:700;color:#dc2626;">' + esc2(out.studentName) + '</span><br>' +
+       '<span style="font-size:11px;color:#dc2626;">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
       (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="badge-in">ว่าง</span>');
     return (
       '<tr>' +
