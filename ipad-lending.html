@@ -28,6 +28,9 @@
     .acc-badge.yes{background:var(--green-light);color:var(--green);}
     .acc-badge.no{background:var(--red-light);color:var(--red);}
     .acc-badge.none{background:#f1f5f9;color:#94a3b8;}
+    .acc-badge.claim{background:#fef3c7;color:#b45309;}
+    .ipad-badge-borrowed{background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .ipad-badge-free{background:var(--red-light);color:var(--red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .ipad-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px;}
     .ipad-stats-grid .card{padding:14px 16px;}
     .ipad-stats-grid canvas{max-height:150px;}
@@ -569,7 +572,7 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยืม) / สีแดง (ไม่ได้ยืม) ให้ดูง่าย
+/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยังไม่คืน/ยืมอยู่) / สีเทา (คืนเรียบร้อยแล้ว หรือไม่ได้ยืมชิ้นนี้)
    เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
 var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
 var ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-tool', 'เคส': 'package' };
@@ -578,12 +581,13 @@ function accBadges(accessories, status) {
   var html = ACC_ORDER.map(function(name) {
     var has = accessories.indexOf(name) !== -1;
     var icon = ACC_ICONS[name] || 'circle';
-    /* เขียว = กำลังยืมอยู่ · แดง = คืนเครื่องแล้วแต่ยังไม่คืนอุปกรณ์เสริมชิ้นนี้ · เทา = ไม่ได้ยืม/คืนเรียบร้อยแล้ว */
-    var cls = !has ? 'none' : (status === 'in' ? 'no' : 'yes');
+    /* accessories ในเรคคอร์ดจะมีเฉพาะชิ้นที่ "ยังไม่คืน" เท่านั้น (ชิ้นที่คืนแล้วจะถูกเอาออกจาก array)
+       เขียว = ยังอยู่กับผู้ยืม (ยืมอยู่ หรือ คืนเครื่องแล้วแต่ชิ้นนี้ยังไม่คืน) · เทา = ไม่ได้ยืม/คืนเรียบร้อยแล้ว */
+    var cls = has ? 'yes' : 'none';
     return '<span class="acc-badge ' + cls + '" title="' + name + '"><i data-lucide="' + icon + '" style="width:14px;height:14px;"></i></span>';
   }).join('');
   var other = accessories.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  if (other.length) html += '<span class="acc-badge ' + (status === 'in' ? 'no' : 'yes') + '" title="' + esc2(other.join(', ')) + '"><i data-lucide="package" style="width:14px;height:14px;"></i></span>';
+  if (other.length) html += '<span class="acc-badge yes" title="' + esc2(other.join(', ')) + '"><i data-lucide="package" style="width:14px;height:14px;"></i></span>';
   return '<div class="acc-badge-wrap">' + html + '</div>';
 }
 
@@ -1295,9 +1299,9 @@ function renderStudentsTable() {
   tbody.innerHTML = list.map(function(s) {
     var b = borrowedByStudentId[s.id];
     var statusCell = b ?
-      ('<span style="color:var(--red);font-weight:700;">' + esc2(b.friendlyName) +
-       '</span><br><span style="font-size:11px;color:var(--red);">' + esc2(b.serialNumber) + '</span>') :
-      '<span class="borrow-badge-yes">● ไม่ได้ยืม</span>';
+      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
+       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
+      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
     return (
       '<tr>' +
         '<td>' + esc2(s.studentId) + '</td>' +
@@ -1427,9 +1431,9 @@ function renderStaffTable() {
   tbody.innerHTML = list.map(function(s) {
     var b = borrowedByStaffId[s.id];
     var statusCell = b ?
-      ('<span style="color:var(--red);font-weight:700;">' + esc2(b.friendlyName) +
-       '</span><br><span style="font-size:11px;color:var(--red);">' + esc2(b.serialNumber) + '</span>') :
-      '<span class="borrow-badge-yes">● ไม่ได้ยืม</span>';
+      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
+       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
+      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
     return (
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
@@ -1498,9 +1502,9 @@ function renderDevicesTable() {
     var out = borrowedMap[d.id];
     var isClaim = d.condition === 'claim' && !out;
     var statusBadge = out ?
-      ('<span style="font-size:11.5px;font-weight:700;color:#dc2626;">' + esc2(out.studentName) + '</span><br>' +
-       '<span style="font-size:11px;color:#dc2626;">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
-      (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="badge-in">ว่าง</span>');
+      ('<span style="font-size:11.5px;font-weight:700;color:var(--green);">' + esc2(out.studentName) + '</span><br>' +
+       '<span style="font-size:11px;color:var(--green);">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
+      (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="ipad-badge-free">ว่าง</span>');
     return (
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
@@ -1914,7 +1918,7 @@ function renderHistoryTable() {
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
         '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
         '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
-        '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="badge-in">คืนแล้ว</span>') : '<span class="badge-out">ยังไม่คืน</span>') + '</td>' +
+        '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="ipad-badge-free">คืนแล้ว</span>') : '<span class="ipad-badge-borrowed">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
   }).join('');
