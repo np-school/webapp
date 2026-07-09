@@ -274,9 +274,15 @@
    (applySiteThemeColors) จะดึงไปใช้ในทุกหน้าอัตโนมัติ
    ══════════════════════════════════════ */
 var THEME_ROLES = {
-  memberAccent: { label: 'ผู้ใช้งานทั่วไป', desc: 'navTheme: blue · หน้าสมาชิก/นักเรียน', fallback: '#1d4ed8' },
-  staffAccent:  { label: 'เจ้าหน้าที่',      desc: 'navTheme: dark · หน้าแอดมิน/เจ้าหน้าที่', fallback: '#0d1b2a' },
+  member: { label: 'ผู้ใช้งานทั่วไป', desc: 'navTheme: blue · หน้าสมาชิก/นักเรียน', fallback: '#1d4ed8' },
+  staff:  { label: 'เจ้าหน้าที่',      desc: 'navTheme: dark · หน้าแอดมิน/เจ้าหน้าที่', fallback: '#0d1b2a' },
 };
+var SHADE_SLOTS = [
+  { key: 'primary', label: 'หลัก' },
+  { key: 'dark',    label: 'เข้ม' },
+  { key: 'light',   label: 'อ่อน' },
+  { key: 'tint',    label: 'พื้นหลัง' }
+];
 
 /* ══ Announcement helpers ══ */
 var ANN_TYPES = {
@@ -288,7 +294,7 @@ var ANN_TYPES = {
 var currentUserEmail = null;
 var isAdmin          = false;
 var isSuperAdmin      = false;
-var siteThemeConfig  = {};  /* { memberAccent, staffAccent } จาก site_config/theme */
+var siteThemeConfig  = {};  /* { member:{primary,dark,light,tint}, staff:{...} } จาก site_config/theme */
 
 /* ══ Announcement Modal (extended) ══
    ฟิลด์: scope, startDate, endDate, noExpiry, department, imageUrl
@@ -636,23 +642,30 @@ function renderPage() {
   );
 }
 
+/* ดึงชุดสี 4 ระดับของ role นั้นๆ — ถ้ายังไม่เคยตั้ง (หรือเป็นข้อมูลเก่าแบบ 1 สี) ให้คำนวณ default */
+function getRoleShades(roleKey) {
+  var set = siteThemeConfig[roleKey];
+  if (set && set.primary) return set;
+  var legacy = siteThemeConfig[roleKey + 'Accent']; /* เผื่อข้อมูลเก่า memberAccent/staffAccent */
+  return computeShades(legacy || THEME_ROLES[roleKey].fallback);
+}
+
 /* ══ ธีมสีทั้งเว็บ — read-only (ผู้ใช้ทั่วไป/แอดมินธรรมดา) ══ */
 function renderThemeReadOnly() {
-  var m = siteThemeConfig.memberAccent || THEME_ROLES.memberAccent.fallback;
-  var s = siteThemeConfig.staffAccent  || THEME_ROLES.staffAccent.fallback;
   return (
     '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:16px;">สีของเว็บไซต์ถูกกำหนดโดยผู้ดูแลระบบส่วนกลาง ใช้ค่าเดียวกันทุกหน้า/ทุกผู้ใช้</p>' +
     '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
-      ['memberAccent', 'staffAccent'].map(function(k) {
-        var c = k === 'memberAccent' ? m : s;
-        var meta = THEME_ROLES[k];
+      ['member', 'staff'].map(function(roleKey) {
+        var shades = getRoleShades(roleKey);
+        var meta = THEME_ROLES[roleKey];
         return (
-          '<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:220px;">' +
-            '<div style="width:40px;height:40px;border-radius:10px;background:' + c + ';flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);"></div>' +
-            '<div>' +
-              '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
-              '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + meta.desc + '</div>' +
-              '<div style="font-size:11px;color:#94a3b8;font-family:monospace;margin-top:2px;">' + c + '</div>' +
+          '<div style="padding:14px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:230px;">' +
+            '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
+            '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">' + meta.desc + '</div>' +
+            '<div style="display:flex;gap:6px;">' +
+              SHADE_SLOTS.map(function(slot) {
+                return '<div title="' + slot.label + ': ' + shades[slot.key] + '" style="width:32px;height:32px;border-radius:8px;background:' + shades[slot.key] + ';box-shadow:0 2px 6px rgba(0,0,0,.12);"></div>';
+              }).join('') +
             '</div>' +
           '</div>'
         );
@@ -661,45 +674,109 @@ function renderThemeReadOnly() {
   );
 }
 
-/* ══ ธีมสีทั้งเว็บ — editor (SuperAdmin เท่านั้น) ══ */
+/* ══ ธีมสีทั้งเว็บ — editor (SuperAdmin เท่านั้น) ══
+   Flow: กรอก "สีหลัก" → กด "สร้างเฉดอัตโนมัติ" ได้ 4 สี (หลัก/เข้ม/อ่อน/พื้นหลัง)
+   เป็นค่าเริ่มต้น แล้วปรับทีละสีต่อได้อิสระ พร้อม preview สดใน mockup การ์ด */
 function renderThemeEditor() {
-  var m = siteThemeConfig.memberAccent || THEME_ROLES.memberAccent.fallback;
-  var s = siteThemeConfig.staffAccent  || THEME_ROLES.staffAccent.fallback;
   return (
-    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:16px;">ตั้งสีหลัก 1 สีต่อกลุ่ม ระบบจะคำนวณเฉดเข้ม/อ่อนให้อัตโนมัติ และมีผลกับทุกหน้าทั้งเว็บทันทีที่บันทึก</p>' +
-    '<div style="display:flex;gap:20px;flex-wrap:wrap;">' +
-      themeColorField('memberAccent', m) +
-      themeColorField('staffAccent', s) +
+    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:18px;">กรอกสีหลักแล้วกด "สร้างเฉดอัตโนมัติ" เพื่อได้ชุดสี 4 ระดับ จากนั้นปรับแต่ละสีเพิ่มเติมได้ตามต้องการ</p>' +
+    '<div class="theme-cards-row" style="max-width:none;grid-template-columns:1fr 1fr;">' +
+      ['member', 'staff'].map(renderThemeEditorCard).join('') +
     '</div>' +
     '<button onclick="saveSiteTheme()" id="saveThemeBtn" style="margin-top:20px;padding:11px 24px;background:var(--accent);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">บันทึกสีทั้งเว็บ</button>'
   );
 }
-function themeColorField(key, value) {
-  var meta = THEME_ROLES[key];
+
+function renderThemeEditorCard(roleKey) {
+  var meta   = THEME_ROLES[roleKey];
+  var shades = getRoleShades(roleKey);
   return (
-    '<div style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:230px;">' +
-      '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
-      '<div style="font-size:11px;color:#94a3b8;">' + meta.desc + '</div>' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-top:6px;">' +
-        '<input type="color" id="color-' + key + '" value="' + value + '" oninput="onThemeColorInput(\'' + key + '\')" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;padding:0;background:none;">' +
-        '<input type="text" id="hex-' + key + '" value="' + value + '" oninput="onThemeHexInput(\'' + key + '\')" maxlength="7" style="width:90px;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:8px;font-size:12px;font-family:monospace;text-transform:uppercase;">' +
+    '<div style="border:1px solid var(--border,#e2e8f0);border-radius:14px;overflow:hidden;">' +
+      /* live preview mockup */
+      '<div id="preview-navbar-' + roleKey + '" class="theme-navbar-strip" style="background:' + shades.dark + ';">' +
+        '<div class="strip-circle"></div>' +
+        '<div class="strip-lines"><div class="strip-line"></div><div class="strip-line short"></div></div>' +
+        '<div class="strip-btn"></div>' +
+      '</div>' +
+      '<div class="theme-body-mock">' +
+        '<div class="mock-sidebar"><div class="mock-sb-item"></div><div class="mock-sb-item"></div><div class="mock-sb-item"></div></div>' +
+        '<div class="mock-content">' +
+          '<div id="preview-btn-' + roleKey + '" class="mock-btn" style="background:' + shades.primary + ';"></div>' +
+          '<div class="mock-line"></div><div class="mock-line s"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:14px 16px;border-top:1px solid var(--border,#e2e8f0);">' +
+        '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">' + meta.desc + '</div>' +
+
+        /* สีหลัก + ปุ่มสร้างเฉดอัตโนมัติ */
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+          '<input type="color" id="color-' + roleKey + '-primary" value="' + shades.primary + '" oninput="onShadeInput(\'' + roleKey + '\',\'primary\')" style="width:38px;height:38px;border:none;border-radius:9px;cursor:pointer;padding:0;background:none;">' +
+          '<input type="text" id="hex-' + roleKey + '-primary" value="' + shades.primary + '" oninput="onShadeHexInput(\'' + roleKey + '\',\'primary\')" maxlength="7" style="width:82px;padding:7px 9px;border:1px solid var(--border,#e2e8f0);border-radius:8px;font-size:11px;font-family:monospace;text-transform:uppercase;">' +
+          '<button onclick="autoGenerateShades(\'' + roleKey + '\')" title="สร้างเฉดอัตโนมัติจากสีหลัก" style="margin-left:auto;padding:7px 10px;border:1px solid var(--border,#e2e8f0);background:#f8fafc;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2,#64748b);font-family:Sarabun,sans-serif;">↻ สร้างเฉดอัตโนมัติ</button>' +
+        '</div>' +
+
+        /* dark / light / tint แก้ทีละสี */
+        '<div style="display:flex;gap:8px;">' +
+          ['dark', 'light', 'tint'].map(function(slotKey) {
+            var slot = SHADE_SLOTS.filter(function(s) { return s.key === slotKey; })[0];
+            return (
+              '<div style="flex:1;">' +
+                '<div style="font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:4px;">' + slot.label + '</div>' +
+                '<input type="color" id="color-' + roleKey + '-' + slotKey + '" value="' + shades[slotKey] + '" oninput="onShadeInput(\'' + roleKey + '\',\'' + slotKey + '\')" style="width:100%;height:30px;border:none;border-radius:7px;cursor:pointer;padding:0;background:none;">' +
+              '</div>'
+            );
+          }).join('') +
+        '</div>' +
       '</div>' +
     '</div>'
   );
 }
-function onThemeColorInput(key) {
-  var v = document.getElementById('color-' + key).value;
-  document.getElementById('hex-' + key).value = v;
+
+function onShadeInput(roleKey, slotKey) {
+  var v = document.getElementById('color-' + roleKey + '-' + slotKey).value;
+  if (slotKey === 'primary') document.getElementById('hex-' + roleKey + '-primary').value = v;
+  updateThemePreview(roleKey);
 }
-function onThemeHexInput(key) {
-  var v = document.getElementById('hex-' + key).value.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById('color-' + key).value = v;
+function onShadeHexInput(roleKey, slotKey) {
+  var v = document.getElementById('hex-' + roleKey + '-' + slotKey).value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+    document.getElementById('color-' + roleKey + '-' + slotKey).value = v;
+    updateThemePreview(roleKey);
+  }
+}
+/* สร้างเฉด dark/light/tint ใหม่จากสีหลักที่กรอกอยู่ตอนนี้ */
+function autoGenerateShades(roleKey) {
+  var primary = document.getElementById('hex-' + roleKey + '-primary').value.trim();
+  if (!/^#[0-9a-fA-F]{6}$/.test(primary)) { showToast('สีหลักไม่ถูกต้อง (ต้องเป็น #RRGGBB)'); return; }
+  var shades = computeShades(primary);
+  ['dark', 'light', 'tint'].forEach(function(slotKey) {
+    document.getElementById('color-' + roleKey + '-' + slotKey).value = shades[slotKey];
+  });
+  updateThemePreview(roleKey);
+}
+/* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก) */
+function updateThemePreview(roleKey) {
+  var dark    = document.getElementById('color-' + roleKey + '-dark').value;
+  var primary = document.getElementById('color-' + roleKey + '-primary').value;
+  document.getElementById('preview-navbar-' + roleKey).style.background = dark;
+  document.getElementById('preview-btn-' + roleKey).style.background    = primary;
+}
+function readShadesFromForm(roleKey) {
+  var out = {};
+  var hexRe = /^#[0-9a-fA-F]{6}$/;
+  for (var i = 0; i < SHADE_SLOTS.length; i++) {
+    var key = SHADE_SLOTS[i].key;
+    var v = document.getElementById('color-' + roleKey + '-' + key).value.trim();
+    if (!hexRe.test(v)) return null;
+    out[key] = v;
+  }
+  return out;
 }
 function saveSiteTheme() {
-  var m = document.getElementById('hex-memberAccent').value.trim();
-  var s = document.getElementById('hex-staffAccent').value.trim();
-  var hexRe = /^#[0-9a-fA-F]{6}$/;
-  if (!hexRe.test(m) || !hexRe.test(s)) {
+  var member = readShadesFromForm('member');
+  var staff  = readShadesFromForm('staff');
+  if (!member || !staff) {
     showToast('รูปแบบสีไม่ถูกต้อง (ต้องเป็น #RRGGBB)');
     return;
   }
@@ -707,12 +784,12 @@ function saveSiteTheme() {
   btn.disabled = true;
   btn.textContent = 'กำลังบันทึก...';
   db.collection('site_config').doc('theme').set({
-    memberAccent: m,
-    staffAccent:  s,
+    member:       member,
+    staff:        staff,
     updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
     updatedBy:    currentUserEmail
   }, { merge: true }).then(function() {
-    siteThemeConfig = { memberAccent: m, staffAccent: s };
+    siteThemeConfig = { member: member, staff: staff };
     /* preview สีทันทีในหน้านี้ (settings.html ใช้ navTheme:'blue' เสมอ) */
     if (typeof applySiteThemeColors === 'function') applySiteThemeColors('blue');
     try { localStorage.setItem('np_site_theme_cache', JSON.stringify(siteThemeConfig)); } catch (e) {}

@@ -265,16 +265,37 @@ function _shade(hex, percent) {
   );
 }
 
+/* คำนวณชุดสี 4 ระดับ (primary/dark/light/tint) จากสีหลักสีเดียว
+   ใช้เป็นค่าเริ่มต้นตอนแอดมินยังไม่เคยปรับละเอียด */
+function computeShades(primary) {
+  return {
+    primary: primary,
+    dark:    _shade(primary, -0.25),
+    light:   _shade(primary,  0.55),
+    tint:    _shade(primary,  0.90)
+  };
+}
+window.computeShades = computeShades;
+
 function _setAccentVars(data, navTheme) {
   if (!data) return;
-  var base = (navTheme === 'dark') ? data.staffAccent : data.memberAccent;
-  if (!base) return;
+  var roleKey = (navTheme === 'dark') ? 'staff' : 'member';
+  var set = data[roleKey];
+
+  /* backward compat: ข้อมูลเก่ามีแค่ memberAccent/staffAccent (1 สี) */
+  if (!set) {
+    var legacyBase = (navTheme === 'dark') ? data.staffAccent : data.memberAccent;
+    if (!legacyBase) return;
+    set = computeShades(legacyBase);
+  }
+
   var root = document.documentElement.style;
-  root.setProperty('--accent',       base);
-  root.setProperty('--accent-dark',  _shade(base, -0.25));
-  root.setProperty('--accent-mid',   _shade(base,  0.25));
-  root.setProperty('--accent-light', _shade(base,  0.55));
-  root.setProperty('--accent-tint',  _shade(base,  0.90));
+  root.setProperty('--accent',       set.primary);
+  root.setProperty('--accent-dark',  set.dark);
+  root.setProperty('--accent-light', set.light);
+  root.setProperty('--accent-tint',  set.tint);
+  /* --accent-mid คงไว้เพื่อความเข้ากันได้ย้อนหลัง คำนวณจาก primary */
+  root.setProperty('--accent-mid',   _shade(set.primary, 0.25));
 }
 
 /* เรียกจาก buildPageShell() ทุกหน้า — ใช้ค่า cache ก่อนกันสีกระพริบ
