@@ -231,6 +231,69 @@ function _toggleAdminItem(id, show) {
    theme: 'blue' (ผู้ใช้ทั่วไป, default) | 'dark' (เจ้าหน้าที่) | 'purple' (legacy)
    backward compat: buildNavbar(subtitle, true) → 'purple'
    ════════════════════════════════ */
+/* ════════════════════════════════
+   Site-wide Theme Colors (Admin-controlled)
+   แอดมิน (SuperAdmin) ตั้งสีหลัก 1 สี ต่อ role ("สมาชิก"/"เจ้าหน้าที่")
+   ที่ site_config/theme ใน Firestore แล้วระบบจะคำนวณเฉด เข้ม/กลาง/อ่อน/พื้นหลัง
+   ให้อัตโนมัติ แล้วเขียนทับ CSS var บน :root ทุกหน้าที่โหลดผ่าน buildPageShell()
+   ════════════════════════════════ */
+var SITE_THEME_CACHE_KEY = 'np_site_theme_cache';
+
+function _hexToRgb(hex) {
+  hex = (hex || '').replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(function(c) { return c + c; }).join('');
+  var n = parseInt(hex, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function _rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(function(v) {
+    v = Math.max(0, Math.min(255, Math.round(v)));
+    var s = v.toString(16);
+    return s.length === 1 ? '0' + s : s;
+  }).join('');
+}
+/* ผสมสีหลักเข้ากับขาว/ดำ เพื่อสร้างเฉดจากสีเดียว
+   percent ติดลบ = เข้มขึ้น (ผสมดำ), บวก = อ่อนลง (ผสมขาว), ค่า 0-1 */
+function _shade(hex, percent) {
+  var c = _hexToRgb(hex);
+  var target = percent < 0 ? 0 : 255;
+  var p = Math.abs(percent);
+  return _rgbToHex(
+    c.r + (target - c.r) * p,
+    c.g + (target - c.g) * p,
+    c.b + (target - c.b) * p
+  );
+}
+
+function _setAccentVars(data, navTheme) {
+  if (!data) return;
+  var base = (navTheme === 'dark') ? data.staffAccent : data.memberAccent;
+  if (!base) return;
+  var root = document.documentElement.style;
+  root.setProperty('--accent',       base);
+  root.setProperty('--accent-dark',  _shade(base, -0.25));
+  root.setProperty('--accent-mid',   _shade(base,  0.25));
+  root.setProperty('--accent-light', _shade(base,  0.55));
+  root.setProperty('--accent-tint',  _shade(base,  0.90));
+}
+
+/* เรียกจาก buildPageShell() ทุกหน้า — ใช้ค่า cache ก่อนกันสีกระพริบ
+   แล้วดึงค่าล่าสุดจาก Firestore มาอัปเดตซ้ำ + cache ไว้ใช้รอบถัดไป */
+function applySiteThemeColors(navTheme) {
+  try {
+    var cached = JSON.parse(localStorage.getItem(SITE_THEME_CACHE_KEY) || 'null');
+    if (cached) _setAccentVars(cached, navTheme);
+  } catch (e) { /* localStorage/JSON พัง ก็ข้ามไปใช้สี default ของ styles-new.css */ }
+
+  if (typeof db === 'undefined') return;
+  db.collection('site_config').doc('theme').get().then(function(doc) {
+    if (!doc.exists) return;
+    var data = doc.data();
+    _setAccentVars(data, navTheme);
+    try { localStorage.setItem(SITE_THEME_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }).catch(function() { /* ออฟไลน์/error → ใช้สี default หรือ cache เดิมต่อไป */ });
+}
+
 function buildPageShell(config) {
   config = config || {};
   var appId      = config.appId       || 'appShell';
@@ -245,6 +308,7 @@ function buildPageShell(config) {
   /* ── inject body theme class (ใช้กับ accent tokens ใน styles-new.css) ── */
   document.body.classList.remove('theme-staff', 'theme-blue');
   document.body.classList.add(theme === 'dark' ? 'theme-staff' : 'theme-blue');
+  applySiteThemeColors(theme);   /* ทับสีด้วยค่าที่แอดมินตั้งไว้ (ถ้ามี) */
 
   appEl.classList.add('app-shell');
   appEl.innerHTML =

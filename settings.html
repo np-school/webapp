@@ -269,57 +269,14 @@
 
 <script>
 /* ══════════════════════════════════════
-   2 ธีมที่มีอยู่จริงใน styles-new.css
+   ธีมสีทั้งเว็บ — แอดมิน (SuperAdmin) เท่านั้นที่แก้ได้
+   บันทึกที่ site_config/theme ใน Firestore แล้ว common.js
+   (applySiteThemeColors) จะดึงไปใช้ในทุกหน้าอัตโนมัติ
    ══════════════════════════════════════ */
-var THEMES = {
-  blue: {
-    key:         'blue',
-    bodyClass:   'theme-blue',
-    navClass:    'blue',
-    navTheme:    'blue',              /* ส่งให้ buildPage */
-    label:       'Ocean Blue',
-    desc:        'ธีมเริ่มต้น · ผู้ใช้ทั่วไป',
-    navbar:      '#1d4ed8',
-    swatches:    ['#1d4ed8','#1e40af','#60a5fa','#93c5fd','#eff6ff'],
-    activeClass: 'selected-blue',
-    mockBtn:     '#1d4ed8',
-    mockSb:      '#1d4ed8',
-  },
-  staff: {
-    key:         'staff',
-    bodyClass:   'theme-staff',
-    navClass:    'dark',
-    navTheme:    'dark',
-    label:       'Ink Black',
-    desc:        'ธีมเจ้าหน้าที่ · Admin',
-    navbar:      '#0d1b2a',
-    swatches:    ['#0d1b2a','#1b263b','#415a77','#778da9','#e0e1dd'],
-    activeClass: 'selected-staff',
-    mockBtn:     '#0d1b2a',
-    mockSb:      '#0d1b2a',
-  },
+var THEME_ROLES = {
+  memberAccent: { label: 'ผู้ใช้งานทั่วไป', desc: 'navTheme: blue · หน้าสมาชิก/นักเรียน', fallback: '#1d4ed8' },
+  staffAccent:  { label: 'เจ้าหน้าที่',      desc: 'navTheme: dark · หน้าแอดมิน/เจ้าหน้าที่', fallback: '#0d1b2a' },
 };
-
-var STORAGE_KEY = 'np_theme';
-var currentKey  = localStorage.getItem(STORAGE_KEY) || 'blue';
-
-/* Apply body class + navbar class ── ไม่ต้อง setProperty เพราะ
-   styles-new.css กำหนด accent tokens ผ่าน body.theme-blue / body.theme-staff */
-function applyTheme(key, save) {
-  var t = THEMES[key] || THEMES.blue;
-  currentKey = t.key;
-
-  document.body.classList.remove('theme-blue', 'theme-staff');
-  document.body.classList.add(t.bodyClass);
-
-  var navbar = document.querySelector('.navbar');
-  if (navbar) { navbar.classList.remove('blue','dark'); navbar.classList.add(t.navClass); }
-
-  if (save) localStorage.setItem(STORAGE_KEY, t.key);
-}
-
-/* Apply ก่อน buildPage เพื่อป้องกัน flash */
-applyTheme(currentKey, false);
 
 /* ══ Announcement helpers ══ */
 var ANN_TYPES = {
@@ -330,6 +287,8 @@ var ANN_TYPES = {
 };
 var currentUserEmail = null;
 var isAdmin          = false;
+var isSuperAdmin      = false;
+var siteThemeConfig  = {};  /* { memberAccent, staffAccent } จาก site_config/theme */
 
 /* ══ Announcement Modal (extended) ══
    ฟิลด์: scope, startDate, endDate, noExpiry, department, imageUrl
@@ -660,8 +619,8 @@ function renderPage() {
     '</div>' +
 
     '<div class="settings-pane active" id="spane-theme">' +
-      '<div class="settings-section-title">ธีมสี</div>' +
-      '<div class="theme-cards-row">' + renderCards() + '</div>' +
+      '<div class="settings-section-title">ธีมสีเว็บไซต์</div>' +
+      (isSuperAdmin ? renderThemeEditor() : renderThemeReadOnly()) +
     '</div>' +
 
     (showAnnTab ?
@@ -677,78 +636,100 @@ function renderPage() {
   );
 }
 
-function renderCards() {
-  return Object.values(THEMES).map(function(t) {
-    var sel = currentKey === t.key;
-    return (
-      '<div class="theme-card' + (sel ? ' ' + t.activeClass : '') + '" ' +
-           'id="themeCard-' + t.key + '" onclick="selectTheme(\'' + t.key + '\')">' +
-
-        /* checkmark */
-        '<div class="check-badge"><i data-lucide="check"></i></div>' +
-
-        /* navbar strip */
-        '<div class="theme-navbar-strip" style="background:' + t.navbar + ';">' +
-          '<div class="strip-circle"></div>' +
-          '<div class="strip-lines">' +
-            '<div class="strip-line"></div>' +
-            '<div class="strip-line short"></div>' +
-          '</div>' +
-          '<div class="strip-btn"></div>' +
-        '</div>' +
-
-        /* app body mockup */
-        '<div class="theme-body-mock">' +
-          '<div class="mock-sidebar">' +
-            '<div class="mock-sb-item" style="background:' + t.mockSb + ';opacity:.85;"></div>' +
-            '<div class="mock-sb-item"></div>' +
-            '<div class="mock-sb-item"></div>' +
-          '</div>' +
-          '<div class="mock-content">' +
-            '<div class="mock-btn" style="background:' + t.mockBtn + ';"></div>' +
-            '<div class="mock-line"></div>' +
-            '<div class="mock-line s"></div>' +
-          '</div>' +
-        '</div>' +
-
-        /* 5 swatches — สะท้อน 5 accent tokens จริง */
-        '<div class="swatch-row">' +
-          t.swatches.map(function(c) {
-            return '<div class="swatch" style="background:' + c + ';"></div>';
-          }).join('') +
-          '<span class="swatch-label">5 สี</span>' +
-        '</div>' +
-
-        /* label */
-        '<div class="theme-label">' +
-          '<div class="theme-label-name">' + t.label + '</div>' +
-          '<div class="theme-label-desc">' + t.desc + '</div>' +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
+/* ══ ธีมสีทั้งเว็บ — read-only (ผู้ใช้ทั่วไป/แอดมินธรรมดา) ══ */
+function renderThemeReadOnly() {
+  var m = siteThemeConfig.memberAccent || THEME_ROLES.memberAccent.fallback;
+  var s = siteThemeConfig.staffAccent  || THEME_ROLES.staffAccent.fallback;
+  return (
+    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:16px;">สีของเว็บไซต์ถูกกำหนดโดยผู้ดูแลระบบส่วนกลาง ใช้ค่าเดียวกันทุกหน้า/ทุกผู้ใช้</p>' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
+      ['memberAccent', 'staffAccent'].map(function(k) {
+        var c = k === 'memberAccent' ? m : s;
+        var meta = THEME_ROLES[k];
+        return (
+          '<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:220px;">' +
+            '<div style="width:40px;height:40px;border-radius:10px;background:' + c + ';flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);"></div>' +
+            '<div>' +
+              '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
+              '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">' + meta.desc + '</div>' +
+              '<div style="font-size:11px;color:#94a3b8;font-family:monospace;margin-top:2px;">' + c + '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('') +
+    '</div>'
+  );
 }
 
-function selectTheme(key) {
-  var t = THEMES[key]; if (!t) return;
-
-  /* ล้าง selected class ทุก card */
-  Object.values(THEMES).forEach(function(th) {
-    var c = document.getElementById('themeCard-' + th.key);
-    if (c) { c.classList.remove('selected-blue', 'selected-staff'); }
+/* ══ ธีมสีทั้งเว็บ — editor (SuperAdmin เท่านั้น) ══ */
+function renderThemeEditor() {
+  var m = siteThemeConfig.memberAccent || THEME_ROLES.memberAccent.fallback;
+  var s = siteThemeConfig.staffAccent  || THEME_ROLES.staffAccent.fallback;
+  return (
+    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:16px;">ตั้งสีหลัก 1 สีต่อกลุ่ม ระบบจะคำนวณเฉดเข้ม/อ่อนให้อัตโนมัติ และมีผลกับทุกหน้าทั้งเว็บทันทีที่บันทึก</p>' +
+    '<div style="display:flex;gap:20px;flex-wrap:wrap;">' +
+      themeColorField('memberAccent', m) +
+      themeColorField('staffAccent', s) +
+    '</div>' +
+    '<button onclick="saveSiteTheme()" id="saveThemeBtn" style="margin-top:20px;padding:11px 24px;background:var(--accent);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">บันทึกสีทั้งเว็บ</button>'
+  );
+}
+function themeColorField(key, value) {
+  var meta = THEME_ROLES[key];
+  return (
+    '<div style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:230px;">' +
+      '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
+      '<div style="font-size:11px;color:#94a3b8;">' + meta.desc + '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-top:6px;">' +
+        '<input type="color" id="color-' + key + '" value="' + value + '" oninput="onThemeColorInput(\'' + key + '\')" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;padding:0;background:none;">' +
+        '<input type="text" id="hex-' + key + '" value="' + value + '" oninput="onThemeHexInput(\'' + key + '\')" maxlength="7" style="width:90px;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:8px;font-size:12px;font-family:monospace;text-transform:uppercase;">' +
+      '</div>' +
+    '</div>'
+  );
+}
+function onThemeColorInput(key) {
+  var v = document.getElementById('color-' + key).value;
+  document.getElementById('hex-' + key).value = v;
+}
+function onThemeHexInput(key) {
+  var v = document.getElementById('hex-' + key).value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById('color-' + key).value = v;
+}
+function saveSiteTheme() {
+  var m = document.getElementById('hex-memberAccent').value.trim();
+  var s = document.getElementById('hex-staffAccent').value.trim();
+  var hexRe = /^#[0-9a-fA-F]{6}$/;
+  if (!hexRe.test(m) || !hexRe.test(s)) {
+    showToast('รูปแบบสีไม่ถูกต้อง (ต้องเป็น #RRGGBB)');
+    return;
+  }
+  var btn = document.getElementById('saveThemeBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก...';
+  db.collection('site_config').doc('theme').set({
+    memberAccent: m,
+    staffAccent:  s,
+    updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy:    currentUserEmail
+  }, { merge: true }).then(function() {
+    siteThemeConfig = { memberAccent: m, staffAccent: s };
+    /* preview สีทันทีในหน้านี้ (settings.html ใช้ navTheme:'blue' เสมอ) */
+    if (typeof applySiteThemeColors === 'function') applySiteThemeColors('blue');
+    try { localStorage.setItem('np_site_theme_cache', JSON.stringify(siteThemeConfig)); } catch (e) {}
+    showToast('บันทึกสีทั้งเว็บเรียบร้อย');
+  }).catch(function(err) {
+    showToast('บันทึกไม่สำเร็จ: ' + (err && err.message ? err.message : err));
+  }).finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'บันทึกสีทั้งเว็บ';
   });
-  var card = document.getElementById('themeCard-' + key);
-  if (card) card.classList.add(t.activeClass);
-
-  applyTheme(key, true);
-  showToast('เปลี่ยนธีมเป็น ' + t.label);
 }
 
 /* ══ Boot ══ */
 buildPage({
   appId:        'settingsApp',
   navSubtitle:  'ตั้งค่า',
-  navTheme:     (THEMES[currentKey] || THEMES.blue).navTheme,
+  navTheme:     'blue',
   activePage:   'settings',
   requireAdmin: false,
 
@@ -758,15 +739,16 @@ buildPage({
     checkAdminAccess(user.email);
     currentUserEmail = user.email;
 
-    /* buildPage reset body class → apply คืน */
-    applyTheme(currentKey, false);
-
-    /* ตรวจสอบ admin เพื่อแสดง/ซ่อน tab ประกาศ */
+    /* ตรวจสอบ admin เพื่อแสดง/ซ่อน tab ประกาศ + ดึงค่าธีมสีทั้งเว็บปัจจุบัน */
     var lEmail = user.email.toLowerCase();
-    var isSA = lEmail === (typeof SUPERADMIN_EMAIL !== 'undefined' ? SUPERADMIN_EMAIL : '');
-    db.collection('admins').doc(lEmail).get()
-      .then(function(doc) {
-        isAdmin = isSA || doc.exists;
+    isSuperAdmin = lEmail === (typeof SUPERADMIN_EMAIL !== 'undefined' ? SUPERADMIN_EMAIL : '');
+    Promise.all([
+      db.collection('admins').doc(lEmail).get(),
+      db.collection('site_config').doc('theme').get()
+    ])
+      .then(function(results) {
+        isAdmin = isSuperAdmin || results[0].exists;
+        siteThemeConfig = results[1].exists ? results[1].data() : {};
         contentEl.innerHTML = renderPage();
         lucide.createIcons();
         /* init type radio click handlers */
@@ -777,6 +759,7 @@ buildPage({
       })
       .catch(function() {
         isAdmin = false;
+        siteThemeConfig = {};
         contentEl.innerHTML = renderPage();
         lucide.createIcons();
         setupScrollTopButton();
