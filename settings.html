@@ -274,10 +274,10 @@ var THEME_ROLES = {
   staff:  { label: 'เจ้าหน้าที่',      desc: 'navTheme: dark · หน้าแอดมิน/เจ้าหน้าที่', fallback: '#0d1b2a' },
 };
 var SHADE_SLOTS = [
-  { key: 'primary', label: 'หลัก' },
-  { key: 'dark',    label: 'เข้ม' },
-  { key: 'light',   label: 'อ่อน' },
-  { key: 'tint',    label: 'พื้นหลัง' }
+  { key: 'primary', label: 'หลัก',     hint: 'navbar, ปุ่มหลัก' },
+  { key: 'dark',    label: 'เข้ม',     hint: 'ตอนชี้เมาส์ (hover)' },
+  { key: 'light',   label: 'อ่อน',     hint: 'เส้นขอบ, ไอคอนรอง' },
+  { key: 'tint',    label: 'พื้นหลัง', hint: 'พื้นการ์ด/badge อ่อนๆ' }
 ];
 
 /* ══ Announcement helpers ══ */
@@ -660,7 +660,7 @@ function renderThemeReadOnly() {
             '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">' + meta.desc + '</div>' +
             '<div style="display:flex;gap:6px;">' +
               SHADE_SLOTS.map(function(slot) {
-                return '<div title="' + slot.label + ': ' + shades[slot.key] + '" style="width:32px;height:32px;border-radius:8px;background:' + shades[slot.key] + ';box-shadow:0 2px 6px rgba(0,0,0,.12);"></div>';
+                return '<div title="' + slot.label + ' (' + slot.hint + '): ' + shades[slot.key] + '" style="width:32px;height:32px;border-radius:8px;background:' + shades[slot.key] + ';box-shadow:0 2px 6px rgba(0,0,0,.12);"></div>';
               }).join('') +
             '</div>' +
           '</div>'
@@ -689,7 +689,7 @@ function renderThemeEditorCard(roleKey) {
   return (
     '<div style="border:1px solid var(--border,#e2e8f0);border-radius:14px;overflow:hidden;">' +
       /* live preview mockup */
-      '<div id="preview-navbar-' + roleKey + '" class="theme-navbar-strip" style="background:' + shades.dark + ';">' +
+      '<div id="preview-navbar-' + roleKey + '" class="theme-navbar-strip" style="background:' + shades.primary + ';">' +
         '<div class="strip-circle"></div>' +
         '<div class="strip-lines"><div class="strip-line"></div><div class="strip-line short"></div></div>' +
         '<div class="strip-btn"></div>' +
@@ -718,7 +718,8 @@ function renderThemeEditorCard(roleKey) {
             var slot = SHADE_SLOTS.filter(function(s) { return s.key === slotKey; })[0];
             return (
               '<div style="flex:1;">' +
-                '<div style="font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:4px;">' + slot.label + '</div>' +
+                '<div style="font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:2px;">' + slot.label + '</div>' +
+                '<div style="font-size:9px;color:#cbd5e1;margin-bottom:4px;">' + slot.hint + '</div>' +
                 '<input type="color" id="color-' + roleKey + '-' + slotKey + '" value="' + shades[slotKey] + '" oninput="onShadeInput(\'' + roleKey + '\',\'' + slotKey + '\')" style="width:100%;height:30px;border:none;border-radius:7px;cursor:pointer;padding:0;background:none;">' +
               '</div>'
             );
@@ -751,11 +752,12 @@ function autoGenerateShades(roleKey) {
   });
   updateThemePreview(roleKey);
 }
-/* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก) */
+/* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก)
+   navbar และปุ่ม ในเว็บจริงใช้สี "หลัก" (primary) เหมือนกัน ส่วนสี "เข้ม" มีผลแค่ตอน hover
+   ทำให้ preview ตรงกับพฤติกรรมจริง ไม่ใช่ผูกกับสีเข้มแบบเดิม */
 function updateThemePreview(roleKey) {
-  var dark    = document.getElementById('color-' + roleKey + '-dark').value;
   var primary = document.getElementById('color-' + roleKey + '-primary').value;
-  document.getElementById('preview-navbar-' + roleKey).style.background = dark;
+  document.getElementById('preview-navbar-' + roleKey).style.background = primary;
   document.getElementById('preview-btn-' + roleKey).style.background    = primary;
 }
 function readShadesFromForm(roleKey) {
