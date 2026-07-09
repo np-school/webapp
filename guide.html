@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1b2a">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -53,7 +53,7 @@
       transition: all .2s; white-space: nowrap;
     }
     .g-tab:hover { background: #f1f5f9; color: #1e293b; }
-    .g-tab.tab-active { background: #1d4ed8; color: white; box-shadow: 0 4px 14px rgba(29,78,216,.3); }
+    .g-tab.tab-active { background: var(--accent); color: white; box-shadow: 0 4px 14px rgba(29,78,216,.3); }
     .g-tab.tab-active-purple { background: var(--purple); color: white; box-shadow: 0 4px 14px rgba(13,27,42,.3); }
 
     .g-pane { display: none; }
@@ -72,7 +72,7 @@
       border-bottom: 2.5px solid transparent; transition: all .18s; white-space: nowrap;
     }
     .g-sub:hover { color: #475569; }
-    .g-sub.sub-active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .g-sub.sub-active { color: var(--accent); border-bottom-color: var(--accent); }
     .g-sub.sub-active-purple { color: #7c3aed; border-bottom-color: #7c3aed; }
 
     .g-subpane { display: none; }
@@ -96,7 +96,7 @@
       font-size: 13px; line-height: 1.65; margin-top: 14px;
     }
     .g-alert-yellow { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-    .g-alert-blue   { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+    .g-alert-blue   { background: var(--accent-tint); border: 1px solid var(--accent-light); color: #1e3a8a; }
     .g-alert-green  { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
 
     /* Status badges */
@@ -110,7 +110,7 @@
     .sb-done      { background: #f1f5f9; color: #64748b; }
     .sb-submitted { background: #dcfce7; color: #15803d; }
     .sb-head_reviewed { background: #e0f2fe; color: #0369a1; }
-    .sb-reviewed  { background: #eff6ff; color: #1e40af; }
+    .sb-reviewed  { background: var(--accent-tint); color: var(--accent-dark); }
     .sb-deputy_reviewed { background: #ede9fe; color: #6d28d9; }
     .sb-final_approved  { background: #f0fdf4; color: #065f46; border: 1px solid #86efac; }
     .sb-revision  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
@@ -134,7 +134,7 @@
       padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center; flex-shrink: 0;
     }
     .flow-arrow { font-size: 16px; color: #94a3b8; padding: 0 6px; flex-shrink: 0; }
-    .fb-blue   { background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; }
+    .fb-blue   { background: var(--accent-tint); color: var(--accent); border: 1.5px solid var(--accent-light); }
     .fb-green  { background: #f0fdf4; color: #15803d; border: 1.5px solid #bbf7d0; }
     .fb-yellow { background: #fffbeb; color: #92400e; border: 1.5px solid #fde68a; }
     .fb-purple { background: #f5f3ff; color: #7c3aed; border: 1.5px solid #c4b5fd; }
@@ -145,7 +145,7 @@
     .sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
     @media(max-width:540px){ .sys-grid { grid-template-columns: 1fr; } }
     .sys-card { border-radius: 12px; padding: 16px; border: 1px solid; font-size: 13px; }
-    .sys-card-blue   { background: #eff6ff; border-color: #bfdbfe; }
+    .sys-card-blue   { background: var(--accent-tint); border-color: var(--accent-light); }
     .sys-card-purple { background: #f5f3ff; border-color: #c4b5fd; }
     .sys-card-title  { font-weight: 700; color: #1e293b; margin: 6px 0 4px; font-size: 14px; }
     .sys-card-desc   { color: #64748b; line-height: 1.5; }
@@ -175,7 +175,7 @@
       text-decoration: none; font-size: 14px; transition: opacity .15s;
     }
     .cta-btn:hover { opacity: .9; }
-    .cta-blue   { background: #1d4ed8; box-shadow: 0 6px 18px rgba(29,78,216,.3); }
+    .cta-blue   { background: var(--accent); box-shadow: 0 6px 18px rgba(29,78,216,.3); }
     .cta-purple { background: var(--purple); box-shadow: 0 6px 18px rgba(13,27,42,.3); }
 
     /* Section divider */
@@ -217,7 +217,7 @@
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
-  <a href="index.html" style="padding:10px 24px;background:#1d4ed8;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
 <!-- Main App -->
@@ -362,17 +362,17 @@ function renderOverview() {
       '</div>' +
       '<div class="sdiv">การเข้าสู่ระบบ</div>' +
       '<div class="g-step">' +
-        '<div class="g-num" style="background:#eff6ff;color:#1d4ed8;">1</div>' +
+        '<div class="g-num" style="background:var(--accent-tint);color:var(--accent);">1</div>' +
         '<div><div class="g-step-title">เข้าเว็บไซต์หรือแอปพลิเคชัน</div>' +
         '<div class="g-step-desc">เปิด NP Origins ผ่านเบราว์เซอร์หรือ Add to Home Screen บน iOS/Android เพื่อใช้งานแบบ PWA</div></div>' +
       '</div>' +
       '<div class="g-step">' +
-        '<div class="g-num" style="background:#eff6ff;color:#1d4ed8;">2</div>' +
+        '<div class="g-num" style="background:var(--accent-tint);color:var(--accent);">2</div>' +
         '<div><div class="g-step-title">คลิก "เข้าสู่ระบบด้วย Google"</div>' +
         '<div class="g-step-desc">เลือกบัญชี <strong>@nongki.ac.th</strong> เท่านั้น บัญชีส่วนตัว Gmail จะไม่สามารถเข้าใช้งานได้</div></div>' +
       '</div>' +
       '<div class="g-step">' +
-        '<div class="g-num" style="background:#eff6ff;color:#1d4ed8;">3</div>' +
+        '<div class="g-num" style="background:var(--accent-tint);color:var(--accent);">3</div>' +
         '<div><div class="g-step-title">เลือกระบบจาก Sidebar</div>' +
         '<div class="g-step-desc">เมื่อเข้าสู่ระบบสำเร็จ เลือกเมนูที่ต้องการจาก Sidebar ด้านซ้าย บนมือถือกดปุ่มเมนู ☰ มุมบนซ้ายเพื่อเปิด Sidebar</div></div>' +
       '</div>' +
@@ -391,23 +391,23 @@ function renderRoomUser() {
         '<div class="page-icon blue"><i data-lucide="calendar-plus" style="width:18px;height:18px;color:white;"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:#1e293b;">ขั้นตอนการขอใช้ห้อง/สถานที่</span>' +
       '</div>' +
-      '<div class="g-step"><div class="g-num" style="background:#eff6ff;color:#1d4ed8;">1</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">1</div><div>' +
         '<div class="g-step-title">เข้าสู่ระบบด้วย Google Account</div>' +
         '<div class="g-step-desc">คลิก "เข้าสู่ระบบด้วย Google" แล้วเลือกบัญชี <strong>@nongki.ac.th</strong> ของโรงเรียน</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#eff6ff;color:#1d4ed8;">2</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">2</div><div>' +
         '<div class="g-step-title">เลือกห้องและตรวจสอบปฏิทิน</div>' +
         '<div class="g-step-desc">เลือกห้องที่ต้องการจาก Sidebar หรือ Dropdown แล้วดูปฏิทิน วันที่มีจุดสีเหลืองหมายถึงมีการจองอยู่แล้ว วันสีแดงหมายถึงจองเต็มแล้ว</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#eff6ff;color:#1d4ed8;">3</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">3</div><div>' +
         '<div class="g-step-title">กดปุ่ม "จองห้อง / สถานที่"</div>' +
         '<div class="g-step-desc">คลิกปุ่มสีน้ำเงินมุมขวาบน กรอกข้อมูลให้ครบ ได้แก่ ชื่อ-สกุล ตำแหน่ง วัตถุประสงค์ วันที่/เวลา จำนวนผู้เข้าร่วม และอุปกรณ์ที่ต้องการ</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#eff6ff;color:#1d4ed8;">4</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">4</div><div>' +
         '<div class="g-step-title">เลือกช่วงเวลา</div>' +
         '<div class="g-step-desc">มี 2 โหมด: <strong>คลาสเรียน</strong> (คาบที่ 1–8 พร้อมช่วงพักกลางวัน) หรือ <strong>กำหนดเอง</strong> (เลือกช่วงเวลาอิสระ) ช่วงที่ถูกจองแล้วจะแสดงเป็นสีแดง</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#eff6ff;color:#1d4ed8;">5</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">5</div><div>' +
         '<div class="g-step-title">แนบไฟล์ผังที่นั่ง (ถ้ามี)</div>' +
         '<div class="g-step-desc">หากมีการจัดผังที่นั่งหรือแผนผังการใช้งาน สามารถแนบไฟล์ภาพได้ เพื่อให้เจ้าหน้าที่พิจารณาได้สะดวกขึ้น</div>' +
       '</div></div>' +
@@ -433,8 +433,8 @@ function renderRoomUser() {
       '<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#475569;">' +
         '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#fef3c7;color:#b45309;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">จุดเหลือง</span><span>วันที่มีการจองบางช่วงเวลา (ยังจองได้ในช่วงที่ว่าง)</span></div>' +
         '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#fee2e2;color:#b91c1c;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันแดง</span><span>วันที่มีการจองเต็มทั้งวัน ไม่สามารถจองเพิ่มได้</span></div>' +
-        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#1d4ed8;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันนี้</span><span>วันปัจจุบัน แสดงด้วยพื้นหลังน้ำเงิน</span></div>' +
-        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#eff6ff;color:#1d4ed8;border:1.5px solid #1d4ed8;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">เลือกแล้ว</span><span>วันที่คุณเลือกสำหรับคำขอปัจจุบัน</span></div>' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--accent);color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันนี้</span><span>วันปัจจุบัน แสดงด้วยพื้นหลังน้ำเงิน</span></div>' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--accent-tint);color:var(--accent);border:1.5px solid var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">เลือกแล้ว</span><span>วันที่คุณเลือกสำหรับคำขอปัจจุบัน</span></div>' +
       '</div>' +
       '<div class="sdiv" style="margin-top:18px;">ฟีเจอร์เสริม</div>' +
       '<div style="font-size:13px;color:#475569;line-height:1.9;">' +

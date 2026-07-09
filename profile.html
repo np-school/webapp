@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
@@ -78,10 +78,10 @@
     .sem-block{background:white;border-radius:18px;border:1.5px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;margin-bottom:14px;}
     .sem-block:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);}
     .sem-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none;}
-    .sem-badge{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:white;font-size:12px;font-weight:800;padding:5px 13px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+    .sem-badge{background:linear-gradient(135deg,var(--accent),#3b82f6);color:white;font-size:12px;font-weight:800;padding:5px 13px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
     .sem-badge.sem2{background:linear-gradient(135deg,#7c3aed,#a855f7);}
     .sem-progress-bar{flex:1;background:#f1f5f9;border-radius:6px;height:7px;overflow:hidden;}
-    .sem-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#1d4ed8,#3b82f6);transition:width .6s ease;}
+    .sem-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#3b82f6);transition:width .6s ease;}
     .sem-progress-fill.purple{background:linear-gradient(90deg,#7c3aed,#a855f7);}
     .sem-count{font-size:12px;font-weight:700;color:#64748b;white-space:nowrap;}
     .sem-chevron{color:#94a3b8;transition:transform .3s;flex-shrink:0;}
@@ -102,7 +102,7 @@
     /* course sub-rows */
     .course-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f8fafc;}
     .course-row:last-child{border-bottom:none;}
-    .course-code{font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;flex-shrink:0;}
+    .course-code{font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;flex-shrink:0;}
     .course-name{font-size:12px;font-weight:600;color:#334155;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .file-count{font-size:10px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 7px;border-radius:6px;flex-shrink:0;}
 
@@ -110,7 +110,7 @@
     .s-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;}
     .s-submitted     {background:#dcfce7;color:#15803d;}
     .s-head_reviewed {background:#e0f2fe;color:#0369a1;}
-    .s-reviewed      {background:#dbeafe;color:#1e40af;}
+    .s-reviewed      {background:#dbeafe;color:var(--accent-dark);}
     .s-assistant_reviewed{background:#fef3c7;color:#92400e;}
     .s-deputy_reviewed{background:#ede9fe;color:#6d28d9;}
     .s-final_approved{background:#d1fae5;color:#065f46;}
@@ -161,7 +161,7 @@
     .subtab-bar::-webkit-scrollbar{display:none;}
     .subtab-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:#64748b;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
     .subtab-btn:hover:not(.active){background:rgba(255,255,255,.6);color:#334155;}
-    .subtab-btn.active{background:white;color:#1d4ed8;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .subtab-btn.active{background:white;color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08);}
     .subtab-panel{display:none;}
     .subtab-panel.active{display:block;}
 
@@ -179,24 +179,24 @@
     /* ── Teaching table ── */
     .teach-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #f1f5f9;}
     .teach-row:last-child{border-bottom:none;}
-    .teach-code{font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;white-space:nowrap;}
+    .teach-code{font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;white-space:nowrap;}
     .teach-name{flex:1;font-size:13px;font-weight:600;color:#0f172a;min-width:0;}
     .teach-periods{font-size:12px;font-weight:800;color:#f97316;background:#fff7ed;padding:3px 9px;border-radius:6px;white-space:nowrap;}
     .teach-level{font-size:11px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:6px;white-space:nowrap;}
-    .add-row-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;color:#1d4ed8;font-size:13px;font-weight:700;cursor:pointer;border-top:1px dashed #bfdbfe;background:#f8fbff;border-radius:0 0 14px 14px;}
-    .add-row-btn:hover{background:#eff6ff;}
+    .add-row-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;border-top:1px dashed var(--accent-light);background:#f8fbff;border-radius:0 0 14px 14px;}
+    .add-row-btn:hover{background:var(--accent-tint);}
 
     /* ── Dev / training items ── */
     .dev-item{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;transition:all .2s;}
-    .dev-item:hover{border-color:#bfdbfe;box-shadow:0 3px 12px rgba(29,78,216,.06);}
-    .dev-dot{width:10px;height:10px;border-radius:50%;background:#1d4ed8;flex-shrink:0;margin-top:4px;}
+    .dev-item:hover{border-color:var(--accent-light);box-shadow:0 3px 12px rgba(29,78,216,.06);}
+    .dev-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
     .dev-title{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px;}
     .dev-meta{font-size:11px;font-weight:600;color:#94a3b8;}
 
     /* ── Media items ── */
     .media-item{background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .2s;}
-    .media-item:hover{border-color:#bfdbfe;box-shadow:0 3px 12px rgba(29,78,216,.06);}
-    .media-icon{width:40px;height:40px;border-radius:12px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .media-item:hover{border-color:var(--accent-light);box-shadow:0 3px 12px rgba(29,78,216,.06);}
+    .media-icon{width:40px;height:40px;border-radius:12px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .media-name{font-size:13px;font-weight:700;color:#0f172a;flex:1;}
     .media-subject{font-size:11px;font-weight:600;color:#64748b;margin-top:2px;}
 
@@ -227,7 +227,7 @@
     .sar-val.empty-val{color:#cbd5e1;font-style:italic;}
     .sar-teach-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f8fafc;}
     .sar-teach-row:last-child{border-bottom:none;}
-    .sar-teach-code{font-size:11px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
+    .sar-teach-code{font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
     .sar-teach-name{font-size:12px;font-weight:600;color:#334155;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .sar-teach-periods{font-size:11px;font-weight:800;color:#f97316;background:#fff7ed;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
     .sar-teach-level{font-size:10px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 6px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
@@ -247,13 +247,13 @@
     .sar-duty-group{font-size:10px;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
     .sar-first-row-ref{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f8fafc;}
     .sar-first-row-ref:last-child{border-bottom:none;}
-    .sar-school-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 14px;margin-bottom:8px;font-size:12px;font-weight:700;color:#1d4ed8;}
+    .sar-school-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-tint);border:1px solid var(--accent-light);border-radius:10px;padding:8px 14px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--accent);}
     .sar-service-chip{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#15803d;}
     .sar-empty{text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-weight:600;}
 
     /* ── Career Timeline ── */
     .career-timeline{position:relative;padding:4px 0 4px 32px;flex:1;}
-    .career-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,#93c5fd,#c4b5fd);border-radius:2px;}
+    .career-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,var(--accent-light),#c4b5fd);border-radius:2px;}
     .ct-node{position:relative;margin-bottom:22px;}
     .ct-node:last-child{margin-bottom:0;}
     .ct-dot{position:absolute;left:-25px;top:13px;width:16px;height:16px;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 2.5px currentColor;display:flex;align-items:center;justify-content:center;}
@@ -277,12 +277,12 @@
     .port-doc-info { flex:1; min-width:0; }
     .port-doc-title { font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px; }
     .port-course-chip { display:inline-flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:5px 10px; margin:3px 4px 3px 0; cursor:pointer; transition:all .15s; text-decoration:none; }
-    .port-course-chip:hover { border-color:#93c5fd; background:#eff6ff; box-shadow:0 2px 6px rgba(29,78,216,.08); }
+    .port-course-chip:hover { border-color:var(--accent-light); background:var(--accent-tint); box-shadow:0 2px 6px rgba(29,78,216,.08); }
     .port-course-chip.has-files { border-color:#86efac; background:#f0fdf4; }
     .port-course-chip.revision  { border-color:#fde68a; background:#fffbeb; }
-    .port-course-code { font-size:10px; font-weight:800; color:#1d4ed8; background:#eff6ff; padding:1px 6px; border-radius:4px; flex-shrink:0; }
+    .port-course-code { font-size:10px; font-weight:800; color:var(--accent); background:var(--accent-tint); padding:1px 6px; border-radius:4px; flex-shrink:0; }
     .port-course-name { font-size:11px; font-weight:700; color:#334155; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .port-file-link { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800; color:#1d4ed8; text-decoration:none; padding:2px 6px; background:#eff6ff; border-radius:5px; flex-shrink:0; }
+    .port-file-link { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800; color:var(--accent); text-decoration:none; padding:2px 6px; background:var(--accent-tint); border-radius:5px; flex-shrink:0; }
     .port-file-link:hover { background:#dbeafe; }
 
   
@@ -383,7 +383,7 @@
             <!-- ข้อมูลส่วนตัว -->
             <div class="sar-card">
               <div class="sar-card-head">
-                <div class="sar-card-icon" style="background:#eff6ff;"><i data-lucide="user-circle" style="width:17px;height:17px;color:#1d4ed8;"></i></div>
+                <div class="sar-card-icon" style="background:var(--accent-tint);"><i data-lucide="user-circle" style="width:17px;height:17px;color:var(--accent);"></i></div>
                 <div class="sar-card-title">ข้อมูลส่วนตัว</div>
               </div>
               <div class="sar-card-body" id="sar-personal-body">
@@ -473,7 +473,7 @@
           <div class="sar-card" id="portfolioSummaryCard">
             <div class="sar-card-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <div class="sar-card-icon" style="background:#eff6ff;"><i data-lucide="folder-check" style="width:17px;height:17px;color:#1d4ed8;"></i></div>
+                <div class="sar-card-icon" style="background:var(--accent-tint);"><i data-lucide="folder-check" style="width:17px;height:17px;color:var(--accent);"></i></div>
                 <div>
                   <div class="sar-card-title" style="margin-bottom:2px;">สรุปการส่งงาน Portfolio</div>
                   <div id="portfolioSemLabel" style="font-size:10px;font-weight:700;color:#94a3b8;">กำลังโหลด...</div>
@@ -482,7 +482,7 @@
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="font-size:12px;font-weight:700;color:#64748b;" id="portfolioProgressText">—</div>
                 <div style="width:100px;background:#e2e8f0;border-radius:6px;height:7px;overflow:hidden;">
-                  <div id="portfolioProgressBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#1d4ed8,#3b82f6);width:0%;transition:width .6s;"></div>
+                  <div id="portfolioProgressBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#3b82f6);width:0%;transition:width .6s;"></div>
                 </div>
               </div>
             </div>
@@ -514,7 +514,7 @@
       <div class="subtab-panel" id="panel-personal">
         <div class="info-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div class="info-card-title"><i data-lucide="user-circle" style="width:18px;height:18px;color:#1d4ed8;"></i> ข้อมูลส่วนตัว</div>
+            <div class="info-card-title"><i data-lucide="user-circle" style="width:18px;height:18px;color:var(--accent);"></i> ข้อมูลส่วนตัว</div>
             <div id="personalActions" style="display:flex;gap:8px;">
               <button class="btn-primary edit-only" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
             </div>
@@ -599,7 +599,7 @@
       <div class="subtab-panel" id="panel-teaching">
         <div class="info-card" style="padding:0;overflow:hidden;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
-            <div class="info-card-title" style="margin:0;"><i data-lucide="book-open" style="width:18px;height:18px;color:#1d4ed8;"></i> ภาระงานสอนตามตาราง</div>
+            <div class="info-card-title" style="margin:0;"><i data-lucide="book-open" style="width:18px;height:18px;color:var(--accent);"></i> ภาระงานสอนตามตาราง</div>
             <button class="btn-primary edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
           </div>
           <!-- header -->
@@ -675,7 +675,7 @@ var DOCUMENT_TYPES = [
   {id:'student_work',     label:'ผลงานนักเรียน',                    icon:'star',       color:'#eab308', bg:'#fefce8', department:'academic'},
 ];
 var DEPARTMENTS = [
-  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff'},
+  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)'},
   {id:'budget',    label:'ฝ่ายงบประมาณ',       icon:'banknote',       color:'#16a34a', bg:'#f0fdf4'},
   {id:'personnel', label:'ฝ่ายบริหารงานบุคคล',icon:'users',          color:'#7c3aed', bg:'#f5f3ff'},
   {id:'general',   label:'ฝ่ายบริหารทั่วไป',  icon:'building-2',     color:'#ea580c', bg:'#fff7ed'},
@@ -979,7 +979,7 @@ function buildSemTabs(data){
   bar.innerHTML = data.map(function(sem, idx){
     var isSem2 = sem.sem === 2;
     var isActive = idx === currentSemIdx;
-    var bg    = isActive ? (isSem2 ? '#7c3aed' : '#1d4ed8') : 'white';
+    var bg    = isActive ? (isSem2 ? '#7c3aed' : 'var(--accent)') : 'white';
     var color = isActive ? 'white' : '#475569';
     var border= isActive ? 'transparent' : '#e2e8f0';
     var label = 'ภาค ' + sem.sem + '/' + sem.year;
@@ -1044,7 +1044,7 @@ function buildSemBlock(sem, openByDefault){
   var sumItems=[
     {key:'submitted',key2:'head_reviewed|reviewed',lbl:'ส่งแล้ว',          color:'#15803d'},
     {key:'head_reviewed',                           lbl:'หัวหน้าตรวจ',     color:'#0369a1'},
-    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'#1e40af'},
+    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'var(--accent-dark)'},
     {key:'assistant_reviewed',                      lbl:'ผช.ผอ.ตรวจ',      color:'#92400e'},
     {key:'deputy_reviewed',                         lbl:'รอง ผอ.ตรวจ',     color:'#6d28d9'},
     {key:'final_approved',                          lbl:'อนุมัติ',         color:'#065f46'},
@@ -1261,7 +1261,7 @@ function renderSarSchoolHistory(){
           '<div class="ct-school">'+esc(item.school||'')+'</div>' +
           (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
           '<div class="ct-chips">' +
-            (item.position?'<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(item.position)+'</span>':'') +
+            (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(item.position)+'</span>':'') +
             (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
           '</div>' +
           (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
@@ -1322,7 +1322,7 @@ function renderSarMedia(){
         '<div class="sar-media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:15px;height:15px;color:#06b6d4;"></i></div>' +
         '<div style="min-width:0;"><div class="sar-media-name">'+esc(item.name||'')+'</div>' +
           (item.subject?'<div class="sar-media-sub">'+esc(item.subject)+'</div>':'') +
-          (item.url?'<a href="'+esc(item.url)+'" target="_blank" style="font-size:10px;color:#1d4ed8;font-weight:700;">เปิดลิงก์</a>':'') +
+          (item.url?'<a href="'+esc(item.url)+'" target="_blank" style="font-size:10px;color:var(--accent);font-weight:700;">เปิดลิงก์</a>':'') +
         '</div></div>';
     }).join('') + '</div>';
   lucide.createIcons();
@@ -1375,8 +1375,8 @@ function renderEducation(){
           (item.grad_year ? '<div style="font-size:11px;font-weight:600;color:#94a3b8;margin-top:3px;">ปีที่สำเร็จการศึกษา: '+esc(item.grad_year)+'</div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:5px;flex-shrink:0;">' +
-          '<button class="del-btn" style="background:#eff6ff;" onclick="editEducationItem(\''+item._id+'\')" title="แก้ไข">' +
-            '<i data-lucide="pencil" style="width:13px;height:13px;color:#1d4ed8;"></i></button>' +
+          '<button class="del-btn" style="background:var(--accent-tint);" onclick="editEducationItem(\''+item._id+'\')" title="แก้ไข">' +
+            '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
           '<button class="del-btn" onclick="deleteEducationItem(\''+item._id+'\')" title="ลบ">' +
             '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
         '</div>' +
@@ -1815,7 +1815,7 @@ function buildCareerTimelineHTML(c){
         '<div class="ct-school">'+esc(c.first_school)+'</div>' +
         (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
           (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
         '</div>' +
@@ -1829,10 +1829,10 @@ function buildCareerTimelineHTML(c){
   if(showCur){
     var svcNow = calcService(c.cur_school_date || c.start_date);
     html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:#eff6ff;">' +
+      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
         '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
-      '<div class="ct-card" style="border-color:#bfdbfe;">' +
+      '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
           '<i data-lucide="calendar" style="width:11px;height:11px;"></i>' +
           (c.cur_school_date ? thDate(c.cur_school_date) : (c.start_date ? thDate(c.start_date) : '')) +
@@ -1841,7 +1841,7 @@ function buildCareerTimelineHTML(c){
         '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
         (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
           (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
           (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
@@ -1853,10 +1853,10 @@ function buildCareerTimelineHTML(c){
     /* มีแค่โรงเรียนเดียว */
     var svcNow2 = calcService(c.start_date);
     html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:#eff6ff;">' +
+      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
         '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
-      '<div class="ct-card" style="border-color:#bfdbfe;">' +
+      '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
           (c.start_date?'<i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' &nbsp;':'') +
           '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' +
@@ -1864,7 +1864,7 @@ function buildCareerTimelineHTML(c){
         '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
         (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(pos)+'</span>' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
           (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
           (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
           (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
@@ -1968,13 +1968,13 @@ function renderCareerHistory(){
           '<div class="ct-school">'+esc(item.school||'')+'</div>' +
           (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
           '<div class="ct-chips">' +
-            (item.position?'<span class="ct-chip" style="background:#eff6ff;color:#1d4ed8;">'+esc(item.position)+'</span>':'') +
+            (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(item.position)+'</span>':'') +
             (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
           '</div>' +
           (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
           '<div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">' +
-            '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:#eff6ff;">' +
-              '<i data-lucide="pencil" style="width:13px;height:13px;color:#1d4ed8;"></i></button>' +
+            '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:var(--accent-tint);">' +
+              '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
             '<button class="del-btn" onclick="deleteCareerHistoryItem(\''+item._id+'\')" title="ลบ">' +
               '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
           '</div>' +
@@ -2288,7 +2288,7 @@ function renderMedia(){
       '<div class="media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:20px;height:20px;color:#06b6d4;"></i></div>' +
       '<div style="flex:1;">' +
         '<div class="media-name">'+esc(item.name||'')+'</div>' +
-        '<div class="media-subject">'+esc(item.subject||'')+(item.url?'<a href="'+esc(item.url)+'" target="_blank" style="color:#1d4ed8;margin-left:8px;font-size:11px;"> เปิดลิงก์</a>':'')+'</div>' +
+        '<div class="media-subject">'+esc(item.subject||'')+(item.url?'<a href="'+esc(item.url)+'" target="_blank" style="color:var(--accent);margin-left:8px;font-size:11px;"> เปิดลิงก์</a>':'')+'</div>' +
       '</div>' +
       '<button class="del-btn" onclick="deleteMediaItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
     '</div>';
@@ -2370,7 +2370,7 @@ function applyFilter(){
 
 /* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
 var _sarDocTypes = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -40,8 +40,8 @@
         document.body.style.cssText = 'margin:0;padding:0;background:#f8fafc;font-family:Sarabun,sans-serif;';
         document.body.innerHTML =
           '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">'
-          + '<div style="width:72px;height:72px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">'
-          + '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          + '<div style="width:72px;height:72px;background:var(--accent-tint);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">'
+          + '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
           + '</div>'
           + '<h1 style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">กรุณาเปิดใน Safari</h1>'
           + '<p style="font-size:14px;color:#64748b;line-height:1.7;margin-bottom:28px;">'
@@ -49,16 +49,16 @@
           + '<div style="background:white;border:1.5px solid #e2e8f0;border-radius:16px;padding:20px 24px;max-width:320px;width:100%;margin-bottom:24px;">'
           + '<p style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:14px;">วิธีเปิดใน Safari</p>'
           + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;text-align:left;">'
-          + '<div style="width:24px;height:24px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">1</div>'
+          + '<div style="width:24px;height:24px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">1</div>'
           + '<p style="font-size:13px;color:#334155;line-height:1.6;">กดปุ่ม <strong>··· (สามจุด)</strong> มุมขวาบนของ LINE</p>'
           + '</div>'
           + '<div style="display:flex;align-items:flex-start;gap:12px;text-align:left;">'
-          + '<div style="width:24px;height:24px;background:#1d4ed8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">2</div>'
+          + '<div style="width:24px;height:24px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">2</div>'
           + '<p style="font-size:13px;color:#334155;line-height:1.6;">เลือก <strong>"เปิดใน Safari"</strong> หรือ <strong>"เปิดในเบราว์เซอร์"</strong></p>'
           + '</div>'
           + '</div>'
           + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + currentUrl + '\').then(function(){this.textContent=\'คัดลอกแล้ว ✓\';this.style.background=\'#16a34a\';}).catch(function(){})" '
-          + 'style="padding:12px 24px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;max-width:320px;">'
+          + 'style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;max-width:320px;">'
           + '📋 คัดลอกลิงก์เพื่อวางใน Safari'
           + '</button>'
           + '</div>';
@@ -104,16 +104,16 @@
     .pub-cal-day.empty{cursor:default;}
     .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
     .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
-    .pub-cal-day.is-today{background:#1d4ed8!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
-    .pub-cal-day.is-selected{border:2px solid #1d4ed8;background:#eff6ff;}
+    .pub-cal-day.is-today{background:var(--accent)!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
+    .pub-cal-day.is-selected{border:2px solid var(--accent);background:var(--accent-tint);}
     .pub-stat-bar{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
-    .pub-stat-fill{height:100%;border-radius:4px;background:#1d4ed8;transition:width .4s;}
+    .pub-stat-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
     @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
     @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
     @media(max-width:900px){.dash-two-col{grid-template-columns:1fr!important;}}
     /* ── New Public UI ── */
-    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1d4ed8 100%);position:relative;overflow:hidden;border-radius:28px;}
+    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,var(--accent) 100%);position:relative;overflow:hidden;border-radius:28px;}
     .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
     .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;}
     /* ── Hero illustration mosaic ── */
@@ -129,7 +129,7 @@
     @keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
     @media(max-width:768px){.hero-img-block{display:none;}}
     .service-card{background:white;border-radius:20px;border:1px solid #e2e8f0;padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
-    .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:#bfdbfe;}
+    .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:var(--accent-light);}
     .service-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .2s;}
     .service-card:hover .service-icon{transform:scale(1.08);}
     .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
@@ -168,7 +168,7 @@
       transition: background .15s;
     }
     .ann-pub-card:hover { background: rgba(255,255,255,.09); }
-    .ann-pub-card.type-info    { border-left-color: #60a5fa; }
+    .ann-pub-card.type-info    { border-left-color: var(--accent-mid); }
     .ann-pub-card.type-warning { border-left-color: #fbbf24; }
     .ann-pub-card.type-success { border-left-color: #34d399; }
     .ann-pub-card.type-urgent  { border-left-color: #f87171; background: rgba(239,68,68,.08); }
@@ -179,7 +179,7 @@
       padding: 2px 9px; border-radius: 20px;
       font-size: 10px; font-weight: 800; letter-spacing: .3px;
     }
-    .ann-pub-badge.info    { background: rgba(96,165,250,.18); color: #93c5fd; }
+    .ann-pub-badge.info    { background: rgba(96,165,250,.18); color: var(--accent-light); }
     .ann-pub-badge.warning { background: rgba(251,191,36,.18);  color: #fcd34d; }
     .ann-pub-badge.success { background: rgba(52,211,153,.18);  color: #6ee7b7; }
     .ann-pub-badge.urgent  { background: rgba(248,113,113,.18); color: #fca5a5; }
@@ -220,12 +220,12 @@
 <!-- ── Public View ── -->
 <div id="loginGate" class="login-gate" onclick="if(event.target===this)closeLoginGate()">
   <div class="login-gate-box">
-    <div id="loginGateIcon" style="width:64px;height:64px;border-radius:20px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-      <i data-lucide="lock" style="width:28px;height:28px;color:#1d4ed8;"></i>
+    <div id="loginGateIcon" style="width:64px;height:64px;border-radius:20px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <i data-lucide="lock" style="width:28px;height:28px;color:var(--accent);"></i>
     </div>
     <h3 id="loginGateTitle" style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">เข้าสู่ระบบก่อนใช้งาน</h3>
     <p id="loginGateDesc" style="font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.6;">กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการนี้</p>
-    <button onclick="handleLogin()" style="width:100%;padding:14px;background:#1d4ed8;color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);margin-bottom:12px;">
+    <button onclick="handleLogin()" style="width:100%;padding:14px;background:var(--accent);color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);margin-bottom:12px;">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       เข้าสู่ระบบด้วย Google
     </button>
@@ -246,12 +246,12 @@
             <i data-lucide="zap" style="width:13px;height:13px;"></i> NP Origins
           </div>
           <h1 style="font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;color:white;line-height:1.15;margin-bottom:14px;">
-            NP <span style="color:#93c5fd;">Origins</span>
+            NP <span style="color:var(--accent-light);">Origins</span>
           </h1>
           <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:420px;margin-bottom:28px;">ศูนย์รวมบริการดิจิทัลสำหรับนักเรียนและบุคลากร สะดวก รวดเร็ว เข้าถึงได้ทุกที่ทุกเวลา</p>
 
           <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
-            <button onclick="handleLogin()" style="padding:13px 24px;background:white;color:#1d4ed8;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(15,23,42,.25);">
+            <button onclick="handleLogin()" style="padding:13px 24px;background:white;color:var(--accent);font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(15,23,42,.25);">
               <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
               เข้าสู่ระบบด้วย Google
             </button>
@@ -277,7 +277,7 @@
               <div><div class="hero-mosaic-title">ส่งงานประจำภาคเรียน</div><div class="hero-mosaic-sub">ติดตามสถานะได้ทันที</div></div>
             </div>
             <div class="hero-mosaic-card mc-3">
-              <div class="hero-mosaic-icon" style="background:#dbeafe;"><i data-lucide="calendar" style="width:20px;height:20px;color:#1d4ed8;"></i></div>
+              <div class="hero-mosaic-icon" style="background:#dbeafe;"><i data-lucide="calendar" style="width:20px;height:20px;color:var(--accent);"></i></div>
               <div><div class="hero-mosaic-title">ขอใช้ห้อง/สถานที่</div><div class="hero-mosaic-sub">จองง่าย เห็นผลทันที</div></div>
             </div>
             <div class="hero-mosaic-card mc-4">
@@ -306,7 +306,7 @@
   <section style="background:#f8fafc;padding:48px 0 16px;">
     <div class="pub-section">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
+        <div style="width:4px;height:26px;background:var(--accent);border-radius:4px;"></div>
         <h2 style="font-size:19px;font-weight:800;color:#0f172a;">บริการออนไลน์</h2>
       </div>
       <p style="font-size:13px;color:#64748b;margin-bottom:24px;padding-left:14px;">เข้าสู่ระบบเพื่อใช้บริการด้านล่าง</p>
@@ -335,12 +335,12 @@
         </div>
         <!-- ระบบจองห้อง -->
         <div class="service-card" onclick="showLoginGate('ระบบขอใช้ห้อง/สถานที่','กรุณาเข้าสู่ระบบด้วยบัญชี Google ก่อนทำการจองห้องหรือสถานที่','calendar')">
-          <div class="service-icon" style="background:#eff6ff;">
-            <i data-lucide="calendar" style="width:26px;height:26px;color:#1d4ed8;"></i>
+          <div class="service-icon" style="background:var(--accent-tint);">
+            <i data-lucide="calendar" style="width:26px;height:26px;color:var(--accent);"></i>
           </div>
           <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px;">ขอใช้ห้อง/สถานที่</div>
           <div style="font-size:12px;color:#64748b;line-height:1.5;">จองห้องประชุม สนาม และสถานที่ต่างๆ</div>
-          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;padding:4px 10px;border-radius:999px;">
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-tint);padding:4px 10px;border-radius:999px;">
             <i data-lucide="log-in" style="width:11px;height:11px;"></i> เข้าสู่ระบบก่อนใช้งาน
           </div>
         </div>
@@ -385,7 +385,7 @@
   <section style="background:#f8fafc;padding:40px 0 56px;">
     <div class="pub-section">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-        <div style="width:4px;height:26px;background:#1d4ed8;border-radius:4px;"></div>
+        <div style="width:4px;height:26px;background:var(--accent);border-radius:4px;"></div>
         <h2 style="font-size:19px;font-weight:800;color:#0f172a;">ปฏิทินการใช้ห้อง/สถานที่</h2>
 
       </div>
@@ -396,20 +396,20 @@
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;">
             <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
+              <span style="font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
               <div style="display:flex;gap:2px;">
-                <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-                <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:#1d4ed8;border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+                <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
+                <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
               </div>
             </div>
             <div style="padding:12px;">
               <div id="pubMonthLabel" style="text-align:center;font-weight:700;font-size:13px;color:#334155;margin-bottom:8px;"></div>
               <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:#94a3b8;margin-bottom:5px;text-align:center;">
-                <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:#60a5fa;">ส</div>
+                <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:var(--accent-mid);">ส</div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="pubCalGrid2"></div>
               <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:9px;">
-                <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#1d4ed8;border-radius:50%;display:inline-block;"></span>วันนี้</span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:var(--accent);border-radius:50%;display:inline-block;"></span>วันนี้</span>
                 <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#eab308;border-radius:50%;display:inline-block;"></span>มีจอง</span>
                 <span style="display:flex;align-items:center;gap:3px;"><span style="width:7px;height:7px;background:#fecaca;border:1px solid #fca5a5;border-radius:50%;display:inline-block;"></span>จองเต็ม</span>
               </div>
@@ -417,8 +417,8 @@
           </div>
           <!-- Monthly stats -->
           <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);padding:16px;">
-            <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:#1d4ed8;"></i> สถิติรายเดือน</div>
-            <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:10px;"></div>
+            <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="bar-chart-2" style="width:12px;height:12px;color:var(--accent);"></i> สถิติรายเดือน</div>
+            <div id="pubStatsMonth" style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px;"></div>
             <div id="pubStatsWrap" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">กำลังโหลด...</div></div>
           </div>
         </div>
@@ -426,7 +426,7 @@
         <!-- Right: Day Detail -->
         <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;min-height:320px;">
           <div style="padding:13px 16px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <span style="font-size:13px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
+            <span style="font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:7px;"><i data-lucide="info" style="width:14px;height:14px;"></i> รายละเอียดการจองในวันที่เลือก</span>
             <span id="pubDateLabel" style="font-size:10px;color:#94a3b8;font-weight:700;"></span>
           </div>
           <div id="pubDayList" style="flex:1;padding:20px;overflow-y:auto;max-height:440px;">
@@ -475,15 +475,15 @@
         <!-- ══ Notification Permission Banner ══ -->
         <div id="notifPermBanner" style="display:none;margin-bottom:20px;background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="bell-ring" style="width:20px;height:20px;color:#1d4ed8;"></i>
+            <div style="width:40px;height:40px;background:var(--accent-tint);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="bell-ring" style="width:20px;height:20px;color:var(--accent);"></i>
             </div>
             <div>
               <div style="font-weight:700;font-size:14px;color:#1e293b;">เปิดการแจ้งเตือน</div>
               <div style="font-size:12px;color:#64748b;">รับแจ้งเตือนทันทีเมื่อสถานะการจองห้องหรือส่งงานมีการเปลี่ยนแปลง</div>
             </div>
           </div>
-          <button id="notifPermBtn" onclick="enableNotifPermission()" style="padding:10px 20px;background:#1d4ed8;color:white;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">เปิดการแจ้งเตือน</button>
+          <button id="notifPermBtn" onclick="enableNotifPermission()" style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">เปิดการแจ้งเตือน</button>
         </div>
 
         <!-- ══ Announcements Section (Dashboard) ══ -->
@@ -506,10 +506,10 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:28px;">
           <!-- Booking stat -->
           <div style="background:white;padding:20px;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden;">
-            <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#eff6ff;border-radius:0 20px 0 70px;"></div>
+            <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:var(--accent-tint);border-radius:0 20px 0 70px;"></div>
             <div style="position:relative;z-index:1;">
-              <div style="width:40px;height:40px;background:#eff6ff;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
-                <i data-lucide="calendar" style="width:19px;height:19px;color:#1d4ed8;"></i>
+              <div style="width:40px;height:40px;background:var(--accent-tint);border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                <i data-lucide="calendar" style="width:19px;height:19px;color:var(--accent);"></i>
               </div>
               <p id="bookingCount" style="font-size:28px;font-weight:900;color:#0f172a;line-height:1;margin-bottom:4px;">0</p>
               <p style="font-size:12px;font-weight:600;color:#64748b;">การจองของฉัน</p>
@@ -542,21 +542,21 @@
           <div style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;display:flex;flex-direction:column;">
             <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
               <div style="display:flex;align-items:center;gap:9px;">
-                <div style="width:34px;height:34px;background:#eff6ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <i data-lucide="calendar-clock" style="width:16px;height:16px;color:#1d4ed8;"></i>
+                <div style="width:34px;height:34px;background:var(--accent-tint);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i data-lucide="calendar-clock" style="width:16px;height:16px;color:var(--accent);"></i>
                 </div>
                 <div>
                   <div style="font-size:14px;font-weight:800;color:#0f172a;">การจองล่าสุด</div>
                   <div style="font-size:11px;color:#94a3b8;margin-top:1px;">5 รายการล่าสุด</div>
                 </div>
               </div>
-              <a href="room-request.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:flex;align-items:center;gap:3px;padding:5px 10px;background:#eff6ff;border-radius:8px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:12px;height:12px;"></i></a>
+              <a href="room-request.html" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:3px;padding:5px 10px;background:var(--accent-tint);border-radius:8px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:12px;height:12px;"></i></a>
             </div>
             <div id="myBookingsList" style="padding:12px 16px;flex:1;">
               <div style="text-align:center;padding:40px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="myBookingsEmpty">กำลังโหลด...</div>
             </div>
             <div id="myBookingsMore" style="display:none;padding:10px 16px 14px;border-top:1px solid #f1f5f9;text-align:center;">
-              <a href="room-request.html" style="font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+              <a href="room-request.html" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
                 <i data-lucide="list" style="width:13px;height:13px;"></i> ดูรายการทั้งหมด
               </a>
             </div>
@@ -762,7 +762,7 @@
     document.getElementById('loginGateTitle').textContent = title || 'เข้าสู่ระบบก่อนใช้งาน';
     document.getElementById('loginGateDesc').textContent = desc || 'กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการ';
     var iconEl = document.getElementById('loginGateIcon');
-    if (icon) { iconEl.innerHTML = '<i data-lucide="'+icon+'" style="width:28px;height:28px;color:#1d4ed8;"></i>'; lucide.createIcons(); }
+    if (icon) { iconEl.innerHTML = '<i data-lucide="'+icon+'" style="width:28px;height:28px;color:var(--accent);"></i>'; lucide.createIcons(); }
     document.getElementById('loginGate').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -1098,7 +1098,7 @@
   /* ════ Portfolio Dashboard ════ */
   /* PF_DOC_TYPES โหลดจาก Firestore (portfolio_doc_types) — ไม่ hardcode */
   var PF_DOC_TYPES = [
-    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
     { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
     { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
     { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },

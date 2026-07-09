@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -77,13 +77,13 @@
     .dot-revision{background:#f59e0b;}
 
     /* ── Upload Zone ── */
-    .upload-zone{border:2px dashed #bfdbfe;border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
-    .upload-zone:hover{border-color:#1d4ed8;background:#eff6ff;}
+    .upload-zone{border:2px dashed var(--accent-light);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#f8faff;}
+    .upload-zone:hover{border-color:var(--accent);background:var(--accent-tint);}
     .upload-zone.has-file{border-color:#22c55e;background:#f0fdf4;border-style:solid;}
-    .upload-zone.dragging{border-color:#1d4ed8;background:#dbeafe;border-style:solid;}
+    .upload-zone.dragging{border-color:var(--accent);background:#dbeafe;border-style:solid;}
 
     /* ── Year header ── */
-    .year-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%);border-radius:20px;padding:28px 28px 24px;position:relative;overflow:hidden;}
+    .year-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,var(--accent) 100%);border-radius:20px;padding:28px 28px 24px;position:relative;overflow:hidden;}
     .year-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(96,165,250,.15) 0%,transparent 70%);}
     .year-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px;}
 
@@ -94,8 +94,8 @@
     .file-entry-status{font-size:11px;font-weight:700;color:#64748b;flex-shrink:0;}
     .file-entry-del{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#94a3b8;flex-shrink:0;display:flex;align-items:center;}
     .file-entry-del:hover{background:#fee2e2;color:#dc2626;}
-    .file-entry-link{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#1d4ed8;flex-shrink:0;display:flex;align-items:center;text-decoration:none;}
-    .file-entry-link:hover{background:#eff6ff;}
+    .file-entry-link{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--accent);flex-shrink:0;display:flex;align-items:center;text-decoration:none;}
+    .file-entry-link:hover{background:var(--accent-tint);}
     .file-slot-badge{font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;border-radius:6px;padding:2px 8px;flex-shrink:0;}
     .file-entry-replace{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#f59e0b;flex-shrink:0;display:flex;align-items:center;}
     .file-entry-replace:hover{background:#fffbeb;}
@@ -355,7 +355,7 @@
       <div style="margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <label style="font-size:13px;font-weight:700;color:#1e293b;">รายวิชาที่ส่ง <span style="color:#ef4444;">*</span></label>
-          <button onclick="addCourseRow()" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          <button onclick="addCourseRow()" style="padding:5px 12px;background:var(--accent-tint);color:var(--accent);border:1px solid var(--accent-light);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่มรายวิชา
           </button>
         </div>
@@ -375,20 +375,20 @@
       <div id="uploadProgress" style="display:none;margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
           <span id="uploadProgressLabel" style="font-size:12px;font-weight:700;color:#64748b;">กำลังอัปโหลด...</span>
-          <span id="uploadPct" style="font-size:12px;font-weight:700;color:#1d4ed8;">0%</span>
+          <span id="uploadPct" style="font-size:12px;font-weight:700;color:var(--accent);">0%</span>
         </div>
         <div class="pbar-bg"><div id="uploadBar" class="pbar-fill" style="width:0%;"></div></div>
       </div>
 
       <!-- ── บันทึกข้อความราชการ (พร้อม Preview) ── -->
-      <div style="margin-bottom:16px;border:1.5px solid #bfdbfe;border-radius:12px;overflow:hidden;" id="memoSection">
+      <div style="margin-bottom:16px;border:1.5px solid var(--accent-light);border-radius:12px;overflow:hidden;" id="memoSection">
         <!-- Header + Tab Buttons -->
-        <div style="background:#eff6ff;padding:10px 14px;border-bottom:1px solid #bfdbfe;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <i data-lucide="file-signature" style="width:14px;height:14px;color:#1d4ed8;flex-shrink:0;"></i>
-          <span style="font-size:13px;font-weight:800;color:#1d4ed8;">บันทึกข้อความราชการ</span>
+        <div style="background:var(--accent-tint);padding:10px 14px;border-bottom:1px solid var(--accent-light);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <i data-lucide="file-signature" style="width:14px;height:14px;color:var(--accent);flex-shrink:0;"></i>
+          <span style="font-size:13px;font-weight:800;color:var(--accent);">บันทึกข้อความราชการ</span>
           <div style="margin-left:auto;display:flex;gap:4px;">
             <button id="memoTabEdit" onclick="switchMemoTab('edit')" class="btn-primary" style="padding:5px 12px;border-radius:8px;font-size:11px;border:1.5px solid var(--blue);transition:all .15s;">✏️ กรอกข้อมูล</button>
-            <button id="memoTabPreview" onclick="switchMemoTab('preview')" style="padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #bfdbfe;background:white;color:var(--blue);transition:all .15s;">📄 ดูบันทึกข้อความ</button>
+            <button id="memoTabPreview" onclick="switchMemoTab('preview')" style="padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--accent-light);background:white;color:var(--blue);transition:all .15s;">📄 ดูบันทึกข้อความ</button>
           </div>
         </div>
 
@@ -512,7 +512,7 @@
     <!-- Toolbar (ไม่พิมพ์) -->
     <div class="memo-no-print" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:4px 4px 0 0;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i data-lucide="file-signature" style="width:15px;height:15px;color:#1d4ed8;"></i>
+        <i data-lucide="file-signature" style="width:15px;height:15px;color:var(--accent);"></i>
         <span style="font-size:13px;font-weight:800;color:#1e293b;">บันทึกข้อความราชการ</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
@@ -713,7 +713,7 @@
       </div>
       <button onclick="closeDeleteSubModal()" class="modal-close"><i data-lucide="x"></i></button>
     </div>
-    <p id="deleteSubCourseName" style="font-size:14px;font-weight:700;color:#1d4ed8;margin-bottom:4px;"></p>
+    <p id="deleteSubCourseName" style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px;"></p>
     <p style="font-size:12px;color:#64748b;margin-bottom:6px;">ระบบจะลบไฟล์ทุกไฟล์ใน Google Drive และลายเซ็นที่เกี่ยวข้องออกทั้งหมด</p>
     <p style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:20px;">⚠️ ไม่สามารถกู้คืนได้</p>
     <div style="display:flex;gap:10px;">
@@ -766,7 +766,7 @@ function sanitizeForFilename(str) {
 
 /* ─── 4 ฝ่ายบริหาร ─── */
 var DEPARTMENTS = [
-  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff' },
+  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)' },
   { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'#16a34a', bg:'#f0fdf4' },
   { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'#7c3aed', bg:'#f5f3ff' },
   { id:'general',   label:'ฝ่ายบริหารทั่วไป',   icon:'building-2',     color:'#ea580c', bg:'#fff7ed' },
@@ -1167,7 +1167,7 @@ function renderDocList() {
         } else if (allFinal) {
           statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
         } else if (allReviewed) {
-          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
+          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = 'var(--accent-dark)';
         } else {
           statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
         }
@@ -1199,7 +1199,7 @@ function renderDocList() {
                       var files   = sub.files || [];
                       return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                          '<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
+                          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
                           '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
                           '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
                           '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
@@ -1212,7 +1212,7 @@ function renderDocList() {
                           '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                             '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
                           '</button>' +
-                          '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #bfdbfe;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
+                          '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:var(--accent-tint);color:var(--accent);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--accent-light);cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                             '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
                           '</button>' +
                           '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:#dc2626;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #fecaca;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
@@ -1355,9 +1355,9 @@ function renderCourseRows() {
           '<input type="text" placeholder="ชื่อวิชา เช่น ฟิสิกส์ 1" value="' + esc(row.name) + '" onchange="courseRows[' + idx + '].name=this.value.trim()" style="font-size:13px;">' +
         '</div>' +
         /* upload zone สำหรับวิชานี้ */
-        '<div style="border:2px dashed #bfdbfe;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
-          '<i data-lucide="file-up" style="width:22px;height:22px;color:#93c5fd;margin-bottom:4px;"></i>' +
-          '<p style="font-size:12px;font-weight:700;color:#1d4ed8;">คลิกเพื่อเพิ่ม PDF</p>' +
+        '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
+          '<i data-lucide="file-up" style="width:22px;height:22px;color:var(--accent-light);margin-bottom:4px;"></i>' +
+          '<p style="font-size:12px;font-weight:700;color:var(--accent);">คลิกเพื่อเพิ่ม PDF</p>' +
           '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">สูงสุด ' + MAX_FILES_PER_TOPIC + ' ไฟล์, PDF, 20MB</p>' +
         '</div>' +
         '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>' +
@@ -1380,7 +1380,7 @@ function renderCourseFilePanels() {
     html +=
       '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-          '<span style="font-size:13px;font-weight:800;color:#1d4ed8;background:#eff6ff;padding:3px 10px;border-radius:8px;">' + esc(sub ? sub.courseCode : '') + '</span>' +
+          '<span style="font-size:13px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:3px 10px;border-radius:8px;">' + esc(sub ? sub.courseCode : '') + '</span>' +
           '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc(sub ? sub.courseName : '') + '</span>' +
           '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
         '</div>' +
@@ -1406,8 +1406,8 @@ function renderCourseFilePanels() {
           }).join('') +
         '</div>' +
         (canAdd
-          ? '<div style="border:2px dashed #bfdbfe;border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#f8faff;margin-top:8px;" onclick="triggerFileInput(' + idx + ')">' +
-              '<p style="font-size:12px;font-weight:700;color:#1d4ed8;">+ เพิ่มไฟล์ PDF</p>' +
+          ? '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#f8faff;margin-top:8px;" onclick="triggerFileInput(' + idx + ')">' +
+              '<p style="font-size:12px;font-weight:700;color:var(--accent);">+ เพิ่มไฟล์ PDF</p>' +
             '</div>' +
             '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>'
           : '<p style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center;">ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว</p>'
@@ -2662,20 +2662,20 @@ function switchMemoTab(tab) {
     editPane.style.display    = 'none';
     previewPane.style.display = 'block';
     tabEdit.style.background    = 'white';
-    tabEdit.style.color         = '#1d4ed8';
-    tabEdit.style.borderColor   = '#bfdbfe';
-    tabPreview.style.background = '#1d4ed8';
+    tabEdit.style.color         = 'var(--accent)';
+    tabEdit.style.borderColor   = 'var(--accent-light)';
+    tabPreview.style.background = 'var(--accent)';
     tabPreview.style.color      = 'white';
-    tabPreview.style.borderColor= '#1d4ed8';
+    tabPreview.style.borderColor= 'var(--accent)';
   } else {
     editPane.style.display    = 'flex';
     previewPane.style.display = 'none';
-    tabEdit.style.background    = '#1d4ed8';
+    tabEdit.style.background    = 'var(--accent)';
     tabEdit.style.color         = 'white';
-    tabEdit.style.borderColor   = '#1d4ed8';
+    tabEdit.style.borderColor   = 'var(--accent)';
     tabPreview.style.background = 'white';
-    tabPreview.style.color      = '#1d4ed8';
-    tabPreview.style.borderColor= '#bfdbfe';
+    tabPreview.style.color      = 'var(--accent)';
+    tabPreview.style.borderColor= 'var(--accent-light)';
   }
 }
 
