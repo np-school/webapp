@@ -869,31 +869,72 @@ function onBorrowDeviceInput() {
   var v = input.value.trim();
   var q = v.toLowerCase();
 
-  var d = DEVICES.find(function(x) { return x.serialNumber === v; });
+  /* map deviceId -> รายการยืมปัจจุบัน (ยกเว้นรายการที่กำลังแก้ไขอยู่ ให้เลือกกลับมาได้) */
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { if (b.id !== editingBorrowId) borrowedMap[b.deviceId] = b; });
+
+  /* จับคู่ได้ทั้ง Serial Number และ Asset Number (เลขไอแพด) */
+  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
   var hint = document.getElementById('deviceInfoHint');
-  if (!d) { hint.textContent = v ? 'ไม่พบ Serial Number นี้ในระบบ' : ''; }
-  else {
-    var borrowedNow = BORROWS_OUT.some(function(b) { return b.deviceId === d.id && b.id !== editingBorrowId; });
-    hint.textContent = d.friendlyName + (borrowedNow ? '  — ⚠️ เครื่องนี้ถูกยืมอยู่แล้ว' : '  — ว่าง พร้อมให้ยืม');
+  if (!d) {
+    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
+  } else {
+    var bOut = borrowedMap[d.id];
+    if (bOut) {
+      hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ' + esc2(d.friendlyName) +
+        ' ถูกยืมอยู่แล้ว โดย ' + esc2(bOut.studentName) + ' (ห้อง ' + esc2(bOut.grade) + '/' + esc2(bOut.room) + ')</span>';
+    } else {
+      hint.textContent = d.friendlyName + '  — ว่าง พร้อมให้ยืม';
+    }
   }
 
-  /* เครื่องที่ถูกยืมอยู่แล้วไม่ต้องแนะนำ ยกเว้นเครื่องของรายการที่กำลังแก้ไขอยู่ (ให้เลือกกลับมาได้) */
-  var borrowedIds = {};
-  BORROWS_OUT.forEach(function(b) { if (b.id !== editingBorrowId) borrowedIds[b.deviceId] = true; });
+  /* แสดงเครื่องที่ถูกยืมอยู่แล้วในลิสต์ด้วย (แต่กดเลือกไม่ได้) แทนการซ่อนไปเฉยๆ
+     เพื่อไม่ให้เข้าใจผิดว่า "ไม่มีข้อมูล" ทั้งที่จริงๆ มีแต่ถูกยืมอยู่ */
   var items = DEVICES.filter(function(dv) {
     if (dv.condition === 'claim') return false;
-    if (borrowedIds[dv.id]) return false;
     if (!q) return true;
     return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
            (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
            (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
   }).slice(0, 30);
 
-  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) { return dv.serialNumber; }, function(dv) {
-    input.value = dv.serialNumber;
-    listEl.classList.remove('show');
-    onBorrowDeviceInput();
+  renderDeviceAcList(listEl, items, borrowedMap, input);
+}
+
+function renderDeviceAcList(listEl, items, borrowedMap, input) {
+  listEl.innerHTML = '';
+  if (!items.length) { listEl.classList.remove('show'); return; }
+  items.forEach(function(dv) {
+    var bOut = borrowedMap[dv.id];
+    var row = document.createElement('div');
+    row.className = 'ac-item' + (bOut ? ' ac-item-disabled' : '');
+    if (bOut) row.style.cssText = 'opacity:.6;cursor:not-allowed;';
+    var main = document.createElement('div');
+    main.textContent = dv.friendlyName;
+    var sub = document.createElement('div');
+    sub.className = 'ac-sub';
+    if (bOut) {
+      sub.innerHTML = esc2(dv.serialNumber) + ' — <span style="color:#dc2626;">ถูกยืมโดย ' + esc2(bOut.studentName) + '</span>';
+    } else {
+      sub.textContent = dv.serialNumber;
+    }
+    row.appendChild(main);
+    row.appendChild(sub);
+    row.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    if (bOut) {
+      row.addEventListener('click', function() {
+        showToast(dv.friendlyName + ' ถูกยืมอยู่แล้ว โดย ' + bOut.studentName, 'warn');
+      });
+    } else {
+      row.addEventListener('click', function() {
+        input.value = dv.serialNumber;
+        listEl.classList.remove('show');
+        onBorrowDeviceInput();
+      });
+    }
+    listEl.appendChild(row);
   });
+  listEl.classList.add('show');
 }
 
 function saveBorrow() {
@@ -913,9 +954,9 @@ function saveBorrow() {
 
   var device = DEVICES.find(function(d) { return d.serialNumber === serial; });
   if (!device)  { showToast('ไม่พบ Serial Number นี้ในระบบ', 'warn'); return; }
-  var conflict = BORROWS_OUT.some(function(b) { return b.deviceId === device.id && b.id !== editingBorrowId; });
-  if (conflict) {
-    showToast('เครื่องนี้ถูกยืมอยู่แล้ว', 'warn'); return;
+  var conflictBorrow = BORROWS_OUT.find(function(b) { return b.deviceId === device.id && b.id !== editingBorrowId; });
+  if (conflictBorrow) {
+    showToast('เครื่องนี้ถูกยืมอยู่แล้ว โดย ' + conflictBorrow.studentName, 'warn'); return;
   }
 
   if (editingBorrowId) {
@@ -1441,8 +1482,8 @@ function renderDevicesTable() {
     return;
   }
   var q = (document.getElementById('deviceSearch') ? document.getElementById('deviceSearch').value : '').trim().toLowerCase();
-  var borrowedIds = {};
-  BORROWS_OUT.forEach(function(b) { borrowedIds[b.deviceId] = true; });
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
   var filtered = DEVICES.filter(function(d) {
     if (!q) return true;
     return ((d.friendlyName||'') + (d.assetNumber||'') + (d.serialNumber||'')).toLowerCase().indexOf(q) !== -1;
@@ -1454,9 +1495,12 @@ function renderDevicesTable() {
     return;
   }
   tbody.innerHTML = filtered.map(function(d) {
-    var out = borrowedIds[d.id];
+    var out = borrowedMap[d.id];
     var isClaim = d.condition === 'claim' && !out;
-    var statusBadge = out ? '<span class="badge-out">ถูกยืมอยู่</span>' :
+    var statusBadge = out ?
+      ('<span class="badge-out">ถูกยืมอยู่</span><br>' +
+       '<span style="font-size:11.5px;font-weight:700;color:#334155;">' + esc2(out.studentName) + '</span><br>' +
+       '<span style="font-size:11px;color:#94a3b8;">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
       (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="badge-in">ว่าง</span>');
     return (
       '<tr>' +
