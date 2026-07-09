@@ -294,6 +294,38 @@
   </div>
 </div>
 
+<!-- Modal: เพิ่มเคลมอุปกรณ์เสริม (ไม่มีรหัส ใส่แค่ชื่ออุปกรณ์เสริม) -->
+<div class="modal-bg" id="modalAccessoryClaim">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div><h3>เพิ่มเคลมอุปกรณ์เสริม</h3><p>ไม่ต้องระบุรหัสเครื่อง ใส่แค่ชื่ออุปกรณ์เสริมที่ชำรุด</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalAccessoryClaim')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">อุปกรณ์เสริม</label>
+      <select id="accClaimName" onchange="onAccClaimNameChange()">
+        <option value="หัวชาร์จ">หัวชาร์จ</option>
+        <option value="สายชาร์จ">สายชาร์จ</option>
+        <option value="ปากกา">ปากกา</option>
+        <option value="เคส">เคส</option>
+        <option value="อื่นๆ">อื่นๆ (ระบุเอง)</option>
+      </select>
+      <input type="text" id="accClaimNameOther" placeholder="ระบุชื่ออุปกรณ์เสริม" style="margin-top:8px;display:none;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">รายละเอียดปัญหา (ไม่บังคับกรอก)</label>
+      <textarea id="accClaimNote" rows="3" placeholder="เช่น สายชาร์จขาด, หัวชาร์จเสีย..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('modalAccessoryClaim')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveAccessoryClaim()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: นำเข้าไฟล์ CSV iPad -->
 <div class="modal-bg" id="modalImport">
   <div class="modal-box wide">
@@ -365,6 +397,7 @@ buildPage({
     loadStaff();
     loadDevices();
     loadBorrows();
+    loadAccessoryClaims();
     setupScrollTopButton();
   }
 });
@@ -380,6 +413,7 @@ var studentFilterGrade = 'all';
 var studentFilterRoom  = 'all';
 var STAFF = [];   /* ดึงอัตโนมัติจาก collection 'staff' (หน้า staff.html) */
 var staffSearchQuery = '';
+var ACCESSORY_CLAIMS = [];   /* {id, name, note, reportedBy, createdAt} — เคลมอุปกรณ์เสริม ไม่มีรหัสอ้างอิง */
 
 /* ══════════════════════════════════════════════════════════════
    ปุ่มย้อนกลับไปด้านบน (ลอยมุมขวาล่าง)
@@ -500,7 +534,7 @@ function renderStatsCharts() {
   var staffOutCount   = BORROWS_OUT.filter(function(b){ return b.borrowerType === 'staff'; }).length;
   var studentOutCount = outCount - staffOutCount;
 
-  _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], ['#dc2626','#16a34a']);
+  _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], ['#16a34a','#dc2626']);
 
   var accTitle = document.getElementById('accessoriesChartTitle');
   if (accTitle) accTitle.textContent = 'อุปกรณ์เสริม (ยืมอยู่ / คงเหลือ) — ชุดละ ' + totalDevices + ' ชิ้น';
@@ -1609,6 +1643,18 @@ function renderClaimsPanel() {
       '</tr></thead><tbody id="claimsTbody">' +
         '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
+    '</div>' +
+
+    '<div class="card" style="margin-top:16px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="cable" style="width:16px;height:16px;"></i> เคลมอุปกรณ์เสริม (<span id="accClaimsCount">0</span>)</div>' +
+        '<button class="btn-primary" onclick="openAccessoryClaimModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มเคลมอุปกรณ์เสริม</button>' +
+      '</div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>อุปกรณ์เสริม</th><th>รายละเอียดปัญหา</th><th>วันที่แจ้ง</th><th>แจ้งโดย</th><th></th>' +
+      '</tr></thead><tbody id="accClaimsTbody">' +
+        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
     '</div>'
   );
 }
@@ -1647,7 +1693,72 @@ function renderClaimsTable() {
   lucide.createIcons();
 }
 
-/* ── CSV Import (Friendly Name / Asset Number / Serial Number only) ── */
+/* ══════════════════════════════════════════════════════════════
+   เคลมอุปกรณ์เสริม — ไม่มีรหัสอ้างอิง เก็บแค่ชื่ออุปกรณ์เสริม + รายละเอียด
+   ══════════════════════════════════════════════════════════════ */
+function openAccessoryClaimModal() {
+  document.getElementById('accClaimName').value = 'หัวชาร์จ';
+  document.getElementById('accClaimNameOther').value = '';
+  document.getElementById('accClaimNameOther').style.display = 'none';
+  document.getElementById('accClaimNote').value = '';
+  openModal('modalAccessoryClaim');
+}
+
+function onAccClaimNameChange() {
+  var isOther = document.getElementById('accClaimName').value === 'อื่นๆ';
+  document.getElementById('accClaimNameOther').style.display = isOther ? 'block' : 'none';
+}
+
+function saveAccessoryClaim() {
+  var selected = document.getElementById('accClaimName').value;
+  var name = selected === 'อื่นๆ' ? document.getElementById('accClaimNameOther').value.trim() : selected;
+  var note = document.getElementById('accClaimNote').value.trim();
+  if (!name) { showToast('กรุณาระบุชื่ออุปกรณ์เสริม', 'warn'); return; }
+
+  db.collection('ipad_accessory_claims').add({
+    name: name,
+    note: note,
+    reportedBy: currentUserLabel(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    showToast('บันทึกเคลมอุปกรณ์เสริมแล้ว ✅');
+    closeModal('modalAccessoryClaim');
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function resolveAccessoryClaim(id) {
+  if (!confirm('ปิดรายการเคลมนี้ (ลบออกจากลิสต์)?')) return;
+  db.collection('ipad_accessory_claims').doc(id).delete().then(function() {
+    showToast('ปิดรายการเคลมแล้ว ✅');
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function renderAccessoryClaimsTable() {
+  var tbody = document.getElementById('accClaimsTbody');
+  if (!tbody) return;
+  var countEl = document.getElementById('accClaimsCount');
+  if (countEl) countEl.textContent = ACCESSORY_CLAIMS.length;
+
+  if (!ACCESSORY_CLAIMS.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีอุปกรณ์เสริมที่ส่งเคลมอยู่ในขณะนี้ 🎉</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = ACCESSORY_CLAIMS.map(function(c) {
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;"><span class="badge-claim">' + esc2(c.name) + '</span></td>' +
+        '<td>' + (c.note ? esc2(c.note) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td style="white-space:nowrap;">' + fmtDate(c.createdAt) + '</td>' +
+        '<td>' + esc2(c.reportedBy || '-') + '</td>' +
+        '<td><button class="btn-secondary btn-sm" onclick="resolveAccessoryClaim(\'' + c.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> ปิดเคลม</button></td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+
 function parseCsv(text) {
   /* รองรับ field ที่ครอบด้วย double quote และมี comma อยู่ข้างในได้ */
   var rows = [];
@@ -1970,6 +2081,13 @@ function loadDevices() {
     renderStatsCharts();
     lucide.createIcons();
   }, function(e) { showToast('โหลดข้อมูล iPad ผิดพลาด: ' + e.message, 'error'); });
+}
+
+function loadAccessoryClaims() {
+  db.collection('ipad_accessory_claims').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+    ACCESSORY_CLAIMS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderAccessoryClaimsTable();
+  }, function(e) { showToast('โหลดข้อมูลเคลมอุปกรณ์เสริมผิดพลาด: ' + e.message, 'error'); });
 }
 
 function loadBorrows() {
