@@ -178,14 +178,14 @@
     <div class="form-group">
       <label class="form-label">สภาพเครื่อง/อุปกรณ์ที่คืน</label>
       <div class="segmented condition">
-        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked onclick="onReturnConditionChange()"><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
-        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" onclick="onReturnConditionChange()"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
+        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked onclick="updateReturnNoteVisibility()"><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
+        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" onclick="updateReturnNoteVisibility()"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
       </div>
     </div>
 
     <div class="form-group" id="returnClaimNoteGroup" style="display:none;">
-      <label class="form-label">รายละเอียดปัญหา (ไม่บังคับกรอก)</label>
-      <textarea id="returnClaimNote" rows="3" placeholder="เช่น จอแตก, แบตเสื่อมเร็ว, ปุ่มโฮมกดไม่ติด..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
+      <label class="form-label">รายละเอียดปัญหา (ใช้ร่วมกันทั้งเครื่องและอุปกรณ์เสริมที่ติ๊กว่าชำรุด — ไม่บังคับกรอก)</label>
+      <textarea id="returnClaimNote" rows="3" placeholder="เช่น จอแตก, สายชาร์จขาด, หัวชาร์จเสีย..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
     </div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -1066,10 +1066,17 @@ function openReturnModal(id) {
     '<input type="checkbox" id="returnItemDevice" checked></label>';
   html += accs.map(function(name) {
     var icon = RETURN_ACC_ICONS[name] || 'package';
-    return '<label class="return-item-card">' +
-      '<span class="ri-icon"><i data-lucide="' + icon + '"></i></span>' +
-      '<span class="ri-label">' + esc2(name) + '</span>' +
-      '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked></label>';
+    return '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<label class="return-item-card" style="flex:1;">' +
+        '<span class="ri-icon"><i data-lucide="' + icon + '"></i></span>' +
+        '<span class="ri-label">' + esc2(name) + '</span>' +
+        '<input type="checkbox" class="returnAccChk" value="' + esc2(name) + '" checked>' +
+      '</label>' +
+      '<label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#b45309;font-weight:700;flex-shrink:0;cursor:pointer;">' +
+        '<input type="checkbox" class="returnAccClaimChk" value="' + esc2(name) + '" onchange="updateReturnNoteVisibility()" style="width:18px;height:18px;accent-color:#b45309;cursor:pointer;">' +
+        'ชำรุด' +
+      '</label>' +
+    '</div>';
   }).join('');
   if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
@@ -1080,9 +1087,10 @@ function openReturnModal(id) {
   lucide.createIcons();
 }
 
-function onReturnConditionChange() {
-  var isClaim = document.getElementById('returnConditionClaim').checked;
-  document.getElementById('returnClaimNoteGroup').style.display = isClaim ? 'block' : 'none';
+function updateReturnNoteVisibility() {
+  var isDeviceClaim = document.getElementById('returnConditionClaim').checked;
+  var anyAccClaim = document.querySelectorAll('#returnItemsList .returnAccClaimChk:checked').length > 0;
+  document.getElementById('returnClaimNoteGroup').style.display = (isDeviceClaim || anyAccClaim) ? 'block' : 'none';
 }
 
 function confirmReturn() {
@@ -1094,6 +1102,10 @@ function confirmReturn() {
   var claimNote = document.getElementById('returnClaimNote').value.trim();
   var checkedAccs = Array.prototype.map.call(
     document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
+    function(el) { return el.value; }
+  );
+  var claimedAccs = Array.prototype.map.call(
+    document.querySelectorAll('#returnItemsList .returnAccClaimChk:checked'),
     function(el) { return el.value; }
   );
   var allAccs = b.accessories || [];
@@ -1134,6 +1146,18 @@ function confirmReturn() {
         showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
       });
     }
+    /* สร้างรายการเคลมอุปกรณ์เสริมอัตโนมัติ ให้ชิ้นที่ติ๊กว่า "ชำรุด" ตอนคืน ไปโผล่ในหน้าส่งเคลมทันที */
+    claimedAccs.forEach(function(name) {
+      db.collection('ipad_accessory_claims').add({
+        name: name,
+        note: claimNote,
+        reportedBy: b.studentName,
+        recordedBy: currentUserLabel(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e) {
+        showToast('บันทึกเคลม ' + name + ' ไม่สำเร็จ: ' + e.message, 'warn');
+      });
+    });
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
