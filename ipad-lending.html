@@ -170,17 +170,9 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">เลือกสิ่งที่คืนในครั้งนี้</label>
+      <label class="form-label">เลือกสิ่งที่คืนในครั้งนี้ และติ๊ก "ชำรุด" หากชิ้นไหนมีปัญหา</label>
       <div id="returnItemsList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
-      <p style="font-size:11.5px;color:#94a3b8;margin-top:6px;">รายการที่ไม่ได้ติ๊ก จะยังถือว่ายืมอยู่ต่อไป</p>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">สภาพเครื่อง/อุปกรณ์ที่คืน</label>
-      <div class="segmented condition">
-        <label><input type="radio" name="returnCondition" id="returnConditionOk" value="ok" checked onclick="updateReturnNoteVisibility()"><i data-lucide="check-circle-2"></i> สภาพสมบูรณ์</label>
-        <label><input type="radio" name="returnCondition" id="returnConditionClaim" value="claim" onclick="updateReturnNoteVisibility()"><i data-lucide="triangle-alert"></i> ส่งเคลม</label>
-      </div>
+      <p style="font-size:11.5px;color:#94a3b8;margin-top:6px;">รายการที่ไม่ได้ติ๊ก "คืน" จะยังถือว่ายืมอยู่ต่อไป · รายการที่ติ๊ก "ชำรุด" จะถูกส่งเคลมอัตโนมัติ</p>
     </div>
 
     <div class="form-group" id="returnClaimNoteGroup" style="display:none;">
@@ -1108,10 +1100,17 @@ function openReturnModal(id) {
   currentReturnBorrowId = id;
   document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
   var accs = b.accessories || [];
-  var html = '<label class="return-item-card is-device">' +
-    '<span class="ri-icon"><i data-lucide="tablet-smartphone"></i></span>' +
-    '<span class="ri-label">เครื่อง iPad<span>' + esc2(b.serialNumber) + '</span></span>' +
-    '<input type="checkbox" id="returnItemDevice" checked></label>';
+  var html = '<div style="display:flex;align-items:center;gap:8px;">' +
+    '<label class="return-item-card is-device" style="flex:1;">' +
+      '<span class="ri-icon"><i data-lucide="tablet-smartphone"></i></span>' +
+      '<span class="ri-label">เครื่อง iPad<span>' + esc2(b.serialNumber) + '</span></span>' +
+      '<input type="checkbox" id="returnItemDevice" checked>' +
+    '</label>' +
+    '<label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#b45309;font-weight:700;flex-shrink:0;cursor:pointer;">' +
+      '<input type="checkbox" id="returnDeviceClaimChk" onchange="updateReturnNoteVisibility()" style="width:18px;height:18px;accent-color:#b45309;cursor:pointer;">' +
+      'ชำรุด' +
+    '</label>' +
+  '</div>';
   html += accs.map(function(name) {
     var icon = RETURN_ACC_ICONS[name] || 'package';
     return '<div style="display:flex;align-items:center;gap:8px;">' +
@@ -1128,7 +1127,6 @@ function openReturnModal(id) {
   }).join('');
   if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
-  document.getElementById('returnConditionOk').checked = true;
   document.getElementById('returnClaimNote').value = '';
   document.getElementById('returnClaimNoteGroup').style.display = 'none';
   openModal('modalReturn');
@@ -1136,7 +1134,7 @@ function openReturnModal(id) {
 }
 
 function updateReturnNoteVisibility() {
-  var isDeviceClaim = document.getElementById('returnConditionClaim').checked;
+  var isDeviceClaim = document.getElementById('returnDeviceClaimChk').checked;
   var anyAccClaim = document.querySelectorAll('#returnItemsList .returnAccClaimChk:checked').length > 0;
   document.getElementById('returnClaimNoteGroup').style.display = (isDeviceClaim || anyAccClaim) ? 'block' : 'none';
 }
@@ -1146,7 +1144,7 @@ function confirmReturn() {
   if (!b) { closeModal('modalReturn'); return; }
 
   var deviceReturned = document.getElementById('returnItemDevice').checked;
-  var condition = document.getElementById('returnConditionClaim').checked ? 'claim' : 'ok';
+  var condition = document.getElementById('returnDeviceClaimChk').checked ? 'claim' : 'ok';
   var claimNote = document.getElementById('returnClaimNote').value.trim();
   var checkedAccs = Array.prototype.map.call(
     document.querySelectorAll('#returnItemsList .returnAccChk:checked'),
