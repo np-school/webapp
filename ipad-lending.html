@@ -294,6 +294,54 @@
   </div>
 </div>
 
+<!-- Modal: เคลมไอแพด (เลือกเครื่องแล้วส่งเคลมได้ทันทีจากหน้าเคลม) -->
+<div class="modal-bg" id="modalClaimDevice">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div><h3>เคลมไอแพด</h3><p>เลือกเครื่องที่ต้องการส่งเคลม (เลือกได้ทั้งเครื่องที่ว่างและเครื่องที่ถูกยืมอยู่)</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalClaimDevice')"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Serial Number / Friendly Name เครื่อง</label>
+      <div class="ac-wrap">
+        <input type="text" id="claimDeviceInput" placeholder="พิมพ์หรือเลือก Serial Number..." autocomplete="off" oninput="onClaimDeviceInput()" onfocus="onClaimDeviceInput()" onblur="setTimeout(function(){ document.getElementById('claimDeviceAcList').classList.remove('show'); }, 150);">
+        <div class="ac-list" id="claimDeviceAcList"></div>
+      </div>
+      <p id="claimDeviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">รายละเอียดปัญหา (ไม่บังคับกรอก)</label>
+      <textarea id="claimDeviceNote" rows="3" placeholder="เช่น จอแตก, แบตเสื่อมเร็ว, ปุ่มโฮมกดไม่ติด..." style="width:100%;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font:inherit;"></textarea>
+    </div>
+
+    <div class="form-group" id="claimSwapGroup" style="display:none;background:var(--accent-tint);border-radius:12px;padding:12px 14px;">
+      <p style="font-size:12.5px;color:var(--accent-dark);margin-bottom:10px;">⚠️ เครื่องนี้กำลังถูกยืมอยู่โดย <strong id="claimSwapBorrowerName"></strong> — ต้องการเปลี่ยนเครื่องให้ผู้ยืมเลยหรือไม่?</p>
+      <div class="segmented">
+        <label><input type="radio" name="claimSwapChoice" id="claimSwapNo" value="no" checked onclick="onClaimSwapChange()"><i data-lucide="minus"></i> ไม่เปลี่ยนเครื่อง</label>
+        <label><input type="radio" name="claimSwapChoice" id="claimSwapYes" value="yes" onclick="onClaimSwapChange()"><i data-lucide="repeat"></i> เปลี่ยนเครื่อง</label>
+      </div>
+      <div id="claimNewDeviceGroup" style="display:none;margin-top:12px;">
+        <label class="form-label">เลือกเครื่องใหม่ให้ผู้ยืม</label>
+        <div class="ac-wrap">
+          <input type="text" id="claimNewDeviceInput" placeholder="พิมพ์หรือเลือก Serial Number เครื่องใหม่..." autocomplete="off" oninput="onClaimNewDeviceInput()" onfocus="onClaimNewDeviceInput()" onblur="setTimeout(function(){ document.getElementById('claimNewDeviceAcList').classList.remove('show'); }, 150);">
+          <div class="ac-list" id="claimNewDeviceAcList"></div>
+        </div>
+        <p id="claimNewDeviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('modalClaimDevice')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveClaimDevice()">บันทึกเคลม</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: เพิ่มเคลมอุปกรณ์เสริม (ไม่มีรหัส ใส่แค่ชื่ออุปกรณ์เสริม) -->
 <div class="modal-bg" id="modalAccessoryClaim">
   <div class="modal-box">
@@ -1653,6 +1701,184 @@ function saveClaimStatus() {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   เคลมไอแพดโดยตรงจากหน้า "ส่งเคลม" — เลือกเครื่องได้ทั้งเครื่องว่างและ
+   เครื่องที่กำลังถูกยืมอยู่ ถ้าเครื่องกำลังถูกยืมอยู่ จะมีตัวเลือกให้
+   "เปลี่ยนเครื่อง" ให้ผู้ยืมทันที (ไม่บังคับ — ไม่เลือกก็ได้ ผู้ยืมจะ
+   ยังถือเครื่องเดิมที่ถูกส่งเคลมต่อไป จนกว่าจะมาคืน/แก้ไขทีหลัง)
+   สถานะ condition ของเครื่องอ่าน/เขียนที่ ipad_devices ตัวเดียวกับหน้า
+   "ข้อมูล iPad" และหน้ายืม (onBorrowDeviceInput กรอง condition==='claim'
+   ออกจากรายการให้ยืมอยู่แล้ว) จึงอัปเดตแล้วเห็นผลตรงกันทุกหน้าโดยอัตโนมัติ
+   ══════════════════════════════════════════════════════════════ */
+var claimSelectedDeviceId  = null;
+var claimSelectedBorrow    = null; /* รายการยืมที่ผูกกับเครื่องที่เลือก (ถ้ามี) */
+var claimNewDeviceId       = null;
+
+function openClaimDeviceModal() {
+  claimSelectedDeviceId = null;
+  claimSelectedBorrow   = null;
+  claimNewDeviceId      = null;
+  document.getElementById('claimDeviceInput').value = '';
+  document.getElementById('claimDeviceInfoHint').textContent = '';
+  document.getElementById('claimDeviceNote').value = '';
+  document.getElementById('claimSwapGroup').style.display = 'none';
+  document.getElementById('claimSwapNo').checked = true;
+  document.getElementById('claimNewDeviceGroup').style.display = 'none';
+  document.getElementById('claimNewDeviceInput').value = '';
+  document.getElementById('claimNewDeviceInfoHint').textContent = '';
+  openModal('modalClaimDevice');
+}
+
+function onClaimDeviceInput() {
+  var input  = document.getElementById('claimDeviceInput');
+  var listEl = document.getElementById('claimDeviceAcList');
+  var v = input.value.trim();
+  var q = v.toLowerCase();
+
+  /* map deviceId -> รายการยืมปัจจุบัน เพื่อโชว์ว่าเครื่องไหนถูกยืมอยู่ */
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
+
+  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
+  var hint = document.getElementById('claimDeviceInfoHint');
+  if (!d) {
+    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
+    claimSelectedDeviceId = null;
+    claimSelectedBorrow = null;
+    document.getElementById('claimSwapGroup').style.display = 'none';
+  } else if (d.condition === 'claim') {
+    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ เครื่องนี้ถูกส่งเคลมอยู่แล้ว</span>';
+    claimSelectedDeviceId = null;
+    claimSelectedBorrow = null;
+    document.getElementById('claimSwapGroup').style.display = 'none';
+  } else {
+    claimSelectedDeviceId = d.id;
+    claimSelectedBorrow = borrowedMap[d.id] || null;
+    if (claimSelectedBorrow) {
+      hint.innerHTML = '<span style="color:#b45309;font-weight:700;">' + esc2(d.friendlyName) +
+        ' — กำลังถูกยืมอยู่โดย ' + esc2(claimSelectedBorrow.studentName) + ' (ห้อง ' + esc2(claimSelectedBorrow.grade) + '/' + esc2(claimSelectedBorrow.room) + ')</span>';
+      document.getElementById('claimSwapBorrowerName').textContent = claimSelectedBorrow.studentName;
+      document.getElementById('claimSwapGroup').style.display = 'block';
+      document.getElementById('claimSwapNo').checked = true;
+      onClaimSwapChange();
+    } else {
+      hint.textContent = d.friendlyName + ' — ว่าง (ไม่ได้ถูกยืมอยู่)';
+      document.getElementById('claimSwapGroup').style.display = 'none';
+    }
+  }
+
+  var items = DEVICES.filter(function(dv) {
+    if (dv.condition === 'claim') return false;
+    if (!q) return true;
+    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
+           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
+           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 30);
+
+  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) {
+    var bOut = borrowedMap[dv.id];
+    return dv.serialNumber + (bOut ? '  ·  ยืมอยู่โดย ' + bOut.studentName : '  ·  ว่าง');
+  }, function(dv) {
+    input.value = dv.serialNumber;
+    listEl.classList.remove('show');
+    onClaimDeviceInput();
+  });
+}
+
+function onClaimSwapChange() {
+  var wantsSwap = document.getElementById('claimSwapYes').checked;
+  document.getElementById('claimNewDeviceGroup').style.display = wantsSwap ? 'block' : 'none';
+  if (!wantsSwap) {
+    claimNewDeviceId = null;
+    document.getElementById('claimNewDeviceInput').value = '';
+    document.getElementById('claimNewDeviceInfoHint').textContent = '';
+  }
+}
+
+function onClaimNewDeviceInput() {
+  var input  = document.getElementById('claimNewDeviceInput');
+  var listEl = document.getElementById('claimNewDeviceAcList');
+  var v = input.value.trim();
+  var q = v.toLowerCase();
+
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
+
+  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
+  var hint = document.getElementById('claimNewDeviceInfoHint');
+  if (!d) {
+    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
+    claimNewDeviceId = null;
+  } else if (d.id === claimSelectedDeviceId || d.condition === 'claim' || borrowedMap[d.id]) {
+    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ไม่สามารถเลือกเครื่องนี้ได้ (ถูกยืม/ส่งเคลมอยู่ หรือเป็นเครื่องเดิม)</span>';
+    claimNewDeviceId = null;
+  } else {
+    claimNewDeviceId = d.id;
+    hint.textContent = d.friendlyName + ' — ว่าง พร้อมให้ยืม';
+  }
+
+  /* รายการเครื่องที่เลือกได้: ไม่ใช่เครื่องเดิมที่กำลังจะเคลม, ไม่ถูกยืมอยู่, ไม่ได้ส่งเคลมอยู่ */
+  var items = DEVICES.filter(function(dv) {
+    if (dv.id === claimSelectedDeviceId) return false;
+    if (dv.condition === 'claim') return false;
+    if (borrowedMap[dv.id]) return false;
+    if (!q) return true;
+    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
+           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
+           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 30);
+
+  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) { return dv.serialNumber + '  ·  ว่าง'; }, function(dv) {
+    input.value = dv.serialNumber;
+    listEl.classList.remove('show');
+    onClaimNewDeviceInput();
+  });
+}
+
+function saveClaimDevice() {
+  if (!claimSelectedDeviceId) { showToast('กรุณาเลือกเครื่องที่ต้องการส่งเคลมก่อน', 'warn'); return; }
+  var device = DEVICES.find(function(d) { return d.id === claimSelectedDeviceId; });
+  if (!device) { showToast('ไม่พบข้อมูลเครื่องนี้ในระบบ', 'warn'); return; }
+
+  var note = document.getElementById('claimDeviceNote').value.trim();
+  var wantsSwap = claimSelectedBorrow && document.getElementById('claimSwapYes').checked;
+
+  if (wantsSwap && !claimNewDeviceId) {
+    showToast('กรุณาเลือกเครื่องใหม่ให้ผู้ยืม หรือเลือก "ไม่เปลี่ยนเครื่อง"', 'warn');
+    return;
+  }
+
+  var claimUpdates = {
+    condition: 'claim',
+    claimNote: note,
+    claimDate: todayStr(),
+    claimReportedBy: claimSelectedBorrow ? claimSelectedBorrow.studentName : currentUserLabel(),
+    claimUpdatedBy: currentUserLabel()
+  };
+
+  var chain = db.collection('ipad_devices').doc(claimSelectedDeviceId).update(claimUpdates);
+
+  if (wantsSwap) {
+    var newDevice = DEVICES.find(function(d) { return d.id === claimNewDeviceId; });
+    if (!newDevice) { showToast('ไม่พบข้อมูลเครื่องใหม่ที่เลือก', 'warn'); return; }
+    chain = chain.then(function() {
+      return db.collection('ipad_borrows').doc(claimSelectedBorrow.id).update({
+        deviceId: newDevice.id,
+        friendlyName: newDevice.friendlyName,
+        serialNumber: newDevice.serialNumber,
+        recordedBy: currentUserLabel()
+      });
+    });
+  }
+
+  chain.then(function() {
+    showToast(wantsSwap ? 'ส่งเคลมและเปลี่ยนเครื่องให้ผู้ยืมสำเร็จ ✅' : 'บันทึกการส่งเคลมสำเร็จ ✅');
+    closeModal('modalClaimDevice');
+  }).catch(function(e) {
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
    PANEL: ส่งเคลม — รวมเครื่องที่สถานะ condition === 'claim' ทั้งหมด
    ══════════════════════════════════════════════════════════════ */
 function renderClaimsPanel() {
@@ -1660,6 +1886,7 @@ function renderClaimsPanel() {
     '<div class="card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
         '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="triangle-alert" style="width:16px;height:16px;"></i> รายการส่งเคลม (<span id="claimsCount">0</span>)</div>' +
+        '<button class="btn-primary" onclick="openClaimDeviceModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เคลมไอแพด</button>' +
       '</div>' +
       '<div class="ipad-search-row"><input type="text" id="claimsSearch" placeholder="ค้นหา Friendly Name / Serial / รายละเอียด..." oninput="renderClaimsTable()"></div>' +
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
