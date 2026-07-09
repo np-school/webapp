@@ -289,7 +289,12 @@ function _setAccentVars(data, navTheme) {
     set = computeShades(legacyBase);
   }
 
-  var root = document.documentElement.style;
+  /* ⚠️ ต้อง set บน <body> ไม่ใช่ <html> — เพราะ body.theme-staff/body.theme-blue
+     ใน CSS ประกาศ --accent ของตัวเองไว้ (แม้จะเป็นแค่ class selector) ซึ่ง "ชนะ"
+     ค่าที่สืบทอดมาจาก parent เสมอไม่ว่า parent จะตั้งด้วย inline style หรือไม่
+     (inline style ที่ html ชนะแค่ตอนแข่งกับ selector อื่นบน "html" element เดียวกัน
+     ไม่ได้ชนะการประกาศซ้ำที่ body — คนละ element กัน จึงต้องตั้งอินไลน์ตรงที่ body เอง) */
+  var root = document.body.style;
   root.setProperty('--accent',       set.primary);
   root.setProperty('--accent-dark',  set.dark);
   root.setProperty('--accent-light', set.light);
