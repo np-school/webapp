@@ -1295,9 +1295,9 @@ function renderStudentsTable() {
   tbody.innerHTML = list.map(function(s) {
     var b = borrowedByStudentId[s.id];
     var statusCell = b ?
-      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
-       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
-      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
+      ('<span style="color:var(--red);font-weight:700;">' + esc2(b.friendlyName) +
+       '</span><br><span style="font-size:11px;color:var(--red);">' + esc2(b.serialNumber) + '</span>') :
+      '<span class="borrow-badge-yes">● ไม่ได้ยืม</span>';
     return (
       '<tr>' +
         '<td>' + esc2(s.studentId) + '</td>' +
@@ -1427,9 +1427,9 @@ function renderStaffTable() {
   tbody.innerHTML = list.map(function(s) {
     var b = borrowedByStaffId[s.id];
     var statusCell = b ?
-      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
-       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
-      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
+      ('<span style="color:var(--red);font-weight:700;">' + esc2(b.friendlyName) +
+       '</span><br><span style="font-size:11px;color:var(--red);">' + esc2(b.serialNumber) + '</span>') :
+      '<span class="borrow-badge-yes">● ไม่ได้ยืม</span>';
     return (
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
