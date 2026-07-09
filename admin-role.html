@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1b2a">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -239,7 +239,7 @@
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">จัดการระบบขอใช้ห้อง/สถานที่</div>
                 <div style="font-size:10px;color:#64748b;">อนุมัติ/ปฏิเสธคำขอจองห้อง และเพิ่ม แก้ไข ลบห้อง</div>
               </div>
-              <i data-lucide="calendar-cog" style="width:13px;height:13px;color:#93c5fd;flex-shrink:0;"></i>
+              <i data-lucide="calendar-cog" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
             </label>
             <label class="perm-row" id="wrap-foodcourt" style="border-radius:8px;">
               <input type="checkbox" id="perm-foodcourt" style="width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;" onchange="onPermChange('foodcourt')">
@@ -247,7 +247,7 @@
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">บัญชีรายได้ Food Court</div>
                 <div style="font-size:10px;color:#64748b;">บันทึกและดูรายรับ–รายจ่าย Food Court โรงเรียน</div>
               </div>
-              <i data-lucide="utensils" style="width:13px;height:13px;color:#93c5fd;flex-shrink:0;"></i>
+              <i data-lucide="utensils" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
             </label>
           </div>
         </div>
@@ -367,20 +367,20 @@
               <i data-lucide="medal" style="width:13px;height:13px;color:#7dd3fc;flex-shrink:0;"></i>
             </label>
             <label class="perm-row" id="wrap-assistantDirectorPersonnel" style="border-radius:8px;">
-              <input type="checkbox" id="perm-assistantDirectorPersonnel" style="width:15px;height:15px;accent-color:#1d4ed8;flex-shrink:0;" onchange="onPermChange('assistantDirectorPersonnel')">
+              <input type="checkbox" id="perm-assistantDirectorPersonnel" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;" onchange="onPermChange('assistantDirectorPersonnel')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้ช่วยผู้อำนวยการฝ่ายบริหารงานบุคคล</div>
                 <div style="font-size:10px;color:#64748b;">ดูแลและกำกับงานด้านบริหารงานบุคคล</div>
               </div>
-              <i data-lucide="medal" style="width:13px;height:13px;color:#93c5fd;flex-shrink:0;"></i>
+              <i data-lucide="medal" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
             </label>
             <label class="perm-row" id="wrap-assistantDirectorStudent" style="border-radius:8px;">
-              <input type="checkbox" id="perm-assistantDirectorStudent" style="width:15px;height:15px;accent-color:#0d1b2a;flex-shrink:0;" onchange="onPermChange('assistantDirectorStudent')">
+              <input type="checkbox" id="perm-assistantDirectorStudent" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;" onchange="onPermChange('assistantDirectorStudent')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">ผู้ช่วยผู้อำนวยการฝ่ายกิจการนักเรียน</div>
                 <div style="font-size:10px;color:#64748b;">ดูแลและกำกับงานด้านกิจการนักเรียน</div>
               </div>
-              <i data-lucide="medal" style="width:13px;height:13px;color:#778da9;flex-shrink:0;"></i>
+              <i data-lucide="medal" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
             </label>
           </div>
         </div>
@@ -388,7 +388,7 @@
         <!-- รองผู้อำนวยการ -->
         <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
           <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);border-bottom:1px solid #e2e8f0;">
-            <div style="width:26px;height:26px;background:#e0e1dd;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:26px;height:26px;background:var(--accent-tint);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i data-lucide="crown" style="width:13px;height:13px;color:#7e22ce;"></i>
             </div>
             <span style="font-size:12px;font-weight:800;color:#374151;">รองผู้อำนวยการ</span>
@@ -400,10 +400,10 @@
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายวิชาการ</div>
                 <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านวิชาการ · <strong style="color:#7e22ce;">ตรวจงานครูขั้นที่ 3 ได้ทุกกลุ่มสาระ (หลัง ผช.ผอ.วิชาการตรวจแล้ว)</strong></div>
               </div>
-              <i data-lucide="crown" style="width:13px;height:13px;color:#778da9;flex-shrink:0;"></i>
+              <i data-lucide="crown" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
             </label>
             <label class="perm-row" id="wrap-deputyDirectorBudget" style="border-radius:8px;">
-              <input type="checkbox" id="perm-deputyDirectorBudget" style="width:15px;height:15px;accent-color:#1b263b;flex-shrink:0;" onchange="onPermChange('deputyDirectorBudget')">
+              <input type="checkbox" id="perm-deputyDirectorBudget" style="width:15px;height:15px;accent-color:var(--accent-dark);flex-shrink:0;" onchange="onPermChange('deputyDirectorBudget')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายบริหารงบประมาณ</div>
                 <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านงบประมาณ</div>
@@ -411,7 +411,7 @@
               <i data-lucide="crown" style="width:13px;height:13px;color:#d8b4fe;flex-shrink:0;"></i>
             </label>
             <label class="perm-row" id="wrap-deputyDirectorGeneral" style="border-radius:8px;">
-              <input type="checkbox" id="perm-deputyDirectorGeneral" style="width:15px;height:15px;accent-color:#0d1b2a;flex-shrink:0;" onchange="onPermChange('deputyDirectorGeneral')">
+              <input type="checkbox" id="perm-deputyDirectorGeneral" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;" onchange="onPermChange('deputyDirectorGeneral')">
               <div style="flex:1;">
                 <div style="font-size:12px;font-weight:700;color:#1e293b;">รองผู้อำนวยการฝ่ายบริหารทั่วไป</div>
                 <div style="font-size:10px;color:#64748b;">กำกับและอนุมัติงานด้านบริหารทั่วไป</div>
@@ -452,14 +452,14 @@
         <!-- SuperAdmin only -->
         <div style="border:1.5px dashed #e2e8f0;border-radius:12px;overflow:hidden;opacity:.6;">
           <div style="background:#f8fafc;padding:9px 14px;display:flex;align-items:center;gap:var(--gap-tight);">
-            <div style="width:26px;height:26px;background:#e0e1dd;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="shield" style="width:13px;height:13px;color:#0d1b2a;"></i>
+            <div style="width:26px;height:26px;background:var(--accent-tint);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="shield" style="width:13px;height:13px;color:var(--accent);"></i>
             </div>
             <div style="flex:1;">
               <span style="font-size:12px;font-weight:800;color:#374151;">จัดการสิทธิ์ Admin</span>
               <div style="font-size:10px;color:#94a3b8;">เฉพาะ SuperAdmin · ไม่สามารถมอบสิทธิ์นี้ได้</div>
             </div>
-            <i data-lucide="lock" style="width:13px;height:13px;color:#778da9;flex-shrink:0;"></i>
+            <i data-lucide="lock" style="width:13px;height:13px;color:var(--accent-light);flex-shrink:0;"></i>
           </div>
         </div>
 
@@ -1361,7 +1361,7 @@ function renderAdminMiniCard(a, isSuperCard){
       '</div>';
   }
 
-  return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
+  return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
     '<img src="'+ph+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
     '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px;">' +

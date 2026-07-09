@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1b2a">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -69,7 +69,7 @@
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
     <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
-  <a href="index.html" style="padding:10px 24px;background:#1d4ed8;color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
 <div id="myApp" style="display:none;"></div>
@@ -86,7 +86,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="tablet-smartphone" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="tablet-smartphone" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3 id="borrowModalTitle">บันทึกการยืม iPad</h3><p id="borrowModalSub">เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalBorrow')"><i data-lucide="x"></i></button>
@@ -106,7 +106,7 @@
         <input type="text" id="borrowStudentInput" placeholder="พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน..." autocomplete="off" oninput="onBorrowStudentInput()" onfocus="onBorrowStudentInput()" onblur="setTimeout(function(){ document.getElementById('studentAcList').classList.remove('show'); }, 150);">
         <div class="ac-list" id="studentAcList"></div>
       </div>
-      <div id="newStudentHint" style="display:none;margin-top:8px;padding:10px 12px;background:#eff6ff;border-radius:10px;font-size:12.5px;color:#1e40af;">
+      <div id="newStudentHint" style="display:none;margin-top:8px;padding:10px 12px;background:var(--accent-tint);border-radius:10px;font-size:12.5px;color:var(--accent-dark);">
         ไม่พบข้อมูลนี้ในระบบ — กรอกข้อมูลเพื่อเพิ่มนักเรียนใหม่
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
           <input type="text" id="newStudentId" placeholder="เลขประจำตัว" style="width:auto;flex:1;min-width:100px;">
@@ -160,7 +160,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="corner-down-left" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="corner-down-left" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>บันทึกการคืนอุปกรณ์</h3><p id="returnModalSub"></p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalReturn')"><i data-lucide="x"></i></button>
@@ -197,7 +197,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="user-plus" id="studentModalIcon" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="user-plus" id="studentModalIcon" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3 id="studentModalTitle">เพิ่มนักเรียน</h3></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalStudent')"><i data-lucide="x"></i></button>
@@ -239,7 +239,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="tablet" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="tablet" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>เพิ่ม iPad</h3></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalDevice')"><i data-lucide="x"></i></button>
@@ -296,7 +296,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>นำเข้าไฟล์รายการ iPad (CSV)</h3><p>ระบบจะดึงเฉพาะคอลัมน์ Friendly Name, Asset Number, Serial Number</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalImport')"><i data-lucide="x"></i></button>
@@ -317,7 +317,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:#1d4ed8;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>นำเข้ารายชื่อนักเรียน (CSV)</h3><p>คอลัมน์ที่ต้องมี: เลขประจำตัว, ชื่อ, นามสกุล, ชั้น, ห้อง</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalImportStudents')"><i data-lucide="x"></i></button>
@@ -507,7 +507,7 @@ function renderStatsCharts() {
     totalDevices
   );
 
-  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['#1d4ed8','#f59e0b']);
+  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['var(--accent)','#f59e0b']);
 }
 function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
   var el = document.getElementById('chartAccessories');
@@ -714,7 +714,7 @@ function renderBorrowOutTable() {
     var isStaff = b.borrowerType === 'staff';
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + '<br>' + (isStaff ? '<span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '<span style="font-size:10px;color:#1d4ed8;font-weight:700;">(นักเรียน)</span>') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + '<br>' + (isStaff ? '<span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '<span style="font-size:10px;color:var(--accent);font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
         '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
@@ -1188,7 +1188,7 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: datasetLabel1, data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel1, data: totals, backgroundColor: 'var(--accent)', borderRadius: 4, maxBarThickness: 28 },
         { label: datasetLabel2, data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
       ]
     },

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1b2a">
+  <meta name="theme-color" content="var(--accent)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -351,7 +351,7 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#2563eb,#93c5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#2563eb,var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="list" style="width:20px;height:20px;color:white;"></i>
               </div>
               <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายการทั้งหมด</h1>
@@ -848,7 +848,7 @@ function renderLineChart(){
   const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDate);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'var(--accent)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
@@ -1134,7 +1134,7 @@ function saveShopCount(){
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
+  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'var(--accent)');
 }
 
 // ── ADD MODAL (daily-entry style) ──
