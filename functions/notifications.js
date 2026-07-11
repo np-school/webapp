@@ -186,7 +186,44 @@ exports.onNewRepairCreated = onDocumentCreated(
 );
 
 // ===========================================
-// 4) งานซ่อมถูกเปิดใหม่ (ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย: done -> reopened)
+// 4) สถานะแจ้งซ่อมเปลี่ยน (approved/rejected/waiting/done/closed ฯลฯ)
+//    -> แจ้งผู้แจ้งซ่อม (reporterUid)
+//    ยกเว้นตอนเปลี่ยนเป็น "reopened" เพราะเคสนั้นเป็นฝั่งผู้แจ้งกดเองอยู่แล้ว
+//    (มี onRepairReopened แจ้งสตาฟแยกไว้ต่างหากด้านล่าง)
+// ===========================================
+const REPAIR_STATUS_TEXT = {
+  approved: "ได้รับการอนุมัติแล้ว ✅",
+  rejected: "ถูกปฏิเสธ ❌",
+  waiting: "รอดำเนินการซ่อม/รออะไหล่ ⏳",
+  inprogress: "กำลังดำเนินการซ่อม 🔧",
+  done: "ดำเนินการซ่อมเสร็จแล้ว ✅",
+  closed: "ปิดงานแล้ว 📁",
+};
+
+exports.onRepairStatusChanged = onDocumentUpdated(
+  "repairs/{repairId}",
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    if (before.status === after.status) return;
+    if (after.status === "reopened") return; // จัดการแยกใน onRepairReopened
+
+    if (!after.reporterUid) return;
+
+    const statusText = REPAIR_STATUS_TEXT[after.status] || after.status;
+
+    await sendToUser(
+      after.reporterUid,
+      "สถานะแจ้งซ่อมอัปเดต",
+      `"${after.title || ""}" ${statusText}`,
+      { url: "/webapp/repair-user.html" }
+    );
+  }
+);
+
+// ===========================================
+// 5) งานซ่อมถูกเปิดใหม่ (ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย: done -> reopened)
 //    -> แจ้งเจ้าหน้าที่ที่มี permission "repair" อีกครั้ง เพราะต้องรับเรื่องใหม่
 // ===========================================
 exports.onRepairReopened = onDocumentUpdated(

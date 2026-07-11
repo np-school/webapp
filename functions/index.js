@@ -11,6 +11,7 @@ const notifications = require("./notifications");
 exports.onBookingStatusChanged = notifications.onBookingStatusChanged;
 exports.onNewBookingCreated = notifications.onNewBookingCreated;
 exports.onNewRepairCreated = notifications.onNewRepairCreated;
+exports.onRepairStatusChanged = notifications.onRepairStatusChanged;
 exports.onRepairReopened = notifications.onRepairReopened;
 
 // ── อัปโหลดรูปแจ้งซ่อมไป Google Drive (ดู functions/drive-upload.js) ──
