@@ -176,6 +176,7 @@ buildPage({
     loadData();
     loadCategories();
     loadBuildings();
+    loadRepairStaffList();
     setupScrollTopButton();
   }
 });
@@ -670,6 +671,104 @@ function renderDetailBody(r) {
   );
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Staff Picker: เลือกช่างผู้รับผิดชอบจากข้อมูลบุคลากร (staff.html)
+   ใช้ suffix แยกอินสแตนซ์ระหว่างฟอร์ม "อนุมัติ" ('') กับ "มอบหมาย/อัปเดต" ('2')
+   เป็น combobox — พิมพ์กรองรายชื่อได้ หรือพิมพ์ชื่อเองได้ (เช่น ช่างภายนอก)
+   ══════════════════════════════════════════════════════════════ */
+var REPAIR_STAFF_LIST = [];
+var _repTechFilteredCache = {};
+
+function loadRepairStaffList() {
+  db.collection('staff').orderBy('name').get().then(function(snap) {
+    REPAIR_STAFF_LIST = [];
+    snap.forEach(function(doc) {
+      var s = doc.data();
+      REPAIR_STAFF_LIST.push({ name: s.name || '', position: s.position || '', group: s.group || '' });
+    });
+  }).catch(function(err) { console.error('loadRepairStaffList', err); });
+}
+
+function techInputId(suffix) { return 'actTechnician' + suffix; }
+
+function openTechPicker(suffix) {
+  var dd = document.getElementById('techDropdown' + suffix);
+  if (!dd) return;
+  dd.classList.add('open');
+  var input = document.getElementById(techInputId(suffix));
+  renderTechPickerList(suffix, input ? input.value : '');
+}
+function closeTechPicker(suffix) {
+  var dd = document.getElementById('techDropdown' + suffix);
+  if (dd) dd.classList.remove('open');
+}
+/* ปิด dropdown เมื่อคลิกนอกกล่อง */
+document.addEventListener('mousedown', function(e) {
+  ['', '2'].forEach(function(suffix) {
+    var wrap = document.getElementById('techPickerWrap' + suffix);
+    var dd = document.getElementById('techDropdown' + suffix);
+    if (wrap && dd && dd.classList.contains('open') && !wrap.contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+});
+
+function filterTechPicker(suffix) {
+  var input = document.getElementById(techInputId(suffix));
+  openTechPicker(suffix);
+  renderTechPickerList(suffix, input ? input.value : '');
+}
+
+function renderTechPickerList(suffix, query) {
+  var listEl = document.getElementById('techPickerList' + suffix);
+  if (!listEl) return;
+
+  if (!REPAIR_STAFF_LIST.length) {
+    listEl.innerHTML = '<div class="staff-picker-loading">กำลังโหลดรายชื่อบุคลากร...</div>';
+    return;
+  }
+
+  var q = (query || '').trim().toLowerCase();
+  var filtered = REPAIR_STAFF_LIST.filter(function(s) {
+    return !q || (s.name + ' ' + s.position + ' ' + s.group).toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 30);
+  _repTechFilteredCache[suffix] = filtered;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อบุคลากรที่ตรงกัน — พิมพ์เพื่อระบุชื่อเอง</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(function(s, idx) {
+    return (
+      '<div class="staff-picker-item" data-idx="' + idx + '">' +
+        '<i data-lucide="user-round" style="width:14px;height:14px;color:var(--text3);flex-shrink:0;pointer-events:none;"></i>' +
+        '<div style="min-width:0;pointer-events:none;">' +
+          '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+          '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+            (s.position ? esc2(s.position) : '') + (s.group ? (' · ' + esc2(s.group)) : '') +
+          '</p>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  listEl.onclick = function(e) {
+    var item = e.target.closest('[data-idx]');
+    if (!item) return;
+    var idx = parseInt(item.getAttribute('data-idx'), 10);
+    var s = _repTechFilteredCache[suffix][idx];
+    if (s) selectTechPicker(suffix, s.name);
+  };
+  lucide.createIcons();
+}
+
+function selectTechPicker(suffix, name) {
+  var input = document.getElementById(techInputId(suffix));
+  if (input) input.value = name;
+  closeTechPicker(suffix);
+}
+
 function renderActionPanel(r) {
   /* ── สถานะ: reported → อนุมัติ / ไม่อนุมัติ ── */
   if (r.status === 'reported') {
@@ -678,7 +777,10 @@ function renderActionPanel(r) {
         '<h4><i data-lucide="check-circle-2" style="width:15px;height:15px;color:var(--green);"></i> อนุมัติแผนการซ่อม</h4>' +
         '<div class="form-group" style="margin-bottom:10px;">' +
           '<label class="form-label">ช่างผู้รับผิดชอบ</label>' +
-          '<input type="text" id="actTechnician" placeholder="ชื่อช่าง/ผู้รับผิดชอบ">' +
+          '<div class="staff-picker-wrap" id="techPickerWrap">' +
+            '<input type="text" id="actTechnician" class="staff-picker-input" style="cursor:text;" placeholder="พิมพ์หรือเลือกชื่อช่าง/ผู้รับผิดชอบ..." autocomplete="off" oninput="filterTechPicker(\'\')" onfocus="openTechPicker(\'\')">' +
+            '<div class="staff-picker-dropdown" id="techDropdown"><div id="techPickerList"></div></div>' +
+          '</div>' +
         '</div>' +
         '<div class="form-group" style="margin-bottom:6px;">' +
           '<label class="form-label">สถานะการซ่อม</label>' +
@@ -709,7 +811,10 @@ function renderActionPanel(r) {
         (r.reopened || r.status === 'reopened' ? ('<div class="card" style="background:var(--red-light);padding:10px 12px;margin-bottom:10px;"><b style="font-size:11.5px;color:var(--red-dark);">ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย:</b><p style="font-size:12px;color:var(--red-dark);margin-top:2px;">' + esc2(r.reviewNote || '-') + '</p></div>') : '') +
         '<div class="form-group" style="margin-bottom:10px;">' +
           '<label class="form-label">ช่างผู้รับผิดชอบ</label>' +
-          '<input type="text" id="actTechnician2" value="' + esc2(r.technician || '') + '">' +
+          '<div class="staff-picker-wrap" id="techPickerWrap2">' +
+            '<input type="text" id="actTechnician2" class="staff-picker-input" style="cursor:text;" value="' + esc2(r.technician || '') + '" placeholder="พิมพ์หรือเลือกชื่อช่าง/ผู้รับผิดชอบ..." autocomplete="off" oninput="filterTechPicker(\'2\')" onfocus="openTechPicker(\'2\')">' +
+            '<div class="staff-picker-dropdown" id="techDropdown2"><div id="techPickerList2"></div></div>' +
+          '</div>' +
         '</div>' +
         '<div class="form-group" style="margin-bottom:10px;">' +
           '<label class="form-label">สถานะการซ่อม</label>' +
