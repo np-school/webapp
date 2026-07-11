@@ -231,12 +231,12 @@ function renderPage() {
       '<div class="chart-grid">' +
         '<div class="chart-card">' +
           '<div class="chart-title"><i data-lucide="building-2" style="width:13px;height:13px;display:inline;vertical-align:-2px;margin-right:4px;color:var(--sky);"></i>แยกตามอาคาร</div>' +
-          '<div class="chart-sub">งานที่ยังไม่ปิด (รออนุมัติ + กำลังดำเนินการ) — คลิกแท่งเพื่อกรองรายการด้านล่าง</div>' +
+          '<div class="chart-sub">นับรวมย้อนหลังทั้งหมดทุกสถานะ (รวมที่ปิดงานแล้ว) — คลิกแท่งเพื่อกรองรายการด้านล่าง</div>' +
           '<div id="repBuildingChart"></div>' +
         '</div>' +
         '<div class="chart-card">' +
           '<div class="chart-title"><i data-lucide="tags" style="width:13px;height:13px;display:inline;vertical-align:-2px;margin-right:4px;color:var(--purple);"></i>แยกตามหมวดหมู่</div>' +
-          '<div class="chart-sub">ตามอาคารที่เลือกไว้ด้านล่าง (หรือทุกอาคารหากยังไม่เลือก)</div>' +
+          '<div class="chart-sub">นับรวมย้อนหลังทั้งหมด ตามอาคารที่เลือกไว้ด้านล่าง (หรือทุกอาคารหากยังไม่เลือก)</div>' +
           '<div id="repCategoryChart"></div>' +
         '</div>' +
       '</div>' +
@@ -384,10 +384,10 @@ function renderActivePanel() {
   newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini(currentActiveBuildingFilter ? 'ไม่มีรายการแจ้งซ่อมใหม่ในอาคารนี้' : 'ไม่มีรายการแจ้งซ่อมใหม่');
   progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini(currentActiveBuildingFilter ? 'ไม่มีงานที่กำลังดำเนินการในอาคารนี้' : 'ไม่มีงานที่กำลังดำเนินการ');
 
-  /* กราฟอาคาร: ภาพรวมทุกอาคารเสมอ (ไฮไลต์อาคารที่เลือกไว้) */
-  renderBuildingChart(newItemsAll.concat(progItemsAll));
-  /* กราฟหมวดหมู่: ตามอาคารที่กรองไว้ (หรือทั้งหมดถ้าไม่ได้เลือก) */
-  renderCategoryChart(newItems.concat(progItems));
+  /* กราฟอาคาร: นับรวมย้อนหลังทั้งหมด (ทุกสถานะ รวมที่ปิดงานแล้ว) ภาพรวมทุกอาคารเสมอ (ไฮไลต์อาคารที่เลือกไว้) */
+  renderBuildingChart(allRepairs);
+  /* กราฟหมวดหมู่: นับรวมย้อนหลังทั้งหมด ตามอาคารที่กรองไว้ (หรือทั้งหมดถ้าไม่ได้เลือก) */
+  renderCategoryChart(filterByActiveBuilding(allRepairs));
 
   lucide.createIcons();
 }
