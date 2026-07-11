@@ -207,6 +207,7 @@ function checkAdminAccess(email) {
       /* ซ่อน/แสดงแต่ละ item ตาม permission */
       _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
       _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
+      _toggleAdminItem('adminMenuItem-repair',     isSA || !!p.repair);
       _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
       _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
       _toggleAdminItem('adminMenuItem-ipad',       isSA || !!p.ipad);
@@ -599,6 +600,7 @@ var GROUP_MENU = [
     icon: 'building-2',
     items: [
       { label: 'ระบบขอใช้ห้อง/สถานที่', icon: 'calendar', href: 'room-request.html' },
+      { label: 'ระบบแจ้งซ่อม',          icon: 'wrench',   href: 'repair-user.html' },
       { label: 'ระบบขอใช้ข้อมูล CCTV',  icon: 'cctv',     onclick: "showToast('ระบบนี้อยู่ระหว่างพัฒนา','warn')" },
     ],
   },
@@ -638,6 +640,7 @@ var ADMIN_GROUP_MENU = [
     icon: 'building-2',
     items: [
       { id: 'adminMenuItem-booking',    label: 'จัดการระบบขอใช้ห้อง/สถานที่', icon: 'calendar-cog', href: 'room-admin.html' },
+      { id: 'adminMenuItem-repair',     label: 'จัดการระบบแจ้งซ่อม',          icon: 'wrench',       href: 'repair-admin.html' },
       { id: 'adminMenuItem-foodcourt',  label: 'บัญชีรายได้ Food Court',       icon: 'utensils',     href: 'foodcourt-admin.html' },
     ],
   },

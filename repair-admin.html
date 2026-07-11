@@ -186,6 +186,7 @@ var allRepairs     = [];
 var currentFilter  = 'all';
 var currentSearch  = '';
 var currentSubTab  = 'active';
+var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
 
 function setupScrollTopButton() {
   var content = document.getElementById('pageContent');
@@ -226,7 +227,27 @@ function renderPage() {
     /* ── Panel: การแจ้งซ่อม (ใหม่ / กำลังดำเนินการ) ── */
     '<div class="sub-panel active" id="repPanelActive">' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repStatGrid"></div>' +
-      '<div class="rp-sec-title"><i data-lucide="bell-ring" style="width:15px;height:15px;color:var(--amber);"></i> รายการแจ้งซ่อมใหม่ (รออนุมัติ)</div>' +
+
+      '<div class="chart-grid">' +
+        '<div class="chart-card">' +
+          '<div class="chart-title"><i data-lucide="building-2" style="width:13px;height:13px;display:inline;vertical-align:-2px;margin-right:4px;color:var(--sky);"></i>แยกตามอาคาร</div>' +
+          '<div class="chart-sub">งานที่ยังไม่ปิด (รออนุมัติ + กำลังดำเนินการ) — คลิกแท่งเพื่อกรองรายการด้านล่าง</div>' +
+          '<div id="repBuildingChart"></div>' +
+        '</div>' +
+        '<div class="chart-card">' +
+          '<div class="chart-title"><i data-lucide="tags" style="width:13px;height:13px;display:inline;vertical-align:-2px;margin-right:4px;color:var(--purple);"></i>แยกตามหมวดหมู่</div>' +
+          '<div class="chart-sub">ตามอาคารที่เลือกไว้ด้านล่าง (หรือทุกอาคารหากยังไม่เลือก)</div>' +
+          '<div id="repCategoryChart"></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;margin:22px 0 10px;">' +
+        '<div class="rp-sec-title" style="margin:0;"><i data-lucide="bell-ring" style="width:15px;height:15px;color:var(--amber);"></i> รายการแจ้งซ่อมใหม่ (รออนุมัติ)</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<label for="repActiveBuildingFilter" style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;"><i data-lucide="filter" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>อาคาร</label>' +
+          '<select id="repActiveBuildingFilter" onchange="setActiveBuildingFilter(this.value)" style="max-width:200px;"><option value="">ทุกอาคาร</option></select>' +
+        '</div>' +
+      '</div>' +
       '<div id="repNewList"></div>' +
       '<div class="rp-sec-title"><i data-lucide="hammer" style="width:15px;height:15px;color:var(--sky);"></i> รายการที่กำลังดำเนินการ</div>' +
       '<div id="repProgressList"></div>' +
@@ -354,12 +375,137 @@ function renderActivePanel() {
   var progList = document.getElementById('repProgressList');
   if (!newList || !progList) return;
 
-  var newItems  = allRepairs.filter(function(r) { return r.status === 'reported'; });
-  var progItems = allRepairs.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
+  var newItemsAll  = allRepairs.filter(function(r) { return r.status === 'reported'; });
+  var progItemsAll = allRepairs.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
 
-  newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini('ไม่มีรายการแจ้งซ่อมใหม่');
-  progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini('ไม่มีงานที่กำลังดำเนินการ');
+  var newItems  = filterByActiveBuilding(newItemsAll);
+  var progItems = filterByActiveBuilding(progItemsAll);
+
+  newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini(currentActiveBuildingFilter ? 'ไม่มีรายการแจ้งซ่อมใหม่ในอาคารนี้' : 'ไม่มีรายการแจ้งซ่อมใหม่');
+  progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini(currentActiveBuildingFilter ? 'ไม่มีงานที่กำลังดำเนินการในอาคารนี้' : 'ไม่มีงานที่กำลังดำเนินการ');
+
+  /* กราฟอาคาร: ภาพรวมทุกอาคารเสมอ (ไฮไลต์อาคารที่เลือกไว้) */
+  renderBuildingChart(newItemsAll.concat(progItemsAll));
+  /* กราฟหมวดหมู่: ตามอาคารที่กรองไว้ (หรือทั้งหมดถ้าไม่ได้เลือก) */
+  renderCategoryChart(newItems.concat(progItems));
+
   lucide.createIcons();
+}
+
+/* ── ตัดชื่ออาคารออกจากข้อความสถานที่ "อาคาร 1 - ห้อง 101" → "อาคาร 1" ── */
+function getBuildingNameFromLocation(loc) {
+  if (!loc) return '';
+  var idx = loc.indexOf(' - ');
+  return idx === -1 ? loc : loc.substring(0, idx);
+}
+
+function filterByActiveBuilding(list) {
+  if (!currentActiveBuildingFilter) return list;
+  return list.filter(function(r) { return getBuildingNameFromLocation(r.location) === currentActiveBuildingFilter; });
+}
+
+function setActiveBuildingFilter(name) {
+  currentActiveBuildingFilter = name || '';
+  var sel = document.getElementById('repActiveBuildingFilter');
+  if (sel) sel.value = currentActiveBuildingFilter;
+  renderActivePanel();
+}
+
+/* ── กราฟแท่งแนวนอน: จำนวนงานแยกตามอาคาร (คลิกเพื่อกรอง) ── */
+function renderBuildingChart(list) {
+  var el = document.getElementById('repBuildingChart');
+  if (!el) return;
+
+  var counts = {};
+  list.forEach(function(r) {
+    var b = getBuildingNameFromLocation(r.location) || 'ไม่ระบุอาคาร';
+    counts[b] = (counts[b] || 0) + 1;
+  });
+  var keys = Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; });
+
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px 0;"><i data-lucide="building-2" style="width:24px;height:24px;color:var(--text3);"></i><p style="margin-top:6px;font-size:12.5px;">ยังไม่มีข้อมูล</p></div>';
+    lucide.createIcons();
+    return;
+  }
+
+  var max = Math.max.apply(null, keys.map(function(k) { return counts[k]; }));
+  el.innerHTML = keys.map(function(k) {
+    var count  = counts[k];
+    var pct    = Math.max(6, Math.round(count / max * 100));
+    var active = currentActiveBuildingFilter === k;
+    return (
+      '<div class="hbar-row" style="cursor:pointer;" onclick="setActiveBuildingFilter(\'' + (active ? '' : k.replace(/'/g, "\\'")) + '\')" title="คลิกเพื่อ' + (active ? 'ยกเลิกการกรอง' : 'กรองตามอาคารนี้') + '">' +
+        '<div class="hbar-label"><span class="hbar-name" style="' + (active ? 'color:var(--purple);' : '') + '">' + esc2(k) + (active ? ' ✓' : '') + '</span><span class="hbar-pct">' + count + '</span></div>' +
+        '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%;background:' + (active ? 'var(--purple)' : 'var(--sky)') + ';"></div></div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+/* ── โดนัท: สัดส่วนงานแยกตามหมวดหมู่ ── */
+var REP_CHART_PALETTE = ['#7c3aed', '#0ea5e9', '#f59e0b', '#22c55e', '#ef4444', '#ec4899', '#14b8a6', '#6366f1'];
+function renderCategoryChart(list) {
+  var el = document.getElementById('repCategoryChart');
+  if (!el) return;
+
+  var total = list.length;
+  if (!total) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px 0;"><i data-lucide="pie-chart" style="width:24px;height:24px;color:var(--text3);"></i><p style="margin-top:6px;font-size:12.5px;">ยังไม่มีข้อมูล</p></div>';
+    lucide.createIcons();
+    return;
+  }
+
+  var counts = {};
+  list.forEach(function(r) {
+    var key = r.category || 'other';
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  var keys = Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; });
+
+  var cursor = 0;
+  var gradientParts = [];
+  var legendHtml = '';
+  keys.forEach(function(key, i) {
+    var cat   = getCategoryMeta(key);
+    var count = counts[key];
+    var pct   = count / total * 100;
+    var color = REP_CHART_PALETTE[i % REP_CHART_PALETTE.length];
+    gradientParts.push(color + ' ' + cursor + '% ' + (cursor + pct) + '%');
+    cursor += pct;
+    legendHtml +=
+      '<div class="legend-row">' +
+        '<span style="display:flex;align-items:center;gap:6px;min-width:0;">' +
+          '<span class="legend-dot" style="background:' + color + ';"></span>' +
+          '<span class="legend-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + cat.label + '</span>' +
+        '</span>' +
+        '<span class="legend-val">' + count + '</span>' +
+      '</div>';
+  });
+
+  el.innerHTML =
+    '<div class="donut-wrap" style="width:130px;height:130px;margin:0 auto;">' +
+      '<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(' + gradientParts.join(',') + ');"></div>' +
+      '<div class="donut-center" style="top:50%;left:50%;transform:translate(-50%,-50%);width:76px;height:76px;background:var(--white);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
+        '<div class="donut-big">' + total + '</div>' +
+        '<div class="donut-label">งาน</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="donut-legend">' + legendHtml + '</div>';
+
+  lucide.createIcons();
+}
+
+/* ── เติมตัวเลือกอาคารในดรอปดาวน์กรอง (เรียกจาก loadBuildings) ── */
+function renderActiveBuildingFilterSelect() {
+  var sel = document.getElementById('repActiveBuildingFilter');
+  if (!sel) return;
+  var current = currentActiveBuildingFilter;
+  sel.innerHTML = '<option value="">ทุกอาคาร</option>' +
+    REPAIR_BUILDINGS.map(function(b) {
+      return '<option value="' + esc2(b.name).replace(/"/g, '&quot;') + '">' + esc2(b.name) + '</option>';
+    }).join('');
+  sel.value = current;
 }
 
 function emptyMini(text) {
@@ -751,6 +897,7 @@ function loadBuildings() {
     REPAIR_BUILDINGS = [];
     snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
     renderBldList();
+    renderActiveBuildingFilterSelect();
   }, function(err) { console.error('loadBuildings', err); });
 }
 
