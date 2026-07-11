@@ -135,14 +135,34 @@ exports.uploadRepairPhoto = onRequest(
       });
 
       // เปิดสิทธิ์ให้ดูได้ผ่านลิงก์ (เหมือน setSharing ANYONE_WITH_LINK / VIEW ในโค้ด Apps Script เดิม)
-      await drive.permissions.create({
-        fileId: file.data.id,
-        requestBody: { role: "reader", type: "anyone" },
-        supportsAllDrives: true,
-      });
+      try {
+        await drive.permissions.create({
+          fileId: file.data.id,
+          requestBody: { role: "reader", type: "anyone" },
+          supportsAllDrives: true,
+        });
+      } catch (shareErr) {
+        // บาง Google Workspace org (เช่นโดเมนโรงเรียน) ปิดการแชร์แบบ
+        // "Anyone with the link" ไว้ที่ระดับ Admin Console เพื่อความปลอดภัย
+        // ผล คือ Drive API จะตีกลับ 400 Bad Request แบบไม่มีข้อความอธิบาย
+        // (Bad Request. User message: "") จึง fallback มาแชร์แบบ
+        // "ใครก็ได้ในโดเมนองค์กร" แทน ซึ่งปกติไม่ถูกบล็อก
+        console.warn(
+          "permissions.create(type=anyone) ล้มเหลว (อาจถูก org policy บล็อก) กำลัง fallback เป็น type=domain:",
+          shareErr && shareErr.message
+        );
+        await drive.permissions.create({
+          fileId: file.data.id,
+          requestBody: { role: "reader", type: "domain", domain: "nongki.ac.th" },
+          supportsAllDrives: true,
+        });
+      }
 
+      // หมายเหตุ: ลิงก์แบบ drive.google.com/uc?id=... ใช้ฝัง <img> ไม่ได้แล้ว
+      // (Google ปิดการใช้งานเพราะยกเลิก third-party cookies ทำให้ 403 แม้เจ้าของไฟล์เอง)
+      // จึงใช้ endpoint thumbnail แทน ซึ่งยังฝังรูปได้ปกติ และปรับขนาดใหญ่พอสำหรับดูรายละเอียด
       res.json({
-        url: "https://drive.google.com/uc?id=" + file.data.id,
+        url: "https://drive.google.com/thumbnail?id=" + file.data.id + "&sz=w2000",
         name: file.data.name,
       });
     } catch (err) {

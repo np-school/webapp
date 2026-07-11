@@ -41,6 +41,10 @@
     .rp-status.c-red    { background:var(--red-light);   color:var(--red-dark); }
     .rp-status.c-purple { background:var(--purple-light);color:var(--purple-dark); }
     .rp-urgent-dot{ width:7px; height:7px; border-radius:50%; background:var(--red); display:inline-block; margin-right:5px; flex-shrink:0; }
+    .rp-urgent-tag{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; color:var(--red-dark); background:#fff; border:1px solid var(--red); padding:2px 9px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
+    .rp-urgent-row{ background:var(--red-light) !important; }
+    tr.rp-urgent-row:hover{ background:var(--red-light) !important; }
+    tr.rp-urgent-row > td{ background:var(--red-light); }
     .rp-row{ cursor:pointer; }
     .rp-photo-thumb{ position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden; flex-shrink:0; border:1px solid var(--border); }
     .rp-photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -541,11 +545,11 @@ function renderMiniCard(r) {
   var cat = getCategoryMeta(r.category);
   var meta = getStatusMeta(r);
   return (
-    '<div class="rp-mini-card" onclick="openDetail(\'' + r.id + '\')">' +
+    '<div class="rp-mini-card' + (r.priority === 'urgent' ? ' rp-urgent-row' : '') + '" onclick="openDetail(\'' + r.id + '\')">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">' +
         '<div style="min-width:0;flex:1;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
-            (r.priority === 'urgent' ? '<span class="rp-urgent-dot" title="เร่งด่วน"></span>' : '') +
+            (r.priority === 'urgent' ? '<span class="rp-urgent-tag"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i>เร่งด่วน</span>' : '') +
             '<span style="font-size:13.5px;font-weight:800;color:var(--text);">' + esc2(r.title || '') + '</span>' +
           '</div>' +
           '<div style="font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
@@ -700,11 +704,11 @@ function renderTable() {
     var cat = getCategoryMeta(r.category);
     var meta = getStatusMeta(r);
     html +=
-      '<tr class="rp-row" onclick="openDetail(\'' + r.id + '\')">' +
+      '<tr class="rp-row' + (r.priority === 'urgent' ? ' rp-urgent-row' : '') + '" onclick="openDetail(\'' + r.id + '\')">' +
         '<td style="white-space:nowrap;font-size:12px;color:var(--text2);">' + fmtDate(r.createdAt) + '</td>' +
         '<td>' +
-          '<div style="font-weight:700;color:var(--text);display:flex;align-items:center;">' +
-            (r.priority === 'urgent' ? '<span class="rp-urgent-dot" title="เร่งด่วน"></span>' : '') +
+          '<div style="font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap;">' +
+            (r.priority === 'urgent' ? '<span class="rp-urgent-tag"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i>เร่งด่วน</span>' : '') +
             esc2(r.title || '') +
           '</div>' +
           '<div style="font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px;"><i data-lucide="map-pin" style="width:11px;height:11px;"></i>' + esc2(r.location || '') + '</div>' +
