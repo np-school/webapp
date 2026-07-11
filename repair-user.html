@@ -96,8 +96,8 @@
           <i data-lucide="wrench" style="color:var(--amber);"></i>
         </div>
         <div>
-          <h3>แจ้งซ่อมใหม่</h3>
-          <p>กรอกรายละเอียดจุดที่ชำรุดให้ครบถ้วน</p>
+          <h3 id="frModalTitle">แจ้งซ่อมใหม่</h3>
+          <p id="frModalSub">กรอกรายละเอียดจุดที่ชำรุดให้ครบถ้วน</p>
         </div>
       </div>
       <button class="modal-close" onclick="closeModal('newReportModal')"><i data-lucide="x"></i></button>
@@ -257,6 +257,13 @@ function fmtDate(ts) {
          ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
 }
 
+/* ── ตัดชื่ออาคารออกจากข้อความสถานที่ "อาคาร 1 - ห้อง 101" → "อาคาร 1" ── */
+function getBuildingNameFromLocation(loc) {
+  if (!loc) return '';
+  var idx = loc.indexOf(' - ');
+  return idx === -1 ? loc : loc.substring(0, idx);
+}
+
 /* ══════════════════════════════════════════════════════════════
    buildPage() — auth guard + shell builder
    ══════════════════════════════════════════════════════════════ */
@@ -288,6 +295,7 @@ var currentUser   = null;
 var myRepairs     = [];
 var currentFilter = 'all';
 var pendingPhotos = []; /* [{name, mimeType, base64, status:'pending'|'uploading'|'done'|'error', url}] */
+var editingRepairId = null; /* ถ้าไม่ใช่ null = กำลังแก้ไขคำขอเดิม (เฉพาะตอนสถานะยังเป็น 'reported' เท่านั้น) */
 
 function setupScrollTopButton() {
   var content = document.getElementById('pageContent');
@@ -478,6 +486,10 @@ function renderRepairCard(r) {
    แจ้งซ่อมใหม่
    ══════════════════════════════════════════════════════════════ */
 function openNewReportModal() {
+  editingRepairId = null;
+  document.getElementById('frModalTitle').textContent = 'แจ้งซ่อมใหม่';
+  document.getElementById('frModalSub').textContent = 'กรอกรายละเอียดจุดที่ชำรุดให้ครบถ้วน';
+
   if (REPAIR_CATEGORIES.length) document.getElementById('frCategory').value = REPAIR_CATEGORIES[0].id;
   document.getElementById('frBuilding').value = '';
   onBuildingChange();
@@ -487,6 +499,49 @@ function openNewReportModal() {
   document.querySelector('input[name="frPriority"][value="normal"]').checked = true;
   pendingPhotos = [];
   renderPhotoList();
+  openModal('newReportModal');
+}
+
+/* ── แก้ไขคำขอเดิม (ทำได้เฉพาะตอนสถานะยังเป็น "reported" คือยังไม่ถูกพิจารณา) ── */
+function openEditModal(id) {
+  var r = myRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  if (r.status !== 'reported') {
+    showToast('แก้ไขได้เฉพาะคำขอที่ยังไม่ถูกพิจารณาเท่านั้น', 'warn');
+    return;
+  }
+
+  editingRepairId = id;
+  document.getElementById('frModalTitle').textContent = 'แก้ไขคำขอแจ้งซ่อม';
+  document.getElementById('frModalSub').textContent = 'แก้ไขรายละเอียดคำขอก่อนที่เจ้าหน้าที่จะพิจารณา';
+
+  if (REPAIR_CATEGORIES.length) document.getElementById('frCategory').value = r.category || REPAIR_CATEGORIES[0].id;
+  document.querySelector('input[name="frPriority"][value="' + (r.priority === 'urgent' ? 'urgent' : 'normal') + '"]').checked = true;
+
+  var buildingName = getBuildingNameFromLocation(r.location);
+  var matched = REPAIR_BUILDINGS.filter(function(b) { return b.name === buildingName; })[0];
+  document.getElementById('frBuilding').value = matched ? matched.id : '';
+  onBuildingChange();
+
+  var subLoc = '';
+  if (matched) {
+    var sepIdx = (r.location || '').indexOf(' - ');
+    subLoc = sepIdx === -1 ? '' : r.location.substring(sepIdx + 3);
+  } else {
+    subLoc = r.location || '';
+  }
+  document.getElementById('frSubLocation').value = subLoc;
+
+  document.getElementById('frTitle').value = r.title || '';
+  document.getElementById('frDescription').value = r.description || '';
+
+  /* โหลดรูปเดิม (ที่อัปโหลดไว้แล้ว) มาแสดงเป็น "รูปที่แนบไว้แล้ว" ในฟอร์ม */
+  pendingPhotos = (r.photos || []).map(function(p) {
+    return { name: p.name || '', mimeType: '', base64: null, status: 'done', url: p.url, localSrc: p.url };
+  });
+  renderPhotoList();
+
+  closeModal('detailModal');
   openModal('newReportModal');
 }
 
@@ -598,9 +653,48 @@ function submitReport() {
     .map(function(p) { return { url: p.url, name: p.name }; });
 
   var btn = document.getElementById('frSubmitBtn');
+  var isEdit = !!editingRepairId;
   btn.disabled = true;
-  btn.innerHTML = '<i data-lucide="loader" style="width:15px;height:15px;"></i> กำลังส่ง...';
+  btn.innerHTML = '<i data-lucide="loader" style="width:15px;height:15px;"></i> กำลัง' + (isEdit ? 'บันทึก' : 'ส่ง') + '...';
   lucide.createIcons();
+
+  function saveSubLocationIfNew() {
+    if (building && (!building.subLocations || building.subLocations.indexOf(subLocation) === -1)) {
+      db.collection('repair_buildings').doc(buildingId).update({
+        subLocations: firebase.firestore.FieldValue.arrayUnion(subLocation)
+      }).catch(function(err) { console.error('save subLocation failed', err); });
+    }
+  }
+
+  function resetSubmitBtn() {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send" style="width:15px;height:15px;"></i> ' + (editingRepairId ? 'บันทึกการแก้ไข' : 'ส่งเรื่องแจ้งซ่อม');
+    lucide.createIcons();
+  }
+
+  if (isEdit) {
+    db.collection('repairs').doc(editingRepairId).update({
+      category: category,
+      priority: priority,
+      location: location,
+      title: title,
+      description: description,
+      photos: photos,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      logs: firebase.firestore.FieldValue.arrayUnion({
+        status: 'reported', note: 'ผู้แจ้งแก้ไขรายละเอียดคำขอ', byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now()
+      })
+    }).then(function() {
+      showToast('บันทึกการแก้ไขสำเร็จ ✅');
+      closeModal('newReportModal');
+      editingRepairId = null;
+      saveSubLocationIfNew();
+    }).catch(function(err) {
+      console.error(err);
+      showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+    }).finally(resetSubmitBtn);
+    return;
+  }
 
   db.collection('repairs').add({
     category: category,
@@ -620,19 +714,11 @@ function submitReport() {
   }).then(function() {
     showToast('ส่งเรื่องแจ้งซ่อมสำเร็จ ✅');
     closeModal('newReportModal');
-    if (building && (!building.subLocations || building.subLocations.indexOf(subLocation) === -1)) {
-      db.collection('repair_buildings').doc(buildingId).update({
-        subLocations: firebase.firestore.FieldValue.arrayUnion(subLocation)
-      }).catch(function(err) { console.error('save subLocation failed', err); });
-    }
+    saveSubLocationIfNew();
   }).catch(function(err) {
     console.error(err);
     showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
-  }).finally(function() {
-    btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="send" style="width:15px;height:15px;"></i> ส่งเรื่องแจ้งซ่อม';
-    lucide.createIcons();
-  });
+  }).finally(resetSubmitBtn);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -686,6 +772,17 @@ function renderDetailBody(r) {
       '</div>';
   }
 
+  var editDeleteActions = '';
+  if (r.status === 'reported') {
+    editDeleteActions =
+      '<div class="section-divider" style="margin-top:18px;"><i data-lucide="settings-2" style="width:14px;height:14px;"></i> จัดการคำขอ</div>' +
+      '<p style="font-size:11.5px;color:var(--text3);margin-bottom:10px;">แก้ไขหรือลบคำขอนี้ได้ ตราบใดที่เจ้าหน้าที่ยังไม่พิจารณา (อนุมัติ/ไม่อนุมัติ)</p>' +
+      '<div style="display:flex;gap:10px;">' +
+        '<button class="btn-secondary" style="flex:1;justify-content:center;" onclick="openEditModal(\'' + r.id + '\')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไขคำขอ</button>' +
+        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="deleteMyRepair(\'' + r.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ลบคำขอ</button>' +
+      '</div>';
+  }
+
   return (
     '<div class="modal-header">' +
       '<div class="modal-title-group">' +
@@ -703,10 +800,30 @@ function renderDetailBody(r) {
     photosHtml +
 
     reviewActions +
+    editDeleteActions +
 
     '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
     logsHtml
   );
+}
+
+/* ── ลบคำขอของตัวเอง (ทำได้เฉพาะตอนสถานะยังเป็น "reported" คือยังไม่ถูกพิจารณา) ── */
+function deleteMyRepair(id) {
+  var r = myRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  if (r.status !== 'reported') {
+    showToast('ลบได้เฉพาะคำขอที่ยังไม่ถูกพิจารณาเท่านั้น', 'warn');
+    return;
+  }
+  if (!confirm('ลบคำขอแจ้งซ่อม "' + (r.title || '') + '" ใช่หรือไม่? การลบไม่สามารถกู้คืนได้')) return;
+
+  db.collection('repairs').doc(id).delete().then(function() {
+    showToast('ลบคำขอแจ้งซ่อมแล้ว');
+    closeModal('detailModal');
+  }).catch(function(err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
 }
 
 function submitReview(id, result) {

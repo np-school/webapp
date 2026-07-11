@@ -785,8 +785,24 @@ function renderDetailBody(r) {
     actionHtml +
 
     '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
-    logsHtml
+    logsHtml +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="triangle-alert" style="width:14px;height:14px;color:var(--red-dark);"></i> โซนอันตราย</div>' +
+    '<p style="font-size:11.5px;color:var(--text3);margin-bottom:10px;">ลบรายการแจ้งซ่อมนี้ทิ้งถาวร (ใช้กรณีแจ้งซ้ำ/แจ้งผิด/ข้อมูลทดสอบ) — ไม่สามารถกู้คืนได้</p>' +
+    '<button class="btn-reject" style="width:100%;justify-content:center;" onclick="deleteRepairAdmin(\'' + r.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ลบรายการแจ้งซ่อมนี้</button>'
   );
+}
+
+function deleteRepairAdmin(id) {
+  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!confirm('ลบคำขอแจ้งซ่อม "' + (r ? esc2(r.title || '') : '') + '" ใช่หรือไม่? การลบไม่สามารถกู้คืนได้ (ประวัติ/รูปภาพจะหายไปทั้งหมด)')) return;
+
+  db.collection('repairs').doc(id).delete().then(function() {
+    showToast('ลบรายการแจ้งซ่อมแล้ว');
+    closeModal('detailModal');
+  }).catch(function(err) {
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
