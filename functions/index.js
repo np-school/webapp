@@ -13,5 +13,8 @@ exports.onNewBookingCreated = notifications.onNewBookingCreated;
 exports.onNewRepairCreated = notifications.onNewRepairCreated;
 exports.onRepairReopened = notifications.onRepairReopened;
 
+// ── อัปโหลดรูปแจ้งซ่อมไป Google Drive (ดู functions/drive-upload.js) ──
+exports.uploadRepairPhoto = require("./drive-upload").uploadRepairPhoto;
+
 // ถ้ามี Cloud Function อื่นอยู่แล้ว (เช่น lineProxy) ให้ require/export เพิ่มที่นี่
 // ตัวอย่าง: exports.lineProxy = require("./line-proxy").lineProxy;
