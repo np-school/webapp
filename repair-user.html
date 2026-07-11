@@ -563,7 +563,14 @@ function uploadOnePhoto(item) {
       reportDate: new Date().toISOString()
     })
   })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        if (!res.ok || !data || !data.url) {
+          throw new Error((data && data.error) || ('อัปโหลดไม่สำเร็จ (HTTP ' + res.status + ')'));
+        }
+        return data;
+      });
+    })
     .then(function(data) {
       item.status = 'done';
       item.url = data.url;
@@ -573,7 +580,7 @@ function uploadOnePhoto(item) {
       console.error(err);
       item.status = 'error';
       renderPhotoList();
-      showToast('อัปโหลดรูป "' + item.name + '" ไม่สำเร็จ', 'error');
+      showToast('อัปโหลดรูป "' + item.name + '" ไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'error');
     });
 }
 
