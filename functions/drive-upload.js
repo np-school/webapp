@@ -99,6 +99,9 @@ exports.uploadRepairPhoto = onRequest(
       const listRes = await drive.files.list({
         q: `'${ROOT_FOLDER_ID}' in parents and name='${monthKey}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: "files(id, name)",
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true,
+        corpora: "allDrives",
       });
 
       let monthFolderId;
@@ -112,6 +115,7 @@ exports.uploadRepairPhoto = onRequest(
             parents: [ROOT_FOLDER_ID],
           },
           fields: "id",
+          supportsAllDrives: true,
         });
         monthFolderId = folder.data.id;
       }
@@ -127,12 +131,14 @@ exports.uploadRepairPhoto = onRequest(
         requestBody: { name: baseName, parents: [monthFolderId] },
         media: { mimeType: data.mimeType || "application/octet-stream", body: stream },
         fields: "id, name",
+        supportsAllDrives: true,
       });
 
       // เปิดสิทธิ์ให้ดูได้ผ่านลิงก์ (เหมือน setSharing ANYONE_WITH_LINK / VIEW ในโค้ด Apps Script เดิม)
       await drive.permissions.create({
         fileId: file.data.id,
         requestBody: { role: "reader", type: "anyone" },
+        supportsAllDrives: true,
       });
 
       res.json({
