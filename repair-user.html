@@ -117,8 +117,14 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">สถานที่ *</label>
-      <input type="text" id="frLocation" placeholder="เช่น อาคาร 2 ชั้น 3 ห้อง 231">
+      <label class="form-label">อาคาร *</label>
+      <select id="frBuilding" onchange="onBuildingChange()"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ห้อง / บริเวณ *</label>
+      <input type="text" id="frSubLocation" list="frSubLocationList" placeholder="เช่น ชั้น 3 ห้อง 231 (พิมพ์ใหม่ได้ถ้ายังไม่มีในลิสต์)">
+      <datalist id="frSubLocationList"></datalist>
     </div>
 
     <div class="form-group">
@@ -196,19 +202,27 @@
    ══════════════════════════════════════════════════════════════ */
 var DRIVE_UPLOAD_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec'; /* ✏️ */
 
-/* ══ Categories ══ */
-var REPAIR_CATEGORIES = [
-  { key:'electric',  label:'ไฟฟ้า',                 icon:'zap' },
-  { key:'plumbing',  label:'ประปา',                 icon:'droplet' },
-  { key:'aircon',    label:'เครื่องปรับอากาศ',       icon:'wind' },
-  { key:'building',  label:'อาคาร/สถานที่',          icon:'building-2' },
-  { key:'it',        label:'คอมพิวเตอร์/เครือข่าย',  icon:'monitor' },
-  { key:'furniture', label:'เฟอร์นิเจอร์',           icon:'armchair' },
-  { key:'other',     label:'อื่นๆ',                  icon:'more-horizontal' }
-];
+/* ══ Categories / Buildings — โหลดจาก Firestore (จัดการได้ในหน้าแอดมิน "ตั้งค่า") ══ */
+var REPAIR_CATEGORIES = [];
+var REPAIR_BUILDINGS  = [];
 function getCategoryMeta(key) {
-  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].key === key) return REPAIR_CATEGORIES[i];
-  return { key:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
+  return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+}
+function loadCategories() {
+  db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_CATEGORIES = [];
+    snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
+    populateCategorySelect();
+    if (typeof renderList === 'function' && myRepairs) renderList();
+  }, function(err) { console.error('loadCategories', err); });
+}
+function loadBuildings() {
+  db.collection('repair_buildings').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_BUILDINGS = [];
+    snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
+    populateBuildingSelect();
+  }, function(err) { console.error('loadBuildings', err); });
 }
 
 /* ══ Status meta: label + color + workflow-step states ══ */
@@ -262,7 +276,8 @@ buildPage({
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
 
-    populateCategorySelect();
+    loadCategories();
+    loadBuildings();
     loadData();
     setupScrollTopButton();
   }
@@ -323,9 +338,32 @@ function renderPage() {
 function populateCategorySelect() {
   var sel = document.getElementById('frCategory');
   if (!sel) return;
+  var prev = sel.value;
   var html = '';
-  REPAIR_CATEGORIES.forEach(function(c) { html += '<option value="' + c.key + '">' + c.label + '</option>'; });
+  REPAIR_CATEGORIES.forEach(function(c) { html += '<option value="' + c.id + '">' + esc2(c.label) + '</option>'; });
   sel.innerHTML = html;
+  if (prev && REPAIR_CATEGORIES.some(function(c) { return c.id === prev; })) sel.value = prev;
+}
+
+function populateBuildingSelect() {
+  var sel = document.getElementById('frBuilding');
+  if (!sel) return;
+  var prev = sel.value;
+  var html = '<option value="">— เลือกอาคาร —</option>';
+  REPAIR_BUILDINGS.forEach(function(b) { html += '<option value="' + b.id + '">' + esc2(b.name) + '</option>'; });
+  sel.innerHTML = html;
+  if (prev && REPAIR_BUILDINGS.some(function(b) { return b.id === prev; })) sel.value = prev;
+  onBuildingChange();
+}
+
+/* เติม datalist สถานที่ย่อยที่เคยมีคนแจ้งไว้แล้วในอาคารที่เลือก ให้เลือกได้ทันที */
+function onBuildingChange() {
+  var sel = document.getElementById('frBuilding');
+  var list = document.getElementById('frSubLocationList');
+  if (!sel || !list) return;
+  var b = REPAIR_BUILDINGS.filter(function(x) { return x.id === sel.value; })[0];
+  var subs = (b && b.subLocations) || [];
+  list.innerHTML = subs.map(function(s) { return '<option value="' + esc2(s) + '">'; }).join('');
 }
 
 /* ══ Data ══ */
@@ -440,8 +478,10 @@ function renderRepairCard(r) {
    แจ้งซ่อมใหม่
    ══════════════════════════════════════════════════════════════ */
 function openNewReportModal() {
-  document.getElementById('frCategory').value = 'electric';
-  document.getElementById('frLocation').value = '';
+  if (REPAIR_CATEGORIES.length) document.getElementById('frCategory').value = REPAIR_CATEGORIES[0].id;
+  document.getElementById('frBuilding').value = '';
+  onBuildingChange();
+  document.getElementById('frSubLocation').value = '';
   document.getElementById('frTitle').value = '';
   document.getElementById('frDescription').value = '';
   document.querySelector('input[name="frPriority"][value="normal"]').checked = true;
@@ -486,7 +526,7 @@ function uploadOnePhoto(item) {
       filename: item.name,
       mimeType: item.mimeType,
       data: item.base64,
-      location: document.getElementById('frLocation').value.trim(),
+      location: currentLocationText(),
       title: document.getElementById('frTitle').value.trim(),
       reportDate: new Date().toISOString()
     })
@@ -526,15 +566,27 @@ function renderPhotoList() {
   lucide.createIcons();
 }
 
+/* ประกอบข้อความสถานที่จาก "อาคาร - ห้อง/บริเวณ" ที่เลือก/กรอกไว้ */
+function currentLocationText() {
+  var buildingId = document.getElementById('frBuilding').value;
+  var building = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
+  var sub = document.getElementById('frSubLocation').value.trim();
+  if (!building) return sub;
+  return sub ? (building.name + ' - ' + sub) : building.name;
+}
+
 function submitReport() {
   var category    = document.getElementById('frCategory').value;
   var priority    = document.querySelector('input[name="frPriority"]:checked').value;
-  var location    = document.getElementById('frLocation').value.trim();
+  var buildingId  = document.getElementById('frBuilding').value;
+  var building    = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
+  var subLocation = document.getElementById('frSubLocation').value.trim();
+  var location    = currentLocationText();
   var title       = document.getElementById('frTitle').value.trim();
   var description = document.getElementById('frDescription').value.trim();
 
-  if (!location || !title || !description) {
-    showToast('กรุณากรอกข้อมูลให้ครบถ้วน (สถานที่ / หัวข้อ / รายละเอียด)', 'warn');
+  if (!buildingId || !subLocation || !title || !description) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน (อาคาร / ห้อง-บริเวณ / หัวข้อ / รายละเอียด)', 'warn');
     return;
   }
   if (pendingPhotos.some(function(p) { return p.status === 'uploading'; })) {
@@ -568,6 +620,11 @@ function submitReport() {
   }).then(function() {
     showToast('ส่งเรื่องแจ้งซ่อมสำเร็จ ✅');
     closeModal('newReportModal');
+    if (building && (!building.subLocations || building.subLocations.indexOf(subLocation) === -1)) {
+      db.collection('repair_buildings').doc(buildingId).update({
+        subLocations: firebase.firestore.FieldValue.arrayUnion(subLocation)
+      }).catch(function(err) { console.error('save subLocation failed', err); });
+    }
   }).catch(function(err) {
     console.error(err);
     showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
