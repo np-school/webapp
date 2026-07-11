@@ -223,6 +223,7 @@ function renderPage() {
 
     '<div class="sub-tab-bar" id="repSubTabBar">' +
       '<button class="sub-tab active" data-tab="active" onclick="switchRepSubTab(\'active\')"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
+      '<button class="sub-tab" data-tab="assignee" onclick="switchRepSubTab(\'assignee\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
       '<button class="sub-tab" data-tab="history" onclick="switchRepSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
       '<button class="sub-tab" data-tab="settings" onclick="switchRepSubTab(\'settings\')"><i data-lucide="settings" style="width:14px;height:14px;"></i> ตั้งค่า</button>' +
     '</div>' +
@@ -254,6 +255,11 @@ function renderPage() {
       '<div id="repNewList"></div>' +
       '<div class="rp-sec-title"><i data-lucide="hammer" style="width:15px;height:15px;color:var(--sky);"></i> รายการที่กำลังดำเนินการ</div>' +
       '<div id="repProgressList"></div>' +
+    '</div>' +
+
+    /* ── Panel: ผู้รับผิดชอบ (สรุปงานที่มอบหมายให้แต่ละคน) ── */
+    '<div class="sub-panel" id="repPanelAssignee">' +
+      '<div id="assigneeGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;"></div>' +
     '</div>' +
 
     /* ── Panel: ประวัติทั้งหมด ── */
@@ -331,9 +337,11 @@ function switchRepSubTab(tab) {
     b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
   document.getElementById('repPanelActive').classList.toggle('active', tab === 'active');
+  document.getElementById('repPanelAssignee').classList.toggle('active', tab === 'assignee');
   document.getElementById('repPanelHistory').classList.toggle('active', tab === 'history');
   document.getElementById('repPanelSettings').classList.toggle('active', tab === 'settings');
   if (tab === 'active') renderActivePanel();
+  if (tab === 'assignee') renderAssigneePanel();
   if (tab === 'history') renderTable();
 }
 
@@ -348,6 +356,7 @@ function loadData() {
       snap.forEach(function(doc) { allRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
       renderStats();
       renderActivePanel();
+      renderAssigneePanel();
       renderTable();
     }, function(err) {
       console.error(err);
@@ -550,6 +559,100 @@ function renderMiniCard(r) {
     '</div>'
   );
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Panel "ผู้รับผิดชอบ": สรุปงานที่มอบหมายให้แต่ละคน + สถิติตามสถานะ
+   จับคู่งานกับคนด้วยชื่อใน r.technician (เทียบแบบ trim+lowercase)
+   แสดงการ์ดตามรายชื่อผู้รับผิดชอบที่ตั้งค่าไว้ (REPAIR_RESPONSIBLE) ก่อน
+   แล้วต่อท้ายด้วยชื่ออื่นๆ ที่เคยถูกพิมพ์มอบหมายเอง (ไม่ได้อยู่ในรายชื่อที่ตั้งค่าไว้)
+   ══════════════════════════════════════════════════════════════ */
+function _normName(s) { return (s || '').trim().toLowerCase(); }
+
+function getAssigneeList() {
+  var seen = {};
+  var list = [];
+
+  REPAIR_RESPONSIBLE.forEach(function(r) {
+    var key = _normName(r.name);
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    list.push({ name: r.name, position: r.position || '', group: r.group || '', curated: true });
+  });
+
+  allRepairs.forEach(function(r) {
+    var name = (r.technician || '').trim();
+    var key = _normName(name);
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    list.push({ name: name, position: '', group: '', curated: false });
+  });
+
+  return list;
+}
+
+function renderAssigneePanel() {
+  var el = document.getElementById('assigneeGrid');
+  if (!el) return;
+
+  var assignees = getAssigneeList();
+
+  if (!assignees.length) {
+    el.innerHTML = emptyMini('ยังไม่มีผู้รับผิดชอบ — เพิ่มรายชื่อได้ในแท็บ "ตั้งค่า" หรือระบุชื่อตอนอนุมัติแผนซ่อม');
+    lucide.createIcons();
+    return;
+  }
+
+  el.innerHTML = assignees.map(renderAssigneeCard).join('');
+  lucide.createIcons();
+}
+
+function renderAssigneeCard(person) {
+  var mine = allRepairs.filter(function(r) { return _normName(r.technician) === _normName(person.name); });
+
+  var inProgress = mine.filter(function(r) { return (r.status === 'approved' || r.status === 'reopened') && r.repairStatus !== 'waiting'; }).length;
+  var waiting    = mine.filter(function(r) { return (r.status === 'approved' || r.status === 'reopened') && r.repairStatus === 'waiting'; }).length;
+  var review     = mine.filter(function(r) { return r.status === 'done'; }).length;
+  var closed     = mine.filter(function(r) { return r.status === 'closed'; }).length;
+  var total      = mine.length;
+
+  var activeJobs = mine.filter(function(r) { return r.status !== 'closed'; })
+    .sort(function(a, b) {
+      var ta = a.updatedAt && a.updatedAt.toMillis ? a.updatedAt.toMillis() : 0;
+      var tb = b.updatedAt && b.updatedAt.toMillis ? b.updatedAt.toMillis() : 0;
+      return tb - ta;
+    });
+
+  var jobsHtml = activeJobs.length
+    ? activeJobs.map(renderMiniCard).join('')
+    : '<p style="font-size:12px;color:var(--text3);padding:4px 0 0;">ไม่มีงานค้างอยู่ในมือตอนนี้</p>';
+
+  return (
+    '<div class="card rp-assignee-card">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+        '<div style="width:38px;height:38px;border-radius:50%;background:var(--sky-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i data-lucide="user-round" style="width:18px;height:18px;color:var(--sky);"></i>' +
+        '</div>' +
+        '<div style="min-width:0;flex:1;">' +
+          '<div style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(person.name) + '</div>' +
+          (person.position ? ('<div style="font-size:11.5px;color:var(--text3);">' + esc2(person.position) + (person.group ? (' · ' + esc2(person.group)) : '') + '</div>') : '') +
+        '</div>' +
+        '<span class="rp-status c-sky" title="งานทั้งหมดที่เคยได้รับมอบหมาย">' + total + ' งาน</span>' +
+      '</div>' +
+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' +
+        '<span class="rp-status c-sky"><i data-lucide="wrench" style="width:11px;height:11px;"></i> กำลังซ่อม ' + inProgress + '</span>' +
+        '<span class="rp-status c-amber"><i data-lucide="clock" style="width:11px;height:11px;"></i> รอซ่อม/รออะไหล่ ' + waiting + '</span>' +
+        '<span class="rp-status c-purple"><i data-lucide="eye" style="width:11px;height:11px;"></i> รอตรวจสอบ ' + review + '</span>' +
+        '<span class="rp-status c-green"><i data-lucide="check-check" style="width:11px;height:11px;"></i> ปิดงานแล้ว ' + closed + '</span>' +
+      '</div>' +
+
+      '<div class="rp-sec-title" style="margin:0 0 8px;font-size:12px;"><i data-lucide="list-checks" style="width:13px;height:13px;color:var(--text3);"></i> งานที่ยังไม่ปิด (' + activeJobs.length + ')</div>' +
+      jobsHtml +
+    '</div>'
+  );
+}
+
+
 
 function setFilter(f) {
   currentFilter = f;
@@ -1094,6 +1197,7 @@ function loadResponsibleList() {
     REPAIR_RESPONSIBLE = [];
     snap.forEach(function(doc) { REPAIR_RESPONSIBLE.push(Object.assign({ id: doc.id }, doc.data())); });
     renderRespList();
+    renderAssigneePanel();
   }, function(err) { console.error('loadResponsibleList', err); });
 }
 
