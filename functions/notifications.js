@@ -165,3 +165,46 @@ exports.onNewBookingCreated = onDocumentCreated(
     );
   }
 );
+
+// ===========================================
+// 3) มีรายการแจ้งซ่อมใหม่ (สถานะ "reported") -> แจ้งเจ้าหน้าที่ที่มี permission "repair"
+// ===========================================
+exports.onNewRepairCreated = onDocumentCreated(
+  "repairs/{repairId}",
+  async (event) => {
+    const data = event.data.data();
+
+    await sendToPermission(
+      "repair",
+      "มีรายการแจ้งซ่อมใหม่",
+      `${data.reporterName || data.reporterEmail || "ผู้แจ้ง"} แจ้ง "${
+        data.title || ""
+      }" ที่ ${data.location || "-"}`,
+      { url: "/webapp/repair-admin.html" }
+    );
+  }
+);
+
+// ===========================================
+// 4) งานซ่อมถูกเปิดใหม่ (ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย: done -> reopened)
+//    -> แจ้งเจ้าหน้าที่ที่มี permission "repair" อีกครั้ง เพราะต้องรับเรื่องใหม่
+// ===========================================
+exports.onRepairReopened = onDocumentUpdated(
+  "repairs/{repairId}",
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    if (before.status === after.status) return;
+    if (after.status !== "reopened") return;
+
+    await sendToPermission(
+      "repair",
+      "มีงานซ่อมถูกเปิดใหม่ ⚠️",
+      `ผู้แจ้งตรวจสอบแล้วว่า "${after.title || ""}" ยังไม่เรียบร้อย (${
+        after.reporterName || after.reporterEmail || "ผู้แจ้ง"
+      })`,
+      { url: "/webapp/repair-admin.html" }
+    );
+  }
+);
