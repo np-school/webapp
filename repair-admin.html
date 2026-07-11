@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="var(--accent)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+
+  <title>จัดการระบบแจ้งซ่อม – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+  <style>
+    .scroll-top-btn{
+      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
+      border-radius:50%; border:none; background:var(--accent); color:#fff;
+      display:none; align-items:center; justify-content:center;
+      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
+      opacity:0; transform:translateY(10px);
+      transition:opacity .2s ease, transform .2s ease;
+    }
+    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
+    .scroll-top-btn:hover{background:var(--accent-dark);}
+    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
+
+    .rp-status{ display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:800; flex-shrink:0; white-space:nowrap; }
+    .rp-status.c-amber { background:var(--amber-light); color:#92400e; }
+    .rp-status.c-sky    { background:var(--sky-light);   color:#075985; }
+    .rp-status.c-green  { background:var(--green-light); color:#15803d; }
+    .rp-status.c-red    { background:var(--red-light);   color:var(--red-dark); }
+    .rp-status.c-purple { background:var(--purple-light);color:var(--purple-dark); }
+    .rp-urgent-dot{ width:7px; height:7px; border-radius:50%; background:var(--red); display:inline-block; margin-right:5px; flex-shrink:0; }
+    .rp-row{ cursor:pointer; }
+    .rp-photo-thumb{ position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden; flex-shrink:0; border:1px solid var(--border); }
+    .rp-photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .rp-log-item{ display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--border-soft); }
+    .rp-log-item:last-child{ border-bottom:none; }
+    .rp-log-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; }
+    .rp-action-card{ background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:16px; margin-top:16px; }
+    .rp-action-card h4{ font-size:13px; font-weight:800; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<div id="myApp" style="display:none;"></div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
+  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+</button>
+
+<!-- ══════════════════ Modal: รายละเอียด + ดำเนินการ ══════════════════ -->
+<div id="detailModal" class="modal-bg">
+  <div class="modal-box wider" id="detailModalBody"></div>
+</div>
+
+<script>
+
+/* ══ Categories (ต้องตรงกับ repair-user.html) ══ */
+var REPAIR_CATEGORIES = [
+  { key:'electric',  label:'ไฟฟ้า',                 icon:'zap' },
+  { key:'plumbing',  label:'ประปา',                 icon:'droplet' },
+  { key:'aircon',    label:'เครื่องปรับอากาศ',       icon:'wind' },
+  { key:'building',  label:'อาคาร/สถานที่',          icon:'building-2' },
+  { key:'it',        label:'คอมพิวเตอร์/เครือข่าย',  icon:'monitor' },
+  { key:'furniture', label:'เฟอร์นิเจอร์',           icon:'armchair' },
+  { key:'other',     label:'อื่นๆ',                  icon:'more-horizontal' }
+];
+function getCategoryMeta(key) {
+  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].key === key) return REPAIR_CATEGORIES[i];
+  return { key:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+}
+
+var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
+
+function getStatusMeta(r) {
+  switch (r.status) {
+    case 'reported': return { label:'รออนุมัติ',                color:'amber',  steps:['done','active','pending','pending','pending'] };
+    case 'rejected': return { label:'ไม่อนุมัติ',                color:'red',    steps:['done','revision','pending','pending','pending'] };
+    case 'approved': return { label: r.repairStatus === 'in_progress' ? 'กำลังซ่อม' : 'รอซ่อม', color:'sky', steps:['done','done','active','pending','pending'] };
+    case 'done':      return { label:'รอผู้แจ้งตรวจสอบ',         color:'purple', steps:['done','done','done','active','pending'] };
+    case 'reopened':  return { label: r.repairStatus === 'in_progress' ? 'ซ่อมใหม่ (กำลังซ่อม)' : 'ซ่อมใหม่ (รอซ่อม)', color:'red', steps:['done','done','active','revision','pending'] };
+    case 'closed':    return { label:'ปิดงานแล้ว',               color:'green',  steps:['done','done','done','done','final'] };
+    default:          return { label:'ไม่ทราบสถานะ',             color:'amber',  steps:['pending','pending','pending','pending','pending'] };
+  }
+}
+
+function buildWorkflowBar(steps) {
+  var html = '<div class="workflow-bar">';
+  for (var i = 0; i < WF_LABELS.length; i++) {
+    html += '<div class="wf-step ' + steps[i] + '">' + WF_LABELS[i] + '</div>';
+    if (i < WF_LABELS.length - 1) html += '<div class="wf-divider"></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function fmtDate(ts) {
+  if (!ts) return '-';
+  var d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
+         ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   buildPage() — auth guard (ต้องมีสิทธิ์ 'repair') + shell builder
+
+   ✏️ ต้องเพิ่มสิทธิ์ 'repair' ให้เจ้าหน้าที่ที่เกี่ยวข้องในเอกสาร
+      admins/{email} → permissions.repair = true (ใน Firestore)
+   ══════════════════════════════════════════════════════════════ */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'จัดการระบบแจ้งซ่อม',
+  navTheme:     'dark',
+  activePage:   'repair-admin',
+  requireAdmin: 'repair', /* ✏️ permission key */
+
+  onAuth: function(user, contentEl) {
+    currentUser = user;
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+
+    loadData();
+    setupScrollTopButton();
+  }
+});
+
+/* ══ Page State ══ */
+var currentUser   = null;
+var allRepairs    = [];
+var currentFilter = 'all';
+var currentSearch = '';
+
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══ Render: หน้าหลัก ══ */
+function renderPage() {
+  return (
+    '<div class="page-header">' +
+      '<div>' +
+        '<div class="page-title-row">' +
+          '<div class="page-icon" style="background:linear-gradient(135deg,var(--purple),var(--purple-mid));">' +
+            '<i data-lucide="wrench" style="width:20px;height:20px;color:white;"></i>' +
+          '</div>' +
+          '<h1 class="page-title">จัดการระบบแจ้งซ่อม</h1>' +
+        '</div>' +
+        '<p class="page-sub">ตรวจอนุมัติ มอบหมายช่าง และติดตามงานซ่อมทั้งหมด</p>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repStatGrid"></div>' +
+
+    '<div class="card" style="margin-bottom:16px;">' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;" id="repFilterBar">' +
+          '<button class="filter-pill active" data-f="all" onclick="setFilter(\'all\')">ทั้งหมด</button>' +
+          '<button class="filter-pill" data-f="reported" onclick="setFilter(\'reported\')">รออนุมัติ</button>' +
+          '<button class="filter-pill" data-f="progress" onclick="setFilter(\'progress\')">กำลังซ่อม</button>' +
+          '<button class="filter-pill" data-f="done" onclick="setFilter(\'done\')">รอตรวจสอบ</button>' +
+          '<button class="filter-pill" data-f="closed" onclick="setFilter(\'closed\')">ปิดงานแล้ว</button>' +
+          '<button class="filter-pill" data-f="rejected" onclick="setFilter(\'rejected\')">ไม่อนุมัติ</button>' +
+        '</div>' +
+        '<input type="text" id="repSearchInput" placeholder="ค้นหาเรื่อง/สถานที่/ผู้แจ้ง..." style="max-width:240px;" oninput="setSearch(this.value)">' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card" style="padding:0;overflow-x:auto;">' +
+      '<table class="data-table" id="repairTable">' +
+        '<thead><tr>' +
+          '<th>วันที่แจ้ง</th><th>เรื่อง / สถานที่</th><th>หมวดหมู่</th><th>ผู้แจ้ง</th><th>สถานะ</th><th></th>' +
+        '</tr></thead>' +
+        '<tbody id="repairTableBody"></tbody>' +
+      '</table>' +
+      '<div id="repairEmptyState" style="display:none;"></div>' +
+    '</div>'
+  );
+}
+
+/* ══ Data ══ */
+function loadData() {
+  db.collection('repairs')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(function(snap) {
+      allRepairs = [];
+      snap.forEach(function(doc) { allRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      renderStats();
+      renderTable();
+    }, function(err) {
+      console.error(err);
+      showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
+    });
+}
+
+function renderStats() {
+  var reported = allRepairs.filter(function(r) { return r.status === 'reported'; }).length;
+  var progress = allRepairs.filter(function(r) { return ['approved','reopened'].indexOf(r.status) !== -1; }).length;
+  var waitReview = allRepairs.filter(function(r) { return r.status === 'done'; }).length;
+  var closed = allRepairs.filter(function(r) { return r.status === 'closed'; }).length;
+
+  function stat(icon, color, bg, val, label) {
+    return (
+      '<div class="stat-card">' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i data-lucide="' + icon + '" style="width:20px;height:20px;color:' + color + ';"></i>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:20px;font-weight:800;color:var(--text);">' + val + '</div>' +
+          '<div style="font-size:11px;color:var(--text2);font-weight:600;">' + label + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  document.getElementById('repStatGrid').innerHTML =
+    stat('inbox',          'var(--amber)',  'var(--amber-light)',  reported,   'รออนุมัติ') +
+    stat('hammer',         'var(--sky)',    'var(--sky-light)',    progress,   'กำลังซ่อม') +
+    stat('eye',            'var(--purple)', 'var(--purple-light)', waitReview, 'รอผู้แจ้งตรวจสอบ') +
+    stat('check-check',    'var(--green)',  'var(--green-light)',  closed,     'ปิดงานแล้ว');
+  lucide.createIcons();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-f') === f);
+  });
+  renderTable();
+}
+function setSearch(v) {
+  currentSearch = (v || '').toLowerCase();
+  renderTable();
+}
+
+function renderTable() {
+  var list = allRepairs.filter(function(r) {
+    if (currentFilter === 'reported' && r.status !== 'reported') return false;
+    if (currentFilter === 'progress' && ['approved','reopened'].indexOf(r.status) === -1) return false;
+    if (currentFilter === 'done' && r.status !== 'done') return false;
+    if (currentFilter === 'closed' && r.status !== 'closed') return false;
+    if (currentFilter === 'rejected' && r.status !== 'rejected') return false;
+    if (currentSearch) {
+      var hay = ((r.title || '') + ' ' + (r.location || '') + ' ' + (r.reporterName || '')).toLowerCase();
+      if (hay.indexOf(currentSearch) === -1) return false;
+    }
+    return true;
+  });
+
+  var tbody = document.getElementById('repairTableBody');
+  var emptyEl = document.getElementById('repairEmptyState');
+
+  if (!list.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    emptyEl.innerHTML = '<div class="empty-state"><i data-lucide="inbox" style="width:28px;height:28px;color:var(--text3);"></i><p style="margin-top:8px;">ไม่พบรายการ</p></div>';
+    lucide.createIcons();
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  var html = '';
+  list.forEach(function(r) {
+    var cat = getCategoryMeta(r.category);
+    var meta = getStatusMeta(r);
+    html +=
+      '<tr class="rp-row" onclick="openDetail(\'' + r.id + '\')">' +
+        '<td style="white-space:nowrap;font-size:12px;color:var(--text2);">' + fmtDate(r.createdAt) + '</td>' +
+        '<td>' +
+          '<div style="font-weight:700;color:var(--text);display:flex;align-items:center;">' +
+            (r.priority === 'urgent' ? '<span class="rp-urgent-dot" title="เร่งด่วน"></span>' : '') +
+            esc2(r.title || '') +
+          '</div>' +
+          '<div style="font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px;"><i data-lucide="map-pin" style="width:11px;height:11px;"></i>' + esc2(r.location || '') + '</div>' +
+        '</td>' +
+        '<td><span style="font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px;"><i data-lucide="' + cat.icon + '" style="width:13px;height:13px;"></i>' + cat.label + '</span></td>' +
+        '<td style="font-size:12.5px;">' + esc2(r.reporterName || r.reporterEmail || '') + '</td>' +
+        '<td><span class="rp-status c-' + meta.color + '">' + meta.label + '</span></td>' +
+        '<td><button class="btn-icon" onclick="event.stopPropagation();openDetail(\'' + r.id + '\')"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+  lucide.createIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Modal รายละเอียด + การดำเนินการ
+   ══════════════════════════════════════════════════════════════ */
+function openDetail(id) {
+  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  document.getElementById('detailModalBody').innerHTML = renderDetailBody(r);
+  lucide.createIcons();
+  openModal('detailModal');
+}
+
+function renderDetailBody(r) {
+  var cat = getCategoryMeta(r.category);
+  var meta = getStatusMeta(r);
+
+  var photosHtml = '';
+  if (r.photos && r.photos.length) {
+    photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
+      r.photos.map(function(p) {
+        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
+      }).join('') + '</div>';
+  } else {
+    photosHtml = '<p style="font-size:12px;color:var(--text3);margin-top:4px;">ไม่มีรูปภาพแนบ</p>';
+  }
+
+  var logsHtml = '';
+  if (r.logs && r.logs.length) {
+    logsHtml = '<div style="margin-top:8px;">' + r.logs.slice().reverse().map(function(l) {
+      return (
+        '<div class="rp-log-item">' +
+          '<div class="rp-log-dot"></div>' +
+          '<div>' +
+            '<div style="font-size:12.5px;font-weight:700;color:var(--text);">' + esc2(l.note || '') + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);">' + esc2(l.byName || '') + ' · ' + fmtDate(l.at) + '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('') + '</div>';
+  }
+
+  var actionHtml = renderActionPanel(r);
+
+  return (
+    '<div class="modal-header">' +
+      '<div class="modal-title-group">' +
+        '<div class="modal-title-icon" style="background:var(--purple-light);"><i data-lucide="' + cat.icon + '" style="color:var(--purple);"></i></div>' +
+        '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
+      '</div>' +
+      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
+    '</div>' +
+
+    '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +
+    buildWorkflowBar(meta.steps) +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;font-size:12.5px;">' +
+      '<div><b style="color:var(--text3);font-size:11px;text-transform:uppercase;">ผู้แจ้ง</b><p style="margin-top:2px;">' + esc2(r.reporterName || '') + '</p><p style="color:var(--text3);">' + esc2(r.reporterEmail || '') + '</p></div>' +
+      '<div><b style="color:var(--text3);font-size:11px;text-transform:uppercase;">ความเร่งด่วน</b><p style="margin-top:2px;">' + (r.priority === 'urgent' ? '<span style="color:var(--red-dark);font-weight:800;">เร่งด่วน</span>' : 'ปกติ') + '</p></div>' +
+    '</div>' +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> รายละเอียด</div>' +
+    '<p style="font-size:13px;color:var(--text2);line-height:1.6;">' + esc2(r.description || '') + '</p>' +
+    photosHtml +
+
+    actionHtml +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
+    logsHtml
+  );
+}
+
+function renderActionPanel(r) {
+  /* ── สถานะ: reported → อนุมัติ / ไม่อนุมัติ ── */
+  if (r.status === 'reported') {
+    return (
+      '<div class="rp-action-card">' +
+        '<h4><i data-lucide="check-circle-2" style="width:15px;height:15px;color:var(--green);"></i> อนุมัติแผนการซ่อม</h4>' +
+        '<div class="form-group" style="margin-bottom:10px;">' +
+          '<label class="form-label">ช่างผู้รับผิดชอบ</label>' +
+          '<input type="text" id="actTechnician" placeholder="ชื่อช่าง/ผู้รับผิดชอบ">' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:10px;">' +
+          '<label class="form-label">สถานะการซ่อม</label>' +
+          '<div class="segmented">' +
+            '<label><input type="radio" name="actRepairStatus" value="in_progress" checked> <i data-lucide="wrench"></i> ซ่อมได้ทันที</label>' +
+            '<label><input type="radio" name="actRepairStatus" value="waiting"> <i data-lucide="clock"></i> รอซ่อม/รออะไหล่</label>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:6px;">' +
+          '<label class="form-label">หมายเหตุแผนซ่อม</label>' +
+          '<textarea id="actPlanNote" rows="2" placeholder="เช่น แผนงาน/กำหนดการเบื้องต้น"></textarea>' +
+        '</div>' +
+        '<button class="btn-approve" style="width:100%;justify-content:center;margin-top:6px;" onclick="approveRepair(\'' + r.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> อนุมัติ</button>' +
+      '</div>' +
+      '<div class="rp-action-card">' +
+        '<h4><i data-lucide="x-circle" style="width:15px;height:15px;color:var(--red);"></i> ไม่อนุมัติ</h4>' +
+        '<textarea id="actRejectNote" rows="2" placeholder="ระบุเหตุผลที่ไม่อนุมัติ"></textarea>' +
+        '<button class="btn-reject" style="width:100%;justify-content:center;margin-top:10px;" onclick="rejectRepair(\'' + r.id + '\')"><i data-lucide="x" style="width:14px;height:14px;"></i> ไม่อนุมัติ</button>' +
+      '</div>'
+    );
+  }
+
+  /* ── สถานะ: approved / reopened → มอบหมาย/อัปเดต + บันทึกซ่อมเสร็จ ── */
+  if (r.status === 'approved' || r.status === 'reopened') {
+    return (
+      '<div class="rp-action-card">' +
+        '<h4><i data-lucide="user-cog" style="width:15px;height:15px;color:var(--sky);"></i> มอบหมาย / อัปเดตสถานะซ่อม</h4>' +
+        (r.reopened || r.status === 'reopened' ? ('<div class="card" style="background:var(--red-light);padding:10px 12px;margin-bottom:10px;"><b style="font-size:11.5px;color:var(--red-dark);">ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย:</b><p style="font-size:12px;color:var(--red-dark);margin-top:2px;">' + esc2(r.reviewNote || '-') + '</p></div>') : '') +
+        '<div class="form-group" style="margin-bottom:10px;">' +
+          '<label class="form-label">ช่างผู้รับผิดชอบ</label>' +
+          '<input type="text" id="actTechnician2" value="' + esc2(r.technician || '') + '">' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:10px;">' +
+          '<label class="form-label">สถานะการซ่อม</label>' +
+          '<div class="segmented">' +
+            '<label><input type="radio" name="actRepairStatus2" value="in_progress" ' + (r.repairStatus !== 'waiting' ? 'checked' : '') + '> <i data-lucide="wrench"></i> กำลังซ่อม</label>' +
+            '<label><input type="radio" name="actRepairStatus2" value="waiting" ' + (r.repairStatus === 'waiting' ? 'checked' : '') + '> <i data-lucide="clock"></i> รอซ่อม/รออะไหล่</label>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn-primary" style="width:100%;justify-content:center;" onclick="updateAssignment(\'' + r.id + '\')"><i data-lucide="save" style="width:14px;height:14px;"></i> บันทึกการมอบหมาย</button>' +
+      '</div>' +
+      '<div class="rp-action-card">' +
+        '<h4><i data-lucide="check-check" style="width:15px;height:15px;color:var(--green);"></i> บันทึกว่าซ่อมเสร็จแล้ว</h4>' +
+        '<textarea id="actRepairNote" rows="2" placeholder="สรุปสิ่งที่ดำเนินการซ่อม"></textarea>' +
+        '<button class="btn-approve" style="width:100%;justify-content:center;margin-top:10px;" onclick="markDone(\'' + r.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> ซ่อมเสร็จแล้ว ส่งให้ผู้แจ้งตรวจสอบ</button>' +
+      '</div>'
+    );
+  }
+
+  /* ── สถานะ: done → รอผู้แจ้งตรวจสอบ (เจ้าหน้าที่ปิดงานแทนได้กรณีผู้แจ้งไม่ตอบกลับ) ── */
+  if (r.status === 'done') {
+    return (
+      '<div class="rp-action-card">' +
+        '<h4><i data-lucide="hourglass" style="width:15px;height:15px;color:var(--purple);"></i> รอผู้แจ้งตรวจสอบความเรียบร้อย</h4>' +
+        '<p style="font-size:12px;color:var(--text2);margin-bottom:10px;">หากผู้แจ้งไม่เข้ามาตรวจสอบภายในเวลาที่เหมาะสม เจ้าหน้าที่สามารถปิดงานแทนได้</p>' +
+        '<textarea id="actCloseNote" rows="2" placeholder="หมายเหตุการปิดงานแทน"></textarea>' +
+        '<button class="btn-secondary" style="width:100%;justify-content:center;margin-top:10px;" onclick="forceClose(\'' + r.id + '\')"><i data-lucide="lock" style="width:14px;height:14px;"></i> ปิดงานแทนผู้แจ้ง</button>' +
+      '</div>'
+    );
+  }
+
+  return '';
+}
+
+function pushLog(id, status, note, extra) {
+  var payload = Object.assign({
+    status: status,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    logs: firebase.firestore.FieldValue.arrayUnion({
+      status: status, note: note, byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now()
+    })
+  }, extra || {});
+  return db.collection('repairs').doc(id).update(payload);
+}
+
+function approveRepair(id) {
+  var technician = document.getElementById('actTechnician').value.trim();
+  var repairStatus = document.querySelector('input[name="actRepairStatus"]:checked').value;
+  var planNote = document.getElementById('actPlanNote').value.trim();
+
+  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
+
+  pushLog(id, 'approved',
+    'อนุมัติแผนซ่อม มอบหมายให้ ' + technician + (planNote ? (' — ' + planNote) : ''),
+    { technician: technician, repairStatus: repairStatus, planNote: planNote,
+      approvedByName: currentUser.displayName || currentUser.email, approvedAt: firebase.firestore.FieldValue.serverTimestamp() }
+  ).then(function() {
+    showToast('อนุมัติเรียบร้อย ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function rejectRepair(id) {
+  var reason = document.getElementById('actRejectNote').value.trim();
+  if (!reason) { showToast('กรุณาระบุเหตุผลที่ไม่อนุมัติ', 'warn'); return; }
+
+  pushLog(id, 'rejected', 'ไม่อนุมัติ — ' + reason, { rejectNote: reason })
+    .then(function() {
+      showToast('บันทึกผลไม่อนุมัติแล้ว');
+      closeModal('detailModal');
+    }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function updateAssignment(id) {
+  var technician = document.getElementById('actTechnician2').value.trim();
+  var repairStatus = document.querySelector('input[name="actRepairStatus2"]:checked').value;
+  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
+
+  pushLog(id, allRepairsStatusOf(id), 'อัปเดตการมอบหมาย: ' + technician + ' — ' + (repairStatus === 'waiting' ? 'รอซ่อม/รออะไหล่' : 'กำลังซ่อม'),
+    { technician: technician, repairStatus: repairStatus }
+  ).then(function() {
+    showToast('บันทึกการมอบหมายแล้ว ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+function allRepairsStatusOf(id) {
+  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
+  return r ? r.status : 'approved';
+}
+
+function markDone(id) {
+  var note = document.getElementById('actRepairNote').value.trim();
+  if (!note) { showToast('กรุณาสรุปสิ่งที่ดำเนินการซ่อม', 'warn'); return; }
+
+  pushLog(id, 'done', 'ดำเนินการซ่อมเสร็จแล้ว — ' + note,
+    { repairNote: note, doneAt: firebase.firestore.FieldValue.serverTimestamp() }
+  ).then(function() {
+    showToast('บันทึกแล้ว รอผู้แจ้งตรวจสอบ ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function forceClose(id) {
+  var note = document.getElementById('actCloseNote').value.trim();
+  pushLog(id, 'closed', 'ปิดงานโดยเจ้าหน้าที่' + (note ? (' — ' + note) : ''),
+    { closeNote: note, closedAt: firebase.firestore.FieldValue.serverTimestamp() }
+  ).then(function() {
+    showToast('ปิดงานเรียบร้อย ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+</script>
+</body>
+</html>

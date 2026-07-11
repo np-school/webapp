@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="var(--accent)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+
+  <title>แจ้งซ่อม – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+  <style>
+    .scroll-top-btn{
+      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
+      border-radius:50%; border:none; background:var(--accent); color:#fff;
+      display:none; align-items:center; justify-content:center;
+      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
+      opacity:0; transform:translateY(10px);
+      transition:opacity .2s ease, transform .2s ease;
+    }
+    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
+    .scroll-top-btn:hover{background:var(--accent-dark);}
+    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
+
+    /* ── หน้านี้เท่านั้น: การ์ดรายการแจ้งซ่อม + badge สถานะสี custom ── */
+    .rp-card{ cursor:pointer; transition:box-shadow .15s, border-color .15s; margin-bottom:12px; }
+    .rp-card:hover{ border-color:var(--accent-light); box-shadow:0 6px 18px rgba(15,23,42,.08); }
+    .rp-status{ display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:800; flex-shrink:0; }
+    .rp-status.c-amber { background:var(--amber-light); color:#92400e; }
+    .rp-status.c-sky    { background:var(--sky-light);   color:#075985; }
+    .rp-status.c-green  { background:var(--green-light); color:#15803d; }
+    .rp-status.c-red    { background:var(--red-light);   color:var(--red-dark); }
+    .rp-status.c-purple { background:var(--purple-light);color:var(--purple-dark); }
+    .rp-cat-chip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--text2); background:var(--bg-alt); padding:3px 10px; border-radius:20px; }
+    .rp-urgent{ display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800; color:var(--red-dark); background:var(--red-light); padding:2px 9px; border-radius:20px; }
+
+    .rp-mini-wf{ display:flex; gap:3px; margin-top:12px; }
+    .rp-mini-wf i{ flex:1; height:6px; border-radius:4px; background:var(--border); }
+    .rp-mini-wf i.on{ background:var(--accent); }
+    .rp-mini-wf i.bad{ background:var(--red); }
+
+    .rp-photo-thumb{ position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden; flex-shrink:0; border:1px solid var(--border); }
+    .rp-photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .rp-photo-thumb .rm{ position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:rgba(15,23,42,.65); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .rp-photo-thumb .up{ position:absolute; inset:0; background:rgba(255,255,255,.85); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:var(--text2); text-align:center; padding:2px; }
+
+    .rp-log-item{ display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--border-soft); }
+    .rp-log-item:last-child{ border-bottom:none; }
+    .rp-log-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<div id="myApp" style="display:none;"></div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
+  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+</button>
+
+<!-- ══════════════════ Modal: แจ้งซ่อมใหม่ ══════════════════ -->
+<div id="newReportModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--amber-light);">
+          <i data-lucide="wrench" style="color:var(--amber);"></i>
+        </div>
+        <div>
+          <h3>แจ้งซ่อมใหม่</h3>
+          <p>กรอกรายละเอียดจุดที่ชำรุดให้ครบถ้วน</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('newReportModal')"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">หมวดหมู่ *</label>
+      <select id="frCategory"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ระดับความเร่งด่วน</label>
+      <div class="segmented" id="frPriority">
+        <label><input type="radio" name="frPriority" value="normal" checked> <i data-lucide="clock"></i> ปกติ</label>
+        <label><input type="radio" name="frPriority" value="urgent"> <i data-lucide="alert-triangle"></i> เร่งด่วน</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สถานที่ *</label>
+      <input type="text" id="frLocation" placeholder="เช่น อาคาร 2 ชั้น 3 ห้อง 231">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">หัวข้อ / สิ่งที่ชำรุด *</label>
+      <input type="text" id="frTitle" placeholder="เช่น เครื่องปรับอากาศไม่เย็น">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">รายละเอียดเพิ่มเติม *</label>
+      <textarea id="frDescription" rows="4" placeholder="อธิบายอาการ/ความเสียหายที่พบ"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">แนบภาพถ่าย (ไม่เกิน 5 รูป)</label>
+      <div class="upload-area" id="frUploadArea" onclick="document.getElementById('frFileInput').click()">
+        <i data-lucide="image-plus" style="width:26px;height:26px;color:var(--blue);margin-bottom:6px;"></i>
+        <div style="font-size:12.5px;font-weight:700;color:var(--text2);">แตะเพื่อเลือกรูปภาพ</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:2px;">ไฟล์จะถูกอัปโหลดเก็บไว้ใน Google Drive ของโรงเรียน</div>
+      </div>
+      <input type="file" id="frFileInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoSelect(this.files)">
+      <div id="frPhotoList" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeModal('newReportModal')">ยกเลิก</button>
+      <button class="btn-primary amber" style="flex:1;justify-content:center;" id="frSubmitBtn" onclick="submitReport()">
+        <i data-lucide="send" style="width:15px;height:15px;"></i> ส่งเรื่องแจ้งซ่อม
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ Modal: รายละเอียด / ตรวจสอบงาน ══════════════════ -->
+<div id="detailModal" class="modal-bg">
+  <div class="modal-box wide" id="detailModalBody"></div>
+</div>
+
+<script>
+
+/* ══════════════════════════════════════════════════════════════
+   ตั้งค่า Google Drive Upload
+   ✏️ ต้องแก้: นำ Web App URL จาก Google Apps Script มาใส่ที่นี่
+   วิธีติดตั้ง (ทำครั้งเดียว):
+   1) เปิด Google Drive → สร้างโฟลเดอร์สำหรับเก็บรูปแจ้งซ่อม → คัดลอก Folder ID จาก URL
+   2) ไปที่ script.google.com → สร้างโปรเจกต์ใหม่ → วางโค้ดนี้ → แก้ FOLDER_ID:
+
+      function doPost(e) {
+        var data = JSON.parse(e.postData.contents);
+        var folder = DriveApp.getFolderById('FOLDER_ID_ที่นี่');
+        var bytes = Utilities.base64Decode(data.data);
+        var blob = Utilities.newBlob(bytes, data.mimeType, data.filename);
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        return ContentService.createTextOutput(JSON.stringify({
+          url: 'https://drive.google.com/uc?id=' + file.getId(),
+          name: data.filename
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+   3) Deploy → New deployment → Web app → Execute as: Me, Who has access: Anyone
+   4) คัดลอก Web app URL มาแทนค่าด้านล่างนี้
+   ══════════════════════════════════════════════════════════════ */
+var DRIVE_UPLOAD_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec'; /* ✏️ */
+
+/* ══ Categories ══ */
+var REPAIR_CATEGORIES = [
+  { key:'electric',  label:'ไฟฟ้า',                 icon:'zap' },
+  { key:'plumbing',  label:'ประปา',                 icon:'droplet' },
+  { key:'aircon',    label:'เครื่องปรับอากาศ',       icon:'wind' },
+  { key:'building',  label:'อาคาร/สถานที่',          icon:'building-2' },
+  { key:'it',        label:'คอมพิวเตอร์/เครือข่าย',  icon:'monitor' },
+  { key:'furniture', label:'เฟอร์นิเจอร์',           icon:'armchair' },
+  { key:'other',     label:'อื่นๆ',                  icon:'more-horizontal' }
+];
+function getCategoryMeta(key) {
+  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].key === key) return REPAIR_CATEGORIES[i];
+  return { key:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+}
+
+/* ══ Status meta: label + color + workflow-step states ══ */
+var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
+
+function getStatusMeta(r) {
+  switch (r.status) {
+    case 'reported': return { label:'รอตรวจสอบ/อนุมัติ',      color:'amber',  steps:['done','active','pending','pending','pending'] };
+    case 'rejected': return { label:'ไม่อนุมัติ',              color:'red',    steps:['done','revision','pending','pending','pending'] };
+    case 'approved': return { label: r.repairStatus === 'in_progress' ? 'กำลังซ่อม' : 'รอซ่อม (อนุมัติแล้ว)', color:'sky', steps:['done','done','active','pending','pending'] };
+    case 'done':      return { label:'รอผู้แจ้งตรวจสอบ',       color:'purple', steps:['done','done','done','active','pending'] };
+    case 'reopened':  return { label: r.repairStatus === 'in_progress' ? 'ส่งกลับไปซ่อมใหม่ (กำลังซ่อม)' : 'ส่งกลับไปซ่อมใหม่ (รอซ่อม)', color:'red', steps:['done','done','active','revision','pending'] };
+    case 'closed':    return { label:'ปิดงานแล้ว',             color:'green',  steps:['done','done','done','done','final'] };
+    default:          return { label:'ไม่ทราบสถานะ',           color:'amber',  steps:['pending','pending','pending','pending','pending'] };
+  }
+}
+
+function buildWorkflowBar(steps) {
+  var html = '<div class="workflow-bar">';
+  for (var i = 0; i < WF_LABELS.length; i++) {
+    html += '<div class="wf-step ' + steps[i] + '">' + WF_LABELS[i] + '</div>';
+    if (i < WF_LABELS.length - 1) html += '<div class="wf-divider"></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function fmtDate(ts) {
+  if (!ts) return '-';
+  var d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
+         ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   buildPage() — auth guard + shell builder
+   ══════════════════════════════════════════════════════════════ */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ระบบแจ้งซ่อม',
+  navTheme:     'blue',
+  activePage:   'repair-user',
+  requireAdmin: false,
+
+  onAuth: function(user, contentEl) {
+    currentUser = user;
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+
+    populateCategorySelect();
+    loadData();
+    setupScrollTopButton();
+  }
+});
+
+/* ══ Page State ══ */
+var currentUser   = null;
+var myRepairs     = [];
+var currentFilter = 'all';
+var pendingPhotos = []; /* [{name, mimeType, base64, status:'pending'|'uploading'|'done'|'error', url}] */
+
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══ Render: หน้าหลัก ══ */
+function renderPage() {
+  return (
+    '<div class="page-header">' +
+      '<div>' +
+        '<div class="page-title-row">' +
+          '<div class="page-icon" style="background:linear-gradient(135deg,var(--amber),#f59e0b);">' +
+            '<i data-lucide="wrench" style="width:20px;height:20px;color:white;"></i>' +
+          '</div>' +
+          '<h1 class="page-title">แจ้งซ่อม</h1>' +
+        '</div>' +
+        '<p class="page-sub">แจ้งปัญหาอาคาร สถานที่ และอุปกรณ์ภายในโรงเรียน</p>' +
+      '</div>' +
+      '<button class="btn-primary amber" onclick="openNewReportModal()">' +
+        '<i data-lucide="plus" style="width:15px;height:15px;"></i> แจ้งซ่อมใหม่' +
+      '</button>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repStatGrid"></div>' +
+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="repFilterBar">' +
+      '<button class="filter-pill active" data-f="all" onclick="setFilter(\'all\')">ทั้งหมด</button>' +
+      '<button class="filter-pill" data-f="open" onclick="setFilter(\'open\')">กำลังดำเนินการ</button>' +
+      '<button class="filter-pill" data-f="done" onclick="setFilter(\'done\')">รอตรวจสอบ</button>' +
+      '<button class="filter-pill" data-f="closed" onclick="setFilter(\'closed\')">ปิดงานแล้ว</button>' +
+    '</div>' +
+
+    '<div id="repairListWrap">' +
+      '<div class="empty-state"><i data-lucide="loader" style="width:26px;height:26px;"></i><p style="margin-top:8px;">กำลังโหลด...</p></div>' +
+    '</div>'
+  );
+}
+
+function populateCategorySelect() {
+  var sel = document.getElementById('frCategory');
+  if (!sel) return;
+  var html = '';
+  REPAIR_CATEGORIES.forEach(function(c) { html += '<option value="' + c.key + '">' + c.label + '</option>'; });
+  sel.innerHTML = html;
+}
+
+/* ══ Data ══ */
+function loadData() {
+  db.collection('repairs')
+    .where('reporterUid', '==', currentUser.uid)
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(function(snap) {
+      myRepairs = [];
+      snap.forEach(function(doc) { myRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      renderStats();
+      renderList();
+    }, function(err) {
+      console.error(err);
+      document.getElementById('repairListWrap').innerHTML =
+        '<div class="empty-state"><i data-lucide="alert-triangle" style="width:26px;height:26px;color:var(--red);"></i><p style="margin-top:8px;">โหลดข้อมูลไม่สำเร็จ</p></div>';
+      lucide.createIcons();
+    });
+}
+
+function renderStats() {
+  var all = myRepairs.length;
+  var open = myRepairs.filter(function(r) { return ['reported','approved','reopened'].indexOf(r.status) !== -1; }).length;
+  var waitReview = myRepairs.filter(function(r) { return r.status === 'done'; }).length;
+  var closed = myRepairs.filter(function(r) { return r.status === 'closed'; }).length;
+
+  function stat(icon, color, bg, val, label) {
+    return (
+      '<div class="stat-card">' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i data-lucide="' + icon + '" style="width:20px;height:20px;color:' + color + ';"></i>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:20px;font-weight:800;color:var(--text);">' + val + '</div>' +
+          '<div style="font-size:11px;color:var(--text2);font-weight:600;">' + label + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  document.getElementById('repStatGrid').innerHTML =
+    stat('clipboard-list', 'var(--blue)',   'var(--blue-light)',   all,        'แจ้งซ่อมทั้งหมด') +
+    stat('loader-circle',  'var(--sky)',    'var(--sky-light)',    open,       'กำลังดำเนินการ') +
+    stat('eye',            'var(--purple)', 'var(--purple-light)', waitReview, 'รอฉันตรวจสอบ') +
+    stat('check-check',    'var(--green)',  'var(--green-light)',  closed,     'ปิดงานแล้ว');
+  lucide.createIcons();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-f') === f);
+  });
+  renderList();
+}
+
+function renderList() {
+  var list = myRepairs.filter(function(r) {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'open') return ['reported','approved','reopened'].indexOf(r.status) !== -1;
+    if (currentFilter === 'done') return r.status === 'done';
+    if (currentFilter === 'closed') return ['closed','rejected'].indexOf(r.status) !== -1;
+    return true;
+  });
+
+  var wrap = document.getElementById('repairListWrap');
+  if (!list.length) {
+    wrap.innerHTML =
+      '<div class="empty-state">' +
+        '<i data-lucide="clipboard-check" style="width:32px;height:32px;color:var(--text3);"></i>' +
+        '<p style="margin-top:10px;font-weight:700;">ยังไม่มีรายการแจ้งซ่อมในหมวดนี้</p>' +
+      '</div>';
+    lucide.createIcons();
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(r) { html += renderRepairCard(r); });
+  wrap.innerHTML = html;
+  lucide.createIcons();
+}
+
+function renderRepairCard(r) {
+  var cat = getCategoryMeta(r.category);
+  var meta = getStatusMeta(r);
+  var stepDots = meta.steps.map(function(s) {
+    return '<i class="' + (s === 'done' || s === 'active' || s === 'final' ? 'on' : (s === 'revision' ? 'bad' : '')) + '"></i>';
+  }).join('');
+
+  return (
+    '<div class="card rp-card" onclick="openDetail(\'' + r.id + '\')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">' +
+        '<div style="min-width:0;flex:1;">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
+            (r.priority === 'urgent' ? '<span class="rp-urgent"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i> เร่งด่วน</span>' : '') +
+            '<span class="rp-cat-chip"><i data-lucide="' + cat.icon + '" style="width:11px;height:11px;"></i> ' + cat.label + '</span>' +
+          '</div>' +
+          '<div style="font-size:15px;font-weight:800;color:var(--text);">' + esc2(r.title || '') + '</div>' +
+          '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:5px;">' +
+            '<i data-lucide="map-pin" style="width:12px;height:12px;"></i> ' + esc2(r.location || '') +
+          '</div>' +
+        '</div>' +
+        '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +
+      '</div>' +
+      '<div class="rp-mini-wf">' + stepDots + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:8px;">แจ้งเมื่อ ' + fmtDate(r.createdAt) + '</div>' +
+    '</div>'
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   แจ้งซ่อมใหม่
+   ══════════════════════════════════════════════════════════════ */
+function openNewReportModal() {
+  document.getElementById('frCategory').value = 'electric';
+  document.getElementById('frLocation').value = '';
+  document.getElementById('frTitle').value = '';
+  document.getElementById('frDescription').value = '';
+  document.querySelector('input[name="frPriority"][value="normal"]').checked = true;
+  pendingPhotos = [];
+  renderPhotoList();
+  openModal('newReportModal');
+}
+
+function handlePhotoSelect(files) {
+  var remain = 5 - pendingPhotos.length;
+  if (remain <= 0) { showToast('แนบได้สูงสุด 5 รูป', 'warn'); return; }
+
+  var arr = Array.prototype.slice.call(files).slice(0, remain);
+  arr.forEach(function(file) {
+    if (!/^image\//.test(file.type)) return;
+    var reader = new FileReader();
+    reader.onload = function() {
+      var base64 = reader.result.split(',')[1];
+      var item = { name: file.name, mimeType: file.type, base64: base64, status: 'pending', url: null, localSrc: reader.result };
+      pendingPhotos.push(item);
+      renderPhotoList();
+      uploadOnePhoto(item);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('frFileInput').value = '';
+}
+
+function uploadOnePhoto(item) {
+  if (!DRIVE_UPLOAD_URL || DRIVE_UPLOAD_URL.indexOf('XXXXXX') !== -1) {
+    item.status = 'error';
+    renderPhotoList();
+    showToast('ยังไม่ได้ตั้งค่าอัปโหลดรูปไป Google Drive (ข้ามรูปนี้)', 'warn');
+    return;
+  }
+  item.status = 'uploading';
+  renderPhotoList();
+
+  fetch(DRIVE_UPLOAD_URL, {
+    method: 'POST',
+    body: JSON.stringify({ filename: item.name, mimeType: item.mimeType, data: item.base64 })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      item.status = 'done';
+      item.url = data.url;
+      renderPhotoList();
+    })
+    .catch(function(err) {
+      console.error(err);
+      item.status = 'error';
+      renderPhotoList();
+      showToast('อัปโหลดรูป "' + item.name + '" ไม่สำเร็จ', 'error');
+    });
+}
+
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  renderPhotoList();
+}
+
+function renderPhotoList() {
+  var wrap = document.getElementById('frPhotoList');
+  if (!wrap) return;
+  var html = '';
+  pendingPhotos.forEach(function(p, idx) {
+    html +=
+      '<div class="rp-photo-thumb">' +
+        '<img src="' + p.localSrc + '">' +
+        (p.status !== 'done' ? '<div class="up">' + (p.status === 'uploading' ? 'กำลังอัปโหลด...' : p.status === 'error' ? 'อัปโหลดไม่สำเร็จ' : 'รออัปโหลด') + '</div>' : '') +
+        '<button class="rm" onclick="event.stopPropagation();removePhoto(' + idx + ')"><i data-lucide="x" style="width:11px;height:11px;"></i></button>' +
+      '</div>';
+  });
+  wrap.innerHTML = html;
+  lucide.createIcons();
+}
+
+function submitReport() {
+  var category    = document.getElementById('frCategory').value;
+  var priority    = document.querySelector('input[name="frPriority"]:checked').value;
+  var location    = document.getElementById('frLocation').value.trim();
+  var title       = document.getElementById('frTitle').value.trim();
+  var description = document.getElementById('frDescription').value.trim();
+
+  if (!location || !title || !description) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน (สถานที่ / หัวข้อ / รายละเอียด)', 'warn');
+    return;
+  }
+  if (pendingPhotos.some(function(p) { return p.status === 'uploading'; })) {
+    showToast('กรุณารอให้อัปโหลดรูปภาพเสร็จก่อน', 'warn');
+    return;
+  }
+
+  var photos = pendingPhotos.filter(function(p) { return p.status === 'done' && p.url; })
+    .map(function(p) { return { url: p.url, name: p.name }; });
+
+  var btn = document.getElementById('frSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader" style="width:15px;height:15px;"></i> กำลังส่ง...';
+  lucide.createIcons();
+
+  db.collection('repairs').add({
+    category: category,
+    priority: priority,
+    location: location,
+    title: title,
+    description: description,
+    photos: photos,
+    status: 'reported',
+    repairStatus: null,
+    reporterUid: currentUser.uid,
+    reporterName: currentUser.displayName || currentUser.email,
+    reporterEmail: (currentUser.email || '').toLowerCase(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    logs: [{ status: 'reported', note: 'แจ้งปัญหาเข้าสู่ระบบ', byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now() }]
+  }).then(function() {
+    showToast('ส่งเรื่องแจ้งซ่อมสำเร็จ ✅');
+    closeModal('newReportModal');
+  }).catch(function(err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send" style="width:15px;height:15px;"></i> ส่งเรื่องแจ้งซ่อม';
+    lucide.createIcons();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   รายละเอียด + ตรวจสอบงาน
+   ══════════════════════════════════════════════════════════════ */
+function openDetail(id) {
+  var r = myRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  document.getElementById('detailModalBody').innerHTML = renderDetailBody(r);
+  lucide.createIcons();
+  openModal('detailModal');
+}
+
+function renderDetailBody(r) {
+  var cat = getCategoryMeta(r.category);
+  var meta = getStatusMeta(r);
+
+  var photosHtml = '';
+  if (r.photos && r.photos.length) {
+    photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
+      r.photos.map(function(p) {
+        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
+      }).join('') + '</div>';
+  }
+
+  var logsHtml = '';
+  if (r.logs && r.logs.length) {
+    logsHtml = '<div style="margin-top:8px;">' + r.logs.slice().reverse().map(function(l) {
+      return (
+        '<div class="rp-log-item">' +
+          '<div class="rp-log-dot"></div>' +
+          '<div>' +
+            '<div style="font-size:12.5px;font-weight:700;color:var(--text);">' + esc2(l.note || '') + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);">' + esc2(l.byName || '') + ' · ' + fmtDate(l.at) + '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('') + '</div>';
+  }
+
+  var reviewActions = '';
+  if (r.status === 'done') {
+    reviewActions =
+      '<div class="section-divider"><i data-lucide="clipboard-check" style="width:14px;height:14px;"></i> ตรวจสอบความเรียบร้อย</div>' +
+      '<p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">ช่างแจ้งว่าดำเนินการซ่อมเสร็จแล้ว กรุณาตรวจสอบและยืนยันผล</p>' +
+      (r.repairNote ? '<div class="card" style="background:var(--bg-alt);padding:12px;margin-bottom:12px;"><b style="font-size:12px;">บันทึกจากช่าง:</b><p style="font-size:12.5px;color:var(--text2);margin-top:4px;">' + esc2(r.repairNote) + '</p></div>' : '') +
+      '<textarea id="reviewNoteInput" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>' +
+      '<div style="display:flex;gap:10px;margin-top:10px;">' +
+        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'fail\')"><i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> ยังไม่เรียบร้อย</button>' +
+        '<button class="btn-approve" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'pass\')"><i data-lucide="check" style="width:14px;height:14px;"></i> เรียบร้อยแล้ว ปิดงาน</button>' +
+      '</div>';
+  }
+
+  return (
+    '<div class="modal-header">' +
+      '<div class="modal-title-group">' +
+        '<div class="modal-title-icon" style="background:var(--amber-light);"><i data-lucide="' + cat.icon + '" style="color:var(--amber);"></i></div>' +
+        '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
+      '</div>' +
+      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
+    '</div>' +
+
+    '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +
+    buildWorkflowBar(meta.steps) +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> รายละเอียด</div>' +
+    '<p style="font-size:13px;color:var(--text2);line-height:1.6;">' + esc2(r.description || '') + '</p>' +
+    photosHtml +
+
+    reviewActions +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
+    logsHtml
+  );
+}
+
+function submitReview(id, result) {
+  var note = (document.getElementById('reviewNoteInput').value || '').trim();
+  var newStatus = result === 'pass' ? 'closed' : 'reopened';
+  var logNote = result === 'pass'
+    ? 'ผู้แจ้งยืนยันว่าซ่อมเรียบร้อย — ปิดงาน' + (note ? (' (' + note + ')') : '')
+    : 'ผู้แจ้งตรวจสอบแล้วยังไม่เรียบร้อย ส่งกลับให้ดำเนินการซ่อมต่อ' + (note ? (' (' + note + ')') : '');
+
+  db.collection('repairs').doc(id).update({
+    status: newStatus,
+    reviewResult: result,
+    reviewNote: note,
+    reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    closedAt: result === 'pass' ? firebase.firestore.FieldValue.serverTimestamp() : null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    logs: firebase.firestore.FieldValue.arrayUnion({
+      status: newStatus, note: logNote, byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now()
+    })
+  }).then(function() {
+    showToast(result === 'pass' ? 'ปิดงานเรียบร้อย ✅' : 'ส่งกลับให้ดำเนินการซ่อมต่อแล้ว');
+    closeModal('detailModal');
+  }).catch(function(err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+</script>
+</body>
+</html>
