@@ -162,19 +162,32 @@
    ตั้งค่า Google Drive Upload
    ✏️ ต้องแก้: นำ Web App URL จาก Google Apps Script มาใส่ที่นี่
    วิธีติดตั้ง (ทำครั้งเดียว):
-   1) เปิด Google Drive → สร้างโฟลเดอร์สำหรับเก็บรูปแจ้งซ่อม → คัดลอก Folder ID จาก URL
-   2) ไปที่ script.google.com → สร้างโปรเจกต์ใหม่ → วางโค้ดนี้ → แก้ FOLDER_ID:
+   1) เปิด Google Drive → สร้างโฟลเดอร์หลักสำหรับเก็บรูปแจ้งซ่อม → คัดลอก Folder ID จาก URL
+   2) ไปที่ script.google.com → สร้างโปรเจกต์ใหม่ → วางโค้ดนี้ → แก้ ROOT_FOLDER_ID:
 
       function doPost(e) {
         var data = JSON.parse(e.postData.contents);
-        var folder = DriveApp.getFolderById('FOLDER_ID_ที่นี่');
+        var rootFolder = DriveApp.getFolderById('ROOT_FOLDER_ID_ที่นี่');
+
+        // แยกโฟลเดอร์รายเดือน เช่น "2569-07"
+        var d = data.reportDate ? new Date(data.reportDate) : new Date();
+        var monthKey = Utilities.formatDate(d, 'GMT+7', 'yyyy-MM');
+        var monthFolders = rootFolder.getFoldersByName(monthKey);
+        var monthFolder = monthFolders.hasNext() ? monthFolders.next() : rootFolder.createFolder(monthKey);
+
+        // ตั้งชื่อไฟล์: วันที่แจ้ง-สถานที่-ชื่องาน
+        var dateStr = Utilities.formatDate(d, 'GMT+7', 'yyyyMMdd');
+        var clean = function(s) { return (s || '').toString().replace(/[\\\/:*?"<>|]/g, '').trim(); };
+        var ext = (data.filename.match(/\.[a-zA-Z0-9]+$/) || [''])[0];
+        var baseName = dateStr + '-' + clean(data.location) + '-' + clean(data.title);
+
         var bytes = Utilities.base64Decode(data.data);
-        var blob = Utilities.newBlob(bytes, data.mimeType, data.filename);
-        var file = folder.createFile(blob);
+        var blob = Utilities.newBlob(bytes, data.mimeType, baseName + ext);
+        var file = monthFolder.createFile(blob);
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         return ContentService.createTextOutput(JSON.stringify({
           url: 'https://drive.google.com/uc?id=' + file.getId(),
-          name: data.filename
+          name: file.getName()
         })).setMimeType(ContentService.MimeType.JSON);
       }
 
@@ -469,7 +482,14 @@ function uploadOnePhoto(item) {
 
   fetch(DRIVE_UPLOAD_URL, {
     method: 'POST',
-    body: JSON.stringify({ filename: item.name, mimeType: item.mimeType, data: item.base64 })
+    body: JSON.stringify({
+      filename: item.name,
+      mimeType: item.mimeType,
+      data: item.base64,
+      location: document.getElementById('frLocation').value.trim(),
+      title: document.getElementById('frTitle').value.trim(),
+      reportDate: new Date().toISOString()
+    })
   })
     .then(function(res) { return res.json(); })
     .then(function(data) {
