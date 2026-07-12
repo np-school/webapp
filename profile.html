@@ -521,12 +521,12 @@
           </div>
           <!-- View mode -->
           <div id="personalView">
-            <!-- Admin-owned section -->
+            <!-- Synced with staff.html section -->
             <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-                <i data-lucide="shield-check" style="width:13px;height:13px;color:#7c3aed;flex-shrink:0;"></i>
-                <span style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase;">จัดการโดย Admin</span>
-                <span style="font-size:10px;color:#94a3b8;font-weight:600;">· ติดต่อผู้ดูแลระบบเพื่อแก้ไข</span>
+                <i data-lucide="refresh-cw" style="width:13px;height:13px;color:#7c3aed;flex-shrink:0;"></i>
+                <span style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase;">ข้อมูลบุคลากร</span>
+                <span style="font-size:10px;color:#94a3b8;font-weight:600;">· ซิงค์กับระบบจัดการบุคลากร แก้ไขได้ทั้งสองฝั่ง</span>
               </div>
               <div class="info-grid">
                 <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ชื่อ-นามสกุล</div><div class="info-val" id="v_fullname" style="background:#f1f5f9;color:#475569;">—</div></div>
@@ -561,24 +561,50 @@
           <div id="personalView_end"></div>
           <!-- Edit mode -->
           <div id="personalEdit" style="display:none;">
-            <!-- Admin fields — read only -->
+            <!-- Synced with staff.html — editable both sides -->
             <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-                <i data-lucide="lock" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>
-                <span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase;">ข้อมูลที่จัดการโดย Admin — ไม่สามารถแก้ไขได้</span>
+                <i data-lucide="refresh-cw" style="width:12px;height:12px;color:#7c3aed;flex-shrink:0;"></i>
+                <span style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase;">ข้อมูลบุคลากร — ซิงค์กับระบบจัดการบุคลากร</span>
               </div>
               <div class="info-grid">
                 <div class="info-field" style="grid-column:1/-1;">
                   <div class="info-label">ชื่อ-นามสกุล</div>
-                  <div id="e_fullname_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                  <input type="text" id="e_fullname" placeholder="นาย/นาง/นางสาว ชื่อ นามสกุล">
                 </div>
                 <div class="info-field">
                   <div class="info-label">ตำแหน่ง</div>
-                  <div id="e_position_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                  <input type="text" id="e_position" placeholder="เช่น ครู, ครูชำนาญการ">
                 </div>
                 <div class="info-field">
                   <div class="info-label">กลุ่มสาระ / กลุ่มงาน</div>
-                  <div id="e_group_ro" style="font-size:14px;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;border:1.5px solid #e2e8f0;">—</div>
+                  <select id="e_group">
+                    <option value="">-- เลือกกลุ่มสาระ / กลุ่มงาน --</option>
+                    <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+                    <option value="เทคโนโลยี">เทคโนโลยี</option>
+                    <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                    <option value="ภาษาไทย">ภาษาไทย</option>
+                    <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+                    <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                    <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                    <option value="ศิลปะ">ศิลปะ</option>
+                    <option value="การงานอาชีพ">การงานอาชีพ</option>
+                    <option value="แนะแนว">แนะแนว</option>
+                    <option value="ผู้บริหาร">ผู้บริหาร</option>
+                    <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                  </select>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">วิทยฐานะ</div>
+                  <select id="e_acrank">
+                    <option value="">-- ไม่มี / ยังไม่ระบุ --</option>
+                    <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                    <option value="ครู">ครู</option>
+                    <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                    <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                    <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                    <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -793,7 +819,7 @@ function init(){
       .where('email','==', currentUser.email.toLowerCase()).limit(1).get()
       .then(function(snap){
         if(!snap.empty){
-          currentStaff = snap.empty ? null : snap.docs[0].data();
+          currentStaff = Object.assign({ _id: snap.docs[0].id }, snap.docs[0].data());
           /* ── Sync uid กลับ staff collection เพื่อให้ view-mode ใช้ได้ ── */
           var staffDocId = snap.docs[0].id;
           var storedUid  = snap.docs[0].data().uid || '';
@@ -1644,13 +1670,11 @@ function editSection(section){
   if(section==='personal'){
     var p = personalData;
     var a = adminSyncData;
-    /* fill read-only admin boxes */
-    var roName = document.getElementById('e_fullname_ro');
-    var roPos  = document.getElementById('e_position_ro');
-    var roGrp  = document.getElementById('e_group_ro');
-    if(roName) roName.textContent = a.name     || (currentStaff&&currentStaff.name)     || '—';
-    if(roPos)  roPos.textContent  = a.position || (currentStaff&&currentStaff.position) || '—';
-    if(roGrp)  roGrp.textContent  = a.group    || (currentStaff&&currentStaff.group)    || '—';
+    /* fill staff-linked (synced) fields — editable ทั้งสองฝั่ง */
+    document.getElementById('e_fullname').value = a.name          || (currentStaff&&currentStaff.name)          || '';
+    document.getElementById('e_position').value = a.position      || (currentStaff&&currentStaff.position)      || '';
+    document.getElementById('e_group').value    = a.group         || (currentStaff&&currentStaff.group)         || '';
+    document.getElementById('e_acrank').value   = a.academic_rank || (currentStaff&&currentStaff.academic_rank) || '';
     /* fill user-editable inputs */
     document.getElementById('e_birthday').value    = p.birthday    || '';
     document.getElementById('e_nationality').value = p.nationality || '';
@@ -1701,7 +1725,16 @@ function saveSection(section){
   var profileRef = db.collection('staff_profile').doc(_targetUid());
 
   if(section==='personal'){
-    var phoneVal = document.getElementById('e_phone').value.trim();
+    var phoneVal    = document.getElementById('e_phone').value.trim();
+    var nameVal     = document.getElementById('e_fullname').value.trim();
+    var positionVal = document.getElementById('e_position').value.trim();
+    var groupVal    = document.getElementById('e_group').value;
+    var acrankVal   = document.getElementById('e_acrank').value;
+
+    if(!nameVal)     { showToast('กรุณากรอกชื่อ-นามสกุล','warn');          return; }
+    if(!positionVal) { showToast('กรุณากรอกตำแหน่ง','warn');               return; }
+    if(!groupVal)     { showToast('กรุณาเลือกกลุ่มสาระ / กลุ่มงาน','warn'); return; }
+
     var userFields = {
       uid:         currentUser.uid,
       birthday:    document.getElementById('e_birthday').value,
@@ -1715,28 +1748,44 @@ function saveSection(section){
     /* merge=true เพื่อไม่ทับ field อื่นที่มีอยู่ใน staff_profile */
     var savePromises = [ profileRef.set(userFields, { merge: true }) ];
 
-    /* ── เบอร์โทรเป็น field ที่ลิงก์กับ staff.html (เก็บกลางที่ staff_profile_sync
-       keyed by email) — เขียนทับตรงนี้ด้วย เพื่อให้แอดมินเห็นค่าล่าสุดที่ผู้ใช้แก้เอง ── */
-    var syncEmail = currentUser.email.toLowerCase();
+    /* ── field ที่ลิงก์กับ staff.html (ชื่อ/ตำแหน่ง/กลุ่มสาระ/วิทยฐานะ/เบอร์โทร)
+       เขียนกลับ 2 ที่: staff_profile_sync (ให้ profile.html ทุกคนอ่านทันที)
+       และ staff/{docId} โดยตรง (ให้ staff.html ที่ฟัง onSnapshot เห็นทันทีด้วย) ── */
+    var syncEmail  = currentUser.email.toLowerCase();
+    var staffLinkedFields = {
+      name:          nameVal,
+      position:      positionVal,
+      group:         groupVal,
+      academic_rank: acrankVal,
+      phone:         phoneVal
+    };
     if(syncEmail){
       savePromises.push(
-        db.collection('staff_profile_sync').doc(syncEmail).set({
+        db.collection('staff_profile_sync').doc(syncEmail).set(Object.assign({
           email:    syncEmail,
-          phone:    phoneVal,
           syncedAt: now,
           syncedBy: 'user'
-        }, { merge: true })
+        }, staffLinkedFields), { merge: true })
+      );
+    }
+    if(currentStaff && currentStaff._id){
+      savePromises.push(
+        db.collection('staff').doc(currentStaff._id).update(Object.assign({
+          updatedAt: now
+        }, staffLinkedFields))
       );
     }
 
     Promise.all(savePromises)
       .then(function(){
-        /* อัปเดต personalData และ adminSyncData ใน memory */
+        /* อัปเดต personalData / adminSyncData / currentStaff ใน memory */
         Object.assign(personalData, userFields);
-        adminSyncData.phone = phoneVal;
+        Object.assign(adminSyncData, staffLinkedFields);
+        if(currentStaff) Object.assign(currentStaff, staffLinkedFields);
         showToast('บันทึกข้อมูลส่วนตัวแล้ว','success');
         cancelSection('personal');
         renderPersonalView();
+        fillHeroStatic();
       })
       .catch(function(e){
         console.error('saveSection personal error:', e);
