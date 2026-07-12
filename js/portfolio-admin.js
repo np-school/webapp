@@ -1,3 +1,4 @@
+/* ══════════════════════ STATE ══════════════════════ */
 /* ════════════════════════════════════════════
    PORTFOLIO ADMIN – portfolio-admin.html
    ════════════════════════════════════════════ */
@@ -17,34 +18,8 @@ var DOCUMENT_TYPES = [
   { id:'media_register',   label:'ทะเบียนสื่อ',                  short:'สื่อ',      icon:'library',     color:'#6366f1' },
   { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'#eab308' },
 ];
-
-/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
-   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
-   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
-─────────────────────────────────────────── */
-(function() {
-  var now    = new Date();
-  var month  = now.getMonth() + 1;
-  var day    = now.getDate();
-  var ceYear = now.getFullYear();
-  var sem, thYear;
-  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
-    sem = 1; thYear = ceYear + 543;
-  } else if (month >= 11) {
-    sem = 2; thYear = ceYear + 543;
-  } else {
-    sem = 2; thYear = (ceYear - 1) + 543;
-  }
-  window._defaultYear = thYear;
-  window._defaultSem  = sem;
-})();
 var currentYear = window._defaultYear || 2568;
 var currentSem  = window._defaultSem  || 1;
-
-/* ── แสดงสถานะ submitted ให้ทุกคนเมื่อปีการศึกษา 2568 ── */
-function fakeStatus(s) {
-  return s || 'none';
-}
 
 var allSubs     = []; /* all submissions for year+sem */
 var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
@@ -60,11 +35,6 @@ var availableGroups = []; /* กลุ่มสาระที่มีอยู
 /* กลุ่มสาระที่นับเป็น "ครู" (ไม่รวมผู้บริหาร/เจ้าหน้าที่) */
 var NON_TEACHER_GROUPS = ['ผู้บริหาร', 'เจ้าหน้าที่'];
 
-/* normalise ชื่อกลุ่มสาระ ให้ใช้เปรียบเทียบได้ (ตัดช่องว่างพิเศษ) */
-function normaliseGroup(g) {
-  return (g || '').replace(/\s+/g, ' ').trim();
-}
-
 /* ─── AUTH + ADMIN CHECK ─── */
 var currentUserEmail = '';
 var currentUserName  = '';  /* ชื่อจริงของผู้ตรวจ สำหรับบันทึกลงใน Firestore */
@@ -72,141 +42,56 @@ var adminRoles = {};        /* { headOfGroups:{groupName:{name,email}}, assistan
 var isHeadOfGroupOnly = false; /* true = หัวหน้ากลุ่มสาระ ไม่ใช่ portfolio admin เต็ม */
 var headOfGroupName   = '';    /* ชื่อกลุ่มสาระของหัวหน้า */
 var adminPermissions  = {};    /* สิทธิ์ทั้งหมดของผู้ใช้ปัจจุบัน */
-var isSuperAdmin      = false; /* true = superadmin → ตรวจ/เปลี่ยนสถานะได้ทุกขั้น */
+var isSuperAdmin      = false;
 
-/* ── buildPage() — auth guard + shell + sidebar อัตโนมัติ ── */
-buildPage({
-  appId:        'adminApp',
-  navSubtitle:  'ติดตามส่งงานครู',
-  navTheme:     'dark',
-  activePage:   'portfolio-admin',
-  requireAdmin: 'admin',          /* ต้องมีในตาราง admins (portfolio/headOfGroup check ใน onAuth) */
+/* ─── REVIEW MODAL ─── */
+var reviewingSubId  = null;
+var reviewingUid    = null;
+var reviewingDocTypeId = null;
+var selectedFileIdx = 0;        /* index ของไฟล์ที่เลือกอยู่ใน sub.files[] */
+var selectedCourseKey = null;
 
-  onAuth: function(user, contentEl) {
-    updateNavUser(user);
-    updateSidebarProfile(user);
-    checkAdminAccess(user.email);
+/* ════════════════════════════════════════════
+   SUB TAB SWITCHING
+   ════════════════════════════════════════════ */
+var currentSubTab = 'overview';
 
-    currentUserEmail = user.email.toLowerCase();
-    currentUserName  = user.displayName || '';
+/* ════════════════════════════════════════════
+   PANEL: รายกลุ่มสาระ
+   ════════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   PANEL: รายกลุ่มสาระ
+   ════════════════════════════════════════════ */
 
-    /* inject page content จาก <template> */
-    var tpl = document.getElementById('portfolioAdminContent');
-    if (tpl) contentEl.appendChild(document.importNode(tpl.content, true));
+var _groupData = {}; /* cache ข้อมูลกลุ่ม */
 
-    lucide.createIcons();
-    setupScrollTopButton();
+var SEG_COLORS = { final:'#16a34a', deputy:'#8b5cf6', assist:'#f59e0b', head:'#0ea5e9', submitted:'#22c55e', revision:'#ef4444' };
+var SEG_LABELS = { final:'ผอ.อนุมัติ', deputy:'รอง ผอ.ตรวจแล้ว', assist:'ผช.ผอ.ตรวจแล้ว', head:'หัวหน้าฯ ตรวจแล้ว', submitted:'รอตรวจ', revision:'ให้แก้ไข' };
+var SEG_KEYS   = ['final','deputy','assist','head','submitted','revision'];
 
-    /* ── ตรวจสิทธิ์เพิ่มเติม (portfolio / headOfGroup) ── */
-    db.collection('admins').doc(currentUserEmail).get().then(function(doc) {
-      var p = doc.exists ? (doc.data().permissions || {}) : {};
-      var isSA = currentUserEmail === SUPERADMIN_EMAIL || !!p.superadmin;
-      isSuperAdmin = isSA;
-      var hasPortfolio   = isSA || !!p.portfolio;
-      var hasHeadOfGroup = !!p.headOfGroup;
+/* ════════════════════════════════════════════
+   TEACHER INDIVIDUAL PANEL
+   ════════════════════════════════════════════ */
 
-      adminPermissions = isSA
-        ? { portfolio:true, assistantDirectorAcademic:true, deputyDirectorAcademic:true, director:true }
-        : p;
+var selectedTeacherKey = null;   /* email key ของครูที่เลือก */
+var teacherDonutCtx    = null;   /* canvas context */
+var teacherDonutChartObj = null;
 
-      if (!hasPortfolio && !hasHeadOfGroup) {
-        document.getElementById('adminApp').style.display = 'none';
-        document.getElementById('accessDenied').style.display = 'flex';
-        lucide.createIcons();
-        return;
-      }
+var editingDocTypeId = null; /* null = new, else Firestore doc id */
+var selectedDtColor  = '#3b82f6';
+var dragSrcIndex     = null;
 
-      /* ── ชื่อจริง + headOfGroup lock ── */
-      db.collection('staff').where('email','==',currentUserEmail).limit(1).get().then(function(ss) {
-        if (!ss.empty) {
-          currentUserName = ss.docs[0].data().name || currentUserName;
-          if (!hasPortfolio && hasHeadOfGroup) {
-            isHeadOfGroupOnly = true;
-            headOfGroupName = normaliseGroup(ss.docs[0].data().group || '');
-          }
-        } else if (!hasPortfolio && hasHeadOfGroup) {
-          isHeadOfGroupOnly = true;
-        }
-        bootApp(user);
-      }).catch(function() {
-        if (!hasPortfolio && hasHeadOfGroup) isHeadOfGroupOnly = true;
-        bootApp(user);
-      });
-    }).catch(function() {
-      document.getElementById('accessDenied').style.display = 'flex';
-    });
-  }
-});
+/* ── drag-to-reorder ── */
+var dragDocs = [];
 
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
-function scrollToTopContent() {
-  var content = document.getElementById('pageContent');
-  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-}
+/* ════════════════════════════════════════════
+   ADMIN MEMO MODAL — ดูบันทึกข้อความราชการ
+   ════════════════════════════════════════════ */
 
-function bootApp(u) {
-    var pageTitle = 'Admin – ติดตามส่งงานประจำภาคเรียน';
-    if (!isSuperAdmin && !adminPermissions.headOfGroup &&
-        !adminPermissions.assistantDirectorAcademic &&
-        !adminPermissions.deputyDirectorAcademic &&
-        !adminPermissions.director) {
-      pageTitle = 'ติดตามส่งงานประจำภาคเรียน (ดูข้อมูลเท่านั้น)';
-    }
-    /* อัปเดต subtitle navbar ตาม role */
-    var navSub = document.querySelector('.navbar-subtitle');
-    if (navSub) navSub.textContent = pageTitle;
+/* A4 Scaler */
+var adminMemoPage1Scale = 1;
 
-    initYearSemUI();
-    /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
-    db.collection('admins').get().then(function(snap) {
-      adminRoles.headOfGroups = {};
-      snap.forEach(function(d) {
-        var data = d.data();
-        var p = data.permissions || {};
-        var nameVal = data.name || data.headOfGroupName || d.id;
-        if (p.headOfGroup) {
-          /* เก็บแยกตามกลุ่มสาระ (headOfGroupSubject) เพื่อดึงให้ตรงกับครูที่ส่ง */
-          var grp = normaliseGroup(data.headOfGroupSubject || data.staffGroup || '');
-          adminRoles.headOfGroups[grp] = { name: nameVal, email: d.id };
-        }
-        if (p.assistantDirectorAcademic) adminRoles.assistantAcademic  = { name: nameVal, email: d.id };
-        if (p.deputyDirectorAcademic)    adminRoles.deputyAcademic     = { name: nameVal, email: d.id };
-        if (p.director)                  adminRoles.director           = { name: nameVal, email: d.id };
-      });
-    }).catch(function(){});
-    loadDocTypesFromFirestore(); /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้ว loadAllSubmissions ตาม */
-    loadAllSubmissions();
-    lucide.createIcons();
-}
-
-/* ─── YEAR / SEM UI INIT ─── */
-function initYearSemUI() {
-  document.getElementById('yearLabel').textContent = currentYear;
-  document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
-  document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
-}
-
-/* ─── YEAR / SEM ─── */
-function changeYear(d) {
-  currentYear += d;
-  document.getElementById('yearLabel').textContent = currentYear;
-  loadAllSubmissions();
-}
-function selectSem(s) {
-  currentSem = s;
-  document.getElementById('semPill1').className = 'sem-pill' + (s===1?' active':'');
-  document.getElementById('semPill2').className = 'sem-pill' + (s===2?' active':'');
-  loadAllSubmissions();
-}
-
+/* ══════════════════════ DATA LOADING ══════════════════════ */
 function loadAllSubmissions() {
   var main = document.getElementById('mainContent');
   main.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;font-size:14px;"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i><p style="margin-top:12px;">กำลังโหลดข้อมูล...</p></div>';
@@ -320,6 +205,132 @@ function loadAllSubmissions() {
   });
 }
 
+/* ── load & render list ── */
+function loadDocTypeList() {
+  var list = document.getElementById('docTypeList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;"></i></div>';
+  lucide.createIcons();
+
+  db.collection('portfolio_doc_types').orderBy('order').get().then(function(snap) {
+    /* ถ้า collection ว่าง → แสดง default (built-in) แต่ยังไม่บันทึก */
+    var docs = [];
+    snap.forEach(function(d) { docs.push(Object.assign({ _id: d.id }, d.data())); });
+
+    /* ถ้ายังไม่มีเลย → เสนอ seed จาก DOCUMENT_TYPES ที่ hardcode */
+    if (!docs.length) {
+      list.innerHTML =
+        '<div style="text-align:center;padding:40px 20px;">' +
+          '<div style="width:56px;height:56px;background:var(--purple-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+            '<i data-lucide="list-plus" style="width:28px;height:28px;color:var(--purple);"></i>' +
+          '</div>' +
+          '<p style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:6px;">ยังไม่มีหัวข้องานใน Firestore</p>' +
+          '<p style="font-size:13px;color:#64748b;margin-bottom:var(--gap-section);">คลิก "นำเข้าค่าเริ่มต้น" เพื่อเพิ่มหัวข้อที่ใช้อยู่ปัจจุบันทั้งหมด หรือเพิ่มทีละรายการ</p>' +
+          '<button onclick="seedDefaultDocTypes()" style="padding:10px 20px;background:var(--purple);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-right:8px;">นำเข้าค่าเริ่มต้น (' + DOCUMENT_TYPES.length + ' รายการ)</button>' +
+          '<button onclick="openDocTypeModal(null)" style="padding:10px 20px;background:white;color:var(--purple);border:1.5px solid var(--purple);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">+ เพิ่มใหม่</button>' +
+        '</div>';
+      lucide.createIcons();
+      return;
+    }
+
+    renderDocTypeRows(docs);
+  }).catch(function(e) {
+    list.innerHTML = '<p style="color:#ef4444;padding:20px;font-size:13px;">โหลดไม่ได้: ' + e.message + '</p>';
+  });
+}
+
+function syncToggleUI() {
+  var on = document.getElementById('dtActive').checked;
+  document.getElementById('dtActiveToggle').style.background = on ? 'var(--purple)' : '#e2e8f0';
+  document.getElementById('dtActiveKnob').style.transform    = on ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function syncColorInput() {
+  var val = document.getElementById('dtColor').value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    selectedDtColor = val;
+    updateColorSwatches(val);
+  }
+}
+
+/* ── load DOCUMENT_TYPES from Firestore into memory (replaces hardcoded array) ── */
+function loadDocTypesFromFirestore() {
+  db.collection('portfolio_doc_types').orderBy('order').get().then(function(snap) {
+    if (snap.empty) return; /* ยังใช้ hardcoded ถ้าว่าง */
+    DOCUMENT_TYPES = [];
+    snap.forEach(function(d) {
+      var data = d.data();
+      if (data.active === false) return; /* กรอง inactive ฝั่ง client */
+      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'var(--purple)', department: data.department||'academic' });
+    });
+    /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่
+       เรียก renderCharts() เฉพาะตอนที่ allSubs/teacherMap โหลดจริงแล้วเท่านั้น
+       (กันเคส initial load ที่ query นี้เสร็จก่อน loadAllSubmissions() แล้ว
+       renderCharts() ไปวาดด้วยข้อมูลว่าง total=0 วูบก่อนของจริงจะมา) */
+    if (currentSubTab === 'overview' && _initialDataLoaded) {
+      buildDocFilterBar();
+      renderCharts();
+    }
+  });
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+/* ── แสดงสถานะ submitted ให้ทุกคนเมื่อปีการศึกษา 2568 ── */
+function fakeStatus(s) {
+  return s || 'none';
+}
+
+/* normalise ชื่อกลุ่มสาระ ให้ใช้เปรียบเทียบได้ (ตัดช่องว่างพิเศษ) */
+function normaliseGroup(g) {
+  return (g || '').replace(/\s+/g, ' ').trim();
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function bootApp(u) {
+    var pageTitle = 'Admin – ติดตามส่งงานประจำภาคเรียน';
+    if (!isSuperAdmin && !adminPermissions.headOfGroup &&
+        !adminPermissions.assistantDirectorAcademic &&
+        !adminPermissions.deputyDirectorAcademic &&
+        !adminPermissions.director) {
+      pageTitle = 'ติดตามส่งงานประจำภาคเรียน (ดูข้อมูลเท่านั้น)';
+    }
+    /* อัปเดต subtitle navbar ตาม role */
+    var navSub = document.querySelector('.navbar-subtitle');
+    if (navSub) navSub.textContent = pageTitle;
+
+    initYearSemUI();
+    /* โหลด admins ทั้งหมด เพื่อ fallback ชื่อผู้ตรวจในบันทึกข้อความ */
+    db.collection('admins').get().then(function(snap) {
+      adminRoles.headOfGroups = {};
+      snap.forEach(function(d) {
+        var data = d.data();
+        var p = data.permissions || {};
+        var nameVal = data.name || data.headOfGroupName || d.id;
+        if (p.headOfGroup) {
+          /* เก็บแยกตามกลุ่มสาระ (headOfGroupSubject) เพื่อดึงให้ตรงกับครูที่ส่ง */
+          var grp = normaliseGroup(data.headOfGroupSubject || data.staffGroup || '');
+          adminRoles.headOfGroups[grp] = { name: nameVal, email: d.id };
+        }
+        if (p.assistantDirectorAcademic) adminRoles.assistantAcademic  = { name: nameVal, email: d.id };
+        if (p.deputyDirectorAcademic)    adminRoles.deputyAcademic     = { name: nameVal, email: d.id };
+        if (p.director)                  adminRoles.director           = { name: nameVal, email: d.id };
+      });
+    }).catch(function(){});
+    loadDocTypesFromFirestore(); /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้ว loadAllSubmissions ตาม */
+    loadAllSubmissions();
+    lucide.createIcons();
+}
+
+/* ─── YEAR / SEM UI INIT ─── */
+function initYearSemUI() {
+  document.getElementById('yearLabel').textContent = currentYear;
+  document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
+  document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
+}
+
 /* ── สร้าง group filter buttons dynamic จาก availableGroups ── */
 function buildGroupFilterBar() {
   var bar = document.getElementById('groupFilterBar');
@@ -367,16 +378,6 @@ function buildDocFilterBar() {
   document.getElementById('docAll').className = 'filter-pill' + (currentDocFilter === 'all' ? ' active' : '');
 }
 
-function setDocFilter(d) {
-  currentDocFilter = d;
-  document.getElementById('docAll').className = 'filter-pill' + (d === 'all' ? ' active' : '');
-  DOCUMENT_TYPES.forEach(function(dt) {
-    var el = document.getElementById('doc_' + dt.id);
-    if (el) el.className = 'filter-pill' + (d === dt.id ? ' active' : '');
-  });
-  renderView();
-}
-
 /* ── helper: สร้าง merged-status map (email|docTypeId → status) จาก teacherMap ──
    ใช้ merged status เดียวกับที่ teacherMap.subs[docTypeId].status คำนวณไว้แล้ว
    (ต่ำสุดของทุก course ใน docType นั้น) เพื่อให้ stat cards, donut chart
@@ -393,39 +394,6 @@ function buildMergedStatusMap() {
     });
   });
   return map;
-}
-
-function updateStats() {
-  var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
-  var teachers  = teacherList.length;
-
-  /* นับจาก merged status (1 ครู × 1 docType = 1 slot) แทนการนับ raw docs */
-  var mergedMap     = buildMergedStatusMap();
-  var statuses      = Object.values(mergedMap);
-  var submitted     = statuses.filter(function(s){ return s !== 'none'; }).length;
-  var reviewed      = statuses.filter(function(s){
-    return s === 'head_reviewed' || s === 'assistant_reviewed' || s === 'deputy_reviewed';
-  }).length;
-  var finalApproved = statuses.filter(function(s){ return s === 'final_approved'; }).length;
-  var pending       = statuses.filter(function(s){ return s === 'none'; }).length;
-
-  document.getElementById('statTeachers').textContent = teachers;
-  document.getElementById('statSubmitted').textContent = submitted;
-  document.getElementById('statReviewed').textContent = reviewed;
-  document.getElementById('statFinalApproved').textContent = finalApproved;
-  document.getElementById('statPending').textContent = pending;
-
-  /* อัปเดตกราฟเสมอ */
-  renderCharts();
-}
-
-/* ─── FILTER / VIEW ─── */
-function setFilter(f) {
-  currentFilter = f;
-  ['filterAll','filterIncomplete','filterComplete','filterPending'].forEach(function(id) {
-    document.getElementById(id).className = 'filter-pill' + (id === 'filter'+cap(f) ? ' active' : '');
-  });
-  renderView();
 }
 function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -475,22 +443,6 @@ function getFilteredTeachers() {
 function renderView() {
   if (currentView === 'list') renderListView();
   else renderMatrixView();
-}
-
-/* ─── LIST VIEW ─── */
-function getLatestSubmitTime(t) {
-  /* หาเวลาส่งล่าสุดของครูคนนี้ — sub เป็น container อ่านจาก _courses */
-  var times = [];
-  Object.values(t.subs).forEach(function(sub) {
-    var docs = sub._courses || [sub];
-    docs.forEach(function(doc) {
-      if (doc._isContainer) return;
-      if (!doc.submittedAt) return;
-      var d = doc.submittedAt.toDate ? doc.submittedAt.toDate() : new Date(doc.submittedAt);
-      times.push(d.getTime());
-    });
-  });
-  return times.length ? Math.max.apply(null, times) : 0;
 }
 
 function getNeedsReviewPriority(t) {
@@ -727,13 +679,6 @@ function renderListView() {
   lucide.createIcons();
 }
 
-function toggleTeacher(uid) {
-  var docs = document.getElementById('docs-' + uid);
-  var chev = document.getElementById('chevron-' + uid);
-  var open = docs.classList.toggle('open');
-  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
-}
-
 /* ─── WORKFLOW BAR HELPER ─── */
 function buildWorkflowBar(status) {
   var steps = [
@@ -850,102 +795,6 @@ function renderMatrixView() {
   lucide.createIcons();
 }
 
-/* ─── REVIEW MODAL ─── */
-var reviewingSubId  = null;
-var reviewingUid    = null;
-var reviewingDocTypeId = null;
-var selectedFileIdx = 0;        /* index ของไฟล์ที่เลือกอยู่ใน sub.files[] */
-var selectedCourseKey = null;   /* courseCode ของรายวิชาที่เลือกอยู่ (สำหรับ multi-course) */
-
-function openReview(subId, uid, docTypeId) {
-  if (!subId) return;
-  var t = teacherMap[uid];
-  var sub = t && t.subs[docTypeId];
-  if (!sub) return;
-
-  var dt = DOCUMENT_TYPES.find(function(d){ return d.id===docTypeId; });
-  reviewingUid       = uid;
-  reviewingDocTypeId = docTypeId;
-  selectedFileIdx    = 0;
-  selectedCourseKey  = null;
-
-  /* สร้าง courseMap เพื่อกำหนด selectedCourseKey และ reviewingSubId ตั้งแต่แรก */
-  var courseMap  = buildCourseMapFromSub(sub);
-  var courseKeys = Object.keys(courseMap);
-
-  /* ตั้งค่าเริ่มต้น: เลือก course แรกเสมอ */
-  if (courseKeys.length > 0) {
-    selectedCourseKey = courseKeys[0];
-    var firstFiles = courseMap[courseKeys[0]];
-    reviewingSubId = (firstFiles.length > 0 && firstFiles[0]._docId)
-      ? firstFiles[0]._docId
-      : (sub._courses ? sub._courses[0].id : (sub.id || subId));
-  } else {
-    reviewingSubId = sub.id || subId;
-  }
-
-  document.getElementById('reviewModalTitle').textContent = dt.label;
-  document.getElementById('reviewModalSub').textContent =
-    (t.staffName || t.displayName) +
-    (t.position  ? ' · ' + t.position  : '') +
-    (t.staffGroup ? ' · ' + t.staffGroup : '') +
-    ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
-
-  /* ── แสดง badge บทบาทผู้ตรวจ ── */
-  var badgeEl = document.getElementById('reviewRoleBadge');
-  if (badgeEl) {
-    var p2 = adminPermissions || {};
-    var badgeCfg = isSuperAdmin
-      ? { label:'⚡ SuperAdmin', bg:'var(--purple-light)', color:'#6d28d9' }
-      : isHeadOfGroupOnly
-      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'#92400e' }
-      : p2.assistantDirectorAcademic && !p2.deputyDirectorAcademic && !p2.director
-      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'#0e7490' }
-      : p2.deputyDirectorAcademic && !p2.director
-      ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'#7e22ce' }
-      : p2.director
-      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'#b45309' }
-      : { label:'👁 ดูข้อมูลเท่านั้น', bg:'#f1f5f9', color:'#64748b' };
-    badgeEl.style.background = badgeCfg.bg;
-    badgeEl.style.color = badgeCfg.color;
-    badgeEl.textContent = badgeCfg.label;
-    badgeEl.style.display = 'inline-flex';
-  }
-
-  var multiSection = document.getElementById('multiFileSection');
-
-  if (courseKeys.length > 1) {
-    /* หลายวิชา (หลาย Firestore doc): แสดง course selector */
-    multiSection.style.display = 'block';
-    renderCourseFileList(sub, courseMap, courseKeys[0]);
-  } else if (courseKeys.length === 1) {
-    /* วิชาเดียว: ซ่อน selector แสดงตรงๆ */
-    multiSection.style.display = 'none';
-    fillSingleFileInfo({});
-  } else {
-    multiSection.style.display = 'none';
-    fillSingleFileInfo(sub);
-  }
-
-  document.getElementById('reviewModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  /* ซ่อน textarea หมายเหตุถ้าดูอย่างเดียว */
-  var p3 = adminPermissions || {};
-  var canReview = isSuperAdmin || isHeadOfGroupOnly ||
-    p3.assistantDirectorAcademic || p3.deputyDirectorAcademic || p3.director;
-  var noteSection = document.getElementById('reviewNoteSection');
-  if (noteSection) noteSection.style.display = canReview ? 'block' : 'none';
-
-  /* เคลียร์ note + signature เมื่อเปิด modal ใหม่ทุกครั้ง */
-  var noteEl = document.getElementById('adminNote');
-  if (noteEl) noteEl.value = '';
-  if (typeof clearAdminSignature === 'function') clearAdminSignature();
-  if (typeof initAdminSigPadNow  === 'function') initAdminSigPadNow();
-
-  lucide.createIcons();
-}
-
 /* จัดกลุ่มไฟล์ตาม courseCode → { courseCode: [file,...] } */
 function buildCourseMap(sub) {
   return buildCourseMapFromSub(sub);
@@ -1022,19 +871,6 @@ function buildFileInfoObj(sub, f) {
   });
 }
 
-/* เปิด modal โดย pre-select รายวิชาที่ระบุ */
-function openReviewCourse(subId, uid, docTypeId, cKey) {
-  openReview(subId, uid, docTypeId);
-  var t   = teacherMap[uid];
-  var sub = t && t.subs[docTypeId];
-  if (!sub) return;
-  var courseMap = buildCourseMapFromSub(sub);
-  var keys = Object.keys(courseMap);
-  if (keys.length > 1 && courseMap[cKey]) {
-    renderCourseFileList(sub, courseMap, cKey);
-  }
-}
-
 /* แสดง course selector และ highlight รายวิชาที่เลือก */
 function renderCourseFileList(sub, courseMap, activeCourseKey) {
   selectedCourseKey = activeCourseKey;
@@ -1088,22 +924,6 @@ function getCourseStatus(files, fallbackStatus) {
     var s = f.status || fallbackStatus || 'submitted';
     return order[s] < order[acc] ? s : acc;
   }, 'final_approved');
-}
-
-function selectCourse(cKey) {
-  var t   = teacherMap[reviewingUid];
-  var sub = t && t.subs[reviewingDocTypeId];
-  if (!sub) return;
-  var courseMap = buildCourseMap(sub);
-  renderCourseFileList(sub, courseMap, cKey);
-  lucide.createIcons();
-}
-
-function selectFile(idx) {
-  var t   = teacherMap[reviewingUid];
-  var sub = t && t.subs[reviewingDocTypeId];
-  if (!sub || !sub.files) return;
-  renderMultiFileList(sub, sub.files, idx);
 }
 
 /* (legacy — kept for single-file list fallback) */
@@ -1440,65 +1260,6 @@ function fillSingleFileInfo(sub) {
   lucide.createIcons();
 }
 
-/* ════════════════════════════════════════════
-   ADMIN SIGNATURE PAD
-   ════════════════════════════════════════════ */
-(function() {
-  var canvas, ctx, drawing = false, hasSig = false;
-
-  function initAdminSigPad() {
-    canvas = document.getElementById('adminSigCanvas');
-    if (!canvas) return;
-    ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-
-    var rect = canvas.getBoundingClientRect();
-    canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
-    canvas.height = Math.floor(rect.height * (window.devicePixelRatio || 1));
-    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-    canvas.style.width  = rect.width  + 'px';
-    canvas.style.height = rect.height + 'px';
-
-    /* reset drawing flag & re-setup style after scale */
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-
-    function getPos(e) {
-      var r = canvas.getBoundingClientRect();
-      var src = e.touches ? e.touches[0] : e;
-      return { x: src.clientX - r.left, y: src.clientY - r.top };
-    }
-    function start(e) { e.preventDefault(); drawing = true; var p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-    function move(e)  { if (!drawing) return; e.preventDefault(); var p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasSig = true; }
-    function end()    { drawing = false; }
-
-    canvas.addEventListener('mousedown',  start);
-    canvas.addEventListener('mousemove',  move);
-    canvas.addEventListener('mouseup',    end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove',  move,  { passive: false });
-    canvas.addEventListener('touchend',   end);
-  }
-
-  window.clearAdminSignature = function() {
-    if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
-    hasSig = false;
-  };
-  window.isAdminSigEmpty = function() { return !hasSig; };
-  window.getAdminSigDataURL = function() { return canvas ? canvas.toDataURL('image/png') : ''; };
-  window.initAdminSigPadNow = function() {
-    hasSig = false;
-    setTimeout(initAdminSigPad, 80);
-  };
-})();
-
 /* อัปโหลด admin signature ไปยัง Firebase Storage */
 function uploadAdminSignatureToStorage(docId, status) {
   if (typeof isAdminSigEmpty === 'function' && isAdminSigEmpty()) {
@@ -1712,12 +1473,6 @@ function formatDate(ts) {
 }
 function esc(s){ var d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
 
-/* Override closeModal for convenience */
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-
 /* ══════════════════════════════════════
    CHARTS
    ══════════════════════════════════════ */
@@ -1896,40 +1651,6 @@ function renderDocTypeBars() {
   }).join('');
   lucide.createIcons();
 }
-
-/* ════════════════════════════════════════════
-   SUB TAB SWITCHING
-   ════════════════════════════════════════════ */
-var currentSubTab = 'overview';
-
-function switchSubTab(tab) {
-  currentSubTab = tab;
-  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'  ? ' active' : '');
-  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'     ? ' active' : '');
-  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'   ? ' active' : '');
-  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes'  ? ' active' : '');
-  document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
-  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
-  document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
-  document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
-
-  if (tab === 'doctypes') { loadDocTypeList(); lucide.createIcons(); }
-  if (tab === 'teacher')  { lucide.createIcons(); }
-  if (tab === 'group')    { renderGroupPanel(); lucide.createIcons(); }
-}
-
-/* ════════════════════════════════════════════
-   PANEL: รายกลุ่มสาระ
-   ════════════════════════════════════════════ */
-/* ════════════════════════════════════════════
-   PANEL: รายกลุ่มสาระ
-   ════════════════════════════════════════════ */
-
-var _groupData = {}; /* cache ข้อมูลกลุ่ม */
-
-var SEG_COLORS = { final:'#16a34a', deputy:'#8b5cf6', assist:'#f59e0b', head:'#0ea5e9', submitted:'#22c55e', revision:'#ef4444' };
-var SEG_LABELS = { final:'ผอ.อนุมัติ', deputy:'รอง ผอ.ตรวจแล้ว', assist:'ผช.ผอ.ตรวจแล้ว', head:'หัวหน้าฯ ตรวจแล้ว', submitted:'รอตรวจ', revision:'ให้แก้ไข' };
-var SEG_KEYS   = ['final','deputy','assist','head','submitted','revision'];
 
 function buildGroupData() {
   _groupData = {};
@@ -2184,165 +1905,6 @@ function renderGroupDetail() {
   lucide.createIcons();
 }
 
-/* ════════════════════════════════════════════
-   NOTES TIMELINE MODAL
-   ════════════════════════════════════════════ */
-
-function openNotesModal(uid, docTypeId) {
-  var t = teacherMap[uid];
-  var sub = t && t.subs[docTypeId];
-  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
-  if (!dt) return;
-
-  document.getElementById('notesModalTitle').textContent = dt.label;
-  document.getElementById('notesModalSub').textContent =
-    (t ? (t.staffName || t.displayName) : uid) + ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
-
-  var body = document.getElementById('notesModalBody');
-
-  if (!sub) {
-    body.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:10px;"></i><p style="font-size:13px;font-weight:700;">ยังไม่มีการส่งงาน</p></div>';
-    document.getElementById('notesModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    lucide.createIcons();
-    return;
-  }
-
-  var docs = sub._courses || [sub];
-  var html = '';
-
-  docs.forEach(function(doc) {
-    if (doc._isContainer) return;
-
-    var dSt = doc.status || 'submitted';
-    var courseLabel = doc.courseCode
-      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
-      : '<span style="font-size:11px;color:#64748b;font-weight:600;">รายการเดียว</span>';
-
-    html += '<div style="margin-bottom:var(--gap-section);">';
-    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">' +
-      courseLabel + '</div>';
-
-    /* Build timeline entries */
-    var entries = [];
-
-    /* 1. Teacher submitted */
-    if (doc.submittedAt) {
-      entries.push({
-        emoji: '📤', bg: '#dcfce7', border: '#22c55e',
-        label: 'ครูส่งงาน',
-        who: t ? (t.staffName || t.displayName) : uid,
-        when: formatDate(doc.submittedAt),
-        note: doc.note || null,
-        noteStyle: 'teacher',
-      });
-    }
-
-    /* 2. Head note */
-    if (doc.headNote || doc.status === 'head_reviewed' || doc.status === 'reviewed') {
-      entries.push({
-        emoji: '👤', bg: '#e0f2fe', border: '#0ea5e9',
-        label: 'หัวหน้ากลุ่มสาระตรวจ',
-        who: doc.headReviewerName || doc.reviewedBy || '',
-        when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
-        note: doc.headNote || null,
-        noteStyle: 'admin',
-      });
-    }
-
-    /* 3. Assistant note */
-    if (doc.assistantNote || doc.status === 'assistant_reviewed') {
-      entries.push({
-        emoji: '🏅', bg: '#fef3c7', border: '#f59e0b',
-        label: 'ผช.ผอ.วิชาการตรวจ',
-        who: doc.assistantReviewerName || '',
-        when: '',
-        note: doc.assistantNote || null,
-        noteStyle: 'admin',
-      });
-    }
-
-    /* 4. Deputy note */
-    if (doc.deputyNote || doc.status === 'deputy_reviewed') {
-      entries.push({
-        emoji: '👑', bg: 'var(--purple-light)', border: '#8b5cf6',
-        label: 'รอง ผอ.วิชาการตรวจ',
-        who: doc.deputyReviewerName || '',
-        when: '',
-        note: doc.deputyNote || null,
-        noteStyle: 'admin',
-      });
-    }
-
-    /* 5. Director note */
-    if (doc.directorNote || doc.status === 'final_approved') {
-      entries.push({
-        emoji: '🎖', bg: '#d1fae5', border: '#16a34a',
-        label: 'ผู้อำนวยการอนุมัติ',
-        who: doc.directorReviewerName || '',
-        when: '',
-        note: doc.directorNote || null,
-        noteStyle: 'admin',
-      });
-    }
-
-    /* 6. Revision note */
-    if (doc.status === 'revision' && doc.adminNote) {
-      entries.push({
-        emoji: '⚠', bg: '#fef2f2', border: '#ef4444',
-        label: 'ส่งคืนเพื่อแก้ไข',
-        who: doc.lastRevisedBy || doc.reviewedBy || '',
-        when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
-        note: doc.adminNote,
-        noteStyle: 'revision',
-      });
-    }
-
-    if (!entries.length) {
-      html += '<p style="font-size:12px;color:#94a3b8;text-align:center;padding:12px;">ยังไม่มีบันทึกข้อความ</p>';
-    } else {
-      html += '<div class="note-timeline">';
-      entries.forEach(function(e, idx) {
-        var isLast = idx === entries.length - 1;
-        html += '<div class="note-tl-item">' +
-          '<div class="note-tl-line">' +
-            '<div class="note-tl-dot" style="background:' + e.bg + ';border-color:' + e.border + ';">' + e.emoji + '</div>' +
-            (!isLast ? '<div class="note-tl-connector"></div>' : '') +
-          '</div>' +
-          '<div class="note-tl-body">' +
-            '<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:4px;">' +
-              '<span style="font-size:12px;font-weight:800;color:#0f172a;">' + e.label + '</span>' +
-              (e.who ? '<span style="font-size:10px;color:var(--purple);font-weight:700;">โดย ' + esc(e.who) + '</span>' : '') +
-              (e.when ? '<span style="font-size:10px;color:#94a3b8;">' + e.when + '</span>' : '') +
-            '</div>' +
-            (e.note ?
-              '<div style="margin-top:6px;padding:8px 12px;border-radius:8px;border-left:3px solid ' + e.border + ';background:' + e.bg + ';">' +
-                '<p style="font-size:12px;color:#334155;line-height:1.7;">' + esc(e.note) + '</p>' +
-              '</div>'
-            : '<p style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:4px;">ไม่มีบันทึกข้อความ</p>') +
-          '</div>' +
-        '</div>';
-      });
-      html += '</div>';
-    }
-
-    html += '</div>';
-  });
-
-  body.innerHTML = html || '<p style="text-align:center;color:#94a3b8;font-size:13px;padding:24px;">ไม่มีข้อมูล</p>';
-  document.getElementById('notesModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  lucide.createIcons();
-}
-
-/* ════════════════════════════════════════════
-   TEACHER INDIVIDUAL PANEL
-   ════════════════════════════════════════════ */
-
-var selectedTeacherKey = null;   /* email key ของครูที่เลือก */
-var teacherDonutCtx    = null;   /* canvas context */
-var teacherDonutChartObj = null;
-
 /* ── Dropdown Search ── */
 function renderTeacherDropdown() {
   var q = (document.getElementById('teacherSearchInput').value || '').toLowerCase().trim();
@@ -2385,31 +1947,6 @@ function renderTeacherDropdown() {
       wrap.style.display = 'none';
     }
   };
-}
-
-function selectTeacher(email) {
-  selectedTeacherKey = email;
-  var t = teacherMap[email];
-  if (!t) return;
-
-  /* hide dropdown */
-  document.getElementById('teacherDropdownWrap').style.display = 'none';
-  document.getElementById('teacherSearchInput').value = '';
-
-  /* show pill */
-  var name   = t.staffName || t.displayName || t.email;
-  var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7c3aed&color=fff&size=72';
-  document.getElementById('selectedTeacherAvatar').src = avatar;
-  document.getElementById('selectedTeacherName').textContent  = name;
-  document.getElementById('selectedTeacherMeta').textContent  = (t.staffGroup || '') + (t.position ? ' · ' + t.position : '') + ' · ' + t.email;
-  document.getElementById('selectedTeacherPill').style.display = 'flex';
-
-  /* show detail panel */
-  document.getElementById('teacherNoSelect').style.display    = 'none';
-  document.getElementById('teacherDetailPanel').style.display = 'flex';
-
-  renderTeacherDetail(t);
-  lucide.createIcons();
 }
 
 function clearTeacherSelection() {
@@ -2672,51 +2209,6 @@ function renderTeacherSubTable(t) {
   lucide.createIcons();
 }
 
-function toggleSubDocRow(rowId) {
-  var body = document.getElementById('body-' + rowId);
-  var chev = document.getElementById('chev-' + rowId);
-  var open = body.classList.toggle('open');
-  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
-}
-
-var editingDocTypeId = null; /* null = new, else Firestore doc id */
-var selectedDtColor  = '#3b82f6';
-var dragSrcIndex     = null;
-
-/* ── load & render list ── */
-function loadDocTypeList() {
-  var list = document.getElementById('docTypeList');
-  if (!list) return;
-  list.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i data-lucide="loader" style="width:24px;height:24px;animation:spin .8s linear infinite;"></i></div>';
-  lucide.createIcons();
-
-  db.collection('portfolio_doc_types').orderBy('order').get().then(function(snap) {
-    /* ถ้า collection ว่าง → แสดง default (built-in) แต่ยังไม่บันทึก */
-    var docs = [];
-    snap.forEach(function(d) { docs.push(Object.assign({ _id: d.id }, d.data())); });
-
-    /* ถ้ายังไม่มีเลย → เสนอ seed จาก DOCUMENT_TYPES ที่ hardcode */
-    if (!docs.length) {
-      list.innerHTML =
-        '<div style="text-align:center;padding:40px 20px;">' +
-          '<div style="width:56px;height:56px;background:var(--purple-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
-            '<i data-lucide="list-plus" style="width:28px;height:28px;color:var(--purple);"></i>' +
-          '</div>' +
-          '<p style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:6px;">ยังไม่มีหัวข้องานใน Firestore</p>' +
-          '<p style="font-size:13px;color:#64748b;margin-bottom:var(--gap-section);">คลิก "นำเข้าค่าเริ่มต้น" เพื่อเพิ่มหัวข้อที่ใช้อยู่ปัจจุบันทั้งหมด หรือเพิ่มทีละรายการ</p>' +
-          '<button onclick="seedDefaultDocTypes()" style="padding:10px 20px;background:var(--purple);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-right:8px;">นำเข้าค่าเริ่มต้น (' + DOCUMENT_TYPES.length + ' รายการ)</button>' +
-          '<button onclick="openDocTypeModal(null)" style="padding:10px 20px;background:white;color:var(--purple);border:1.5px solid var(--purple);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">+ เพิ่มใหม่</button>' +
-        '</div>';
-      lucide.createIcons();
-      return;
-    }
-
-    renderDocTypeRows(docs);
-  }).catch(function(e) {
-    list.innerHTML = '<p style="color:#ef4444;padding:20px;font-size:13px;">โหลดไม่ได้: ' + e.message + '</p>';
-  });
-}
-
 function renderDocTypeRows(docs) {
   var list = document.getElementById('docTypeList');
   if (!docs.length) {
@@ -2776,93 +2268,6 @@ function seedDefaultDocTypes() {
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
 }
 
-/* ── drag-to-reorder ── */
-var dragDocs = []; /* snapshot ของ list ขณะ drag */
-
-function dtDragStart(ev, idx) {
-  dragSrcIndex = idx;
-  ev.currentTarget.classList.add('dragging');
-  ev.dataTransfer.effectAllowed = 'move';
-  /* snapshot current docs */
-  dragDocs = Array.prototype.slice.call(document.getElementById('docTypeList').querySelectorAll('.dt-row')).map(function(el){ return el.dataset.docid; });
-}
-function dtDragOver(ev) {
-  ev.preventDefault();
-  ev.dataTransfer.dropEffect = 'move';
-  ev.currentTarget.classList.add('drag-over');
-}
-function dtDragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
-function dtDragEnd() {
-  document.querySelectorAll('.dt-row').forEach(function(el){ el.classList.remove('dragging','drag-over'); });
-}
-function dtDrop(ev, targetIdx, targetDocId) {
-  ev.preventDefault();
-  ev.currentTarget.classList.remove('drag-over');
-  if (dragSrcIndex === null || dragSrcIndex === targetIdx) return;
-
-  /* reorder dragDocs */
-  var moved = dragDocs.splice(dragSrcIndex, 1)[0];
-  dragDocs.splice(targetIdx, 0, moved);
-
-  /* batch update order */
-  var batch = db.batch();
-  dragDocs.forEach(function(docId, i) {
-    batch.update(db.collection('portfolio_doc_types').doc(docId), { order: i });
-  });
-  batch.commit().then(function() {
-    loadDocTypeList();
-    /* อัปเดต DOCUMENT_TYPES ใน memory ด้วย */
-    loadDocTypesFromFirestore();
-  }).catch(function(e){ showToast('เรียงลำดับไม่ได้: ' + e.message, '#ef4444'); });
-  dragSrcIndex = null;
-}
-
-/* ── open add/edit modal ── */
-function openDocTypeModal(firestoreId) {
-  editingDocTypeId = firestoreId;
-  document.getElementById('dtModalTitle').textContent = firestoreId ? 'แก้ไขหัวข้องาน' : 'เพิ่มหัวข้องาน';
-  document.getElementById('dtLabel').value  = '';
-  document.getElementById('dtShort').value  = '';
-  document.getElementById('dtId').value     = '';
-  document.getElementById('dtIcon').value   = 'file';
-  document.getElementById('dtColor').value  = '#3b82f6';
-  document.getElementById('dtActive').checked = true;
-  document.getElementById('dtDepartment').value = 'academic';
-  selectedDtColor = '#3b82f6';
-  updateColorSwatches('#3b82f6');
-  syncToggleUI();
-  previewDtIcon();
-
-  if (firestoreId) {
-    db.collection('portfolio_doc_types').doc(firestoreId).get().then(function(d) {
-      if (!d.exists) return;
-      var data = d.data();
-      document.getElementById('dtLabel').value  = data.label  || '';
-      document.getElementById('dtShort').value  = data.short  || '';
-      document.getElementById('dtId').value     = data.id     || firestoreId;
-      document.getElementById('dtIcon').value   = data.icon   || 'file';
-      document.getElementById('dtColor').value  = data.color  || '#3b82f6';
-      document.getElementById('dtActive').checked = data.active !== false;
-      document.getElementById('dtDepartment').value = data.department || 'academic';
-      selectedDtColor = data.color || '#3b82f6';
-      updateColorSwatches(selectedDtColor);
-      syncToggleUI();
-      previewDtIcon();
-    });
-  }
-
-  /* toggle knob wiring */
-  document.getElementById('dtActive').onchange = syncToggleUI;
-
-  openModal('docTypeModal');
-}
-
-function syncToggleUI() {
-  var on = document.getElementById('dtActive').checked;
-  document.getElementById('dtActiveToggle').style.background = on ? 'var(--purple)' : '#e2e8f0';
-  document.getElementById('dtActiveKnob').style.transform    = on ? 'translateX(20px)' : 'translateX(0)';
-}
-
 function previewDtIcon() {
   var icon = document.getElementById('dtIcon').value.trim() || 'file';
   var el = document.getElementById('dtIconPreviewIcon');
@@ -2874,101 +2279,6 @@ function setDtIcon(icon) {
   document.getElementById('dtIcon').value = icon;
   previewDtIcon();
 }
-
-function selectDtColor(color, el) {
-  selectedDtColor = color;
-  document.getElementById('dtColor').value = color;
-  updateColorSwatches(color);
-}
-
-function updateColorSwatches(color) {
-  document.querySelectorAll('#dtColorPicker .color-swatch').forEach(function(sw) {
-    sw.classList.toggle('selected', sw.dataset.color === color);
-  });
-}
-
-function syncColorInput() {
-  var val = document.getElementById('dtColor').value.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-    selectedDtColor = val;
-    updateColorSwatches(val);
-  }
-}
-
-/* ── save doc type ── */
-function saveDocType() {
-  var label  = document.getElementById('dtLabel').value.trim();
-  var short  = document.getElementById('dtShort').value.trim();
-  var id     = document.getElementById('dtId').value.trim();
-  var icon   = document.getElementById('dtIcon').value.trim() || 'file';
-  var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
-  var active = document.getElementById('dtActive').checked;
-  var department = document.getElementById('dtDepartment').value || 'academic';
-
-  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
-  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
-  if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
-
-  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active, department: department };
-
-  var prom;
-  if (editingDocTypeId) {
-    prom = db.collection('portfolio_doc_types').doc(editingDocTypeId).update(saveData);
-  } else {
-    /* กำหนด order ต่อท้าย */
-    prom = db.collection('portfolio_doc_types').orderBy('order','desc').limit(1).get().then(function(snap) {
-      var nextOrder = snap.empty ? 0 : (snap.docs[0].data().order || 0) + 1;
-      saveData.order = nextOrder;
-      /* ใช้ id เป็น Firestore doc id */
-      return db.collection('portfolio_doc_types').doc(id).set(saveData);
-    });
-  }
-
-  prom.then(function() {
-    showToast(editingDocTypeId ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มหัวข้องานใหม่แล้ว', '#22c55e');
-    closeModal('docTypeModal');
-    loadDocTypeList();
-    loadDocTypesFromFirestore(); /* อัปเดต DOCUMENT_TYPES ใน memory */
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
-}
-
-/* ── delete doc type ── */
-function deleteDocType(firestoreId, label) {
-  if (!confirm('ลบหัวข้อ "' + label + '" ออกจากระบบ?\n\nงานที่ครูส่งไปแล้วจะยังอยู่ใน Firestore แต่จะไม่แสดงในมุมมองติดตาม')) return;
-  db.collection('portfolio_doc_types').doc(firestoreId).delete().then(function() {
-    showToast('ลบหัวข้อแล้ว', '#f59e0b');
-    loadDocTypeList();
-    loadDocTypesFromFirestore();
-  }).catch(function(e){ showToast('ลบไม่ได้: ' + e.message, '#ef4444'); });
-}
-
-/* ── load DOCUMENT_TYPES from Firestore into memory (replaces hardcoded array) ── */
-function loadDocTypesFromFirestore() {
-  db.collection('portfolio_doc_types').orderBy('order').get().then(function(snap) {
-    if (snap.empty) return; /* ยังใช้ hardcoded ถ้าว่าง */
-    DOCUMENT_TYPES = [];
-    snap.forEach(function(d) {
-      var data = d.data();
-      if (data.active === false) return; /* กรอง inactive ฝั่ง client */
-      DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'var(--purple)', department: data.department||'academic' });
-    });
-    /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่
-       เรียก renderCharts() เฉพาะตอนที่ allSubs/teacherMap โหลดจริงแล้วเท่านั้น
-       (กันเคส initial load ที่ query นี้เสร็จก่อน loadAllSubmissions() แล้ว
-       renderCharts() ไปวาดด้วยข้อมูลว่าง total=0 วูบก่อนของจริงจะมา) */
-    if (currentSubTab === 'overview' && _initialDataLoaded) {
-      buildDocFilterBar();
-      renderCharts();
-    }
-  });
-}
-
-/* ════════════════════════════════════════════
-   ADMIN MEMO MODAL — ดูบันทึกข้อความราชการ
-   ════════════════════════════════════════════ */
-
-/* A4 Scaler */
-var adminMemoPage1Scale = 1;
 function scaleAdminA4() {
   var el = document.getElementById('adminMemoContent');
   if (el) {
@@ -3004,20 +2314,6 @@ function scaleAdminA4() {
   }
 }
 
-function initAdminA4Scaler() {
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (m.target.classList && m.target.classList.contains('open')) {
-        setTimeout(scaleAdminA4, 80);
-        setTimeout(scaleAdminA4, 300);
-      }
-    });
-  });
-  var modal = document.getElementById('adminMemoModal');
-  if (modal) observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
-  window.addEventListener('resize', function(){ setTimeout(scaleAdminA4, 50); });
-}
-
 function toThaiNumeralsAdmin(s) {
   if (!s) return '';
   var thaiDigits = ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'];
@@ -3038,94 +2334,6 @@ function renderAdminMemoBody(el, text) {
     if (!p.trim()) return '<div style="height:0.8em;"></div>';
     return '<p style="margin:0;text-indent:2.5em;font-size:12pt;line-height:1.8;">' + p + '</p>';
   }).join('');
-}
-
-/* เปิด memo modal จากหน้า admin — อ่าน memo จาก portfolio_memos (shared doc) */
-function openAdminMemoModal(docId, teacherEmail, docTypeId) {
-  var t = teacherMap[teacherEmail];
-  if (!t) { showToast('ไม่พบข้อมูลครู', 'error'); return; }
-  var sub = t.subs[docTypeId];
-  if (!sub) { showToast('ยังไม่มีการส่งงาน', 'warn'); return; }
-
-  /* หา uid ของครู จาก submission */
-  var docRef = docId
-    ? db.collection('portfolio_submissions').doc(docId)
-    : (sub._courses && sub._courses[0] && sub._courses[0].id
-        ? db.collection('portfolio_submissions').doc(sub._courses[0].id)
-        : null);
-
-  /* ดึง uid ของครูจาก submission เพื่อสร้าง memoId */
-  function proceedWithUid(uid) {
-    var memoId = uid + '_' + docTypeId + '_' + currentYear + '_' + currentSem;
-    db.collection('portfolio_memos').doc(memoId).get()
-      .then(function(mDoc) {
-        var memoData = mDoc.exists ? mDoc.data() : null;
-
-        /* รวบรวม docId ทั้งหมดที่ต้อง fetch (ตัวที่คลิก + ทุก course) */
-        var idsToFetch = [];
-        if (docId) idsToFetch.push(docId);
-        if (sub._courses) {
-          sub._courses.forEach(function(c) {
-            if (c.id && idsToFetch.indexOf(c.id) === -1) idsToFetch.push(c.id);
-          });
-        }
-        if (!idsToFetch.length) {
-          _renderAdminMemoModal(Object.assign({}, sub), t, docTypeId, memoData);
-          return;
-        }
-
-        /* field ที่ต้องรวมจากทุก course */
-        var sigFields = ['headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL',
-                         'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
-                         'headNote','assistantNote','deputyNote','directorNote'];
-
-        /* fetch ทุก doc แล้ว merge ลายเซ็นเข้าด้วยกัน */
-        Promise.all(idsToFetch.map(function(id){
-          return db.collection('portfolio_submissions').doc(id).get().catch(function(){ return null; });
-        })).then(function(snaps) {
-          /* ใช้ doc ที่ตรงกับ docId เป็นฐาน ไม่ก็ตัวแรก */
-          var primary = null;
-          snaps.forEach(function(s) {
-            if (s && s.exists && s.id === docId) primary = Object.assign({ id: s.id }, s.data());
-          });
-          if (!primary && snaps[0] && snaps[0].exists) {
-            primary = Object.assign({ id: snaps[0].id }, snaps[0].data());
-          }
-          if (!primary) {
-            primary = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
-          }
-
-          /* เติม field ลายเซ็น/ชื่อ/note จาก course อื่น ๆ ถ้า primary ยังว่าง */
-          snaps.forEach(function(s) {
-            if (!s || !s.exists) return;
-            var d = s.data();
-            sigFields.forEach(function(f) {
-              if (!primary[f] && d[f]) primary[f] = d[f];
-            });
-          });
-
-          _renderAdminMemoModal(primary, t, docTypeId, memoData);
-        }).catch(function() {
-          var fallback = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
-          _renderAdminMemoModal(fallback, t, docTypeId, memoData);
-        });
-      })
-      .catch(function(e) {
-        console.warn('[AdminMemo] loadMemo error:', e);
-        var fallback = Object.assign({ id: docId || '' }, (sub._courses && sub._courses[0]) || sub);
-        _renderAdminMemoModal(fallback, t, docTypeId, null);
-      });
-  }
-
-  /* ถ้ามี docRef ให้ดึง uid จาก Firestore; ถ้าไม่มีก็ใช้ uid จาก teacherMap หรือ email */
-  if (docRef) {
-    docRef.get().then(function(d) {
-      var uid = (d.exists && d.data().uid) || t.uid || teacherEmail;
-      proceedWithUid(uid);
-    }).catch(function() { proceedWithUid(t.uid || teacherEmail); });
-  } else {
-    proceedWithUid(t.uid || teacherEmail);
-  }
 }
 function _renderAdminMemoModal(doc, t, docTypeId, memoData) {
   var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; }) || {};
@@ -3232,6 +2440,658 @@ function _renderAdminMemoModal(doc, t, docTypeId, memoData) {
   lucide.createIcons();
 }
 
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+/* ─── YEAR / SEM ─── */
+function changeYear(d) {
+  currentYear += d;
+  document.getElementById('yearLabel').textContent = currentYear;
+  loadAllSubmissions();
+}
+function selectSem(s) {
+  currentSem = s;
+  document.getElementById('semPill1').className = 'sem-pill' + (s===1?' active':'');
+  document.getElementById('semPill2').className = 'sem-pill' + (s===2?' active':'');
+  loadAllSubmissions();
+}
+
+function setDocFilter(d) {
+  currentDocFilter = d;
+  document.getElementById('docAll').className = 'filter-pill' + (d === 'all' ? ' active' : '');
+  DOCUMENT_TYPES.forEach(function(dt) {
+    var el = document.getElementById('doc_' + dt.id);
+    if (el) el.className = 'filter-pill' + (d === dt.id ? ' active' : '');
+  });
+  renderView();
+}
+
+function updateStats() {
+  var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
+  var teachers  = teacherList.length;
+
+  /* นับจาก merged status (1 ครู × 1 docType = 1 slot) แทนการนับ raw docs */
+  var mergedMap     = buildMergedStatusMap();
+  var statuses      = Object.values(mergedMap);
+  var submitted     = statuses.filter(function(s){ return s !== 'none'; }).length;
+  var reviewed      = statuses.filter(function(s){
+    return s === 'head_reviewed' || s === 'assistant_reviewed' || s === 'deputy_reviewed';
+  }).length;
+  var finalApproved = statuses.filter(function(s){ return s === 'final_approved'; }).length;
+  var pending       = statuses.filter(function(s){ return s === 'none'; }).length;
+
+  document.getElementById('statTeachers').textContent = teachers;
+  document.getElementById('statSubmitted').textContent = submitted;
+  document.getElementById('statReviewed').textContent = reviewed;
+  document.getElementById('statFinalApproved').textContent = finalApproved;
+  document.getElementById('statPending').textContent = pending;
+
+  /* อัปเดตกราฟเสมอ */
+  renderCharts();
+}
+
+/* ─── FILTER / VIEW ─── */
+function setFilter(f) {
+  currentFilter = f;
+  ['filterAll','filterIncomplete','filterComplete','filterPending'].forEach(function(id) {
+    document.getElementById(id).className = 'filter-pill' + (id === 'filter'+cap(f) ? ' active' : '');
+  });
+  renderView();
+}
+
+/* ─── LIST VIEW ─── */
+function getLatestSubmitTime(t) {
+  /* หาเวลาส่งล่าสุดของครูคนนี้ — sub เป็น container อ่านจาก _courses */
+  var times = [];
+  Object.values(t.subs).forEach(function(sub) {
+    var docs = sub._courses || [sub];
+    docs.forEach(function(doc) {
+      if (doc._isContainer) return;
+      if (!doc.submittedAt) return;
+      var d = doc.submittedAt.toDate ? doc.submittedAt.toDate() : new Date(doc.submittedAt);
+      times.push(d.getTime());
+    });
+  });
+  return times.length ? Math.max.apply(null, times) : 0;
+}
+
+function toggleTeacher(uid) {
+  var docs = document.getElementById('docs-' + uid);
+  var chev = document.getElementById('chevron-' + uid);
+  var open = docs.classList.toggle('open');
+  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+}   /* courseCode ของรายวิชาที่เลือกอยู่ (สำหรับ multi-course) */
+
+function openReview(subId, uid, docTypeId) {
+  if (!subId) return;
+  var t = teacherMap[uid];
+  var sub = t && t.subs[docTypeId];
+  if (!sub) return;
+
+  var dt = DOCUMENT_TYPES.find(function(d){ return d.id===docTypeId; });
+  reviewingUid       = uid;
+  reviewingDocTypeId = docTypeId;
+  selectedFileIdx    = 0;
+  selectedCourseKey  = null;
+
+  /* สร้าง courseMap เพื่อกำหนด selectedCourseKey และ reviewingSubId ตั้งแต่แรก */
+  var courseMap  = buildCourseMapFromSub(sub);
+  var courseKeys = Object.keys(courseMap);
+
+  /* ตั้งค่าเริ่มต้น: เลือก course แรกเสมอ */
+  if (courseKeys.length > 0) {
+    selectedCourseKey = courseKeys[0];
+    var firstFiles = courseMap[courseKeys[0]];
+    reviewingSubId = (firstFiles.length > 0 && firstFiles[0]._docId)
+      ? firstFiles[0]._docId
+      : (sub._courses ? sub._courses[0].id : (sub.id || subId));
+  } else {
+    reviewingSubId = sub.id || subId;
+  }
+
+  document.getElementById('reviewModalTitle').textContent = dt.label;
+  document.getElementById('reviewModalSub').textContent =
+    (t.staffName || t.displayName) +
+    (t.position  ? ' · ' + t.position  : '') +
+    (t.staffGroup ? ' · ' + t.staffGroup : '') +
+    ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
+
+  /* ── แสดง badge บทบาทผู้ตรวจ ── */
+  var badgeEl = document.getElementById('reviewRoleBadge');
+  if (badgeEl) {
+    var p2 = adminPermissions || {};
+    var badgeCfg = isSuperAdmin
+      ? { label:'⚡ SuperAdmin', bg:'var(--purple-light)', color:'#6d28d9' }
+      : isHeadOfGroupOnly
+      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'#92400e' }
+      : p2.assistantDirectorAcademic && !p2.deputyDirectorAcademic && !p2.director
+      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'#0e7490' }
+      : p2.deputyDirectorAcademic && !p2.director
+      ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'#7e22ce' }
+      : p2.director
+      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'#b45309' }
+      : { label:'👁 ดูข้อมูลเท่านั้น', bg:'#f1f5f9', color:'#64748b' };
+    badgeEl.style.background = badgeCfg.bg;
+    badgeEl.style.color = badgeCfg.color;
+    badgeEl.textContent = badgeCfg.label;
+    badgeEl.style.display = 'inline-flex';
+  }
+
+  var multiSection = document.getElementById('multiFileSection');
+
+  if (courseKeys.length > 1) {
+    /* หลายวิชา (หลาย Firestore doc): แสดง course selector */
+    multiSection.style.display = 'block';
+    renderCourseFileList(sub, courseMap, courseKeys[0]);
+  } else if (courseKeys.length === 1) {
+    /* วิชาเดียว: ซ่อน selector แสดงตรงๆ */
+    multiSection.style.display = 'none';
+    fillSingleFileInfo({});
+  } else {
+    multiSection.style.display = 'none';
+    fillSingleFileInfo(sub);
+  }
+
+  document.getElementById('reviewModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  /* ซ่อน textarea หมายเหตุถ้าดูอย่างเดียว */
+  var p3 = adminPermissions || {};
+  var canReview = isSuperAdmin || isHeadOfGroupOnly ||
+    p3.assistantDirectorAcademic || p3.deputyDirectorAcademic || p3.director;
+  var noteSection = document.getElementById('reviewNoteSection');
+  if (noteSection) noteSection.style.display = canReview ? 'block' : 'none';
+
+  /* เคลียร์ note + signature เมื่อเปิด modal ใหม่ทุกครั้ง */
+  var noteEl = document.getElementById('adminNote');
+  if (noteEl) noteEl.value = '';
+  if (typeof clearAdminSignature === 'function') clearAdminSignature();
+  if (typeof initAdminSigPadNow  === 'function') initAdminSigPadNow();
+
+  lucide.createIcons();
+}
+
+/* เปิด modal โดย pre-select รายวิชาที่ระบุ */
+function openReviewCourse(subId, uid, docTypeId, cKey) {
+  openReview(subId, uid, docTypeId);
+  var t   = teacherMap[uid];
+  var sub = t && t.subs[docTypeId];
+  if (!sub) return;
+  var courseMap = buildCourseMapFromSub(sub);
+  var keys = Object.keys(courseMap);
+  if (keys.length > 1 && courseMap[cKey]) {
+    renderCourseFileList(sub, courseMap, cKey);
+  }
+}
+
+function selectCourse(cKey) {
+  var t   = teacherMap[reviewingUid];
+  var sub = t && t.subs[reviewingDocTypeId];
+  if (!sub) return;
+  var courseMap = buildCourseMap(sub);
+  renderCourseFileList(sub, courseMap, cKey);
+  lucide.createIcons();
+}
+
+function selectFile(idx) {
+  var t   = teacherMap[reviewingUid];
+  var sub = t && t.subs[reviewingDocTypeId];
+  if (!sub || !sub.files) return;
+  renderMultiFileList(sub, sub.files, idx);
+}
+
+/* Override closeModal for convenience */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchSubTab(tab) {
+  currentSubTab = tab;
+  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'  ? ' active' : '');
+  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'     ? ' active' : '');
+  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'   ? ' active' : '');
+  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes'  ? ' active' : '');
+  document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
+  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
+  document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
+  document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
+
+  if (tab === 'doctypes') { loadDocTypeList(); lucide.createIcons(); }
+  if (tab === 'teacher')  { lucide.createIcons(); }
+  if (tab === 'group')    { renderGroupPanel(); lucide.createIcons(); }
+}
+
+/* ════════════════════════════════════════════
+   NOTES TIMELINE MODAL
+   ════════════════════════════════════════════ */
+
+function openNotesModal(uid, docTypeId) {
+  var t = teacherMap[uid];
+  var sub = t && t.subs[docTypeId];
+  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+  if (!dt) return;
+
+  document.getElementById('notesModalTitle').textContent = dt.label;
+  document.getElementById('notesModalSub').textContent =
+    (t ? (t.staffName || t.displayName) : uid) + ' · ปีการศึกษา ' + currentYear + ' ภาคเรียน ' + currentSem;
+
+  var body = document.getElementById('notesModalBody');
+
+  if (!sub) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:10px;"></i><p style="font-size:13px;font-weight:700;">ยังไม่มีการส่งงาน</p></div>';
+    document.getElementById('notesModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    lucide.createIcons();
+    return;
+  }
+
+  var docs = sub._courses || [sub];
+  var html = '';
+
+  docs.forEach(function(doc) {
+    if (doc._isContainer) return;
+
+    var dSt = doc.status || 'submitted';
+    var courseLabel = doc.courseCode
+      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
+      : '<span style="font-size:11px;color:#64748b;font-weight:600;">รายการเดียว</span>';
+
+    html += '<div style="margin-bottom:var(--gap-section);">';
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">' +
+      courseLabel + '</div>';
+
+    /* Build timeline entries */
+    var entries = [];
+
+    /* 1. Teacher submitted */
+    if (doc.submittedAt) {
+      entries.push({
+        emoji: '📤', bg: '#dcfce7', border: '#22c55e',
+        label: 'ครูส่งงาน',
+        who: t ? (t.staffName || t.displayName) : uid,
+        when: formatDate(doc.submittedAt),
+        note: doc.note || null,
+        noteStyle: 'teacher',
+      });
+    }
+
+    /* 2. Head note */
+    if (doc.headNote || doc.status === 'head_reviewed' || doc.status === 'reviewed') {
+      entries.push({
+        emoji: '👤', bg: '#e0f2fe', border: '#0ea5e9',
+        label: 'หัวหน้ากลุ่มสาระตรวจ',
+        who: doc.headReviewerName || doc.reviewedBy || '',
+        when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
+        note: doc.headNote || null,
+        noteStyle: 'admin',
+      });
+    }
+
+    /* 3. Assistant note */
+    if (doc.assistantNote || doc.status === 'assistant_reviewed') {
+      entries.push({
+        emoji: '🏅', bg: '#fef3c7', border: '#f59e0b',
+        label: 'ผช.ผอ.วิชาการตรวจ',
+        who: doc.assistantReviewerName || '',
+        when: '',
+        note: doc.assistantNote || null,
+        noteStyle: 'admin',
+      });
+    }
+
+    /* 4. Deputy note */
+    if (doc.deputyNote || doc.status === 'deputy_reviewed') {
+      entries.push({
+        emoji: '👑', bg: 'var(--purple-light)', border: '#8b5cf6',
+        label: 'รอง ผอ.วิชาการตรวจ',
+        who: doc.deputyReviewerName || '',
+        when: '',
+        note: doc.deputyNote || null,
+        noteStyle: 'admin',
+      });
+    }
+
+    /* 5. Director note */
+    if (doc.directorNote || doc.status === 'final_approved') {
+      entries.push({
+        emoji: '🎖', bg: '#d1fae5', border: '#16a34a',
+        label: 'ผู้อำนวยการอนุมัติ',
+        who: doc.directorReviewerName || '',
+        when: '',
+        note: doc.directorNote || null,
+        noteStyle: 'admin',
+      });
+    }
+
+    /* 6. Revision note */
+    if (doc.status === 'revision' && doc.adminNote) {
+      entries.push({
+        emoji: '⚠', bg: '#fef2f2', border: '#ef4444',
+        label: 'ส่งคืนเพื่อแก้ไข',
+        who: doc.lastRevisedBy || doc.reviewedBy || '',
+        when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
+        note: doc.adminNote,
+        noteStyle: 'revision',
+      });
+    }
+
+    if (!entries.length) {
+      html += '<p style="font-size:12px;color:#94a3b8;text-align:center;padding:12px;">ยังไม่มีบันทึกข้อความ</p>';
+    } else {
+      html += '<div class="note-timeline">';
+      entries.forEach(function(e, idx) {
+        var isLast = idx === entries.length - 1;
+        html += '<div class="note-tl-item">' +
+          '<div class="note-tl-line">' +
+            '<div class="note-tl-dot" style="background:' + e.bg + ';border-color:' + e.border + ';">' + e.emoji + '</div>' +
+            (!isLast ? '<div class="note-tl-connector"></div>' : '') +
+          '</div>' +
+          '<div class="note-tl-body">' +
+            '<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:4px;">' +
+              '<span style="font-size:12px;font-weight:800;color:#0f172a;">' + e.label + '</span>' +
+              (e.who ? '<span style="font-size:10px;color:var(--purple);font-weight:700;">โดย ' + esc(e.who) + '</span>' : '') +
+              (e.when ? '<span style="font-size:10px;color:#94a3b8;">' + e.when + '</span>' : '') +
+            '</div>' +
+            (e.note ?
+              '<div style="margin-top:6px;padding:8px 12px;border-radius:8px;border-left:3px solid ' + e.border + ';background:' + e.bg + ';">' +
+                '<p style="font-size:12px;color:#334155;line-height:1.7;">' + esc(e.note) + '</p>' +
+              '</div>'
+            : '<p style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:4px;">ไม่มีบันทึกข้อความ</p>') +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  body.innerHTML = html || '<p style="text-align:center;color:#94a3b8;font-size:13px;padding:24px;">ไม่มีข้อมูล</p>';
+  document.getElementById('notesModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+}
+
+function selectTeacher(email) {
+  selectedTeacherKey = email;
+  var t = teacherMap[email];
+  if (!t) return;
+
+  /* hide dropdown */
+  document.getElementById('teacherDropdownWrap').style.display = 'none';
+  document.getElementById('teacherSearchInput').value = '';
+
+  /* show pill */
+  var name   = t.staffName || t.displayName || t.email;
+  var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7c3aed&color=fff&size=72';
+  document.getElementById('selectedTeacherAvatar').src = avatar;
+  document.getElementById('selectedTeacherName').textContent  = name;
+  document.getElementById('selectedTeacherMeta').textContent  = (t.staffGroup || '') + (t.position ? ' · ' + t.position : '') + ' · ' + t.email;
+  document.getElementById('selectedTeacherPill').style.display = 'flex';
+
+  /* show detail panel */
+  document.getElementById('teacherNoSelect').style.display    = 'none';
+  document.getElementById('teacherDetailPanel').style.display = 'flex';
+
+  renderTeacherDetail(t);
+  lucide.createIcons();
+}
+
+function toggleSubDocRow(rowId) {
+  var body = document.getElementById('body-' + rowId);
+  var chev = document.getElementById('chev-' + rowId);
+  var open = body.classList.toggle('open');
+  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+} /* snapshot ของ list ขณะ drag */
+
+function dtDragStart(ev, idx) {
+  dragSrcIndex = idx;
+  ev.currentTarget.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+  /* snapshot current docs */
+  dragDocs = Array.prototype.slice.call(document.getElementById('docTypeList').querySelectorAll('.dt-row')).map(function(el){ return el.dataset.docid; });
+}
+function dtDragOver(ev) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+  ev.currentTarget.classList.add('drag-over');
+}
+function dtDragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+function dtDragEnd() {
+  document.querySelectorAll('.dt-row').forEach(function(el){ el.classList.remove('dragging','drag-over'); });
+}
+function dtDrop(ev, targetIdx, targetDocId) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  if (dragSrcIndex === null || dragSrcIndex === targetIdx) return;
+
+  /* reorder dragDocs */
+  var moved = dragDocs.splice(dragSrcIndex, 1)[0];
+  dragDocs.splice(targetIdx, 0, moved);
+
+  /* batch update order */
+  var batch = db.batch();
+  dragDocs.forEach(function(docId, i) {
+    batch.update(db.collection('portfolio_doc_types').doc(docId), { order: i });
+  });
+  batch.commit().then(function() {
+    loadDocTypeList();
+    /* อัปเดต DOCUMENT_TYPES ใน memory ด้วย */
+    loadDocTypesFromFirestore();
+  }).catch(function(e){ showToast('เรียงลำดับไม่ได้: ' + e.message, '#ef4444'); });
+  dragSrcIndex = null;
+}
+
+/* ── open add/edit modal ── */
+function openDocTypeModal(firestoreId) {
+  editingDocTypeId = firestoreId;
+  document.getElementById('dtModalTitle').textContent = firestoreId ? 'แก้ไขหัวข้องาน' : 'เพิ่มหัวข้องาน';
+  document.getElementById('dtLabel').value  = '';
+  document.getElementById('dtShort').value  = '';
+  document.getElementById('dtId').value     = '';
+  document.getElementById('dtIcon').value   = 'file';
+  document.getElementById('dtColor').value  = '#3b82f6';
+  document.getElementById('dtActive').checked = true;
+  document.getElementById('dtDepartment').value = 'academic';
+  selectedDtColor = '#3b82f6';
+  updateColorSwatches('#3b82f6');
+  syncToggleUI();
+  previewDtIcon();
+
+  if (firestoreId) {
+    db.collection('portfolio_doc_types').doc(firestoreId).get().then(function(d) {
+      if (!d.exists) return;
+      var data = d.data();
+      document.getElementById('dtLabel').value  = data.label  || '';
+      document.getElementById('dtShort').value  = data.short  || '';
+      document.getElementById('dtId').value     = data.id     || firestoreId;
+      document.getElementById('dtIcon').value   = data.icon   || 'file';
+      document.getElementById('dtColor').value  = data.color  || '#3b82f6';
+      document.getElementById('dtActive').checked = data.active !== false;
+      document.getElementById('dtDepartment').value = data.department || 'academic';
+      selectedDtColor = data.color || '#3b82f6';
+      updateColorSwatches(selectedDtColor);
+      syncToggleUI();
+      previewDtIcon();
+    });
+  }
+
+  /* toggle knob wiring */
+  document.getElementById('dtActive').onchange = syncToggleUI;
+
+  openModal('docTypeModal');
+}
+
+function selectDtColor(color, el) {
+  selectedDtColor = color;
+  document.getElementById('dtColor').value = color;
+  updateColorSwatches(color);
+}
+
+function updateColorSwatches(color) {
+  document.querySelectorAll('#dtColorPicker .color-swatch').forEach(function(sw) {
+    sw.classList.toggle('selected', sw.dataset.color === color);
+  });
+}
+
+/* ── save doc type ── */
+function saveDocType() {
+  var label  = document.getElementById('dtLabel').value.trim();
+  var short  = document.getElementById('dtShort').value.trim();
+  var id     = document.getElementById('dtId').value.trim();
+  var icon   = document.getElementById('dtIcon').value.trim() || 'file';
+  var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
+  var active = document.getElementById('dtActive').checked;
+  var department = document.getElementById('dtDepartment').value || 'academic';
+
+  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
+  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
+  if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
+
+  var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active, department: department };
+
+  var prom;
+  if (editingDocTypeId) {
+    prom = db.collection('portfolio_doc_types').doc(editingDocTypeId).update(saveData);
+  } else {
+    /* กำหนด order ต่อท้าย */
+    prom = db.collection('portfolio_doc_types').orderBy('order','desc').limit(1).get().then(function(snap) {
+      var nextOrder = snap.empty ? 0 : (snap.docs[0].data().order || 0) + 1;
+      saveData.order = nextOrder;
+      /* ใช้ id เป็น Firestore doc id */
+      return db.collection('portfolio_doc_types').doc(id).set(saveData);
+    });
+  }
+
+  prom.then(function() {
+    showToast(editingDocTypeId ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มหัวข้องานใหม่แล้ว', '#22c55e');
+    closeModal('docTypeModal');
+    loadDocTypeList();
+    loadDocTypesFromFirestore(); /* อัปเดต DOCUMENT_TYPES ใน memory */
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
+}
+
+/* ── delete doc type ── */
+function deleteDocType(firestoreId, label) {
+  if (!confirm('ลบหัวข้อ "' + label + '" ออกจากระบบ?\n\nงานที่ครูส่งไปแล้วจะยังอยู่ใน Firestore แต่จะไม่แสดงในมุมมองติดตาม')) return;
+  db.collection('portfolio_doc_types').doc(firestoreId).delete().then(function() {
+    showToast('ลบหัวข้อแล้ว', '#f59e0b');
+    loadDocTypeList();
+    loadDocTypesFromFirestore();
+  }).catch(function(e){ showToast('ลบไม่ได้: ' + e.message, '#ef4444'); });
+}
+
+function initAdminA4Scaler() {
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.target.classList && m.target.classList.contains('open')) {
+        setTimeout(scaleAdminA4, 80);
+        setTimeout(scaleAdminA4, 300);
+      }
+    });
+  });
+  var modal = document.getElementById('adminMemoModal');
+  if (modal) observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', function(){ setTimeout(scaleAdminA4, 50); });
+}
+
+/* เปิด memo modal จากหน้า admin — อ่าน memo จาก portfolio_memos (shared doc) */
+function openAdminMemoModal(docId, teacherEmail, docTypeId) {
+  var t = teacherMap[teacherEmail];
+  if (!t) { showToast('ไม่พบข้อมูลครู', 'error'); return; }
+  var sub = t.subs[docTypeId];
+  if (!sub) { showToast('ยังไม่มีการส่งงาน', 'warn'); return; }
+
+  /* หา uid ของครู จาก submission */
+  var docRef = docId
+    ? db.collection('portfolio_submissions').doc(docId)
+    : (sub._courses && sub._courses[0] && sub._courses[0].id
+        ? db.collection('portfolio_submissions').doc(sub._courses[0].id)
+        : null);
+
+  /* ดึง uid ของครูจาก submission เพื่อสร้าง memoId */
+  function proceedWithUid(uid) {
+    var memoId = uid + '_' + docTypeId + '_' + currentYear + '_' + currentSem;
+    db.collection('portfolio_memos').doc(memoId).get()
+      .then(function(mDoc) {
+        var memoData = mDoc.exists ? mDoc.data() : null;
+
+        /* รวบรวม docId ทั้งหมดที่ต้อง fetch (ตัวที่คลิก + ทุก course) */
+        var idsToFetch = [];
+        if (docId) idsToFetch.push(docId);
+        if (sub._courses) {
+          sub._courses.forEach(function(c) {
+            if (c.id && idsToFetch.indexOf(c.id) === -1) idsToFetch.push(c.id);
+          });
+        }
+        if (!idsToFetch.length) {
+          _renderAdminMemoModal(Object.assign({}, sub), t, docTypeId, memoData);
+          return;
+        }
+
+        /* field ที่ต้องรวมจากทุก course */
+        var sigFields = ['headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL',
+                         'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
+                         'headNote','assistantNote','deputyNote','directorNote'];
+
+        /* fetch ทุก doc แล้ว merge ลายเซ็นเข้าด้วยกัน */
+        Promise.all(idsToFetch.map(function(id){
+          return db.collection('portfolio_submissions').doc(id).get().catch(function(){ return null; });
+        })).then(function(snaps) {
+          /* ใช้ doc ที่ตรงกับ docId เป็นฐาน ไม่ก็ตัวแรก */
+          var primary = null;
+          snaps.forEach(function(s) {
+            if (s && s.exists && s.id === docId) primary = Object.assign({ id: s.id }, s.data());
+          });
+          if (!primary && snaps[0] && snaps[0].exists) {
+            primary = Object.assign({ id: snaps[0].id }, snaps[0].data());
+          }
+          if (!primary) {
+            primary = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
+          }
+
+          /* เติม field ลายเซ็น/ชื่อ/note จาก course อื่น ๆ ถ้า primary ยังว่าง */
+          snaps.forEach(function(s) {
+            if (!s || !s.exists) return;
+            var d = s.data();
+            sigFields.forEach(function(f) {
+              if (!primary[f] && d[f]) primary[f] = d[f];
+            });
+          });
+
+          _renderAdminMemoModal(primary, t, docTypeId, memoData);
+        }).catch(function() {
+          var fallback = Object.assign({ id: docId || idsToFetch[0] }, (sub._courses && sub._courses[0]) || sub);
+          _renderAdminMemoModal(fallback, t, docTypeId, memoData);
+        });
+      })
+      .catch(function(e) {
+        console.warn('[AdminMemo] loadMemo error:', e);
+        var fallback = Object.assign({ id: docId || '' }, (sub._courses && sub._courses[0]) || sub);
+        _renderAdminMemoModal(fallback, t, docTypeId, null);
+      });
+  }
+
+  /* ถ้ามี docRef ให้ดึง uid จาก Firestore; ถ้าไม่มีก็ใช้ uid จาก teacherMap หรือ email */
+  if (docRef) {
+    docRef.get().then(function(d) {
+      var uid = (d.exists && d.data().uid) || t.uid || teacherEmail;
+      proceedWithUid(uid);
+    }).catch(function() { proceedWithUid(t.uid || teacherEmail); });
+  } else {
+    proceedWithUid(t.uid || teacherEmail);
+  }
+}
+
 function closeAdminMemoModal() {
   var modal = document.getElementById('adminMemoModal');
   if (modal) modal.classList.remove('open');
@@ -3240,4 +3100,151 @@ function closeAdminMemoModal() {
 
 /* เรียก init เมื่อ DOM พร้อม */
 document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
+
+/* ══════════════════════ INIT ══════════════════════ */
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+─────────────────────────────────────────── */
+(function() {
+  var now    = new Date();
+  var month  = now.getMonth() + 1;
+  var day    = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1; thYear = ceYear + 543;
+  } else if (month >= 11) {
+    sem = 2; thYear = ceYear + 543;
+  } else {
+    sem = 2; thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})(); /* true = superadmin → ตรวจ/เปลี่ยนสถานะได้ทุกขั้น */
+
+/* ── buildPage() — auth guard + shell + sidebar อัตโนมัติ ── */
+buildPage({
+  appId:        'adminApp',
+  navSubtitle:  'ติดตามส่งงานครู',
+  navTheme:     'dark',
+  activePage:   'portfolio-admin',
+  requireAdmin: 'admin',          /* ต้องมีในตาราง admins (portfolio/headOfGroup check ใน onAuth) */
+
+  onAuth: function(user, contentEl) {
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    currentUserEmail = user.email.toLowerCase();
+    currentUserName  = user.displayName || '';
+
+    /* inject page content จาก <template> */
+    var tpl = document.getElementById('portfolioAdminContent');
+    if (tpl) contentEl.appendChild(document.importNode(tpl.content, true));
+
+    lucide.createIcons();
+    setupScrollTopButton();
+
+    /* ── ตรวจสิทธิ์เพิ่มเติม (portfolio / headOfGroup) ── */
+    db.collection('admins').doc(currentUserEmail).get().then(function(doc) {
+      var p = doc.exists ? (doc.data().permissions || {}) : {};
+      var isSA = currentUserEmail === SUPERADMIN_EMAIL || !!p.superadmin;
+      isSuperAdmin = isSA;
+      var hasPortfolio   = isSA || !!p.portfolio;
+      var hasHeadOfGroup = !!p.headOfGroup;
+
+      adminPermissions = isSA
+        ? { portfolio:true, assistantDirectorAcademic:true, deputyDirectorAcademic:true, director:true }
+        : p;
+
+      if (!hasPortfolio && !hasHeadOfGroup) {
+        document.getElementById('adminApp').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'flex';
+        lucide.createIcons();
+        return;
+      }
+
+      /* ── ชื่อจริง + headOfGroup lock ── */
+      db.collection('staff').where('email','==',currentUserEmail).limit(1).get().then(function(ss) {
+        if (!ss.empty) {
+          currentUserName = ss.docs[0].data().name || currentUserName;
+          if (!hasPortfolio && hasHeadOfGroup) {
+            isHeadOfGroupOnly = true;
+            headOfGroupName = normaliseGroup(ss.docs[0].data().group || '');
+          }
+        } else if (!hasPortfolio && hasHeadOfGroup) {
+          isHeadOfGroupOnly = true;
+        }
+        bootApp(user);
+      }).catch(function() {
+        if (!hasPortfolio && hasHeadOfGroup) isHeadOfGroupOnly = true;
+        bootApp(user);
+      });
+    }).catch(function() {
+      document.getElementById('accessDenied').style.display = 'flex';
+    });
+  }
+});
+
+/* ════════════════════════════════════════════
+   ADMIN SIGNATURE PAD
+   ════════════════════════════════════════════ */
+(function() {
+  var canvas, ctx, drawing = false, hasSig = false;
+
+  function initAdminSigPad() {
+    canvas = document.getElementById('adminSigCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    var rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
+    canvas.height = Math.floor(rect.height * (window.devicePixelRatio || 1));
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    canvas.style.width  = rect.width  + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    /* reset drawing flag & re-setup style after scale */
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    function getPos(e) {
+      var r = canvas.getBoundingClientRect();
+      var src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+    function start(e) { e.preventDefault(); drawing = true; var p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e)  { if (!drawing) return; e.preventDefault(); var p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasSig = true; }
+    function end()    { drawing = false; }
+
+    canvas.addEventListener('mousedown',  start);
+    canvas.addEventListener('mousemove',  move);
+    canvas.addEventListener('mouseup',    end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove',  move,  { passive: false });
+    canvas.addEventListener('touchend',   end);
+  }
+
+  window.clearAdminSignature = function() {
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+    hasSig = false;
+  };
+  window.isAdminSigEmpty = function() { return !hasSig; };
+  window.getAdminSigDataURL = function() { return canvas ? canvas.toDataURL('image/png') : ''; };
+  window.initAdminSigPadNow = function() {
+    hasSig = false;
+    setTimeout(initAdminSigPad, 80);
+  };
+})();
+
+
 

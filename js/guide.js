@@ -1,35 +1,4 @@
-
-buildPage({
-  appId:        'guideApp',
-  navSubtitle:  'คู่มือการใช้งาน',
-  navTheme:     'blue',
-  activePage:   'guide',
-  requireAdmin: false,
-  requireAuth:  false,
-
-  onAuth: function(user, contentEl) {
-    if (user) {
-      updateNavUser(user);
-      updateSidebarProfile(user);
-      checkAdminAccess(user.email);
-    }
-
-    contentEl.innerHTML = renderPage();
-    lucide.createIcons();
-    initTabs();
-    setupScrollTopButton();
-  }
-});
-
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
+/* ══════════════════════ RENDER ══════════════════════ */
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
@@ -467,6 +436,17 @@ function initTabs() {
   /* nothing needed — tabs start with correct active classes from render */
 }
 
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
 function switchGTab(name, btn) {
   document.querySelectorAll('.g-pane').forEach(function(p){ p.classList.remove('active'); });
   document.querySelectorAll('.g-tab').forEach(function(b){ b.classList.remove('tab-active','tab-active-purple'); });
@@ -501,6 +481,29 @@ function toggleFaq(btn) {
   }
 }
 
+/* ══════════════════════ INIT ══════════════════════ */
+buildPage({
+  appId:        'guideApp',
+  navSubtitle:  'คู่มือการใช้งาน',
+  navTheme:     'blue',
+  activePage:   'guide',
+  requireAdmin: false,
+  requireAuth:  false,
+
+  onAuth: function(user, contentEl) {
+    if (user) {
+      updateNavUser(user);
+      updateSidebarProfile(user);
+      checkAdminAccess(user.email);
+    }
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+    initTabs();
+    setupScrollTopButton();
+  }
+});
+
 /* ── Deep-link support ── */
 (function(){
   var h = window.location.hash;
@@ -529,4 +532,6 @@ function toggleFaq(btn) {
     });
   }
 })();
+
+
 

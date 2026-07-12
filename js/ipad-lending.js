@@ -1,33 +1,4 @@
-
-/* ══════════════════════════════════════════════════════════════
-   Auth guard + shell
-   ══════════════════════════════════════════════════════════════ */
-buildPage({
-  appId:        'myApp',
-  navSubtitle:  'ระบบยืม-คืน iPad',
-  navTheme:     'dark',
-  activePage:   'ipad-lending',
-  requireAdmin: 'ipad',    /* เฉพาะแอดมินที่มีสิทธิ์ permissions.ipad == true (หรือ SuperAdmin) เท่านั้นที่เข้าได้ */
-
-  onAuth: function(user, contentEl) {
-    currentUser = user;
-    updateNavUser(user);
-    updateSidebarProfile(user);
-    checkAdminAccess(user.email);
-
-    contentEl.innerHTML = renderPage();
-    lucide.createIcons();
-
-    document.getElementById('borrowDate').value = todayStr();
-    loadStudents();
-    loadStaff();
-    loadDevices();
-    loadActiveBorrows();
-    loadAccessoryClaims();
-    setupScrollTopButton();
-  }
-});
-
+/* ══════════════════════ STATE ══════════════════════ */
 var currentUser  = null;
 var STUDENTS     = [];   /* {id, name, grade, room} */
 var DEVICES      = [];   /* {id, friendlyName, assetNumber, serialNumber, status} */
@@ -50,17 +21,148 @@ var historyHasNext      = false;
 var historyLoading      = false;
 
 /* ══════════════════════════════════════════════════════════════
-   ปุ่มย้อนกลับไปด้านบน (ลอยมุมขวาล่าง)
-   scroll จริงเกิดที่ .content-area (id="pageContent") ไม่ใช่ window
+   สถิติ (กราฟด้านบน) — อัปเดตทุกครั้งที่ STUDENTS/DEVICES/BORROWS เปลี่ยน
    ══════════════════════════════════════════════════════════════ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
+var _charts = {};
+/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยังไม่คืน/ยืมอยู่) / สีเทา (คืนเรียบร้อยแล้ว หรือไม่ได้ยืมชิ้นนี้)
+   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
+var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
+var ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-tool', 'เคส': 'package' };
+
+var borrowFilterType = 'all';
+
+var editingBorrowId = null;
+
+var currentReturnBorrowId = null;
+
+var RETURN_ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
+
+var studentStatType  = 'student'; /* 'student' | 'staff' */
+var studentStatMode  = 'grade';
+var studentStatGrade = 'ม.4';
+
+var editingStudentId = null;
+
+/* ══════════════════════════════════════════════════════════════
+   ปรับสถานะเคลม (ใช้ร่วมกันทั้งหน้า "ข้อมูล iPad" และหน้า "ส่งเคลม")
+   ══════════════════════════════════════════════════════════════ */
+var currentClaimDeviceId = null;
+
+/* ══════════════════════════════════════════════════════════════
+   เคลมไอแพดโดยตรงจากหน้า "ส่งเคลม" — เลือกเครื่องได้ทั้งเครื่องว่างและ
+   เครื่องที่กำลังถูกยืมอยู่ ถ้าเครื่องกำลังถูกยืมอยู่ จะมีตัวเลือกให้
+   "เปลี่ยนเครื่อง" ให้ผู้ยืมทันที (ไม่บังคับ — ไม่เลือกก็ได้ ผู้ยืมจะ
+   ยังถือเครื่องเดิมที่ถูกส่งเคลมต่อไป จนกว่าจะมาคืน/แก้ไขทีหลัง)
+   สถานะ condition ของเครื่องอ่าน/เขียนที่ ipad_devices ตัวเดียวกับหน้า
+   "ข้อมูล iPad" และหน้ายืม (onBorrowDeviceInput กรอง condition==='claim'
+   ออกจากรายการให้ยืมอยู่แล้ว) จึงอัปเดตแล้วเห็นผลตรงกันทุกหน้าโดยอัตโนมัติ
+   ══════════════════════════════════════════════════════════════ */
+var claimSelectedDeviceId  = null;
+var claimSelectedBorrow    = null; /* รายการยืมที่ผูกกับเครื่องที่เลือก (ถ้ามี) */
+var claimNewDeviceId       = null;
+
+/* ══════════════════════ DATA LOADING ══════════════════════ */
+function refreshStudentRoomFilterOptions() {
+  var sel = document.getElementById('studentRoomFilter');
+  if (!sel) return;
+  var rooms = {};
+  STUDENTS.forEach(function(s) {
+    if (studentFilterGrade === 'all' || s.grade === studentFilterGrade) rooms[s.room] = true;
+  });
+  var roomList = Object.keys(rooms).sort(function(a,b){ return a.localeCompare(b,'th',{numeric:true}); });
+  sel.innerHTML = '<option value="all">ทุกห้อง</option>' + roomList.map(function(r) {
+    return '<option value="' + esc2(r) + '">ห้อง ' + esc2(r) + '</option>';
+  }).join('');
+  sel.value = studentFilterRoom;
+}
+
+function loadStaff() {
+  db.collection('staff').orderBy('name').onSnapshot(function(snap) {
+    STAFF = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderStaffTable();
+    renderStatsCharts();
+    renderStudentStatsChart();
+    if (document.getElementById('borrowFilterGroup')) populateBorrowFilterGroupOptions();
+  }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ประวัติทั้งหมด — โหลดทีละหน้า (100 รายการ/หน้า) ด้วย Firestore cursor
+   แทนที่จะโหลดทุก doc มาไว้ในหน่วยความจำตั้งแต่เปิดเว็บ
+   ══════════════════════════════════════════════════════════════ */
+function fetchHistoryPage(page) {
+  if (historyLoading) return;
+  historyLoading = true;
+
+  var tbody = document.getElementById('historyTbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>';
+
+  var query = db.collection('ipad_borrows').orderBy('createdAt', 'desc').limit(HISTORY_PAGE_SIZE);
+  if (page > 1 && historyPageCursors[page - 2]) {
+    query = query.startAfter(historyPageCursors[page - 2]);
+  }
+
+  query.get().then(function(snap) {
+    BORROWS_HISTORY = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    historyHasNext = snap.docs.length === HISTORY_PAGE_SIZE;
+    if (snap.docs.length) historyPageCursors[page - 1] = snap.docs[snap.docs.length - 1];
+    historyPage = page;
+    renderHistoryTable();
+    updateHistoryPagerUI();
+  }).catch(function(e) {
+    showToast('โหลดประวัติผิดพลาด: ' + e.message, 'error');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+  }).then(function() {
+    historyLoading = false;
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Firestore listeners
+   ══════════════════════════════════════════════════════════════ */
+function loadStudents() {
+  db.collection('ipad_students').onSnapshot(function(snap) {
+    STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderStudentsTable();
+    renderStudentStatsChart();
+    if (document.getElementById('borrowFilterRoom')) populateBorrowFilterRoomOptions();
+  }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
+}
+
+function loadDevices() {
+  db.collection('ipad_devices').onSnapshot(function(snap) {
+    DEVICES = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderDevicesTable();
+    renderClaimsTable();
+    var header = document.querySelector('#subpanel-devices .section-divider');
+    if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการ iPad ทั้งหมด (' + DEVICES.length + ')';
+    renderStatsCharts();
+    lucide.createIcons();
+  }, function(e) { showToast('โหลดข้อมูล iPad ผิดพลาด: ' + e.message, 'error'); });
+}
+
+function loadAccessoryClaims() {
+  db.collection('ipad_accessory_claims').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+    ACCESSORY_CLAIMS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderAccessoryClaimsTable();
+  }, function(e) { showToast('โหลดข้อมูลเคลมอุปกรณ์เสริมผิดพลาด: ' + e.message, 'error'); });
+}
+
+function loadActiveBorrows() {
+  /* ดึงเฉพาะรายการที่ "ยังไม่คืน" (real-time) — จำนวนถูกจำกัดด้วยจำนวน iPad ที่มีจริง
+     ไม่ใช่ประวัติทั้งหมดที่โตขึ้นเรื่อยๆ ทุกวัน จึงไม่ต้องกังวลเรื่อง limit */
+  db.collection('ipad_borrows').where('status', '==', 'out').onSnapshot(function(snap) {
+    BORROWS_OUT = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    renderBorrowOutTable();
+    renderDevicesTable();
+    renderStudentsTable();
+    renderStaffTable();
+    renderStatsCharts();
+    renderStudentStatsChart();
+  }, function(e) { showToast('โหลดรายการที่กำลังยืมผิดพลาด: ' + e.message, 'error'); });
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
@@ -143,22 +245,6 @@ function renderPage() {
     '<div class="sub-panel" id="subpanel-history">'         + renderHistoryPanel()  + '</div>'
   );
 }
-
-function switchSubTab(name) {
-  ['borrow','students','staff','devices','claims','history'].forEach(function(k) {
-    document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
-    document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
-  });
-  if (name === 'history') {
-    fetchHistoryPage(historyPage || 1);   /* โหลด/รีเฟรชหน้าปัจจุบันทุกครั้งที่เปิดแท็บนี้ */
-  }
-  lucide.createIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   สถิติ (กราฟด้านบน) — อัปเดตทุกครั้งที่ STUDENTS/DEVICES/BORROWS เปลี่ยน
-   ══════════════════════════════════════════════════════════════ */
-var _charts = {};
 function renderStatsCharts() {
   if (typeof Chart === 'undefined') return;
   var outCount = BORROWS_OUT.length;
@@ -243,10 +329,6 @@ function studentLabel(s) {
 function studentFullName(s) {
   return s.firstName + ' ' + s.lastName;
 }
-/* แสดงอุปกรณ์เสริมแยกเป็น badge สีเขียว (ยังไม่คืน/ยืมอยู่) / สีเทา (คืนเรียบร้อยแล้ว หรือไม่ได้ยืมชิ้นนี้)
-   เรียงลำดับ: หัวชาร์จ, สายชาร์จ, ปากกา, เคส */
-var ACC_ORDER = ['หัวชาร์จ', 'สายชาร์จ', 'ปากกา', 'เคส'];
-var ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-tool', 'เคส': 'package' };
 function accBadges(accessories, status) {
   accessories = accessories || [];
   var html = ACC_ORDER.map(function(name) {
@@ -298,57 +380,6 @@ function renderBorrowPanel() {
       '</tbody></table></div>' +
     '</div>'
   );
-}
-
-var borrowFilterType = 'all';  /* 'all' | 'student' | 'staff' */
-
-function setBorrowFilterType(type) {
-  borrowFilterType = type;
-  document.getElementById('borrowFilterTypeAll').classList.toggle('active', type === 'all');
-  document.getElementById('borrowFilterTypeStudent').classList.toggle('active', type === 'student');
-  document.getElementById('borrowFilterTypeStaff').classList.toggle('active', type === 'staff');
-
-  document.getElementById('borrowFilterStudentWrap').style.display = (type === 'student') ? 'flex' : 'none';
-  document.getElementById('borrowFilterStaffWrap').style.display   = (type === 'staff')   ? 'flex' : 'none';
-
-  if (type === 'student') {
-    document.getElementById('borrowFilterGrade').value = 'all';
-    populateBorrowFilterRoomOptions();
-  } else if (type === 'staff') {
-    populateBorrowFilterGroupOptions();
-  }
-  renderBorrowOutTable();
-}
-
-function onBorrowFilterGradeChange() {
-  populateBorrowFilterRoomOptions();
-  renderBorrowOutTable();
-}
-
-/* เติมตัวเลือก "ห้อง" ตามชั้นที่เลือก (ดึงจากข้อมูลนักเรียนทั้งหมด ไม่ใช่แค่คนที่ยืมอยู่
-   เพื่อให้เลือกดูห้องที่ยังไม่มีใครยืมได้ด้วย) */
-function populateBorrowFilterRoomOptions() {
-  var sel = document.getElementById('borrowFilterRoom');
-  if (!sel) return;
-  var grade = document.getElementById('borrowFilterGrade').value;
-  var roomsSet = {};
-  STUDENTS.forEach(function(s) {
-    if (grade === 'all' || s.grade === grade) roomsSet[s.room] = true;
-  });
-  var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
-  sel.innerHTML = '<option value="all">ทุกห้อง</option>' +
-    rooms.map(function(r) { return '<option value="' + esc2(r) + '">ห้อง ' + esc2(r) + '</option>'; }).join('');
-}
-
-/* เติมตัวเลือก "กลุ่มสาระ/งาน" จากข้อมูลบุคลากรทั้งหมด */
-function populateBorrowFilterGroupOptions() {
-  var sel = document.getElementById('borrowFilterGroup');
-  if (!sel) return;
-  var groupsSet = {};
-  STAFF.forEach(function(s) { groupsSet[s.group || 'ไม่ระบุ'] = true; });
-  var groups = Object.keys(groupsSet).sort(function(a, b) { return a.localeCompare(b, 'th'); });
-  sel.innerHTML = '<option value="all">ทุกกลุ่มสาระ/งาน</option>' +
-    groups.map(function(g) { return '<option value="' + esc2(g) + '">' + esc2(g) + '</option>'; }).join('');
 }
 
 function renderBorrowOutTable() {
@@ -404,72 +435,6 @@ function renderBorrowOutTable() {
   lucide.createIcons();
 }
 
-var editingBorrowId = null;
-
-function openBorrowModal() {
-  editingBorrowId = null;
-  document.getElementById('borrowModalTitle').textContent = 'บันทึกการยืม iPad';
-  document.getElementById('borrowModalSub').textContent = 'เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม';
-  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการยืม';
-  document.getElementById('borrowStudentInput').value = '';
-  document.getElementById('borrowDeviceInput').value = '';
-  document.getElementById('deviceInfoHint').textContent = '';
-  document.getElementById('newStudentHint').style.display = 'none';
-  document.getElementById('accCharger').checked = false;
-  document.getElementById('accCable').checked = false;
-  document.getElementById('accPen').checked = false;
-  document.getElementById('accCase').checked = false;
-  document.getElementById('accOther').value = '';
-  document.getElementById('borrowDate').value = todayStr();
-  document.getElementById('borrowerTypeStudent').checked = true;
-  document.getElementById('borrowerTypeStudent').disabled = false;
-  document.getElementById('borrowerTypeStaff').disabled = false;
-  onBorrowerTypeChange();
-  openModal('modalBorrow');
-}
-
-/* แก้ไขข้อมูลการยืมที่มีอยู่แล้ว (เปลี่ยนเครื่อง/อุปกรณ์เสริม/วันที่ยืมได้ — ไม่เปลี่ยนตัวผู้ยืม) */
-function openEditBorrowModal(id) {
-  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
-  if (!b) return;
-  editingBorrowId = id;
-  document.getElementById('borrowModalTitle').textContent = 'แก้ไขข้อมูลการยืม';
-  document.getElementById('borrowModalSub').textContent = 'แก้ไขเครื่อง / อุปกรณ์เสริม / วันที่ยืม';
-  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการแก้ไข';
-  document.getElementById('newStudentHint').style.display = 'none';
-
-  var isStaff = b.borrowerType === 'staff';
-  document.getElementById('borrowerTypeStaff').checked = isStaff;
-  document.getElementById('borrowerTypeStudent').checked = !isStaff;
-  /* ล็อกประเภทผู้ยืมไว้ตอนแก้ไข เพื่อไม่ให้สลับ list แล้วข้อมูลผู้ยืมเดิมหาย */
-  document.getElementById('borrowerTypeStudent').disabled = true;
-  document.getElementById('borrowerTypeStaff').disabled = true;
-  onBorrowerTypeChange();
-
-  document.getElementById('borrowStudentInput').value = b.studentName;
-  document.getElementById('borrowDeviceInput').value = b.serialNumber;
-  document.getElementById('deviceInfoHint').textContent = b.friendlyName;
-  var accs = b.accessories || [];
-  document.getElementById('accCharger').checked = accs.indexOf('หัวชาร์จ') !== -1;
-  document.getElementById('accCable').checked  = accs.indexOf('สายชาร์จ') !== -1;
-  document.getElementById('accPen').checked    = accs.indexOf('ปากกา') !== -1;
-  document.getElementById('accCase').checked   = accs.indexOf('เคส') !== -1;
-  var other = accs.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
-  document.getElementById('accOther').value = other.join(', ');
-  document.getElementById('borrowDate').value = b.borrowDate || todayStr();
-
-  openModal('modalBorrow');
-}
-
-function onBorrowerTypeChange() {
-  var isStaff = document.getElementById('borrowerTypeStaff').checked;
-  document.getElementById('borrowStudentInput').placeholder = isStaff ? 'พิมพ์ชื่อ-นามสกุลบุคลากร...' : 'พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน...';
-  document.getElementById('borrowStudentLabel').textContent = isStaff ? 'บุคลากร' : 'นักเรียน';
-  document.getElementById('borrowStudentInput').value = '';
-  document.getElementById('newStudentHint').style.display = 'none';
-  document.getElementById('studentAcList').classList.remove('show');
-}
-
 function staffLabel(s) { return (s.name || ''); }
 
 /* ── กล่องแนะนำแบบ custom (แทน native <datalist> ซึ่งบนมือถือ/ไอแพดหลายรุ่นไม่แสดงผล) ──
@@ -519,23 +484,6 @@ function onBorrowStudentInput() {
       listEl.classList.remove('show');
     });
   }
-}
-
-function addNewStudentInline() {
-  var studentId = document.getElementById('newStudentId').value.trim();
-  var firstName = document.getElementById('newStudentFirstName').value.trim();
-  var lastName  = document.getElementById('newStudentLastName').value.trim();
-  var grade     = document.getElementById('newStudentGrade').value;
-  var room      = document.getElementById('newStudentRoom').value.trim();
-  if (!studentId || !firstName || !lastName || !room) { showToast('กรอกข้อมูลนักเรียนให้ครบ', 'warn'); return; }
-  db.collection('ipad_students').add({
-    studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(ref) {
-    showToast('เพิ่มนักเรียนแล้ว ✅');
-    document.getElementById('newStudentHint').style.display = 'none';
-    document.getElementById('borrowStudentInput').value = studentId + ' - ' + firstName + ' ' + lastName;
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
 function onBorrowDeviceInput() {
@@ -612,85 +560,6 @@ function renderDeviceAcList(listEl, items, borrowedMap, input) {
   listEl.classList.add('show');
 }
 
-function saveBorrow() {
-  var isStaff      = document.getElementById('borrowerTypeStaff').checked;
-  var borrowerName = document.getElementById('borrowStudentInput').value.trim();
-  var serial       = document.getElementById('borrowDeviceInput').value.trim();
-  var borrowDate   = document.getElementById('borrowDate').value;
-  var accessories  = [];
-  if (document.getElementById('accCharger').checked) accessories.push('หัวชาร์จ');
-  if (document.getElementById('accCable').checked) accessories.push('สายชาร์จ');
-  if (document.getElementById('accPen').checked) accessories.push('ปากกา');
-  if (document.getElementById('accCase').checked) accessories.push('เคส');
-  var other = document.getElementById('accOther').value.trim();
-  if (other) accessories.push(other);
-
-  if (!borrowerName || !serial || !borrowDate) { showToast('กรอกข้อมูลให้ครบก่อนบันทึก', 'warn'); return; }
-
-  var device = DEVICES.find(function(d) { return d.serialNumber === serial; });
-  if (!device)  { showToast('ไม่พบ Serial Number นี้ในระบบ', 'warn'); return; }
-  var conflictBorrow = BORROWS_OUT.find(function(b) { return b.deviceId === device.id && b.id !== editingBorrowId; });
-  if (conflictBorrow) {
-    showToast('เครื่องนี้ถูกยืมอยู่แล้ว โดย ' + conflictBorrow.studentName, 'warn'); return;
-  }
-
-  if (editingBorrowId) {
-    /* แก้ไขรายการเดิม — ไม่แตะต้องข้อมูลผู้ยืม (studentId/studentName/grade/room/borrowerType) */
-    var updatePayload = {
-      deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
-      accessories: accessories,
-      borrowDate: borrowDate,
-      recordedBy: currentUserLabel()
-    };
-    db.collection('ipad_borrows').doc(editingBorrowId).update(updatePayload).then(function() {
-      showToast('แก้ไขข้อมูลการยืมสำเร็จ ✅');
-      closeModal('modalBorrow');
-      editingBorrowId = null;
-    }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-    return;
-  }
-
-  var payload = {
-    deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
-    accessories: accessories,
-    borrowDate: borrowDate,
-    returnDate: null,
-    status: 'out',
-    createdBy: currentUser ? currentUser.email : '',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    recordedBy: currentUserLabel()
-  };
-
-  if (isStaff) {
-    var staffMember = STAFF.find(function(s) { return staffLabel(s) === borrowerName; });
-    if (!staffMember) { showToast('ไม่พบบุคลากรนี้ในระบบ (รายชื่อบุคลากรดึงมาจากหน้าบุคลากรอัตโนมัติ)', 'warn'); return; }
-    payload.borrowerType = 'staff';
-    payload.studentId    = staffMember.id;
-    payload.studentIdNum = '';
-    payload.studentName  = staffMember.name;
-    payload.grade        = staffMember.group || '-';
-    payload.room         = staffMember.position || '-';
-  } else {
-    var student = STUDENTS.find(function(s) { return studentLabel(s) === borrowerName; });
-    if (!student) { showToast('ไม่พบนักเรียนนี้ในระบบ กรุณาเพิ่มนักเรียนก่อน', 'warn'); return; }
-    payload.borrowerType = 'student';
-    payload.studentId    = student.id;
-    payload.studentIdNum = student.studentId;
-    payload.studentName  = studentFullName(student);
-    payload.grade        = student.grade;
-    payload.room         = student.room;
-  }
-
-  db.collection('ipad_borrows').add(payload).then(function() {
-    showToast('บันทึกการยืมสำเร็จ ✅');
-    closeModal('modalBorrow');
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-}
-
-var currentReturnBorrowId = null;
-
-var RETURN_ACC_ICONS = { 'หัวชาร์จ': 'plug-zap', 'สายชาร์จ': 'cable', 'ปากกา': 'pen-line', 'เคส': 'briefcase' };
-
 /* การ์ด 1 ชิ้น = ไอคอน+ชื่อ ด้านบน แล้วมีปุ่มเลือกสถานะ 3 ทาง ด้านล่าง
    (ไม่คืน / คืน-สภาพดี / คืน-ชำรุด) พื้นหลังการ์ดจะเปลี่ยนสีตามสถานะที่เลือก
    ให้เห็นชัดโดยไม่ต้องอ่านตัวหนังสือ ค่าเริ่มต้นของทุกชิ้นคือ "คืน-สภาพดี" */
@@ -710,109 +579,9 @@ function buildReturnRow(radioName, icon, label, sub) {
   );
 }
 
-function openReturnModal(id) {
-  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
-  if (!b) return;
-  currentReturnBorrowId = id;
-  document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
-  var accs = b.accessories || [];
-  var html = buildReturnRow('retDevice', 'tablet-smartphone', 'เครื่อง iPad', b.serialNumber);
-  html += accs.map(function(name, i) {
-    var icon = RETURN_ACC_ICONS[name] || 'package';
-    return buildReturnRow('retAcc_' + i, icon, name, null);
-  }).join('');
-  if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
-  document.getElementById('returnItemsList').innerHTML = html;
-  document.getElementById('returnClaimNote').value = '';
-  document.getElementById('returnClaimNoteGroup').style.display = 'none';
-  openModal('modalReturn');
-  lucide.createIcons();
-}
-
-/* อัปเดตสีพื้นหลังการ์ดตามสถานะที่เลือก + โชว์/ซ่อนช่องกรอกรายละเอียดปัญหา */
-function onReturnRowChange(radioName) {
-  var checked = document.querySelector('input[name="' + radioName + '"]:checked');
-  var row = document.getElementById('row_' + radioName);
-  if (row && checked) row.setAttribute('data-state', checked.value);
-
-  var anyClaim = false;
-  document.querySelectorAll('#returnItemsList .return-row').forEach(function(r) {
-    if (r.getAttribute('data-state') === 'claim') anyClaim = true;
-  });
-  document.getElementById('returnClaimNoteGroup').style.display = anyClaim ? 'block' : 'none';
-}
-
 function getReturnRowState(radioName) {
   var checked = document.querySelector('input[name="' + radioName + '"]:checked');
   return checked ? checked.value : 'none';
-}
-
-function confirmReturn() {
-  var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
-  if (!b) { closeModal('modalReturn'); return; }
-
-  var deviceState = getReturnRowState('retDevice');
-  var deviceReturned = deviceState !== 'none';
-  var condition = deviceState === 'claim' ? 'claim' : 'ok';
-  var claimNote = document.getElementById('returnClaimNote').value.trim();
-
-  var allAccs = b.accessories || [];
-  var checkedAccs = [], claimedAccs = [], remainingAccs = [];
-  allAccs.forEach(function(name, i) {
-    var state = getReturnRowState('retAcc_' + i);
-    if (state === 'none') { remainingAccs.push(name); return; }
-    checkedAccs.push(name);
-    if (state === 'claim') claimedAccs.push(name);
-  });
-
-  if (!deviceReturned && !checkedAccs.length) {
-    showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
-  }
-
-  var updates = { accessories: remainingAccs };
-  if (deviceReturned) {
-    updates.status = 'in';
-    updates.returnDate = todayStr();
-    updates.returnCondition = condition;
-    updates.claimNote = condition === 'claim' ? claimNote : '';
-    updates.returnedBy = currentUserLabel();
-  }
-
-  db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
-    showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
-    closeModal('modalReturn');
-    /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
-       ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
-    if (deviceReturned) {
-      var deviceUpdates = { condition: condition };
-      if (condition === 'claim') {
-        deviceUpdates.claimNote = claimNote;
-        deviceUpdates.claimDate = todayStr();
-        deviceUpdates.claimReportedBy = b.studentName;
-        deviceUpdates.claimUpdatedBy = currentUserLabel();
-      } else {
-        deviceUpdates.claimNote = firebase.firestore.FieldValue.delete();
-        deviceUpdates.claimDate = firebase.firestore.FieldValue.delete();
-        deviceUpdates.claimReportedBy = firebase.firestore.FieldValue.delete();
-        deviceUpdates.claimUpdatedBy = firebase.firestore.FieldValue.delete();
-      }
-      db.collection('ipad_devices').doc(b.deviceId).update(deviceUpdates).catch(function(e) {
-        showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
-      });
-    }
-    /* สร้างรายการเคลมอุปกรณ์เสริมอัตโนมัติ ให้ชิ้นที่เลือก "ชำรุด" ตอนคืน ไปโผล่ในหน้าส่งเคลมทันที */
-    claimedAccs.forEach(function(name) {
-      db.collection('ipad_accessory_claims').add({
-        name: name,
-        note: claimNote,
-        reportedBy: b.studentName,
-        recordedBy: currentUserLabel(),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(function(e) {
-        showToast('บันทึกเคลม ' + name + ' ไม่สำเร็จ: ' + e.message, 'warn');
-      });
-    });
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -844,10 +613,6 @@ function renderStudentsPanel() {
     '</div>'
   );
 }
-
-var studentStatType  = 'student'; /* 'student' | 'staff' */
-var studentStatMode  = 'grade';
-var studentStatGrade = 'ม.4';
 
 function setStudentStatType(type) {
   studentStatType = type;
@@ -960,34 +725,6 @@ function renderStudentStatsChart() {
   });
 }
 
-function filterStudents(grade, btn) {
-  studentFilterGrade = grade;
-  studentFilterRoom = 'all';
-  document.querySelectorAll('#studentTableFilterWrap .filter-pill').forEach(function(el) { el.classList.remove('active'); });
-  btn.classList.add('active');
-  refreshStudentRoomFilterOptions();
-  renderStudentsTable();
-}
-
-function refreshStudentRoomFilterOptions() {
-  var sel = document.getElementById('studentRoomFilter');
-  if (!sel) return;
-  var rooms = {};
-  STUDENTS.forEach(function(s) {
-    if (studentFilterGrade === 'all' || s.grade === studentFilterGrade) rooms[s.room] = true;
-  });
-  var roomList = Object.keys(rooms).sort(function(a,b){ return a.localeCompare(b,'th',{numeric:true}); });
-  sel.innerHTML = '<option value="all">ทุกห้อง</option>' + roomList.map(function(r) {
-    return '<option value="' + esc2(r) + '">ห้อง ' + esc2(r) + '</option>';
-  }).join('');
-  sel.value = studentFilterRoom;
-}
-
-function onStudentRoomFilterChange() {
-  studentFilterRoom = document.getElementById('studentRoomFilter').value;
-  renderStudentsTable();
-}
-
 function renderStudentsTable() {
   var tbody = document.getElementById('studentsTbody');
   if (!tbody) return;
@@ -1032,7 +769,760 @@ function renderStudentsTable() {
   lucide.createIcons();
 }
 
-var editingStudentId = null;
+/* ══════════════════════════════════════════════════════════════
+   PANEL 2B: รายชื่อบุคลากร (ดึงอัตโนมัติจาก collection 'staff')
+   ══════════════════════════════════════════════════════════════ */
+function renderStaffPanel() {
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="id-card" style="width:16px;height:16px;"></i> รายชื่อบุคลากร (' + STAFF.length + ') — ข้อมูลดึงมาจากหน้าบุคลากรอัตโนมัติ</div>' +
+      '</div>' +
+      '<div class="ipad-search-row"><input type="text" id="staffSearch" placeholder="ค้นหาชื่อ / ตำแหน่ง / กลุ่มสาระ..." oninput="renderStaffTable()"></div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>กลุ่มสาระ/งาน</th><th>สถานะยืม iPad</th>' +
+      '</tr></thead><tbody id="staffTbody">' +
+        '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>'
+  );
+}
+
+function renderStaffTable() {
+  var tbody = document.getElementById('staffTbody');
+  if (!tbody) return;
+  var q = (document.getElementById('staffSearch') ? document.getElementById('staffSearch').value : '').trim().toLowerCase();
+  var borrowedByStaffId = {};
+  BORROWS_OUT.forEach(function(b) { if (b.borrowerType === 'staff') borrowedByStaffId[b.studentId] = b; });
+  var list = STAFF.filter(function(s) {
+    if (!q) return true;
+    return ((s.name||'') + (s.position||'') + (s.group||'')).toLowerCase().indexOf(q) !== -1;
+  }).sort(function(a,b) { return (a.name||'').localeCompare(b.name||'', 'th'); });
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูลบุคลากร</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(function(s) {
+    var b = borrowedByStaffId[s.id];
+    var statusCell = b ?
+      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
+       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
+      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
+        '<td>' + esc2(s.position || '-') + '</td>' +
+        '<td>' + esc2(s.group || '-') + '</td>' +
+        '<td style="white-space:nowrap;">' + statusCell + '</td>' +
+      '</tr>'
+    );
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL 3: ข้อมูล iPad
+   ══════════════════════════════════════════════════════════════ */
+function renderDevicesPanel() {
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการ iPad ทั้งหมด (' + DEVICES.length + ')</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn-secondary" onclick="openModal(\'modalImport\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
+          '<button class="btn-primary" onclick="openModal(\'modalDevice\')"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่ม iPad</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ipad-search-row"><input type="text" id="deviceSearch" placeholder="ค้นหา Friendly Name / Asset / Serial Number..." oninput="renderDevicesTable()"></div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>Friendly Name</th><th>Asset Number</th><th>Serial Number</th><th>สถานะ</th><th></th>' +
+      '</tr></thead><tbody id="devicesTbody">' +
+        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>'
+  );
+}
+
+function renderDevicesTable() {
+  var tbody = document.getElementById('devicesTbody');
+  if (!tbody) return;
+  if (!DEVICES.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ยังไม่มีข้อมูล iPad — ลองนำเข้าไฟล์ CSV</td></tr>';
+    return;
+  }
+  var q = (document.getElementById('deviceSearch') ? document.getElementById('deviceSearch').value : '').trim().toLowerCase();
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
+  var filtered = DEVICES.filter(function(d) {
+    if (!q) return true;
+    return ((d.friendlyName||'') + (d.assetNumber||'') + (d.serialNumber||'')).toLowerCase().indexOf(q) !== -1;
+  }).sort(function(a, b) {
+    return (a.assetNumber||'').localeCompare((b.assetNumber||''), 'th', { numeric: true, sensitivity: 'base' });
+  });
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(function(d) {
+    var out = borrowedMap[d.id];
+    var isClaim = d.condition === 'claim' && !out;
+    var statusBadge = out ?
+      ('<span style="font-size:11.5px;font-weight:700;color:var(--green);">' + esc2(out.studentName) + '</span><br>' +
+       '<span style="font-size:11px;color:var(--green);">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
+      (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="ipad-badge-free">ว่าง</span>');
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
+        '<td>' + esc2(d.assetNumber) + '</td>' +
+        '<td>' + esc2(d.serialNumber) + '</td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td style="white-space:nowrap;">' +
+          '<button class="btn-icon" onclick="openClaimStatusModal(\'' + d.id + '\')" title="ปรับสถานะเคลม"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i></button> ' +
+          '<button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+        '</td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+function onClaimDeviceInput() {
+  var input  = document.getElementById('claimDeviceInput');
+  var listEl = document.getElementById('claimDeviceAcList');
+  var v = input.value.trim();
+  var q = v.toLowerCase();
+
+  /* map deviceId -> รายการยืมปัจจุบัน เพื่อโชว์ว่าเครื่องไหนถูกยืมอยู่ */
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
+
+  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
+  var hint = document.getElementById('claimDeviceInfoHint');
+  if (!d) {
+    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
+    claimSelectedDeviceId = null;
+    claimSelectedBorrow = null;
+    document.getElementById('claimSwapGroup').style.display = 'none';
+  } else if (d.condition === 'claim') {
+    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ เครื่องนี้ถูกส่งเคลมอยู่แล้ว</span>';
+    claimSelectedDeviceId = null;
+    claimSelectedBorrow = null;
+    document.getElementById('claimSwapGroup').style.display = 'none';
+  } else {
+    claimSelectedDeviceId = d.id;
+    claimSelectedBorrow = borrowedMap[d.id] || null;
+    if (claimSelectedBorrow) {
+      hint.innerHTML = '<span style="color:#b45309;font-weight:700;">' + esc2(d.friendlyName) +
+        ' — กำลังถูกยืมอยู่โดย ' + esc2(claimSelectedBorrow.studentName) + ' (ห้อง ' + esc2(claimSelectedBorrow.grade) + '/' + esc2(claimSelectedBorrow.room) + ')</span>';
+      document.getElementById('claimSwapBorrowerName').textContent = claimSelectedBorrow.studentName;
+      document.getElementById('claimSwapGroup').style.display = 'block';
+      document.getElementById('claimSwapNo').checked = true;
+      onClaimSwapChange();
+    } else {
+      hint.textContent = d.friendlyName + ' — ว่าง (ไม่ได้ถูกยืมอยู่)';
+      document.getElementById('claimSwapGroup').style.display = 'none';
+    }
+  }
+
+  var items = DEVICES.filter(function(dv) {
+    if (dv.condition === 'claim') return false;
+    if (!q) return true;
+    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
+           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
+           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 30);
+
+  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) {
+    var bOut = borrowedMap[dv.id];
+    return dv.serialNumber + (bOut ? '  ·  ยืมอยู่โดย ' + bOut.studentName : '  ·  ว่าง');
+  }, function(dv) {
+    input.value = dv.serialNumber;
+    listEl.classList.remove('show');
+    onClaimDeviceInput();
+  });
+}
+
+function onClaimNewDeviceInput() {
+  var input  = document.getElementById('claimNewDeviceInput');
+  var listEl = document.getElementById('claimNewDeviceAcList');
+  var v = input.value.trim();
+  var q = v.toLowerCase();
+
+  var borrowedMap = {};
+  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
+
+  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
+  var hint = document.getElementById('claimNewDeviceInfoHint');
+  if (!d) {
+    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
+    claimNewDeviceId = null;
+  } else if (d.id === claimSelectedDeviceId || d.condition === 'claim' || borrowedMap[d.id]) {
+    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ไม่สามารถเลือกเครื่องนี้ได้ (ถูกยืม/ส่งเคลมอยู่ หรือเป็นเครื่องเดิม)</span>';
+    claimNewDeviceId = null;
+  } else {
+    claimNewDeviceId = d.id;
+    hint.textContent = d.friendlyName + ' — ว่าง พร้อมให้ยืม';
+  }
+
+  /* รายการเครื่องที่เลือกได้: ไม่ใช่เครื่องเดิมที่กำลังจะเคลม, ไม่ถูกยืมอยู่, ไม่ได้ส่งเคลมอยู่ */
+  var items = DEVICES.filter(function(dv) {
+    if (dv.id === claimSelectedDeviceId) return false;
+    if (dv.condition === 'claim') return false;
+    if (borrowedMap[dv.id]) return false;
+    if (!q) return true;
+    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
+           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
+           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 30);
+
+  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) { return dv.serialNumber + '  ·  ว่าง'; }, function(dv) {
+    input.value = dv.serialNumber;
+    listEl.classList.remove('show');
+    onClaimNewDeviceInput();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL: ส่งเคลม — รวมเครื่องที่สถานะ condition === 'claim' ทั้งหมด
+   ══════════════════════════════════════════════════════════════ */
+function renderClaimsPanel() {
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="triangle-alert" style="width:16px;height:16px;"></i> รายการส่งเคลม (<span id="claimsCount">0</span>)</div>' +
+        '<button class="btn-primary" onclick="openClaimDeviceModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เคลมไอแพด</button>' +
+      '</div>' +
+      '<div class="ipad-search-row"><input type="text" id="claimsSearch" placeholder="ค้นหา Friendly Name / Serial / รายละเอียด..." oninput="renderClaimsTable()"></div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>เครื่อง</th><th>Serial</th><th>รายละเอียดปัญหา</th><th>วันที่ส่งเคลม</th><th>แจ้งโดย</th><th></th>' +
+      '</tr></thead><tbody id="claimsTbody">' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>' +
+
+    '<div class="card" style="margin-top:16px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="cable" style="width:16px;height:16px;"></i> เคลมอุปกรณ์เสริม (<span id="accClaimsCount">0</span>)</div>' +
+        '<button class="btn-primary" onclick="openAccessoryClaimModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มเคลมอุปกรณ์เสริม</button>' +
+      '</div>' +
+      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
+        '<th>อุปกรณ์เสริม</th><th>รายละเอียดปัญหา</th><th>วันที่แจ้ง</th><th>แจ้งโดย</th><th></th>' +
+      '</tr></thead><tbody id="accClaimsTbody">' +
+        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>'
+  );
+}
+
+function renderClaimsTable() {
+  var tbody = document.getElementById('claimsTbody');
+  if (!tbody) return;
+  var claimed = DEVICES.filter(function(d) { return d.condition === 'claim'; });
+  var countEl = document.getElementById('claimsCount');
+  if (countEl) countEl.textContent = claimed.length;
+
+  var q = (document.getElementById('claimsSearch') ? document.getElementById('claimsSearch').value : '').trim().toLowerCase();
+  var filtered = claimed.filter(function(d) {
+    if (!q) return true;
+    return ((d.friendlyName||'') + (d.serialNumber||'') + (d.claimNote||'') + (d.claimReportedBy||'')).toLowerCase().indexOf(q) !== -1;
+  });
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' +
+      (claimed.length ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีเครื่องที่ส่งเคลมอยู่ในขณะนี้ 🎉') + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(d) {
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
+        '<td>' + esc2(d.serialNumber) + '</td>' +
+        '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td style="white-space:nowrap;">' + (d.claimDate ? fmtDate(d.claimDate) : '-') + '</td>' +
+        '<td>' + esc2(d.claimReportedBy || '-') + (d.claimUpdatedBy ? '<br><span style="font-size:10px;color:#94a3b8;">บันทึกโดย ' + esc2(d.claimUpdatedBy) + '</span>' : '') + '</td>' +
+        '<td><button class="btn-secondary btn-sm" onclick="openClaimStatusModal(\'' + d.id + '\')"><i data-lucide="wrench" style="width:14px;height:14px;"></i> จัดการ</button></td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+function resolveAccessoryClaim(id) {
+  if (!confirm('ปิดรายการเคลมนี้ (ลบออกจากลิสต์)?')) return;
+  db.collection('ipad_accessory_claims').doc(id).delete().then(function() {
+    showToast('ปิดรายการเคลมแล้ว ✅');
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function renderAccessoryClaimsTable() {
+  var tbody = document.getElementById('accClaimsTbody');
+  if (!tbody) return;
+  var countEl = document.getElementById('accClaimsCount');
+  if (countEl) countEl.textContent = ACCESSORY_CLAIMS.length;
+
+  if (!ACCESSORY_CLAIMS.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีอุปกรณ์เสริมที่ส่งเคลมอยู่ในขณะนี้ 🎉</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = ACCESSORY_CLAIMS.map(function(c) {
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;"><span class="badge-claim">' + esc2(c.name) + '</span></td>' +
+        '<td>' + (c.note ? esc2(c.note) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td style="white-space:nowrap;">' + fmtDate(c.createdAt) + '</td>' +
+        '<td>' + esc2(c.reportedBy || '-') + '</td>' +
+        '<td><button class="btn-secondary btn-sm" onclick="resolveAccessoryClaim(\'' + c.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> ปิดเคลม</button></td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+
+function parseCsv(text) {
+  /* รองรับ field ที่ครอบด้วย double quote และมี comma อยู่ข้างในได้ */
+  var rows = [];
+  var row = [];
+  var field = '';
+  var inQuotes = false;
+  text = text.replace(/^\uFEFF/, ''); /* ตัด BOM */
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else { field += c; }
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else { field += c; }
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* ── CSV Import: นักเรียน (เลขประจำตัว / ชื่อ / นามสกุล / ชั้น / ห้อง) ── */
+function _findCol(header, aliases) {
+  for (var i = 0; i < header.length; i++) {
+    var h = header[i].trim().toLowerCase();
+    for (var j = 0; j < aliases.length; j++) {
+      if (h === aliases[j]) return i;
+    }
+  }
+  return -1;
+}
+function _normalizeGrade(v) {
+  v = (v || '').toString().trim().replace(/\s+/g, '');
+  if (/^ม\.?4$/.test(v) || v === '4') return 'ม.4';
+  if (/^ม\.?5$/.test(v) || v === '5') return 'ม.5';
+  if (/^ม\.?6$/.test(v) || v === '6') return 'ม.6';
+  return v;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL 4: ประวัติทั้งหมด + Export CSV
+   ══════════════════════════════════════════════════════════════ */
+function renderHistoryPanel() {
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
+        '<input type="text" id="historySearch" placeholder="ค้นหาในหน้านี้ (เลขประจำตัว / ชื่อนักเรียน / Serial Number)" style="max-width:340px;" oninput="renderHistoryTable()">' +
+        '<button class="btn-secondary" id="exportHistoryBtn" onclick="exportHistoryCsv()"><i data-lucide="download" style="width:16px;height:16px;"></i> ส่งออกเป็น CSV (ทั้งหมด)</button>' +
+      '</div>' +
+      '<div class="tbl-wrap"><table class="data-table history-table"><thead><tr>' +
+        '<th>นักเรียน</th><th>ชั้น/ห้อง</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th>วันที่คืน</th><th>สถานะ</th>' +
+      '</tr></thead><tbody id="historyTbody">' +
+        '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+      '</tbody></table></div>' +
+      '<div style="display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap;">' +
+        '<button class="btn-secondary" id="historyPrevBtn" onclick="historyPrevPage()" disabled><i data-lucide="chevron-left" style="width:14px;height:14px;"></i> หน้าก่อนหน้า</button>' +
+        '<span id="historyPageInfo" style="font-size:13px;font-weight:700;color:var(--text2);">หน้า 1</span>' +
+        '<button class="btn-secondary" id="historyNextBtn" onclick="historyNextPage()">หน้าถัดไป <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function renderHistoryTable() {
+  var tbody = document.getElementById('historyTbody');
+  if (!tbody) return;
+  var q = (document.getElementById('historySearch') ? document.getElementById('historySearch').value : '').trim().toLowerCase();
+  var list = BORROWS_HISTORY.filter(function(b) {
+    if (!q) return true;
+    return (b.studentName  || '').toLowerCase().indexOf(q) !== -1 ||
+           (b.studentIdNum || '').toLowerCase().indexOf(q) !== -1 ||
+           (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
+  });
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(function(b) {
+    return (
+      '<tr>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? '<br><span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
+        '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
+        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
+        '<td>' + accBadges(b.accessories, b.status) + '</td>' +
+        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
+        '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
+        '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="ipad-badge-free">คืนแล้ว</span>') : '<span class="ipad-badge-borrowed">ยังไม่คืน</span>') + '</td>' +
+      '</tr>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   ปุ่มย้อนกลับไปด้านบน (ลอยมุมขวาล่าง)
+   scroll จริงเกิดที่ .content-area (id="pageContent") ไม่ใช่ window
+   ══════════════════════════════════════════════════════════════ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function switchSubTab(name) {
+  ['borrow','students','staff','devices','claims','history'].forEach(function(k) {
+    document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
+    document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
+  });
+  if (name === 'history') {
+    fetchHistoryPage(historyPage || 1);   /* โหลด/รีเฟรชหน้าปัจจุบันทุกครั้งที่เปิดแท็บนี้ */
+  }
+  lucide.createIcons();
+}  /* 'all' | 'student' | 'staff' */
+
+function setBorrowFilterType(type) {
+  borrowFilterType = type;
+  document.getElementById('borrowFilterTypeAll').classList.toggle('active', type === 'all');
+  document.getElementById('borrowFilterTypeStudent').classList.toggle('active', type === 'student');
+  document.getElementById('borrowFilterTypeStaff').classList.toggle('active', type === 'staff');
+
+  document.getElementById('borrowFilterStudentWrap').style.display = (type === 'student') ? 'flex' : 'none';
+  document.getElementById('borrowFilterStaffWrap').style.display   = (type === 'staff')   ? 'flex' : 'none';
+
+  if (type === 'student') {
+    document.getElementById('borrowFilterGrade').value = 'all';
+    populateBorrowFilterRoomOptions();
+  } else if (type === 'staff') {
+    populateBorrowFilterGroupOptions();
+  }
+  renderBorrowOutTable();
+}
+
+function onBorrowFilterGradeChange() {
+  populateBorrowFilterRoomOptions();
+  renderBorrowOutTable();
+}
+
+/* เติมตัวเลือก "ห้อง" ตามชั้นที่เลือก (ดึงจากข้อมูลนักเรียนทั้งหมด ไม่ใช่แค่คนที่ยืมอยู่
+   เพื่อให้เลือกดูห้องที่ยังไม่มีใครยืมได้ด้วย) */
+function populateBorrowFilterRoomOptions() {
+  var sel = document.getElementById('borrowFilterRoom');
+  if (!sel) return;
+  var grade = document.getElementById('borrowFilterGrade').value;
+  var roomsSet = {};
+  STUDENTS.forEach(function(s) {
+    if (grade === 'all' || s.grade === grade) roomsSet[s.room] = true;
+  });
+  var rooms = Object.keys(roomsSet).sort(function(a, b) { return a.localeCompare(b, 'th', { numeric: true }); });
+  sel.innerHTML = '<option value="all">ทุกห้อง</option>' +
+    rooms.map(function(r) { return '<option value="' + esc2(r) + '">ห้อง ' + esc2(r) + '</option>'; }).join('');
+}
+
+/* เติมตัวเลือก "กลุ่มสาระ/งาน" จากข้อมูลบุคลากรทั้งหมด */
+function populateBorrowFilterGroupOptions() {
+  var sel = document.getElementById('borrowFilterGroup');
+  if (!sel) return;
+  var groupsSet = {};
+  STAFF.forEach(function(s) { groupsSet[s.group || 'ไม่ระบุ'] = true; });
+  var groups = Object.keys(groupsSet).sort(function(a, b) { return a.localeCompare(b, 'th'); });
+  sel.innerHTML = '<option value="all">ทุกกลุ่มสาระ/งาน</option>' +
+    groups.map(function(g) { return '<option value="' + esc2(g) + '">' + esc2(g) + '</option>'; }).join('');
+}
+
+function openBorrowModal() {
+  editingBorrowId = null;
+  document.getElementById('borrowModalTitle').textContent = 'บันทึกการยืม iPad';
+  document.getElementById('borrowModalSub').textContent = 'เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม';
+  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการยืม';
+  document.getElementById('borrowStudentInput').value = '';
+  document.getElementById('borrowDeviceInput').value = '';
+  document.getElementById('deviceInfoHint').textContent = '';
+  document.getElementById('newStudentHint').style.display = 'none';
+  document.getElementById('accCharger').checked = false;
+  document.getElementById('accCable').checked = false;
+  document.getElementById('accPen').checked = false;
+  document.getElementById('accCase').checked = false;
+  document.getElementById('accOther').value = '';
+  document.getElementById('borrowDate').value = todayStr();
+  document.getElementById('borrowerTypeStudent').checked = true;
+  document.getElementById('borrowerTypeStudent').disabled = false;
+  document.getElementById('borrowerTypeStaff').disabled = false;
+  onBorrowerTypeChange();
+  openModal('modalBorrow');
+}
+
+/* แก้ไขข้อมูลการยืมที่มีอยู่แล้ว (เปลี่ยนเครื่อง/อุปกรณ์เสริม/วันที่ยืมได้ — ไม่เปลี่ยนตัวผู้ยืม) */
+function openEditBorrowModal(id) {
+  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
+  if (!b) return;
+  editingBorrowId = id;
+  document.getElementById('borrowModalTitle').textContent = 'แก้ไขข้อมูลการยืม';
+  document.getElementById('borrowModalSub').textContent = 'แก้ไขเครื่อง / อุปกรณ์เสริม / วันที่ยืม';
+  document.getElementById('borrowSaveBtn').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('newStudentHint').style.display = 'none';
+
+  var isStaff = b.borrowerType === 'staff';
+  document.getElementById('borrowerTypeStaff').checked = isStaff;
+  document.getElementById('borrowerTypeStudent').checked = !isStaff;
+  /* ล็อกประเภทผู้ยืมไว้ตอนแก้ไข เพื่อไม่ให้สลับ list แล้วข้อมูลผู้ยืมเดิมหาย */
+  document.getElementById('borrowerTypeStudent').disabled = true;
+  document.getElementById('borrowerTypeStaff').disabled = true;
+  onBorrowerTypeChange();
+
+  document.getElementById('borrowStudentInput').value = b.studentName;
+  document.getElementById('borrowDeviceInput').value = b.serialNumber;
+  document.getElementById('deviceInfoHint').textContent = b.friendlyName;
+  var accs = b.accessories || [];
+  document.getElementById('accCharger').checked = accs.indexOf('หัวชาร์จ') !== -1;
+  document.getElementById('accCable').checked  = accs.indexOf('สายชาร์จ') !== -1;
+  document.getElementById('accPen').checked    = accs.indexOf('ปากกา') !== -1;
+  document.getElementById('accCase').checked   = accs.indexOf('เคส') !== -1;
+  var other = accs.filter(function(a){ return ACC_ORDER.indexOf(a) === -1; });
+  document.getElementById('accOther').value = other.join(', ');
+  document.getElementById('borrowDate').value = b.borrowDate || todayStr();
+
+  openModal('modalBorrow');
+}
+
+function onBorrowerTypeChange() {
+  var isStaff = document.getElementById('borrowerTypeStaff').checked;
+  document.getElementById('borrowStudentInput').placeholder = isStaff ? 'พิมพ์ชื่อ-นามสกุลบุคลากร...' : 'พิมพ์เลขประจำตัว หรือชื่อ-นามสกุลนักเรียน...';
+  document.getElementById('borrowStudentLabel').textContent = isStaff ? 'บุคลากร' : 'นักเรียน';
+  document.getElementById('borrowStudentInput').value = '';
+  document.getElementById('newStudentHint').style.display = 'none';
+  document.getElementById('studentAcList').classList.remove('show');
+}
+
+function addNewStudentInline() {
+  var studentId = document.getElementById('newStudentId').value.trim();
+  var firstName = document.getElementById('newStudentFirstName').value.trim();
+  var lastName  = document.getElementById('newStudentLastName').value.trim();
+  var grade     = document.getElementById('newStudentGrade').value;
+  var room      = document.getElementById('newStudentRoom').value.trim();
+  if (!studentId || !firstName || !lastName || !room) { showToast('กรอกข้อมูลนักเรียนให้ครบ', 'warn'); return; }
+  db.collection('ipad_students').add({
+    studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(ref) {
+    showToast('เพิ่มนักเรียนแล้ว ✅');
+    document.getElementById('newStudentHint').style.display = 'none';
+    document.getElementById('borrowStudentInput').value = studentId + ' - ' + firstName + ' ' + lastName;
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function saveBorrow() {
+  var isStaff      = document.getElementById('borrowerTypeStaff').checked;
+  var borrowerName = document.getElementById('borrowStudentInput').value.trim();
+  var serial       = document.getElementById('borrowDeviceInput').value.trim();
+  var borrowDate   = document.getElementById('borrowDate').value;
+  var accessories  = [];
+  if (document.getElementById('accCharger').checked) accessories.push('หัวชาร์จ');
+  if (document.getElementById('accCable').checked) accessories.push('สายชาร์จ');
+  if (document.getElementById('accPen').checked) accessories.push('ปากกา');
+  if (document.getElementById('accCase').checked) accessories.push('เคส');
+  var other = document.getElementById('accOther').value.trim();
+  if (other) accessories.push(other);
+
+  if (!borrowerName || !serial || !borrowDate) { showToast('กรอกข้อมูลให้ครบก่อนบันทึก', 'warn'); return; }
+
+  var device = DEVICES.find(function(d) { return d.serialNumber === serial; });
+  if (!device)  { showToast('ไม่พบ Serial Number นี้ในระบบ', 'warn'); return; }
+  var conflictBorrow = BORROWS_OUT.find(function(b) { return b.deviceId === device.id && b.id !== editingBorrowId; });
+  if (conflictBorrow) {
+    showToast('เครื่องนี้ถูกยืมอยู่แล้ว โดย ' + conflictBorrow.studentName, 'warn'); return;
+  }
+
+  if (editingBorrowId) {
+    /* แก้ไขรายการเดิม — ไม่แตะต้องข้อมูลผู้ยืม (studentId/studentName/grade/room/borrowerType) */
+    var updatePayload = {
+      deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
+      accessories: accessories,
+      borrowDate: borrowDate,
+      recordedBy: currentUserLabel()
+    };
+    db.collection('ipad_borrows').doc(editingBorrowId).update(updatePayload).then(function() {
+      showToast('แก้ไขข้อมูลการยืมสำเร็จ ✅');
+      closeModal('modalBorrow');
+      editingBorrowId = null;
+    }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    return;
+  }
+
+  var payload = {
+    deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
+    accessories: accessories,
+    borrowDate: borrowDate,
+    returnDate: null,
+    status: 'out',
+    createdBy: currentUser ? currentUser.email : '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    recordedBy: currentUserLabel()
+  };
+
+  if (isStaff) {
+    var staffMember = STAFF.find(function(s) { return staffLabel(s) === borrowerName; });
+    if (!staffMember) { showToast('ไม่พบบุคลากรนี้ในระบบ (รายชื่อบุคลากรดึงมาจากหน้าบุคลากรอัตโนมัติ)', 'warn'); return; }
+    payload.borrowerType = 'staff';
+    payload.studentId    = staffMember.id;
+    payload.studentIdNum = '';
+    payload.studentName  = staffMember.name;
+    payload.grade        = staffMember.group || '-';
+    payload.room         = staffMember.position || '-';
+  } else {
+    var student = STUDENTS.find(function(s) { return studentLabel(s) === borrowerName; });
+    if (!student) { showToast('ไม่พบนักเรียนนี้ในระบบ กรุณาเพิ่มนักเรียนก่อน', 'warn'); return; }
+    payload.borrowerType = 'student';
+    payload.studentId    = student.id;
+    payload.studentIdNum = student.studentId;
+    payload.studentName  = studentFullName(student);
+    payload.grade        = student.grade;
+    payload.room         = student.room;
+  }
+
+  db.collection('ipad_borrows').add(payload).then(function() {
+    showToast('บันทึกการยืมสำเร็จ ✅');
+    closeModal('modalBorrow');
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function openReturnModal(id) {
+  var b = BORROWS_OUT.find(function(x) { return x.id === id; });
+  if (!b) return;
+  currentReturnBorrowId = id;
+  document.getElementById('returnModalSub').textContent = b.studentName + ' — ' + b.friendlyName + ' (' + b.serialNumber + ')';
+  var accs = b.accessories || [];
+  var html = buildReturnRow('retDevice', 'tablet-smartphone', 'เครื่อง iPad', b.serialNumber);
+  html += accs.map(function(name, i) {
+    var icon = RETURN_ACC_ICONS[name] || 'package';
+    return buildReturnRow('retAcc_' + i, icon, name, null);
+  }).join('');
+  if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
+  document.getElementById('returnItemsList').innerHTML = html;
+  document.getElementById('returnClaimNote').value = '';
+  document.getElementById('returnClaimNoteGroup').style.display = 'none';
+  openModal('modalReturn');
+  lucide.createIcons();
+}
+
+/* อัปเดตสีพื้นหลังการ์ดตามสถานะที่เลือก + โชว์/ซ่อนช่องกรอกรายละเอียดปัญหา */
+function onReturnRowChange(radioName) {
+  var checked = document.querySelector('input[name="' + radioName + '"]:checked');
+  var row = document.getElementById('row_' + radioName);
+  if (row && checked) row.setAttribute('data-state', checked.value);
+
+  var anyClaim = false;
+  document.querySelectorAll('#returnItemsList .return-row').forEach(function(r) {
+    if (r.getAttribute('data-state') === 'claim') anyClaim = true;
+  });
+  document.getElementById('returnClaimNoteGroup').style.display = anyClaim ? 'block' : 'none';
+}
+
+function confirmReturn() {
+  var b = BORROWS_OUT.find(function(x) { return x.id === currentReturnBorrowId; });
+  if (!b) { closeModal('modalReturn'); return; }
+
+  var deviceState = getReturnRowState('retDevice');
+  var deviceReturned = deviceState !== 'none';
+  var condition = deviceState === 'claim' ? 'claim' : 'ok';
+  var claimNote = document.getElementById('returnClaimNote').value.trim();
+
+  var allAccs = b.accessories || [];
+  var checkedAccs = [], claimedAccs = [], remainingAccs = [];
+  allAccs.forEach(function(name, i) {
+    var state = getReturnRowState('retAcc_' + i);
+    if (state === 'none') { remainingAccs.push(name); return; }
+    checkedAccs.push(name);
+    if (state === 'claim') claimedAccs.push(name);
+  });
+
+  if (!deviceReturned && !checkedAccs.length) {
+    showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
+  }
+
+  var updates = { accessories: remainingAccs };
+  if (deviceReturned) {
+    updates.status = 'in';
+    updates.returnDate = todayStr();
+    updates.returnCondition = condition;
+    updates.claimNote = condition === 'claim' ? claimNote : '';
+    updates.returnedBy = currentUserLabel();
+  }
+
+  db.collection('ipad_borrows').doc(b.id).update(updates).then(function() {
+    showToast(deviceReturned ? 'บันทึกการคืนเครื่องแล้ว ✅' : 'บันทึกการคืนอุปกรณ์เสริมแล้ว ✅');
+    closeModal('modalReturn');
+    /* อัปเดตสถานะเครื่อง (ว่าง/ส่งเคลม) แยกเป็นอีกคำขอหนึ่ง — ไม่ให้ล้มทั้งการคืน
+       ถ้า Firestore rules ยังไม่อนุญาตให้แก้ไข field 'condition' ในคอลเลกชัน ipad_devices */
+    if (deviceReturned) {
+      var deviceUpdates = { condition: condition };
+      if (condition === 'claim') {
+        deviceUpdates.claimNote = claimNote;
+        deviceUpdates.claimDate = todayStr();
+        deviceUpdates.claimReportedBy = b.studentName;
+        deviceUpdates.claimUpdatedBy = currentUserLabel();
+      } else {
+        deviceUpdates.claimNote = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimDate = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimReportedBy = firebase.firestore.FieldValue.delete();
+        deviceUpdates.claimUpdatedBy = firebase.firestore.FieldValue.delete();
+      }
+      db.collection('ipad_devices').doc(b.deviceId).update(deviceUpdates).catch(function(e) {
+        showToast('บันทึกการคืนสำเร็จ แต่ตั้งสถานะเครื่องไม่สำเร็จ (' + e.message + ') — กรุณาตรวจสอบสิทธิ์การเขียนคอลเลกชัน ipad_devices ใน Firestore Rules', 'warn');
+      });
+    }
+    /* สร้างรายการเคลมอุปกรณ์เสริมอัตโนมัติ ให้ชิ้นที่เลือก "ชำรุด" ตอนคืน ไปโผล่ในหน้าส่งเคลมทันที */
+    claimedAccs.forEach(function(name) {
+      db.collection('ipad_accessory_claims').add({
+        name: name,
+        note: claimNote,
+        reportedBy: b.studentName,
+        recordedBy: currentUserLabel(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e) {
+        showToast('บันทึกเคลม ' + name + ' ไม่สำเร็จ: ' + e.message, 'warn');
+      });
+    });
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+}
+
+function filterStudents(grade, btn) {
+  studentFilterGrade = grade;
+  studentFilterRoom = 'all';
+  document.querySelectorAll('#studentTableFilterWrap .filter-pill').forEach(function(el) { el.classList.remove('active'); });
+  btn.classList.add('active');
+  refreshStudentRoomFilterOptions();
+  renderStudentsTable();
+}
+
+function onStudentRoomFilterChange() {
+  studentFilterRoom = document.getElementById('studentRoomFilter').value;
+  renderStudentsTable();
+}
 
 function openAddStudentModal() {
   editingStudentId = null;
@@ -1107,132 +1597,6 @@ function deleteStudent(id) {
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PANEL 2B: รายชื่อบุคลากร (ดึงอัตโนมัติจาก collection 'staff')
-   ══════════════════════════════════════════════════════════════ */
-function renderStaffPanel() {
-  return (
-    '<div class="card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="id-card" style="width:16px;height:16px;"></i> รายชื่อบุคลากร (' + STAFF.length + ') — ข้อมูลดึงมาจากหน้าบุคลากรอัตโนมัติ</div>' +
-      '</div>' +
-      '<div class="ipad-search-row"><input type="text" id="staffSearch" placeholder="ค้นหาชื่อ / ตำแหน่ง / กลุ่มสาระ..." oninput="renderStaffTable()"></div>' +
-      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>กลุ่มสาระ/งาน</th><th>สถานะยืม iPad</th>' +
-      '</tr></thead><tbody id="staffTbody">' +
-        '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
-      '</tbody></table></div>' +
-    '</div>'
-  );
-}
-
-function renderStaffTable() {
-  var tbody = document.getElementById('staffTbody');
-  if (!tbody) return;
-  var q = (document.getElementById('staffSearch') ? document.getElementById('staffSearch').value : '').trim().toLowerCase();
-  var borrowedByStaffId = {};
-  BORROWS_OUT.forEach(function(b) { if (b.borrowerType === 'staff') borrowedByStaffId[b.studentId] = b; });
-  var list = STAFF.filter(function(s) {
-    if (!q) return true;
-    return ((s.name||'') + (s.position||'') + (s.group||'')).toLowerCase().indexOf(q) !== -1;
-  }).sort(function(a,b) { return (a.name||'').localeCompare(b.name||'', 'th'); });
-  if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูลบุคลากร</td></tr>';
-    return;
-  }
-  tbody.innerHTML = list.map(function(s) {
-    var b = borrowedByStaffId[s.id];
-    var statusCell = b ?
-      ('<span style="color:var(--green);font-weight:700;">' + esc2(b.friendlyName) +
-       '</span><br><span style="font-size:11px;color:var(--green);">' + esc2(b.serialNumber) + '</span>') :
-      '<span class="borrow-badge-no">● ไม่ได้ยืม</span>';
-    return (
-      '<tr>' +
-        '<td style="font-weight:700;">' + esc2(s.name) + '</td>' +
-        '<td>' + esc2(s.position || '-') + '</td>' +
-        '<td>' + esc2(s.group || '-') + '</td>' +
-        '<td style="white-space:nowrap;">' + statusCell + '</td>' +
-      '</tr>'
-    );
-  }).join('');
-}
-
-function loadStaff() {
-  db.collection('staff').orderBy('name').onSnapshot(function(snap) {
-    STAFF = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderStaffTable();
-    renderStatsCharts();
-    renderStudentStatsChart();
-    if (document.getElementById('borrowFilterGroup')) populateBorrowFilterGroupOptions();
-  }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PANEL 3: ข้อมูล iPad
-   ══════════════════════════════════════════════════════════════ */
-function renderDevicesPanel() {
-  return (
-    '<div class="card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการ iPad ทั้งหมด (' + DEVICES.length + ')</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="btn-secondary" onclick="openModal(\'modalImport\')"><i data-lucide="upload" style="width:16px;height:16px;"></i> นำเข้า CSV</button>' +
-          '<button class="btn-primary" onclick="openModal(\'modalDevice\')"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่ม iPad</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="ipad-search-row"><input type="text" id="deviceSearch" placeholder="ค้นหา Friendly Name / Asset / Serial Number..." oninput="renderDevicesTable()"></div>' +
-      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>Friendly Name</th><th>Asset Number</th><th>Serial Number</th><th>สถานะ</th><th></th>' +
-      '</tr></thead><tbody id="devicesTbody">' +
-        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
-      '</tbody></table></div>' +
-    '</div>'
-  );
-}
-
-function renderDevicesTable() {
-  var tbody = document.getElementById('devicesTbody');
-  if (!tbody) return;
-  if (!DEVICES.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ยังไม่มีข้อมูล iPad — ลองนำเข้าไฟล์ CSV</td></tr>';
-    return;
-  }
-  var q = (document.getElementById('deviceSearch') ? document.getElementById('deviceSearch').value : '').trim().toLowerCase();
-  var borrowedMap = {};
-  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
-  var filtered = DEVICES.filter(function(d) {
-    if (!q) return true;
-    return ((d.friendlyName||'') + (d.assetNumber||'') + (d.serialNumber||'')).toLowerCase().indexOf(q) !== -1;
-  }).sort(function(a, b) {
-    return (a.assetNumber||'').localeCompare((b.assetNumber||''), 'th', { numeric: true, sensitivity: 'base' });
-  });
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
-    return;
-  }
-  tbody.innerHTML = filtered.map(function(d) {
-    var out = borrowedMap[d.id];
-    var isClaim = d.condition === 'claim' && !out;
-    var statusBadge = out ?
-      ('<span style="font-size:11.5px;font-weight:700;color:var(--green);">' + esc2(out.studentName) + '</span><br>' +
-       '<span style="font-size:11px;color:var(--green);">ห้อง ' + esc2(out.grade) + '/' + esc2(out.room) + '</span>') :
-      (isClaim ? '<span class="badge-claim">ส่งเคลม</span>' : '<span class="ipad-badge-free">ว่าง</span>');
-    return (
-      '<tr>' +
-        '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
-        '<td>' + esc2(d.assetNumber) + '</td>' +
-        '<td>' + esc2(d.serialNumber) + '</td>' +
-        '<td>' + statusBadge + '</td>' +
-        '<td style="white-space:nowrap;">' +
-          '<button class="btn-icon" onclick="openClaimStatusModal(\'' + d.id + '\')" title="ปรับสถานะเคลม"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i></button> ' +
-          '<button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
-        '</td>' +
-      '</tr>'
-    );
-  }).join('');
-  lucide.createIcons();
-}
-
 function saveDevice() {
   var friendlyName = document.getElementById('devFriendly').value.trim();
   var assetNumber  = document.getElementById('devAsset').value.trim();
@@ -1259,11 +1623,6 @@ function deleteDevice(id) {
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
-
-/* ══════════════════════════════════════════════════════════════
-   ปรับสถานะเคลม (ใช้ร่วมกันทั้งหน้า "ข้อมูล iPad" และหน้า "ส่งเคลม")
-   ══════════════════════════════════════════════════════════════ */
-var currentClaimDeviceId = null;
 
 function openClaimStatusModal(deviceId) {
   var d = DEVICES.find(function(x) { return x.id === deviceId; });
@@ -1306,19 +1665,6 @@ function saveClaimStatus() {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   เคลมไอแพดโดยตรงจากหน้า "ส่งเคลม" — เลือกเครื่องได้ทั้งเครื่องว่างและ
-   เครื่องที่กำลังถูกยืมอยู่ ถ้าเครื่องกำลังถูกยืมอยู่ จะมีตัวเลือกให้
-   "เปลี่ยนเครื่อง" ให้ผู้ยืมทันที (ไม่บังคับ — ไม่เลือกก็ได้ ผู้ยืมจะ
-   ยังถือเครื่องเดิมที่ถูกส่งเคลมต่อไป จนกว่าจะมาคืน/แก้ไขทีหลัง)
-   สถานะ condition ของเครื่องอ่าน/เขียนที่ ipad_devices ตัวเดียวกับหน้า
-   "ข้อมูล iPad" และหน้ายืม (onBorrowDeviceInput กรอง condition==='claim'
-   ออกจากรายการให้ยืมอยู่แล้ว) จึงอัปเดตแล้วเห็นผลตรงกันทุกหน้าโดยอัตโนมัติ
-   ══════════════════════════════════════════════════════════════ */
-var claimSelectedDeviceId  = null;
-var claimSelectedBorrow    = null; /* รายการยืมที่ผูกกับเครื่องที่เลือก (ถ้ามี) */
-var claimNewDeviceId       = null;
-
 function openClaimDeviceModal() {
   claimSelectedDeviceId = null;
   claimSelectedBorrow   = null;
@@ -1334,62 +1680,6 @@ function openClaimDeviceModal() {
   openModal('modalClaimDevice');
 }
 
-function onClaimDeviceInput() {
-  var input  = document.getElementById('claimDeviceInput');
-  var listEl = document.getElementById('claimDeviceAcList');
-  var v = input.value.trim();
-  var q = v.toLowerCase();
-
-  /* map deviceId -> รายการยืมปัจจุบัน เพื่อโชว์ว่าเครื่องไหนถูกยืมอยู่ */
-  var borrowedMap = {};
-  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
-
-  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
-  var hint = document.getElementById('claimDeviceInfoHint');
-  if (!d) {
-    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
-    claimSelectedDeviceId = null;
-    claimSelectedBorrow = null;
-    document.getElementById('claimSwapGroup').style.display = 'none';
-  } else if (d.condition === 'claim') {
-    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ เครื่องนี้ถูกส่งเคลมอยู่แล้ว</span>';
-    claimSelectedDeviceId = null;
-    claimSelectedBorrow = null;
-    document.getElementById('claimSwapGroup').style.display = 'none';
-  } else {
-    claimSelectedDeviceId = d.id;
-    claimSelectedBorrow = borrowedMap[d.id] || null;
-    if (claimSelectedBorrow) {
-      hint.innerHTML = '<span style="color:#b45309;font-weight:700;">' + esc2(d.friendlyName) +
-        ' — กำลังถูกยืมอยู่โดย ' + esc2(claimSelectedBorrow.studentName) + ' (ห้อง ' + esc2(claimSelectedBorrow.grade) + '/' + esc2(claimSelectedBorrow.room) + ')</span>';
-      document.getElementById('claimSwapBorrowerName').textContent = claimSelectedBorrow.studentName;
-      document.getElementById('claimSwapGroup').style.display = 'block';
-      document.getElementById('claimSwapNo').checked = true;
-      onClaimSwapChange();
-    } else {
-      hint.textContent = d.friendlyName + ' — ว่าง (ไม่ได้ถูกยืมอยู่)';
-      document.getElementById('claimSwapGroup').style.display = 'none';
-    }
-  }
-
-  var items = DEVICES.filter(function(dv) {
-    if (dv.condition === 'claim') return false;
-    if (!q) return true;
-    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
-           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
-           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
-  }).slice(0, 30);
-
-  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) {
-    var bOut = borrowedMap[dv.id];
-    return dv.serialNumber + (bOut ? '  ·  ยืมอยู่โดย ' + bOut.studentName : '  ·  ว่าง');
-  }, function(dv) {
-    input.value = dv.serialNumber;
-    listEl.classList.remove('show');
-    onClaimDeviceInput();
-  });
-}
-
 function onClaimSwapChange() {
   var wantsSwap = document.getElementById('claimSwapYes').checked;
   document.getElementById('claimNewDeviceGroup').style.display = wantsSwap ? 'block' : 'none';
@@ -1398,46 +1688,6 @@ function onClaimSwapChange() {
     document.getElementById('claimNewDeviceInput').value = '';
     document.getElementById('claimNewDeviceInfoHint').textContent = '';
   }
-}
-
-function onClaimNewDeviceInput() {
-  var input  = document.getElementById('claimNewDeviceInput');
-  var listEl = document.getElementById('claimNewDeviceAcList');
-  var v = input.value.trim();
-  var q = v.toLowerCase();
-
-  var borrowedMap = {};
-  BORROWS_OUT.forEach(function(b) { borrowedMap[b.deviceId] = b; });
-
-  var d = DEVICES.find(function(x) { return x.serialNumber === v || x.assetNumber === v; });
-  var hint = document.getElementById('claimNewDeviceInfoHint');
-  if (!d) {
-    hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
-    claimNewDeviceId = null;
-  } else if (d.id === claimSelectedDeviceId || d.condition === 'claim' || borrowedMap[d.id]) {
-    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ไม่สามารถเลือกเครื่องนี้ได้ (ถูกยืม/ส่งเคลมอยู่ หรือเป็นเครื่องเดิม)</span>';
-    claimNewDeviceId = null;
-  } else {
-    claimNewDeviceId = d.id;
-    hint.textContent = d.friendlyName + ' — ว่าง พร้อมให้ยืม';
-  }
-
-  /* รายการเครื่องที่เลือกได้: ไม่ใช่เครื่องเดิมที่กำลังจะเคลม, ไม่ถูกยืมอยู่, ไม่ได้ส่งเคลมอยู่ */
-  var items = DEVICES.filter(function(dv) {
-    if (dv.id === claimSelectedDeviceId) return false;
-    if (dv.condition === 'claim') return false;
-    if (borrowedMap[dv.id]) return false;
-    if (!q) return true;
-    return dv.serialNumber.toLowerCase().indexOf(q) !== -1 ||
-           (dv.friendlyName || '').toLowerCase().indexOf(q) !== -1 ||
-           (dv.assetNumber || '').toLowerCase().indexOf(q) !== -1;
-  }).slice(0, 30);
-
-  buildAcList(listEl, items, function(dv) { return dv.friendlyName; }, function(dv) { return dv.serialNumber + '  ·  ว่าง'; }, function(dv) {
-    input.value = dv.serialNumber;
-    listEl.classList.remove('show');
-    onClaimNewDeviceInput();
-  });
 }
 
 function saveClaimDevice() {
@@ -1485,72 +1735,6 @@ function saveClaimDevice() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PANEL: ส่งเคลม — รวมเครื่องที่สถานะ condition === 'claim' ทั้งหมด
-   ══════════════════════════════════════════════════════════════ */
-function renderClaimsPanel() {
-  return (
-    '<div class="card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="triangle-alert" style="width:16px;height:16px;"></i> รายการส่งเคลม (<span id="claimsCount">0</span>)</div>' +
-        '<button class="btn-primary" onclick="openClaimDeviceModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เคลมไอแพด</button>' +
-      '</div>' +
-      '<div class="ipad-search-row"><input type="text" id="claimsSearch" placeholder="ค้นหา Friendly Name / Serial / รายละเอียด..." oninput="renderClaimsTable()"></div>' +
-      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>เครื่อง</th><th>Serial</th><th>รายละเอียดปัญหา</th><th>วันที่ส่งเคลม</th><th>แจ้งโดย</th><th></th>' +
-      '</tr></thead><tbody id="claimsTbody">' +
-        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
-      '</tbody></table></div>' +
-    '</div>' +
-
-    '<div class="card" style="margin-top:16px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<div class="section-divider" style="margin:0;border:none;padding:0;"><i data-lucide="cable" style="width:16px;height:16px;"></i> เคลมอุปกรณ์เสริม (<span id="accClaimsCount">0</span>)</div>' +
-        '<button class="btn-primary" onclick="openAccessoryClaimModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> เพิ่มเคลมอุปกรณ์เสริม</button>' +
-      '</div>' +
-      '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
-        '<th>อุปกรณ์เสริม</th><th>รายละเอียดปัญหา</th><th>วันที่แจ้ง</th><th>แจ้งโดย</th><th></th>' +
-      '</tr></thead><tbody id="accClaimsTbody">' +
-        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
-      '</tbody></table></div>' +
-    '</div>'
-  );
-}
-
-function renderClaimsTable() {
-  var tbody = document.getElementById('claimsTbody');
-  if (!tbody) return;
-  var claimed = DEVICES.filter(function(d) { return d.condition === 'claim'; });
-  var countEl = document.getElementById('claimsCount');
-  if (countEl) countEl.textContent = claimed.length;
-
-  var q = (document.getElementById('claimsSearch') ? document.getElementById('claimsSearch').value : '').trim().toLowerCase();
-  var filtered = claimed.filter(function(d) {
-    if (!q) return true;
-    return ((d.friendlyName||'') + (d.serialNumber||'') + (d.claimNote||'') + (d.claimReportedBy||'')).toLowerCase().indexOf(q) !== -1;
-  });
-
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' +
-      (claimed.length ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีเครื่องที่ส่งเคลมอยู่ในขณะนี้ 🎉') + '</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(function(d) {
-    return (
-      '<tr>' +
-        '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
-        '<td>' + esc2(d.serialNumber) + '</td>' +
-        '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
-        '<td style="white-space:nowrap;">' + (d.claimDate ? fmtDate(d.claimDate) : '-') + '</td>' +
-        '<td>' + esc2(d.claimReportedBy || '-') + (d.claimUpdatedBy ? '<br><span style="font-size:10px;color:#94a3b8;">บันทึกโดย ' + esc2(d.claimUpdatedBy) + '</span>' : '') + '</td>' +
-        '<td><button class="btn-secondary btn-sm" onclick="openClaimStatusModal(\'' + d.id + '\')"><i data-lucide="wrench" style="width:14px;height:14px;"></i> จัดการ</button></td>' +
-      '</tr>'
-    );
-  }).join('');
-  lucide.createIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
    เคลมอุปกรณ์เสริม — ไม่มีรหัสอ้างอิง เก็บแค่ชื่ออุปกรณ์เสริม + รายละเอียด
    ══════════════════════════════════════════════════════════════ */
 function openAccessoryClaimModal() {
@@ -1581,67 +1765,6 @@ function saveAccessoryClaim() {
     showToast('บันทึกเคลมอุปกรณ์เสริมแล้ว ✅');
     closeModal('modalAccessoryClaim');
   }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-}
-
-function resolveAccessoryClaim(id) {
-  if (!confirm('ปิดรายการเคลมนี้ (ลบออกจากลิสต์)?')) return;
-  db.collection('ipad_accessory_claims').doc(id).delete().then(function() {
-    showToast('ปิดรายการเคลมแล้ว ✅');
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-}
-
-function renderAccessoryClaimsTable() {
-  var tbody = document.getElementById('accClaimsTbody');
-  if (!tbody) return;
-  var countEl = document.getElementById('accClaimsCount');
-  if (countEl) countEl.textContent = ACCESSORY_CLAIMS.length;
-
-  if (!ACCESSORY_CLAIMS.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีอุปกรณ์เสริมที่ส่งเคลมอยู่ในขณะนี้ 🎉</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = ACCESSORY_CLAIMS.map(function(c) {
-    return (
-      '<tr>' +
-        '<td style="font-weight:700;"><span class="badge-claim">' + esc2(c.name) + '</span></td>' +
-        '<td>' + (c.note ? esc2(c.note) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
-        '<td style="white-space:nowrap;">' + fmtDate(c.createdAt) + '</td>' +
-        '<td>' + esc2(c.reportedBy || '-') + '</td>' +
-        '<td><button class="btn-secondary btn-sm" onclick="resolveAccessoryClaim(\'' + c.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> ปิดเคลม</button></td>' +
-      '</tr>'
-    );
-  }).join('');
-  lucide.createIcons();
-}
-
-
-function parseCsv(text) {
-  /* รองรับ field ที่ครอบด้วย double quote และมี comma อยู่ข้างในได้ */
-  var rows = [];
-  var row = [];
-  var field = '';
-  var inQuotes = false;
-  text = text.replace(/^\uFEFF/, ''); /* ตัด BOM */
-  for (var i = 0; i < text.length; i++) {
-    var c = text[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i+1] === '"') { field += '"'; i++; } else { inQuotes = false; }
-      } else { field += c; }
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === ',') { row.push(field); field = ''; }
-      else if (c === '\n' || c === '\r') {
-        if (c === '\r' && text[i+1] === '\n') i++;
-        row.push(field); field = '';
-        if (row.length > 1 || row[0] !== '') rows.push(row);
-        row = [];
-      } else { field += c; }
-    }
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows;
 }
 
 function handleCsvFile(evt) {
@@ -1723,24 +1846,6 @@ function confirmImport() {
     showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
     btn.textContent = 'นำเข้าข้อมูล'; btn.disabled = false;
   });
-}
-
-/* ── CSV Import: นักเรียน (เลขประจำตัว / ชื่อ / นามสกุล / ชั้น / ห้อง) ── */
-function _findCol(header, aliases) {
-  for (var i = 0; i < header.length; i++) {
-    var h = header[i].trim().toLowerCase();
-    for (var j = 0; j < aliases.length; j++) {
-      if (h === aliases[j]) return i;
-    }
-  }
-  return -1;
-}
-function _normalizeGrade(v) {
-  v = (v || '').toString().trim().replace(/\s+/g, '');
-  if (/^ม\.?4$/.test(v) || v === '4') return 'ม.4';
-  if (/^ม\.?5$/.test(v) || v === '5') return 'ม.5';
-  if (/^ม\.?6$/.test(v) || v === '6') return 'ม.6';
-  return v;
 }
 
 function downloadStudentCsvTemplate() {
@@ -1844,60 +1949,6 @@ function confirmStudentImport() {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PANEL 4: ประวัติทั้งหมด + Export CSV
-   ══════════════════════════════════════════════════════════════ */
-function renderHistoryPanel() {
-  return (
-    '<div class="card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">' +
-        '<input type="text" id="historySearch" placeholder="ค้นหาในหน้านี้ (เลขประจำตัว / ชื่อนักเรียน / Serial Number)" style="max-width:340px;" oninput="renderHistoryTable()">' +
-        '<button class="btn-secondary" id="exportHistoryBtn" onclick="exportHistoryCsv()"><i data-lucide="download" style="width:16px;height:16px;"></i> ส่งออกเป็น CSV (ทั้งหมด)</button>' +
-      '</div>' +
-      '<div class="tbl-wrap"><table class="data-table history-table"><thead><tr>' +
-        '<th>นักเรียน</th><th>ชั้น/ห้อง</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th>วันที่คืน</th><th>สถานะ</th>' +
-      '</tr></thead><tbody id="historyTbody">' +
-        '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
-      '</tbody></table></div>' +
-      '<div style="display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap;">' +
-        '<button class="btn-secondary" id="historyPrevBtn" onclick="historyPrevPage()" disabled><i data-lucide="chevron-left" style="width:14px;height:14px;"></i> หน้าก่อนหน้า</button>' +
-        '<span id="historyPageInfo" style="font-size:13px;font-weight:700;color:var(--text2);">หน้า 1</span>' +
-        '<button class="btn-secondary" id="historyNextBtn" onclick="historyNextPage()">หน้าถัดไป <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
-function renderHistoryTable() {
-  var tbody = document.getElementById('historyTbody');
-  if (!tbody) return;
-  var q = (document.getElementById('historySearch') ? document.getElementById('historySearch').value : '').trim().toLowerCase();
-  var list = BORROWS_HISTORY.filter(function(b) {
-    if (!q) return true;
-    return (b.studentName  || '').toLowerCase().indexOf(q) !== -1 ||
-           (b.studentIdNum || '').toLowerCase().indexOf(q) !== -1 ||
-           (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
-  });
-  if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
-    return;
-  }
-  tbody.innerHTML = list.map(function(b) {
-    return (
-      '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? '<br><span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
-        '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
-        '<td>' + accBadges(b.accessories, b.status) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
-        '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
-        '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="ipad-badge-free">คืนแล้ว</span>') : '<span class="ipad-badge-borrowed">ยังไม่คืน</span>') + '</td>' +
-      '</tr>'
-    );
-  }).join('');
-  lucide.createIcons();
-}
-
 function exportHistoryCsv() {
   var btn = document.getElementById('exportHistoryBtn');
   if (btn) {
@@ -1942,37 +1993,6 @@ function exportHistoryCsv() {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ประวัติทั้งหมด — โหลดทีละหน้า (100 รายการ/หน้า) ด้วย Firestore cursor
-   แทนที่จะโหลดทุก doc มาไว้ในหน่วยความจำตั้งแต่เปิดเว็บ
-   ══════════════════════════════════════════════════════════════ */
-function fetchHistoryPage(page) {
-  if (historyLoading) return;
-  historyLoading = true;
-
-  var tbody = document.getElementById('historyTbody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>';
-
-  var query = db.collection('ipad_borrows').orderBy('createdAt', 'desc').limit(HISTORY_PAGE_SIZE);
-  if (page > 1 && historyPageCursors[page - 2]) {
-    query = query.startAfter(historyPageCursors[page - 2]);
-  }
-
-  query.get().then(function(snap) {
-    BORROWS_HISTORY = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    historyHasNext = snap.docs.length === HISTORY_PAGE_SIZE;
-    if (snap.docs.length) historyPageCursors[page - 1] = snap.docs[snap.docs.length - 1];
-    historyPage = page;
-    renderHistoryTable();
-    updateHistoryPagerUI();
-  }).catch(function(e) {
-    showToast('โหลดประวัติผิดพลาด: ' + e.message, 'error');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
-  }).then(function() {
-    historyLoading = false;
-  });
-}
-
 function historyNextPage() { if (historyHasNext) fetchHistoryPage(historyPage + 1); }
 function historyPrevPage() { if (historyPage > 1) fetchHistoryPage(historyPage - 1); }
 
@@ -1985,48 +2005,35 @@ function updateHistoryPagerUI() {
   if (nextBtn) nextBtn.disabled = !historyHasNext;
 }
 
+/* ══════════════════════ INIT ══════════════════════ */
 /* ══════════════════════════════════════════════════════════════
-   Firestore listeners
+   Auth guard + shell
    ══════════════════════════════════════════════════════════════ */
-function loadStudents() {
-  db.collection('ipad_students').onSnapshot(function(snap) {
-    STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderStudentsTable();
-    renderStudentStatsChart();
-    if (document.getElementById('borrowFilterRoom')) populateBorrowFilterRoomOptions();
-  }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
-}
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ระบบยืม-คืน iPad',
+  navTheme:     'dark',
+  activePage:   'ipad-lending',
+  requireAdmin: 'ipad',    /* เฉพาะแอดมินที่มีสิทธิ์ permissions.ipad == true (หรือ SuperAdmin) เท่านั้นที่เข้าได้ */
 
-function loadDevices() {
-  db.collection('ipad_devices').onSnapshot(function(snap) {
-    DEVICES = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderDevicesTable();
-    renderClaimsTable();
-    var header = document.querySelector('#subpanel-devices .section-divider');
-    if (header) header.innerHTML = '<i data-lucide="tablet" style="width:16px;height:16px;"></i> รายการ iPad ทั้งหมด (' + DEVICES.length + ')';
-    renderStatsCharts();
+  onAuth: function(user, contentEl) {
+    currentUser = user;
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    contentEl.innerHTML = renderPage();
     lucide.createIcons();
-  }, function(e) { showToast('โหลดข้อมูล iPad ผิดพลาด: ' + e.message, 'error'); });
-}
 
-function loadAccessoryClaims() {
-  db.collection('ipad_accessory_claims').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
-    ACCESSORY_CLAIMS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderAccessoryClaimsTable();
-  }, function(e) { showToast('โหลดข้อมูลเคลมอุปกรณ์เสริมผิดพลาด: ' + e.message, 'error'); });
-}
+    document.getElementById('borrowDate').value = todayStr();
+    loadStudents();
+    loadStaff();
+    loadDevices();
+    loadActiveBorrows();
+    loadAccessoryClaims();
+    setupScrollTopButton();
+  }
+});
 
-function loadActiveBorrows() {
-  /* ดึงเฉพาะรายการที่ "ยังไม่คืน" (real-time) — จำนวนถูกจำกัดด้วยจำนวน iPad ที่มีจริง
-     ไม่ใช่ประวัติทั้งหมดที่โตขึ้นเรื่อยๆ ทุกวัน จึงไม่ต้องกังวลเรื่อง limit */
-  db.collection('ipad_borrows').where('status', '==', 'out').onSnapshot(function(snap) {
-    BORROWS_OUT = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderBorrowOutTable();
-    renderDevicesTable();
-    renderStudentsTable();
-    renderStaffTable();
-    renderStatsCharts();
-    renderStudentStatsChart();
-  }, function(e) { showToast('โหลดรายการที่กำลังยืมผิดพลาด: ' + e.message, 'error'); });
-}
+
 

@@ -1,3 +1,4 @@
+/* ══════════════════════ STATE ══════════════════════ */
 // ══════════════════════════════════════
 // DATA
 // ══════════════════════════════════════
@@ -141,16 +142,6 @@ const CSV_RAW = `วันที่,รายการ,รายรับ,รา
 
 const SHOP_TRANSFER_NAME = 'นำเข้ารายได้โรงเรียน ร้าน*50 บาท';
 
-function parseCSV(raw){
-  const lines=raw.trim().split('\n');const rows=[];
-  for(let i=1;i<lines.length;i++){
-    const cols=lines[i].split(',');
-    if(cols.length<4) continue;
-    rows.push({id:Date.now()+i,date:cols[0].trim(),name:cols[1].trim(),income:parseFloat(cols[2])||0,expense:parseFloat(cols[3])||0,balance:parseFloat(cols[4])||0,note:cols[5]?cols[5].trim():'',recurring:false});
-  }
-  return rows;
-}
-
 let transactions=parseCSV(CSV_RAW);
 let period='week';
 let addType='income';
@@ -176,27 +167,28 @@ const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeri
 const today=()=>new Date().toISOString().split('T')[0];
 const colors=['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#b45309'];
 
-function recomputeBalance(){
-  const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
-  let bal=0;const map={};
-  sorted.forEach(t=>{bal+=t.income-t.expense;map[t.id]=bal;});
-  transactions.forEach(t=>t.balance=map[t.id]||0);
-}
-
 // ── FIRESTORE PERSISTENCE ──
 const FC_TX_COLL = 'foodcourt_transactions';
 const FC_META_DOC = db.collection('foodcourt_meta').doc('config');
 
-function fcSaveTransaction(t){
-  db.collection(FC_TX_COLL).doc(String(t.id)).set(t).catch(function(e){console.error('save tx',e);});
-}
-function fcDeleteTransaction(id){
-  db.collection(FC_TX_COLL).doc(String(id)).delete().catch(function(e){console.error('delete tx',e);});
-}
-function fcSaveRecurring(){
-  FC_META_DOC.set({recurringItems:recurringItems},{merge:true}).catch(function(e){console.error('save recurring',e);});
-}
+// ── DASHBOARD RECURRING SUMMARY ──
+let recPeriod = 'day';
 
+// ── DAILY ENTRY (บันทึกรายวัน) ──
+let extraEntryRows={income:[],expense:[]};
+
+let _quickLogRec=null;
+
+// ── ADD MODAL (daily-entry style) ──
+let modalExtraRows={income:[],expense:[]};
+
+// ── MONTHLY CHART ──
+var monthlyBarChart;
+
+// ── AUTH + BOOT ──
+var currentUser = null;
+
+/* ══════════════════════ DATA LOADING ══════════════════════ */
 /* โหลดข้อมูลจาก Firestore — ถ้ายังไม่เคยมีข้อมูล (ครั้งแรก) จะ seed จาก CSV/ค่าเริ่มต้น แล้วบันทึกขึ้น Firestore */
 function loadFoodcourtData(){
   return Promise.all([
@@ -228,38 +220,22 @@ function loadFoodcourtData(){
   });
 }
 
-// ── SIDEBAR + TABS ──
-function switchTab(id,el){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  document.querySelectorAll('.content-area .sub-tab-bar .sub-tab').forEach(b=>b.classList.remove('active'));
-  const tabBtn=el||document.getElementById('sb-'+id);
-  if(tabBtn) tabBtn.classList.add('active');
-  if(id==='dashboard') renderDashboard();
-  if(id==='daily') renderDaily();
-  if(id==='manage'){ renderManage(); renderDailyEntry(); }
+/* ══════════════════════ RENDER ══════════════════════ */
+function parseCSV(raw){
+  const lines=raw.trim().split('\n');const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(',');
+    if(cols.length<4) continue;
+    rows.push({id:Date.now()+i,date:cols[0].trim(),name:cols[1].trim(),income:parseFloat(cols[2])||0,expense:parseFloat(cols[3])||0,balance:parseFloat(cols[4])||0,note:cols[5]?cols[5].trim():'',recurring:false});
+  }
+  return rows;
 }
 
-function switchDailySub(type,el){
-  dailySubFilter=type;
-  document.querySelectorAll('#tab-daily .sub-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderDaily();
-}
-
-function switchManageSub(panel,el){
-  document.querySelectorAll('#tab-manage .sub-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#tab-manage .sub-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panelMgmt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
-  if(panel==='recurring') renderManage();
-  if(panel==='entry') renderDailyEntry();
-}
-
-/* ปุ่ม "เพิ่มรายการ" → ไปที่จัดการรายการ → บันทึกรายวัน */
-function goToDailyEntry(){
-  switchTab('manage',document.getElementById('sb-manage'));
-  switchManageSub('entry',document.getElementById('subMgmtEntry'));
+function recomputeBalance(){
+  const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
+  let bal=0;const map={};
+  sorted.forEach(t=>{bal+=t.income-t.expense;map[t.id]=bal;});
+  transactions.forEach(t=>t.balance=map[t.id]||0);
 }
 
 // ── DASHBOARD ──
@@ -333,9 +309,6 @@ function renderDonut(){
   donutChart=new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:bg,borderWidth:2,borderColor:'white'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});
   document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${bg[i]}"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div><div style="font-size:10px;color:var(--text2)">฿${fmt(data[i])}</div></div></div>`).join('');
 }
-
-// ── DASHBOARD RECURRING SUMMARY ──
-let recPeriod = 'day';
 
 function setRecPeriod(p, el) {
   recPeriod = p;
@@ -431,9 +404,6 @@ function manageRecCard(r){
   </div>`;
 }
 
-// ── DAILY ENTRY (บันทึกรายวัน) ──
-let extraEntryRows={income:[],expense:[]};
-
 function renderDailyEntry(){
   if(!document.getElementById('entryDate').value) document.getElementById('entryDate').value=today();
 
@@ -471,6 +441,216 @@ function entryRow(r){
     </div>
   </div>`;
 }
+function renderExtraEntryRows(type){
+  const wrap=document.getElementById(type==='income'?'entryExtraIncome':'entryExtraExpense');
+  wrap.innerHTML=extraEntryRows[type].length ? extraEntryRows[type].map(r=>`
+    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
+      <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="entryExtraName-${r.id}" value="${r.name}">
+      <input type="number" min="0" placeholder="0" style="width:120px;text-align:right" id="entryExtraAmt-${r.id}" value="${r.amount}" oninput="updateEntrySumBar()">
+      <span style="font-size:14px;font-weight:800;color:var(--text2)">฿</span>
+      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeExtraEntryRow('${type}',${r.id})">✕</button>
+    </div>`).join('') : '';
+}
+
+function renderModalEntryRows(){
+  const recIncome=recurringItems.filter(r=>r.type==='income');
+  const recExpense=recurringItems.filter(r=>r.type==='expense');
+  document.getElementById('modalEntryRecIncome').innerHTML=recIncome.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
+  document.getElementById('modalEntryRecExpense').innerHTML=recExpense.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
+  renderModalExtraRows('income');
+  renderModalExtraRows('expense');
+  updateModalSumBar();
+}
+
+function modalEntryRow(r){
+  if(r.shopCount){
+    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+      <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+      <div class="shop-count-wrap" style="margin-left:0">
+        <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
+        <span style="font-size:11px;color:var(--text2)">ร้าน × 50</span>
+      </div>
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
+    <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input type="number" id="mEntryAmt-${r.id}" min="0" placeholder="0" style="width:120px;text-align:right" oninput="updateModalSumBar()">
+      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
+    </div>
+  </div>`;
+}
+function renderModalExtraRows(type){
+  const wrap=document.getElementById(type==='income'?'modalExtraIncome':'modalExtraExpense');
+  wrap.innerHTML=modalExtraRows[type].map(r=>`
+    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
+      <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="mExtraName-${r.id}" value="${r.name}">
+      <input type="number" min="0" placeholder="0" style="width:110px;text-align:right" id="mExtraAmt-${r.id}" value="${r.amount}" oninput="updateModalSumBar()">
+      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
+      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeModalExtraRow('${type}',${r.id})">✕</button>
+    </div>`).join('');
+}
+
+// ── RECURRING MANAGE (add/delete) ──
+function setRecType(t){
+  recType=t;
+  ['recCardIn','recCardOut'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className='modal-type-card '+(id==='recCardIn'?'income':'expense')+(t===(id==='recCardIn'?'income':'expense')?' active':'');
+  });
+}
+function renderMonthlyChart(month){
+  const wrap = document.getElementById('monthlyChartWrap');
+  if(!month){ wrap.style.display='none'; if(monthlyBarChart){monthlyBarChart.destroy();monthlyBarChart=null;} return; }
+
+  const rows = transactions.filter(t=>t.date.startsWith(month));
+  if(!rows.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+
+  // ชื่อเดือนสำหรับ title
+  const [y,mo]=month.split('-');
+  const mLabel=new Date(parseInt(y),parseInt(mo)-1,1).toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  document.getElementById('monthlyChartTitle').textContent='สรุป '+mLabel;
+
+  // KPI
+  const totalIn=rows.reduce((s,t)=>s+t.income,0);
+  const totalOut=rows.reduce((s,t)=>s+t.expense,0);
+  const net=totalIn-totalOut;
+  document.getElementById('monthlyChartKpi').innerHTML=`
+    <span style="font-weight:800;color:var(--green)">รับ ฿${fmt(totalIn)}</span>
+    <span style="color:var(--text2)">|</span>
+    <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
+    <span style="color:var(--text2)">|</span>
+    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
+  `;
+
+  // Group by date
+  const days=[...new Set(rows.map(t=>t.date))].sort();
+  const labels=days.map(fmtDate);
+  const incomes=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
+  const expenses=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
+
+  if(monthlyBarChart) monthlyBarChart.destroy();
+  monthlyBarChart=new Chart(document.getElementById('monthlyBarChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:5},
+      {label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:11}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
+  });
+}
+
+// ── DAILY ──
+function renderDaily(){
+  const filterMonth=document.getElementById('filterMonth').value;
+  renderMonthlyChart(filterMonth);
+  const filterSearch=document.getElementById('filterSearch').value.toLowerCase();
+  let rows=[...transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
+  if(filterMonth) rows=rows.filter(r=>r.date.startsWith(filterMonth));
+  if(dailySubFilter==='income') rows=rows.filter(r=>r.income>0);
+  if(dailySubFilter==='expense') rows=rows.filter(r=>r.expense>0);
+  if(filterSearch) rows=rows.filter(r=>r.name.toLowerCase().includes(filterSearch)||r.note.toLowerCase().includes(filterSearch));
+
+  const totalIn=rows.reduce((s,r)=>s+r.income,0);
+  const totalOut=rows.reduce((s,r)=>s+r.expense,0);const net=totalIn-totalOut;
+  document.getElementById('sumBar').innerHTML=`
+    <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
+    <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
+  `;
+
+  if(!rows.length){document.getElementById('dailyList').innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>ไม่พบรายการ</div></div>`;return;}
+
+  const byDate={};rows.forEach(r=>{(byDate[r.date]=byDate[r.date]||[]).push(r);});
+  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+
+  document.getElementById('dailyList').innerHTML=dates.map(date=>{
+    const items=byDate[date];
+    const dayIn=items.reduce((s,i)=>s+i.income,0);const dayOut=items.reduce((s,i)=>s+i.expense,0);
+    return `<div class="day-section">
+      <div class="day-header">
+        <div class="day-title">${fmtDate(date)}</div>
+        <div class="day-stats">
+          <span class="day-in">+฿${fmt(dayIn)}</span>
+          <span class="day-out">-฿${fmt(dayOut)}</span>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>รายการ</th><th>ประเภท</th>
+          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
+          <th>หมายเหตุ</th><th></th>
+        </tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td style="font-weight:600">${r.name}${r.name===SHOP_TRANSFER_NAME&&r.note?` <span class="amount-highlight">${r.note}</span>`:''}</td>
+            <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
+            <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
+            <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
+            <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
+            <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+  }).join('');
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderShell() {
+  return document.getElementById('foodcourtShell').innerHTML;
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+function fcSaveTransaction(t){
+  db.collection(FC_TX_COLL).doc(String(t.id)).set(t).catch(function(e){console.error('save tx',e);});
+}
+function fcDeleteTransaction(id){
+  db.collection(FC_TX_COLL).doc(String(id)).delete().catch(function(e){console.error('delete tx',e);});
+}
+function fcSaveRecurring(){
+  FC_META_DOC.set({recurringItems:recurringItems},{merge:true}).catch(function(e){console.error('save recurring',e);});
+}
+
+// ── SIDEBAR + TABS ──
+function switchTab(id,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.content-area .sub-tab-bar .sub-tab').forEach(b=>b.classList.remove('active'));
+  const tabBtn=el||document.getElementById('sb-'+id);
+  if(tabBtn) tabBtn.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='daily') renderDaily();
+  if(id==='manage'){ renderManage(); renderDailyEntry(); }
+}
+
+function switchDailySub(type,el){
+  dailySubFilter=type;
+  document.querySelectorAll('#tab-daily .sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderDaily();
+}
+
+function switchManageSub(panel,el){
+  document.querySelectorAll('#tab-manage .sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#tab-manage .sub-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panelMgmt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
+  if(panel==='recurring') renderManage();
+  if(panel==='entry') renderDailyEntry();
+}
+
+/* ปุ่ม "เพิ่มรายการ" → ไปที่จัดการรายการ → บันทึกรายวัน */
+function goToDailyEntry(){
+  switchTab('manage',document.getElementById('sb-manage'));
+  switchManageSub('entry',document.getElementById('subMgmtEntry'));
+}
 
 function addExtraEntryRow(type){
   extraEntryRows[type].push({id:Date.now()+Math.random(),name:'',amount:''});
@@ -481,16 +661,6 @@ function removeExtraEntryRow(type,id){
   extraEntryRows[type]=extraEntryRows[type].filter(r=>r.id!==id);
   renderExtraEntryRows(type);
   updateEntrySumBar();
-}
-function renderExtraEntryRows(type){
-  const wrap=document.getElementById(type==='income'?'entryExtraIncome':'entryExtraExpense');
-  wrap.innerHTML=extraEntryRows[type].length ? extraEntryRows[type].map(r=>`
-    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
-      <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="entryExtraName-${r.id}" value="${r.name}">
-      <input type="number" min="0" placeholder="0" style="width:120px;text-align:right" id="entryExtraAmt-${r.id}" value="${r.amount}" oninput="updateEntrySumBar()">
-      <span style="font-size:14px;font-weight:800;color:var(--text2)">฿</span>
-      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeExtraEntryRow('${type}',${r.id})">✕</button>
-    </div>`).join('') : '';
 }
 
 function updateEntrySumBar(){
@@ -559,8 +729,6 @@ function saveDailyEntry(){
   renderDashboard();
   showToast('บันทึกรายวันแล้ว '+count+' รายการ','#16a34a');
 }
-
-let _quickLogRec=null;
 function openQuickLog(recId){
   _quickLogRec=recurringItems.find(r=>r.id===recId);if(!_quickLogRec) return;
   document.getElementById('quickLogTitle').textContent='📝 '+_quickLogRec.name;
@@ -611,9 +779,6 @@ function saveShopCount(){
   showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'var(--accent)');
 }
 
-// ── ADD MODAL (daily-entry style) ──
-let modalExtraRows={income:[],expense:[]};
-
 function openAddModal(){
   document.getElementById('addDate').value=today();
   modalExtraRows={income:[],expense:[]};
@@ -621,35 +786,6 @@ function openAddModal(){
   document.getElementById('addModal').classList.add('open');
 }
 function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
-
-function renderModalEntryRows(){
-  const recIncome=recurringItems.filter(r=>r.type==='income');
-  const recExpense=recurringItems.filter(r=>r.type==='expense');
-  document.getElementById('modalEntryRecIncome').innerHTML=recIncome.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
-  document.getElementById('modalEntryRecExpense').innerHTML=recExpense.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
-  renderModalExtraRows('income');
-  renderModalExtraRows('expense');
-  updateModalSumBar();
-}
-
-function modalEntryRow(r){
-  if(r.shopCount){
-    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
-      <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
-      <div class="shop-count-wrap" style="margin-left:0">
-        <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
-        <span style="font-size:11px;color:var(--text2)">ร้าน × 50</span>
-      </div>
-    </div>`;
-  }
-  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
-    <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="mEntryAmt-${r.id}" min="0" placeholder="0" style="width:120px;text-align:right" oninput="updateModalSumBar()">
-      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
-    </div>
-  </div>`;
-}
 
 function addModalExtraRow(type){
   modalExtraRows[type].push({id:Date.now()+Math.random(),name:'',amount:''});
@@ -660,16 +796,6 @@ function removeModalExtraRow(type,id){
   modalExtraRows[type]=modalExtraRows[type].filter(r=>r.id!==id);
   renderModalExtraRows(type);
   updateModalSumBar();
-}
-function renderModalExtraRows(type){
-  const wrap=document.getElementById(type==='income'?'modalExtraIncome':'modalExtraExpense');
-  wrap.innerHTML=modalExtraRows[type].map(r=>`
-    <div style="display:flex;align-items:center;gap:var(--gap-tight)">
-      <input type="text" placeholder="ชื่อรายการ..." style="flex:1" id="mExtraName-${r.id}" value="${r.name}">
-      <input type="number" min="0" placeholder="0" style="width:110px;text-align:right" id="mExtraAmt-${r.id}" value="${r.amount}" oninput="updateModalSumBar()">
-      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
-      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeModalExtraRow('${type}',${r.id})">✕</button>
-    </div>`).join('');
 }
 
 function updateModalSumBar(){
@@ -723,15 +849,6 @@ function saveModalEntry(){
   renderDashboard();
   showToast('บันทึกแล้ว '+count+' รายการ','#16a34a');
 }
-
-// ── RECURRING MANAGE (add/delete) ──
-function setRecType(t){
-  recType=t;
-  ['recCardIn','recCardOut'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.className='modal-type-card '+(id==='recCardIn'?'income':'expense')+(t===(id==='recCardIn'?'income':'expense')?' active':'');
-  });
-}
 function saveRecurring(){
   const name=document.getElementById('recName').value.trim();
   const amount=parseFloat(document.getElementById('recAmount').value)||0;
@@ -753,50 +870,6 @@ function deleteRec(id){
   showToast('ลบรายการประจำแล้ว','#dc2626');
 }
 
-// ── MONTHLY CHART ──
-var monthlyBarChart;
-function renderMonthlyChart(month){
-  const wrap = document.getElementById('monthlyChartWrap');
-  if(!month){ wrap.style.display='none'; if(monthlyBarChart){monthlyBarChart.destroy();monthlyBarChart=null;} return; }
-
-  const rows = transactions.filter(t=>t.date.startsWith(month));
-  if(!rows.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-
-  // ชื่อเดือนสำหรับ title
-  const [y,mo]=month.split('-');
-  const mLabel=new Date(parseInt(y),parseInt(mo)-1,1).toLocaleDateString('th-TH',{month:'long',year:'numeric'});
-  document.getElementById('monthlyChartTitle').textContent='สรุป '+mLabel;
-
-  // KPI
-  const totalIn=rows.reduce((s,t)=>s+t.income,0);
-  const totalOut=rows.reduce((s,t)=>s+t.expense,0);
-  const net=totalIn-totalOut;
-  document.getElementById('monthlyChartKpi').innerHTML=`
-    <span style="font-weight:800;color:var(--green)">รับ ฿${fmt(totalIn)}</span>
-    <span style="color:var(--text2)">|</span>
-    <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
-    <span style="color:var(--text2)">|</span>
-    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
-  `;
-
-  // Group by date
-  const days=[...new Set(rows.map(t=>t.date))].sort();
-  const labels=days.map(fmtDate);
-  const incomes=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
-  const expenses=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
-
-  if(monthlyBarChart) monthlyBarChart.destroy();
-  monthlyBarChart=new Chart(document.getElementById('monthlyBarChart'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:5},
-      {label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:5}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:11}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
-  });
-}
-
 // ── POPULATE MONTH FILTER ──
 function populateMonthFilter(){
   const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
@@ -813,64 +886,6 @@ function populateMonthFilter(){
     const thisMonth=new Date().toISOString().slice(0,7);
     if(months.includes(thisMonth)) sel.value=thisMonth;
   }
-}
-
-// ── DAILY ──
-function renderDaily(){
-  const filterMonth=document.getElementById('filterMonth').value;
-  renderMonthlyChart(filterMonth);
-  const filterSearch=document.getElementById('filterSearch').value.toLowerCase();
-  let rows=[...transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
-  if(filterMonth) rows=rows.filter(r=>r.date.startsWith(filterMonth));
-  if(dailySubFilter==='income') rows=rows.filter(r=>r.income>0);
-  if(dailySubFilter==='expense') rows=rows.filter(r=>r.expense>0);
-  if(filterSearch) rows=rows.filter(r=>r.name.toLowerCase().includes(filterSearch)||r.note.toLowerCase().includes(filterSearch));
-
-  const totalIn=rows.reduce((s,r)=>s+r.income,0);
-  const totalOut=rows.reduce((s,r)=>s+r.expense,0);const net=totalIn-totalOut;
-  document.getElementById('sumBar').innerHTML=`
-    <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
-    <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
-    <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
-    <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
-  `;
-
-  if(!rows.length){document.getElementById('dailyList').innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>ไม่พบรายการ</div></div>`;return;}
-
-  const byDate={};rows.forEach(r=>{(byDate[r.date]=byDate[r.date]||[]).push(r);});
-  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-
-  document.getElementById('dailyList').innerHTML=dates.map(date=>{
-    const items=byDate[date];
-    const dayIn=items.reduce((s,i)=>s+i.income,0);const dayOut=items.reduce((s,i)=>s+i.expense,0);
-    return `<div class="day-section">
-      <div class="day-header">
-        <div class="day-title">${fmtDate(date)}</div>
-        <div class="day-stats">
-          <span class="day-in">+฿${fmt(dayIn)}</span>
-          <span class="day-out">-฿${fmt(dayOut)}</span>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table><thead><tr>
-          <th>รายการ</th><th>ประเภท</th>
-          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
-          <th>หมายเหตุ</th><th></th>
-        </tr></thead><tbody>
-          ${items.map(r=>`<tr>
-            <td style="font-weight:600">${r.name}${r.name===SHOP_TRANSFER_NAME&&r.note?` <span class="amount-highlight">${r.note}</span>`:''}</td>
-            <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
-            <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
-            <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
-            <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
-            <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
-          </tr>`).join('')}
-        </tbody></table>
-      </div>
-    </div>`;
-  }).join('');
 }
 
 function deleteRow(id){
@@ -893,9 +908,17 @@ function exportCSV(){
   showToast('ส่งออก CSV แล้ว');
 }
 
-// ── AUTH + BOOT ──
-var currentUser = null;
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
 
+/* ══════════════════════ INIT ══════════════════════ */
 buildPage({
   appId:        'foodcourtApp',
   navSubtitle:  'บัญชีรายได้ Food Court',
@@ -919,20 +942,4 @@ buildPage({
   }
 });
 
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
-function scrollToTopContent() {
-  var content = document.getElementById('pageContent');
-  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
-function renderShell() {
-  return document.getElementById('foodcourtShell').innerHTML;
-}

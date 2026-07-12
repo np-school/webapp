@@ -5,53 +5,19 @@ var allStaff = [], currentFilter = 'all', editingId = null, deleteId = null, par
 var canWrite = false; /* set after auth */
 var SUPER_ADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
-buildPage({
-  appId:        'staffApp',
-  navSubtitle:  'NP Origins · จัดการบุคลากร',
-  navTheme:     'dark',
-  activePage:   'staff',
-  requireAdmin: 'staff',
+/* ════ Render Table ════ */
+var GROUP_COLORS = { 'วิทยาศาสตร์':'วิทยาศาสตร์','เทคโนโลยี':'เทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์','ภาษาไทย':'ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา':'สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ศิลปะ':'ศิลปะ','การงานอาชีพ':'การงานอาชีพ','แนะแนว':'แนะแนว','เจ้าหน้าที่':'เจ้าหน้าที่','ผู้บริหาร':'ผู้บริหาร' };
+var AVATAR_COLORS = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
 
-  onAuth: function(user, contentEl) {
-    /* inject page content จาก <template> */
-    var tpl = document.getElementById('staffContent');
-    if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+/* ════ Import CSV / Paste ════ */
+var importTab = 'file';
 
-    updateNavUser(user);
-    checkAdminAccess(user.email);
-    updateSidebarProfile(user);
+/* ═══════════════════════════════════════════
+   SAR Modal – แสดงภาพรวม SAR ของบุคลากร
+   ═══════════════════════════════════════════ */
+var _smStaffId = '', _smStaffData = null;
 
-    /* ── ตรวจสิทธิ์เขียนข้อมูล ── */
-    var lEmail = user.email.toLowerCase();
-    var isSA = lEmail === SUPER_ADMIN_EMAIL;
-    db.collection('admins').doc(lEmail).get().then(function(doc) {
-      var perms = (doc.exists && doc.data().permissions) ? doc.data().permissions : {};
-      canWrite = isSA || !!perms.staff;
-      if (!canWrite) {
-        document.querySelectorAll('.write-gated').forEach(function(el){ el.style.display='none'; });
-      }
-    });
-
-    initStaffListener();
-    lucide.createIcons();
-    setupScrollTopButton();
-  }
-});
-
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
-function scrollToTopContent() {
-  var content = document.getElementById('pageContent');
-  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
+/* ══════════════════════ DATA LOADING ══════════════════════ */
 /* ════ Firestore ════ */
 function initStaffListener() {
   db.collection('staff').orderBy('name').onSnapshot(function(snap) {
@@ -62,17 +28,11 @@ function initStaffListener() {
   });
 }
 
-function updateStats() {
-  var subs = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ','ศิลปะ','การงานอาชีพ','แนะแนว'];
-  document.getElementById('statTotal').textContent = allStaff.length;
-  document.getElementById('statAcademic').textContent = allStaff.filter(function(s) { return subs.indexOf(s.group) >= 0; }).length;
-  document.getElementById('statBudget').textContent = allStaff.filter(function(s) { return s.group === 'เจ้าหน้าที่'; }).length;
-  document.getElementById('statAdmin').textContent = allStaff.filter(function(s) { return s.group === 'ผู้บริหาร'; }).length;
+/* ══════════════════════ RENDER ══════════════════════ */
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-/* ════ Render Table ════ */
-var GROUP_COLORS = { 'วิทยาศาสตร์':'วิทยาศาสตร์','เทคโนโลยี':'เทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์','ภาษาไทย':'ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา':'สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ศิลปะ':'ศิลปะ','การงานอาชีพ':'การงานอาชีพ','แนะแนว':'แนะแนว','เจ้าหน้าที่':'เจ้าหน้าที่','ผู้บริหาร':'ผู้บริหาร' };
-var AVATAR_COLORS = ['#1d4ed8','#7c3aed','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
 
 function getInitials(name) {
   if (!name) return '?';
@@ -155,6 +115,140 @@ function renderStaff() {
 
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function parsePasteData() {
+  var text = document.getElementById('csvPasteArea').value;
+  if (!text.trim()) { document.getElementById('importPreview').style.display = 'none'; return; }
+  parseCSVText(text, '\t');
+}
+
+function detectDelimiter(text) {
+  var firstLine = text.split('\n')[0];
+  if ((firstLine.match(/\t/g) || []).length > (firstLine.match(/,/g) || []).length) return '\t';
+  return ',';
+}
+
+function parseCSVText(text, delim) {
+  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+  if (!lines.length) { showToast('ไม่พบข้อมูลในไฟล์', 'warn'); return; }
+
+  // Parse header
+  var headers = parseCSVLine(lines[0], delim).map(function(h) { return h.toLowerCase().trim(); });
+
+  // Map column indices
+  var colMap = {
+    name:     findCol(headers, ['ชื่อ-นามสกุล','ชื่อนามสกุล','ชื่อ','name','fullname','full_name']),
+    position: findCol(headers, ['ตำแหน่ง','position','pos','rank']),
+    group:    findCol(headers, ['กลุ่มงาน','กลุ่ม','group','department','dept']),
+    email:    findCol(headers, ['อีเมล','email','e-mail','mail']),
+    phone:    findCol(headers, ['เบอร์โทร','เบอร์','phone','tel','telephone']),
+    subject:  findCol(headers, ['วิชาที่สอน','วิชา','subject','subjects']),
+    note:     findCol(headers, ['หมายเหตุ','note','notes','remark']),
+  };
+
+  if (colMap.name === -1) { showToast('ไม่พบคอลัมน์ "ชื่อ-นามสกุล" หรือ "name"', 'warn'); return; }
+  if (colMap.position === -1) { showToast('ไม่พบคอลัมน์ "ตำแหน่ง" หรือ "position"', 'warn'); return; }
+  if (colMap.group === -1) { showToast('ไม่พบคอลัมน์ "กลุ่มงาน" หรือ "group"', 'warn'); return; }
+
+  var rows = [];
+  var warnings = [];
+  var validGroups = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ','ศิลปะ','การงานอาชีพ','แนะแนว','ผู้บริหาร','เจ้าหน้าที่'];
+
+  for (var i = 1; i < lines.length; i++) {
+    var cells = parseCSVLine(lines[i], delim);
+    var name = cells[colMap.name] || '';
+    if (!name.trim()) continue;
+
+    var group = cells[colMap.group] || '';
+    // normalize group
+    var g = group;
+    if (g.includes('การงาน') || g.includes('อาชีพ')) group = 'การงานอาชีพ';
+    else if (g.includes('วิทยาศาสตร์') && !g.includes('เทคโนโลยี')) group = 'วิทยาศาสตร์';
+    else if (g.includes('เทคโนโลยี') && !g.includes('วิทยาศาสตร์')) group = 'เทคโนโลยี';
+    else if (g.includes('วิทยาศาสตร์') && g.includes('เทคโนโลยี')) group = 'วิทยาศาสตร์';
+    else if (g.includes('คณิตศาสตร์')) group = 'คณิตศาสตร์';
+    else if (g.includes('ต่างประเทศ') || g.includes('ภาษาอังกฤษ')) group = 'ภาษาต่างประเทศ';
+    else if (g.includes('ภาษาไทย')) group = 'ภาษาไทย';
+    else if (g.includes('ศิลปะ')) group = 'ศิลปะ';
+    else if (g.includes('สังคม')) group = 'สังคมศึกษา ศาสนา และวัฒนธรรม';
+    else if (g.includes('สุขศึกษา') || g.includes('พลศึกษา')) group = 'สุขศึกษาและพลศึกษา';
+    else if (g.includes('แนะแนว')) group = 'แนะแนว';
+    else if (g.includes('บริหาร') && !g.includes('งาน')) group = 'ผู้บริหาร';
+    else if (g.includes('เจ้าหน้าที่') || g.includes('ธุรการ')) group = 'เจ้าหน้าที่';
+    else if (!validGroups.includes(group)) { warnings.push('แถวที่ '+(i+1)+': กลุ่ม "'+group+'" ไม่รู้จัก → ใช้ "เจ้าหน้าที่"'); group = 'เจ้าหน้าที่'; }
+
+    rows.push({
+      name:     name.trim(),
+      position: colMap.position >= 0 ? (cells[colMap.position] || '').trim() : '',
+      group:    group,
+      email:    colMap.email >= 0 ? (cells[colMap.email] || '').trim() : '',
+      phone:    colMap.phone >= 0 ? (cells[colMap.phone] || '').trim() : '',
+      subject:  colMap.subject >= 0 ? (cells[colMap.subject] || '').trim() : '',
+      note:     colMap.note >= 0 ? (cells[colMap.note] || '').trim() : '',
+    });
+  }
+
+  parsedCSV = rows;
+  showImportPreview(rows, headers, warnings);
+}
+
+function findCol(headers, aliases) {
+  for (var i = 0; i < headers.length; i++) {
+    for (var j = 0; j < aliases.length; j++) {
+      if (headers[i].includes(aliases[j])) return i;
+    }
+  }
+  return -1;
+}
+
+function parseCSVLine(line, delim) {
+  if (delim === '\t') return line.split('\t').map(function(v) { return v.trim(); });
+  // Simple CSV parser supporting quoted fields
+  var result = [], current = '', inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim()); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function clearImport() {
+  parsedCSV = [];
+  document.getElementById('csvFileInput').value = '';
+  document.getElementById('csvPasteArea').value = '';
+  document.getElementById('csvDropArea').classList.remove('has-file');
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('importCount').textContent = '0';
+  var btn = document.getElementById('importConfirmBtn');
+  btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function updateStats() {
+  var subs = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ','ศิลปะ','การงานอาชีพ','แนะแนว'];
+  document.getElementById('statTotal').textContent = allStaff.length;
+  document.getElementById('statAcademic').textContent = allStaff.filter(function(s) { return subs.indexOf(s.group) >= 0; }).length;
+  document.getElementById('statBudget').textContent = allStaff.filter(function(s) { return s.group === 'เจ้าหน้าที่'; }).length;
+  document.getElementById('statAdmin').textContent = allStaff.filter(function(s) { return s.group === 'ผู้บริหาร'; }).length;
 }
 
 /* ════ Filter ════ */
@@ -285,9 +379,6 @@ function exportCSV() {
   a.click(); URL.revokeObjectURL(url);
   showToast('ส่งออก CSV แล้ว ✓');
 }
-
-/* ════ Import CSV / Paste ════ */
-var importTab = 'file';
 function openImportModal() {
   parsedCSV = [];
   document.getElementById('csvFileInput').value = '';
@@ -331,110 +422,6 @@ function handleCsvFile(file) {
   reader.readAsText(file, 'UTF-8');
 }
 
-function parsePasteData() {
-  var text = document.getElementById('csvPasteArea').value;
-  if (!text.trim()) { document.getElementById('importPreview').style.display = 'none'; return; }
-  parseCSVText(text, '\t');
-}
-
-function detectDelimiter(text) {
-  var firstLine = text.split('\n')[0];
-  if ((firstLine.match(/\t/g) || []).length > (firstLine.match(/,/g) || []).length) return '\t';
-  return ',';
-}
-
-function parseCSVText(text, delim) {
-  var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
-  if (!lines.length) { showToast('ไม่พบข้อมูลในไฟล์', 'warn'); return; }
-
-  // Parse header
-  var headers = parseCSVLine(lines[0], delim).map(function(h) { return h.toLowerCase().trim(); });
-
-  // Map column indices
-  var colMap = {
-    name:     findCol(headers, ['ชื่อ-นามสกุล','ชื่อนามสกุล','ชื่อ','name','fullname','full_name']),
-    position: findCol(headers, ['ตำแหน่ง','position','pos','rank']),
-    group:    findCol(headers, ['กลุ่มงาน','กลุ่ม','group','department','dept']),
-    email:    findCol(headers, ['อีเมล','email','e-mail','mail']),
-    phone:    findCol(headers, ['เบอร์โทร','เบอร์','phone','tel','telephone']),
-    subject:  findCol(headers, ['วิชาที่สอน','วิชา','subject','subjects']),
-    note:     findCol(headers, ['หมายเหตุ','note','notes','remark']),
-  };
-
-  if (colMap.name === -1) { showToast('ไม่พบคอลัมน์ "ชื่อ-นามสกุล" หรือ "name"', 'warn'); return; }
-  if (colMap.position === -1) { showToast('ไม่พบคอลัมน์ "ตำแหน่ง" หรือ "position"', 'warn'); return; }
-  if (colMap.group === -1) { showToast('ไม่พบคอลัมน์ "กลุ่มงาน" หรือ "group"', 'warn'); return; }
-
-  var rows = [];
-  var warnings = [];
-  var validGroups = ['วิทยาศาสตร์','เทคโนโลยี','คณิตศาสตร์','ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ','ศิลปะ','การงานอาชีพ','แนะแนว','ผู้บริหาร','เจ้าหน้าที่'];
-
-  for (var i = 1; i < lines.length; i++) {
-    var cells = parseCSVLine(lines[i], delim);
-    var name = cells[colMap.name] || '';
-    if (!name.trim()) continue;
-
-    var group = cells[colMap.group] || '';
-    // normalize group
-    var g = group;
-    if (g.includes('การงาน') || g.includes('อาชีพ')) group = 'การงานอาชีพ';
-    else if (g.includes('วิทยาศาสตร์') && !g.includes('เทคโนโลยี')) group = 'วิทยาศาสตร์';
-    else if (g.includes('เทคโนโลยี') && !g.includes('วิทยาศาสตร์')) group = 'เทคโนโลยี';
-    else if (g.includes('วิทยาศาสตร์') && g.includes('เทคโนโลยี')) group = 'วิทยาศาสตร์';
-    else if (g.includes('คณิตศาสตร์')) group = 'คณิตศาสตร์';
-    else if (g.includes('ต่างประเทศ') || g.includes('ภาษาอังกฤษ')) group = 'ภาษาต่างประเทศ';
-    else if (g.includes('ภาษาไทย')) group = 'ภาษาไทย';
-    else if (g.includes('ศิลปะ')) group = 'ศิลปะ';
-    else if (g.includes('สังคม')) group = 'สังคมศึกษา ศาสนา และวัฒนธรรม';
-    else if (g.includes('สุขศึกษา') || g.includes('พลศึกษา')) group = 'สุขศึกษาและพลศึกษา';
-    else if (g.includes('แนะแนว')) group = 'แนะแนว';
-    else if (g.includes('บริหาร') && !g.includes('งาน')) group = 'ผู้บริหาร';
-    else if (g.includes('เจ้าหน้าที่') || g.includes('ธุรการ')) group = 'เจ้าหน้าที่';
-    else if (!validGroups.includes(group)) { warnings.push('แถวที่ '+(i+1)+': กลุ่ม "'+group+'" ไม่รู้จัก → ใช้ "เจ้าหน้าที่"'); group = 'เจ้าหน้าที่'; }
-
-    rows.push({
-      name:     name.trim(),
-      position: colMap.position >= 0 ? (cells[colMap.position] || '').trim() : '',
-      group:    group,
-      email:    colMap.email >= 0 ? (cells[colMap.email] || '').trim() : '',
-      phone:    colMap.phone >= 0 ? (cells[colMap.phone] || '').trim() : '',
-      subject:  colMap.subject >= 0 ? (cells[colMap.subject] || '').trim() : '',
-      note:     colMap.note >= 0 ? (cells[colMap.note] || '').trim() : '',
-    });
-  }
-
-  parsedCSV = rows;
-  showImportPreview(rows, headers, warnings);
-}
-
-function findCol(headers, aliases) {
-  for (var i = 0; i < headers.length; i++) {
-    for (var j = 0; j < aliases.length; j++) {
-      if (headers[i].includes(aliases[j])) return i;
-    }
-  }
-  return -1;
-}
-
-function parseCSVLine(line, delim) {
-  if (delim === '\t') return line.split('\t').map(function(v) { return v.trim(); });
-  // Simple CSV parser supporting quoted fields
-  var result = [], current = '', inQuotes = false;
-  for (var i = 0; i < line.length; i++) {
-    var ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current.trim()); current = '';
-    } else {
-      current += ch;
-    }
-  }
-  result.push(current.trim());
-  return result;
-}
-
 function showImportPreview(rows, headers, warnings) {
   var previewCols = ['name','position','group','email'];
   var colLabels = { name:'ชื่อ-นามสกุล', position:'ตำแหน่ง', group:'กลุ่มงาน', email:'อีเมล' };
@@ -471,17 +458,6 @@ function showImportPreview(rows, headers, warnings) {
   } else {
     btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   }
-}
-
-function clearImport() {
-  parsedCSV = [];
-  document.getElementById('csvFileInput').value = '';
-  document.getElementById('csvPasteArea').value = '';
-  document.getElementById('csvDropArea').classList.remove('has-file');
-  document.getElementById('importPreview').style.display = 'none';
-  document.getElementById('importCount').textContent = '0';
-  var btn = document.getElementById('importConfirmBtn');
-  btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
 }
 
 function confirmImport() {
@@ -541,11 +517,6 @@ function downloadTemplate() {
   showToast('ดาวน์โหลด Template CSV แล้ว ✓');
 }
 
-/* ═══════════════════════════════════════════
-   SAR Modal – แสดงภาพรวม SAR ของบุคลากร
-   ═══════════════════════════════════════════ */
-var _smStaffId = '', _smStaffData = null;
-
 function openSarModal(staffId, staffEmail) {
   _smStaffId   = staffId;
   var s = allStaff.find(function(x){ return x.id === staffId; });
@@ -585,6 +556,42 @@ function closeSarModal() {
   var iframe = document.getElementById('sarModalIframe');
   if (iframe) iframe.src = '';
 }
+
+/* ══════════════════════ INIT ══════════════════════ */
+buildPage({
+  appId:        'staffApp',
+  navSubtitle:  'NP Origins · จัดการบุคลากร',
+  navTheme:     'dark',
+  activePage:   'staff',
+  requireAdmin: 'staff',
+
+  onAuth: function(user, contentEl) {
+    /* inject page content จาก <template> */
+    var tpl = document.getElementById('staffContent');
+    if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+    updateNavUser(user);
+    checkAdminAccess(user.email);
+    updateSidebarProfile(user);
+
+    /* ── ตรวจสิทธิ์เขียนข้อมูล ── */
+    var lEmail = user.email.toLowerCase();
+    var isSA = lEmail === SUPER_ADMIN_EMAIL;
+    db.collection('admins').doc(lEmail).get().then(function(doc) {
+      var perms = (doc.exists && doc.data().permissions) ? doc.data().permissions : {};
+      canWrite = isSA || !!perms.staff;
+      if (!canWrite) {
+        document.querySelectorAll('.write-gated').forEach(function(el){ el.style.display='none'; });
+      }
+    });
+
+    initStaffListener();
+    lucide.createIcons();
+    setupScrollTopButton();
+  }
+});
 /* ═══════════════ END SAR Modal ═══════════════ */
 
 lucide.createIcons();
+
+

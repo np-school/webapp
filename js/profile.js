@@ -1,12 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   profile.html – ดึงข้อมูลจาก portfolio_submissions จริง
-   collection: portfolio_submissions
-   fields: uid, yearSem (e.g. "2567_1"), docTypeId,
-           courseCode, courseName, status, files[], note, adminNote
-   ═══════════════════════════════════════════════════════════ */
-
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
+/* ══════════════════════ STATE ══════════════════════ */
 /* DOCUMENT_TYPES fallback (จะถูก override จาก Firestore) */
 var DOCUMENT_TYPES = [
   {id:'syllabus',         label:'Course Syllabus',                  icon:'file-text',  color:'#3b82f6', bg:'#eff6ff', department:'academic'},
@@ -30,7 +22,6 @@ var STATUS_LABEL = {
   reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ',
   deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข'
 };
-function colorToBg(hex){ return (hex||'#7c3aed')+'15'; }
 
 /* globals */
 var currentUser  = null;
@@ -43,59 +34,364 @@ var _viewStaffId = _urlParams.get('staffId') || '';  /* staff doc id */
 var isViewMode   = !!_viewStaffId;                    /* true = ดูโปรไฟล์คนอื่น */
 var isEmbed      = _urlParams.get('embed') === '1';   /* true = โหลดใน iframe ของ staff.html */
 var _viewStaff   = null; /* staff doc ของคนที่ถูกดู (view mode) */
-var _viewUid     = '';   /* uid ของคนที่ถูกดู */
+var _viewUid     = '';
 
-/* ── AUTH + APP SHELL ── */
-if (isEmbed) {
-  /* Embed mode: ไม่ใช้ navbar/sidebar, แต่ยังต้องตรวจสอบ auth */
-  auth.onAuthStateChanged(function(u){
-    var loadEl = document.getElementById('loadingOverlay');
-    if (loadEl) loadEl.style.display = 'none';
-    if (!u) return;
-    currentUser = u;
-    var appEl = document.getElementById('profileApp');
-    var tpl   = document.getElementById('profileContent');
-    if (appEl) {
-      appEl.classList.add('content-area');
-      appEl.style.removeProperty('display');
-      if (tpl) appEl.appendChild(tpl.content.cloneNode(true));
-    }
-    lucide.createIcons();
-    init();
-  });
-} else {
-  buildPage({
-    appId:        'profileApp',
-    navSubtitle:  isViewMode ? 'ดูโปรไฟล์บุคลากร' : 'My Portfolio',
-    navTheme:     'blue',
-    activePage:   'profile',
+/* ── Semester tab system ── */
+var currentSemFilter = 'all';
+var currentSemIdx = 0;
 
-    onAuth: function(user, contentEl) {
-      currentUser = user;
-      updateNavUser(user);
-      updateSidebarProfile(user);
-      checkAdminAccess(user.email);
+/* SAR data loaders */
+/* ─── SECTION: ประวัติการศึกษา ─── */
+var educationItems = [];
+var EDU_LEVEL_OPTS = ['ต่ำกว่าปริญญาตรี','ปริญญาตรี','ปริญญาโท','ปริญญาเอก'];
+var EDU_COLORS = { 'ต่ำกว่าปริญญาตรี':'#64748b', 'ปริญญาตรี':'#1d4ed8', 'ปริญญาโท':'#7c3aed', 'ปริญญาเอก':'#0369a1' };
+var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 'ปริญญาตรี':'#eff6ff', 'ปริญญาโท':'#f5f3ff', 'ปริญญาเอก':'#e0f2fe' };
 
-      /* inject page content จาก <template> */
-      var tpl = document.getElementById('profileContent');
-      if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+/* ─── SECTION: ข้อมูลส่วนตัว ─── */
+var personalData  = {};  /* user-owned fields */
+var adminSyncData = {};
 
-      lucide.createIcons();
-      init();
-      setupScrollTopButton();
-    }
-  });
+/* ─── SECTION: ประวัติการทำงาน ─── */
+var careerData={};
+
+/* ─── SECTION: ประวัติการย้ายโรงเรียน (sub-collection) ─── */
+var careerHistoryItems = [];
+
+/* ─── SECTION: ภาระงานสอน ─── */
+var teachingItems=[];
+
+/* ─── SECTION: งานที่ได้รับมอบหมาย ─── */
+var dutyItems=[];
+
+/* ─── SECTION: การพัฒนาตนเอง ─── */
+var devItems=[];
+
+/* ─── SECTION: สื่อนวัตกรรม ─── */
+var mediaItems=[];
+var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wordwall','flipgrid','book','image','video','music','code-2','globe','file-text'];
+
+/* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
+var _sarDocTypes = [
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
+  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
+  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+];
+var _sarPortSubs = null; /* cache */
+var _sarDocTypesLoaded = false;
+
+/* ══════════════════════ DATA LOADING ══════════════════════ */
+/* ── Load all submissions ── */
+function loadSubmissions(){
+  /* view mode: ใช้ uid ของ staff ที่ถูกดู ถ้าไม่มี uid = ยังไม่เคย login ระบบ */
+  var targetUid = isViewMode ? _viewUid : currentUser.uid;
+
+  if(!targetUid){
+    /* บุคลากรคนนี้ยังไม่เคย login → ไม่มี portfolio */
+    finishRender();
+    return;
+  }
+
+  db.collection('portfolio_submissions')
+    .where('uid','==', targetUid)
+    .get()
+    .then(function(snap){ buildSemData(snap.docs); })
+    .catch(function(e){
+      console.error('portfolio_submissions query error:', e);
+      db.collection('portfolio_submissions')
+        .where('uid','==', targetUid)
+        .get()
+        .then(function(snap){ buildSemData(snap.docs); })
+        .catch(function(e2){ console.error(e2); finishRender(); });
+    });
 }
 
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
+function loadEducation(){
+  if(!currentUser) return;
+  db.collection('staff_education').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      educationItems = [];
+      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+      renderEducation();
+    }).catch(function(e){ console.error('loadEducation error:',e); renderEducation(); });
+}
+
+function loadPersonalForSar(){
+  if(!currentUser) return;
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
+  Promise.all([
+    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
+    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
+  ]).then(function(results){
+    var profileDoc = results[0];
+    var syncDoc    = results[1];
+    if(profileDoc && profileDoc.exists) personalData  = profileDoc.data();
+    if(syncDoc    && syncDoc.exists)    adminSyncData = syncDoc.data();
+    renderSarPersonal();
   });
 }
+function loadCareerForSar(){
+  if(!currentUser) return;
+  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
+    careerData = d.exists ? d.data() : {};
+    renderSarCareer();
+  }).catch(function(){});
+}
+
+function loadEducationForSar(){
+  if(!currentUser) return;
+  db.collection('staff_education').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      educationItems = [];
+      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
+      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+      renderSarEducation();
+    }).catch(function(){});
+}
+
+function loadCareerHistoryForSar(){
+  if(!currentUser) return;
+  db.collection('staff_career_history').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      careerHistoryItems = [];
+      snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id},d.data())); });
+      careerHistoryItems.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
+      renderSarSchoolHistory();
+    }).catch(function(){});
+}
+function loadTeachingForSar(){
+  if(!currentUser) return;
+  db.collection('staff_teaching').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      teachingItems=[];
+      snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
+      renderSarTeaching();
+    }).catch(function(){});
+}
+function loadDutiesForSar(){
+  if(!currentUser) return;
+  db.collection('staff_duties').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      dutyItems=[];
+      snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
+      renderSarDuties();
+    }).catch(function(){});
+}
+function loadDevForSar(){
+  if(!currentUser) return;
+  db.collection('staff_development').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      devItems=[];
+      snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
+      renderSarDev();
+    }).catch(function(){});
+}
+function loadMediaForSar(){
+  if(!currentUser) return;
+  db.collection('staff_media').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      mediaItems=[];
+      snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
+      renderSarMedia();
+    }).catch(function(){});
+}  /* admin-owned fields จาก staff_profile_sync */
+
+function loadPersonal(){
+  if(!currentUser) return;
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
+
+  /* โหลดทั้งสอง collection พร้อมกัน แล้ว merge */
+  Promise.all([
+    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
+    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
+  ]).then(function(results){
+    var profileDoc = results[0];
+    var syncDoc    = results[1];
+
+    personalData  = (profileDoc && profileDoc.exists) ? profileDoc.data() : {};
+    adminSyncData = (syncDoc    && syncDoc.exists)    ? syncDoc.data()    : {};
+
+    renderPersonalView();
+  });
+}
+function loadCareer(){
+  if(!currentUser) return;
+  var email = isViewMode
+    ? ((_viewStaff && _viewStaff.email) || '')
+    : currentUser.email.toLowerCase();
+  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
+    careerData = d.exists ? d.data() : {};
+    if(!careerData.cur_position && email){
+      db.collection('staff_profile_sync').doc(email).get().then(function(s){
+        if(s.exists){
+          var sync = s.data();
+          if(!careerData.cur_position)  careerData.cur_position  = sync.position      || '';
+          if(!careerData.subject_group) careerData.subject_group = sync.subject_group || '';
+          if(!careerData.academic_rank) careerData.academic_rank = sync.academic_rank || '';
+        }
+        renderCareerView();
+      }).catch(function(){ renderCareerView(); });
+    } else {
+      renderCareerView();
+    }
+  }).catch(function(){ renderCareerView(); });
+}
+
+function loadCareerHistory(){
+  if(!currentUser) return;
+  var el = document.getElementById('careerHistoryList');
+  if(el) el.innerHTML = '<div class="empty-block">กำลังโหลด...</div>';
+
+  db.collection('staff_career_history')
+    .where('uid','==', _targetUid())
+    .orderBy('start_date')
+    .get()
+    .then(function(snap){
+      careerHistoryItems = [];
+      snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
+      renderCareerHistory();
+    })
+    .catch(function(){
+      /* fallback ไม่มี index — ไม่ orderBy */
+      db.collection('staff_career_history')
+        .where('uid','==', _targetUid()).get()
+        .then(function(snap){
+          careerHistoryItems = [];
+          snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
+          /* sort client-side */
+          careerHistoryItems.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
+          renderCareerHistory();
+        }).catch(function(){ renderCareerHistory(); });
+    });
+}
+function loadTeaching(){
+  if(!currentUser) return;
+  db.collection('staff_teaching').where('uid','==',_targetUid()).orderBy('order').get()
+    .then(function(snap){
+      teachingItems=[];
+      snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
+      renderTeaching();
+    }).catch(function(){
+      db.collection('staff_teaching').where('uid','==',_targetUid()).get()
+        .then(function(snap){
+          teachingItems=[];
+          snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
+          renderTeaching();
+        }).catch(function(){ renderTeaching(); });
+    });
+}
+function loadDuties(){
+  if(!currentUser) return;
+  db.collection('staff_duties').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      dutyItems=[];
+      snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
+      renderDuties();
+    }).catch(function(){ renderDuties(); });
+}
+function loadDevelopment(){
+  if(!currentUser) return;
+  db.collection('staff_development').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      devItems=[];
+      snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
+      renderDev();
+    }).catch(function(){ renderDev(); });
+}
+function loadMedia(){
+  if(!currentUser) return;
+  db.collection('staff_media').where('uid','==',_targetUid()).get()
+    .then(function(snap){
+      mediaItems=[];
+      snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
+      renderMedia();
+    }).catch(function(){ renderMedia(); });
+}
+
+function loadPortfolioForSar() {
+  var el = document.getElementById('portfolioDocList');
+  var semLbl = document.getElementById('portfolioSemLabel');
+  if (!el) return;
+  if (!currentUser) { el.innerHTML = '<div class="sar-empty">ไม่พบข้อมูลผู้ใช้</div>'; return; }
+
+  var portYear = window._sarPortYear || 2568;
+  var portSem  = window._sarPortSem  || 1;
+  var key      = portYear + '_' + portSem;
+
+  if (semLbl) semLbl.textContent = 'ปีการศึกษา ' + portYear + ' ภาคเรียนที่ ' + portSem;
+  el.innerHTML = '<div class="sar-empty">กำลังโหลด...</div>';
+
+  /* โหลด doc types จาก Firestore ก่อน (ถ้ายังไม่เคย) */
+  function fetchAndRender() {
+    db.collection('portfolio_submissions')
+      .where('uid', '==', _targetUid())
+      .where('yearSem', '==', key)
+      .get()
+      .then(function(snap) {
+        var subs = {};
+        snap.forEach(function(d) {
+          var data = d.data();
+          var subKey = data.docTypeId + '_' + (data.courseCode || '');
+          subs[subKey] = Object.assign({ id: d.id }, data);
+        });
+        _sarPortSubs = subs;
+        renderPortfolioSummary(subs, portYear, portSem);
+      })
+      .catch(function(e) {
+        console.warn('loadPortfolioForSar error:', e);
+        el.innerHTML = '<div class="sar-empty">ไม่สามารถโหลดข้อมูลได้</div>';
+      });
+  }
+
+  /* โหลด doc types จาก Firestore ถ้ายังไม่มี */
+  if (!_sarDocTypesLoaded) {
+    db.collection('portfolio_doc_types').orderBy('order').get()
+      .then(function(snap) {
+        if (!snap.empty) {
+          _sarDocTypes = [];
+          snap.forEach(function(d) {
+            var data = d.data();
+            if (data.active === false) return;
+            _sarDocTypes.push({
+              id:     data.id     || d.id,
+              label:  data.label  || '',
+              icon:   data.icon   || 'file',
+              color:  data.color  || '#64748b',
+              bg:     (data.color || '#64748b') + '15',
+            });
+          });
+        }
+        _sarDocTypesLoaded = true;
+        fetchAndRender();
+      })
+      .catch(function() { _sarDocTypesLoaded = true; fetchAndRender(); });
+  } else {
+    fetchAndRender();
+  }
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   profile.html – ดึงข้อมูลจาก portfolio_submissions จริง
+   collection: portfolio_submissions
+   fields: uid, yearSem (e.g. "2567_1"), docTypeId,
+           courseCode, courseName, status, files[], note, adminNote
+   ═══════════════════════════════════════════════════════════ */
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function colorToBg(hex){ return (hex||'#7c3aed')+'15'; }
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
@@ -232,31 +528,6 @@ function setInitials(wrap,name){
   wrap.innerHTML='<span class="avatar-initials">'+ini+'</span>';
 }
 
-/* ── Load all submissions ── */
-function loadSubmissions(){
-  /* view mode: ใช้ uid ของ staff ที่ถูกดู ถ้าไม่มี uid = ยังไม่เคย login ระบบ */
-  var targetUid = isViewMode ? _viewUid : currentUser.uid;
-
-  if(!targetUid){
-    /* บุคลากรคนนี้ยังไม่เคย login → ไม่มี portfolio */
-    finishRender();
-    return;
-  }
-
-  db.collection('portfolio_submissions')
-    .where('uid','==', targetUid)
-    .get()
-    .then(function(snap){ buildSemData(snap.docs); })
-    .catch(function(e){
-      console.error('portfolio_submissions query error:', e);
-      db.collection('portfolio_submissions')
-        .where('uid','==', targetUid)
-        .get()
-        .then(function(snap){ buildSemData(snap.docs); })
-        .catch(function(e2){ console.error(e2); finishRender(); });
-    });
-}
-
 /* ── Group docs by yearSem → docTypeId ── */
 function buildSemData(docs){
   var map={};
@@ -300,10 +571,6 @@ function computeStats(){
   /* stats removed from hero — keep function for future use */
 }
 
-/* ── Semester tab system ── */
-var currentSemFilter = 'all';
-var currentSemIdx = 0;
-
 function renderSemList(data){
   buildSemTabs(data);
 }
@@ -337,17 +604,6 @@ function buildSemTabs(data){
   }).join('');
   renderSemDetail(data[currentSemIdx]);
   lucide.createIcons();
-}
-
-function selectSemTab(idx){
-  currentSemIdx = idx;
-  var filterVal = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'all';
-  var data = filterVal === 'all' ? allSemData : allSemData.filter(function(sem){
-    return Object.values(sem.docs).some(function(courses){
-      return courses.some(function(c){ return (c.status||'submitted')===filterVal; });
-    });
-  });
-  buildSemTabs(data);
 }
 
 function renderSemDetail(sem){
@@ -504,22 +760,6 @@ function buildDocGroup(dt, courses){
   '</div>';
 }
 
-/* ── Subtab switch ── */
-function switchSubtab(id, btn){
-  document.querySelectorAll('.subtab-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.subtab-btn').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('panel-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='personal')    { loadPersonal(); loadEducation(); }
-  if(id==='career')      loadCareerHistory();
-
-  if(id==='teaching')    loadTeaching();
-  if(id==='duties')      loadDuties();
-  if(id==='development') loadDevelopment();
-  if(id==='media')       loadMedia();
-  if(id==='sar')         renderSarOverview();
-}
-
 /* ════════════════════════════════════════
    SAR OVERVIEW – render all sections
    ════════════════════════════════════════ */
@@ -673,25 +913,6 @@ function renderSarMedia(){
   lucide.createIcons();
 }
 
-/* SAR data loaders */
-/* ─── SECTION: ประวัติการศึกษา ─── */
-var educationItems = [];
-var EDU_LEVEL_OPTS = ['ต่ำกว่าปริญญาตรี','ปริญญาตรี','ปริญญาโท','ปริญญาเอก'];
-var EDU_COLORS = { 'ต่ำกว่าปริญญาตรี':'#64748b', 'ปริญญาตรี':'#1d4ed8', 'ปริญญาโท':'#7c3aed', 'ปริญญาเอก':'#0369a1' };
-var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 'ปริญญาตรี':'#eff6ff', 'ปริญญาโท':'#f5f3ff', 'ปริญญาเอก':'#e0f2fe' };
-
-function loadEducation(){
-  if(!currentUser) return;
-  db.collection('staff_education').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      educationItems = [];
-      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
-      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
-      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
-      renderEducation();
-    }).catch(function(e){ console.error('loadEducation error:',e); renderEducation(); });
-}
-
 function renderEducation(){
   var el = document.getElementById('educationList');
   if(!el) return;
@@ -729,6 +950,463 @@ function renderEducation(){
     }).join('') +
   '</div>';
   lucide.createIcons();
+}
+function renderSarEducation(){
+  var el = document.getElementById('sar-education-body');
+  if(!el) return;
+  if(!educationItems.length){
+    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลการศึกษา</div>';
+    return;
+  }
+  var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
+  var sorted = educationItems.slice().sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
+  el.innerHTML = sorted.map(function(item){
+    var col = EDU_COLORS[item.level] || '#64748b';
+    var bg  = EDU_BG[item.level]    || '#f8fafc';
+    return '<div class="sar-row" style="align-items:flex-start;gap:10px;padding:8px 0;">' +
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:5px;"></div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">' +
+          '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';border:1px solid '+col+'44;padding:1px 7px;border-radius:20px;">'+esc(item.level||'')+'</span>' +
+          (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc(item.degree)+'</span>' : '') +
+        '</div>' +
+        (item.institution ? '<div style="font-size:12px;font-weight:600;color:#334155;">'+esc(item.institution)+'</div>' : '') +
+        (item.major ? '<div style="font-size:11px;color:#94a3b8;">วิชาเอก: '+esc(item.major)+'</div>' : '') +
+        (item.grad_year ? '<div style="font-size:11px;color:#94a3b8;">สำเร็จการศึกษา พ.ศ. '+esc(item.grad_year)+'</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+/* ════════════════ END SAR OVERVIEW ════════════════ */
+
+/* ════════════════════════════════════════
+   HELPER: auto compute age from birthday
+   ════════════════════════════════════════ */
+function calcAge(dateStr){
+  if(!dateStr) return '';
+  var d=new Date(dateStr), now=new Date();
+  var age=now.getFullYear()-d.getFullYear();
+  var m=now.getMonth()-d.getMonth();
+  if(m<0||(m===0&&now.getDate()<d.getDate())) age--;
+  return age+' ปี';
+}
+function calcService(dateStr){
+  if(!dateStr) return '';
+  var d=new Date(dateStr), now=new Date();
+  var yy=now.getFullYear()-d.getFullYear();
+  var mm=now.getMonth()-d.getMonth();
+  if(mm<0){ yy--; mm+=12; }
+  return yy+' ปี '+mm+' เดือน';
+}
+function thDate(dateStr){
+  if(!dateStr) return '';
+  var d=new Date(dateStr);
+  var months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+function setValEl(id, val){
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=val||'—';
+  el.classList.toggle('empty',!val);
+}
+function renderPersonalView(){
+  var p = personalData;
+  var a = adminSyncData;
+
+  /* Admin-owned: ใช้จาก sync ก่อน fallback staff */
+  setValEl('v_fullname',  a.name     || (currentStaff&&currentStaff.name) || p.fullname || '');
+  setValEl('v_position',  a.position || (currentStaff&&currentStaff.position) || '');
+  setValEl('v_group',     a.group    || (currentStaff&&currentStaff.group) || '');
+  setValEl('v_acrank',    a.academic_rank || '');
+
+  /* User-owned */
+  setValEl('v_birthday',    thDate(p.birthday));
+  setValEl('v_age',         calcAge(p.birthday));
+  setValEl('v_nationality', p.nationality||'');
+  document.getElementById('v_ethnicity').textContent = p.ethnicity||'—';
+  setValEl('v_religion',    p.religion||'');
+  setValEl('v_phone',       a.phone||p.phone||'');
+  setValEl('v_address',     p.address||'');
+
+  loadEducation();
+  lucide.createIcons();
+}
+function buildCareerTimelineHTML(c){
+  if(!c || (!c.start_date && !c.cur_school && !c.first_school)){
+    return '<div style="text-align:center;padding:32px 16px;color:#94a3b8;font-size:13px;font-weight:600;">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
+  }
+  var html = '';
+  var pos   = c.cur_position || (currentStaff&&currentStaff.position) || 'ครู';
+  var rank  = c.academic_rank || '';
+  var group = c.subject_group || (currentStaff&&currentStaff.group) || '';
+  var major = c.major_subject || '';
+
+  /* ── Node 1: โรงเรียนแรกบรรจุ ── */
+  if(c.first_school && c.start_date){
+    var svc1 = '';
+    if(c.cur_school_date && c.first_school !== c.cur_school){
+      /* มีโรงเรียนปัจจุบันที่ต่างออกไป — คำนวณระยะเวลาที่โรงเรียนแรก */
+      var d1=new Date(c.start_date), d2=new Date(c.cur_school_date);
+      var yy=d2.getFullYear()-d1.getFullYear(), mm=d2.getMonth()-d1.getMonth();
+      if(mm<0){yy--;mm+=12;}
+      svc1=yy+' ปี '+mm+' เดือน';
+    }
+    html += '<div class="ct-node">' +
+      '<div class="ct-dot" style="color:#22c55e;background:#dcfce7;">' +
+        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
+      '</div>' +
+      '<div class="ct-card" style="border-color:#bbf7d0;">' +
+        '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' · เริ่มรับราชการ</div>' +
+        '<div class="ct-school">'+esc(c.first_school)+'</div>' +
+        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
+        '<div class="ct-chips">' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
+          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+        '</div>' +
+        (svc1?'<div class="ct-service-bar"></div><div class="ct-service-lbl">ระยะเวลา '+svc1+'</div>':'') +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ── Node 2: โรงเรียนปัจจุบัน (ถ้าต่างจากแรกบรรจุ) ── */
+  var showCur = c.cur_school && (c.cur_school !== c.first_school || !c.first_school);
+  if(showCur){
+    var svcNow = calcService(c.cur_school_date || c.start_date);
+    html += '<div class="ct-node">' +
+      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
+        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+      '</div>' +
+      '<div class="ct-card" style="border-color:var(--accent-light);">' +
+        '<div class="ct-period">' +
+          '<i data-lucide="calendar" style="width:11px;height:11px;"></i>' +
+          (c.cur_school_date ? thDate(c.cur_school_date) : (c.start_date ? thDate(c.start_date) : '')) +
+          ' &nbsp;<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' +
+        '</div>' +
+        '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
+        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
+        '<div class="ct-chips">' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
+          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
+          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+        '</div>' +
+        (svcNow?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+calcService(c.start_date)+(svcNow?' · โรงเรียนนี้ '+svcNow:'')+'</div>':'') +
+      '</div>' +
+    '</div>';
+  } else if(!c.first_school && c.cur_school){
+    /* มีแค่โรงเรียนเดียว */
+    var svcNow2 = calcService(c.start_date);
+    html += '<div class="ct-node">' +
+      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
+        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+      '</div>' +
+      '<div class="ct-card" style="border-color:var(--accent-light);">' +
+        '<div class="ct-period">' +
+          (c.start_date?'<i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' &nbsp;':'') +
+          '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' +
+        '</div>' +
+        '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
+        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
+        '<div class="ct-chips">' +
+          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
+          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
+          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
+        '</div>' +
+        (svcNow2?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+svcNow2+'</div>':'') +
+      '</div>' +
+    '</div>';
+  } else if(!c.cur_school && c.first_school){
+    /* ไม่มีโรงเรียนปัจจุบันแยก — แสดง now badge บน node แรกแทน */
+  }
+
+  return '<div class="career-timeline">'+html+'</div>';
+}
+
+function renderCareerView(){
+  var c=careerData;
+  document.getElementById('careerTimeline').innerHTML = buildCareerTimelineHTML(c);
+  lucide.createIcons();
+}
+
+function renderCareerHistory(){
+  var el = document.getElementById('careerHistoryList');
+  if(!el) return;
+  if(!careerHistoryItems.length){
+    el.innerHTML = '<div class="empty-block" style="padding:32px 20px;">' +
+      '<div style="font-size:32px;margin-bottom:10px;">🏫</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;">ยังไม่มีข้อมูลโรงเรียน</div>' +
+      '<div style="font-size:12px;color:#94a3b8;">กด "+ เพิ่มโรงเรียน" เพื่อบันทึกทุกโรงเรียนตั้งแต่แรกบรรจุจนถึงปัจจุบัน</div>' +
+    '</div>';
+    return;
+  }
+
+  var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
+  var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
+  var total = careerHistoryItems.length;
+
+  el.innerHTML = '<div class="career-timeline">' +
+    careerHistoryItems.map(function(item, idx){
+      var col = colors[idx % colors.length];
+      var bdr = borderColors[idx % borderColors.length];
+      var isFirst  = idx === 0;
+      var isCurrent = !item.end_date;
+
+      /* period label */
+      var periodStr = item.start_date ? thDate(item.start_date) : '';
+      if(item.end_date) periodStr += ' – ' + thDate(item.end_date);
+
+      /* duration */
+      var durStr = '';
+      if(item.start_date){
+        var from = new Date(item.start_date);
+        var to   = item.end_date ? new Date(item.end_date) : new Date();
+        var yy = to.getFullYear()-from.getFullYear(), mm = to.getMonth()-from.getMonth();
+        if(mm<0){yy--;mm+=12;}
+        if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
+      }
+
+      /* label badges */
+      var labelBadge = '';
+      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isCurrent) labelBadge += '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>';
+
+      return '<div class="ct-node">' +
+        '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
+          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
+        '</div>' +
+        '<div class="ct-card" style="border-color:'+bdr+';">' +
+          (labelBadge ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+labelBadge+'</div>' : '') +
+          (periodStr  ? '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+esc(periodStr)+'</div>' : '') +
+          '<div class="ct-school">'+esc(item.school||'')+'</div>' +
+          (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
+          '<div class="ct-chips">' +
+            (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(item.position)+'</span>':'') +
+            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
+          '</div>' +
+          (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
+          '<div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">' +
+            '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:var(--accent-tint);">' +
+              '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
+            '<button class="del-btn" onclick="deleteCareerHistoryItem(\''+item._id+'\')" title="ลบ">' +
+              '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+  lucide.createIcons();
+}
+function renderTeaching(){
+  var el=document.getElementById('teachingList');
+  if(!teachingItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลภาระงานสอน</div>'; document.getElementById('teachTotal').textContent=''; return; }
+  var total=0;
+  el.innerHTML=teachingItems.map(function(item){
+    total+=(parseInt(item.periods)||0);
+    return '<div class="teach-row">' +
+      '<span class="teach-code">'+esc(item.code||'')+'</span>' +
+      '<div style="flex:1;min-width:0;"><div class="teach-name">'+esc(item.name||'')+'</div></div>' +
+      '<span class="teach-periods">'+esc(String(item.periods||0))+' คาบ</span>' +
+      '<span class="teach-level">'+esc(item.level||'')+'</span>' +
+      '<button class="del-btn" onclick="deleteTeachItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+    '</div>';
+  }).join('');
+  document.getElementById('teachTotal').textContent='รวม '+total+' คาบ/สัปดาห์';
+  lucide.createIcons();
+}
+function renderDuties(){
+  var el=document.getElementById('dutiesList');
+  if(!dutyItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div>'; return; }
+  el.innerHTML='<div>'+dutyItems.map(function(item){
+    return '<div class="duty-item">' +
+      '<div class="duty-dot"></div>' +
+      '<div class="duty-text">'+esc(item.task||'')+'</div>' +
+      (item.group?'<span class="duty-group">'+esc(item.group)+'</span>':'') +
+      '<button class="del-btn" onclick="deleteDutyItem(\''+item._id+'\')" title="ลบ" style="margin-left:6px;"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+    '</div>';
+  }).join('')+'</div>';
+  lucide.createIcons();
+}
+function renderDev(){
+  var el=document.getElementById('devList');
+  if(!devItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div>'; return; }
+  el.innerHTML=devItems.map(function(item){
+    return '<div class="dev-item">' +
+      '<div class="dev-dot"></div>' +
+      '<div style="flex:1;">' +
+        '<div class="dev-title">'+esc(item.title||'')+'</div>' +
+        '<div class="dev-meta">'+(item.organizer?esc(item.organizer)+' · ':'')+esc(item.date_str||'')+(item.hours?' · '+item.hours+' ชั่วโมง':'')+'</div>' +
+      '</div>' +
+      '<button class="del-btn" onclick="deleteDevItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+function renderMedia(){
+  var el=document.getElementById('mediaList');
+  if(!mediaItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
+  el.innerHTML=mediaItems.map(function(item){
+    return '<div class="media-item">' +
+      '<div class="media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:20px;height:20px;color:#06b6d4;"></i></div>' +
+      '<div style="flex:1;">' +
+        '<div class="media-name">'+esc(item.name||'')+'</div>' +
+        '<div class="media-subject">'+esc(item.subject||'')+(item.url?'<a href="'+esc(item.url)+'" target="_blank" style="color:var(--accent);margin-left:8px;font-size:11px;"> เปิดลิงก์</a>':'')+'</div>' +
+      '</div>' +
+      '<button class="del-btn" onclick="deleteMediaItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+function _getDocTypeInfo(id) {
+  return _sarDocTypes.find(function(d){ return d.id === id; }) || { id:id, label:id, icon:'file', color:'#64748b', bg:'#f1f5f9' };
+}
+
+function renderPortfolioSummary(subs, portYear, portSem) {
+  var el  = document.getElementById('portfolioDocList');
+  var bar = document.getElementById('portfolioProgressBar');
+  var txt = document.getElementById('portfolioProgressText');
+  if (!el) return;
+
+  /* รวบรวม docTypeId → [subKeys] */
+  var docCourses = {};
+  Object.keys(subs).forEach(function(subKey) {
+    var dtId = subs[subKey].docTypeId;
+    if (!dtId) return;
+    if (!docCourses[dtId]) docCourses[dtId] = [];
+    docCourses[dtId].push(subKey);
+  });
+
+  var totalDocs     = _sarDocTypes.length;
+  var submittedDocs = 0;
+  _sarDocTypes.forEach(function(dt) { if (docCourses[dt.id] && docCourses[dt.id].length) submittedDocs++; });
+  var pct = totalDocs ? Math.round((submittedDocs / totalDocs) * 100) : 0;
+
+  if (bar) bar.style.width = pct + '%';
+  if (txt) txt.textContent = submittedDocs + ' / ' + totalDocs + ' รายการ';
+
+  if (!_sarDocTypes.length) {
+    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประเภทเอกสาร</div>';
+    return;
+  }
+
+  var STATUS_LABEL = { submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว',
+    assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' };
+  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af',
+    assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' };
+  var STATUS_BG    = { submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe',
+    assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' };
+
+  var html = '<div style="display:grid;gap:2px;">';
+
+  _sarDocTypes.forEach(function(dt) {
+    var courses = docCourses[dt.id] || [];
+    var hasAny  = courses.length > 0;
+
+    /* ไอคอนสถานะรวม */
+    var overallBadge = '';
+    if (!hasAny) {
+      overallBadge = '<span style="font-size:10px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:1px 8px;border-radius:20px;">ยังไม่ส่ง</span>';
+    } else {
+      var anyRevision = courses.some(function(k){ return subs[k].status === 'revision'; });
+      var allFinal    = courses.every(function(k){ return subs[k].status === 'final_approved'; });
+      var obg, ocol, olbl;
+      if (anyRevision)  { obg = '#fef9c3'; ocol = '#92400e'; olbl = 'มีรายวิชาแก้ไข'; }
+      else if (allFinal){ obg = '#d1fae5'; ocol = '#065f46'; olbl = 'ผอ.อนุมัติครบ'; }
+      else              { obg = '#dcfce7'; ocol = '#15803d'; olbl = 'ส่งแล้ว ' + courses.length + ' วิชา'; }
+      overallBadge = '<span style="font-size:10px;font-weight:700;color:'+ocol+';background:'+obg+';padding:1px 8px;border-radius:20px;">'+olbl+'</span>';
+    }
+
+    /* course chips */
+    var chipsHtml = '';
+    if (hasAny) {
+      chipsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">';
+      courses.forEach(function(subKey) {
+        var sub    = subs[subKey];
+        var status = sub.status || 'submitted';
+        var files  = sub.files  || [];
+        var chipClass = 'port-course-chip' + (status === 'revision' ? ' revision' : (files.length ? ' has-files' : ''));
+        var stBg  = STATUS_BG[status]    || '#dcfce7';
+        var stCol = STATUS_COLOR[status] || '#15803d';
+        var stLbl = STATUS_LABEL[status] || 'ส่งแล้ว';
+
+        chipsHtml +=
+          '<div class="' + chipClass + '" title="' + esc(sub.courseName || '') + '">' +
+            (sub.courseCode ? '<span class="port-course-code">' + esc(sub.courseCode) + '</span>' : '') +
+            '<span class="port-course-name">' + esc(sub.courseName || '(ไม่ระบุ)') + '</span>' +
+            '<span style="font-size:9px;font-weight:800;color:' + stCol + ';background:' + stBg + ';padding:1px 6px;border-radius:4px;white-space:nowrap;">' + stLbl + '</span>' +
+            /* ปุ่มเปิดไฟล์ */
+            (files.length
+              ? files.map(function(f, fi) {
+                  if (!f || !f.fileUrl) return '';
+                  return '<a href="' + esc(f.fileUrl) + '" target="_blank" class="port-file-link" title="' + esc(f.fileName || ('ไฟล์ ' + (fi+1))) + '" onclick="event.stopPropagation();">' +
+                    '<i data-lucide="file-text" style="width:11px;height:11px;"></i>' + (fi+1) +
+                    '</a>';
+                }).join('')
+              : '') +
+          '</div>';
+      });
+      chipsHtml += '</div>';
+    }
+
+    html +=
+      '<div class="port-doc-row">' +
+        '<div class="port-doc-icon" style="background:' + dt.bg + ';">' +
+          '<i data-lucide="' + dt.icon + '" style="width:16px;height:16px;color:' + dt.color + ';"></i>' +
+        '</div>' +
+        '<div class="port-doc-info">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span class="port-doc-title">' + esc(dt.label) + '</span>' +
+            overallBadge +
+          '</div>' +
+          chipsHtml +
+        '</div>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+  lucide.createIcons();
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function selectSemTab(idx){
+  currentSemIdx = idx;
+  var filterVal = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'all';
+  var data = filterVal === 'all' ? allSemData : allSemData.filter(function(sem){
+    return Object.values(sem.docs).some(function(courses){
+      return courses.some(function(c){ return (c.status||'submitted')===filterVal; });
+    });
+  });
+  buildSemTabs(data);
+}
+
+/* ── Subtab switch ── */
+function switchSubtab(id, btn){
+  document.querySelectorAll('.subtab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='personal')    { loadPersonal(); loadEducation(); }
+  if(id==='career')      loadCareerHistory();
+
+  if(id==='teaching')    loadTeaching();
+  if(id==='duties')      loadDuties();
+  if(id==='development') loadDevelopment();
+  if(id==='media')       loadMedia();
+  if(id==='sar')         renderSarOverview();
 }
 
 function addEducationItem(editId, prefill){
@@ -790,195 +1468,6 @@ function deleteEducationItem(id){
   db.collection('staff_education').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadEducation(); })
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
-}
-
-function loadPersonalForSar(){
-  if(!currentUser) return;
-  var email = isViewMode
-    ? ((_viewStaff && _viewStaff.email) || '')
-    : currentUser.email.toLowerCase();
-  Promise.all([
-    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
-    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
-  ]).then(function(results){
-    var profileDoc = results[0];
-    var syncDoc    = results[1];
-    if(profileDoc && profileDoc.exists) personalData  = profileDoc.data();
-    if(syncDoc    && syncDoc.exists)    adminSyncData = syncDoc.data();
-    renderSarPersonal();
-  });
-}
-function loadCareerForSar(){
-  if(!currentUser) return;
-  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
-    careerData = d.exists ? d.data() : {};
-    renderSarCareer();
-  }).catch(function(){});
-}
-function renderSarEducation(){
-  var el = document.getElementById('sar-education-body');
-  if(!el) return;
-  if(!educationItems.length){
-    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลการศึกษา</div>';
-    return;
-  }
-  var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
-  var sorted = educationItems.slice().sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
-  el.innerHTML = sorted.map(function(item){
-    var col = EDU_COLORS[item.level] || '#64748b';
-    var bg  = EDU_BG[item.level]    || '#f8fafc';
-    return '<div class="sar-row" style="align-items:flex-start;gap:10px;padding:8px 0;">' +
-      '<div style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:5px;"></div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">' +
-          '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';border:1px solid '+col+'44;padding:1px 7px;border-radius:20px;">'+esc(item.level||'')+'</span>' +
-          (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc(item.degree)+'</span>' : '') +
-        '</div>' +
-        (item.institution ? '<div style="font-size:12px;font-weight:600;color:#334155;">'+esc(item.institution)+'</div>' : '') +
-        (item.major ? '<div style="font-size:11px;color:#94a3b8;">วิชาเอก: '+esc(item.major)+'</div>' : '') +
-        (item.grad_year ? '<div style="font-size:11px;color:#94a3b8;">สำเร็จการศึกษา พ.ศ. '+esc(item.grad_year)+'</div>' : '') +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function loadEducationForSar(){
-  if(!currentUser) return;
-  db.collection('staff_education').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      educationItems = [];
-      snap.forEach(function(d){ educationItems.push(Object.assign({_id:d.id},d.data())); });
-      var levelOrder = {'ต่ำกว่าปริญญาตรี':0,'ปริญญาตรี':1,'ปริญญาโท':2,'ปริญญาเอก':3};
-      educationItems.sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
-      renderSarEducation();
-    }).catch(function(){});
-}
-
-function loadCareerHistoryForSar(){
-  if(!currentUser) return;
-  db.collection('staff_career_history').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      careerHistoryItems = [];
-      snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id},d.data())); });
-      careerHistoryItems.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
-      renderSarSchoolHistory();
-    }).catch(function(){});
-}
-function loadTeachingForSar(){
-  if(!currentUser) return;
-  db.collection('staff_teaching').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      teachingItems=[];
-      snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
-      renderSarTeaching();
-    }).catch(function(){});
-}
-function loadDutiesForSar(){
-  if(!currentUser) return;
-  db.collection('staff_duties').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      dutyItems=[];
-      snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
-      renderSarDuties();
-    }).catch(function(){});
-}
-function loadDevForSar(){
-  if(!currentUser) return;
-  db.collection('staff_development').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      devItems=[];
-      snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
-      renderSarDev();
-    }).catch(function(){});
-}
-function loadMediaForSar(){
-  if(!currentUser) return;
-  db.collection('staff_media').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      mediaItems=[];
-      snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
-      renderSarMedia();
-    }).catch(function(){});
-}
-/* ════════════════ END SAR OVERVIEW ════════════════ */
-
-/* ════════════════════════════════════════
-   HELPER: auto compute age from birthday
-   ════════════════════════════════════════ */
-function calcAge(dateStr){
-  if(!dateStr) return '';
-  var d=new Date(dateStr), now=new Date();
-  var age=now.getFullYear()-d.getFullYear();
-  var m=now.getMonth()-d.getMonth();
-  if(m<0||(m===0&&now.getDate()<d.getDate())) age--;
-  return age+' ปี';
-}
-function calcService(dateStr){
-  if(!dateStr) return '';
-  var d=new Date(dateStr), now=new Date();
-  var yy=now.getFullYear()-d.getFullYear();
-  var mm=now.getMonth()-d.getMonth();
-  if(mm<0){ yy--; mm+=12; }
-  return yy+' ปี '+mm+' เดือน';
-}
-function thDate(dateStr){
-  if(!dateStr) return '';
-  var d=new Date(dateStr);
-  var months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  return d.getDate()+' '+months[d.getMonth()]+' '+(d.getFullYear()+543);
-}
-function setValEl(id, val){
-  var el=document.getElementById(id);
-  if(!el) return;
-  el.textContent=val||'—';
-  el.classList.toggle('empty',!val);
-}
-
-/* ─── SECTION: ข้อมูลส่วนตัว ─── */
-var personalData  = {};  /* user-owned fields */
-var adminSyncData = {};  /* admin-owned fields จาก staff_profile_sync */
-
-function loadPersonal(){
-  if(!currentUser) return;
-  var email = isViewMode
-    ? ((_viewStaff && _viewStaff.email) || '')
-    : currentUser.email.toLowerCase();
-
-  /* โหลดทั้งสอง collection พร้อมกัน แล้ว merge */
-  Promise.all([
-    db.collection('staff_profile').doc(_targetUid()).get().catch(function(){ return null; }),
-    db.collection('staff_profile_sync').doc(email).get().catch(function(){ return null; })
-  ]).then(function(results){
-    var profileDoc = results[0];
-    var syncDoc    = results[1];
-
-    personalData  = (profileDoc && profileDoc.exists) ? profileDoc.data() : {};
-    adminSyncData = (syncDoc    && syncDoc.exists)    ? syncDoc.data()    : {};
-
-    renderPersonalView();
-  });
-}
-function renderPersonalView(){
-  var p = personalData;
-  var a = adminSyncData;
-
-  /* Admin-owned: ใช้จาก sync ก่อน fallback staff */
-  setValEl('v_fullname',  a.name     || (currentStaff&&currentStaff.name) || p.fullname || '');
-  setValEl('v_position',  a.position || (currentStaff&&currentStaff.position) || '');
-  setValEl('v_group',     a.group    || (currentStaff&&currentStaff.group) || '');
-  setValEl('v_acrank',    a.academic_rank || '');
-
-  /* User-owned */
-  setValEl('v_birthday',    thDate(p.birthday));
-  setValEl('v_age',         calcAge(p.birthday));
-  setValEl('v_nationality', p.nationality||'');
-  document.getElementById('v_ethnicity').textContent = p.ethnicity||'—';
-  setValEl('v_religion',    p.religion||'');
-  setValEl('v_phone',       a.phone||p.phone||'');
-  setValEl('v_address',     p.address||'');
-
-  loadEducation();
-  lucide.createIcons();
 }
 function editSection(section){
   if(!_assertNotViewMode()) return;
@@ -1148,229 +1637,6 @@ function saveSection(section){
   }
 }
 
-/* ─── SECTION: ประวัติการทำงาน ─── */
-var careerData={};
-function loadCareer(){
-  if(!currentUser) return;
-  var email = isViewMode
-    ? ((_viewStaff && _viewStaff.email) || '')
-    : currentUser.email.toLowerCase();
-  db.collection('staff_profile').doc(_targetUid()).get().then(function(d){
-    careerData = d.exists ? d.data() : {};
-    if(!careerData.cur_position && email){
-      db.collection('staff_profile_sync').doc(email).get().then(function(s){
-        if(s.exists){
-          var sync = s.data();
-          if(!careerData.cur_position)  careerData.cur_position  = sync.position      || '';
-          if(!careerData.subject_group) careerData.subject_group = sync.subject_group || '';
-          if(!careerData.academic_rank) careerData.academic_rank = sync.academic_rank || '';
-        }
-        renderCareerView();
-      }).catch(function(){ renderCareerView(); });
-    } else {
-      renderCareerView();
-    }
-  }).catch(function(){ renderCareerView(); });
-}
-function buildCareerTimelineHTML(c){
-  if(!c || (!c.start_date && !c.cur_school && !c.first_school)){
-    return '<div style="text-align:center;padding:32px 16px;color:#94a3b8;font-size:13px;font-weight:600;">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
-  }
-  var html = '';
-  var pos   = c.cur_position || (currentStaff&&currentStaff.position) || 'ครู';
-  var rank  = c.academic_rank || '';
-  var group = c.subject_group || (currentStaff&&currentStaff.group) || '';
-  var major = c.major_subject || '';
-
-  /* ── Node 1: โรงเรียนแรกบรรจุ ── */
-  if(c.first_school && c.start_date){
-    var svc1 = '';
-    if(c.cur_school_date && c.first_school !== c.cur_school){
-      /* มีโรงเรียนปัจจุบันที่ต่างออกไป — คำนวณระยะเวลาที่โรงเรียนแรก */
-      var d1=new Date(c.start_date), d2=new Date(c.cur_school_date);
-      var yy=d2.getFullYear()-d1.getFullYear(), mm=d2.getMonth()-d1.getMonth();
-      if(mm<0){yy--;mm+=12;}
-      svc1=yy+' ปี '+mm+' เดือน';
-    }
-    html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#22c55e;background:#dcfce7;">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
-      '</div>' +
-      '<div class="ct-card" style="border-color:#bbf7d0;">' +
-        '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' · เริ่มรับราชการ</div>' +
-        '<div class="ct-school">'+esc(c.first_school)+'</div>' +
-        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
-        '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
-        '</div>' +
-        (svc1?'<div class="ct-service-bar"></div><div class="ct-service-lbl">ระยะเวลา '+svc1+'</div>':'') +
-      '</div>' +
-    '</div>';
-  }
-
-  /* ── Node 2: โรงเรียนปัจจุบัน (ถ้าต่างจากแรกบรรจุ) ── */
-  var showCur = c.cur_school && (c.cur_school !== c.first_school || !c.first_school);
-  if(showCur){
-    var svcNow = calcService(c.cur_school_date || c.start_date);
-    html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
-      '</div>' +
-      '<div class="ct-card" style="border-color:var(--accent-light);">' +
-        '<div class="ct-period">' +
-          '<i data-lucide="calendar" style="width:11px;height:11px;"></i>' +
-          (c.cur_school_date ? thDate(c.cur_school_date) : (c.start_date ? thDate(c.start_date) : '')) +
-          ' &nbsp;<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' +
-        '</div>' +
-        '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
-        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
-        '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
-          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
-        '</div>' +
-        (svcNow?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+calcService(c.start_date)+(svcNow?' · โรงเรียนนี้ '+svcNow:'')+'</div>':'') +
-      '</div>' +
-    '</div>';
-  } else if(!c.first_school && c.cur_school){
-    /* มีแค่โรงเรียนเดียว */
-    var svcNow2 = calcService(c.start_date);
-    html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
-      '</div>' +
-      '<div class="ct-card" style="border-color:var(--accent-light);">' +
-        '<div class="ct-period">' +
-          (c.start_date?'<i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' &nbsp;':'') +
-          '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>' +
-        '</div>' +
-        '<div class="ct-school">'+esc(c.cur_school)+'</div>' +
-        (c.department?'<div class="ct-dept">'+esc(c.department)+'</div>':'') +
-        '<div class="ct-chips">' +
-          '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(pos)+'</span>' +
-          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc(rank)+'</span>':'') +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc(major)+'</span>':'') +
-        '</div>' +
-        (svcNow2?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+svcNow2+'</div>':'') +
-      '</div>' +
-    '</div>';
-  } else if(!c.cur_school && c.first_school){
-    /* ไม่มีโรงเรียนปัจจุบันแยก — แสดง now badge บน node แรกแทน */
-  }
-
-  return '<div class="career-timeline">'+html+'</div>';
-}
-
-function renderCareerView(){
-  var c=careerData;
-  document.getElementById('careerTimeline').innerHTML = buildCareerTimelineHTML(c);
-  lucide.createIcons();
-}
-
-/* ─── SECTION: ประวัติการย้ายโรงเรียน (sub-collection) ─── */
-var careerHistoryItems = [];
-
-function loadCareerHistory(){
-  if(!currentUser) return;
-  var el = document.getElementById('careerHistoryList');
-  if(el) el.innerHTML = '<div class="empty-block">กำลังโหลด...</div>';
-
-  db.collection('staff_career_history')
-    .where('uid','==', _targetUid())
-    .orderBy('start_date')
-    .get()
-    .then(function(snap){
-      careerHistoryItems = [];
-      snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
-      renderCareerHistory();
-    })
-    .catch(function(){
-      /* fallback ไม่มี index — ไม่ orderBy */
-      db.collection('staff_career_history')
-        .where('uid','==', _targetUid()).get()
-        .then(function(snap){
-          careerHistoryItems = [];
-          snap.forEach(function(d){ careerHistoryItems.push(Object.assign({_id:d.id}, d.data())); });
-          /* sort client-side */
-          careerHistoryItems.sort(function(a,b){ return (a.start_date||'').localeCompare(b.start_date||''); });
-          renderCareerHistory();
-        }).catch(function(){ renderCareerHistory(); });
-    });
-}
-
-function renderCareerHistory(){
-  var el = document.getElementById('careerHistoryList');
-  if(!el) return;
-  if(!careerHistoryItems.length){
-    el.innerHTML = '<div class="empty-block" style="padding:32px 20px;">' +
-      '<div style="font-size:32px;margin-bottom:10px;">🏫</div>' +
-      '<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;">ยังไม่มีข้อมูลโรงเรียน</div>' +
-      '<div style="font-size:12px;color:#94a3b8;">กด "+ เพิ่มโรงเรียน" เพื่อบันทึกทุกโรงเรียนตั้งแต่แรกบรรจุจนถึงปัจจุบัน</div>' +
-    '</div>';
-    return;
-  }
-
-  var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
-  var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
-  var total = careerHistoryItems.length;
-
-  el.innerHTML = '<div class="career-timeline">' +
-    careerHistoryItems.map(function(item, idx){
-      var col = colors[idx % colors.length];
-      var bdr = borderColors[idx % borderColors.length];
-      var isFirst  = idx === 0;
-      var isCurrent = !item.end_date;
-
-      /* period label */
-      var periodStr = item.start_date ? thDate(item.start_date) : '';
-      if(item.end_date) periodStr += ' – ' + thDate(item.end_date);
-
-      /* duration */
-      var durStr = '';
-      if(item.start_date){
-        var from = new Date(item.start_date);
-        var to   = item.end_date ? new Date(item.end_date) : new Date();
-        var yy = to.getFullYear()-from.getFullYear(), mm = to.getMonth()-from.getMonth();
-        if(mm<0){yy--;mm+=12;}
-        if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
-      }
-
-      /* label badges */
-      var labelBadge = '';
-      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
-      if(isCurrent) labelBadge += '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>';
-
-      return '<div class="ct-node">' +
-        '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
-          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
-        '</div>' +
-        '<div class="ct-card" style="border-color:'+bdr+';">' +
-          (labelBadge ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+labelBadge+'</div>' : '') +
-          (periodStr  ? '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+esc(periodStr)+'</div>' : '') +
-          '<div class="ct-school">'+esc(item.school||'')+'</div>' +
-          (item.department?'<div class="ct-dept">'+esc(item.department)+'</div>':'') +
-          '<div class="ct-chips">' +
-            (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc(item.position)+'</span>':'') +
-            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc(item.academic_rank)+'</span>':'') +
-          '</div>' +
-          (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
-          '<div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">' +
-            '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:var(--accent-tint);">' +
-              '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
-            '<button class="del-btn" onclick="deleteCareerHistoryItem(\''+item._id+'\')" title="ลบ">' +
-              '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    }).join('') +
-  '</div>';
-  lucide.createIcons();
-}
-
 function addCareerHistoryItem(editId, prefill){
   prefill = prefill || {};
   var modalId = 'chModal';
@@ -1461,42 +1727,6 @@ function deleteCareerHistoryItem(id){
     .then(function(){ showToast('ลบแล้ว'); loadCareerHistory(); })
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
-
-/* ─── SECTION: ภาระงานสอน ─── */
-var teachingItems=[];
-function loadTeaching(){
-  if(!currentUser) return;
-  db.collection('staff_teaching').where('uid','==',_targetUid()).orderBy('order').get()
-    .then(function(snap){
-      teachingItems=[];
-      snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
-      renderTeaching();
-    }).catch(function(){
-      db.collection('staff_teaching').where('uid','==',_targetUid()).get()
-        .then(function(snap){
-          teachingItems=[];
-          snap.forEach(function(d){ teachingItems.push(Object.assign({_id:d.id},d.data())); });
-          renderTeaching();
-        }).catch(function(){ renderTeaching(); });
-    });
-}
-function renderTeaching(){
-  var el=document.getElementById('teachingList');
-  if(!teachingItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลภาระงานสอน</div>'; document.getElementById('teachTotal').textContent=''; return; }
-  var total=0;
-  el.innerHTML=teachingItems.map(function(item){
-    total+=(parseInt(item.periods)||0);
-    return '<div class="teach-row">' +
-      '<span class="teach-code">'+esc(item.code||'')+'</span>' +
-      '<div style="flex:1;min-width:0;"><div class="teach-name">'+esc(item.name||'')+'</div></div>' +
-      '<span class="teach-periods">'+esc(String(item.periods||0))+' คาบ</span>' +
-      '<span class="teach-level">'+esc(item.level||'')+'</span>' +
-      '<button class="del-btn" onclick="deleteTeachItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
-    '</div>';
-  }).join('');
-  document.getElementById('teachTotal').textContent='รวม '+total+' คาบ/สัปดาห์';
-  lucide.createIcons();
-}
 function addTeachRow(){
   /* simple inline modal */
   var html='<div id="teachModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
@@ -1534,31 +1764,6 @@ function deleteTeachItem(id){
     .then(function(){ showToast('ลบแล้ว'); loadTeaching(); })
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
 }
-
-/* ─── SECTION: งานที่ได้รับมอบหมาย ─── */
-var dutyItems=[];
-function loadDuties(){
-  if(!currentUser) return;
-  db.collection('staff_duties').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      dutyItems=[];
-      snap.forEach(function(d){ dutyItems.push(Object.assign({_id:d.id},d.data())); });
-      renderDuties();
-    }).catch(function(){ renderDuties(); });
-}
-function renderDuties(){
-  var el=document.getElementById('dutiesList');
-  if(!dutyItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div>'; return; }
-  el.innerHTML='<div>'+dutyItems.map(function(item){
-    return '<div class="duty-item">' +
-      '<div class="duty-dot"></div>' +
-      '<div class="duty-text">'+esc(item.task||'')+'</div>' +
-      (item.group?'<span class="duty-group">'+esc(item.group)+'</span>':'') +
-      '<button class="del-btn" onclick="deleteDutyItem(\''+item._id+'\')" title="ลบ" style="margin-left:6px;"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
-    '</div>';
-  }).join('')+'</div>';
-  lucide.createIcons();
-}
 function addDutyRow(){
   var html='<div id="dutyModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:420px;padding:24px;">' +
@@ -1589,33 +1794,6 @@ function deleteDutyItem(id){
   db.collection('staff_duties').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadDuties(); })
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
-}
-
-/* ─── SECTION: การพัฒนาตนเอง ─── */
-var devItems=[];
-function loadDevelopment(){
-  if(!currentUser) return;
-  db.collection('staff_development').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      devItems=[];
-      snap.forEach(function(d){ devItems.push(Object.assign({_id:d.id},d.data())); });
-      renderDev();
-    }).catch(function(){ renderDev(); });
-}
-function renderDev(){
-  var el=document.getElementById('devList');
-  if(!devItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div>'; return; }
-  el.innerHTML=devItems.map(function(item){
-    return '<div class="dev-item">' +
-      '<div class="dev-dot"></div>' +
-      '<div style="flex:1;">' +
-        '<div class="dev-title">'+esc(item.title||'')+'</div>' +
-        '<div class="dev-meta">'+(item.organizer?esc(item.organizer)+' · ':'')+esc(item.date_str||'')+(item.hours?' · '+item.hours+' ชั่วโมง':'')+'</div>' +
-      '</div>' +
-      '<button class="del-btn" onclick="deleteDevItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
-    '</div>';
-  }).join('');
-  lucide.createIcons();
 }
 function addDevItem(){
   var html='<div id="devModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
@@ -1652,34 +1830,6 @@ function deleteDevItem(id){
   db.collection('staff_development').doc(id).delete()
     .then(function(){ showToast('ลบแล้ว'); loadDevelopment(); })
     .catch(function(){ showToast('เกิดข้อผิดพลาด','error'); });
-}
-
-/* ─── SECTION: สื่อนวัตกรรม ─── */
-var mediaItems=[];
-var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wordwall','flipgrid','book','image','video','music','code-2','globe','file-text'];
-function loadMedia(){
-  if(!currentUser) return;
-  db.collection('staff_media').where('uid','==',_targetUid()).get()
-    .then(function(snap){
-      mediaItems=[];
-      snap.forEach(function(d){ mediaItems.push(Object.assign({_id:d.id},d.data())); });
-      renderMedia();
-    }).catch(function(){ renderMedia(); });
-}
-function renderMedia(){
-  var el=document.getElementById('mediaList');
-  if(!mediaItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
-  el.innerHTML=mediaItems.map(function(item){
-    return '<div class="media-item">' +
-      '<div class="media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:20px;height:20px;color:#06b6d4;"></i></div>' +
-      '<div style="flex:1;">' +
-        '<div class="media-name">'+esc(item.name||'')+'</div>' +
-        '<div class="media-subject">'+esc(item.subject||'')+(item.url?'<a href="'+esc(item.url)+'" target="_blank" style="color:var(--accent);margin-left:8px;font-size:11px;"> เปิดลิงก์</a>':'')+'</div>' +
-      '</div>' +
-      '<button class="del-btn" onclick="deleteMediaItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
-    '</div>';
-  }).join('');
-  lucide.createIcons();
 }
 function addMediaItem(){
   var html='<div id="mediaModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
@@ -1732,6 +1882,51 @@ function applyFilter(){
   buildSemTabs(filtered);
 }
 
+/* ══════════════════════ INIT ══════════════════════ */
+   /* uid ของคนที่ถูกดู */
+
+/* ── AUTH + APP SHELL ── */
+if (isEmbed) {
+  /* Embed mode: ไม่ใช้ navbar/sidebar, แต่ยังต้องตรวจสอบ auth */
+  auth.onAuthStateChanged(function(u){
+    var loadEl = document.getElementById('loadingOverlay');
+    if (loadEl) loadEl.style.display = 'none';
+    if (!u) return;
+    currentUser = u;
+    var appEl = document.getElementById('profileApp');
+    var tpl   = document.getElementById('profileContent');
+    if (appEl) {
+      appEl.classList.add('content-area');
+      appEl.style.removeProperty('display');
+      if (tpl) appEl.appendChild(tpl.content.cloneNode(true));
+    }
+    lucide.createIcons();
+    init();
+  });
+} else {
+  buildPage({
+    appId:        'profileApp',
+    navSubtitle:  isViewMode ? 'ดูโปรไฟล์บุคลากร' : 'My Portfolio',
+    navTheme:     'blue',
+    activePage:   'profile',
+
+    onAuth: function(user, contentEl) {
+      currentUser = user;
+      updateNavUser(user);
+      updateSidebarProfile(user);
+      checkAdminAccess(user.email);
+
+      /* inject page content จาก <template> */
+      var tpl = document.getElementById('profileContent');
+      if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+      lucide.createIcons();
+      init();
+      setupScrollTopButton();
+    }
+  });
+}
+
 /* ══════════════════════════════════════════════
    PORTFOLIO SUMMARY (SAR panel)
    ดึงข้อมูลจาก portfolio_submissions ภาคเรียนปัจจุบัน
@@ -1754,191 +1949,5 @@ function applyFilter(){
   window._sarPortSem  = sem;
 })();
 
-/* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
-var _sarDocTypes = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
-  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
-  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
-  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
-  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
-  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
-  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
-  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
-  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
-];
-var _sarPortSubs = null; /* cache */
-var _sarDocTypesLoaded = false;
 
-function _getDocTypeInfo(id) {
-  return _sarDocTypes.find(function(d){ return d.id === id; }) || { id:id, label:id, icon:'file', color:'#64748b', bg:'#f1f5f9' };
-}
-
-function loadPortfolioForSar() {
-  var el = document.getElementById('portfolioDocList');
-  var semLbl = document.getElementById('portfolioSemLabel');
-  if (!el) return;
-  if (!currentUser) { el.innerHTML = '<div class="sar-empty">ไม่พบข้อมูลผู้ใช้</div>'; return; }
-
-  var portYear = window._sarPortYear || 2568;
-  var portSem  = window._sarPortSem  || 1;
-  var key      = portYear + '_' + portSem;
-
-  if (semLbl) semLbl.textContent = 'ปีการศึกษา ' + portYear + ' ภาคเรียนที่ ' + portSem;
-  el.innerHTML = '<div class="sar-empty">กำลังโหลด...</div>';
-
-  /* โหลด doc types จาก Firestore ก่อน (ถ้ายังไม่เคย) */
-  function fetchAndRender() {
-    db.collection('portfolio_submissions')
-      .where('uid', '==', _targetUid())
-      .where('yearSem', '==', key)
-      .get()
-      .then(function(snap) {
-        var subs = {};
-        snap.forEach(function(d) {
-          var data = d.data();
-          var subKey = data.docTypeId + '_' + (data.courseCode || '');
-          subs[subKey] = Object.assign({ id: d.id }, data);
-        });
-        _sarPortSubs = subs;
-        renderPortfolioSummary(subs, portYear, portSem);
-      })
-      .catch(function(e) {
-        console.warn('loadPortfolioForSar error:', e);
-        el.innerHTML = '<div class="sar-empty">ไม่สามารถโหลดข้อมูลได้</div>';
-      });
-  }
-
-  /* โหลด doc types จาก Firestore ถ้ายังไม่มี */
-  if (!_sarDocTypesLoaded) {
-    db.collection('portfolio_doc_types').orderBy('order').get()
-      .then(function(snap) {
-        if (!snap.empty) {
-          _sarDocTypes = [];
-          snap.forEach(function(d) {
-            var data = d.data();
-            if (data.active === false) return;
-            _sarDocTypes.push({
-              id:     data.id     || d.id,
-              label:  data.label  || '',
-              icon:   data.icon   || 'file',
-              color:  data.color  || '#64748b',
-              bg:     (data.color || '#64748b') + '15',
-            });
-          });
-        }
-        _sarDocTypesLoaded = true;
-        fetchAndRender();
-      })
-      .catch(function() { _sarDocTypesLoaded = true; fetchAndRender(); });
-  } else {
-    fetchAndRender();
-  }
-}
-
-function renderPortfolioSummary(subs, portYear, portSem) {
-  var el  = document.getElementById('portfolioDocList');
-  var bar = document.getElementById('portfolioProgressBar');
-  var txt = document.getElementById('portfolioProgressText');
-  if (!el) return;
-
-  /* รวบรวม docTypeId → [subKeys] */
-  var docCourses = {};
-  Object.keys(subs).forEach(function(subKey) {
-    var dtId = subs[subKey].docTypeId;
-    if (!dtId) return;
-    if (!docCourses[dtId]) docCourses[dtId] = [];
-    docCourses[dtId].push(subKey);
-  });
-
-  var totalDocs     = _sarDocTypes.length;
-  var submittedDocs = 0;
-  _sarDocTypes.forEach(function(dt) { if (docCourses[dt.id] && docCourses[dt.id].length) submittedDocs++; });
-  var pct = totalDocs ? Math.round((submittedDocs / totalDocs) * 100) : 0;
-
-  if (bar) bar.style.width = pct + '%';
-  if (txt) txt.textContent = submittedDocs + ' / ' + totalDocs + ' รายการ';
-
-  if (!_sarDocTypes.length) {
-    el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประเภทเอกสาร</div>';
-    return;
-  }
-
-  var STATUS_LABEL = { submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว',
-    assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' };
-  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af',
-    assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' };
-  var STATUS_BG    = { submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe',
-    assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' };
-
-  var html = '<div style="display:grid;gap:2px;">';
-
-  _sarDocTypes.forEach(function(dt) {
-    var courses = docCourses[dt.id] || [];
-    var hasAny  = courses.length > 0;
-
-    /* ไอคอนสถานะรวม */
-    var overallBadge = '';
-    if (!hasAny) {
-      overallBadge = '<span style="font-size:10px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:1px 8px;border-radius:20px;">ยังไม่ส่ง</span>';
-    } else {
-      var anyRevision = courses.some(function(k){ return subs[k].status === 'revision'; });
-      var allFinal    = courses.every(function(k){ return subs[k].status === 'final_approved'; });
-      var obg, ocol, olbl;
-      if (anyRevision)  { obg = '#fef9c3'; ocol = '#92400e'; olbl = 'มีรายวิชาแก้ไข'; }
-      else if (allFinal){ obg = '#d1fae5'; ocol = '#065f46'; olbl = 'ผอ.อนุมัติครบ'; }
-      else              { obg = '#dcfce7'; ocol = '#15803d'; olbl = 'ส่งแล้ว ' + courses.length + ' วิชา'; }
-      overallBadge = '<span style="font-size:10px;font-weight:700;color:'+ocol+';background:'+obg+';padding:1px 8px;border-radius:20px;">'+olbl+'</span>';
-    }
-
-    /* course chips */
-    var chipsHtml = '';
-    if (hasAny) {
-      chipsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">';
-      courses.forEach(function(subKey) {
-        var sub    = subs[subKey];
-        var status = sub.status || 'submitted';
-        var files  = sub.files  || [];
-        var chipClass = 'port-course-chip' + (status === 'revision' ? ' revision' : (files.length ? ' has-files' : ''));
-        var stBg  = STATUS_BG[status]    || '#dcfce7';
-        var stCol = STATUS_COLOR[status] || '#15803d';
-        var stLbl = STATUS_LABEL[status] || 'ส่งแล้ว';
-
-        chipsHtml +=
-          '<div class="' + chipClass + '" title="' + esc(sub.courseName || '') + '">' +
-            (sub.courseCode ? '<span class="port-course-code">' + esc(sub.courseCode) + '</span>' : '') +
-            '<span class="port-course-name">' + esc(sub.courseName || '(ไม่ระบุ)') + '</span>' +
-            '<span style="font-size:9px;font-weight:800;color:' + stCol + ';background:' + stBg + ';padding:1px 6px;border-radius:4px;white-space:nowrap;">' + stLbl + '</span>' +
-            /* ปุ่มเปิดไฟล์ */
-            (files.length
-              ? files.map(function(f, fi) {
-                  if (!f || !f.fileUrl) return '';
-                  return '<a href="' + esc(f.fileUrl) + '" target="_blank" class="port-file-link" title="' + esc(f.fileName || ('ไฟล์ ' + (fi+1))) + '" onclick="event.stopPropagation();">' +
-                    '<i data-lucide="file-text" style="width:11px;height:11px;"></i>' + (fi+1) +
-                    '</a>';
-                }).join('')
-              : '') +
-          '</div>';
-      });
-      chipsHtml += '</div>';
-    }
-
-    html +=
-      '<div class="port-doc-row">' +
-        '<div class="port-doc-icon" style="background:' + dt.bg + ';">' +
-          '<i data-lucide="' + dt.icon + '" style="width:16px;height:16px;color:' + dt.color + ';"></i>' +
-        '</div>' +
-        '<div class="port-doc-info">' +
-          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-            '<span class="port-doc-title">' + esc(dt.label) + '</span>' +
-            overallBadge +
-          '</div>' +
-          chipsHtml +
-        '</div>' +
-      '</div>';
-  });
-
-  html += '</div>';
-  el.innerHTML = html;
-  lucide.createIcons();
-}
 

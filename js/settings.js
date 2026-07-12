@@ -1,3 +1,4 @@
+/* ══════════════════════ STATE ══════════════════════ */
 /* ══════════════════════════════════════
    ธีมสีทั้งเว็บ — แอดมิน (SuperAdmin) เท่านั้นที่แก้ได้
    บันทึกที่ site_config/theme ใน Firestore แล้ว common.js
@@ -32,246 +33,9 @@ var siteThemeConfig  = {};  /* { member:{primary,dark,light,tint}, staff:{...} }
 
 var annEditId      = null;
 var annImgFile_obj = null;   /* File รอ upload */
-var annImgExistUrl = '';     /* URL เดิม (กรณี edit) */
+var annImgExistUrl = '';
 
-/* ─── openAnnModal ─── */
-function openAnnModal(id) {
-  annEditId      = id || null;
-  annImgFile_obj = null;
-
-  document.getElementById('annModalTitle').textContent = id ? 'แก้ไขประกาศ' : 'เพิ่มประกาศใหม่';
-  document.getElementById('annModalSub').textContent   = id ? 'แก้ไขข้อมูลประกาศที่มีอยู่' : 'กรอกข้อมูลและบันทึกประกาศใหม่';
-
-  if (!id) {
-    document.getElementById('annTitle').value     = '';
-    document.getElementById('annBody').value      = '';
-    document.getElementById('annActive').checked  = true;
-    document.getElementById('annStartDate').value = '';
-    document.getElementById('annEndDate').value   = '';
-    document.getElementById('annNoExpiry').checked = false;
-    document.getElementById('annDeptSelect').value = '';
-    document.getElementById('annDeptOther').value  = '';
-    document.getElementById('annDeptOther').style.display = 'none';
-    toggleNoExpiry(false);
-    setAnnType('info');
-    setAnnScope('external');
-    resetAnnImage();
-    annImgExistUrl = '';
-  } else {
-    db.collection('announcements').doc(id).get().then(function(doc) {
-      if (!doc.exists) return;
-      var d = doc.data();
-      document.getElementById('annTitle').value    = d.title  || '';
-      document.getElementById('annBody').value     = d.body   || '';
-      document.getElementById('annActive').checked = d.active !== false;
-      setAnnType(d.type   || 'info');
-      setAnnScope(d.scope || 'external');
-
-      var noExpiry = d.noExpiry === true || (!d.startDate && !d.endDate);
-      document.getElementById('annNoExpiry').checked = noExpiry;
-      toggleNoExpiry(noExpiry);
-      if (!noExpiry) {
-        document.getElementById('annStartDate').value = d.startDate || '';
-        document.getElementById('annEndDate').value   = d.endDate   || '';
-      }
-
-      var dept    = d.department || '';
-      var stdOpts = ['ฝ่ายบริหาร','งานวิชาการ','งานบุคคล','งานการเงิน','งานพัสดุ','งานอาคารสถานที่','งานปกครอง','งานแนะแนว','งานสัมพันธ์ชุมชน','งานสารสนเทศ'];
-      if (dept && stdOpts.indexOf(dept) === -1) {
-        document.getElementById('annDeptSelect').value = 'other';
-        document.getElementById('annDeptOther').value  = dept;
-        document.getElementById('annDeptOther').style.display = 'block';
-      } else {
-        document.getElementById('annDeptSelect').value = dept;
-        document.getElementById('annDeptOther').style.display = 'none';
-      }
-
-      annImgExistUrl = d.imageUrl || '';
-      if (annImgExistUrl) {
-        document.getElementById('annImgPreview').src = annImgExistUrl;
-        document.getElementById('annImgPreview').style.display = 'block';
-        document.getElementById('annImgDrop').classList.add('has-file');
-        document.getElementById('annImgName').textContent    = 'รูปภาพที่มีอยู่';
-        document.getElementById('annImgName').style.display  = 'block';
-      } else {
-        resetAnnImage();
-      }
-      lucide.createIcons();
-    });
-  }
-
-  openModal('annModal');
-  lucide.createIcons();
-}
-
-function closeAnnModal() { closeModal('annModal'); }
-
-/* ─── setAnnType ─── */
-function setAnnType(type) {
-  document.querySelectorAll('[name="annType"]').forEach(function(r) { r.checked = (r.value === type); });
-  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
-    el.className = 'ann-type-opt' + (el.dataset.type === type ? ' sel-' + type : '');
-  });
-}
-
-/* ─── setAnnScope ─── */
-function setAnnScope(scope) {
-  document.querySelectorAll('[name="annScope"]').forEach(function(r) { r.checked = (r.value === scope); });
-  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
-    el.className = 'ann-scope-opt' + (el.dataset.scope === scope ? ' sel-' + scope : '');
-  });
-}
-
-/* ─── toggleNoExpiry ─── */
-function toggleNoExpiry(checked) {
-  var row = document.getElementById('annDateRow');
-  if (!row) return;
-  row.style.opacity      = checked ? '.35' : '1';
-  row.style.pointerEvents = checked ? 'none' : '';
-  if (checked) {
-    document.getElementById('annStartDate').value = '';
-    document.getElementById('annEndDate').value   = '';
-  }
-}
-
-/* ─── onDeptChange ─── */
-function onDeptChange(val) {
-  var other = document.getElementById('annDeptOther');
-  other.style.display = (val === 'other') ? 'block' : 'none';
-  if (val !== 'other') other.value = '';
-}
-
-/* ─── Image helpers ─── */
-function handleAnnImage(evt) {
-  var file = evt.target.files && evt.target.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('รูปภาพต้องไม่เกิน 5 MB', 'error'); return; }
-  annImgFile_obj = file;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    document.getElementById('annImgPreview').src = e.target.result;
-    document.getElementById('annImgPreview').style.display = 'block';
-    document.getElementById('annImgDrop').classList.add('has-file');
-    document.getElementById('annImgName').textContent   = file.name;
-    document.getElementById('annImgName').style.display = 'block';
-    annImgExistUrl = '';
-    lucide.createIcons();
-  };
-  reader.readAsDataURL(file);
-}
-function removeAnnImage(evt) {
-  evt.stopPropagation();
-  resetAnnImage();
-  annImgExistUrl = '';
-  annImgFile_obj = null;
-}
-function resetAnnImage() {
-  document.getElementById('annImgFile').value = '';
-  document.getElementById('annImgPreview').src = '';
-  document.getElementById('annImgPreview').style.display = 'none';
-  document.getElementById('annImgDrop').classList.remove('has-file');
-  document.getElementById('annImgName').style.display = 'none';
-  document.getElementById('annImgName').textContent = '';
-}
-
-/* ─── saveAnn ─── */
-function saveAnn() {
-  var title     = (document.getElementById('annTitle').value    || '').trim();
-  var body      = (document.getElementById('annBody').value     || '').trim();
-  var active    = document.getElementById('annActive').checked;
-  var noExpiry  = document.getElementById('annNoExpiry').checked;
-  var startDate = noExpiry ? '' : (document.getElementById('annStartDate').value || '');
-  var endDate   = noExpiry ? '' : (document.getElementById('annEndDate').value   || '');
-  var typeEl    = document.querySelector('[name="annType"]:checked');
-  var type      = typeEl ? typeEl.value : 'info';
-  var scopeEl   = document.querySelector('[name="annScope"]:checked');
-  var scope     = scopeEl ? scopeEl.value : 'external';
-  var deptSel   = document.getElementById('annDeptSelect').value;
-  var department = (deptSel === 'other')
-    ? (document.getElementById('annDeptOther').value || '').trim()
-    : deptSel;
-
-  if (!title)      { showToast('กรุณากรอกชื่อเรื่อง', 'error'); return; }
-  if (!department) { showToast('กรุณาเลือกฝ่าย/หน่วยงาน', 'error'); return; }
-  if (!noExpiry && startDate && endDate && endDate < startDate) {
-    showToast('วันที่สิ้นสุดต้องอยู่หลังวันที่เริ่ม', 'error'); return;
-  }
-
-  var btn = document.getElementById('annSaveBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i data-lucide="loader-2" style="width:15px;height:15px;"></i> กำลังบันทึก...';
-  lucide.createIcons();
-
-  var data = {
-    title: title, body: body, type: type,
-    scope: scope, active: active, noExpiry: noExpiry,
-    startDate: startDate, endDate: endDate, department: department,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  function doSave(imageUrl) {
-    if (imageUrl !== undefined) data.imageUrl = imageUrl;
-    else if (annImgExistUrl)   data.imageUrl = annImgExistUrl;
-
-    var p = annEditId
-      ? db.collection('announcements').doc(annEditId).update(data)
-      : db.collection('announcements').add(Object.assign({}, data, {
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdBy: (typeof currentUserEmail !== 'undefined' ? currentUserEmail : '')
-        }));
-    p.then(function() {
-      showToast(annEditId ? 'แก้ไขประกาศแล้ว' : 'เพิ่มประกาศใหม่แล้ว');
-      closeAnnModal();
-      loadAnnouncements();
-    }).catch(function(e) {
-      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-    }).finally(function() {
-      btn.disabled = false;
-      btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
-      lucide.createIcons();
-    });
-  }
-
-  if (annImgFile_obj && storage) {
-    var ext   = annImgFile_obj.name.split('.').pop();
-    var fname = 'announcements/' + Date.now() + '.' + ext;
-    var ref   = storage.ref(fname);
-    ref.put(annImgFile_obj)
-      .then(function() { return ref.getDownloadURL(); })
-      .then(function(url) { doSave(url); })
-      .catch(function(e) {
-        showToast('อัปโหลดรูปไม่ได้: ' + e.message, 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
-        lucide.createIcons();
-      });
-  } else {
-    doSave(undefined);
-  }
-}
-
-/* ─── Click handlers (scope + type radios) ─── */
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
-    el.addEventListener('click', function() { setAnnType(el.dataset.type); });
-  });
-  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
-    el.addEventListener('click', function() { setAnnScope(el.dataset.scope); });
-  });
-});
-
-function deleteAnn(id) {
-  if (!confirm('ลบประกาศนี้?')) return;
-  db.collection('announcements').doc(id).delete()
-    .then(function() { showToast('ลบประกาศแล้ว'); loadAnnouncements(); })
-    .catch(function(e) { showToast('เกิดข้อผิดพลาด','error'); });
-}
-
-function toggleAnnActive(id, current) {
-  db.collection('announcements').doc(id).update({ active: !current, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
-    .then(function() { showToast(!current ? 'เปิดใช้งานแล้ว' : 'ปิดการแสดงผลแล้ว'); loadAnnouncements(); });
-}
-
+/* ══════════════════════ DATA LOADING ══════════════════════ */
 function loadAnnouncements() {
   var wrap = document.getElementById('annListWrap');
   if (!wrap) return;
@@ -320,12 +84,21 @@ function loadAnnouncements() {
     .catch(function() { wrap.innerHTML = '<div style="text-align:center;padding:32px;color:#ef4444;font-size:13px;">โหลดข้อมูลไม่ได้</div>'; });
 }
 
-function switchSettingsTab(name) {
-  document.querySelectorAll('.settings-tab').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelectorAll('.settings-pane').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById('stab-'+name).classList.add('active');
-  document.getElementById('spane-'+name).classList.add('active');
-  if (name === 'announcements') loadAnnouncements();
+/* ══════════════════════ RENDER ══════════════════════ */
+/* ─── setAnnType ─── */
+function setAnnType(type) {
+  document.querySelectorAll('[name="annType"]').forEach(function(r) { r.checked = (r.value === type); });
+  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
+    el.className = 'ann-type-opt' + (el.dataset.type === type ? ' sel-' + type : '');
+  });
+}
+
+/* ─── setAnnScope ─── */
+function setAnnScope(scope) {
+  document.querySelectorAll('[name="annScope"]').forEach(function(r) { r.checked = (r.value === scope); });
+  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
+    el.className = 'ann-scope-opt' + (el.dataset.scope === scope ? ' sel-' + scope : '');
+  });
 }
 
 /* ══ Render ══ */
@@ -486,14 +259,6 @@ function autoGenerateShades(roleKey) {
   });
   updateThemePreview(roleKey);
 }
-/* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก)
-   navbar และปุ่ม ในเว็บจริงใช้สี "หลัก" (primary) เหมือนกัน ส่วนสี "เข้ม" มีผลแค่ตอน hover
-   ทำให้ preview ตรงกับพฤติกรรมจริง ไม่ใช่ผูกกับสีเข้มแบบเดิม */
-function updateThemePreview(roleKey) {
-  var primary = document.getElementById('color-' + roleKey + '-primary').value;
-  document.getElementById('preview-navbar-' + roleKey).style.background = primary;
-  document.getElementById('preview-btn-' + roleKey).style.background    = primary;
-}
 function readShadesFromForm(roleKey) {
   var out = {};
   var hexRe = /^#[0-9a-fA-F]{6}$/;
@@ -504,6 +269,251 @@ function readShadesFromForm(roleKey) {
     out[key] = v;
   }
   return out;
+}
+function scrollToTopContent() {
+  var content = document.getElementById('pageContent');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+     /* URL เดิม (กรณี edit) */
+
+/* ─── openAnnModal ─── */
+function openAnnModal(id) {
+  annEditId      = id || null;
+  annImgFile_obj = null;
+
+  document.getElementById('annModalTitle').textContent = id ? 'แก้ไขประกาศ' : 'เพิ่มประกาศใหม่';
+  document.getElementById('annModalSub').textContent   = id ? 'แก้ไขข้อมูลประกาศที่มีอยู่' : 'กรอกข้อมูลและบันทึกประกาศใหม่';
+
+  if (!id) {
+    document.getElementById('annTitle').value     = '';
+    document.getElementById('annBody').value      = '';
+    document.getElementById('annActive').checked  = true;
+    document.getElementById('annStartDate').value = '';
+    document.getElementById('annEndDate').value   = '';
+    document.getElementById('annNoExpiry').checked = false;
+    document.getElementById('annDeptSelect').value = '';
+    document.getElementById('annDeptOther').value  = '';
+    document.getElementById('annDeptOther').style.display = 'none';
+    toggleNoExpiry(false);
+    setAnnType('info');
+    setAnnScope('external');
+    resetAnnImage();
+    annImgExistUrl = '';
+  } else {
+    db.collection('announcements').doc(id).get().then(function(doc) {
+      if (!doc.exists) return;
+      var d = doc.data();
+      document.getElementById('annTitle').value    = d.title  || '';
+      document.getElementById('annBody').value     = d.body   || '';
+      document.getElementById('annActive').checked = d.active !== false;
+      setAnnType(d.type   || 'info');
+      setAnnScope(d.scope || 'external');
+
+      var noExpiry = d.noExpiry === true || (!d.startDate && !d.endDate);
+      document.getElementById('annNoExpiry').checked = noExpiry;
+      toggleNoExpiry(noExpiry);
+      if (!noExpiry) {
+        document.getElementById('annStartDate').value = d.startDate || '';
+        document.getElementById('annEndDate').value   = d.endDate   || '';
+      }
+
+      var dept    = d.department || '';
+      var stdOpts = ['ฝ่ายบริหาร','งานวิชาการ','งานบุคคล','งานการเงิน','งานพัสดุ','งานอาคารสถานที่','งานปกครอง','งานแนะแนว','งานสัมพันธ์ชุมชน','งานสารสนเทศ'];
+      if (dept && stdOpts.indexOf(dept) === -1) {
+        document.getElementById('annDeptSelect').value = 'other';
+        document.getElementById('annDeptOther').value  = dept;
+        document.getElementById('annDeptOther').style.display = 'block';
+      } else {
+        document.getElementById('annDeptSelect').value = dept;
+        document.getElementById('annDeptOther').style.display = 'none';
+      }
+
+      annImgExistUrl = d.imageUrl || '';
+      if (annImgExistUrl) {
+        document.getElementById('annImgPreview').src = annImgExistUrl;
+        document.getElementById('annImgPreview').style.display = 'block';
+        document.getElementById('annImgDrop').classList.add('has-file');
+        document.getElementById('annImgName').textContent    = 'รูปภาพที่มีอยู่';
+        document.getElementById('annImgName').style.display  = 'block';
+      } else {
+        resetAnnImage();
+      }
+      lucide.createIcons();
+    });
+  }
+
+  openModal('annModal');
+  lucide.createIcons();
+}
+
+function closeAnnModal() { closeModal('annModal'); }
+
+/* ─── toggleNoExpiry ─── */
+function toggleNoExpiry(checked) {
+  var row = document.getElementById('annDateRow');
+  if (!row) return;
+  row.style.opacity      = checked ? '.35' : '1';
+  row.style.pointerEvents = checked ? 'none' : '';
+  if (checked) {
+    document.getElementById('annStartDate').value = '';
+    document.getElementById('annEndDate').value   = '';
+  }
+}
+
+/* ─── onDeptChange ─── */
+function onDeptChange(val) {
+  var other = document.getElementById('annDeptOther');
+  other.style.display = (val === 'other') ? 'block' : 'none';
+  if (val !== 'other') other.value = '';
+}
+
+/* ─── Image helpers ─── */
+function handleAnnImage(evt) {
+  var file = evt.target.files && evt.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('รูปภาพต้องไม่เกิน 5 MB', 'error'); return; }
+  annImgFile_obj = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('annImgPreview').src = e.target.result;
+    document.getElementById('annImgPreview').style.display = 'block';
+    document.getElementById('annImgDrop').classList.add('has-file');
+    document.getElementById('annImgName').textContent   = file.name;
+    document.getElementById('annImgName').style.display = 'block';
+    annImgExistUrl = '';
+    lucide.createIcons();
+  };
+  reader.readAsDataURL(file);
+}
+function removeAnnImage(evt) {
+  evt.stopPropagation();
+  resetAnnImage();
+  annImgExistUrl = '';
+  annImgFile_obj = null;
+}
+function resetAnnImage() {
+  document.getElementById('annImgFile').value = '';
+  document.getElementById('annImgPreview').src = '';
+  document.getElementById('annImgPreview').style.display = 'none';
+  document.getElementById('annImgDrop').classList.remove('has-file');
+  document.getElementById('annImgName').style.display = 'none';
+  document.getElementById('annImgName').textContent = '';
+}
+
+/* ─── saveAnn ─── */
+function saveAnn() {
+  var title     = (document.getElementById('annTitle').value    || '').trim();
+  var body      = (document.getElementById('annBody').value     || '').trim();
+  var active    = document.getElementById('annActive').checked;
+  var noExpiry  = document.getElementById('annNoExpiry').checked;
+  var startDate = noExpiry ? '' : (document.getElementById('annStartDate').value || '');
+  var endDate   = noExpiry ? '' : (document.getElementById('annEndDate').value   || '');
+  var typeEl    = document.querySelector('[name="annType"]:checked');
+  var type      = typeEl ? typeEl.value : 'info';
+  var scopeEl   = document.querySelector('[name="annScope"]:checked');
+  var scope     = scopeEl ? scopeEl.value : 'external';
+  var deptSel   = document.getElementById('annDeptSelect').value;
+  var department = (deptSel === 'other')
+    ? (document.getElementById('annDeptOther').value || '').trim()
+    : deptSel;
+
+  if (!title)      { showToast('กรุณากรอกชื่อเรื่อง', 'error'); return; }
+  if (!department) { showToast('กรุณาเลือกฝ่าย/หน่วยงาน', 'error'); return; }
+  if (!noExpiry && startDate && endDate && endDate < startDate) {
+    showToast('วันที่สิ้นสุดต้องอยู่หลังวันที่เริ่ม', 'error'); return;
+  }
+
+  var btn = document.getElementById('annSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader-2" style="width:15px;height:15px;"></i> กำลังบันทึก...';
+  lucide.createIcons();
+
+  var data = {
+    title: title, body: body, type: type,
+    scope: scope, active: active, noExpiry: noExpiry,
+    startDate: startDate, endDate: endDate, department: department,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  function doSave(imageUrl) {
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    else if (annImgExistUrl)   data.imageUrl = annImgExistUrl;
+
+    var p = annEditId
+      ? db.collection('announcements').doc(annEditId).update(data)
+      : db.collection('announcements').add(Object.assign({}, data, {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: (typeof currentUserEmail !== 'undefined' ? currentUserEmail : '')
+        }));
+    p.then(function() {
+      showToast(annEditId ? 'แก้ไขประกาศแล้ว' : 'เพิ่มประกาศใหม่แล้ว');
+      closeAnnModal();
+      loadAnnouncements();
+    }).catch(function(e) {
+      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    }).finally(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
+      lucide.createIcons();
+    });
+  }
+
+  if (annImgFile_obj && storage) {
+    var ext   = annImgFile_obj.name.split('.').pop();
+    var fname = 'announcements/' + Date.now() + '.' + ext;
+    var ref   = storage.ref(fname);
+    ref.put(annImgFile_obj)
+      .then(function() { return ref.getDownloadURL(); })
+      .then(function(url) { doSave(url); })
+      .catch(function(e) {
+        showToast('อัปโหลดรูปไม่ได้: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก';
+        lucide.createIcons();
+      });
+  } else {
+    doSave(undefined);
+  }
+}
+
+/* ─── Click handlers (scope + type radios) ─── */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ann-type-opt').forEach(function(el) {
+    el.addEventListener('click', function() { setAnnType(el.dataset.type); });
+  });
+  document.querySelectorAll('.ann-scope-opt').forEach(function(el) {
+    el.addEventListener('click', function() { setAnnScope(el.dataset.scope); });
+  });
+});
+
+function deleteAnn(id) {
+  if (!confirm('ลบประกาศนี้?')) return;
+  db.collection('announcements').doc(id).delete()
+    .then(function() { showToast('ลบประกาศแล้ว'); loadAnnouncements(); })
+    .catch(function(e) { showToast('เกิดข้อผิดพลาด','error'); });
+}
+
+function toggleAnnActive(id, current) {
+  db.collection('announcements').doc(id).update({ active: !current, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(function() { showToast(!current ? 'เปิดใช้งานแล้ว' : 'ปิดการแสดงผลแล้ว'); loadAnnouncements(); });
+}
+
+function switchSettingsTab(name) {
+  document.querySelectorAll('.settings-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.settings-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('stab-'+name).classList.add('active');
+  document.getElementById('spane-'+name).classList.add('active');
+  if (name === 'announcements') loadAnnouncements();
+}
+/* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก)
+   navbar และปุ่ม ในเว็บจริงใช้สี "หลัก" (primary) เหมือนกัน ส่วนสี "เข้ม" มีผลแค่ตอน hover
+   ทำให้ preview ตรงกับพฤติกรรมจริง ไม่ใช่ผูกกับสีเข้มแบบเดิม */
+function updateThemePreview(roleKey) {
+  var primary = document.getElementById('color-' + roleKey + '-primary').value;
+  document.getElementById('preview-navbar-' + roleKey).style.background = primary;
+  document.getElementById('preview-btn-' + roleKey).style.background    = primary;
 }
 function saveSiteTheme() {
   var member = readShadesFromForm('member');
@@ -534,6 +544,17 @@ function saveSiteTheme() {
   });
 }
 
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+/* ══════════════════════ INIT ══════════════════════ */
 /* ══ Boot ══ */
 buildPage({
   appId:        'settingsApp',
@@ -576,16 +597,4 @@ buildPage({
   }
 });
 
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
-function scrollToTopContent() {
-  var content = document.getElementById('pageContent');
-  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-}
+

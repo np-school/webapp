@@ -1,4 +1,4 @@
-
+/* ══════════════════════ STATE ══════════════════════ */
 /* ══════════════════════════════════════════════════════════════
    ตั้งค่า Google Drive Upload (ผ่าน Firebase Cloud Function)
    ✏️ ต้องแก้: นำ URL ของ Cloud Function "uploadRepairPhoto" มาใส่ที่นี่
@@ -16,10 +16,6 @@ var DRIVE_UPLOAD_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/u
 /* ══ Categories / Buildings — โหลดจาก Firestore (จัดการได้ในหน้าแอดมิน "ตั้งค่า") ══ */
 var REPAIR_CATEGORIES = [];
 var REPAIR_BUILDINGS  = [];
-function getCategoryMeta(key) {
-  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
-  return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
-}
 
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ไม่ต้องตั้งค่าเพิ่มในแอดมิน)
      หมวดหมู่เดียวกันจะได้สีเดิมเสมอไม่ว่าจะโหลดกี่ครั้งก็ตาม ── */
@@ -31,6 +27,76 @@ var CATEGORY_PALETTE = [
   { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
   { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
 ];
+
+/* ══ Status meta: label + color + workflow-step states ══ */
+var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
+
+/* ══ Page State ══ */
+var currentUser   = null;
+var myRepairs     = [];
+var currentFilter = 'all';
+var pendingPhotos = []; /* [{name, mimeType, base64, status:'pending'|'uploading'|'done'|'error', url}] */
+var editingRepairId = null; /* ถ้าไม่ใช่ null = กำลังแก้ไขคำขอเดิม (เฉพาะตอนสถานะยังเป็น 'reported' เท่านั้น) */
+var staffInfo     = null;
+
+/* ── แถบกรองตามหมวดหมู่ (สร้างใหม่ทุกครั้งที่หมวดหมู่เปลี่ยน, สีของแต่ละปุ่มตรงกับสีหมวดหมู่) ── */
+var currentCategoryFilter = 'all';
+
+/* ══════════════════════ DATA LOADING ══════════════════════ */
+function loadCategories() {
+  db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_CATEGORIES = [];
+    snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
+    populateCategorySelect();
+    renderCategoryFilterBar();
+    if (typeof renderList === 'function' && myRepairs) renderList();
+  }, function(err) { console.error('loadCategories', err); });
+}
+function loadBuildings() {
+  db.collection('repair_buildings').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_BUILDINGS = [];
+    snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
+    populateBuildingSelect();
+  }, function(err) { console.error('loadBuildings', err); });
+} /* {name, phone} จาก staff collection ตาม email ของผู้ใช้ที่ login — ใช้เติมฟอร์มแจ้งซ่อมอัตโนมัติ */
+
+/* ── ดึงชื่อ-เบอร์โทรจาก staff collection ตาม email เพื่อเติมฟอร์มแจ้งซ่อมอัตโนมัติ
+     ถ้าไม่พบข้อมูล (ไม่มีชื่ออยู่ในทะเบียนบุคลากร) จะปล่อยให้ผู้ใช้กรอกเอง ── */
+function loadStaffInfo(user) {
+  if (typeof db === 'undefined' || !user.email) return;
+  db.collection('staff').where('email', '==', user.email.toLowerCase()).limit(1).get()
+    .then(function(snap) {
+      if (!snap.empty) {
+        var s = snap.docs[0].data();
+        staffInfo = { name: s.name || '', phone: s.phone || '' };
+      }
+    })
+    .catch(function(err) { console.error('loadStaffInfo error:', err); });
+}
+
+/* ══ Data ══ */
+function loadData() {
+  db.collection('repairs')
+    .where('reporterUid', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      myRepairs = [];
+      snap.forEach(function(doc) { myRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      sortRepairList(myRepairs);
+      renderStats();
+      renderList();
+    }, function(err) {
+      console.error(err);
+      document.getElementById('repairListWrap').innerHTML =
+        '<div class="empty-state"><i data-lucide="alert-triangle" style="width:26px;height:26px;color:var(--red);"></i><p style="margin-top:8px;">โหลดข้อมูลไม่สำเร็จ</p></div>';
+      lucide.createIcons();
+    });
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+function getCategoryMeta(key) {
+  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
+  return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+}
 function hexToRgba(hex, alpha) {
   hex = (hex || '').replace('#', '');
   if (hex.length === 3) hex = hex.split('').map(function(ch) { return ch + ch; }).join('');
@@ -51,25 +117,6 @@ function getCategoryColor(catId) {
   for (var i = 0; i < key.length; i++) hash = (hash + key.charCodeAt(i) * (i + 1)) % CATEGORY_PALETTE.length;
   return CATEGORY_PALETTE[hash];
 }
-function loadCategories() {
-  db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
-    REPAIR_CATEGORIES = [];
-    snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
-    populateCategorySelect();
-    renderCategoryFilterBar();
-    if (typeof renderList === 'function' && myRepairs) renderList();
-  }, function(err) { console.error('loadCategories', err); });
-}
-function loadBuildings() {
-  db.collection('repair_buildings').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
-    REPAIR_BUILDINGS = [];
-    snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
-    populateBuildingSelect();
-  }, function(err) { console.error('loadBuildings', err); });
-}
-
-/* ══ Status meta: label + color + workflow-step states ══ */
-var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
 
 function getStatusMeta(r) {
   switch (r.status) {
@@ -105,64 +152,6 @@ function getBuildingNameFromLocation(loc) {
   if (!loc) return '';
   var idx = loc.indexOf(' - ');
   return idx === -1 ? loc : loc.substring(0, idx);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   buildPage() — auth guard + shell builder
-   ══════════════════════════════════════════════════════════════ */
-buildPage({
-  appId:        'myApp',
-  navSubtitle:  'ระบบแจ้งซ่อม',
-  navTheme:     'blue',
-  activePage:   'repair-user',
-  requireAdmin: false,
-
-  onAuth: function(user, contentEl) {
-    currentUser = user;
-    updateNavUser(user);
-    updateSidebarProfile(user);
-    checkAdminAccess(user.email);
-    loadStaffInfo(user);
-
-    contentEl.innerHTML = renderPage();
-    lucide.createIcons();
-
-    loadCategories();
-    loadBuildings();
-    loadData();
-    setupScrollTopButton();
-  }
-});
-
-/* ══ Page State ══ */
-var currentUser   = null;
-var myRepairs     = [];
-var currentFilter = 'all';
-var pendingPhotos = []; /* [{name, mimeType, base64, status:'pending'|'uploading'|'done'|'error', url}] */
-var editingRepairId = null; /* ถ้าไม่ใช่ null = กำลังแก้ไขคำขอเดิม (เฉพาะตอนสถานะยังเป็น 'reported' เท่านั้น) */
-var staffInfo     = null; /* {name, phone} จาก staff collection ตาม email ของผู้ใช้ที่ login — ใช้เติมฟอร์มแจ้งซ่อมอัตโนมัติ */
-
-/* ── ดึงชื่อ-เบอร์โทรจาก staff collection ตาม email เพื่อเติมฟอร์มแจ้งซ่อมอัตโนมัติ
-     ถ้าไม่พบข้อมูล (ไม่มีชื่ออยู่ในทะเบียนบุคลากร) จะปล่อยให้ผู้ใช้กรอกเอง ── */
-function loadStaffInfo(user) {
-  if (typeof db === 'undefined' || !user.email) return;
-  db.collection('staff').where('email', '==', user.email.toLowerCase()).limit(1).get()
-    .then(function(snap) {
-      if (!snap.empty) {
-        var s = snap.docs[0].data();
-        staffInfo = { name: s.name || '', phone: s.phone || '' };
-      }
-    })
-    .catch(function(err) { console.error('loadStaffInfo error:', err); });
-}
-
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
 }
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
@@ -204,69 +193,6 @@ function renderPage() {
   );
 }
 
-function populateCategorySelect() {
-  var sel = document.getElementById('frCategory');
-  if (!sel) return;
-  var prev = sel.value;
-  var html = '';
-  REPAIR_CATEGORIES.forEach(function(c) { html += '<option value="' + c.id + '">' + esc2(c.label) + '</option>'; });
-  sel.innerHTML = html;
-  if (prev && REPAIR_CATEGORIES.some(function(c) { return c.id === prev; })) sel.value = prev;
-}
-
-function populateBuildingSelect() {
-  var sel = document.getElementById('frBuilding');
-  if (!sel) return;
-  var prev = sel.value;
-  var html = '<option value="">— เลือกอาคาร —</option>';
-  REPAIR_BUILDINGS.forEach(function(b) { html += '<option value="' + b.id + '">' + esc2(b.name) + '</option>'; });
-  sel.innerHTML = html;
-  if (prev && REPAIR_BUILDINGS.some(function(b) { return b.id === prev; })) sel.value = prev;
-  onBuildingChange();
-}
-
-/* เติม datalist สถานที่ย่อยที่เคยมีคนแจ้งไว้แล้วในอาคารที่เลือก ให้เลือกได้ทันที */
-function onBuildingChange() {
-  var sel = document.getElementById('frBuilding');
-  var list = document.getElementById('frSubLocationList');
-  if (!sel || !list) return;
-  var b = REPAIR_BUILDINGS.filter(function(x) { return x.id === sel.value; })[0];
-  var subs = (b && b.subLocations) || [];
-  list.innerHTML = subs.map(function(s) { return '<option value="' + esc2(s) + '">'; }).join('');
-}
-
-/* ══ Data ══ */
-function loadData() {
-  db.collection('repairs')
-    .where('reporterUid', '==', currentUser.uid)
-    .onSnapshot(function(snap) {
-      myRepairs = [];
-      snap.forEach(function(doc) { myRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
-      sortRepairList(myRepairs);
-      renderStats();
-      renderList();
-    }, function(err) {
-      console.error(err);
-      document.getElementById('repairListWrap').innerHTML =
-        '<div class="empty-state"><i data-lucide="alert-triangle" style="width:26px;height:26px;color:var(--red);"></i><p style="margin-top:8px;">โหลดข้อมูลไม่สำเร็จ</p></div>';
-      lucide.createIcons();
-    });
-}
-
-/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
-     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด ── */
-function sortRepairList(arr) {
-  arr.sort(function(a, b) {
-    var aUrgent = a.priority === 'urgent' ? 0 : 1;
-    var bUrgent = b.priority === 'urgent' ? 0 : 1;
-    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
-    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
-    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
-    return at - bt; /* เก่าไว้ก่อน */
-  });
-  return arr;
-}
-
 function renderStats() {
   var all = myRepairs.length;
   var open = myRepairs.filter(function(r) { return ['reported','approved','reopened'].indexOf(r.status) !== -1; }).length;
@@ -294,17 +220,6 @@ function renderStats() {
     stat('check-check',    'var(--green)',  'var(--green-light)',  closed,     'ปิดงานแล้ว');
   lucide.createIcons();
 }
-
-function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
-    b.classList.toggle('active', b.getAttribute('data-f') === f);
-  });
-  renderList();
-}
-
-/* ── แถบกรองตามหมวดหมู่ (สร้างใหม่ทุกครั้งที่หมวดหมู่เปลี่ยน, สีของแต่ละปุ่มตรงกับสีหมวดหมู่) ── */
-var currentCategoryFilter = 'all';
 function renderCategoryFilterBar() {
   var bar = document.getElementById('repCatFilterBar');
   if (!bar) return;
@@ -324,12 +239,6 @@ function renderCategoryFilterBar() {
 
   bar.innerHTML = html;
   lucide.createIcons();
-}
-
-function setCategoryFilter(catId) {
-  currentCategoryFilter = catId;
-  renderCategoryFilterBar();
-  renderList();
 }
 
 function renderList() {
@@ -386,6 +295,218 @@ function renderRepairCard(r) {
       '<div style="font-size:11px;color:var(--text3);margin-top:8px;">แจ้งเมื่อ ' + fmtDate(r.createdAt) + '</div>' +
     '</div>'
   );
+}
+
+function uploadOnePhoto(item) {
+  if (!DRIVE_UPLOAD_URL || DRIVE_UPLOAD_URL.indexOf('XXXXXX') !== -1) {
+    item.status = 'error';
+    renderPhotoList();
+    showToast('ยังไม่ได้ตั้งค่าอัปโหลดรูปไป Google Drive (ข้ามรูปนี้)', 'warn');
+    return;
+  }
+  item.status = 'uploading';
+  renderPhotoList();
+
+  fetch(DRIVE_UPLOAD_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: item.name,
+      mimeType: item.mimeType,
+      data: item.base64,
+      location: currentLocationText(),
+      title: document.getElementById('frTitle').value.trim(),
+      reportDate: new Date().toISOString()
+    })
+  })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        if (!res.ok || !data || !data.url) {
+          throw new Error((data && data.error) || ('อัปโหลดไม่สำเร็จ (HTTP ' + res.status + ')'));
+        }
+        return data;
+      });
+    })
+    .then(function(data) {
+      item.status = 'done';
+      item.url = data.url;
+      renderPhotoList();
+    })
+    .catch(function(err) {
+      console.error(err);
+      item.status = 'error';
+      renderPhotoList();
+      showToast('อัปโหลดรูป "' + item.name + '" ไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'error');
+    });
+}
+
+function renderPhotoList() {
+  var wrap = document.getElementById('frPhotoList');
+  if (!wrap) return;
+  var html = '';
+  pendingPhotos.forEach(function(p, idx) {
+    html +=
+      '<div class="rp-photo-thumb">' +
+        '<img src="' + p.localSrc + '">' +
+        (p.status !== 'done' ? '<div class="up">' + (p.status === 'uploading' ? 'กำลังอัปโหลด...' : p.status === 'error' ? 'อัปโหลดไม่สำเร็จ' : 'รออัปโหลด') + '</div>' : '') +
+        '<button class="rm" onclick="event.stopPropagation();removePhoto(' + idx + ')"><i data-lucide="x" style="width:11px;height:11px;"></i></button>' +
+      '</div>';
+  });
+  wrap.innerHTML = html;
+  lucide.createIcons();
+}
+
+/* ประกอบข้อความสถานที่จาก "อาคาร - ห้อง/บริเวณ" ที่เลือก/กรอกไว้ */
+function currentLocationText() {
+  var buildingId = document.getElementById('frBuilding').value;
+  var building = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
+  var sub = document.getElementById('frSubLocation').value.trim();
+  if (!building) return sub;
+  return sub ? (building.name + ' - ' + sub) : building.name;
+}
+
+function renderDetailBody(r) {
+  var cat = getCategoryMeta(r.category);
+  var meta = getStatusMeta(r);
+
+  var photosHtml = '';
+  if (r.photos && r.photos.length) {
+    photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
+      r.photos.map(function(p) {
+        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
+      }).join('') + '</div>';
+  }
+
+  var logsHtml = '';
+  if (r.logs && r.logs.length) {
+    logsHtml = '<div style="margin-top:8px;">' + r.logs.slice().reverse().map(function(l) {
+      return (
+        '<div class="rp-log-item">' +
+          '<div class="rp-log-dot"></div>' +
+          '<div>' +
+            '<div style="font-size:12.5px;font-weight:700;color:var(--text);">' + esc2(l.note || '') + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);">' + esc2(l.byName || '') + ' · ' + fmtDate(l.at) + '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('') + '</div>';
+  }
+
+  var reviewActions = '';
+  if (r.status === 'done') {
+    reviewActions =
+      '<div class="section-divider"><i data-lucide="clipboard-check" style="width:14px;height:14px;"></i> ตรวจสอบความเรียบร้อย</div>' +
+      '<p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">ช่างแจ้งว่าดำเนินการซ่อมเสร็จแล้ว กรุณาตรวจสอบและยืนยันผล</p>' +
+      (r.repairNote ? '<div class="card" style="background:var(--bg-alt);padding:12px;margin-bottom:12px;"><b style="font-size:12px;">บันทึกจากช่าง:</b><p style="font-size:12.5px;color:var(--text2);margin-top:4px;">' + esc2(r.repairNote) + '</p></div>' : '') +
+      '<textarea id="reviewNoteInput" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>' +
+      '<div style="display:flex;gap:10px;margin-top:10px;">' +
+        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'fail\')"><i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> ยังไม่เรียบร้อย</button>' +
+        '<button class="btn-approve" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'pass\')"><i data-lucide="check" style="width:14px;height:14px;"></i> เรียบร้อยแล้ว ปิดงาน</button>' +
+      '</div>';
+  }
+
+  var editDeleteActions = '';
+  if (r.status === 'reported') {
+    editDeleteActions =
+      '<div class="section-divider" style="margin-top:18px;"><i data-lucide="settings-2" style="width:14px;height:14px;"></i> จัดการคำขอ</div>' +
+      '<p style="font-size:11.5px;color:var(--text3);margin-bottom:10px;">แก้ไขหรือลบคำขอนี้ได้ ตราบใดที่เจ้าหน้าที่ยังไม่พิจารณา (อนุมัติ/ไม่อนุมัติ)</p>' +
+      '<div style="display:flex;gap:10px;">' +
+        '<button class="btn-secondary" style="flex:1;justify-content:center;" onclick="openEditModal(\'' + r.id + '\')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไขคำขอ</button>' +
+        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="deleteMyRepair(\'' + r.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ลบคำขอ</button>' +
+      '</div>';
+  }
+
+  return (
+    '<div class="modal-header">' +
+      '<div class="modal-title-group">' +
+        '<div class="modal-title-icon" style="background:var(--amber-light);"><i data-lucide="' + cat.icon + '" style="color:var(--amber);"></i></div>' +
+        '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
+      '</div>' +
+      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
+    '</div>' +
+
+    '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +
+    buildWorkflowBar(meta.steps) +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> รายละเอียด</div>' +
+    '<p style="font-size:13px;color:var(--text2);line-height:1.6;">' + esc2(r.description || '') + '</p>' +
+    photosHtml +
+
+    reviewActions +
+    editDeleteActions +
+
+    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
+    logsHtml
+  );
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function populateCategorySelect() {
+  var sel = document.getElementById('frCategory');
+  if (!sel) return;
+  var prev = sel.value;
+  var html = '';
+  REPAIR_CATEGORIES.forEach(function(c) { html += '<option value="' + c.id + '">' + esc2(c.label) + '</option>'; });
+  sel.innerHTML = html;
+  if (prev && REPAIR_CATEGORIES.some(function(c) { return c.id === prev; })) sel.value = prev;
+}
+
+function populateBuildingSelect() {
+  var sel = document.getElementById('frBuilding');
+  if (!sel) return;
+  var prev = sel.value;
+  var html = '<option value="">— เลือกอาคาร —</option>';
+  REPAIR_BUILDINGS.forEach(function(b) { html += '<option value="' + b.id + '">' + esc2(b.name) + '</option>'; });
+  sel.innerHTML = html;
+  if (prev && REPAIR_BUILDINGS.some(function(b) { return b.id === prev; })) sel.value = prev;
+  onBuildingChange();
+}
+
+/* เติม datalist สถานที่ย่อยที่เคยมีคนแจ้งไว้แล้วในอาคารที่เลือก ให้เลือกได้ทันที */
+function onBuildingChange() {
+  var sel = document.getElementById('frBuilding');
+  var list = document.getElementById('frSubLocationList');
+  if (!sel || !list) return;
+  var b = REPAIR_BUILDINGS.filter(function(x) { return x.id === sel.value; })[0];
+  var subs = (b && b.subLocations) || [];
+  list.innerHTML = subs.map(function(s) { return '<option value="' + esc2(s) + '">'; }).join('');
+}
+
+/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
+     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด ── */
+function sortRepairList(arr) {
+  arr.sort(function(a, b) {
+    var aUrgent = a.priority === 'urgent' ? 0 : 1;
+    var bUrgent = b.priority === 'urgent' ? 0 : 1;
+    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+    return at - bt; /* เก่าไว้ก่อน */
+  });
+  return arr;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-f') === f);
+  });
+  renderList();
+}
+
+function setCategoryFilter(catId) {
+  currentCategoryFilter = catId;
+  renderCategoryFilterBar();
+  renderList();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -496,77 +617,9 @@ function handlePhotoSelect(files) {
   document.getElementById('frFileInput').value = '';
 }
 
-function uploadOnePhoto(item) {
-  if (!DRIVE_UPLOAD_URL || DRIVE_UPLOAD_URL.indexOf('XXXXXX') !== -1) {
-    item.status = 'error';
-    renderPhotoList();
-    showToast('ยังไม่ได้ตั้งค่าอัปโหลดรูปไป Google Drive (ข้ามรูปนี้)', 'warn');
-    return;
-  }
-  item.status = 'uploading';
-  renderPhotoList();
-
-  fetch(DRIVE_UPLOAD_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      filename: item.name,
-      mimeType: item.mimeType,
-      data: item.base64,
-      location: currentLocationText(),
-      title: document.getElementById('frTitle').value.trim(),
-      reportDate: new Date().toISOString()
-    })
-  })
-    .then(function(res) {
-      return res.json().then(function(data) {
-        if (!res.ok || !data || !data.url) {
-          throw new Error((data && data.error) || ('อัปโหลดไม่สำเร็จ (HTTP ' + res.status + ')'));
-        }
-        return data;
-      });
-    })
-    .then(function(data) {
-      item.status = 'done';
-      item.url = data.url;
-      renderPhotoList();
-    })
-    .catch(function(err) {
-      console.error(err);
-      item.status = 'error';
-      renderPhotoList();
-      showToast('อัปโหลดรูป "' + item.name + '" ไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'error');
-    });
-}
-
 function removePhoto(idx) {
   pendingPhotos.splice(idx, 1);
   renderPhotoList();
-}
-
-function renderPhotoList() {
-  var wrap = document.getElementById('frPhotoList');
-  if (!wrap) return;
-  var html = '';
-  pendingPhotos.forEach(function(p, idx) {
-    html +=
-      '<div class="rp-photo-thumb">' +
-        '<img src="' + p.localSrc + '">' +
-        (p.status !== 'done' ? '<div class="up">' + (p.status === 'uploading' ? 'กำลังอัปโหลด...' : p.status === 'error' ? 'อัปโหลดไม่สำเร็จ' : 'รออัปโหลด') + '</div>' : '') +
-        '<button class="rm" onclick="event.stopPropagation();removePhoto(' + idx + ')"><i data-lucide="x" style="width:11px;height:11px;"></i></button>' +
-      '</div>';
-  });
-  wrap.innerHTML = html;
-  lucide.createIcons();
-}
-
-/* ประกอบข้อความสถานที่จาก "อาคาร - ห้อง/บริเวณ" ที่เลือก/กรอกไว้ */
-function currentLocationText() {
-  var buildingId = document.getElementById('frBuilding').value;
-  var building = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
-  var sub = document.getElementById('frSubLocation').value.trim();
-  if (!building) return sub;
-  return sub ? (building.name + ' - ' + sub) : building.name;
 }
 
 function submitReport() {
@@ -681,81 +734,6 @@ function openDetail(id) {
   openModal('detailModal');
 }
 
-function renderDetailBody(r) {
-  var cat = getCategoryMeta(r.category);
-  var meta = getStatusMeta(r);
-
-  var photosHtml = '';
-  if (r.photos && r.photos.length) {
-    photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
-      r.photos.map(function(p) {
-        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
-      }).join('') + '</div>';
-  }
-
-  var logsHtml = '';
-  if (r.logs && r.logs.length) {
-    logsHtml = '<div style="margin-top:8px;">' + r.logs.slice().reverse().map(function(l) {
-      return (
-        '<div class="rp-log-item">' +
-          '<div class="rp-log-dot"></div>' +
-          '<div>' +
-            '<div style="font-size:12.5px;font-weight:700;color:var(--text);">' + esc2(l.note || '') + '</div>' +
-            '<div style="font-size:11px;color:var(--text3);">' + esc2(l.byName || '') + ' · ' + fmtDate(l.at) + '</div>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join('') + '</div>';
-  }
-
-  var reviewActions = '';
-  if (r.status === 'done') {
-    reviewActions =
-      '<div class="section-divider"><i data-lucide="clipboard-check" style="width:14px;height:14px;"></i> ตรวจสอบความเรียบร้อย</div>' +
-      '<p style="font-size:12.5px;color:var(--text2);margin-bottom:12px;">ช่างแจ้งว่าดำเนินการซ่อมเสร็จแล้ว กรุณาตรวจสอบและยืนยันผล</p>' +
-      (r.repairNote ? '<div class="card" style="background:var(--bg-alt);padding:12px;margin-bottom:12px;"><b style="font-size:12px;">บันทึกจากช่าง:</b><p style="font-size:12.5px;color:var(--text2);margin-top:4px;">' + esc2(r.repairNote) + '</p></div>' : '') +
-      '<textarea id="reviewNoteInput" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>' +
-      '<div style="display:flex;gap:10px;margin-top:10px;">' +
-        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'fail\')"><i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> ยังไม่เรียบร้อย</button>' +
-        '<button class="btn-approve" style="flex:1;justify-content:center;" onclick="submitReview(\'' + r.id + '\',\'pass\')"><i data-lucide="check" style="width:14px;height:14px;"></i> เรียบร้อยแล้ว ปิดงาน</button>' +
-      '</div>';
-  }
-
-  var editDeleteActions = '';
-  if (r.status === 'reported') {
-    editDeleteActions =
-      '<div class="section-divider" style="margin-top:18px;"><i data-lucide="settings-2" style="width:14px;height:14px;"></i> จัดการคำขอ</div>' +
-      '<p style="font-size:11.5px;color:var(--text3);margin-bottom:10px;">แก้ไขหรือลบคำขอนี้ได้ ตราบใดที่เจ้าหน้าที่ยังไม่พิจารณา (อนุมัติ/ไม่อนุมัติ)</p>' +
-      '<div style="display:flex;gap:10px;">' +
-        '<button class="btn-secondary" style="flex:1;justify-content:center;" onclick="openEditModal(\'' + r.id + '\')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไขคำขอ</button>' +
-        '<button class="btn-reject" style="flex:1;justify-content:center;" onclick="deleteMyRepair(\'' + r.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ลบคำขอ</button>' +
-      '</div>';
-  }
-
-  return (
-    '<div class="modal-header">' +
-      '<div class="modal-title-group">' +
-        '<div class="modal-title-icon" style="background:var(--amber-light);"><i data-lucide="' + cat.icon + '" style="color:var(--amber);"></i></div>' +
-        '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
-      '</div>' +
-      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
-    '</div>' +
-
-    '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +
-    buildWorkflowBar(meta.steps) +
-
-    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> รายละเอียด</div>' +
-    '<p style="font-size:13px;color:var(--text2);line-height:1.6;">' + esc2(r.description || '') + '</p>' +
-    photosHtml +
-
-    reviewActions +
-    editDeleteActions +
-
-    '<div class="section-divider" style="margin-top:18px;"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติดำเนินการ</div>' +
-    logsHtml
-  );
-}
-
 /* ── ลบคำขอของตัวเอง (ทำได้เฉพาะตอนสถานะยังเป็น "reported" คือยังไม่ถูกพิจารณา) ── */
 function deleteMyRepair(id) {
   var r = myRepairs.filter(function(x) { return x.id === id; })[0];
@@ -800,4 +778,34 @@ function submitReview(id, result) {
     showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
   });
 }
+
+/* ══════════════════════ INIT ══════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   buildPage() — auth guard + shell builder
+   ══════════════════════════════════════════════════════════════ */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ระบบแจ้งซ่อม',
+  navTheme:     'blue',
+  activePage:   'repair-user',
+  requireAdmin: false,
+
+  onAuth: function(user, contentEl) {
+    currentUser = user;
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+    loadStaffInfo(user);
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+
+    loadCategories();
+    loadBuildings();
+    loadData();
+    setupScrollTopButton();
+  }
+});
+
+
 

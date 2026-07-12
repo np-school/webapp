@@ -1,3 +1,4 @@
+/* ══════════════════════ STATE ══════════════════════ */
 /* ════════════════════════════════════════════
    TEACHER PORTFOLIO – portfolio-teacher.html
    Google Drive upload edition
@@ -9,31 +10,7 @@ var MAX_FILES_PER_TOPIC = 5;
 var GOOGLE_CLIENT_ID = '275537025660-49nigfmsb17jf4ha8a2rmopv7qnpk2ej.apps.googleusercontent.com';
 var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
-var _sharedDriveId = null; /* จะถูก set อัตโนมัติจาก folder metadata ครั้งแรกที่ใช้งาน */
-
-/* ดึง driveId ของ Shared Drive จาก folder ID — cache ไว้ใช้ซ้ำ */
-function getSharedDriveId() {
-  if (_sharedDriveId) return Promise.resolve(_sharedDriveId);
-  return fetch(
-    'https://www.googleapis.com/drive/v3/files/' + DRIVE_FOLDER_ID +
-    '?fields=driveId,name&supportsAllDrives=true',
-    { headers: driveHeaders() }
-  )
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.driveId) { _sharedDriveId = d.driveId; return d.driveId; }
-    /* ไม่ใช่ Shared Drive — คืน null แล้วใช้โหมด regular folder */
-    return null;
-  });
-}
-
-/* ─── HELPERS ─── */
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function sanitizeForFilename(str) {
-  return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
-}
+var _sharedDriveId = null;
 
 /* ─── 4 ฝ่ายบริหาร ─── */
 var DEPARTMENTS = [
@@ -57,9 +34,37 @@ var DOCUMENT_TYPES = [
 ];
 var _docTypesLoaded = false;
 var _docTypesUnsubscribe = null;
+var currentStaffData = null;
 
-function colorToBg(hex) { return hex + '15'; }
+/* ── ข้อมูลผู้มีสิทธิ์ตามตำแหน่งจาก admins collection ── */
+var adminRoles = {
+  headOfGroup: {},        /* กลุ่มสาระ → { name, email } */
+  assistantAcademic: null,/* { name, email } */
+  deputyAcademic: null,   /* { name, email } */
+  director: null          /* { name, email } */
+};
+var currentYear      = window._defaultYear || 2568;
+var currentSem       = window._defaultSem  || 1;
+/* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
+var submissions      = {};
+var currentDocId     = null;
+/* courseRows: array of { code, name, files: File[], activeCourseKey: string|null } */
+var courseRows       = [];
+/* which course panel's file-input is active (for file picker) */
+var activeUploadRowIdx = null;
+var driveAccessToken = null;
+var pendingDeleteInfo = null; /* { subKey, fileIndex } */
+var tokenClient      = null;
+var pendingReplaceInfo = null;
 
+var pendingUploadCallback = null;
+
+/* ─── DELETE WHOLE SUBMISSION ─── */
+var pendingDeleteSubKey = null;
+
+var _isUploading = false;
+
+/* ══════════════════════ DATA LOADING ══════════════════════ */
 function loadDocTypesFromFirestore(callback) {
   if (_docTypesUnsubscribe) { _docTypesUnsubscribe(); _docTypesUnsubscribe = null; }
 
@@ -98,23 +103,6 @@ function loadDocTypesFromFirestore(callback) {
       }
     });
 }
-
-function updateProgressTotal() {
-  /* อัปเดตตัวเลข total ใน progress bar ให้ตรงกับ DOCUMENT_TYPES จริง */
-  var el = document.getElementById('progressText');
-  if (!el) return;
-  var current = el.textContent.split('/')[0].trim();
-  el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
-}
-var currentStaffData = null;
-
-/* ── ข้อมูลผู้มีสิทธิ์ตามตำแหน่งจาก admins collection ── */
-var adminRoles = {
-  headOfGroup: {},        /* กลุ่มสาระ → { name, email } */
-  assistantAcademic: null,/* { name, email } */
-  deputyAcademic: null,   /* { name, email } */
-  director: null          /* { name, email } */
-};
 
 function loadAdminRoles() {
   db.collection('admins').get().then(function(snap) {
@@ -155,49 +143,85 @@ function loadAdminRoles() {
     console.warn('loadAdminRoles error:', e);
   });
 }
-/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
-   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
-   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
-   ปีการศึกษา (พ.ศ.) = ปี ค.ศ. + 543 โดย
-     ภาคเรียน 1 → ปี พ.ศ. ของวันที่นั้น
-     ภาคเรียน 2 ที่เปิดในเดือน พ.ย.–ธ.ค. → ปี พ.ศ. ของปีนั้น
-     ภาคเรียน 2 ที่ยังค้างมาถึง ม.ค.–พ.ค. → ปี พ.ศ. ของปีก่อน
-─────────────────────────────────────────── */
-(function() {
-  var now   = new Date();
-  var month = now.getMonth() + 1; /* 1–12 */
-  var day   = now.getDate();
-  var ceYear = now.getFullYear();
-  var sem, thYear;
-  /* ภาคเรียน 1: 16 พ.ค. – 31 ต.ค. */
-  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
-    sem = 1;
-    thYear = ceYear + 543;
-  /* ภาคเรียน 2: 1 พ.ย. – 15 พ.ค. */
-  } else if (month >= 11) {
-    sem = 2;
-    thYear = ceYear + 543;
-  } else {
-    /* ม.ค. – 15 พ.ค.: ยังอยู่ในภาค 2 ของปีการศึกษาก่อน */
-    sem = 2;
-    thYear = (ceYear - 1) + 543;
-  }
-  window._defaultYear = thYear;
-  window._defaultSem  = sem;
-})();
-var currentYear      = window._defaultYear || 2568;
-var currentSem       = window._defaultSem  || 1;
-/* submissions: key = docTypeId + '_' + courseCode → { id, files, courseCode, courseName, ... } */
-var submissions      = {};
-var currentDocId     = null;
-/* courseRows: array of { code, name, files: File[], activeCourseKey: string|null } */
-var courseRows       = [];
-/* which course panel's file-input is active (for file picker) */
-var activeUploadRowIdx = null;
-var driveAccessToken = null;
-var pendingDeleteInfo = null; /* { subKey, fileIndex } */
-var tokenClient      = null;
-var pendingReplaceInfo = null; /* { subKey, fileIndex } */
+
+/* ─── LOAD SUBMISSIONS ─── */
+function loadSubmissions() {
+  if (!currentUser) return;
+  var key = currentYear + '_' + currentSem;
+  db.collection('portfolio_submissions')
+    .where('uid', '==', currentUser.uid)
+    .where('yearSem', '==', key)
+    .get()
+    .then(function(snap) {
+      submissions = {};
+      snap.forEach(function(d) {
+        var data = d.data();
+        /* support both old (single course) and new (multi-course) docs */
+        var subKey = data.docTypeId + '_' + (data.courseCode || '');
+        submissions[subKey] = Object.assign({ id: d.id }, data);
+      });
+      renderDocList();
+    })
+    .catch(function(e){ console.error(e); renderDocList(); });
+}
+
+/* โหลด memo กลับมาเติมใน form fields */
+function loadMemoDocument(docTypeId, callback) {
+  var memoId = getMemoDocId(docTypeId);
+  db.collection('portfolio_memos').doc(memoId).get()
+    .then(function(doc) {
+      if (doc.exists) {
+        var d = doc.data();
+        if (document.getElementById('memoRef'))     document.getElementById('memoRef').value     = ''; /* ไม่โหลดค่าเก่า ให้ครูพิมพ์ใหม่ทุกครั้ง */
+        if (document.getElementById('memoDate'))    document.getElementById('memoDate').value    = d.memoDate    || thaiDateToday();
+        if (document.getElementById('memoSubject')) document.getElementById('memoSubject').value = d.memoSubject || '';
+        if (document.getElementById('memoTo'))      document.getElementById('memoTo').value      = d.memoTo      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+        if (document.getElementById('memoThrough')) document.getElementById('memoThrough').value = d.memoThrough || '';
+        if (document.getElementById('memoBody'))    document.getElementById('memoBody').value    = d.memoBody    || '';
+        /* โหลดลายเซ็น (ถ้ามี URL ที่บันทึกไว้) */
+        window._loadedMemoSignatureURL = d.signatureURL || '';
+      } else {
+        /* memo ยังไม่มี — เติม default */
+        if (document.getElementById('memoDate')) document.getElementById('memoDate').value = thaiDateToday();
+        if (document.getElementById('memoTo'))   document.getElementById('memoTo').value   = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
+        window._loadedMemoSignatureURL = '';
+      }
+      if (callback) callback();
+    })
+    .catch(function(e) {
+      console.warn('[Memo] loadMemoDocument error:', e);
+      if (callback) callback();
+    });
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+ /* จะถูก set อัตโนมัติจาก folder metadata ครั้งแรกที่ใช้งาน */
+
+/* ดึง driveId ของ Shared Drive จาก folder ID — cache ไว้ใช้ซ้ำ */
+function getSharedDriveId() {
+  if (_sharedDriveId) return Promise.resolve(_sharedDriveId);
+  return fetch(
+    'https://www.googleapis.com/drive/v3/files/' + DRIVE_FOLDER_ID +
+    '?fields=driveId,name&supportsAllDrives=true',
+    { headers: driveHeaders() }
+  )
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.driveId) { _sharedDriveId = d.driveId; return d.driveId; }
+    /* ไม่ใช่ Shared Drive — คืน null แล้วใช้โหมด regular folder */
+    return null;
+  });
+}
+
+/* ─── HELPERS ─── */
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function sanitizeForFilename(str) {
+  return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
+}
+
+function colorToBg(hex) { return hex + '15'; } /* { subKey, fileIndex } */
 
 /* ─── GOOGLE IDENTITY / DRIVE AUTH ─── */
 function initGoogleAuth() {
@@ -217,84 +241,14 @@ function initGoogleAuth() {
     }
   });
 }
-
-var pendingUploadCallback = null;
 function authorizeDrive(callback) {
   pendingUploadCallback = callback || null;
   if (!tokenClient) { showToast('Google API ยังไม่พร้อม', 'error'); return; }
   tokenClient.requestAccessToken({ prompt: '' });
 }
-
-window.onload = function() {
-  if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
-};
-
-/* ─── AUTH / PAGE SHELL ───
-   buildPage() จะ handle auth guard + navbar/sidebar shell ให้
-   (theme 'blue' = ผู้ใช้ทั่วไป/ครู) จากนั้นตรวจสอบ staff collection เพิ่มเอง */
-buildPage({
-  appId:        'myApp',
-  navSubtitle:  'ระบบส่งงานประจำภาคเรียน',
-  navTheme:     'blue',
-  activePage:   'portfolio-teacher',
-  requireAdmin: false,
-
-  onAuth: function(u, contentEl) {
-    db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
-      .then(function(snap) {
-        if (snap.empty) { showStaffDenied(u.email); return; }
-        currentUser      = u;
-        currentStaffData = snap.docs[0].data();
-
-        updateNavUser(u);
-        updateSidebarProfile(u);
-        checkAdminAccess(u.email);
-
-        /* inject page content จาก <template> */
-        var tpl = document.getElementById('portfolioContent');
-        if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
-
-        renderStaffInfoBadge();
-        initYearSemUI();
-        loadAdminRoles();
-        /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
-        loadDocTypesFromFirestore(function() {
-          loadSubmissions();
-        });
-        lucide.createIcons();
-        setupScrollTopButton();
-        /* init Google auth after user confirmed */
-        setTimeout(initGoogleAuth, 500);
-      })
-      .catch(function(e) {
-        showStaffDenied(u.email);
-      });
-  }
-});
-
-/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
-}
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function showStaffDenied(email) {
-  var loadEl = document.getElementById('loadingOverlay');
-  if (loadEl) loadEl.style.display = 'none';
-  var denied = document.getElementById('staffDenied');
-  if (denied) {
-    document.getElementById('staffDeniedEmail').textContent = email || '';
-    denied.style.display = 'flex';
-  }
-  lucide.createIcons();
 }
 
 function renderStaffInfoBadge() {
@@ -338,42 +292,6 @@ function initYearSemUI() {
   document.getElementById('displaySem').textContent  = 'ภาคเรียนที่ ' + currentSem;
   document.getElementById('semPill1').className = 'sem-pill' + (currentSem===1?' active':'');
   document.getElementById('semPill2').className = 'sem-pill' + (currentSem===2?' active':'');
-}
-
-/* ─── YEAR / SEM ─── */
-function changeYear(d) {
-  currentYear += d;
-  document.getElementById('yearLabel').textContent    = currentYear;
-  document.getElementById('displayYear').textContent  = currentYear;
-  loadSubmissions();
-}
-function selectSem(s) {
-  currentSem = s;
-  document.getElementById('semPill1').className = 'sem-pill' + (s===1?' active':'');
-  document.getElementById('semPill2').className = 'sem-pill' + (s===2?' active':'');
-  document.getElementById('displaySem').textContent   = 'ภาคเรียนที่ ' + s;
-  loadSubmissions();
-}
-
-/* ─── LOAD SUBMISSIONS ─── */
-function loadSubmissions() {
-  if (!currentUser) return;
-  var key = currentYear + '_' + currentSem;
-  db.collection('portfolio_submissions')
-    .where('uid', '==', currentUser.uid)
-    .where('yearSem', '==', key)
-    .get()
-    .then(function(snap) {
-      submissions = {};
-      snap.forEach(function(d) {
-        var data = d.data();
-        /* support both old (single course) and new (multi-course) docs */
-        var subKey = data.docTypeId + '_' + (data.courseCode || '');
-        submissions[subKey] = Object.assign({ id: d.id }, data);
-      });
-      renderDocList();
-    })
-    .catch(function(e){ console.error(e); renderDocList(); });
 }
 
 /* ─── RENDER ─── */
@@ -517,98 +435,6 @@ function renderDocList() {
   lucide.createIcons();
 }
 
-/* ─── UPLOAD MODAL (add new course) ─── */
-function openUploadModal(docTypeId) {
-  currentDocId  = docTypeId;
-  courseRows    = []; /* reset: เริ่มต้นด้วยแถวว่างหนึ่งแถว */
-  activeUploadRowIdx = null;
-
-  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
-
-  document.getElementById('modalTitle').textContent    = 'ส่งงาน: ' + dt.label;
-  document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('submitNote').value = '';
-  document.getElementById('courseFilePanels').innerHTML = '';
-  document.getElementById('courseRowsContainer').innerHTML = '';
-
-  /* โหลด memo fields จาก portfolio_memos (shared document) */
-  loadMemoDocument(docTypeId, function() {
-    /* ถ้ายังไม่มี memoDate ให้ใส่วันนี้ */
-    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
-    /* ถ้ายังไม่มี memoThrough ให้ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติ */
-    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
-      var headInfo = adminRoles.headOfGroup[currentStaffData.group];
-      if (headInfo && headInfo.name) document.getElementById('memoThrough').value = headInfo.name;
-    }
-  });
-  switchMemoTab('edit');
-
-  /* auto-fill กลุ่มสาระ */
-  if (window._defaultSubjectGroup) {
-    document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
-  } else {
-    document.getElementById('subjectGroup').value = '';
-  }
-
-  /* เพิ่มแถวรายวิชาแรก */
-  addCourseRow();
-
-  document.getElementById('uploadModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  lucide.createIcons();
-  if (typeof initSignaturePadNow === 'function') initSignaturePadNow();
-}
-
-/* ─── MANAGE MODAL (จัดการไฟล์ของวิชาที่ส่งแล้ว) ─── */
-function openManageCourseModal(docTypeId, subKey) {
-  currentDocId = docTypeId;
-  var sub = submissions[subKey];
-  if (!sub) return;
-  var dt    = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
-  var files = sub.files || [];
-
-  document.getElementById('modalTitle').textContent    = 'จัดการงาน: ' + dt.label;
-  document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('submitNote').value = sub.note || '';
-  document.getElementById('subjectGroup').value = sub.subjectGroup || '';
-  document.getElementById('courseRowsContainer').innerHTML = '';
-  document.getElementById('uploadProgress').style.display = 'none';
-
-  /* restore memo fields */
-  /* โหลด memo fields จาก portfolio_memos (shared document) */
-  loadMemoDocument(docTypeId, function() {
-    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
-    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
-      var headInfoR = adminRoles.headOfGroup[currentStaffData.group];
-      if (headInfoR && headInfoR.name) document.getElementById('memoThrough').value = headInfoR.name;
-    }
-  });
-  switchMemoTab('edit');
-
-  /* แสดง panel ของวิชานี้ */
-  courseRows = [{ code: sub.courseCode, name: sub.courseName, files: [], managingSubKey: subKey }];
-  renderCourseFilePanels();
-
-  document.getElementById('uploadModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  lucide.createIcons();
-  if (typeof initSignaturePadNow === 'function') initSignaturePadNow();
-}
-
-/* ─── COURSE ROW MANAGEMENT ─── */
-function addCourseRow() {
-  courseRows.push({ code: '', name: '', files: [], managingSubKey: null });
-  renderCourseRows();
-}
-
-function removeCourseRow(idx) {
-  courseRows.splice(idx, 1);
-  if (courseRows.length === 0) addCourseRow();
-  else renderCourseRows();
-}
-
 function renderCourseRows() {
   var container = document.getElementById('courseRowsContainer');
   var html = '';
@@ -704,22 +530,6 @@ function onFileSelected(input) {
   input.value = '';
 }
 
-function addFilesToRow(rowIdx, newFiles) {
-  var row = courseRows[rowIdx];
-  if (!row) return;
-  var managingFiles = row.managingSubKey ? (submissions[row.managingSubKey] ? submissions[row.managingSubKey].files.length : 0) : 0;
-  var total = managingFiles + row.files.length;
-  newFiles.forEach(function(f) {
-    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
-      showToast(f.name + ' – รองรับเฉพาะ PDF', 'error'); return;
-    }
-    if (f.size > 20*1024*1024) { showToast(f.name + ' – เกิน 20MB', 'error'); return; }
-    if (total >= MAX_FILES_PER_TOPIC) { showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว', 'error'); return; }
-    row.files.push(f); total++;
-  });
-  renderCourseQueuedFiles(rowIdx);
-}
-
 function renderCourseQueuedFiles(rowIdx) {
   var container = document.getElementById('queued_' + rowIdx);
   if (!container) return;
@@ -739,29 +549,11 @@ function renderCourseQueuedFiles(rowIdx) {
   lucide.createIcons();
 }
 
-function removeCourseFile(rowIdx, fileIdx) {
-  courseRows[rowIdx].files.splice(fileIdx, 1);
-  renderCourseQueuedFiles(rowIdx);
-}
-
 /* ─── MANAGE REPLACE ─── */
 function triggerManageReplace(subKey, fileIndex) {
   pendingReplaceInfo = { subKey: subKey, fileIndex: fileIndex };
   document.getElementById('replaceFileInput').value = '';
   document.getElementById('replaceFileInput').click();
-}
-
-function toggleManageReplaceZone(subKey, fileIndex, rowIdx) {
-  var sub = submissions[subKey];
-  if (!sub) return;
-  var files = sub.files || [];
-  files.forEach(function(_, fi) {
-    var z = document.getElementById('mReplaceZone_' + rowIdx + '_' + fi);
-    if (fi !== fileIndex && z) z.style.display = 'none';
-  });
-  var zone = document.getElementById('mReplaceZone_' + rowIdx + '_' + fileIndex);
-  if (zone) zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
-  lucide.createIcons();
 }
 
 function onReplaceFileSelected(input) {
@@ -856,416 +648,6 @@ function overwriteFileToDrive(fileId, file) {
     xhr.onerror = function() { reject(new Error('Network error')); };
     xhr.send(file); /* ส่ง raw file (ไม่ต้อง FormData สำหรับ media upload) */
   });
-}
-
-/* ─── DELETE FILE ─── */
-function promptDeleteFile(subKey, fileIndex) {
-  var sub = submissions[subKey];
-  var fileName = sub && sub.files && sub.files[fileIndex] ? sub.files[fileIndex].fileName : '';
-  pendingDeleteInfo = { subKey: subKey, fileIndex: fileIndex };
-  document.getElementById('deleteFileName').textContent = fileName;
-  /* reset ปุ่มทุกครั้งที่เปิด modal ใหม่ */
-  var btn = document.getElementById('confirmDeleteBtn');
-  btn.disabled = false;
-  btn.textContent = 'ลบไฟล์';
-  document.getElementById('confirmDeleteModal').classList.add('open');
-  lucide.createIcons();
-}
-function closeDeleteModal() {
-  document.getElementById('confirmDeleteModal').classList.remove('open');
-  pendingDeleteInfo = null;
-  /* reset ปุ่มเสมอเมื่อปิด */
-  var btn = document.getElementById('confirmDeleteBtn');
-  if (btn) { btn.disabled = false; btn.textContent = 'ลบไฟล์'; }
-}
-function confirmDelete() {
-  if (!pendingDeleteInfo) return;
-  var subKey    = pendingDeleteInfo.subKey;
-  var fileIndex = pendingDeleteInfo.fileIndex;
-  var sub = submissions[subKey];
-  if (!sub || !sub.files) { closeDeleteModal(); return; }
-
-  var btn = document.getElementById('confirmDeleteBtn');
-  var fileToDelete = sub.files[fileIndex];
-  var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
-  var isDeletingAll = newFiles.length === 0;
-
-  /* ── ลบลายเซ็นจาก Storage (เฉพาะกรณีลบทั้ง submission) ── */
-  function deleteSignatureFromStorage() {
-    if (!isDeletingAll) return Promise.resolve();
-    var sigURL = sub.signatureURL || '';
-    if (!sigURL) return Promise.resolve();
-    try {
-      var ref = firebase.storage().refFromURL(sigURL);
-      return ref.delete().catch(function(e) {
-        /* ถ้าลบไม่ได้ (ไฟล์ถูกลบแล้ว / permission) ไม่ต้อง block การลบ doc */
-        console.warn('[Signature] ลบจาก Storage ไม่สำเร็จ:', e.code);
-      });
-    } catch(e) {
-      console.warn('[Signature] refFromURL error:', e);
-      return Promise.resolve();
-    }
-  }
-
-  function updateFirestore() {
-    if (isDeletingAll) return db.collection('portfolio_submissions').doc(sub.id).delete();
-    return db.collection('portfolio_submissions').doc(sub.id).update({
-      files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-
-  function proceedDelete() {
-    btn.disabled = true; btn.textContent = 'กำลังลบ...';
-
-    var driveDeletePromise = Promise.resolve();
-    if (fileToDelete && fileToDelete.fileId) {
-      /* ลบจาก Drive จริง ๆ (มี token แล้วแน่นอน) */
-      driveDeletePromise = fetch(
-        'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId + '?supportsAllDrives=true',
-        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
-      ).then(function(res) {
-        if (!res.ok && res.status !== 404) throw new Error('Drive delete failed: ' + res.status);
-      });
-    }
-
-    driveDeletePromise
-      .then(deleteSignatureFromStorage)
-      .then(updateFirestore)
-      .then(function() {
-        showToast('ลบไฟล์สำเร็จ', 'success');
-        closeDeleteModal();
-        if (isDeletingAll) {
-          delete submissions[subKey];
-          closeUploadModal();
-        } else {
-          submissions[subKey] = Object.assign({}, sub, { files: newFiles });
-          var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
-          if (rowIdx >= 0) renderCourseFilePanels();
-        }
-        renderDocList();
-      }).catch(function(e) {
-        showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-        btn.disabled = false; btn.textContent = 'ลบไฟล์';
-      });
-  }
-
-  /* ต้อง auth Drive ก่อนเสมอเพื่อให้ลบได้จริง */
-  if (fileToDelete && fileToDelete.fileId && !driveAccessToken) {
-    btn.disabled = true; btn.textContent = 'รอการอนุญาต Drive...';
-    authorizeDrive(function() {
-      btn.disabled = false; btn.textContent = 'ลบไฟล์';
-      proceedDelete();
-    });
-  } else {
-    proceedDelete();
-  }
-}
-
-/* ─── DELETE WHOLE SUBMISSION ─── */
-var pendingDeleteSubKey = null;
-
-function promptDeleteSubmission(subKey) {
-  var sub = submissions[subKey];
-  if (!sub) return;
-  pendingDeleteSubKey = subKey;
-  var label = (sub.courseCode ? sub.courseCode + ' ' : '') + (sub.courseName || '');
-  document.getElementById('deleteSubCourseName').textContent = label;
-  var btn = document.getElementById('confirmDeleteSubBtn');
-  btn.disabled = false;
-  btn.textContent = 'ลบงาน';
-  document.getElementById('confirmDeleteSubModal').classList.add('open');
-  lucide.createIcons();
-}
-
-function closeDeleteSubModal() {
-  document.getElementById('confirmDeleteSubModal').classList.remove('open');
-  pendingDeleteSubKey = null;
-  var btn = document.getElementById('confirmDeleteSubBtn');
-  if (btn) { btn.disabled = false; btn.textContent = 'ลบงาน'; }
-}
-
-function confirmDeleteSubmission() {
-  if (!pendingDeleteSubKey) return;
-  var subKey = pendingDeleteSubKey;
-  var sub = submissions[subKey];
-  if (!sub) { closeDeleteSubModal(); return; }
-
-  var btn = document.getElementById('confirmDeleteSubBtn');
-  btn.disabled = true;
-  btn.textContent = 'กำลังลบ...';
-
-  var files = sub.files || [];
-
-  /* ลบลายเซ็นจาก Storage */
-  function deleteSignature() {
-    var sigURL = sub.signatureURL || '';
-    if (!sigURL) return Promise.resolve();
-    try {
-      var ref = firebase.storage().refFromURL(sigURL);
-      return ref.delete().catch(function(e) {
-        console.warn('[Signature] ลบไม่สำเร็จ:', e.code);
-      });
-    } catch(e) {
-      console.warn('[Signature] refFromURL error:', e);
-      return Promise.resolve();
-    }
-  }
-
-  /* ลบไฟล์ทุกไฟล์จาก Drive */
-  function deleteAllDriveFiles() {
-    if (!driveAccessToken) return Promise.resolve();
-    var promises = files.filter(function(f){ return f && f.fileId; }).map(function(f) {
-      return fetch(
-        'https://www.googleapis.com/drive/v3/files/' + f.fileId + '?supportsAllDrives=true',
-        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
-      ).then(function(res) {
-        if (!res.ok && res.status !== 404) console.warn('Drive delete warning:', res.status, f.fileId);
-      }).catch(function(e) { console.warn('Drive delete error:', e); });
-    });
-    return Promise.all(promises);
-  }
-
-  /* ลบ Firestore doc */
-  function deleteFirestoreDoc() {
-    return db.collection('portfolio_submissions').doc(sub.id).delete();
-  }
-
-  function proceedDeleteSub() {
-    deleteAllDriveFiles()
-      .then(deleteSignature)
-      .then(deleteFirestoreDoc)
-      .then(function() {
-        showToast('ลบงานเรียบร้อย ✓', 'success');
-        delete submissions[subKey];
-        closeDeleteSubModal();
-        renderDocList();
-      })
-      .catch(function(e) {
-        showToast('เกิดข้อผิดพลาด: ' + (e.message || e), 'error');
-        btn.disabled = false;
-        btn.textContent = 'ลบงาน';
-      });
-  }
-
-  /* ถ้ามีไฟล์ใน Drive ต้อง auth ก่อน */
-  var hasDriveFiles = files.some(function(f){ return f && f.fileId; });
-  if (hasDriveFiles && !driveAccessToken) {
-    btn.textContent = 'รอการอนุญาต Drive...';
-    authorizeDrive(function() {
-      btn.disabled = true;
-      btn.textContent = 'กำลังลบ...';
-      proceedDeleteSub();
-    });
-  } else {
-    proceedDeleteSub();
-  }
-}
-
-/* ─── CLOSE MODAL ─── */
-function closeUploadModal() {
-  document.getElementById('uploadModal').classList.remove('open');
-  document.body.style.overflow = '';
-  courseRows = [];
-}
-
-/* ─── SUBMIT ─── */
-/* ─── SIGNATURE PAD ─── */
-(function() {
-  var canvas, ctx, drawing = false, hasSig = false;
-  var lastX, lastY;
-
-  function initSignaturePad() {
-    canvas = document.getElementById('signatureCanvas');
-    if (!canvas) return;
-    ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-
-    /* scale canvas to devicePixelRatio for crisp rendering */
-    var rect = canvas.getBoundingClientRect();
-    canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
-    canvas.height = Math.floor(rect.height * (window.devicePixelRatio || 1));
-    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-    canvas.style.width  = rect.width  + 'px';
-    canvas.style.height = rect.height + 'px';
-
-    function getPos(e) {
-      var r = canvas.getBoundingClientRect();
-      var src = e.touches ? e.touches[0] : e;
-      return { x: src.clientX - r.left, y: src.clientY - r.top };
-    }
-    function start(e) {
-      e.preventDefault();
-      drawing = true;
-      var p = getPos(e);
-      ctx.beginPath(); ctx.moveTo(p.x, p.y);
-      lastX = p.x; lastY = p.y;
-    }
-    function move(e) {
-      if (!drawing) return;
-      e.preventDefault();
-      var p = getPos(e);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-      lastX = p.x; lastY = p.y;
-      hasSig = true;
-    }
-    function end(e) { drawing = false; }
-
-    canvas.addEventListener('mousedown',  start);
-    canvas.addEventListener('mousemove',  move);
-    canvas.addEventListener('mouseup',    end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove',  move,  { passive: false });
-    canvas.addEventListener('touchend',   end);
-  }
-
-  window.clearSignature = function() {
-    if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
-    hasSig = false;
-  };
-
-  window.isSignatureEmpty = function() { return !hasSig; };
-
-  window.getSignatureDataURL = function() {
-    if (!canvas) return '';
-    return canvas.toDataURL('image/png');
-  };
-
-  /* init ทุกครั้งที่ modal เปิด (เพราะ canvas อาจเพิ่งถูก render) */
-  window.initSignaturePadNow = function() {
-    hasSig = false;
-    setTimeout(initSignaturePad, 80);
-  };
-})();
-
-var _isUploading = false;
-function submitDoc() {
-  if (!currentUser || !currentDocId) return;
-  if (_isUploading) { showToast('กำลังอัปโหลด กรุณารอสักครู่...', 'info'); return; }
-  var subjectGroup = document.getElementById('subjectGroup').value.trim();
-  var note         = document.getElementById('submitNote').value.trim();
-  var btn          = document.getElementById('submitBtn');
-
-  if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
-
-  /* ── บังคับกรอกเลขที่บันทึกข้อความ ── */
-  var memoRefVal = document.getElementById('memoRef') ? document.getElementById('memoRef').value.trim() : '';
-  if (!memoRefVal) {
-    showToast('กรุณากรอกเลขที่บันทึกข้อความ (ช่อง "ที่")', 'error');
-    document.getElementById('memoRef').focus();
-    /* สลับไปแท็บ กรอกข้อมูล ถ้าอยู่แท็บ preview */
-    switchMemoTab('edit');
-    return;
-  }
-
-  /* ── บังคับเซ็นลายเซ็น ── */
-  if (typeof isSignatureEmpty === 'function' && isSignatureEmpty()) {
-    showToast('กรุณาเซ็นลายมือชื่อในช่องลายเซ็นก่อนส่ง', 'error');
-    switchMemoTab('edit');
-    return;
-  }
-
-  /* ตรวจสอบว่าอยู่ใน manage mode (มี managingSubKey) หรือ add mode */
-  var isManageMode = courseRows.length === 1 && courseRows[0].managingSubKey;
-
-  if (isManageMode) {
-    /* manage mode: บันทึก meta เท่านั้น (ไฟล์จัดการแยกผ่าน panel) */
-    var subKey = courseRows[0].managingSubKey;
-    var sub    = submissions[subKey];
-    var newFiles = courseRows[0].files; /* ไฟล์ใหม่ที่จะเพิ่ม */
-
-    if (newFiles.length > 0) {
-      /* มีไฟล์ใหม่ → อัปโหลดแล้ว save */
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
-      lucide.createIcons();
-      if (!driveAccessToken) {
-        document.getElementById('driveAuthNotice').style.display = 'block';
-        authorizeDrive(function(){ uploadManageFiles(subKey, newFiles, subjectGroup, note, btn); });
-        btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
-        lucide.createIcons();
-        return;
-      }
-      uploadManageFiles(subKey, newFiles, subjectGroup, note, btn);
-    } else {
-      /* ไม่มีไฟล์ใหม่ → บันทึก meta เท่านั้น */
-      uploadSignatureToStorage(currentUser.uid, sub.courseCode || '', currentDocId)
-        .then(function(sigURL) {
-          var updateData = {
-            subjectGroup: subjectGroup,
-            note: note,
-            memoDate:    document.getElementById('memoDate').value.trim(),
-            memoSubject: document.getElementById('memoSubject').value.trim(),
-            memoTo:      document.getElementById('memoTo').value.trim(),
-            memoThrough: document.getElementById('memoThrough').value.trim(),
-            memoBody:    document.getElementById('memoBody').value.trim(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          };
-          if (sigURL) updateData.signatureURL = sigURL;
-          return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
-        })
-        .then(function() {
-          showToast('บันทึกสำเร็จ ✓', 'success');
-          closeUploadModal(); loadSubmissions();
-        }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
-    }
-    return;
-  }
-
-  /* ADD MODE: ตรวจสอบแต่ละแถว */
-  var validRows = [];
-  var ok = true;
-  courseRows.forEach(function(row, i) {
-    var code = row.code || document.querySelector('#courseRowsContainer div:nth-child(' + (i+1) + ') input:nth-child(1)')
-                         ? (document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัส"]')[i] || {}).value || row.code
-                         : row.code;
-    /* read from DOM inputs directly */
-    var inputs = document.querySelectorAll('#courseRowsContainer div > div > input');
-    /* inputs arranged as [code0, name0, code1, name1, ...] */
-  });
-
-  /* อ่านค่าจาก DOM โดยตรง */
-  var codeInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัสวิชา"]');
-  var nameInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="ชื่อวิชา"]');
-
-  var hasError = false;
-  var rowsToSubmit = [];
-  courseRows.forEach(function(row, i) {
-    var code = codeInputs[i] ? codeInputs[i].value.trim() : row.code;
-    var name = nameInputs[i] ? nameInputs[i].value.trim() : row.name;
-    row.code = code; row.name = name;
-    if (!code) { showToast('กรุณากรอกรหัสวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
-    if (!name) { showToast('กรุณากรอกชื่อวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
-    if (row.files.length === 0) { showToast('กรุณาเพิ่มไฟล์สำหรับวิชา ' + code, 'error'); hasError = true; return; }
-    /* ตรวจว่า courseCode ซ้ำกับที่ส่งแล้วหรือไม่ */
-    var existSubKey = currentDocId + '_' + code;
-    if (submissions[existSubKey]) {
-      showToast('รหัสวิชา ' + code + ' ส่งแล้ว ใช้ปุ่ม "จัดการไฟล์" แทน', 'error'); hasError = true; return;
-    }
-    rowsToSubmit.push({ code: code, name: name, files: row.files });
-  });
-  if (hasError) return;
-
-  btn.disabled = true;
-  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
-  lucide.createIcons();
-
-  if (!driveAccessToken) {
-    document.getElementById('driveAuthNotice').style.display = 'block';
-    authorizeDrive(function(){ _isUploading = true; uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
-    btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
-    lucide.createIcons();
-    return;
-  }
-  _isUploading = true;
-  uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn);
 }
 
 /* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
@@ -1572,36 +954,6 @@ function uploadSignatureToStorage(uid, courseCode, docTypeId) {
   });
 }
 
-function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseName, signatureURL) {
-  var key    = currentYear + '_' + currentSem;
-  var now    = firebase.firestore.FieldValue.serverTimestamp();
-  var subKey = currentDocId + '_' + courseCode;
-  var existing = submissions[subKey];
-  var data = {
-    uid:           currentUser.uid,
-    email:         currentUser.email,
-    displayName:   currentUser.displayName || '',
-    staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
-    staffPosition: (currentStaffData && currentStaffData.position) || '',
-    staffGroup:    (currentStaffData && currentStaffData.group)    || '',
-    yearSem:       key,
-    year:          currentYear,
-    semester:      currentSem,
-    docTypeId:     currentDocId,
-    files:         allFiles,
-    fileUrl:       allFiles.length > 0 ? allFiles[0].fileUrl : '',
-    note:          note,
-    subjectGroup:  subjectGroup,
-    courseCode:    courseCode,
-    courseName:    courseName,
-    status:        'submitted',
-    updatedAt:     now,
-    submittedAt:   now,
-    resubmittedAt: null,
-  };
-  return db.collection('portfolio_submissions').add(data);
-}
-
 function uploadFileToDrive(file, fileName, folderId, onProgress) {
   return new Promise(function(resolve, reject) {
     var metadata = { name: fileName, parents: [folderId] };
@@ -1631,12 +983,6 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
   });
 }
 
-function resetBtn(btn) {
-  btn.disabled  = false;
-  btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
-  lucide.createIcons();
-}
-
 /* ════════════════════════════════════════════
    SHARED MEMO DOCUMENT — portfolio_memos
    key: {uid}_{docTypeId}_{year}_{sem}
@@ -1646,61 +992,6 @@ function resetBtn(btn) {
 function getMemoDocId(docTypeId) {
   var dt = docTypeId || currentDocId || '';
   return currentUser.uid + '_' + dt + '_' + currentYear + '_' + currentSem;
-}
-
-/* บันทึก memo แยกออกจาก submission → portfolio_memos */
-function saveMemoDocument(signatureURL, docTypeId) {
-  var memoId = getMemoDocId(docTypeId);
-  var data = {
-    uid:          currentUser.uid,
-    email:        currentUser.email,
-    staffName:    (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
-    staffPosition:(currentStaffData && currentStaffData.position) || '',
-    staffGroup:   (currentStaffData && currentStaffData.group)    || '',
-    docTypeId:    docTypeId || currentDocId,
-    year:         currentYear,
-    semester:     currentSem,
-    yearSem:      currentYear + '_' + currentSem,
-    memoRef:      (document.getElementById('memoRef')     && document.getElementById('memoRef').value.trim())     || '',
-    memoDate:     (document.getElementById('memoDate')    && document.getElementById('memoDate').value.trim())    || '',
-    memoSubject:  (document.getElementById('memoSubject') && document.getElementById('memoSubject').value.trim()) || '',
-    memoTo:       (document.getElementById('memoTo')      && document.getElementById('memoTo').value.trim())      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
-    memoThrough:  (document.getElementById('memoThrough') && document.getElementById('memoThrough').value.trim()) || '',
-    memoBody:     (document.getElementById('memoBody')    && document.getElementById('memoBody').value.trim())    || '',
-    signatureURL: signatureURL || '',
-    updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
-  };
-  /* set + merge: อัปเดตทับ doc เดิมได้ */
-  return db.collection('portfolio_memos').doc(memoId).set(data, { merge: true });
-}
-
-/* โหลด memo กลับมาเติมใน form fields */
-function loadMemoDocument(docTypeId, callback) {
-  var memoId = getMemoDocId(docTypeId);
-  db.collection('portfolio_memos').doc(memoId).get()
-    .then(function(doc) {
-      if (doc.exists) {
-        var d = doc.data();
-        if (document.getElementById('memoRef'))     document.getElementById('memoRef').value     = ''; /* ไม่โหลดค่าเก่า ให้ครูพิมพ์ใหม่ทุกครั้ง */
-        if (document.getElementById('memoDate'))    document.getElementById('memoDate').value    = d.memoDate    || thaiDateToday();
-        if (document.getElementById('memoSubject')) document.getElementById('memoSubject').value = d.memoSubject || '';
-        if (document.getElementById('memoTo'))      document.getElementById('memoTo').value      = d.memoTo      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-        if (document.getElementById('memoThrough')) document.getElementById('memoThrough').value = d.memoThrough || '';
-        if (document.getElementById('memoBody'))    document.getElementById('memoBody').value    = d.memoBody    || '';
-        /* โหลดลายเซ็น (ถ้ามี URL ที่บันทึกไว้) */
-        window._loadedMemoSignatureURL = d.signatureURL || '';
-      } else {
-        /* memo ยังไม่มี — เติม default */
-        if (document.getElementById('memoDate')) document.getElementById('memoDate').value = thaiDateToday();
-        if (document.getElementById('memoTo'))   document.getElementById('memoTo').value   = 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม';
-        window._loadedMemoSignatureURL = '';
-      }
-      if (callback) callback();
-    })
-    .catch(function(e) {
-      console.warn('[Memo] loadMemoDocument error:', e);
-      if (callback) callback();
-    });
 }
 
 /* ─── THAI DATE ─── */
@@ -1739,39 +1030,6 @@ function thaiDateToday() {
   var months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
                 'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   return toThaiNumerals(d.getDate()) + ' ' + months[d.getMonth()] + ' ' + toThaiNumerals(d.getFullYear() + 543);
-}
-
-/* ─── MEMO MODAL ─── */
-function openMemoModal(subKey) {
-  var sub = submissions[subKey];
-  if (!sub) { showToast('ไม่พบข้อมูลการส่งงาน','error'); return; }
-
-  /* ดึง fresh data จาก Firestore สำหรับ note/ลายเซ็นผู้ตรวจ */
-  var freshSub = sub;
-  var fetchSub = sub.id
-    ? db.collection('portfolio_submissions').doc(sub.id).get().then(function(doc) {
-        if (doc.exists) {
-          var fresh = doc.data();
-          ['headNote','assistantNote','deputyNote','directorNote',
-           'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
-           'headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL'
-          ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
-          submissions[subKey] = sub;
-          freshSub = sub;
-        }
-      }).catch(function(){})
-    : Promise.resolve();
-
-  /* ดึง memo doc แบบ shared จาก portfolio_memos — ใช้ currentYear/currentSem ให้ตรงกับ getMemoDocId() */
-  var memoId = currentUser.uid + '_' + sub.docTypeId + '_' + currentYear + '_' + currentSem;
-  var fetchMemo = db.collection('portfolio_memos').doc(memoId).get()
-    .then(function(mDoc) { return mDoc.exists ? mDoc.data() : null; })
-    .catch(function(){ return null; });
-
-  Promise.all([fetchSub, fetchMemo]).then(function(results) {
-    var memoData = results[1];
-    _renderMemoModal(subKey, memoData);
-  });
 }
 
 function _renderMemoModal(subKey, memoData) {
@@ -1905,49 +1163,11 @@ function _renderMemoModal(subKey, memoData) {
   lucide.createIcons();
 }
 
-function closeMemoModal() {
-  document.getElementById('memoModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
 /* ─── HELPERS ─── */
 function formatDate(ts) {
   if (!ts) return '-';
   var d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-/* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
-function switchMemoTab(tab) {
-  var editPane    = document.getElementById('memoEditPane');
-  var previewPane = document.getElementById('memoPreviewPane');
-  var tabEdit     = document.getElementById('memoTabEdit');
-  var tabPreview  = document.getElementById('memoTabPreview');
-  if (!editPane || !previewPane) return;
-
-  if (tab === 'preview') {
-    renderInlineMemoPreview();
-    editPane.style.display    = 'none';
-    previewPane.style.display = 'block';
-    tabEdit.style.background    = 'white';
-    tabEdit.style.color         = 'var(--accent)';
-    tabEdit.style.borderColor   = 'var(--accent-light)';
-    tabPreview.style.background = 'var(--accent)';
-    tabPreview.style.color      = 'white';
-    tabPreview.style.borderColor= 'var(--accent)';
-  } else {
-    editPane.style.display    = 'flex';
-    previewPane.style.display = 'none';
-    tabEdit.style.background    = 'var(--accent)';
-    tabEdit.style.color         = 'white';
-    tabEdit.style.borderColor   = 'var(--accent)';
-    tabPreview.style.background = 'white';
-    tabPreview.style.color      = 'var(--accent)';
-    tabPreview.style.borderColor= 'var(--accent-light)';
-  }
 }
 
 function renderInlineMemoPreview() {
@@ -2004,3 +1224,793 @@ function renderInlineMemoPreview() {
   setText('prevSignPos',  staffPos  ? 'ตำแหน่ง ' + staffPos : 'ครู');
   setText('prevSignGroup', staffGrp ? 'กลุ่มสาระการเรียนรู้' + staffGrp : '');
 }
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+function updateProgressTotal() {
+  /* อัปเดตตัวเลข total ใน progress bar ให้ตรงกับ DOCUMENT_TYPES จริง */
+  var el = document.getElementById('progressText');
+  if (!el) return;
+  var current = el.textContent.split('/')[0].trim();
+  el.textContent = current + ' / ' + DOCUMENT_TYPES.length + ' รายการ';
+}
+
+/* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function showStaffDenied(email) {
+  var loadEl = document.getElementById('loadingOverlay');
+  if (loadEl) loadEl.style.display = 'none';
+  var denied = document.getElementById('staffDenied');
+  if (denied) {
+    document.getElementById('staffDeniedEmail').textContent = email || '';
+    denied.style.display = 'flex';
+  }
+  lucide.createIcons();
+}
+
+/* ─── YEAR / SEM ─── */
+function changeYear(d) {
+  currentYear += d;
+  document.getElementById('yearLabel').textContent    = currentYear;
+  document.getElementById('displayYear').textContent  = currentYear;
+  loadSubmissions();
+}
+function selectSem(s) {
+  currentSem = s;
+  document.getElementById('semPill1').className = 'sem-pill' + (s===1?' active':'');
+  document.getElementById('semPill2').className = 'sem-pill' + (s===2?' active':'');
+  document.getElementById('displaySem').textContent   = 'ภาคเรียนที่ ' + s;
+  loadSubmissions();
+}
+
+/* ─── UPLOAD MODAL (add new course) ─── */
+function openUploadModal(docTypeId) {
+  currentDocId  = docTypeId;
+  courseRows    = []; /* reset: เริ่มต้นด้วยแถวว่างหนึ่งแถว */
+  activeUploadRowIdx = null;
+
+  var dt = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+
+  document.getElementById('modalTitle').textContent    = 'ส่งงาน: ' + dt.label;
+  document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('submitNote').value = '';
+  document.getElementById('courseFilePanels').innerHTML = '';
+  document.getElementById('courseRowsContainer').innerHTML = '';
+
+  /* โหลด memo fields จาก portfolio_memos (shared document) */
+  loadMemoDocument(docTypeId, function() {
+    /* ถ้ายังไม่มี memoDate ให้ใส่วันนี้ */
+    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
+    /* ถ้ายังไม่มี memoThrough ให้ใส่ชื่อหัวหน้ากลุ่มสาระอัตโนมัติ */
+    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
+      var headInfo = adminRoles.headOfGroup[currentStaffData.group];
+      if (headInfo && headInfo.name) document.getElementById('memoThrough').value = headInfo.name;
+    }
+  });
+  switchMemoTab('edit');
+
+  /* auto-fill กลุ่มสาระ */
+  if (window._defaultSubjectGroup) {
+    document.getElementById('subjectGroup').value = window._defaultSubjectGroup;
+  } else {
+    document.getElementById('subjectGroup').value = '';
+  }
+
+  /* เพิ่มแถวรายวิชาแรก */
+  addCourseRow();
+
+  document.getElementById('uploadModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+  if (typeof initSignaturePadNow === 'function') initSignaturePadNow();
+}
+
+/* ─── MANAGE MODAL (จัดการไฟล์ของวิชาที่ส่งแล้ว) ─── */
+function openManageCourseModal(docTypeId, subKey) {
+  currentDocId = docTypeId;
+  var sub = submissions[subKey];
+  if (!sub) return;
+  var dt    = DOCUMENT_TYPES.find(function(d){ return d.id === docTypeId; });
+  var files = sub.files || [];
+
+  document.getElementById('modalTitle').textContent    = 'จัดการงาน: ' + dt.label;
+  document.getElementById('modalSemLabel').textContent = 'ปีการศึกษา ' + currentYear + ' ภาคเรียนที่ ' + currentSem;
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('submitNote').value = sub.note || '';
+  document.getElementById('subjectGroup').value = sub.subjectGroup || '';
+  document.getElementById('courseRowsContainer').innerHTML = '';
+  document.getElementById('uploadProgress').style.display = 'none';
+
+  /* restore memo fields */
+  /* โหลด memo fields จาก portfolio_memos (shared document) */
+  loadMemoDocument(docTypeId, function() {
+    if (!document.getElementById('memoDate').value) document.getElementById('memoDate').value = thaiDateToday();
+    if (!document.getElementById('memoThrough').value && currentStaffData && currentStaffData.group) {
+      var headInfoR = adminRoles.headOfGroup[currentStaffData.group];
+      if (headInfoR && headInfoR.name) document.getElementById('memoThrough').value = headInfoR.name;
+    }
+  });
+  switchMemoTab('edit');
+
+  /* แสดง panel ของวิชานี้ */
+  courseRows = [{ code: sub.courseCode, name: sub.courseName, files: [], managingSubKey: subKey }];
+  renderCourseFilePanels();
+
+  document.getElementById('uploadModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+  if (typeof initSignaturePadNow === 'function') initSignaturePadNow();
+}
+
+/* ─── COURSE ROW MANAGEMENT ─── */
+function addCourseRow() {
+  courseRows.push({ code: '', name: '', files: [], managingSubKey: null });
+  renderCourseRows();
+}
+
+function removeCourseRow(idx) {
+  courseRows.splice(idx, 1);
+  if (courseRows.length === 0) addCourseRow();
+  else renderCourseRows();
+}
+
+function addFilesToRow(rowIdx, newFiles) {
+  var row = courseRows[rowIdx];
+  if (!row) return;
+  var managingFiles = row.managingSubKey ? (submissions[row.managingSubKey] ? submissions[row.managingSubKey].files.length : 0) : 0;
+  var total = managingFiles + row.files.length;
+  newFiles.forEach(function(f) {
+    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+      showToast(f.name + ' – รองรับเฉพาะ PDF', 'error'); return;
+    }
+    if (f.size > 20*1024*1024) { showToast(f.name + ' – เกิน 20MB', 'error'); return; }
+    if (total >= MAX_FILES_PER_TOPIC) { showToast('ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว', 'error'); return; }
+    row.files.push(f); total++;
+  });
+  renderCourseQueuedFiles(rowIdx);
+}
+
+function removeCourseFile(rowIdx, fileIdx) {
+  courseRows[rowIdx].files.splice(fileIdx, 1);
+  renderCourseQueuedFiles(rowIdx);
+}
+
+function toggleManageReplaceZone(subKey, fileIndex, rowIdx) {
+  var sub = submissions[subKey];
+  if (!sub) return;
+  var files = sub.files || [];
+  files.forEach(function(_, fi) {
+    var z = document.getElementById('mReplaceZone_' + rowIdx + '_' + fi);
+    if (fi !== fileIndex && z) z.style.display = 'none';
+  });
+  var zone = document.getElementById('mReplaceZone_' + rowIdx + '_' + fileIndex);
+  if (zone) zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
+  lucide.createIcons();
+}
+
+/* ─── DELETE FILE ─── */
+function promptDeleteFile(subKey, fileIndex) {
+  var sub = submissions[subKey];
+  var fileName = sub && sub.files && sub.files[fileIndex] ? sub.files[fileIndex].fileName : '';
+  pendingDeleteInfo = { subKey: subKey, fileIndex: fileIndex };
+  document.getElementById('deleteFileName').textContent = fileName;
+  /* reset ปุ่มทุกครั้งที่เปิด modal ใหม่ */
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = false;
+  btn.textContent = 'ลบไฟล์';
+  document.getElementById('confirmDeleteModal').classList.add('open');
+  lucide.createIcons();
+}
+function closeDeleteModal() {
+  document.getElementById('confirmDeleteModal').classList.remove('open');
+  pendingDeleteInfo = null;
+  /* reset ปุ่มเสมอเมื่อปิด */
+  var btn = document.getElementById('confirmDeleteBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ลบไฟล์'; }
+}
+function confirmDelete() {
+  if (!pendingDeleteInfo) return;
+  var subKey    = pendingDeleteInfo.subKey;
+  var fileIndex = pendingDeleteInfo.fileIndex;
+  var sub = submissions[subKey];
+  if (!sub || !sub.files) { closeDeleteModal(); return; }
+
+  var btn = document.getElementById('confirmDeleteBtn');
+  var fileToDelete = sub.files[fileIndex];
+  var newFiles = sub.files.filter(function(_, i){ return i !== fileIndex; });
+  var isDeletingAll = newFiles.length === 0;
+
+  /* ── ลบลายเซ็นจาก Storage (เฉพาะกรณีลบทั้ง submission) ── */
+  function deleteSignatureFromStorage() {
+    if (!isDeletingAll) return Promise.resolve();
+    var sigURL = sub.signatureURL || '';
+    if (!sigURL) return Promise.resolve();
+    try {
+      var ref = firebase.storage().refFromURL(sigURL);
+      return ref.delete().catch(function(e) {
+        /* ถ้าลบไม่ได้ (ไฟล์ถูกลบแล้ว / permission) ไม่ต้อง block การลบ doc */
+        console.warn('[Signature] ลบจาก Storage ไม่สำเร็จ:', e.code);
+      });
+    } catch(e) {
+      console.warn('[Signature] refFromURL error:', e);
+      return Promise.resolve();
+    }
+  }
+
+  function updateFirestore() {
+    if (isDeletingAll) return db.collection('portfolio_submissions').doc(sub.id).delete();
+    return db.collection('portfolio_submissions').doc(sub.id).update({
+      files: newFiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function proceedDelete() {
+    btn.disabled = true; btn.textContent = 'กำลังลบ...';
+
+    var driveDeletePromise = Promise.resolve();
+    if (fileToDelete && fileToDelete.fileId) {
+      /* ลบจาก Drive จริง ๆ (มี token แล้วแน่นอน) */
+      driveDeletePromise = fetch(
+        'https://www.googleapis.com/drive/v3/files/' + fileToDelete.fileId + '?supportsAllDrives=true',
+        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
+      ).then(function(res) {
+        if (!res.ok && res.status !== 404) throw new Error('Drive delete failed: ' + res.status);
+      });
+    }
+
+    driveDeletePromise
+      .then(deleteSignatureFromStorage)
+      .then(updateFirestore)
+      .then(function() {
+        showToast('ลบไฟล์สำเร็จ', 'success');
+        closeDeleteModal();
+        if (isDeletingAll) {
+          delete submissions[subKey];
+          closeUploadModal();
+        } else {
+          submissions[subKey] = Object.assign({}, sub, { files: newFiles });
+          var rowIdx = courseRows.findIndex(function(r){ return r.managingSubKey === subKey; });
+          if (rowIdx >= 0) renderCourseFilePanels();
+        }
+        renderDocList();
+      }).catch(function(e) {
+        showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+        btn.disabled = false; btn.textContent = 'ลบไฟล์';
+      });
+  }
+
+  /* ต้อง auth Drive ก่อนเสมอเพื่อให้ลบได้จริง */
+  if (fileToDelete && fileToDelete.fileId && !driveAccessToken) {
+    btn.disabled = true; btn.textContent = 'รอการอนุญาต Drive...';
+    authorizeDrive(function() {
+      btn.disabled = false; btn.textContent = 'ลบไฟล์';
+      proceedDelete();
+    });
+  } else {
+    proceedDelete();
+  }
+}
+
+function promptDeleteSubmission(subKey) {
+  var sub = submissions[subKey];
+  if (!sub) return;
+  pendingDeleteSubKey = subKey;
+  var label = (sub.courseCode ? sub.courseCode + ' ' : '') + (sub.courseName || '');
+  document.getElementById('deleteSubCourseName').textContent = label;
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  btn.disabled = false;
+  btn.textContent = 'ลบงาน';
+  document.getElementById('confirmDeleteSubModal').classList.add('open');
+  lucide.createIcons();
+}
+
+function closeDeleteSubModal() {
+  document.getElementById('confirmDeleteSubModal').classList.remove('open');
+  pendingDeleteSubKey = null;
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ลบงาน'; }
+}
+
+function confirmDeleteSubmission() {
+  if (!pendingDeleteSubKey) return;
+  var subKey = pendingDeleteSubKey;
+  var sub = submissions[subKey];
+  if (!sub) { closeDeleteSubModal(); return; }
+
+  var btn = document.getElementById('confirmDeleteSubBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังลบ...';
+
+  var files = sub.files || [];
+
+  /* ลบลายเซ็นจาก Storage */
+  function deleteSignature() {
+    var sigURL = sub.signatureURL || '';
+    if (!sigURL) return Promise.resolve();
+    try {
+      var ref = firebase.storage().refFromURL(sigURL);
+      return ref.delete().catch(function(e) {
+        console.warn('[Signature] ลบไม่สำเร็จ:', e.code);
+      });
+    } catch(e) {
+      console.warn('[Signature] refFromURL error:', e);
+      return Promise.resolve();
+    }
+  }
+
+  /* ลบไฟล์ทุกไฟล์จาก Drive */
+  function deleteAllDriveFiles() {
+    if (!driveAccessToken) return Promise.resolve();
+    var promises = files.filter(function(f){ return f && f.fileId; }).map(function(f) {
+      return fetch(
+        'https://www.googleapis.com/drive/v3/files/' + f.fileId + '?supportsAllDrives=true',
+        { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + driveAccessToken } }
+      ).then(function(res) {
+        if (!res.ok && res.status !== 404) console.warn('Drive delete warning:', res.status, f.fileId);
+      }).catch(function(e) { console.warn('Drive delete error:', e); });
+    });
+    return Promise.all(promises);
+  }
+
+  /* ลบ Firestore doc */
+  function deleteFirestoreDoc() {
+    return db.collection('portfolio_submissions').doc(sub.id).delete();
+  }
+
+  function proceedDeleteSub() {
+    deleteAllDriveFiles()
+      .then(deleteSignature)
+      .then(deleteFirestoreDoc)
+      .then(function() {
+        showToast('ลบงานเรียบร้อย ✓', 'success');
+        delete submissions[subKey];
+        closeDeleteSubModal();
+        renderDocList();
+      })
+      .catch(function(e) {
+        showToast('เกิดข้อผิดพลาด: ' + (e.message || e), 'error');
+        btn.disabled = false;
+        btn.textContent = 'ลบงาน';
+      });
+  }
+
+  /* ถ้ามีไฟล์ใน Drive ต้อง auth ก่อน */
+  var hasDriveFiles = files.some(function(f){ return f && f.fileId; });
+  if (hasDriveFiles && !driveAccessToken) {
+    btn.textContent = 'รอการอนุญาต Drive...';
+    authorizeDrive(function() {
+      btn.disabled = true;
+      btn.textContent = 'กำลังลบ...';
+      proceedDeleteSub();
+    });
+  } else {
+    proceedDeleteSub();
+  }
+}
+
+/* ─── CLOSE MODAL ─── */
+function closeUploadModal() {
+  document.getElementById('uploadModal').classList.remove('open');
+  document.body.style.overflow = '';
+  courseRows = [];
+}
+function submitDoc() {
+  if (!currentUser || !currentDocId) return;
+  if (_isUploading) { showToast('กำลังอัปโหลด กรุณารอสักครู่...', 'info'); return; }
+  var subjectGroup = document.getElementById('subjectGroup').value.trim();
+  var note         = document.getElementById('submitNote').value.trim();
+  var btn          = document.getElementById('submitBtn');
+
+  if (!subjectGroup) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
+
+  /* ── บังคับกรอกเลขที่บันทึกข้อความ ── */
+  var memoRefVal = document.getElementById('memoRef') ? document.getElementById('memoRef').value.trim() : '';
+  if (!memoRefVal) {
+    showToast('กรุณากรอกเลขที่บันทึกข้อความ (ช่อง "ที่")', 'error');
+    document.getElementById('memoRef').focus();
+    /* สลับไปแท็บ กรอกข้อมูล ถ้าอยู่แท็บ preview */
+    switchMemoTab('edit');
+    return;
+  }
+
+  /* ── บังคับเซ็นลายเซ็น ── */
+  if (typeof isSignatureEmpty === 'function' && isSignatureEmpty()) {
+    showToast('กรุณาเซ็นลายมือชื่อในช่องลายเซ็นก่อนส่ง', 'error');
+    switchMemoTab('edit');
+    return;
+  }
+
+  /* ตรวจสอบว่าอยู่ใน manage mode (มี managingSubKey) หรือ add mode */
+  var isManageMode = courseRows.length === 1 && courseRows[0].managingSubKey;
+
+  if (isManageMode) {
+    /* manage mode: บันทึก meta เท่านั้น (ไฟล์จัดการแยกผ่าน panel) */
+    var subKey = courseRows[0].managingSubKey;
+    var sub    = submissions[subKey];
+    var newFiles = courseRows[0].files; /* ไฟล์ใหม่ที่จะเพิ่ม */
+
+    if (newFiles.length > 0) {
+      /* มีไฟล์ใหม่ → อัปโหลดแล้ว save */
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
+      lucide.createIcons();
+      if (!driveAccessToken) {
+        document.getElementById('driveAuthNotice').style.display = 'block';
+        authorizeDrive(function(){ uploadManageFiles(subKey, newFiles, subjectGroup, note, btn); });
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+        lucide.createIcons();
+        return;
+      }
+      uploadManageFiles(subKey, newFiles, subjectGroup, note, btn);
+    } else {
+      /* ไม่มีไฟล์ใหม่ → บันทึก meta เท่านั้น */
+      uploadSignatureToStorage(currentUser.uid, sub.courseCode || '', currentDocId)
+        .then(function(sigURL) {
+          var updateData = {
+            subjectGroup: subjectGroup,
+            note: note,
+            memoDate:    document.getElementById('memoDate').value.trim(),
+            memoSubject: document.getElementById('memoSubject').value.trim(),
+            memoTo:      document.getElementById('memoTo').value.trim(),
+            memoThrough: document.getElementById('memoThrough').value.trim(),
+            memoBody:    document.getElementById('memoBody').value.trim(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          };
+          if (sigURL) updateData.signatureURL = sigURL;
+          return db.collection('portfolio_submissions').doc(sub.id).update(updateData);
+        })
+        .then(function() {
+          showToast('บันทึกสำเร็จ ✓', 'success');
+          closeUploadModal(); loadSubmissions();
+        }).catch(function(e){ showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
+    }
+    return;
+  }
+
+  /* ADD MODE: ตรวจสอบแต่ละแถว */
+  var validRows = [];
+  var ok = true;
+  courseRows.forEach(function(row, i) {
+    var code = row.code || document.querySelector('#courseRowsContainer div:nth-child(' + (i+1) + ') input:nth-child(1)')
+                         ? (document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัส"]')[i] || {}).value || row.code
+                         : row.code;
+    /* read from DOM inputs directly */
+    var inputs = document.querySelectorAll('#courseRowsContainer div > div > input');
+    /* inputs arranged as [code0, name0, code1, name1, ...] */
+  });
+
+  /* อ่านค่าจาก DOM โดยตรง */
+  var codeInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="รหัสวิชา"]');
+  var nameInputs = document.querySelectorAll('#courseRowsContainer input[placeholder^="ชื่อวิชา"]');
+
+  var hasError = false;
+  var rowsToSubmit = [];
+  courseRows.forEach(function(row, i) {
+    var code = codeInputs[i] ? codeInputs[i].value.trim() : row.code;
+    var name = nameInputs[i] ? nameInputs[i].value.trim() : row.name;
+    row.code = code; row.name = name;
+    if (!code) { showToast('กรุณากรอกรหัสวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
+    if (!name) { showToast('กรุณากรอกชื่อวิชาวิชาที่ ' + (i+1), 'error'); hasError = true; return; }
+    if (row.files.length === 0) { showToast('กรุณาเพิ่มไฟล์สำหรับวิชา ' + code, 'error'); hasError = true; return; }
+    /* ตรวจว่า courseCode ซ้ำกับที่ส่งแล้วหรือไม่ */
+    var existSubKey = currentDocId + '_' + code;
+    if (submissions[existSubKey]) {
+      showToast('รหัสวิชา ' + code + ' ส่งแล้ว ใช้ปุ่ม "จัดการไฟล์" แทน', 'error'); hasError = true; return;
+    }
+    rowsToSubmit.push({ code: code, name: name, files: row.files });
+  });
+  if (hasError) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
+  lucide.createIcons();
+
+  if (!driveAccessToken) {
+    document.getElementById('driveAuthNotice').style.display = 'block';
+    authorizeDrive(function(){ _isUploading = true; uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+    lucide.createIcons();
+    return;
+  }
+  _isUploading = true;
+  uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn);
+}
+
+function saveCourseSubmission(allFiles, note, subjectGroup, courseCode, courseName, signatureURL) {
+  var key    = currentYear + '_' + currentSem;
+  var now    = firebase.firestore.FieldValue.serverTimestamp();
+  var subKey = currentDocId + '_' + courseCode;
+  var existing = submissions[subKey];
+  var data = {
+    uid:           currentUser.uid,
+    email:         currentUser.email,
+    displayName:   currentUser.displayName || '',
+    staffName:     (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
+    staffPosition: (currentStaffData && currentStaffData.position) || '',
+    staffGroup:    (currentStaffData && currentStaffData.group)    || '',
+    yearSem:       key,
+    year:          currentYear,
+    semester:      currentSem,
+    docTypeId:     currentDocId,
+    files:         allFiles,
+    fileUrl:       allFiles.length > 0 ? allFiles[0].fileUrl : '',
+    note:          note,
+    subjectGroup:  subjectGroup,
+    courseCode:    courseCode,
+    courseName:    courseName,
+    status:        'submitted',
+    updatedAt:     now,
+    submittedAt:   now,
+    resubmittedAt: null,
+  };
+  return db.collection('portfolio_submissions').add(data);
+}
+
+function resetBtn(btn) {
+  btn.disabled  = false;
+  btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> ส่งงาน';
+  lucide.createIcons();
+}
+
+/* บันทึก memo แยกออกจาก submission → portfolio_memos */
+function saveMemoDocument(signatureURL, docTypeId) {
+  var memoId = getMemoDocId(docTypeId);
+  var data = {
+    uid:          currentUser.uid,
+    email:        currentUser.email,
+    staffName:    (currentStaffData && currentStaffData.name)     || currentUser.displayName || '',
+    staffPosition:(currentStaffData && currentStaffData.position) || '',
+    staffGroup:   (currentStaffData && currentStaffData.group)    || '',
+    docTypeId:    docTypeId || currentDocId,
+    year:         currentYear,
+    semester:     currentSem,
+    yearSem:      currentYear + '_' + currentSem,
+    memoRef:      (document.getElementById('memoRef')     && document.getElementById('memoRef').value.trim())     || '',
+    memoDate:     (document.getElementById('memoDate')    && document.getElementById('memoDate').value.trim())    || '',
+    memoSubject:  (document.getElementById('memoSubject') && document.getElementById('memoSubject').value.trim()) || '',
+    memoTo:       (document.getElementById('memoTo')      && document.getElementById('memoTo').value.trim())      || 'ผู้อำนวยการโรงเรียนหนองกี่พิทยาคม',
+    memoThrough:  (document.getElementById('memoThrough') && document.getElementById('memoThrough').value.trim()) || '',
+    memoBody:     (document.getElementById('memoBody')    && document.getElementById('memoBody').value.trim())    || '',
+    signatureURL: signatureURL || '',
+    updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  /* set + merge: อัปเดตทับ doc เดิมได้ */
+  return db.collection('portfolio_memos').doc(memoId).set(data, { merge: true });
+}
+
+/* ─── MEMO MODAL ─── */
+function openMemoModal(subKey) {
+  var sub = submissions[subKey];
+  if (!sub) { showToast('ไม่พบข้อมูลการส่งงาน','error'); return; }
+
+  /* ดึง fresh data จาก Firestore สำหรับ note/ลายเซ็นผู้ตรวจ */
+  var freshSub = sub;
+  var fetchSub = sub.id
+    ? db.collection('portfolio_submissions').doc(sub.id).get().then(function(doc) {
+        if (doc.exists) {
+          var fresh = doc.data();
+          ['headNote','assistantNote','deputyNote','directorNote',
+           'headReviewerName','assistantReviewerName','deputyReviewerName','directorReviewerName',
+           'headSignatureURL','assistantSignatureURL','deputySignatureURL','directorSignatureURL'
+          ].forEach(function(f){ if (fresh[f] !== undefined) sub[f] = fresh[f]; });
+          submissions[subKey] = sub;
+          freshSub = sub;
+        }
+      }).catch(function(){})
+    : Promise.resolve();
+
+  /* ดึง memo doc แบบ shared จาก portfolio_memos — ใช้ currentYear/currentSem ให้ตรงกับ getMemoDocId() */
+  var memoId = currentUser.uid + '_' + sub.docTypeId + '_' + currentYear + '_' + currentSem;
+  var fetchMemo = db.collection('portfolio_memos').doc(memoId).get()
+    .then(function(mDoc) { return mDoc.exists ? mDoc.data() : null; })
+    .catch(function(){ return null; });
+
+  Promise.all([fetchSub, fetchMemo]).then(function(results) {
+    var memoData = results[1];
+    _renderMemoModal(subKey, memoData);
+  });
+}
+
+function closeMemoModal() {
+  document.getElementById('memoModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+/* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
+function switchMemoTab(tab) {
+  var editPane    = document.getElementById('memoEditPane');
+  var previewPane = document.getElementById('memoPreviewPane');
+  var tabEdit     = document.getElementById('memoTabEdit');
+  var tabPreview  = document.getElementById('memoTabPreview');
+  if (!editPane || !previewPane) return;
+
+  if (tab === 'preview') {
+    renderInlineMemoPreview();
+    editPane.style.display    = 'none';
+    previewPane.style.display = 'block';
+    tabEdit.style.background    = 'white';
+    tabEdit.style.color         = 'var(--accent)';
+    tabEdit.style.borderColor   = 'var(--accent-light)';
+    tabPreview.style.background = 'var(--accent)';
+    tabPreview.style.color      = 'white';
+    tabPreview.style.borderColor= 'var(--accent)';
+  } else {
+    editPane.style.display    = 'flex';
+    previewPane.style.display = 'none';
+    tabEdit.style.background    = 'var(--accent)';
+    tabEdit.style.color         = 'white';
+    tabEdit.style.borderColor   = 'var(--accent)';
+    tabPreview.style.background = 'white';
+    tabPreview.style.color      = 'var(--accent)';
+    tabPreview.style.borderColor= 'var(--accent-light)';
+  }
+}
+
+/* ══════════════════════ INIT ══════════════════════ */
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+   ปีการศึกษา (พ.ศ.) = ปี ค.ศ. + 543 โดย
+     ภาคเรียน 1 → ปี พ.ศ. ของวันที่นั้น
+     ภาคเรียน 2 ที่เปิดในเดือน พ.ย.–ธ.ค. → ปี พ.ศ. ของปีนั้น
+     ภาคเรียน 2 ที่ยังค้างมาถึง ม.ค.–พ.ค. → ปี พ.ศ. ของปีก่อน
+─────────────────────────────────────────── */
+(function() {
+  var now   = new Date();
+  var month = now.getMonth() + 1; /* 1–12 */
+  var day   = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  /* ภาคเรียน 1: 16 พ.ค. – 31 ต.ค. */
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1;
+    thYear = ceYear + 543;
+  /* ภาคเรียน 2: 1 พ.ย. – 15 พ.ค. */
+  } else if (month >= 11) {
+    sem = 2;
+    thYear = ceYear + 543;
+  } else {
+    /* ม.ค. – 15 พ.ค.: ยังอยู่ในภาค 2 ของปีการศึกษาก่อน */
+    sem = 2;
+    thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})();
+
+window.onload = function() {
+  if (typeof google !== 'undefined' && google.accounts) initGoogleAuth();
+};
+
+/* ─── AUTH / PAGE SHELL ───
+   buildPage() จะ handle auth guard + navbar/sidebar shell ให้
+   (theme 'blue' = ผู้ใช้ทั่วไป/ครู) จากนั้นตรวจสอบ staff collection เพิ่มเอง */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'ระบบส่งงานประจำภาคเรียน',
+  navTheme:     'blue',
+  activePage:   'portfolio-teacher',
+  requireAdmin: false,
+
+  onAuth: function(u, contentEl) {
+    db.collection('staff').where('email', '==', u.email.toLowerCase()).limit(1).get()
+      .then(function(snap) {
+        if (snap.empty) { showStaffDenied(u.email); return; }
+        currentUser      = u;
+        currentStaffData = snap.docs[0].data();
+
+        updateNavUser(u);
+        updateSidebarProfile(u);
+        checkAdminAccess(u.email);
+
+        /* inject page content จาก <template> */
+        var tpl = document.getElementById('portfolioContent');
+        if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+        renderStaffInfoBadge();
+        initYearSemUI();
+        loadAdminRoles();
+        /* โหลด DOCUMENT_TYPES จาก Firestore ก่อน แล้วค่อย loadSubmissions */
+        loadDocTypesFromFirestore(function() {
+          loadSubmissions();
+        });
+        lucide.createIcons();
+        setupScrollTopButton();
+        /* init Google auth after user confirmed */
+        setTimeout(initGoogleAuth, 500);
+      })
+      .catch(function(e) {
+        showStaffDenied(u.email);
+      });
+  }
+});
+
+/* ─── SUBMIT ─── */
+/* ─── SIGNATURE PAD ─── */
+(function() {
+  var canvas, ctx, drawing = false, hasSig = false;
+  var lastX, lastY;
+
+  function initSignaturePad() {
+    canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    /* scale canvas to devicePixelRatio for crisp rendering */
+    var rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
+    canvas.height = Math.floor(rect.height * (window.devicePixelRatio || 1));
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    canvas.style.width  = rect.width  + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    function getPos(e) {
+      var r = canvas.getBoundingClientRect();
+      var src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+    function start(e) {
+      e.preventDefault();
+      drawing = true;
+      var p = getPos(e);
+      ctx.beginPath(); ctx.moveTo(p.x, p.y);
+      lastX = p.x; lastY = p.y;
+    }
+    function move(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      var p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+      hasSig = true;
+    }
+    function end(e) { drawing = false; }
+
+    canvas.addEventListener('mousedown',  start);
+    canvas.addEventListener('mousemove',  move);
+    canvas.addEventListener('mouseup',    end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove',  move,  { passive: false });
+    canvas.addEventListener('touchend',   end);
+  }
+
+  window.clearSignature = function() {
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+    hasSig = false;
+  };
+
+  window.isSignatureEmpty = function() { return !hasSig; };
+
+  window.getSignatureDataURL = function() {
+    if (!canvas) return '';
+    return canvas.toDataURL('image/png');
+  };
+
+  /* init ทุกครั้งที่ modal เปิด (เพราะ canvas อาจเพิ่งถูก render) */
+  window.initSignaturePadNow = function() {
+    hasSig = false;
+    setTimeout(initSignaturePad, 80);
+  };
+})();
+
+

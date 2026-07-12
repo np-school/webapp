@@ -1,69 +1,17 @@
-
-  // LINE handled by Cloud Functions
-  /* ── Helper: อ่าน CSS variable จาก :root (ใช้กับ canvas ที่ไม่รองรับ var() ตรงๆ) ── */
-  function cssVar(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
+/* ══════════════════════ STATE ══════════════════════ */
   var currentAdmin=null,allBookings=[],allRooms=[],currentFilter='all',pendingId=null,editRoomId=null,roomImageDataURL=null,roomImageBlob=null;
 
   /* ── Normalize legacy room names → current names ── */
   var ROOM_NAME_ALIAS={'ห้องประชุมปาริชาติ':'ห้องประชุมปาริชาต'};
-  function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
   var currentPage=1,PAGE_SIZE=20;
 
-  /* ══════════════════════ INIT ══════════════════════ */
-  buildPage({
-    appId:        'roomAdminApp',
-    navSubtitle:  'NP Origins · Admin Dashboard',
-    navTheme:     'dark',
-    activePage:   'room-admin',
-    requireAdmin: 'bookings',
+  /* ══════════════════════════════════════
+     SUMMARY TAB — Canvas bar charts
+     ══════════════════════════════════════ */
+  var sumPeriod='day';
+  var _sumByRoom={};
 
-    onAuth: function(user, contentEl) {
-      currentAdmin = user;
-      updateNavUser(user);
-      buildSidebar('room-admin');
-      checkAdminAccess(user.email);
-      updateSidebarProfile(user);
-
-      /* inject page content จาก <template> */
-      var tpl = document.getElementById('roomAdminContent');
-      if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
-
-      initListeners();
-      lucide.createIcons();
-      setupScrollTopButton();
-    }
-  });
-
-  /* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
-  function setupScrollTopButton() {
-    var content = document.getElementById('pageContent');
-    var btn = document.getElementById('scrollTopBtn');
-    if (!content || !btn) return;
-    content.addEventListener('scroll', function() {
-      btn.classList.toggle('show', content.scrollTop > 300);
-    });
-  }
-  function scrollToTopContent() {
-    var content = document.getElementById('pageContent');
-    if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  /* ════════════════════════════════
-     Sub-tab switching (bookings / rooms)
-     ════════════════════════════════ */
-  function switchSubTab(name, btn) {
-    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
-    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-    document.getElementById('tab-' + name).classList.add('active');
-    if (btn) btn.classList.add('active');
-    lucide.createIcons();
-  }
-
-  /* compat: switchTab ยังถูกเรียกจาก common.js */
-  function switchTab(name, btn) { switchSubTab(name, btn); }
-
+/* ══════════════════════ DATA LOADING ══════════════════════ */
   function initListeners(){
     db.collection('bookings').orderBy('createdAt','desc').limit(500).onSnapshot(function(snap){
       allBookings=[];snap.forEach(function(d){var bk=Object.assign({id:d.id},d.data());bk.room=normalizeRoomName(bk.room||'');allBookings.push(bk);});
@@ -80,9 +28,17 @@
     });
   }
 
-  function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
-
-  function setFilter(f,el){currentFilter=f;currentPage=1;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
+/* ══════════════════════ RENDER ══════════════════════ */
+  // LINE handled by Cloud Functions
+  /* ── Helper: อ่าน CSS variable จาก :root (ใช้กับ canvas ที่ไม่รองรับ var() ตรงๆ) ── */
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function normalizeRoomName(n){return ROOM_NAME_ALIAS[n]||n;}
+  function scrollToTopContent() {
+    var content = document.getElementById('pageContent');
+    if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function renderBookings(){
     var search=(document.getElementById('searchInput').value||'').toLowerCase();
@@ -159,30 +115,7 @@
     lucide.createIcons();
   }
 
-  function goPage(p){
-    var search=(document.getElementById('searchInput').value||'').toLowerCase();
-    var list=allBookings.filter(function(b){
-      if(currentFilter!=='all'&&b.status!==currentFilter)return false;
-      if(search){var txt=((b.fullName||b.userName||'')+(b.room||'')+(b.purpose||'')+(b.date||'')).toLowerCase();if(txt.indexOf(search)===-1)return false;}
-      return true;
-    });
-    var totalPages=Math.ceil(list.length/PAGE_SIZE);
-    if(p<1||p>totalPages)return;
-    currentPage=p;
-    renderBookings();
-    document.getElementById('tab-bookings').scrollTop=0;
-  }
-
   function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-
-  function openApprove(id,room,date){pendingId=id;document.getElementById('approveModalSub').textContent=room+' · '+date;document.getElementById('approveNote').value='';openModal('approveModal');}
-  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.displayName||currentAdmin.email,approvedByEmail:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
-
-  function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
-  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.displayName||currentAdmin.email,rejectedByEmail:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
-
-  function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
-  function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
 
   function renderRooms(){
     var c=document.getElementById('roomsList');
@@ -193,120 +126,8 @@
     }).join('');
     lucide.createIcons();
   }
-  function openRoomModal(){
-    editRoomId=null;roomImageDataURL=null;roomImageBlob=null;
-    document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่';
-    document.getElementById('roomName').value='';document.getElementById('roomCapacity').value='';document.getElementById('roomDetail').value='';
-    clearRoomImageUI();
-    openModal('roomModal');
-  }
-  function openRoomEdit(id){
-    var r=allRooms.find(function(x){return x.id===id;});if(!r)return;
-    editRoomId=id;roomImageDataURL=r.imageUrl||null;roomImageBlob=null;
-    document.getElementById('roomModalTitle').textContent='แก้ไขห้อง';
-    document.getElementById('roomName').value=r.name||'';document.getElementById('roomCapacity').value=r.capacity||'';document.getElementById('roomDetail').value=r.detail||'';
-    if(r.imageUrl){document.getElementById('roomPreviewImg').src=r.imageUrl;document.getElementById('roomFileName').textContent='รูปภาพที่บันทึกไว้';document.getElementById('roomFileSize').textContent='';document.getElementById('roomUploadDefault').style.display='none';document.getElementById('roomUploadPreview').style.display='block';document.getElementById('roomUploadArea').classList.add('has-file');}
-    else{clearRoomImageUI();}
-    openModal('roomModal');
-  }
   function clearRoomImageUI(){document.getElementById('roomImageFile').value='';document.getElementById('roomUploadDefault').style.display='block';document.getElementById('roomUploadPreview').style.display='none';document.getElementById('roomUploadArea').classList.remove('has-file');}
-  function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;roomImageBlob=null;}
-  function handleRoomImage(input){
-    var file=input.files[0];if(!file)return;
-    if(file.size>15*1024*1024){showToast('ไฟล์ใหญ่เกิน 15MB','warn');input.value='';return;}
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      var img=new Image();
-      img.onload=function(){
-        // Target: base64 string must be < 680,000 chars (~500KB binary) to fit Firestore 1MB doc limit safely
-        var TARGET=680000;
-        // Step 1: scale down — start at max 800px, step down if needed
-        var scales=[800,640,480,360];
-        var dataUrl='',finalW=img.width,finalH=img.height;
-        for(var si=0;si<scales.length;si++){
-          var MAX=scales[si];
-          var w=img.width,h=img.height;
-          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-          // Step 2: try quality from 0.75 down
-          var canvas=document.createElement('canvas');
-          canvas.width=w;canvas.height=h;
-          canvas.getContext('2d').drawImage(img,0,0,w,h);
-          var q=0.75,found=false;
-          while(q>=0.3){
-            dataUrl=canvas.toDataURL('image/jpeg',q);
-            if(dataUrl.length<=TARGET){finalW=w;finalH=h;found=true;break;}
-            q=Math.round((q-0.05)*100)/100;
-          }
-          if(found)break;
-        }
-        // Fallback: use last result even if still slightly over (better than nothing)
-        if(!dataUrl)dataUrl=canvas.toDataURL('image/jpeg',0.3);
-        roomImageDataURL=dataUrl;
-        // convert dataUrl -> Blob for Storage upload
-        var byteStr=atob(dataUrl.split(',')[1]);
-        var bytes=new Uint8Array(byteStr.length);
-        for(var bi=0;bi<byteStr.length;bi++)bytes[bi]=byteStr.charCodeAt(bi);
-        roomImageBlob=new Blob([bytes],{type:'image/jpeg'});
-        var kb=(dataUrl.length*0.75/1024).toFixed(0);
-        document.getElementById('roomPreviewImg').src=dataUrl;
-        document.getElementById('roomFileName').textContent=file.name;
-        document.getElementById('roomFileSize').textContent='✓ บีบอัดแล้ว '+kb+' KB · '+finalW+'×'+finalH+'px';
-        document.getElementById('roomUploadDefault').style.display='none';
-        document.getElementById('roomUploadPreview').style.display='block';
-        document.getElementById('roomUploadArea').classList.add('has-file');
-      };
-      img.src=ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  function saveRoom(){
-    var name=document.getElementById('roomName').value.trim();
-    if(!name){showToast('กรุณาระบุชื่อห้อง','warn');return;}
-    var data={name:name,capacity:document.getElementById('roomCapacity').value.trim(),detail:document.getElementById('roomDetail').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-
-    function finishSave(){
-      var p=editRoomId?db.collection('rooms').doc(editRoomId).update(data):db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-      p.then(function(){closeModal('roomModal');showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
-    }
-
-    if(roomImageBlob){
-      if(!storage){showToast('Storage ยังไม่พร้อมใช้งาน','error');return;}
-      var path='room-images/'+(editRoomId||'new_'+Date.now())+'_'+Date.now()+'.jpg';
-      var ref=storage.ref().child(path);
-      showToast('กำลังอัปโหลดรูปภาพ...');
-      ref.put(roomImageBlob,{contentType:'image/jpeg'}).then(function(snap){
-        return snap.ref.getDownloadURL();
-      }).then(function(url){
-        data.imageUrl=url;
-        finishSave();
-      }).catch(function(e){showToast('อัปโหลดรูปไม่สำเร็จ: '+e.message,'error');});
-    } else {
-      if(roomImageDataURL)data.imageUrl=roomImageDataURL;
-      finishSave();
-    }
-  }
-  function deleteRoom(id,name){if(!confirm('ต้องการลบห้อง "'+name+'" ใช่หรือไม่?'))return;db.collection('rooms').doc(id).delete().then(function(){showToast('ลบห้องแล้ว');}).catch(function(e){showToast(e.message,'error');});}
-
-  /* ── File View (Admin) ── */
-  function openFileViewAdmin(bookingId){
-    var b=allBookings.find(function(x){return x.id===bookingId;});
-    if(!b||!b.hasLayout){showToast('ไม่มีไฟล์แนบ','warn');return;}
-    var modal=document.getElementById('fileViewModal');
-    var img=document.getElementById('fileViewImg');
-    var errEl=document.getElementById('fileViewError');
-    document.getElementById('fileViewName').textContent=b.layoutName||'ไฟล์แนบ';
-    if(b.layoutUrl){img.src=b.layoutUrl;img.style.display='block';errEl.style.display='none';}
-    else if(b.layoutDataURL){img.src=b.layoutDataURL;img.style.display='block';errEl.style.display='none';}
-    else{img.style.display='none';errEl.style.display='block';errEl.innerHTML='<p style="font-size:13px;color:var(--text3);">ไฟล์ชื่อ: <b>'+(b.layoutName||'-')+'</b><br><span style="font-size:11px;">ไม่มีข้อมูล URL ของรูปภาพ</span></p>';}
-    modal.classList.add('open');document.body.style.overflow='hidden';
-  }
-  function closeFileView(){document.getElementById('fileViewModal').classList.remove('open');document.body.style.overflow='';}
-
-  /* ══════════════════════════════════════
-     SUMMARY TAB — Canvas bar charts
-     ══════════════════════════════════════ */
-  var sumPeriod='day';
-  var _sumByRoom={};  // kept for mini-chart on expand
+  function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;roomImageBlob=null;}  // kept for mini-chart on expand
 
   function setSumPeriod(p,el){
     sumPeriod=p;
@@ -580,26 +401,6 @@
     lucide.createIcons();
   }
 
-  function toggleSumDetail(cardId,roomName){
-    var body=document.getElementById('sum-body-'+cardId);
-    var chev=document.getElementById('chev-'+cardId);
-    if(!body)return;
-    var isHidden=body.style.display==='none';
-    body.style.display=isHidden?'block':'none';
-    if(chev)chev.style.transform=isHidden?'rotate(180deg)':'rotate(0deg)';
-    if(isHidden){
-      // build buckets for this room only
-      var roomData=_sumByRoom[roomName]||null;
-      if(!roomData)return;
-      var bks=buildTrendBuckets(sumPeriod);
-      roomData.items.forEach(function(b){
-        var d=parseDateFromBooking(b);if(!d)return;
-        bks.forEach(function(bk){if(bk.fn(d)){bk.total++;if(b.status==='approved')bk.approved++;else if(b.status==='pending')bk.pending++;else if(b.status==='rejected')bk.rejected++;}});
-      });
-      setTimeout(function(){drawTrendChart('mini-'+cardId,bks,100);},30);
-    }
-  }
-
   /* ══════════════════════════════════════
      CHARTS
      ══════════════════════════════════════ */
@@ -705,4 +506,209 @@
     }).join('');
   }
 
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+  /* ══ ปุ่มย้อนกลับไปด้านบน — scroll เกิดที่ .content-area (id="pageContent") ══ */
+  function setupScrollTopButton() {
+    var content = document.getElementById('pageContent');
+    var btn = document.getElementById('scrollTopBtn');
+    if (!content || !btn) return;
+    content.addEventListener('scroll', function() {
+      btn.classList.toggle('show', content.scrollTop > 300);
+    });
+  }
+
+  /* ════════════════════════════════
+     Sub-tab switching (bookings / rooms)
+     ════════════════════════════════ */
+  function switchSubTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('tab-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    lucide.createIcons();
+  }
+
+  /* compat: switchTab ยังถูกเรียกจาก common.js */
+  function switchTab(name, btn) { switchSubTab(name, btn); }
+
+  function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
+
+  function setFilter(f,el){currentFilter=f;currentPage=1;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
+
+  function goPage(p){
+    var search=(document.getElementById('searchInput').value||'').toLowerCase();
+    var list=allBookings.filter(function(b){
+      if(currentFilter!=='all'&&b.status!==currentFilter)return false;
+      if(search){var txt=((b.fullName||b.userName||'')+(b.room||'')+(b.purpose||'')+(b.date||'')).toLowerCase();if(txt.indexOf(search)===-1)return false;}
+      return true;
+    });
+    var totalPages=Math.ceil(list.length/PAGE_SIZE);
+    if(p<1||p>totalPages)return;
+    currentPage=p;
+    renderBookings();
+    document.getElementById('tab-bookings').scrollTop=0;
+  }
+
+  function openApprove(id,room,date){pendingId=id;document.getElementById('approveModalSub').textContent=room+' · '+date;document.getElementById('approveNote').value='';openModal('approveModal');}
+  function confirmApprove(){var note=document.getElementById('approveNote').value;db.collection('bookings').doc(pendingId).update({status:'approved',approveNote:note,approvedBy:currentAdmin.displayName||currentAdmin.email,approvedByEmail:currentAdmin.email,approvedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('approveModal');showToast('อนุมัติคำขอเรียบร้อย ✓');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
+
+  function openReject(id,room,date){pendingId=id;document.getElementById('rejectModalSub').textContent=room+' · '+date;document.getElementById('rejectReason').value='';openModal('rejectModal');}
+  function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.displayName||currentAdmin.email,rejectedByEmail:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
+
+  function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
+  function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+  function openRoomModal(){
+    editRoomId=null;roomImageDataURL=null;roomImageBlob=null;
+    document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่';
+    document.getElementById('roomName').value='';document.getElementById('roomCapacity').value='';document.getElementById('roomDetail').value='';
+    clearRoomImageUI();
+    openModal('roomModal');
+  }
+  function openRoomEdit(id){
+    var r=allRooms.find(function(x){return x.id===id;});if(!r)return;
+    editRoomId=id;roomImageDataURL=r.imageUrl||null;roomImageBlob=null;
+    document.getElementById('roomModalTitle').textContent='แก้ไขห้อง';
+    document.getElementById('roomName').value=r.name||'';document.getElementById('roomCapacity').value=r.capacity||'';document.getElementById('roomDetail').value=r.detail||'';
+    if(r.imageUrl){document.getElementById('roomPreviewImg').src=r.imageUrl;document.getElementById('roomFileName').textContent='รูปภาพที่บันทึกไว้';document.getElementById('roomFileSize').textContent='';document.getElementById('roomUploadDefault').style.display='none';document.getElementById('roomUploadPreview').style.display='block';document.getElementById('roomUploadArea').classList.add('has-file');}
+    else{clearRoomImageUI();}
+    openModal('roomModal');
+  }
+  function handleRoomImage(input){
+    var file=input.files[0];if(!file)return;
+    if(file.size>15*1024*1024){showToast('ไฟล์ใหญ่เกิน 15MB','warn');input.value='';return;}
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        // Target: base64 string must be < 680,000 chars (~500KB binary) to fit Firestore 1MB doc limit safely
+        var TARGET=680000;
+        // Step 1: scale down — start at max 800px, step down if needed
+        var scales=[800,640,480,360];
+        var dataUrl='',finalW=img.width,finalH=img.height;
+        for(var si=0;si<scales.length;si++){
+          var MAX=scales[si];
+          var w=img.width,h=img.height;
+          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+          // Step 2: try quality from 0.75 down
+          var canvas=document.createElement('canvas');
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          var q=0.75,found=false;
+          while(q>=0.3){
+            dataUrl=canvas.toDataURL('image/jpeg',q);
+            if(dataUrl.length<=TARGET){finalW=w;finalH=h;found=true;break;}
+            q=Math.round((q-0.05)*100)/100;
+          }
+          if(found)break;
+        }
+        // Fallback: use last result even if still slightly over (better than nothing)
+        if(!dataUrl)dataUrl=canvas.toDataURL('image/jpeg',0.3);
+        roomImageDataURL=dataUrl;
+        // convert dataUrl -> Blob for Storage upload
+        var byteStr=atob(dataUrl.split(',')[1]);
+        var bytes=new Uint8Array(byteStr.length);
+        for(var bi=0;bi<byteStr.length;bi++)bytes[bi]=byteStr.charCodeAt(bi);
+        roomImageBlob=new Blob([bytes],{type:'image/jpeg'});
+        var kb=(dataUrl.length*0.75/1024).toFixed(0);
+        document.getElementById('roomPreviewImg').src=dataUrl;
+        document.getElementById('roomFileName').textContent=file.name;
+        document.getElementById('roomFileSize').textContent='✓ บีบอัดแล้ว '+kb+' KB · '+finalW+'×'+finalH+'px';
+        document.getElementById('roomUploadDefault').style.display='none';
+        document.getElementById('roomUploadPreview').style.display='block';
+        document.getElementById('roomUploadArea').classList.add('has-file');
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function saveRoom(){
+    var name=document.getElementById('roomName').value.trim();
+    if(!name){showToast('กรุณาระบุชื่อห้อง','warn');return;}
+    var data={name:name,capacity:document.getElementById('roomCapacity').value.trim(),detail:document.getElementById('roomDetail').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+
+    function finishSave(){
+      var p=editRoomId?db.collection('rooms').doc(editRoomId).update(data):db.collection('rooms').add(Object.assign(data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
+      p.then(function(){closeModal('roomModal');showToast(editRoomId?'แก้ไขห้องแล้ว':'เพิ่มห้องใหม่แล้ว ✓');}).catch(function(e){showToast(e.message,'error');});
+    }
+
+    if(roomImageBlob){
+      if(!storage){showToast('Storage ยังไม่พร้อมใช้งาน','error');return;}
+      var path='room-images/'+(editRoomId||'new_'+Date.now())+'_'+Date.now()+'.jpg';
+      var ref=storage.ref().child(path);
+      showToast('กำลังอัปโหลดรูปภาพ...');
+      ref.put(roomImageBlob,{contentType:'image/jpeg'}).then(function(snap){
+        return snap.ref.getDownloadURL();
+      }).then(function(url){
+        data.imageUrl=url;
+        finishSave();
+      }).catch(function(e){showToast('อัปโหลดรูปไม่สำเร็จ: '+e.message,'error');});
+    } else {
+      if(roomImageDataURL)data.imageUrl=roomImageDataURL;
+      finishSave();
+    }
+  }
+  function deleteRoom(id,name){if(!confirm('ต้องการลบห้อง "'+name+'" ใช่หรือไม่?'))return;db.collection('rooms').doc(id).delete().then(function(){showToast('ลบห้องแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+
+  /* ── File View (Admin) ── */
+  function openFileViewAdmin(bookingId){
+    var b=allBookings.find(function(x){return x.id===bookingId;});
+    if(!b||!b.hasLayout){showToast('ไม่มีไฟล์แนบ','warn');return;}
+    var modal=document.getElementById('fileViewModal');
+    var img=document.getElementById('fileViewImg');
+    var errEl=document.getElementById('fileViewError');
+    document.getElementById('fileViewName').textContent=b.layoutName||'ไฟล์แนบ';
+    if(b.layoutUrl){img.src=b.layoutUrl;img.style.display='block';errEl.style.display='none';}
+    else if(b.layoutDataURL){img.src=b.layoutDataURL;img.style.display='block';errEl.style.display='none';}
+    else{img.style.display='none';errEl.style.display='block';errEl.innerHTML='<p style="font-size:13px;color:var(--text3);">ไฟล์ชื่อ: <b>'+(b.layoutName||'-')+'</b><br><span style="font-size:11px;">ไม่มีข้อมูล URL ของรูปภาพ</span></p>';}
+    modal.classList.add('open');document.body.style.overflow='hidden';
+  }
+  function closeFileView(){document.getElementById('fileViewModal').classList.remove('open');document.body.style.overflow='';}
+
+  function toggleSumDetail(cardId,roomName){
+    var body=document.getElementById('sum-body-'+cardId);
+    var chev=document.getElementById('chev-'+cardId);
+    if(!body)return;
+    var isHidden=body.style.display==='none';
+    body.style.display=isHidden?'block':'none';
+    if(chev)chev.style.transform=isHidden?'rotate(180deg)':'rotate(0deg)';
+    if(isHidden){
+      // build buckets for this room only
+      var roomData=_sumByRoom[roomName]||null;
+      if(!roomData)return;
+      var bks=buildTrendBuckets(sumPeriod);
+      roomData.items.forEach(function(b){
+        var d=parseDateFromBooking(b);if(!d)return;
+        bks.forEach(function(bk){if(bk.fn(d)){bk.total++;if(b.status==='approved')bk.approved++;else if(b.status==='pending')bk.pending++;else if(b.status==='rejected')bk.rejected++;}});
+      });
+      setTimeout(function(){drawTrendChart('mini-'+cardId,bks,100);},30);
+    }
+  }
+
+  /* ══════════════════════ INIT ══════════════════════ */
+  buildPage({
+    appId:        'roomAdminApp',
+    navSubtitle:  'NP Origins · Admin Dashboard',
+    navTheme:     'dark',
+    activePage:   'room-admin',
+    requireAdmin: 'bookings',
+
+    onAuth: function(user, contentEl) {
+      currentAdmin = user;
+      updateNavUser(user);
+      buildSidebar('room-admin');
+      checkAdminAccess(user.email);
+      updateSidebarProfile(user);
+
+      /* inject page content จาก <template> */
+      var tpl = document.getElementById('roomAdminContent');
+      if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
+
+      initListeners();
+      lucide.createIcons();
+      setupScrollTopButton();
+    }
+  });
+
   lucide.createIcons();
+
+

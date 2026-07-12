@@ -1,4 +1,4 @@
-
+/* ══════════════════════ STATE ══════════════════════ */
 /* ══ Categories (ต้องตรงกับ repair-user.html) ══ */
 /* ══ Categories / Buildings — โหลดจาก Firestore (ตั้งค่าได้ในแท็บ "ตั้งค่า") ══ */
 var REPAIR_CATEGORIES = [];
@@ -13,10 +13,6 @@ var DEFAULT_CATEGORIES = [
   { id:'furniture', label:'เฟอร์นิเจอร์',           icon:'armchair' },
   { id:'other',     label:'อื่นๆ',                  icon:'more-horizontal' }
 ];
-function getCategoryMeta(key) {
-  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
-  return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
-}
 
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ต้อง sync logic เดียวกับ repair-user.html
      เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า) ── */
@@ -28,6 +24,121 @@ var CATEGORY_PALETTE = [
   { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
   { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
 ];
+
+var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
+
+/* ══ Page State ══ */
+var currentUser    = null;
+var allRepairs     = [];
+var currentFilter  = 'all';
+var currentSearch  = '';
+var currentSubTab  = 'active';
+var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
+var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
+var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
+
+/* ── ตัวกรองช่วงเวลา: ใช้ร่วมกันทั้งหน้า "การแจ้งซ่อม" (scope=active) และ "ประวัติทั้งหมด" (scope=history)
+     แต่ละหน้าเลือกช่วงเวลาเป็นอิสระจากกัน โหมด: all / week / month (เลือกเดือน+ปี) / year (เลือกปี)
+     ปีย้อนหลังเลือกได้สูงสุด 3 ปี (ปีปัจจุบัน + ย้อนหลัง 2 ปี) ── */
+var periodState = {
+  active:  { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() },
+  history: { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() }
+};
+var PERIOD_MODE_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
+var THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var PERIOD_MAX_YEARS_BACK = 3;
+
+/* ══════════════════════════════════════════════════════════════
+   Staff Picker: เลือกช่างผู้รับผิดชอบจากข้อมูลบุคลากร (staff.html)
+   ใช้ suffix แยกอินสแตนซ์ระหว่างฟอร์ม "อนุมัติ" ('') กับ "มอบหมาย/อัปเดต" ('2')
+   เป็น combobox — พิมพ์กรองรายชื่อได้ หรือพิมพ์ชื่อเองได้ (เช่น ช่างภายนอก)
+   ══════════════════════════════════════════════════════════════ */
+var REPAIR_STAFF_LIST = [];
+var _repTechFilteredCache = {};
+
+/* ══════════════════════════════════════════════════════════════
+   ตั้งค่า: รายชื่อผู้รับผิดชอบ (repair_responsible)
+   คัดเลือกมาจากข้อมูลบุคลากร (staff.html / คอลเลกชัน "staff")
+   ใช้เป็นตัวเลือกลัดของช่อง "ช่างผู้รับผิดชอบ" ตอนอนุมัติแผนซ่อม/มอบหมายงาน
+   (ยังพิมพ์ชื่อเองได้เสมอ ไม่ได้บังคับว่าต้องเลือกจากรายชื่อนี้เท่านั้น)
+   ══════════════════════════════════════════════════════════════ */
+var _respSelectedStaff  = null; /* บุคลากรที่เพิ่งถูกเลือกจาก dropdown ก่อนกดเพิ่ม */
+var _respFilteredCache  = [];
+
+/* ══════════════════════════════════════════════════════════════
+   Data: repairs
+   ══════════════════════════════════════════════════════════════ */
+function loadData() {
+  db.collection('repairs')
+    .onSnapshot(function(snap) {
+      allRepairs = [];
+      snap.forEach(function(doc) { allRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      sortRepairList(allRepairs);
+      renderStats();
+      renderActivePanel();
+      renderAssigneePanel();
+      renderTable();
+    }, function(err) {
+      console.error(err);
+      showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
+    });
+}
+
+function loadRepairStaffList() {
+  db.collection('staff').orderBy('name').get().then(function(snap) {
+    REPAIR_STAFF_LIST = [];
+    snap.forEach(function(doc) {
+      var s = doc.data();
+      REPAIR_STAFF_LIST.push({ name: s.name || '', position: s.position || '', group: s.group || '' });
+    });
+  }).catch(function(err) { console.error('loadRepairStaffList', err); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ตั้งค่า: หมวดหมู่การแจ้งซ่อม (repair_categories)
+   ══════════════════════════════════════════════════════════════ */
+function loadCategories() {
+  db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    if (snap.empty) { seedDefaultCategories(); return; }
+    REPAIR_CATEGORIES = [];
+    snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
+    renderCatList();
+    renderActiveCategoryFilterSelect();
+    renderHistoryCategoryFilterBar();
+    renderActivePanel();
+    renderTable();
+  }, function(err) { console.error('loadCategories', err); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ตั้งค่า: อาคาร / สถานที่ (repair_buildings)
+   อาคาร: เจ้าหน้าที่สร้าง/ลบเท่านั้น
+   สถานที่ย่อย (subLocations): สมาชิกทั่วไปเพิ่มได้เองตอนแจ้งซ่อม (repair-user.html)
+   ที่นี่เจ้าหน้าที่ทำได้แค่ "ลบ" รายการที่พิมพ์ผิด/ซ้ำ เพื่อความสะอาดของข้อมูล
+   ══════════════════════════════════════════════════════════════ */
+function loadBuildings() {
+  db.collection('repair_buildings').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_BUILDINGS = [];
+    snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
+    renderBldList();
+    renderActiveBuildingFilterSelect();
+  }, function(err) { console.error('loadBuildings', err); });
+}
+
+function loadResponsibleList() {
+  db.collection('repair_responsible').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
+    REPAIR_RESPONSIBLE = [];
+    snap.forEach(function(doc) { REPAIR_RESPONSIBLE.push(Object.assign({ id: doc.id }, doc.data())); });
+    renderRespList();
+    renderAssigneePanel();
+  }, function(err) { console.error('loadResponsibleList', err); });
+}
+
+/* ══════════════════════ RENDER ══════════════════════ */
+function getCategoryMeta(key) {
+  for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
+  return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
+}
 function hexToRgba(hex, alpha) {
   hex = (hex || '').replace('#', '');
   if (hex.length === 3) hex = hex.split('').map(function(ch) { return ch + ch; }).join('');
@@ -49,8 +160,6 @@ function getCategoryColor(catId) {
   for (var i = 0; i < key.length; i++) hash = (hash + key.charCodeAt(i) * (i + 1)) % CATEGORY_PALETTE.length;
   return CATEGORY_PALETTE[hash];
 }
-
-var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
 
 function getStatusMeta(r) {
   switch (r.status) {
@@ -79,59 +188,7 @@ function fmtDate(ts) {
   var d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
          ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   buildPage() — auth guard (ต้องมีสิทธิ์ 'repair') + shell builder
-
-   ✏️ ต้องเพิ่มสิทธิ์ 'repair' ให้เจ้าหน้าที่ที่เกี่ยวข้องในเอกสาร
-      admins/{email} → permissions.repair = true (ใน Firestore)
-   ══════════════════════════════════════════════════════════════ */
-buildPage({
-  appId:        'myApp',
-  navSubtitle:  'จัดการระบบแจ้งซ่อม',
-  navTheme:     'dark',
-  activePage:   'repair-admin',
-  requireAdmin: 'repair', /* ✏️ permission key */
-
-  onAuth: function(user, contentEl) {
-    currentUser = user;
-    updateNavUser(user);
-    updateSidebarProfile(user);
-    checkAdminAccess(user.email);
-
-    contentEl.innerHTML = renderPage();
-    lucide.createIcons();
-
-    loadData();
-    loadCategories();
-    loadBuildings();
-    loadRepairStaffList();
-    loadResponsibleList();
-    setupScrollTopButton();
-  }
-});
-
-/* ══ Page State ══ */
-var currentUser    = null;
-var allRepairs     = [];
-var currentFilter  = 'all';
-var currentSearch  = '';
-var currentSubTab  = 'active';
-var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
-var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
-var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
-
-/* ── ตัวกรองช่วงเวลา: ใช้ร่วมกันทั้งหน้า "การแจ้งซ่อม" (scope=active) และ "ประวัติทั้งหมด" (scope=history)
-     แต่ละหน้าเลือกช่วงเวลาเป็นอิสระจากกัน โหมด: all / week / month (เลือกเดือน+ปี) / year (เลือกปี)
-     ปีย้อนหลังเลือกได้สูงสุด 3 ปี (ปีปัจจุบัน + ย้อนหลัง 2 ปี) ── */
-var periodState = {
-  active:  { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() },
-  history: { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() }
-};
-var PERIOD_MODE_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
-var THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var PERIOD_MAX_YEARS_BACK = 3; /* ดูย้อนหลังได้สูงสุด 3 ปี */
+} /* ดูย้อนหลังได้สูงสุด 3 ปี */
 
 function getPeriodRange(scope) {
   var st = periodState[scope];
@@ -155,15 +212,6 @@ function getPeriodRange(scope) {
     return [start, end];
   }
   return null; /* all */
-}
-function filterByPeriod(list, scope) {
-  var range = getPeriodRange(scope);
-  if (!range) return list;
-  return list.filter(function(r) {
-    if (!r.createdAt) return false;
-    var d = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
-    return d >= range[0] && d < range[1];
-  });
 }
 
 /* ── แถบเลือกช่วงเวลา: ปุ่มโหมด + (ถ้าเลือกรายเดือน/รายปี) ป๊อปอัปเลือกเดือน/ปีแบบสวย ── */
@@ -269,24 +317,6 @@ function positionPeriodPopover(scope) {
   el.style.top  = top + 'px';
   el.style.right = 'auto';
 }
-function togglePeriodPopover(scope) {
-  var el = document.getElementById('periodPopover-' + scope);
-  if (!el) return;
-  var willOpen = el.style.display !== 'block';
-  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
-  el.style.display = willOpen ? 'block' : 'none';
-  if (willOpen) positionPeriodPopover(scope);
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest || !e.target.closest('.period-picker')) {
-    document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
-  }
-});
-/* popover เป็น position:fixed (อิง viewport) จึงไม่เลื่อนตาม content ที่ scroll เอง —
-   ปิดไปเลยเมื่อผู้ใช้เลื่อนหน้า กันปัญหากล่องค้างผิดตำแหน่ง */
-document.addEventListener('scroll', function() {
-  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
-}, true);
 
 function rerenderPeriodScope(scope) {
   if (scope === 'active') { renderStats(); renderActivePanel(); }
@@ -324,15 +354,6 @@ function stepPeriodYear(scope, delta) {
   if (y === curYear && periodState[scope].month > curMonth) periodState[scope].month = curMonth;
   rerenderPeriodScope(scope);
   reopenPeriodPopover(scope); /* ใช้ลูกศรเลื่อนปีอยู่ — เก็บป๊อปอัปให้เปิดค้างไว้เลือกเดือนต่อ */
-}
-
-function setupScrollTopButton() {
-  var content = document.getElementById('pageContent');
-  var btn = document.getElementById('scrollTopBtn');
-  if (!content || !btn) return;
-  content.addEventListener('scroll', function() {
-    btn.classList.toggle('show', content.scrollTop > 300);
-  });
 }
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
@@ -478,53 +499,6 @@ function renderPage() {
   );
 }
 
-function switchRepSubTab(tab) {
-  currentSubTab = tab;
-  document.querySelectorAll('#repSubTabBar .sub-tab').forEach(function(b) {
-    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
-  });
-  document.getElementById('repPanelActive').classList.toggle('active', tab === 'active');
-  document.getElementById('repPanelAssignee').classList.toggle('active', tab === 'assignee');
-  document.getElementById('repPanelHistory').classList.toggle('active', tab === 'history');
-  document.getElementById('repPanelSettings').classList.toggle('active', tab === 'settings');
-  if (tab === 'active') renderActivePanel();
-  if (tab === 'assignee') renderAssigneePanel();
-  if (tab === 'history') renderTable();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   Data: repairs
-   ══════════════════════════════════════════════════════════════ */
-function loadData() {
-  db.collection('repairs')
-    .onSnapshot(function(snap) {
-      allRepairs = [];
-      snap.forEach(function(doc) { allRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
-      sortRepairList(allRepairs);
-      renderStats();
-      renderActivePanel();
-      renderAssigneePanel();
-      renderTable();
-    }, function(err) {
-      console.error(err);
-      showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
-    });
-}
-
-/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
-     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด — ต้องตรงกับ repair-user.html ── */
-function sortRepairList(arr) {
-  arr.sort(function(a, b) {
-    var aUrgent = a.priority === 'urgent' ? 0 : 1;
-    var bUrgent = b.priority === 'urgent' ? 0 : 1;
-    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
-    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
-    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
-    return at - bt; /* เก่าไว้ก่อน */
-  });
-  return arr;
-}
-
 function renderStats() {
   renderPeriodBar('repActivePeriodBar', 'active');
   var scoped = filterByPeriod(allRepairs, 'active');
@@ -586,30 +560,6 @@ function getBuildingNameFromLocation(loc) {
   if (!loc) return '';
   var idx = loc.indexOf(' - ');
   return idx === -1 ? loc : loc.substring(0, idx);
-}
-
-function filterByActiveBuilding(list) {
-  if (!currentActiveBuildingFilter) return list;
-  return list.filter(function(r) { return getBuildingNameFromLocation(r.location) === currentActiveBuildingFilter; });
-}
-
-function filterByActiveCategory(list) {
-  if (!currentActiveCategoryFilter) return list;
-  return list.filter(function(r) { return r.category === currentActiveCategoryFilter; });
-}
-
-function setActiveBuildingFilter(name) {
-  currentActiveBuildingFilter = name || '';
-  var sel = document.getElementById('repActiveBuildingFilter');
-  if (sel) sel.value = currentActiveBuildingFilter;
-  renderActivePanel();
-}
-
-function setActiveCategoryFilter(catId) {
-  currentActiveCategoryFilter = catId || '';
-  var sel = document.getElementById('repActiveCategoryFilter');
-  if (sel) sel.value = currentActiveCategoryFilter;
-  renderActivePanel();
 }
 
 /* ── กราฟแท่งแนวนอน: จำนวนงานแยกตามอาคาร (คลิกเพื่อกรอง) ── */
@@ -829,20 +779,6 @@ function renderAssigneeCard(person) {
   );
 }
 
-
-
-function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
-    b.classList.toggle('active', b.getAttribute('data-f') === f);
-  });
-  renderTable();
-}
-function setSearch(v) {
-  currentSearch = (v || '').toLowerCase();
-  renderTable();
-}
-
 /* ── แถบกรองตามหมวดหมู่ของตาราง "ประวัติทั้งหมด" (สีปุ่มตรงกับสีหมวดหมู่นั้นๆ) ── */
 function renderHistoryCategoryFilterBar() {
   var bar = document.getElementById('repCatFilterBar');
@@ -863,12 +799,6 @@ function renderHistoryCategoryFilterBar() {
 
   bar.innerHTML = html;
   lucide.createIcons();
-}
-
-function setHistoryCategoryFilter(catId) {
-  currentCategoryFilter = catId;
-  renderHistoryCategoryFilterBar();
-  renderTable();
 }
 
 /* ── Panel "ประวัติทั้งหมด" ── */
@@ -927,17 +857,6 @@ function renderTable() {
   });
   tbody.innerHTML = html;
   lucide.createIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   Modal รายละเอียด + การดำเนินการ
-   ══════════════════════════════════════════════════════════════ */
-function openDetail(id) {
-  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
-  if (!r) return;
-  document.getElementById('detailModalBody').innerHTML = renderDetailBody(r);
-  lucide.createIcons();
-  openModal('detailModal');
 }
 
 function renderDetailBody(r) {
@@ -1003,65 +922,7 @@ function renderDetailBody(r) {
   );
 }
 
-function deleteRepairAdmin(id) {
-  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
-  if (!confirm('ลบคำขอแจ้งซ่อม "' + (r ? esc2(r.title || '') : '') + '" ใช่หรือไม่? การลบไม่สามารถกู้คืนได้ (ประวัติ/รูปภาพจะหายไปทั้งหมด)')) return;
-
-  db.collection('repairs').doc(id).delete().then(function() {
-    showToast('ลบรายการแจ้งซ่อมแล้ว');
-    closeModal('detailModal');
-  }).catch(function(err) {
-    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
-  });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   Staff Picker: เลือกช่างผู้รับผิดชอบจากข้อมูลบุคลากร (staff.html)
-   ใช้ suffix แยกอินสแตนซ์ระหว่างฟอร์ม "อนุมัติ" ('') กับ "มอบหมาย/อัปเดต" ('2')
-   เป็น combobox — พิมพ์กรองรายชื่อได้ หรือพิมพ์ชื่อเองได้ (เช่น ช่างภายนอก)
-   ══════════════════════════════════════════════════════════════ */
-var REPAIR_STAFF_LIST = [];
-var _repTechFilteredCache = {};
-
-function loadRepairStaffList() {
-  db.collection('staff').orderBy('name').get().then(function(snap) {
-    REPAIR_STAFF_LIST = [];
-    snap.forEach(function(doc) {
-      var s = doc.data();
-      REPAIR_STAFF_LIST.push({ name: s.name || '', position: s.position || '', group: s.group || '' });
-    });
-  }).catch(function(err) { console.error('loadRepairStaffList', err); });
-}
-
 function techInputId(suffix) { return 'actTechnician' + suffix; }
-
-function openTechPicker(suffix) {
-  var dd = document.getElementById('techDropdown' + suffix);
-  if (!dd) return;
-  dd.classList.add('open');
-  var input = document.getElementById(techInputId(suffix));
-  renderTechPickerList(suffix, input ? input.value : '');
-}
-function closeTechPicker(suffix) {
-  var dd = document.getElementById('techDropdown' + suffix);
-  if (dd) dd.classList.remove('open');
-}
-/* ปิด dropdown เมื่อคลิกนอกกล่อง */
-document.addEventListener('mousedown', function(e) {
-  ['', '2'].forEach(function(suffix) {
-    var wrap = document.getElementById('techPickerWrap' + suffix);
-    var dd = document.getElementById('techDropdown' + suffix);
-    if (wrap && dd && dd.classList.contains('open') && !wrap.contains(e.target)) {
-      dd.classList.remove('open');
-    }
-  });
-});
-
-function filterTechPicker(suffix) {
-  var input = document.getElementById(techInputId(suffix));
-  openTechPicker(suffix);
-  renderTechPickerList(suffix, input ? input.value : '');
-}
 
 function renderTechPickerList(suffix, query) {
   var listEl = document.getElementById('techPickerList' + suffix);
@@ -1110,12 +971,6 @@ function renderTechPickerList(suffix, query) {
     if (s) selectTechPicker(suffix, s.name);
   };
   lucide.createIcons();
-}
-
-function selectTechPicker(suffix, name) {
-  var input = document.getElementById(techInputId(suffix));
-  if (input) input.value = name;
-  closeTechPicker(suffix);
 }
 
 function renderActionPanel(r) {
@@ -1207,47 +1062,6 @@ function pushLog(id, status, note, extra) {
   }, extra || {});
   return db.collection('repairs').doc(id).update(payload);
 }
-
-function approveRepair(id) {
-  var technician = document.getElementById('actTechnician').value.trim();
-  var repairStatus = document.querySelector('input[name="actRepairStatus"]:checked').value;
-  var planNote = document.getElementById('actPlanNote').value.trim();
-
-  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
-
-  pushLog(id, 'approved',
-    'อนุมัติแผนซ่อม มอบหมายให้ ' + technician + (planNote ? (' — ' + planNote) : ''),
-    { technician: technician, repairStatus: repairStatus, planNote: planNote,
-      approvedByName: currentUser.displayName || currentUser.email, approvedAt: firebase.firestore.FieldValue.serverTimestamp() }
-  ).then(function() {
-    showToast('อนุมัติเรียบร้อย ✅');
-    closeModal('detailModal');
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function rejectRepair(id) {
-  var reason = document.getElementById('actRejectNote').value.trim();
-  if (!reason) { showToast('กรุณาระบุเหตุผลที่ไม่อนุมัติ', 'warn'); return; }
-
-  pushLog(id, 'rejected', 'ไม่อนุมัติ — ' + reason, { rejectNote: reason })
-    .then(function() {
-      showToast('บันทึกผลไม่อนุมัติแล้ว');
-      closeModal('detailModal');
-    }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function updateAssignment(id) {
-  var technician = document.getElementById('actTechnician2').value.trim();
-  var repairStatus = document.querySelector('input[name="actRepairStatus2"]:checked').value;
-  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
-
-  pushLog(id, allRepairsStatusOf(id), 'อัปเดตการมอบหมาย: ' + technician + ' — ' + (repairStatus === 'waiting' ? 'รอซ่อม/รออะไหล่' : 'กำลังซ่อม'),
-    { technician: technician, repairStatus: repairStatus }
-  ).then(function() {
-    showToast('บันทึกการมอบหมายแล้ว ✅');
-    closeModal('detailModal');
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
 function allRepairsStatusOf(id) {
   var r = allRepairs.filter(function(x) { return x.id === id; })[0];
   return r ? r.status : 'approved';
@@ -1263,32 +1077,6 @@ function markDone(id) {
     showToast('บันทึกแล้ว รอผู้แจ้งตรวจสอบ ✅');
     closeModal('detailModal');
   }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function forceClose(id) {
-  var note = document.getElementById('actCloseNote').value.trim();
-  pushLog(id, 'closed', 'ปิดงานโดยเจ้าหน้าที่' + (note ? (' — ' + note) : ''),
-    { closeNote: note, closedAt: firebase.firestore.FieldValue.serverTimestamp() }
-  ).then(function() {
-    showToast('ปิดงานเรียบร้อย ✅');
-    closeModal('detailModal');
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ตั้งค่า: หมวดหมู่การแจ้งซ่อม (repair_categories)
-   ══════════════════════════════════════════════════════════════ */
-function loadCategories() {
-  db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
-    if (snap.empty) { seedDefaultCategories(); return; }
-    REPAIR_CATEGORIES = [];
-    snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
-    renderCatList();
-    renderActiveCategoryFilterSelect();
-    renderHistoryCategoryFilterBar();
-    renderActivePanel();
-    renderTable();
-  }, function(err) { console.error('loadCategories', err); });
 }
 
 /* ── เติมตัวเลือกหมวดหมู่ในดรอปดาวน์กรองของแผง "การแจ้งซ่อม" ── */
@@ -1319,36 +1107,6 @@ function randomCatColor() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function addCategory() {
-  var labelInput = document.getElementById('newCatLabel');
-  var iconInput  = document.getElementById('newCatIcon');
-  var colorInput = document.getElementById('newCatColor');
-  var label = labelInput.value.trim();
-  var icon  = iconInput.value.trim() || 'wrench';
-  var color = (colorInput && colorInput.value) || randomCatColor();
-  if (!label) { showToast('กรุณากรอกชื่อหมวดหมู่', 'warn'); return; }
-
-  db.collection('repair_categories').add({
-    label: label, icon: icon, color: color, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    labelInput.value = ''; iconInput.value = ''; if (colorInput) colorInput.value = randomCatColor();
-    showToast('เพิ่มหมวดหมู่แล้ว ✅');
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-/* แก้สีหมวดหมู่ที่มีอยู่แล้ว (สีจะเปลี่ยนพร้อมกันทุกที่ทั้งป้าย/การ์ด/กราฟ เพราะอ่านจาก Firestore ตัวเดียว) */
-function updateCategoryColor(id, color) {
-  db.collection('repair_categories').doc(id).update({ color: color })
-    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function deleteCategory(id, label) {
-  if (!confirm('ลบหมวดหมู่ "' + label + '" ใช่หรือไม่? (รายการแจ้งซ่อมเก่าที่เคยใช้หมวดหมู่นี้จะยังอยู่ แต่จะแสดงเป็น "ไม่ระบุ")')) return;
-  db.collection('repair_categories').doc(id).delete()
-    .then(function() { showToast('ลบหมวดหมู่แล้ว'); })
-    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
 function renderCatList() {
   var el = document.getElementById('catList');
   if (!el) return;
@@ -1370,47 +1128,6 @@ function renderCatList() {
     );
   }).join('');
   lucide.createIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ตั้งค่า: อาคาร / สถานที่ (repair_buildings)
-   อาคาร: เจ้าหน้าที่สร้าง/ลบเท่านั้น
-   สถานที่ย่อย (subLocations): สมาชิกทั่วไปเพิ่มได้เองตอนแจ้งซ่อม (repair-user.html)
-   ที่นี่เจ้าหน้าที่ทำได้แค่ "ลบ" รายการที่พิมพ์ผิด/ซ้ำ เพื่อความสะอาดของข้อมูล
-   ══════════════════════════════════════════════════════════════ */
-function loadBuildings() {
-  db.collection('repair_buildings').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
-    REPAIR_BUILDINGS = [];
-    snap.forEach(function(doc) { REPAIR_BUILDINGS.push(Object.assign({ id: doc.id }, doc.data())); });
-    renderBldList();
-    renderActiveBuildingFilterSelect();
-  }, function(err) { console.error('loadBuildings', err); });
-}
-
-function addBuilding() {
-  var nameInput = document.getElementById('newBldName');
-  var name = nameInput.value.trim();
-  if (!name) { showToast('กรุณากรอกชื่ออาคาร', 'warn'); return; }
-
-  db.collection('repair_buildings').add({
-    name: name, subLocations: [], createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    nameInput.value = '';
-    showToast('เพิ่มอาคารแล้ว ✅');
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function deleteBuilding(id, name) {
-  if (!confirm('ลบอาคาร "' + name + '" พร้อมรายการสถานที่ย่อยทั้งหมดใช่หรือไม่?')) return;
-  db.collection('repair_buildings').doc(id).delete()
-    .then(function() { showToast('ลบอาคารแล้ว'); })
-    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
-}
-
-function removeSubLocation(buildingId, value) {
-  db.collection('repair_buildings').doc(buildingId).update({
-    subLocations: firebase.firestore.FieldValue.arrayRemove(value)
-  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
 }
 
 function renderBldList() {
@@ -1439,51 +1156,6 @@ function renderBldList() {
     );
   }).join('');
   lucide.createIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ตั้งค่า: รายชื่อผู้รับผิดชอบ (repair_responsible)
-   คัดเลือกมาจากข้อมูลบุคลากร (staff.html / คอลเลกชัน "staff")
-   ใช้เป็นตัวเลือกลัดของช่อง "ช่างผู้รับผิดชอบ" ตอนอนุมัติแผนซ่อม/มอบหมายงาน
-   (ยังพิมพ์ชื่อเองได้เสมอ ไม่ได้บังคับว่าต้องเลือกจากรายชื่อนี้เท่านั้น)
-   ══════════════════════════════════════════════════════════════ */
-var _respSelectedStaff  = null; /* บุคลากรที่เพิ่งถูกเลือกจาก dropdown ก่อนกดเพิ่ม */
-var _respFilteredCache  = [];
-
-function loadResponsibleList() {
-  db.collection('repair_responsible').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
-    REPAIR_RESPONSIBLE = [];
-    snap.forEach(function(doc) { REPAIR_RESPONSIBLE.push(Object.assign({ id: doc.id }, doc.data())); });
-    renderRespList();
-    renderAssigneePanel();
-  }, function(err) { console.error('loadResponsibleList', err); });
-}
-
-function openRespPicker() {
-  var dd = document.getElementById('respDropdown');
-  if (!dd) return;
-  dd.classList.add('open');
-  var input = document.getElementById('newRespName');
-  renderRespPickerList(input ? input.value : '');
-}
-function closeRespPicker() {
-  var dd = document.getElementById('respDropdown');
-  if (dd) dd.classList.remove('open');
-}
-/* ปิด dropdown เมื่อคลิกนอกกล่อง */
-document.addEventListener('mousedown', function(e) {
-  var wrap = document.getElementById('respPickerWrap');
-  var dd = document.getElementById('respDropdown');
-  if (wrap && dd && dd.classList.contains('open') && !wrap.contains(e.target)) {
-    dd.classList.remove('open');
-  }
-});
-
-function filterRespPicker() {
-  _respSelectedStaff = null;
-  openRespPicker();
-  var input = document.getElementById('newRespName');
-  renderRespPickerList(input ? input.value : '');
 }
 
 function renderRespPickerList(query) {
@@ -1532,6 +1204,328 @@ function renderRespPickerList(query) {
   lucide.createIcons();
 }
 
+function renderRespList() {
+  var el = document.getElementById('respList');
+  if (!el) return;
+  if (!REPAIR_RESPONSIBLE.length) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3);">ยังไม่มีรายชื่อผู้รับผิดชอบ — เพิ่มจากช่องค้นหาด้านบน (ถ้ายังไม่เพิ่ม ตอนอนุมัติจะเลือกจากรายชื่อบุคลากรทั้งหมดแทน)</p>';
+    return;
+  }
+  el.innerHTML = REPAIR_RESPONSIBLE.map(function(r) {
+    return (
+      '<div class="rp-set-row">' +
+        '<i data-lucide="user-round" style="width:16px;height:16px;color:var(--green);flex-shrink:0;"></i>' +
+        '<span class="grow" style="font-size:13px;font-weight:600;color:var(--text);">' + esc2(r.name) +
+          (r.position ? (' <span style="font-weight:400;color:var(--text3);font-size:11.5px;">· ' + esc2(r.position) + '</span>') : '') +
+        '</span>' +
+        '<button class="btn-icon" onclick="deleteResponsible(\'' + r.id + '\',\'' + esc2(r.name).replace(/'/g,"\\'") + '\')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px;color:var(--red-dark);"></i></button>' +
+      '</div>'
+    );
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ══════════════════════ EVENT HANDLERS ══════════════════════ */
+function filterByPeriod(list, scope) {
+  var range = getPeriodRange(scope);
+  if (!range) return list;
+  return list.filter(function(r) {
+    if (!r.createdAt) return false;
+    var d = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
+    return d >= range[0] && d < range[1];
+  });
+}
+function togglePeriodPopover(scope) {
+  var el = document.getElementById('periodPopover-' + scope);
+  if (!el) return;
+  var willOpen = el.style.display !== 'block';
+  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  el.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) positionPeriodPopover(scope);
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('.period-picker')) {
+    document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  }
+});
+/* popover เป็น position:fixed (อิง viewport) จึงไม่เลื่อนตาม content ที่ scroll เอง —
+   ปิดไปเลยเมื่อผู้ใช้เลื่อนหน้า กันปัญหากล่องค้างผิดตำแหน่ง */
+document.addEventListener('scroll', function() {
+  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+}, true);
+
+function setupScrollTopButton() {
+  var content = document.getElementById('pageContent');
+  var btn = document.getElementById('scrollTopBtn');
+  if (!content || !btn) return;
+  content.addEventListener('scroll', function() {
+    btn.classList.toggle('show', content.scrollTop > 300);
+  });
+}
+
+function switchRepSubTab(tab) {
+  currentSubTab = tab;
+  document.querySelectorAll('#repSubTabBar .sub-tab').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+  });
+  document.getElementById('repPanelActive').classList.toggle('active', tab === 'active');
+  document.getElementById('repPanelAssignee').classList.toggle('active', tab === 'assignee');
+  document.getElementById('repPanelHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('repPanelSettings').classList.toggle('active', tab === 'settings');
+  if (tab === 'active') renderActivePanel();
+  if (tab === 'assignee') renderAssigneePanel();
+  if (tab === 'history') renderTable();
+}
+
+/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
+     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด — ต้องตรงกับ repair-user.html ── */
+function sortRepairList(arr) {
+  arr.sort(function(a, b) {
+    var aUrgent = a.priority === 'urgent' ? 0 : 1;
+    var bUrgent = b.priority === 'urgent' ? 0 : 1;
+    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+    return at - bt; /* เก่าไว้ก่อน */
+  });
+  return arr;
+}
+
+function filterByActiveBuilding(list) {
+  if (!currentActiveBuildingFilter) return list;
+  return list.filter(function(r) { return getBuildingNameFromLocation(r.location) === currentActiveBuildingFilter; });
+}
+
+function filterByActiveCategory(list) {
+  if (!currentActiveCategoryFilter) return list;
+  return list.filter(function(r) { return r.category === currentActiveCategoryFilter; });
+}
+
+function setActiveBuildingFilter(name) {
+  currentActiveBuildingFilter = name || '';
+  var sel = document.getElementById('repActiveBuildingFilter');
+  if (sel) sel.value = currentActiveBuildingFilter;
+  renderActivePanel();
+}
+
+function setActiveCategoryFilter(catId) {
+  currentActiveCategoryFilter = catId || '';
+  var sel = document.getElementById('repActiveCategoryFilter');
+  if (sel) sel.value = currentActiveCategoryFilter;
+  renderActivePanel();
+}
+
+
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('#repFilterBar .filter-pill').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-f') === f);
+  });
+  renderTable();
+}
+function setSearch(v) {
+  currentSearch = (v || '').toLowerCase();
+  renderTable();
+}
+
+function setHistoryCategoryFilter(catId) {
+  currentCategoryFilter = catId;
+  renderHistoryCategoryFilterBar();
+  renderTable();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Modal รายละเอียด + การดำเนินการ
+   ══════════════════════════════════════════════════════════════ */
+function openDetail(id) {
+  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  document.getElementById('detailModalBody').innerHTML = renderDetailBody(r);
+  lucide.createIcons();
+  openModal('detailModal');
+}
+
+function deleteRepairAdmin(id) {
+  var r = allRepairs.filter(function(x) { return x.id === id; })[0];
+  if (!confirm('ลบคำขอแจ้งซ่อม "' + (r ? esc2(r.title || '') : '') + '" ใช่หรือไม่? การลบไม่สามารถกู้คืนได้ (ประวัติ/รูปภาพจะหายไปทั้งหมด)')) return;
+
+  db.collection('repairs').doc(id).delete().then(function() {
+    showToast('ลบรายการแจ้งซ่อมแล้ว');
+    closeModal('detailModal');
+  }).catch(function(err) {
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+function openTechPicker(suffix) {
+  var dd = document.getElementById('techDropdown' + suffix);
+  if (!dd) return;
+  dd.classList.add('open');
+  var input = document.getElementById(techInputId(suffix));
+  renderTechPickerList(suffix, input ? input.value : '');
+}
+function closeTechPicker(suffix) {
+  var dd = document.getElementById('techDropdown' + suffix);
+  if (dd) dd.classList.remove('open');
+}
+/* ปิด dropdown เมื่อคลิกนอกกล่อง */
+document.addEventListener('mousedown', function(e) {
+  ['', '2'].forEach(function(suffix) {
+    var wrap = document.getElementById('techPickerWrap' + suffix);
+    var dd = document.getElementById('techDropdown' + suffix);
+    if (wrap && dd && dd.classList.contains('open') && !wrap.contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+});
+
+function filterTechPicker(suffix) {
+  var input = document.getElementById(techInputId(suffix));
+  openTechPicker(suffix);
+  renderTechPickerList(suffix, input ? input.value : '');
+}
+
+function selectTechPicker(suffix, name) {
+  var input = document.getElementById(techInputId(suffix));
+  if (input) input.value = name;
+  closeTechPicker(suffix);
+}
+
+function approveRepair(id) {
+  var technician = document.getElementById('actTechnician').value.trim();
+  var repairStatus = document.querySelector('input[name="actRepairStatus"]:checked').value;
+  var planNote = document.getElementById('actPlanNote').value.trim();
+
+  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
+
+  pushLog(id, 'approved',
+    'อนุมัติแผนซ่อม มอบหมายให้ ' + technician + (planNote ? (' — ' + planNote) : ''),
+    { technician: technician, repairStatus: repairStatus, planNote: planNote,
+      approvedByName: currentUser.displayName || currentUser.email, approvedAt: firebase.firestore.FieldValue.serverTimestamp() }
+  ).then(function() {
+    showToast('อนุมัติเรียบร้อย ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function rejectRepair(id) {
+  var reason = document.getElementById('actRejectNote').value.trim();
+  if (!reason) { showToast('กรุณาระบุเหตุผลที่ไม่อนุมัติ', 'warn'); return; }
+
+  pushLog(id, 'rejected', 'ไม่อนุมัติ — ' + reason, { rejectNote: reason })
+    .then(function() {
+      showToast('บันทึกผลไม่อนุมัติแล้ว');
+      closeModal('detailModal');
+    }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function updateAssignment(id) {
+  var technician = document.getElementById('actTechnician2').value.trim();
+  var repairStatus = document.querySelector('input[name="actRepairStatus2"]:checked').value;
+  if (!technician) { showToast('กรุณาระบุช่างผู้รับผิดชอบ', 'warn'); return; }
+
+  pushLog(id, allRepairsStatusOf(id), 'อัปเดตการมอบหมาย: ' + technician + ' — ' + (repairStatus === 'waiting' ? 'รอซ่อม/รออะไหล่' : 'กำลังซ่อม'),
+    { technician: technician, repairStatus: repairStatus }
+  ).then(function() {
+    showToast('บันทึกการมอบหมายแล้ว ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function forceClose(id) {
+  var note = document.getElementById('actCloseNote').value.trim();
+  pushLog(id, 'closed', 'ปิดงานโดยเจ้าหน้าที่' + (note ? (' — ' + note) : ''),
+    { closeNote: note, closedAt: firebase.firestore.FieldValue.serverTimestamp() }
+  ).then(function() {
+    showToast('ปิดงานเรียบร้อย ✅');
+    closeModal('detailModal');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function addCategory() {
+  var labelInput = document.getElementById('newCatLabel');
+  var iconInput  = document.getElementById('newCatIcon');
+  var colorInput = document.getElementById('newCatColor');
+  var label = labelInput.value.trim();
+  var icon  = iconInput.value.trim() || 'wrench';
+  var color = (colorInput && colorInput.value) || randomCatColor();
+  if (!label) { showToast('กรุณากรอกชื่อหมวดหมู่', 'warn'); return; }
+
+  db.collection('repair_categories').add({
+    label: label, icon: icon, color: color, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    labelInput.value = ''; iconInput.value = ''; if (colorInput) colorInput.value = randomCatColor();
+    showToast('เพิ่มหมวดหมู่แล้ว ✅');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+/* แก้สีหมวดหมู่ที่มีอยู่แล้ว (สีจะเปลี่ยนพร้อมกันทุกที่ทั้งป้าย/การ์ด/กราฟ เพราะอ่านจาก Firestore ตัวเดียว) */
+function updateCategoryColor(id, color) {
+  db.collection('repair_categories').doc(id).update({ color: color })
+    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function deleteCategory(id, label) {
+  if (!confirm('ลบหมวดหมู่ "' + label + '" ใช่หรือไม่? (รายการแจ้งซ่อมเก่าที่เคยใช้หมวดหมู่นี้จะยังอยู่ แต่จะแสดงเป็น "ไม่ระบุ")')) return;
+  db.collection('repair_categories').doc(id).delete()
+    .then(function() { showToast('ลบหมวดหมู่แล้ว'); })
+    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function addBuilding() {
+  var nameInput = document.getElementById('newBldName');
+  var name = nameInput.value.trim();
+  if (!name) { showToast('กรุณากรอกชื่ออาคาร', 'warn'); return; }
+
+  db.collection('repair_buildings').add({
+    name: name, subLocations: [], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    nameInput.value = '';
+    showToast('เพิ่มอาคารแล้ว ✅');
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function deleteBuilding(id, name) {
+  if (!confirm('ลบอาคาร "' + name + '" พร้อมรายการสถานที่ย่อยทั้งหมดใช่หรือไม่?')) return;
+  db.collection('repair_buildings').doc(id).delete()
+    .then(function() { showToast('ลบอาคารแล้ว'); })
+    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function removeSubLocation(buildingId, value) {
+  db.collection('repair_buildings').doc(buildingId).update({
+    subLocations: firebase.firestore.FieldValue.arrayRemove(value)
+  }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+function openRespPicker() {
+  var dd = document.getElementById('respDropdown');
+  if (!dd) return;
+  dd.classList.add('open');
+  var input = document.getElementById('newRespName');
+  renderRespPickerList(input ? input.value : '');
+}
+function closeRespPicker() {
+  var dd = document.getElementById('respDropdown');
+  if (dd) dd.classList.remove('open');
+}
+/* ปิด dropdown เมื่อคลิกนอกกล่อง */
+document.addEventListener('mousedown', function(e) {
+  var wrap = document.getElementById('respPickerWrap');
+  var dd = document.getElementById('respDropdown');
+  if (wrap && dd && dd.classList.contains('open') && !wrap.contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
+
+function filterRespPicker() {
+  _respSelectedStaff = null;
+  openRespPicker();
+  var input = document.getElementById('newRespName');
+  renderRespPickerList(input ? input.value : '');
+}
+
 function selectRespPicker(s) {
   _respSelectedStaff = s;
   var input = document.getElementById('newRespName');
@@ -1569,23 +1563,36 @@ function deleteResponsible(id, name) {
     .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
 }
 
-function renderRespList() {
-  var el = document.getElementById('respList');
-  if (!el) return;
-  if (!REPAIR_RESPONSIBLE.length) {
-    el.innerHTML = '<p style="font-size:12px;color:var(--text3);">ยังไม่มีรายชื่อผู้รับผิดชอบ — เพิ่มจากช่องค้นหาด้านบน (ถ้ายังไม่เพิ่ม ตอนอนุมัติจะเลือกจากรายชื่อบุคลากรทั้งหมดแทน)</p>';
-    return;
+/* ══════════════════════ INIT ══════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   buildPage() — auth guard (ต้องมีสิทธิ์ 'repair') + shell builder
+
+   ✏️ ต้องเพิ่มสิทธิ์ 'repair' ให้เจ้าหน้าที่ที่เกี่ยวข้องในเอกสาร
+      admins/{email} → permissions.repair = true (ใน Firestore)
+   ══════════════════════════════════════════════════════════════ */
+buildPage({
+  appId:        'myApp',
+  navSubtitle:  'จัดการระบบแจ้งซ่อม',
+  navTheme:     'dark',
+  activePage:   'repair-admin',
+  requireAdmin: 'repair', /* ✏️ permission key */
+
+  onAuth: function(user, contentEl) {
+    currentUser = user;
+    updateNavUser(user);
+    updateSidebarProfile(user);
+    checkAdminAccess(user.email);
+
+    contentEl.innerHTML = renderPage();
+    lucide.createIcons();
+
+    loadData();
+    loadCategories();
+    loadBuildings();
+    loadRepairStaffList();
+    loadResponsibleList();
+    setupScrollTopButton();
   }
-  el.innerHTML = REPAIR_RESPONSIBLE.map(function(r) {
-    return (
-      '<div class="rp-set-row">' +
-        '<i data-lucide="user-round" style="width:16px;height:16px;color:var(--green);flex-shrink:0;"></i>' +
-        '<span class="grow" style="font-size:13px;font-weight:600;color:var(--text);">' + esc2(r.name) +
-          (r.position ? (' <span style="font-weight:400;color:var(--text3);font-size:11.5px;">· ' + esc2(r.position) + '</span>') : '') +
-        '</span>' +
-        '<button class="btn-icon" onclick="deleteResponsible(\'' + r.id + '\',\'' + esc2(r.name).replace(/'/g,"\\'") + '\')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px;color:var(--red-dark);"></i></button>' +
-      '</div>'
-    );
-  }).join('');
-  lucide.createIcons();
-}
+});
+
+
