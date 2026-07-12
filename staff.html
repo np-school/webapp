@@ -632,6 +632,7 @@ function saveStaff() {
         group:         group,
         academic_rank: academic_rank || data.role || '',
         subject:       data.subject || '',
+        phone:         phone,
         syncedAt:      now,
         syncedBy:      'admin'
       }, { merge: true }).catch(function(e){ console.warn('sync warn:', e); });

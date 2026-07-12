@@ -1218,7 +1218,7 @@ function renderSarPersonal(){
     sarRow('เชื้อชาติ',          p.ethnicity||'') +
     sarRow('ศาสนา',              p.religion||'') +
     sarRow('ที่อยู่ปัจจุบัน',    p.address||'') +
-    sarRow('เบอร์โทรศัพท์',      p.phone||'');
+    sarRow('เบอร์โทรศัพท์',      a.phone||p.phone||'');
   document.getElementById('sar-personal-body').innerHTML = html || '<div class="sar-empty">ยังไม่มีข้อมูล</div>';
   lucide.createIcons();
 }
@@ -1629,7 +1629,7 @@ function renderPersonalView(){
   setValEl('v_nationality', p.nationality||'');
   document.getElementById('v_ethnicity').textContent = p.ethnicity||'—';
   setValEl('v_religion',    p.religion||'');
-  setValEl('v_phone',       p.phone||'');
+  setValEl('v_phone',       a.phone||p.phone||'');
   setValEl('v_address',     p.address||'');
 
   loadEducation();
@@ -1656,7 +1656,7 @@ function editSection(section){
     document.getElementById('e_nationality').value = p.nationality || '';
     document.getElementById('e_ethnicity').value   = p.ethnicity   || '';
     document.getElementById('e_religion').value    = p.religion    || '';
-    document.getElementById('e_phone').value       = p.phone       || '';
+    document.getElementById('e_phone').value       = a.phone       || p.phone || '';
     document.getElementById('e_address').value     = p.address     || '';
   } else if(section==='career'){
     var c=careerData;
@@ -1701,21 +1701,39 @@ function saveSection(section){
   var profileRef = db.collection('staff_profile').doc(_targetUid());
 
   if(section==='personal'){
+    var phoneVal = document.getElementById('e_phone').value.trim();
     var userFields = {
       uid:         currentUser.uid,
       birthday:    document.getElementById('e_birthday').value,
       nationality: document.getElementById('e_nationality').value.trim(),
       ethnicity:   document.getElementById('e_ethnicity').value.trim(),
       religion:    document.getElementById('e_religion').value.trim(),
-      phone:       document.getElementById('e_phone').value.trim(),
+      phone:       phoneVal,
       address:     document.getElementById('e_address').value.trim(),
       updatedAt:   now
     };
     /* merge=true เพื่อไม่ทับ field อื่นที่มีอยู่ใน staff_profile */
-    profileRef.set(userFields, { merge: true })
+    var savePromises = [ profileRef.set(userFields, { merge: true }) ];
+
+    /* ── เบอร์โทรเป็น field ที่ลิงก์กับ staff.html (เก็บกลางที่ staff_profile_sync
+       keyed by email) — เขียนทับตรงนี้ด้วย เพื่อให้แอดมินเห็นค่าล่าสุดที่ผู้ใช้แก้เอง ── */
+    var syncEmail = currentUser.email.toLowerCase();
+    if(syncEmail){
+      savePromises.push(
+        db.collection('staff_profile_sync').doc(syncEmail).set({
+          email:    syncEmail,
+          phone:    phoneVal,
+          syncedAt: now,
+          syncedBy: 'user'
+        }, { merge: true })
+      );
+    }
+
+    Promise.all(savePromises)
       .then(function(){
-        /* อัปเดต personalData ใน memory เฉพาะ user fields */
+        /* อัปเดต personalData และ adminSyncData ใน memory */
         Object.assign(personalData, userFields);
+        adminSyncData.phone = phoneVal;
         showToast('บันทึกข้อมูลส่วนตัวแล้ว','success');
         cancelSection('personal');
         renderPersonalView();
