@@ -16,10 +16,12 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
 var auth    = firebase.auth();
 var db      = firebase.firestore();
-/* บังคับใช้ long-polling แทน WebChannel streaming
+/* บังคับใช้ long-polling แทน WebChannel streaming (ใช้ force แทน auto-detect
+   เพราะ auto-detect บางครั้งตรวจผิดว่าเครือข่ายรองรับ streaming ทั้งที่ไม่รองรับจริง
+   ทำให้ยังเจอ error "Listen/channel ... 404" / "transport errored" อยู่)
    ช่วยลด error "Could not reach Cloud Firestore backend / transport errored"
    ที่เกิดบ่อยบนเครือข่ายที่บล็อก/ไม่รองรับ HTTP/2 streaming (เช่น เครือข่ายโรงเรียน, proxy) */
-db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+db.settings({ experimentalForceLongPolling: true, merge: true });
 /* storage SDK optional — โหลดเฉพาะหน้าที่ต้องการ */
 var storage = (typeof firebase.storage === 'function') ? firebase.storage() : null;
 
