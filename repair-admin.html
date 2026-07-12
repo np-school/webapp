@@ -291,7 +291,7 @@ function renderPeriodBar(containerId, scope) {
           '<i data-lucide="calendar" style="width:13px;height:13px;color:var(--purple);"></i>' + label +
           '<i data-lucide="chevron-down" style="width:12px;height:12px;color:var(--text3);"></i>' +
         '</button>' +
-        '<div id="periodPopover-' + scope + '" class="period-popover" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:40;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:12px;min-width:230px;">' +
+        '<div id="periodPopover-' + scope + '" class="period-popover" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:40;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:12px;width:230px;max-width:calc(100vw - 24px);box-sizing:border-box;">' +
           renderPeriodPopoverBody(scope) +
         '</div>' +
       '</div>';
@@ -344,12 +344,26 @@ function renderPeriodPopoverBody(scope) {
 }
 
 /* เปิด/ปิดป๊อปอัปเลือกเดือน-ปี (ปิดตัวอื่นเสมอเวลาเปิดตัวใหม่ และปิดเมื่อคลิกนอกกล่อง) */
+/* จัดตำแหน่งป๊อปอัปให้อยู่ในจอเสมอ (กันล้นซ้าย/ขวา) โดยเช็คพื้นที่จริงหลัง render */
+function positionPeriodPopover(scope) {
+  var el = document.getElementById('periodPopover-' + scope);
+  if (!el || el.style.display !== 'block') return;
+  el.style.left = ''; el.style.right = '';
+  var rect = el.getBoundingClientRect();
+  var vw = window.innerWidth;
+  if (rect.right > vw - 8) {
+    el.style.right = '0'; el.style.left = 'auto';
+  } else if (rect.left < 8) {
+    el.style.left = '0'; el.style.right = 'auto';
+  }
+}
 function togglePeriodPopover(scope) {
   var el = document.getElementById('periodPopover-' + scope);
   if (!el) return;
   var willOpen = el.style.display !== 'block';
   document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
   el.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) positionPeriodPopover(scope);
 }
 document.addEventListener('click', function(e) {
   if (!e.target.closest || !e.target.closest('.period-picker')) {
@@ -365,7 +379,7 @@ function reopenPeriodPopover(scope) {
   /* render ใหม่ทำให้ popover ถูกสร้างใหม่ (ปิดอยู่โดย default) — เปิดกลับให้ทันทีเพื่อให้เลือกต่อได้ลื่นๆ */
   setTimeout(function() {
     var el = document.getElementById('periodPopover-' + scope);
-    if (el) el.style.display = 'block';
+    if (el) { el.style.display = 'block'; positionPeriodPopover(scope); }
   }, 0);
 }
 function setPeriodMode(scope, mode) {
