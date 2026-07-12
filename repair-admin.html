@@ -226,14 +226,22 @@ var currentSubTab  = 'active';
 var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
 var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
 var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
-var currentActivePeriodFilter  = 'all'; /* ช่วงเวลาของหน้า "การแจ้งซ่อม" (สถิติ/กราฟ/รายการ) */
-var currentHistoryPeriodFilter = 'all'; /* ช่วงเวลาของหน้า "ประวัติทั้งหมด" */
-var PERIOD_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'เดือนนี้', year: 'ปีนี้' };
 
-/* ── ช่วงเวลาปัจจุบัน: คืนค่า [startDate, endDate) หรือ null ถ้าเลือก "ทั้งหมด" ── */
-function getPeriodRange(period) {
+/* ── ตัวกรองช่วงเวลา: ใช้ร่วมกันทั้งหน้า "การแจ้งซ่อม" (scope=active) และ "ประวัติทั้งหมด" (scope=history)
+     แต่ละหน้าเลือกช่วงเวลาเป็นอิสระจากกัน โหมด: all / week / month (เลือกเดือน+ปี) / year (เลือกปี)
+     ปีย้อนหลังเลือกได้สูงสุด 3 ปี (ปีปัจจุบัน + ย้อนหลัง 2 ปี) ── */
+var periodState = {
+  active:  { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() },
+  history: { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() }
+};
+var PERIOD_MODE_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
+var THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var PERIOD_MAX_YEARS_BACK = 3; /* ดูย้อนหลังได้สูงสุด 3 ปี */
+
+function getPeriodRange(scope) {
+  var st = periodState[scope];
   var now = new Date();
-  if (period === 'week') {
+  if (st.period === 'week') {
     var day = now.getDay();
     var diffToMonday = (day === 0 ? -6 : 1 - day);
     var start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
@@ -241,20 +249,20 @@ function getPeriodRange(period) {
     var end = new Date(start); end.setDate(start.getDate() + 7);
     return [start, end];
   }
-  if (period === 'month') {
-    var start = new Date(now.getFullYear(), now.getMonth(), 1);
-    var end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  if (st.period === 'month') {
+    var start = new Date(st.year, st.month, 1);
+    var end = new Date(st.year, st.month + 1, 1);
     return [start, end];
   }
-  if (period === 'year') {
-    var start = new Date(now.getFullYear(), 0, 1);
-    var end = new Date(now.getFullYear() + 1, 0, 1);
+  if (st.period === 'year') {
+    var start = new Date(st.year, 0, 1);
+    var end = new Date(st.year + 1, 0, 1);
     return [start, end];
   }
-  return null;
+  return null; /* all */
 }
-function filterByPeriod(list, period) {
-  var range = getPeriodRange(period);
+function filterByPeriod(list, scope) {
+  var range = getPeriodRange(scope);
   if (!range) return list;
   return list.filter(function(r) {
     if (!r.createdAt) return false;
@@ -262,23 +270,51 @@ function filterByPeriod(list, period) {
     return d >= range[0] && d < range[1];
   });
 }
-/* ── แถบปุ่มเลือกช่วงเวลา (ใช้ร่วมกันทั้งหน้า "การแจ้งซ่อม" และ "ประวัติทั้งหมด") ── */
-function renderPeriodBar(containerId, current, setterName) {
+
+/* ── แถบเลือกช่วงเวลา: ปุ่มโหมด + (ถ้าเลือกรายเดือน/รายปี) select เดือน/ปี ── */
+function renderPeriodBar(containerId, scope) {
   var el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = ['all', 'week', 'month', 'year'].map(function(p) {
-    var active = current === p;
-    return '<button class="filter-pill' + (active ? ' active' : '') + '" onclick="' + setterName + '(\'' + p + '\')">' + PERIOD_LABELS[p] + '</button>';
+  var st = periodState[scope];
+  var curYear = new Date().getFullYear();
+  var years = [];
+  for (var i = 0; i < PERIOD_MAX_YEARS_BACK; i++) years.push(curYear - i);
+
+  var html = ['all', 'week', 'month', 'year'].map(function(p) {
+    var active = st.period === p;
+    return '<button class="filter-pill' + (active ? ' active' : '') + '" onclick="setPeriodMode(\'' + scope + '\',\'' + p + '\')">' + PERIOD_MODE_LABELS[p] + '</button>';
   }).join('');
+
+  if (st.period === 'month') {
+    html += '<select onchange="setPeriodMonth(\'' + scope + '\',this.value)" style="max-width:110px;">' +
+      THAI_MONTHS.map(function(m, idx) { return '<option value="' + idx + '"' + (idx === st.month ? ' selected' : '') + '>' + m + '</option>'; }).join('') +
+      '</select>' +
+      '<select onchange="setPeriodYear(\'' + scope + '\',this.value)" style="max-width:100px;">' +
+      years.map(function(y) { return '<option value="' + y + '"' + (y === st.year ? ' selected' : '') + '>พ.ศ. ' + (y + 543) + '</option>'; }).join('') +
+      '</select>';
+  } else if (st.period === 'year') {
+    html += '<select onchange="setPeriodYear(\'' + scope + '\',this.value)" style="max-width:100px;">' +
+      years.map(function(y) { return '<option value="' + y + '"' + (y === st.year ? ' selected' : '') + '>พ.ศ. ' + (y + 543) + '</option>'; }).join('') +
+      '</select>';
+  }
+  el.innerHTML = html;
 }
-function setActivePeriodFilter(p) {
-  currentActivePeriodFilter = p;
-  renderStats();
-  renderActivePanel();
+function rerenderPeriodScope(scope) {
+  if (scope === 'active') { renderStats(); renderActivePanel(); }
+  else { renderTable(); }
 }
-function setHistoryPeriodFilter(p) {
-  currentHistoryPeriodFilter = p;
-  renderTable();
+function setPeriodMode(scope, mode) {
+  periodState[scope].period = mode;
+  if ((mode === 'month' || mode === 'year') && !periodState[scope].year) periodState[scope].year = new Date().getFullYear();
+  rerenderPeriodScope(scope);
+}
+function setPeriodMonth(scope, m) {
+  periodState[scope].month = parseInt(m, 10);
+  rerenderPeriodScope(scope);
+}
+function setPeriodYear(scope, y) {
+  periodState[scope].year = parseInt(y, 10);
+  rerenderPeriodScope(scope);
 }
 
 function setupScrollTopButton() {
@@ -481,8 +517,8 @@ function sortRepairList(arr) {
 }
 
 function renderStats() {
-  renderPeriodBar('repActivePeriodBar', currentActivePeriodFilter, 'setActivePeriodFilter');
-  var scoped = filterByPeriod(allRepairs, currentActivePeriodFilter);
+  renderPeriodBar('repActivePeriodBar', 'active');
+  var scoped = filterByPeriod(allRepairs, 'active');
   var reported = scoped.filter(function(r) { return r.status === 'reported'; }).length;
   var progress = scoped.filter(function(r) { return ['approved','reopened'].indexOf(r.status) !== -1; }).length;
   var waitReview = scoped.filter(function(r) { return r.status === 'done'; }).length;
@@ -518,7 +554,7 @@ function renderActivePanel() {
   var progList = document.getElementById('repProgressList');
   if (!newList || !progList) return;
 
-  var periodScoped = filterByPeriod(allRepairs, currentActivePeriodFilter);
+  var periodScoped = filterByPeriod(allRepairs, 'active');
   var newItemsAll  = periodScoped.filter(function(r) { return r.status === 'reported'; });
   var progItemsAll = periodScoped.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
 
@@ -532,7 +568,7 @@ function renderActivePanel() {
   renderBuildingChart(periodScoped);
   renderCategoryChart(filterByActiveBuilding(periodScoped));
 
-  renderPeriodBar('repActivePeriodBar', currentActivePeriodFilter, 'setActivePeriodFilter');
+  renderPeriodBar('repActivePeriodBar', 'active');
   lucide.createIcons();
 }
 
@@ -830,9 +866,9 @@ function setHistoryCategoryFilter(catId) {
 function renderTable() {
   var tbody = document.getElementById('repairTableBody');
   if (!tbody) return;
-  renderPeriodBar('repHistoryPeriodBar', currentHistoryPeriodFilter, 'setHistoryPeriodFilter');
+  renderPeriodBar('repHistoryPeriodBar', 'history');
 
-  var list = filterByPeriod(allRepairs, currentHistoryPeriodFilter).filter(function(r) {
+  var list = filterByPeriod(allRepairs, 'history').filter(function(r) {
     if (currentCategoryFilter !== 'all' && r.category !== currentCategoryFilter) return false;
     if (currentFilter === 'reported' && r.status !== 'reported') return false;
     if (currentFilter === 'progress' && ['approved','reopened'].indexOf(r.status) === -1) return false;
