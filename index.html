@@ -599,6 +599,25 @@
           </div>
         </div>
 
+        <!-- ══ Recent Repairs Section ══ -->
+        <div id="repairDashSection" style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;margin-bottom:24px;">
+          <div style="padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <div style="width:34px;height:34px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="wrench" style="width:16px;height:16px;color:#ea580c;"></i>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:#0f172a;">แจ้งซ่อมล่าสุด</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:1px;">5 รายการล่าสุด</div>
+              </div>
+            </div>
+            <a href="repair-user.html" style="font-size:12px;font-weight:700;color:#ea580c;text-decoration:none;display:flex;align-items:center;gap:3px;padding:5px 10px;background:#fff7ed;border-radius:8px;">ดูทั้งหมด <i data-lucide="chevron-right" style="width:12px;height:12px;"></i></a>
+          </div>
+          <div id="repairDashList" style="padding:12px 16px;">
+            <div style="text-align:center;padding:32px 0;color:#cbd5e1;font-size:13px;font-style:italic;" id="repairDashEmpty">กำลังโหลด...</div>
+          </div>
+        </div>
+
         <!-- ══ LINE Notification Section (compact) ══ -->
         <div style="background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">
           <!-- Header -->
@@ -745,6 +764,7 @@
       checkNotifPermBanner();
       pfInit(user.uid, user.email);
       loadDashboardAnnouncements();
+      loadDashboardRepairs(user.uid);
     }else{
       npCurrentUser = null;
       document.body.classList.add('guest-mode');
@@ -844,6 +864,62 @@
           '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
+      '</div>';
+    }).join('');
+    lucide.createIcons();
+  }
+
+  /* ── Dashboard: Recent Repairs ── */
+  var REPAIR_STATUS_META={
+    reported: {label:'รออนุมัติ',        bg:'#fef3c7', color:'#92400e'},
+    rejected: {label:'ไม่อนุมัติ',        bg:'#fee2e2', color:'#991b1b'},
+    approved: {label:'รอซ่อม',           bg:'#e0f2fe', color:'#075985'},
+    done:     {label:'รอตรวจสอบ',        bg:'#ede9fe', color:'#5b21b6'},
+    reopened: {label:'ซ่อมใหม่',         bg:'#fee2e2', color:'#991b1b'},
+    closed:   {label:'ปิดงานแล้ว',       bg:'#d1fae5', color:'#065f46'}
+  };
+
+  function loadDashboardRepairs(uid){
+    // ไม่ใช้ orderBy ร่วมกับ where เพื่อหลีกเลี่ยง Firestore composite index — เรียงฝั่ง client แทน
+    db.collection('repairs').where('reporterUid','==',uid).onSnapshot(function(snap){
+      var list=[];
+      snap.forEach(function(d){list.push(Object.assign({id:d.id},d.data()));});
+      list.sort(function(a,b){
+        var ta=a.createdAt?a.createdAt.seconds:0, tb=b.createdAt?b.createdAt.seconds:0;
+        return tb-ta;
+      });
+      renderDashboardRepairs(list.slice(0,5));
+    },function(err){
+      console.error('loadDashboardRepairs error:',err);
+      var empty=document.getElementById('repairDashEmpty');
+      if(empty){empty.style.display='block';empty.textContent='ไม่สามารถโหลดข้อมูลได้: '+err.message;}
+    });
+  }
+
+  function renderDashboardRepairs(list){
+    var wrap=document.getElementById('repairDashList');
+    var empty=document.getElementById('repairDashEmpty');
+    if(!wrap)return;
+    if(!list.length){
+      if(empty){empty.style.display='block';empty.textContent='ยังไม่มีรายการแจ้งซ่อม';}
+      return;
+    }
+    if(empty)empty.style.display='none';
+    wrap.innerHTML=list.map(function(r){
+      var st=REPAIR_STATUS_META[r.status]||{label:r.status||'-',bg:'#f1f5f9',color:'#64748b'};
+      if(r.status==='approved'&&r.repairStatus==='in_progress'){st=Object.assign({},st,{label:'กำลังซ่อม'});}
+      if(r.status==='reopened'&&r.repairStatus==='in_progress'){st=Object.assign({},st,{label:'ซ่อมใหม่ (กำลังซ่อม)'});}
+      var dateStr='';
+      try{dateStr=r.createdAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){}
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
+        '<div style="width:42px;height:42px;background:#fff7ed;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<i data-lucide="wrench" style="width:18px;height:18px;color:#ea580c;"></i>'+
+        '</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:13px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.title||'-')+'</div>'+
+          '<div style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.location||'-')+(dateStr?' &nbsp;·&nbsp; '+dateStr:'')+'</div>'+
+        '</div>'+
+        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+st.bg+';color:'+st.color+';">'+st.label+'</span>'+
       '</div>';
     }).join('');
     lucide.createIcons();
