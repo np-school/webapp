@@ -2310,3 +2310,11 @@ body::-webkit-scrollbar,
   height: 0 !important;
   display: none !important;             /* Chrome, Safari, Edge */
 }
+
+/* ══ 32. Portfolio Admin — Group Stat Cards ══════════════════════
+   ✏️ ย้ายมาจาก <style> ที่ portfolio-admin.js เคย inject เข้า DOM ตรงๆ
+   ทุกครั้งที่ renderGroupDetail() ทำงาน (ทำให้มี <style> ซ้อนกันหลาย tag
+   ใน DOM เวลา render ซ้ำ) ย้ายมาไว้ที่นี่ที่เดียวแทน */
+@media (max-width: 640px) {
+  .group-stat-cards { grid-template-columns: repeat(3, 1fr) !important; }
+}

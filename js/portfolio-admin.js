@@ -1907,7 +1907,7 @@ function renderGroupDetail() {
   det.innerHTML =
     /* stat cards */
     '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap-item);margin-bottom:var(--gap-section);" class="group-stat-cards">' + statCards + '</div>' +
-    '<style>.group-stat-cards{} @media(max-width:640px){.group-stat-cards{grid-template-columns:repeat(3,1fr)!important;}}</style>' +
+    /* .group-stat-cards responsive rule ย้ายไป styles-new.css แล้ว (section 32) — ไม่ inject <style> ซ้ำทุกครั้งที่ render อีกต่อไป */
     /* doc bars */
     '<div style="margin-bottom:var(--gap-section);">' +
       '<p style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:12px;">การส่งงานแยกตามประเภท</p>' +
