@@ -226,6 +226,60 @@ var currentSubTab  = 'active';
 var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
 var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
 var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
+var currentActivePeriodFilter  = 'all'; /* ช่วงเวลาของหน้า "การแจ้งซ่อม" (สถิติ/กราฟ/รายการ) */
+var currentHistoryPeriodFilter = 'all'; /* ช่วงเวลาของหน้า "ประวัติทั้งหมด" */
+var PERIOD_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'เดือนนี้', year: 'ปีนี้' };
+
+/* ── ช่วงเวลาปัจจุบัน: คืนค่า [startDate, endDate) หรือ null ถ้าเลือก "ทั้งหมด" ── */
+function getPeriodRange(period) {
+  var now = new Date();
+  if (period === 'week') {
+    var day = now.getDay();
+    var diffToMonday = (day === 0 ? -6 : 1 - day);
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+    start.setHours(0, 0, 0, 0);
+    var end = new Date(start); end.setDate(start.getDate() + 7);
+    return [start, end];
+  }
+  if (period === 'month') {
+    var start = new Date(now.getFullYear(), now.getMonth(), 1);
+    var end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return [start, end];
+  }
+  if (period === 'year') {
+    var start = new Date(now.getFullYear(), 0, 1);
+    var end = new Date(now.getFullYear() + 1, 0, 1);
+    return [start, end];
+  }
+  return null;
+}
+function filterByPeriod(list, period) {
+  var range = getPeriodRange(period);
+  if (!range) return list;
+  return list.filter(function(r) {
+    if (!r.createdAt) return false;
+    var d = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
+    return d >= range[0] && d < range[1];
+  });
+}
+/* ── แถบปุ่มเลือกช่วงเวลา (ใช้ร่วมกันทั้งหน้า "การแจ้งซ่อม" และ "ประวัติทั้งหมด") ── */
+function renderPeriodBar(containerId, current, setterName) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = ['all', 'week', 'month', 'year'].map(function(p) {
+    var active = current === p;
+    return '<button class="filter-pill' + (active ? ' active' : '') + '" onclick="' + setterName + '(\'' + p + '\')">' + PERIOD_LABELS[p] + '</button>';
+  }).join('');
+}
+function setActivePeriodFilter(p) {
+  currentActivePeriodFilter = p;
+  renderStats();
+  renderActivePanel();
+}
+function setHistoryPeriodFilter(p) {
+  currentHistoryPeriodFilter = p;
+  renderTable();
+}
 
 function setupScrollTopButton() {
   var content = document.getElementById('pageContent');
@@ -266,6 +320,10 @@ function renderPage() {
 
     /* ── Panel: การแจ้งซ่อม (ใหม่ / กำลังดำเนินการ) ── */
     '<div class="sub-panel active" id="repPanelActive">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">' +
+        '<span style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;"><i data-lucide="calendar-days" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>ช่วงเวลา</span>' +
+        '<div id="repActivePeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>' +
+      '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repStatGrid"></div>' +
 
       '<div class="chart-grid">' +
@@ -313,6 +371,10 @@ function renderPage() {
             '<button class="filter-pill" data-f="rejected" onclick="setFilter(\'rejected\')">ไม่อนุมัติ</button>' +
           '</div>' +
           '<input type="text" id="repSearchInput" placeholder="ค้นหาเรื่อง/สถานที่/ผู้แจ้ง..." style="max-width:240px;" oninput="setSearch(this.value)">' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);">' +
+          '<span style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;"><i data-lucide="calendar-days" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>ช่วงเวลา</span>' +
+          '<div id="repHistoryPeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);" id="repCatFilterBar"></div>' +
       '</div>' +
@@ -419,10 +481,12 @@ function sortRepairList(arr) {
 }
 
 function renderStats() {
-  var reported = allRepairs.filter(function(r) { return r.status === 'reported'; }).length;
-  var progress = allRepairs.filter(function(r) { return ['approved','reopened'].indexOf(r.status) !== -1; }).length;
-  var waitReview = allRepairs.filter(function(r) { return r.status === 'done'; }).length;
-  var closed = allRepairs.filter(function(r) { return r.status === 'closed'; }).length;
+  renderPeriodBar('repActivePeriodBar', currentActivePeriodFilter, 'setActivePeriodFilter');
+  var scoped = filterByPeriod(allRepairs, currentActivePeriodFilter);
+  var reported = scoped.filter(function(r) { return r.status === 'reported'; }).length;
+  var progress = scoped.filter(function(r) { return ['approved','reopened'].indexOf(r.status) !== -1; }).length;
+  var waitReview = scoped.filter(function(r) { return r.status === 'done'; }).length;
+  var closed = scoped.filter(function(r) { return r.status === 'closed'; }).length;
 
   function stat(icon, color, bg, val, label) {
     return (
@@ -454,8 +518,9 @@ function renderActivePanel() {
   var progList = document.getElementById('repProgressList');
   if (!newList || !progList) return;
 
-  var newItemsAll  = allRepairs.filter(function(r) { return r.status === 'reported'; });
-  var progItemsAll = allRepairs.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
+  var periodScoped = filterByPeriod(allRepairs, currentActivePeriodFilter);
+  var newItemsAll  = periodScoped.filter(function(r) { return r.status === 'reported'; });
+  var progItemsAll = periodScoped.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
 
   var newItems  = filterByActiveCategory(filterByActiveBuilding(newItemsAll));
   var progItems = filterByActiveCategory(filterByActiveBuilding(progItemsAll));
@@ -463,11 +528,11 @@ function renderActivePanel() {
   newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini((currentActiveBuildingFilter || currentActiveCategoryFilter) ? 'ไม่มีรายการแจ้งซ่อมใหม่ตรงกับตัวกรองนี้' : 'ไม่มีรายการแจ้งซ่อมใหม่');
   progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini((currentActiveBuildingFilter || currentActiveCategoryFilter) ? 'ไม่มีงานที่กำลังดำเนินการตรงกับตัวกรองนี้' : 'ไม่มีงานที่กำลังดำเนินการ');
 
-  /* กราฟอาคาร: นับรวมย้อนหลังทั้งหมด (ทุกสถานะ รวมที่ปิดงานแล้ว) ภาพรวมทุกอาคารเสมอ (ไฮไลต์อาคารที่เลือกไว้) */
-  renderBuildingChart(allRepairs);
-  /* กราฟหมวดหมู่: นับรวมย้อนหลังทั้งหมด ตามอาคารที่กรองไว้ (หรือทั้งหมดถ้าไม่ได้เลือก) */
-  renderCategoryChart(filterByActiveBuilding(allRepairs));
+  /* กราฟอาคาร/หมวดหมู่: นับตามช่วงเวลาที่เลือกไว้ด้านบน (ทุกสถานะ รวมที่ปิดงานแล้ว) */
+  renderBuildingChart(periodScoped);
+  renderCategoryChart(filterByActiveBuilding(periodScoped));
 
+  renderPeriodBar('repActivePeriodBar', currentActivePeriodFilter, 'setActivePeriodFilter');
   lucide.createIcons();
 }
 
@@ -765,8 +830,9 @@ function setHistoryCategoryFilter(catId) {
 function renderTable() {
   var tbody = document.getElementById('repairTableBody');
   if (!tbody) return;
+  renderPeriodBar('repHistoryPeriodBar', currentHistoryPeriodFilter, 'setHistoryPeriodFilter');
 
-  var list = allRepairs.filter(function(r) {
+  var list = filterByPeriod(allRepairs, currentHistoryPeriodFilter).filter(function(r) {
     if (currentCategoryFilter !== 'all' && r.category !== currentCategoryFilter) return false;
     if (currentFilter === 'reported' && r.status !== 'reported') return false;
     if (currentFilter === 'progress' && ['approved','reopened'].indexOf(r.status) === -1) return false;
