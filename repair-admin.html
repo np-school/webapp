@@ -126,14 +126,29 @@ function getCategoryMeta(key) {
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ต้อง sync logic เดียวกับ repair-user.html
      เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า) ── */
 var CATEGORY_PALETTE = [
-  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)' },
-  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d' },
-  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e' },
-  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)' },
-  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985' },
-  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)' }
+  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d',            hex: '#15803d' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e',            hex: '#92400e' },
+  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
+  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
 ];
+function hexToRgba(hex, alpha) {
+  hex = (hex || '').replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(function(ch) { return ch + ch; }).join('');
+  var r = parseInt(hex.substring(0, 2), 16); if (isNaN(r)) r = 100;
+  var g = parseInt(hex.substring(2, 4), 16); if (isNaN(g)) g = 100;
+  var b = parseInt(hex.substring(4, 6), 16); if (isNaN(b)) b = 100;
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+}
+/* ── สีของแต่ละหมวดหมู่: ใช้สีที่ตั้งไว้เอง (เลือกได้ตอนเพิ่ม/แก้ไขหมวดหมู่) ก่อน
+     ถ้าไม่มีค่อย fallback เป็นสีสุ่มคงที่จาก id เหมือนเดิม (sync กับ repair-user.html
+     เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า รวมถึงกราฟ) ── */
 function getCategoryColor(catId) {
+  var cat = getCategoryMeta(catId);
+  if (cat && cat.color) {
+    return { bg: hexToRgba(cat.color, 0.14), border: hexToRgba(cat.color, 0.4), text: cat.color };
+  }
   var key = catId || 'ไม่ระบุ';
   var hash = 0;
   for (var i = 0; i < key.length; i++) hash = (hash + key.charCodeAt(i) * (i + 1)) % CATEGORY_PALETTE.length;
@@ -321,6 +336,7 @@ function renderPage() {
           '<div class="rp-inline-form">' +
             '<input type="text" id="newCatLabel" placeholder="ชื่อหมวดหมู่ เช่น กระจก/ประตู">' +
             '<input type="text" id="newCatIcon" placeholder="ไอคอน (lucide) เช่น wrench" style="max-width:150px;">' +
+            '<input type="color" id="newCatColor" value="' + randomCatColor() + '" title="เลือกสีหมวดหมู่" style="width:40px;height:34px;padding:2px;border-radius:8px;cursor:pointer;flex-shrink:0;">' +
             '<button class="btn-primary" onclick="addCategory()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่ม</button>' +
           '</div>' +
           '<p style="font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:12px;">ชื่อไอคอนดูได้ที่ <a href="https://lucide.dev/icons" target="_blank" rel="noopener">lucide.dev/icons</a> (ไม่ใส่ก็ได้ ระบบจะใช้ไอคอนเริ่มต้น)</p>' +
@@ -518,8 +534,7 @@ function renderBuildingChart(list) {
   }).join('');
 }
 
-/* ── โดนัท: สัดส่วนงานแยกตามหมวดหมู่ ── */
-var REP_CHART_PALETTE = ['#7c3aed', '#0ea5e9', '#f59e0b', '#22c55e', '#ef4444', '#ec4899', '#14b8a6', '#6366f1'];
+/* ── โดนัท: สัดส่วนงานแยกตามหมวดหมู่ (สีของกราฟตรงกับสีหมวดหมู่ที่ตั้งไว้ในแท็บ "ตั้งค่า") ── */
 function renderCategoryChart(list) {
   var el = document.getElementById('repCategoryChart');
   if (!el) return;
@@ -545,7 +560,7 @@ function renderCategoryChart(list) {
     var cat   = getCategoryMeta(key);
     var count = counts[key];
     var pct   = count / total * 100;
-    var color = REP_CHART_PALETTE[i % REP_CHART_PALETTE.length];
+    var color = getCategoryColor(key).text;
     gradientParts.push(color + ' ' + cursor + '% ' + (cursor + pct) + '%');
     cursor += pct;
     legendHtml +=
@@ -1187,19 +1202,33 @@ function seedDefaultCategories() {
   batch.commit().catch(function(err) { console.error('seedDefaultCategories', err); });
 }
 
+/* สุ่มสี hex สวยๆ ให้ input color ตอนเปิดฟอร์ม (ผู้ใช้เปลี่ยนเองได้ก่อนกด "เพิ่ม") */
+function randomCatColor() {
+  var pool = ['#2563eb', '#15803d', '#b45309', '#dc2626', '#0369a1', '#7c3aed', '#db2777', '#0f766e', '#4f46e5', '#ca8a04'];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function addCategory() {
   var labelInput = document.getElementById('newCatLabel');
   var iconInput  = document.getElementById('newCatIcon');
+  var colorInput = document.getElementById('newCatColor');
   var label = labelInput.value.trim();
   var icon  = iconInput.value.trim() || 'wrench';
+  var color = (colorInput && colorInput.value) || randomCatColor();
   if (!label) { showToast('กรุณากรอกชื่อหมวดหมู่', 'warn'); return; }
 
   db.collection('repair_categories').add({
-    label: label, icon: icon, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    label: label, icon: icon, color: color, createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
-    labelInput.value = ''; iconInput.value = '';
+    labelInput.value = ''; iconInput.value = ''; if (colorInput) colorInput.value = randomCatColor();
     showToast('เพิ่มหมวดหมู่แล้ว ✅');
   }).catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+/* แก้สีหมวดหมู่ที่มีอยู่แล้ว (สีจะเปลี่ยนพร้อมกันทุกที่ทั้งป้าย/การ์ด/กราฟ เพราะอ่านจาก Firestore ตัวเดียว) */
+function updateCategoryColor(id, color) {
+  db.collection('repair_categories').doc(id).update({ color: color })
+    .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
 }
 
 function deleteCategory(id, label) {
@@ -1217,10 +1246,14 @@ function renderCatList() {
     return;
   }
   el.innerHTML = REPAIR_CATEGORIES.map(function(c) {
+    var col = getCategoryColor(c.id);
     return (
       '<div class="rp-set-row">' +
-        '<i data-lucide="' + (c.icon || 'wrench') + '" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>' +
+        '<i data-lucide="' + (c.icon || 'wrench') + '" style="width:16px;height:16px;color:' + col.text + ';flex-shrink:0;"></i>' +
         '<span class="grow" style="font-size:13px;font-weight:600;color:var(--text);">' + esc2(c.label) + '</span>' +
+        '<input type="color" value="' + (c.color || col.hex || '#64748b') + '" title="เปลี่ยนสีหมวดหมู่" ' +
+          'onchange="updateCategoryColor(\'' + c.id + '\', this.value)" ' +
+          'style="width:28px;height:28px;padding:1px;border-radius:6px;cursor:pointer;flex-shrink:0;border:1px solid var(--border);">' +
         '<button class="btn-icon" onclick="deleteCategory(\'' + c.id + '\',\'' + esc2(c.label).replace(/'/g,"\\'") + '\')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px;color:var(--red-dark);"></i></button>' +
       '</div>'
     );
