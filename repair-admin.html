@@ -43,9 +43,6 @@
     .rp-status.c-purple { background:var(--purple-light);color:var(--purple-dark); }
     .rp-urgent-dot{ width:7px; height:7px; border-radius:50%; background:var(--red); display:inline-block; margin-right:5px; flex-shrink:0; }
     .rp-urgent-tag{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; color:var(--red-dark); background:#fff; border:1px solid var(--red); padding:2px 9px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
-    .rp-urgent-row{ background:var(--red-light) !important; }
-    tr.rp-urgent-row:hover{ background:var(--red-light) !important; }
-    tr.rp-urgent-row > td{ background:var(--red-light); }
     .rp-row{ cursor:pointer; }
     .rp-photo-thumb{ position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden; flex-shrink:0; border:1px solid var(--border); }
     .rp-photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -126,6 +123,23 @@ function getCategoryMeta(key) {
   return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
 }
 
+/* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ต้อง sync logic เดียวกับ repair-user.html
+     เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า) ── */
+var CATEGORY_PALETTE = [
+  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e' },
+  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)' },
+  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985' },
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)' }
+];
+function getCategoryColor(catId) {
+  var key = catId || 'ไม่ระบุ';
+  var hash = 0;
+  for (var i = 0; i < key.length; i++) hash = (hash + key.charCodeAt(i) * (i + 1)) % CATEGORY_PALETTE.length;
+  return CATEGORY_PALETTE[hash];
+}
+
 var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
 
 function getStatusMeta(r) {
@@ -195,6 +209,8 @@ var currentFilter  = 'all';
 var currentSearch  = '';
 var currentSubTab  = 'active';
 var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
+var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
+var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
 
 function setupScrollTopButton() {
   var content = document.getElementById('pageContent');
@@ -255,6 +271,8 @@ function renderPage() {
         '<div style="display:flex;align-items:center;gap:8px;">' +
           '<label for="repActiveBuildingFilter" style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;"><i data-lucide="filter" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>อาคาร</label>' +
           '<select id="repActiveBuildingFilter" onchange="setActiveBuildingFilter(this.value)" style="max-width:200px;"><option value="">ทุกอาคาร</option></select>' +
+          '<label for="repActiveCategoryFilter" style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;">หมวดหมู่</label>' +
+          '<select id="repActiveCategoryFilter" onchange="setActiveCategoryFilter(this.value)" style="max-width:200px;"><option value="">ทุกหมวดหมู่</option></select>' +
         '</div>' +
       '</div>' +
       '<div id="repNewList"></div>' +
@@ -281,6 +299,7 @@ function renderPage() {
           '</div>' +
           '<input type="text" id="repSearchInput" placeholder="ค้นหาเรื่อง/สถานที่/ผู้แจ้ง..." style="max-width:240px;" oninput="setSearch(this.value)">' +
         '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);" id="repCatFilterBar"></div>' +
       '</div>' +
       '<div class="card" style="padding:0;overflow-x:auto;">' +
         '<table class="data-table" id="repairTable">' +
@@ -355,10 +374,10 @@ function switchRepSubTab(tab) {
    ══════════════════════════════════════════════════════════════ */
 function loadData() {
   db.collection('repairs')
-    .orderBy('createdAt', 'desc')
     .onSnapshot(function(snap) {
       allRepairs = [];
       snap.forEach(function(doc) { allRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      sortRepairList(allRepairs);
       renderStats();
       renderActivePanel();
       renderAssigneePanel();
@@ -367,6 +386,20 @@ function loadData() {
       console.error(err);
       showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
     });
+}
+
+/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
+     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด — ต้องตรงกับ repair-user.html ── */
+function sortRepairList(arr) {
+  arr.sort(function(a, b) {
+    var aUrgent = a.priority === 'urgent' ? 0 : 1;
+    var bUrgent = b.priority === 'urgent' ? 0 : 1;
+    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+    return at - bt; /* เก่าไว้ก่อน */
+  });
+  return arr;
 }
 
 function renderStats() {
@@ -408,11 +441,11 @@ function renderActivePanel() {
   var newItemsAll  = allRepairs.filter(function(r) { return r.status === 'reported'; });
   var progItemsAll = allRepairs.filter(function(r) { return ['approved','reopened','done'].indexOf(r.status) !== -1; });
 
-  var newItems  = filterByActiveBuilding(newItemsAll);
-  var progItems = filterByActiveBuilding(progItemsAll);
+  var newItems  = filterByActiveCategory(filterByActiveBuilding(newItemsAll));
+  var progItems = filterByActiveCategory(filterByActiveBuilding(progItemsAll));
 
-  newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini(currentActiveBuildingFilter ? 'ไม่มีรายการแจ้งซ่อมใหม่ในอาคารนี้' : 'ไม่มีรายการแจ้งซ่อมใหม่');
-  progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini(currentActiveBuildingFilter ? 'ไม่มีงานที่กำลังดำเนินการในอาคารนี้' : 'ไม่มีงานที่กำลังดำเนินการ');
+  newList.innerHTML  = newItems.length  ? newItems.map(renderMiniCard).join('')  : emptyMini((currentActiveBuildingFilter || currentActiveCategoryFilter) ? 'ไม่มีรายการแจ้งซ่อมใหม่ตรงกับตัวกรองนี้' : 'ไม่มีรายการแจ้งซ่อมใหม่');
+  progList.innerHTML = progItems.length ? progItems.map(renderMiniCard).join('') : emptyMini((currentActiveBuildingFilter || currentActiveCategoryFilter) ? 'ไม่มีงานที่กำลังดำเนินการตรงกับตัวกรองนี้' : 'ไม่มีงานที่กำลังดำเนินการ');
 
   /* กราฟอาคาร: นับรวมย้อนหลังทั้งหมด (ทุกสถานะ รวมที่ปิดงานแล้ว) ภาพรวมทุกอาคารเสมอ (ไฮไลต์อาคารที่เลือกไว้) */
   renderBuildingChart(allRepairs);
@@ -434,10 +467,22 @@ function filterByActiveBuilding(list) {
   return list.filter(function(r) { return getBuildingNameFromLocation(r.location) === currentActiveBuildingFilter; });
 }
 
+function filterByActiveCategory(list) {
+  if (!currentActiveCategoryFilter) return list;
+  return list.filter(function(r) { return r.category === currentActiveCategoryFilter; });
+}
+
 function setActiveBuildingFilter(name) {
   currentActiveBuildingFilter = name || '';
   var sel = document.getElementById('repActiveBuildingFilter');
   if (sel) sel.value = currentActiveBuildingFilter;
+  renderActivePanel();
+}
+
+function setActiveCategoryFilter(catId) {
+  currentActiveCategoryFilter = catId || '';
+  var sel = document.getElementById('repActiveCategoryFilter');
+  if (sel) sel.value = currentActiveCategoryFilter;
   renderActivePanel();
 }
 
@@ -544,9 +589,10 @@ function emptyMini(text) {
 
 function renderMiniCard(r) {
   var cat = getCategoryMeta(r.category);
+  var col = getCategoryColor(r.category);
   var meta = getStatusMeta(r);
   return (
-    '<div class="rp-mini-card' + (r.priority === 'urgent' ? ' rp-urgent-row' : '') + '" onclick="openDetail(\'' + r.id + '\')">' +
+    '<div class="rp-mini-card" style="background:' + col.bg + ';border-color:' + col.border + ';border-left:4px solid ' + col.text + ';" onclick="openDetail(\'' + r.id + '\')">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">' +
         '<div style="min-width:0;flex:1;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
@@ -554,7 +600,7 @@ function renderMiniCard(r) {
             '<span style="font-size:13.5px;font-weight:800;color:var(--text);">' + esc2(r.title || '') + '</span>' +
           '</div>' +
           '<div style="font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
-            '<span style="display:flex;align-items:center;gap:4px;"><i data-lucide="' + cat.icon + '" style="width:11px;height:11px;"></i>' + cat.label + '</span>' +
+            '<span style="display:flex;align-items:center;gap:4px;color:' + col.text + ';font-weight:700;"><i data-lucide="' + cat.icon + '" style="width:11px;height:11px;"></i>' + cat.label + '</span>' +
             '<span style="display:flex;align-items:center;gap:4px;"><i data-lucide="map-pin" style="width:11px;height:11px;"></i>' + esc2(r.location || '') + '</span>' +
             '<span>' + esc2(r.reporterName || r.reporterEmail || '') + '</span>' +
             (r.reporterPhone ? '<span style="display:flex;align-items:center;gap:4px;"><i data-lucide="phone" style="width:11px;height:11px;"></i>' + esc2(r.reporterPhone) + '</span>' : '') +
@@ -672,12 +718,41 @@ function setSearch(v) {
   renderTable();
 }
 
+/* ── แถบกรองตามหมวดหมู่ของตาราง "ประวัติทั้งหมด" (สีปุ่มตรงกับสีหมวดหมู่นั้นๆ) ── */
+function renderHistoryCategoryFilterBar() {
+  var bar = document.getElementById('repCatFilterBar');
+  if (!bar) return;
+
+  var html = '<button class="filter-pill' + (currentCategoryFilter === 'all' ? ' active' : '') +
+    '" data-cf="all" onclick="setHistoryCategoryFilter(\'all\')">ทุกหมวดหมู่</button>';
+
+  REPAIR_CATEGORIES.forEach(function(c) {
+    var col = getCategoryColor(c.id);
+    var isActive = currentCategoryFilter === c.id;
+    html += '<button class="filter-pill' + (isActive ? ' active' : '') + '" data-cf="' + c.id + '" ' +
+      'onclick="setHistoryCategoryFilter(\'' + c.id + '\')" ' +
+      'style="' + (isActive ? ('background:' + col.text + ';border-color:' + col.text + ';color:#fff;') : ('color:' + col.text + ';border-color:' + col.border + ';')) + '">' +
+      '<i data-lucide="' + (c.icon || 'wrench') + '" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i>' + esc2(c.label) +
+    '</button>';
+  });
+
+  bar.innerHTML = html;
+  lucide.createIcons();
+}
+
+function setHistoryCategoryFilter(catId) {
+  currentCategoryFilter = catId;
+  renderHistoryCategoryFilterBar();
+  renderTable();
+}
+
 /* ── Panel "ประวัติทั้งหมด" ── */
 function renderTable() {
   var tbody = document.getElementById('repairTableBody');
   if (!tbody) return;
 
   var list = allRepairs.filter(function(r) {
+    if (currentCategoryFilter !== 'all' && r.category !== currentCategoryFilter) return false;
     if (currentFilter === 'reported' && r.status !== 'reported') return false;
     if (currentFilter === 'progress' && ['approved','reopened'].indexOf(r.status) === -1) return false;
     if (currentFilter === 'done' && r.status !== 'done') return false;
@@ -704,10 +779,11 @@ function renderTable() {
   var html = '';
   list.forEach(function(r) {
     var cat = getCategoryMeta(r.category);
+    var col = getCategoryColor(r.category);
     var meta = getStatusMeta(r);
     html +=
-      '<tr class="rp-row' + (r.priority === 'urgent' ? ' rp-urgent-row' : '') + '" onclick="openDetail(\'' + r.id + '\')">' +
-        '<td style="white-space:nowrap;font-size:12px;color:var(--text2);">' + fmtDate(r.createdAt) + '</td>' +
+      '<tr class="rp-row" style="background:' + col.bg + ';" onclick="openDetail(\'' + r.id + '\')">' +
+        '<td style="white-space:nowrap;font-size:12px;color:var(--text2);border-left:4px solid ' + col.text + ';">' + fmtDate(r.createdAt) + '</td>' +
         '<td>' +
           '<div style="font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap;">' +
             (r.priority === 'urgent' ? '<span class="rp-urgent-tag"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i>เร่งด่วน</span>' : '') +
@@ -715,7 +791,7 @@ function renderTable() {
           '</div>' +
           '<div style="font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px;"><i data-lucide="map-pin" style="width:11px;height:11px;"></i>' + esc2(r.location || '') + '</div>' +
         '</td>' +
-        '<td><span style="font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px;"><i data-lucide="' + cat.icon + '" style="width:13px;height:13px;"></i>' + cat.label + '</span></td>' +
+        '<td><span style="font-size:11.5px;color:' + col.text + ';font-weight:700;display:flex;align-items:center;gap:5px;"><i data-lucide="' + cat.icon + '" style="width:13px;height:13px;"></i>' + cat.label + '</span></td>' +
         '<td style="font-size:12.5px;">' + esc2(r.reporterName || r.reporterEmail || '') +
           (r.reporterPhone ? '<div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px;"><i data-lucide="phone" style="width:10px;height:10px;"></i>' + esc2(r.reporterPhone) + '</div>' : '') +
         '</td>' +
@@ -1082,9 +1158,23 @@ function loadCategories() {
     REPAIR_CATEGORIES = [];
     snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
     renderCatList();
+    renderActiveCategoryFilterSelect();
+    renderHistoryCategoryFilterBar();
     renderActivePanel();
     renderTable();
   }, function(err) { console.error('loadCategories', err); });
+}
+
+/* ── เติมตัวเลือกหมวดหมู่ในดรอปดาวน์กรองของแผง "การแจ้งซ่อม" ── */
+function renderActiveCategoryFilterSelect() {
+  var sel = document.getElementById('repActiveCategoryFilter');
+  if (!sel) return;
+  var current = currentActiveCategoryFilter;
+  sel.innerHTML = '<option value="">ทุกหมวดหมู่</option>' +
+    REPAIR_CATEGORIES.map(function(c) {
+      return '<option value="' + c.id + '">' + esc2(c.label) + '</option>';
+    }).join('');
+  sel.value = current;
 }
 
 /* ครั้งแรกที่ยังไม่มีข้อมูล ให้เติมหมวดหมู่เริ่มต้น (คงชื่อ key เดิมไว้ ไม่ให้กระทบข้อมูลเก่า) */
