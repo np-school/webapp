@@ -202,11 +202,29 @@ function getCategoryMeta(key) {
   for (var i = 0; i < REPAIR_CATEGORIES.length; i++) if (REPAIR_CATEGORIES[i].id === key) return REPAIR_CATEGORIES[i];
   return { id:key, label:key || 'ไม่ระบุ', icon:'help-circle' };
 }
+
+/* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ไม่ต้องตั้งค่าเพิ่มในแอดมิน)
+     หมวดหมู่เดียวกันจะได้สีเดิมเสมอไม่ว่าจะโหลดกี่ครั้งก็ตาม ── */
+var CATEGORY_PALETTE = [
+  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e' },
+  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)' },
+  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985' },
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)' }
+];
+function getCategoryColor(catId) {
+  var key = catId || 'ไม่ระบุ';
+  var hash = 0;
+  for (var i = 0; i < key.length; i++) hash = (hash + key.charCodeAt(i) * (i + 1)) % CATEGORY_PALETTE.length;
+  return CATEGORY_PALETTE[hash];
+}
 function loadCategories() {
   db.collection('repair_categories').orderBy('createdAt', 'asc').onSnapshot(function(snap) {
     REPAIR_CATEGORIES = [];
     snap.forEach(function(doc) { REPAIR_CATEGORIES.push(Object.assign({ id: doc.id }, doc.data())); });
     populateCategorySelect();
+    renderCategoryFilterBar();
     if (typeof renderList === 'function' && myRepairs) renderList();
   }, function(err) { console.error('loadCategories', err); });
 }
@@ -339,12 +357,14 @@ function renderPage() {
 
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repStatGrid"></div>' +
 
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="repFilterBar">' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="repFilterBar">' +
       '<button class="filter-pill active" data-f="all" onclick="setFilter(\'all\')">ทั้งหมด</button>' +
       '<button class="filter-pill" data-f="open" onclick="setFilter(\'open\')">กำลังดำเนินการ</button>' +
       '<button class="filter-pill" data-f="done" onclick="setFilter(\'done\')">รอตรวจสอบ</button>' +
       '<button class="filter-pill" data-f="closed" onclick="setFilter(\'closed\')">ปิดงานแล้ว</button>' +
     '</div>' +
+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="repCatFilterBar"></div>' +
 
     '<div id="repairListWrap">' +
       '<div class="empty-state"><i data-lucide="loader" style="width:26px;height:26px;"></i><p style="margin-top:8px;">กำลังโหลด...</p></div>' +
@@ -387,10 +407,10 @@ function onBuildingChange() {
 function loadData() {
   db.collection('repairs')
     .where('reporterUid', '==', currentUser.uid)
-    .orderBy('createdAt', 'desc')
     .onSnapshot(function(snap) {
       myRepairs = [];
       snap.forEach(function(doc) { myRepairs.push(Object.assign({ id: doc.id }, doc.data())); });
+      sortRepairList(myRepairs);
       renderStats();
       renderList();
     }, function(err) {
@@ -399,6 +419,20 @@ function loadData() {
         '<div class="empty-state"><i data-lucide="alert-triangle" style="width:26px;height:26px;color:var(--red);"></i><p style="margin-top:8px;">โหลดข้อมูลไม่สำเร็จ</p></div>';
       lucide.createIcons();
     });
+}
+
+/* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
+     ภายในกลุ่มเดียวกัน (เร่งด่วน / ปกติ) เรียงจากแจ้งเก่าสุดไปใหม่สุด ── */
+function sortRepairList(arr) {
+  arr.sort(function(a, b) {
+    var aUrgent = a.priority === 'urgent' ? 0 : 1;
+    var bUrgent = b.priority === 'urgent' ? 0 : 1;
+    if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+    return at - bt; /* เก่าไว้ก่อน */
+  });
+  return arr;
 }
 
 function renderStats() {
@@ -437,8 +471,38 @@ function setFilter(f) {
   renderList();
 }
 
+/* ── แถบกรองตามหมวดหมู่ (สร้างใหม่ทุกครั้งที่หมวดหมู่เปลี่ยน, สีของแต่ละปุ่มตรงกับสีหมวดหมู่) ── */
+var currentCategoryFilter = 'all';
+function renderCategoryFilterBar() {
+  var bar = document.getElementById('repCatFilterBar');
+  if (!bar) return;
+
+  var html = '<button class="filter-pill' + (currentCategoryFilter === 'all' ? ' active' : '') +
+    '" data-cf="all" onclick="setCategoryFilter(\'all\')">ทุกหมวดหมู่</button>';
+
+  REPAIR_CATEGORIES.forEach(function(c) {
+    var col = getCategoryColor(c.id);
+    var isActive = currentCategoryFilter === c.id;
+    html += '<button class="filter-pill' + (isActive ? ' active' : '') + '" data-cf="' + c.id + '" ' +
+      'onclick="setCategoryFilter(\'' + c.id + '\')" ' +
+      'style="' + (isActive ? ('background:' + col.text + ';border-color:' + col.text + ';color:#fff;') : ('color:' + col.text + ';border-color:' + col.border + ';')) + '">' +
+      '<i data-lucide="' + (c.icon || 'wrench') + '" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i>' + esc2(c.label) +
+    '</button>';
+  });
+
+  bar.innerHTML = html;
+  lucide.createIcons();
+}
+
+function setCategoryFilter(catId) {
+  currentCategoryFilter = catId;
+  renderCategoryFilterBar();
+  renderList();
+}
+
 function renderList() {
   var list = myRepairs.filter(function(r) {
+    if (currentCategoryFilter !== 'all' && r.category !== currentCategoryFilter) return false;
     if (currentFilter === 'all') return true;
     if (currentFilter === 'open') return ['reported','approved','reopened'].indexOf(r.status) !== -1;
     if (currentFilter === 'done') return r.status === 'done';
@@ -465,18 +529,19 @@ function renderList() {
 
 function renderRepairCard(r) {
   var cat = getCategoryMeta(r.category);
+  var col = getCategoryColor(r.category);
   var meta = getStatusMeta(r);
   var stepDots = meta.steps.map(function(s) {
     return '<i class="' + (s === 'done' || s === 'active' || s === 'final' ? 'on' : (s === 'revision' ? 'bad' : '')) + '"></i>';
   }).join('');
 
   return (
-    '<div class="card rp-card" onclick="openDetail(\'' + r.id + '\')">' +
+    '<div class="card rp-card" style="background:' + col.bg + ';border-color:' + col.border + ';border-left:4px solid ' + col.text + ';" onclick="openDetail(\'' + r.id + '\')">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">' +
         '<div style="min-width:0;flex:1;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
             (r.priority === 'urgent' ? '<span class="rp-urgent"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i> เร่งด่วน</span>' : '') +
-            '<span class="rp-cat-chip"><i data-lucide="' + cat.icon + '" style="width:11px;height:11px;"></i> ' + cat.label + '</span>' +
+            '<span class="rp-cat-chip" style="background:rgba(255,255,255,.6);color:' + col.text + ';"><i data-lucide="' + cat.icon + '" style="width:11px;height:11px;"></i> ' + cat.label + '</span>' +
           '</div>' +
           '<div style="font-size:15px;font-weight:800;color:var(--text);">' + esc2(r.title || '') + '</div>' +
           '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:5px;">' +
