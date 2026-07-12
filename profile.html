@@ -34,19 +34,7 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
-    /* ปุ่มย้อนกลับไปด้านบน (ลอยมุมขวาล่าง) */
-    .scroll-top-btn{
-      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
-      border-radius:50%; border:none; background:var(--accent); color:#fff;
-      display:none; align-items:center; justify-content:center;
-      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
-      opacity:0; transform:translateY(10px);
-      transition:opacity .2s ease, transform .2s ease;
-    }
-    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
-    .scroll-top-btn:hover{background:var(--accent-dark);}
-    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
-    body.embed-mode .scroll-top-btn { display: none !important; }
+        body.embed-mode .scroll-top-btn { display: none !important; }
 
     /* ── Embed mode: ซ่อน chrome ทั้งหมดเมื่อโหลดใน iframe ── */
     body.embed-mode #loadingOverlay { display: none !important; }

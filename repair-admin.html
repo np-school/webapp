@@ -23,32 +23,12 @@
   <script src="shared/firebase.js"></script>
   <script src="shared/common.js"></script>
   <style>
-    .scroll-top-btn{
-      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
-      border-radius:50%; border:none; background:var(--accent); color:#fff;
-      display:none; align-items:center; justify-content:center;
-      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
-      opacity:0; transform:translateY(10px);
-      transition:opacity .2s ease, transform .2s ease;
-    }
-    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
-    .scroll-top-btn:hover{background:var(--accent-dark);}
-    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
-
+    
     .rp-status{ display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:800; flex-shrink:0; white-space:nowrap; }
-    .rp-status.c-amber { background:var(--amber-light); color:#92400e; }
-    .rp-status.c-sky    { background:var(--sky-light);   color:#075985; }
-    .rp-status.c-green  { background:var(--green-light); color:#15803d; }
-    .rp-status.c-red    { background:var(--red-light);   color:var(--red-dark); }
-    .rp-status.c-purple { background:var(--purple-light);color:var(--purple-dark); }
+    /* .rp-status.c-* / .rp-photo-thumb / .rp-log-item / .rp-log-dot ย้ายไป styles-new.css แล้ว (เหมือนกับ repair-user.html เป๊ะ) */
     .rp-urgent-dot{ width:7px; height:7px; border-radius:50%; background:var(--red); display:inline-block; margin-right:5px; flex-shrink:0; }
     .rp-urgent-tag{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; color:var(--red-dark); background:#fff; border:1px solid var(--red); padding:2px 9px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
     .rp-row{ cursor:pointer; }
-    .rp-photo-thumb{ position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden; flex-shrink:0; border:1px solid var(--border); }
-    .rp-photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .rp-log-item{ display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--border-soft); }
-    .rp-log-item:last-child{ border-bottom:none; }
-    .rp-log-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; }
     .rp-action-card{ background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:16px; margin-top:16px; }
     .rp-action-card h4{ font-size:13px; font-weight:800; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
 

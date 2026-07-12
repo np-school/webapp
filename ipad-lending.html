@@ -39,18 +39,7 @@
     .borrow-badge-yes{background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .borrow-badge-no{background:var(--red-light);color:var(--red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
     .badge-claim{background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-    .scroll-top-btn{
-      position:fixed; right:20px; bottom:20px; width:46px; height:46px;
-      border-radius:50%; border:none; background:var(--accent); color:#fff;
-      display:none; align-items:center; justify-content:center;
-      box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; z-index:999;
-      opacity:0; transform:translateY(10px);
-      transition:opacity .2s ease, transform .2s ease;
-    }
-    .scroll-top-btn.show{display:flex; opacity:1; transform:translateY(0);}
-    .scroll-top-btn:hover{background:var(--accent-dark);}
-    .scroll-top-btn:active{transform:translateY(0) scale(.94);}
-
+    
     /* ── Return item row: การ์ดคืนอุปกรณ์แบบใหม่ — แต่ละชิ้นมี 3 สถานะในตัวเอง
        (ยังไม่คืน / คืน-สภาพดี / คืน-ชำรุด) พร้อมสีพื้นหลังเปลี่ยนตามสถานะ
        ให้เห็นชัดในทันทีโดยไม่ต้องอ่านตัวหนังสือ ── */
