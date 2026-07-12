@@ -163,7 +163,7 @@ let recurringItems=[
 ];
 
 const fmt=n=>Math.round(n).toLocaleString('th-TH');
-const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+const fmtDateShort=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
 const today=()=>new Date().toISOString().split('T')[0];
 const colors=['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#b45309'];
 
@@ -249,7 +249,7 @@ function renderDashboard(){
   const latestDate=[...new Set(transactions.map(t=>t.date))].sort().pop();
   const chip=document.getElementById('lastUpdatedChip');
   if(latestDate){
-    document.getElementById('lastUpdated').textContent=fmtDate(latestDate);
+    document.getElementById('lastUpdated').textContent=fmtDateShort(latestDate);
     chip.style.display='inline-flex';
   } else {
     chip.style.display='none';
@@ -287,7 +287,7 @@ function getFilteredDays(){
 function setPeriod(p,el){period=p;document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderBarChart();}
 
 function renderBarChart(){
-  const days=getFilteredDays();const labels=days.map(fmtDate);
+  const days=getFilteredDays();const labels=days.map(fmtDateShort);
   const incomes=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
   const expenses=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
   if(barChart) barChart.destroy();
@@ -295,7 +295,7 @@ function renderBarChart(){
 }
 
 function renderLineChart(){
-  const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDate);
+  const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDateShort);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
   lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'var(--accent)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
@@ -526,7 +526,7 @@ function renderMonthlyChart(month){
 
   // Group by date
   const days=[...new Set(rows.map(t=>t.date))].sort();
-  const labels=days.map(fmtDate);
+  const labels=days.map(fmtDateShort);
   const incomes=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
   const expenses=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
 
@@ -573,7 +573,7 @@ function renderDaily(){
     const dayIn=items.reduce((s,i)=>s+i.income,0);const dayOut=items.reduce((s,i)=>s+i.expense,0);
     return `<div class="day-section">
       <div class="day-header">
-        <div class="day-title">${fmtDate(date)}</div>
+        <div class="day-title">${fmtDateShort(date)}</div>
         <div class="day-stats">
           <span class="day-in">+฿${fmt(dayIn)}</span>
           <span class="day-out">-฿${fmt(dayOut)}</span>

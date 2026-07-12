@@ -146,6 +146,30 @@ function fmtDate(ts) {
          ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
 }
 
+/**
+ * คำนวณปีการศึกษา + เทอม จากวันที่ที่ให้มา (ใช้แยก/กรองข้อมูลตามปีการศึกษา
+ * เช่น ระบบส่งงานประจำภาคเรียน — ไม่เกี่ยวกับการแสดงผลวันที่ ให้ใช้ fmtDate/formatDate ตามปกติ)
+ * ปีการศึกษาไทยเริ่ม พ.ค. : พ.ค.-ต.ค. = เทอม 1, พ.ย.-เม.ย. = เทอม 2 (ม.ค.-เม.ย. นับเป็นเทอม 2 ของปีก่อนหน้า)
+ * @param {Date|Firestore Timestamp|string} ts
+ * @returns {{year:number, semester:number, label:string}} year = ปี พ.ศ., label เช่น "ปีการศึกษา 2569"
+ */
+function getAcademicYear(ts) {
+  var d = (ts && ts.toDate) ? ts.toDate() : new Date(ts);
+  var buddhistYear = d.getFullYear() + 543;
+  var month = d.getMonth() + 1; // 1-12
+
+  var year, semester;
+  if (month >= 5 && month <= 10) {        // พ.ค.-ต.ค. = เทอม 1
+    year = buddhistYear; semester = 1;
+  } else if (month >= 11) {                // พ.ย.-ธ.ค. = เทอม 2
+    year = buddhistYear; semester = 2;
+  } else {                                  // ม.ค.-เม.ย. = เทอม 2 ของปีก่อนหน้า
+    year = buddhistYear - 1; semester = 2;
+  }
+
+  return { year: year, semester: semester, label: 'ปีการศึกษา ' + year };
+}
+
 /* ════════════════════════════════
    Room Pastel Color System
    ════════════════════════════════ */
