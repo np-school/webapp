@@ -140,12 +140,6 @@ function buildWorkflowBar(steps) {
   return html;
 }
 
-function fmtDate(ts) {
-  if (!ts) return '-';
-  var d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
-         ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
-}
 
 /* ── ตัดชื่ออาคารออกจากข้อความสถานที่ "อาคาร 1 - ห้อง 101" → "อาคาร 1" ── */
 function getBuildingNameFromLocation(loc) {

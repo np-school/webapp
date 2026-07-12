@@ -800,8 +800,7 @@ function renderMatrix(){
 }
 
 /* ══════════════════════ HELPERS ══════════════════════ */
-function esc(s){ return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+/* esc()/esc2() ใช้ตัวกลางจาก common.js (เดิมประกาศซ้ำที่นี่ด้วยโค้ดเดียวกัน) */
 
 /* ══════════════════════ EVENT HANDLERS ══════════════════════ */
 function toggleStaffDropdown() {

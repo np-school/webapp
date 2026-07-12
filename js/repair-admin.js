@@ -183,12 +183,7 @@ function buildWorkflowBar(steps) {
   return html;
 }
 
-function fmtDate(ts) {
-  if (!ts) return '-';
-  var d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
-         ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
-} /* ดูย้อนหลังได้สูงสุด 3 ปี */
+/* fmtDate() ใช้ตัวกลางจาก common.js (ดูย้อนหลังได้สูงสุด 3 ปี) */
 
 function getPeriodRange(scope) {
   var st = periodState[scope];

@@ -122,6 +122,31 @@ function esc(s)  { return (s || '').toString().replace(/\\/g, '\\\\').replace(/'
 function esc2(s) { return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 /* ════════════════════════════════
+   Portfolio status order (ใช้เทียบ/sort ลำดับสถานะเอกสาร)
+   ✏️ เดิมประกาศซ้ำ 3 จุดใน portfolio-admin.js (ค่าตรงกันทุกจุด) — รวมมาไว้ที่นี่
+   หมายเหตุ: ไม่รวมกับ ORDER ใน buildWorkflowBar() ของ portfolio-admin.js
+   เพราะอันนั้นคือคนละความหมาย (ดัชนี step ของ workflow bar 0-4 ไม่ใช่ลำดับ sort สถานะ)
+   ════════════════════════════════ */
+var PORTFOLIO_STATUS_ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+
+/* ════════════════════════════════
+   Date formatters
+   - formatDate(ts) : วันที่+เวลาแบบเต็ม เช่น "12 ก.ค. 2569 14:30" (เดิมซ้ำใน portfolio-admin.js / portfolio-teacher.js)
+   - fmtDate(ts)     : วันที่+เวลา เช่น "12 ก.ค. 2569 14:30" (เดิมซ้ำใน repair-admin.js / repair-user.js)
+   ════════════════════════════════ */
+function formatDate(ts) {
+  if (!ts) return '-';
+  var d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function fmtDate(ts) {
+  if (!ts) return '-';
+  var d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
+         ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ════════════════════════════════
    Room Pastel Color System
    ════════════════════════════════ */
 var ROOM_PASTEL_MAP = {

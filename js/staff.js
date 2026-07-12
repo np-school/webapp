@@ -86,21 +86,21 @@ function renderStaff() {
             '<a href="javascript:void(0)" onclick="openSarModal(\'' + s.id + '\',\'' + esc(s.email||'') + '\')" ' +
               'style="font-weight:700;color:#0f172a;font-size:13px;text-decoration:none;cursor:pointer;" ' +
               'onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'#0f172a\'">' +
-              esc(s.name || '') +
+              esc2(s.name || '') +
             '</a>' +
-            (s.subject ? '<p style="font-size:11px;color:#94a3b8;">วิชา: ' + esc(s.subject) + '</p>' : '') +
+            (s.subject ? '<p style="font-size:11px;color:#94a3b8;">วิชา: ' + esc2(s.subject) + '</p>' : '') +
           '</div>' +
         '</div>' +
       '</td>' +
-      '<td><span class="pos-tag">' + esc(s.position || '-') + '</span>' +
-        (s.role ? '<br><span style="font-size:10px;color:#7c3aed;font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc(s.role) + '</span>' : '') +
+      '<td><span class="pos-tag">' + esc2(s.position || '-') + '</span>' +
+        (s.role ? '<br><span style="font-size:10px;color:#7c3aed;font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc2(s.role) + '</span>' : '') +
       '</td>' +
-      '<td><span class="group-badge" data-group="' + esc(s.group||'') + '">' + esc(groupLabel) + '</span></td>' +
+      '<td><span class="group-badge" data-group="' + esc2(s.group||'') + '">' + esc2(groupLabel) + '</span></td>' +
       '<td class="hide-mobile">' +
-        (s.email ? '<a href="mailto:' + esc(s.email) + '" style="color:var(--accent);font-weight:600;font-size:12px;text-decoration:none;">' + esc(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.email ? '<a href="mailto:' + esc2(s.email) + '" style="color:var(--accent);font-weight:600;font-size:12px;text-decoration:none;">' + esc2(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
       '</td>' +
       '<td class="hide-mobile" style="font-size:12px;">' +
-        (s.phone ? '<a href="tel:' + esc(s.phone) + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' + esc(s.phone) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.phone ? '<a href="tel:' + esc2(s.phone) + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' + esc2(s.phone) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
       '</td>' +
       '<td>' +
         '<div style="display:flex;gap:5px;justify-content:center;">' +
@@ -113,9 +113,6 @@ function renderStaff() {
   lucide.createIcons();
 }
 
-function esc(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
 
 function parsePasteData() {
   var text = document.getElementById('csvPasteArea').value;
@@ -357,8 +354,9 @@ function confirmDelete() {
 }
 
 /* ════ Modal helpers ════ */
+/* openModal overridden here (not in common.js) to also refresh lucide icons inside the modal on open.
+   closeModal intentionally NOT redefined — uses common.js's version. */
 function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; lucide.createIcons(); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
 
 /* ════ Export CSV ════ */
 function exportCSV() {
@@ -438,7 +436,7 @@ function showImportPreview(rows, headers, warnings) {
   var showRows = rows.slice(0, 10);
   showRows.forEach(function(r) {
     tbody += '<tr>';
-    previewCols.forEach(function(c) { tbody += '<td>' + esc(r[c] || '') + '</td>'; });
+    previewCols.forEach(function(c) { tbody += '<td>' + esc2(r[c] || '') + '</td>'; });
     tbody += '</tr>';
   });
   if (rows.length > 10) tbody += '<tr><td colspan="4" style="text-align:center;color:#94a3b8;font-style:italic;">... และอีก ' + (rows.length - 10) + ' รายการ</td></tr>';
@@ -446,7 +444,7 @@ function showImportPreview(rows, headers, warnings) {
 
   if (warnings.length) {
     document.getElementById('importWarning').style.display = '';
-    document.getElementById('importWarning').innerHTML = '⚠️ ' + warnings.slice(0,3).map(function(w){return esc(w);}).join('<br>') + (warnings.length > 3 ? '<br>... และอีก '+(warnings.length-3)+' คำเตือน' : '');
+    document.getElementById('importWarning').innerHTML = '⚠️ ' + warnings.slice(0,3).map(function(w){return esc2(w);}).join('<br>') + (warnings.length > 3 ? '<br>... และอีก '+(warnings.length-3)+' คำเตือน' : '');
   } else {
     document.getElementById('importWarning').style.display = 'none';
   }

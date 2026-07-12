@@ -247,9 +247,6 @@ function getSharedDriveId() {
 }
 
 /* ─── HELPERS ─── */
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 function sanitizeForFilename(str) {
   return String(str || '').replace(/[\/\\:*?"<>|]/g,'').replace(/\s+/g,'_').trim();
 }
@@ -297,10 +294,10 @@ function renderStaffInfoBadge() {
         '<i data-lucide="user" style="width:18px;height:18px;color:white;"></i>' +
       '</div>' +
       '<div>' +
-        '<p style="font-size:14px;font-weight:800;color:white;line-height:1.3;">' + esc(name) + '</p>' +
+        '<p style="font-size:14px;font-weight:800;color:white;line-height:1.3;">' + esc2(name) + '</p>' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;">' +
-          (position ? '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);">' + esc(position) + '</span>' : '') +
-          (group    ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:rgba(255,255,255,.2);color:white;border-radius:20px;border:1px solid rgba(255,255,255,.3);">' + esc(group) + '</span>' : '') +
+          (position ? '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);">' + esc2(position) + '</span>' : '') +
+          (group    ? '<span style="font-size:10px;font-weight:800;padding:2px 8px;background:rgba(255,255,255,.2);color:white;border-radius:20px;border:1px solid rgba(255,255,255,.3);">' + esc2(group) + '</span>' : '') +
         '</div>' +
       '</div>' +
     '</div>';
@@ -421,14 +418,14 @@ function renderDocList() {
                       var files   = sub.files || [];
                       return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(sub.courseCode) + '</span>' +
-                          '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc(sub.courseName) + '</span>' +
+                          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc2(sub.courseCode) + '</span>' +
+                          '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc2(sub.courseName) + '</span>' +
                           '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
                           '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
                         '</div>' +
-                        (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc(sub.note) + '</p>' : '') +
+                        (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc2(sub.note) + '</p>' : '') +
                         (status === 'revision' && sub.adminNote
-                          ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc(sub.adminNote) + '</p></div>'
+                          ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc2(sub.adminNote) + '</p></div>'
                           : '') +
                         '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
                           '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
@@ -481,8 +478,8 @@ function renderCourseRows() {
             : '') +
         '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-bottom:8px;">' +
-          '<input type="text" placeholder="รหัสวิชา เช่น ว31101" maxlength="20" value="' + esc(row.code) + '" onchange="courseRows[' + idx + '].code=this.value.trim()" style="font-size:13px;">' +
-          '<input type="text" placeholder="ชื่อวิชา เช่น ฟิสิกส์ 1" value="' + esc(row.name) + '" onchange="courseRows[' + idx + '].name=this.value.trim()" style="font-size:13px;">' +
+          '<input type="text" placeholder="รหัสวิชา เช่น ว31101" maxlength="20" value="' + esc2(row.code) + '" onchange="courseRows[' + idx + '].code=this.value.trim()" style="font-size:13px;">' +
+          '<input type="text" placeholder="ชื่อวิชา เช่น ฟิสิกส์ 1" value="' + esc2(row.name) + '" onchange="courseRows[' + idx + '].name=this.value.trim()" style="font-size:13px;">' +
         '</div>' +
         /* upload zone สำหรับวิชานี้ */
         '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
@@ -510,8 +507,8 @@ function renderCourseFilePanels() {
     html +=
       '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-          '<span style="font-size:13px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:3px 10px;border-radius:8px;">' + esc(sub ? sub.courseCode : '') + '</span>' +
-          '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc(sub ? sub.courseName : '') + '</span>' +
+          '<span style="font-size:13px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:3px 10px;border-radius:8px;">' + esc2(sub ? sub.courseCode : '') + '</span>' +
+          '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc2(sub ? sub.courseName : '') + '</span>' +
           '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
         '</div>' +
         '<div id="existFileList_' + idx + '">' +
@@ -519,8 +516,8 @@ function renderCourseFilePanels() {
             return '<div class="file-entry" id="ef_' + idx + '_' + fi + '">' +
               '<i data-lucide="file-text" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>' +
               '<span class="file-slot-badge">' + (fi+1) + '</span>' +
-              '<span class="file-entry-name" title="' + esc(f.fileName) + '">' + esc(f.fileName) + '</span>' +
-              '<a href="' + esc(f.fileUrl) + '" target="_blank" class="file-entry-link"><i data-lucide="external-link" style="width:14px;height:14px;"></i></a>' +
+              '<span class="file-entry-name" title="' + esc2(f.fileName) + '">' + esc2(f.fileName) + '</span>' +
+              '<a href="' + esc2(f.fileUrl) + '" target="_blank" class="file-entry-link"><i data-lucide="external-link" style="width:14px;height:14px;"></i></a>' +
               '<button class="file-entry-replace" onclick="toggleManageReplaceZone(\'' + esc(subKey) + '\',' + fi + ',' + idx + ')" title="แทนที่"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
               '<button class="file-entry-del" onclick="promptDeleteFile(\'' + esc(subKey) + '\',' + fi + ')" title="ลบ"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
             '</div>' +
@@ -573,7 +570,7 @@ function renderCourseQueuedFiles(rowIdx) {
     html +=
       '<div class="file-entry">' +
         '<i data-lucide="file-text" style="width:15px;height:15px;color:#22c55e;flex-shrink:0;"></i>' +
-        '<span class="file-entry-name">' + esc(f.name) + '</span>' +
+        '<span class="file-entry-name">' + esc2(f.name) + '</span>' +
         '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + 'MB</span>' +
         '<button class="file-entry-del" onclick="removeCourseFile(' + rowIdx + ',' + i + ')"><i data-lucide="x" style="width:13px;height:13px;"></i></button>' +
       '</div>';
@@ -1197,11 +1194,6 @@ function _renderMemoModal(subKey, memoData) {
 }
 
 /* ─── HELPERS ─── */
-function formatDate(ts) {
-  if (!ts) return '-';
-  var d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-}
 
 function renderInlineMemoPreview() {
   var dt = (typeof DOCUMENT_TYPES !== 'undefined' && DOCUMENT_TYPES.find(function(d){ return d.id === currentDocId; })) || {};
@@ -1858,10 +1850,6 @@ function closeMemoModal() {
   document.getElementById('memoModal').classList.remove('open');
   document.body.style.overflow = '';
 }
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
 /* ─── MEMO TAB SWITCH + INLINE PREVIEW ─── */
 function switchMemoTab(tab) {
   var editPane    = document.getElementById('memoEditPane');

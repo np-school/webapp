@@ -211,7 +211,7 @@ function loadAllSubmissions() {
           /* doc ถัดไปของ docTypeId เดิม — push เข้า _courses เท่านั้น */
           existing._courses.push(data);
           /* คำนวณ merged status (ต่ำสุดของทุก doc) */
-          var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+          var ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
           existing.status = existing._courses.reduce(function(acc, c) {
             var s = c.status || 'submitted';
             return ORDER[s] < ORDER[acc] ? s : acc;
@@ -562,8 +562,8 @@ function renderListView() {
           '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=40" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
-              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(t.staffName || t.displayName) + '</p>' +
-              (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc(t.position) + '</span>' : '') +
+              '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc2(t.staffName || t.displayName) + '</p>' +
+              (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc2(t.position) + '</span>' : '') +
               (pendingCount   ? '<span class="review-badge waiting">📤 รอตรวจ ' + pendingCount + ' รายการ</span>' : '') +
               (headRevCount   ? '<span class="review-badge head-wait">👤 รอ ผช.ผอ. ' + headRevCount + ' รายการ</span>' : '') +
               (assistRevCount ? '<span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">🏅 รอรอง ผอ. ' + assistRevCount + '</span>' : '') +
@@ -572,8 +572,8 @@ function renderListView() {
               (finalCount     ? '<span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">ผอ.อนุมัติ ✓ ' + finalCount + '</span>' : '') +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">' +
-              (t.staffGroup ? '<span style="font-size:9px;font-weight:800;padding:2px 8px;background:var(--purple-light);color:#5b21b6;border-radius:8px;">' + esc(t.staffGroup) + '</span>' : '') +
-              '<p style="font-size:11px;color:#94a3b8;">' + esc(t.email) + '</p>' +
+              (t.staffGroup ? '<span style="font-size:9px;font-weight:800;padding:2px 8px;background:var(--purple-light);color:#5b21b6;border-radius:8px;">' + esc2(t.staffGroup) + '</span>' : '') +
+              '<p style="font-size:11px;color:#94a3b8;">' + esc2(t.email) + '</p>' +
               latestLabel +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:var(--gap-tight);margin-top:6px;">' +
@@ -648,8 +648,8 @@ function renderListView() {
                     return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + cDocIdForClick + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
                       '<div style="display:flex;align-items:center;gap:4px;">' +
                         '<span style="font-size:10px;font-weight:800;color:' + cColor + ';">' + cIcon + '</span>' +
-                        '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:1px 5px;border-radius:4px;">' + esc(cCode) + '</span>' +
-                        (cName ? '<span style="font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc(cName) + '</span>' : '') +
+                        '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:1px 5px;border-radius:4px;">' + esc2(cCode) + '</span>' +
+                        (cName ? '<span style="font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc2(cName) + '</span>' : '') +
                       '</div>' +
                       buildWorkflowBar(cStatus) +
                     '</div>';
@@ -793,8 +793,8 @@ function renderMatrixView() {
     html += '<tr style="' + rowStyle + '"><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:var(--gap-tight);">' +
       '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
       '<div style="overflow:hidden;">' +
-        '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.staffName || t.displayName) + '</p>' +
-        (t.staffGroup ? '<p style="font-size:9px;color:var(--purple);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc(t.staffGroup) + '</p>' : '') +
+        '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc2(t.staffName || t.displayName) + '</p>' +
+        (t.staffGroup ? '<p style="font-size:9px;color:var(--purple);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc2(t.staffGroup) + '</p>' : '') +
       '</div>' +
     '</div></td>';
 
@@ -921,8 +921,8 @@ function renderCourseFileList(sub, courseMap, activeCourseKey) {
       '<i data-lucide="book-open" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>' +
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(courseCode) + '</span>' +
-          '<span style="font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">' + esc(courseName) + '</span>' +
+          '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc2(courseCode) + '</span>' +
+          '<span style="font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">' + esc2(courseName) + '</span>' +
         '</div>' +
         '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">' + files.length + ' ไฟล์</p>' +
       '</div>' +
@@ -960,7 +960,7 @@ function renderMultiFileList(sub, files, idx) {
     return '<div class="file-item fi-' + fStatus + (isSelected?' selected':'') + '" onclick="selectFile(' + i + ')">' +
       '<i data-lucide="file-text" style="width:16px;height:16px;color:var(--purple);flex-shrink:0;"></i>' +
       '<div style="flex:1;min-width:0;">' +
-        '<p style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.name || 'ไฟล์ที่ ' + (i+1)) + '</p>' +
+        '<p style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc2(f.name || 'ไฟล์ที่ ' + (i+1)) + '</p>' +
         '<p style="font-size:10px;color:#94a3b8;">' + (f.submittedAt ? formatDate(f.submittedAt) : '-') + '</p>' +
       '</div>' +
       '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;flex-shrink:0;' + getStatusChipStyle(fStatus) + '">' + (statusLabels[fStatus]||fStatus) + '</span>' +
@@ -1054,8 +1054,8 @@ function fillSingleFileInfo(sub) {
       var borderColor = {submitted:'#22c55e',head_reviewed:'#0ea5e9',reviewed:'#3b82f6',final_approved:'var(--purple)',revision:'#f59e0b'}[fStatus] || '#e2e8f0';
       return '<div style="display:flex;align-items:center;gap:var(--gap-tight);padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;border-left:3px solid ' + borderColor + ';">' +
         '<i data-lucide="file-text" style="width:13px;height:13px;color:#64748b;flex-shrink:0;"></i>' +
-        '<span style="font-size:11px;font-weight:600;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.fileName || f.name || 'ไฟล์ที่ ' + (i+1)) + '</span>' +
-        '<a href="' + esc(f.url || f.fileUrl || '#') + '" target="_blank" style="font-size:10px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 7px;background:var(--purple-light);border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
+        '<span style="font-size:11px;font-weight:600;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc2(f.fileName || f.name || 'ไฟล์ที่ ' + (i+1)) + '</span>' +
+        '<a href="' + esc2(f.url || f.fileUrl || '#') + '" target="_blank" style="font-size:10px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 7px;background:var(--purple-light);border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
           '<i data-lucide="external-link" style="width:10px;height:10px;"></i> เปิด' +
         '</a>' +
       '</div>';
@@ -1093,7 +1093,7 @@ function fillSingleFileInfo(sub) {
   var prevNoteVal = _targetDocForSig ? (_targetDocForSig[noteFieldMap2[curStatus]] || '') : '';
   if (prevNoteVal) {
     prevNoteRef.style.cssText = 'margin-top:6px;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;font-size:12px;color:#92400e;';
-    prevNoteRef.innerHTML = '<strong>ความคิดเห็นที่เคยบันทึกไว้:</strong> ' + esc(prevNoteVal);
+    prevNoteRef.innerHTML = '<strong>ความคิดเห็นที่เคยบันทึกไว้:</strong> ' + esc2(prevNoteVal);
   } else {
     prevNoteRef.style.display = 'none';
     prevNoteRef.innerHTML = '';
@@ -1110,9 +1110,9 @@ function fillSingleFileInfo(sub) {
     var cGroup = displayFile.subjectGroup || sub.subjectGroup;
     var cCode  = displayFile.courseCode   || sub.courseCode;
     var cName  = displayFile.courseName   || sub.courseName;
-    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:var(--accent-tint);color:var(--accent);padding:2px 8px;border-radius:10px;">' + esc(cGroup) + '</span> ';
-    if (cCode)  cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + esc(cCode) + '</span> ';
-    if (cName)  cText += '<span style="font-size:12px;color:#64748b;">· ' + esc(cName) + '</span>';
+    if (cGroup) cText += '<span style="font-size:10px;font-weight:800;background:var(--accent-tint);color:var(--accent);padding:2px 8px;border-radius:10px;">' + esc2(cGroup) + '</span> ';
+    if (cCode)  cText += '<span style="font-size:12px;font-weight:700;color:#475569;">' + esc2(cCode) + '</span> ';
+    if (cName)  cText += '<span style="font-size:12px;color:#64748b;">· ' + esc2(cName) + '</span>';
     courseInfoBox.style.display = cText ? 'flex' : 'none';
     courseInfoBox.innerHTML = cText;
   }
@@ -1474,7 +1474,7 @@ function setReviewStatus(status) {
     }
 
     /* คำนวณ merged status ของ container ใหม่ (ต่ำสุดของทุก doc) */
-    var ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+    var ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
     sub.status = courses.reduce(function(acc, c) {
       var s = c.status || 'submitted';
       return ORDER[s] < ORDER[acc] ? s : acc;
@@ -1489,12 +1489,6 @@ function setReviewStatus(status) {
 }
 
 /* ─── HELPERS ─── */
-function formatDate(ts) {
-  if (!ts) return '-';
-  var d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-function esc(s){ var d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
 
 /* ══════════════════════════════════════
    CHARTS
@@ -1631,7 +1625,7 @@ function renderGroupBars() {
     var color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
     return '<div class="hbar-row">' +
       '<div class="hbar-label">' +
-        '<span class="hbar-name" title="' + esc(g) + '">' + esc(g) + '</span>' +
+        '<span class="hbar-name" title="' + esc2(g) + '">' + esc2(g) + '</span>' +
         '<span class="hbar-pct" style="color:' + color + ';">' + pct + '%</span>' +
       '</div>' +
       '<div class="hbar-track">' +
@@ -1660,7 +1654,7 @@ function renderDocTypeBars() {
       '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
-      '<span class="docbar-label" title="' + esc(dt.label) + '">' + esc(dt.short || dt.label) + '</span>' +
+      '<span class="docbar-label" title="' + esc2(dt.label) + '">' + esc2(dt.short || dt.label) + '</span>' +
       '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;width:90px;">' +
         '<div class="docbar-track" style="width:90px;">' +
           '<div class="docbar-fill" style="width:' + pct + '%;background:' + dt.color + '55;"></div>' +
@@ -1706,7 +1700,7 @@ function renderGroupPanel() {
   var sel = document.getElementById('groupSelectDropdown');
   if (sel) {
     sel.innerHTML = '<option value="">-- เลือกกลุ่มสาระ --</option>' +
-      groups.map(function(g){ return '<option value="' + esc(g) + '">' + esc(g) + ' (' + _groupData[g].teachers.length + ' คน)</option>'; }).join('');
+      groups.map(function(g){ return '<option value="' + esc2(g) + '">' + esc2(g) + ' (' + _groupData[g].teachers.length + ' คน)</option>'; }).join('');
   }
 
   renderGroupBarChart(groups);
@@ -1768,10 +1762,10 @@ function renderGroupBarChart(groups) {
       '</div>';
     }).join('');
 
-    html += '<div style="display:flex;align-items:center;gap:0;cursor:pointer;" onclick="jumpToGroup(\'' + esc(g) + '\')" title="คลิกเพื่อดูรายละเอียดกลุ่ม ' + esc(g) + '">' +
+    html += '<div style="display:flex;align-items:center;gap:0;cursor:pointer;" onclick="jumpToGroup(\'' + esc(g) + '\')" title="คลิกเพื่อดูรายละเอียดกลุ่ม ' + esc2(g) + '">' +
       /* label */
       '<div style="width:' + labelW + 'px;flex-shrink:0;padding-right:10px;">' +
-        '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(g) + '</p>' +
+        '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(g) + '</p>' +
         '<p style="font-size:10px;color:#94a3b8;">' + d.teachers.length + ' คน</p>' +
       '</div>' +
       /* bar */
@@ -1874,7 +1868,7 @@ function renderGroupDetail() {
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<div style="width:140px;flex-shrink:0;">' +
-        '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(dt.label) + '">' + esc(dt.label) + '</p>' +
+        '<p style="font-size:12px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc2(dt.label) + '">' + esc2(dt.label) + '</p>' +
       '</div>' +
       '<div style="flex:1;display:flex;height:20px;border-radius:6px;overflow:hidden;background:#f8fafc;">' +
         segs + noneBar +
@@ -1892,13 +1886,13 @@ function renderGroupDetail() {
       var sub = t.subs[dt.id];
       var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
       var chipColor = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || '#e2e8f0';
-      return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc(dt.label) + '"></div>';
+      return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc2(dt.label) + '"></div>';
     }).join('');
 
     return '<div style="display:flex;align-items:center;gap:var(--gap-item);padding:8px 0;border-bottom:1px solid #f8fafc;">' +
       '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.email) + '&background=7c3aed&color=fff&size=28" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">' +
       '<div style="flex:1;min-width:0;">' +
-        '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t.staffName||t.email) + '</p>' +
+        '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(t.staffName||t.email) + '</p>' +
         '<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">' +
           '<div style="flex:1;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;">' +
             '<div style="width:' + pctT + '%;height:100%;background:' + barColor + ';border-radius:4px;"></div>' +
@@ -1955,8 +1949,8 @@ function renderTeacherDropdown() {
     return '<div class="teacher-search-item" onclick="selectTeacher(\'' + esc(t.email) + '\')">' +
       '<img src="' + avatar + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">' +
       '<div style="min-width:0;">' +
-        '<p style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(name) + '</p>' +
-        '<p style="font-size:11px;color:var(--purple);font-weight:600;">' + esc(t.staffGroup || '') + (t.position ? ' · ' + esc(t.position) : '') + '</p>' +
+        '<p style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(name) + '</p>' +
+        '<p style="font-size:11px;color:var(--purple);font-weight:600;">' + esc2(t.staffGroup || '') + (t.position ? ' · ' + esc2(t.position) : '') + '</p>' +
       '</div>' +
       '<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:var(--purple-light);color:var(--purple);flex-shrink:0;">' + Object.keys(t.subs).length + '/' + DOCUMENT_TYPES.length + '</span>' +
     '</div>';
@@ -2083,7 +2077,7 @@ function renderTeacherDocBars(t) {
 
   var STATUS_LABEL = { submitted:'รอตรวจ', head_reviewed:'หัวหน้าฯ ✓', reviewed:'หัวหน้าฯ ✓', assistant_reviewed:'ผช.ผอ. ✓', deputy_reviewed:'รอง ผอ. ✓', final_approved:'ผอ. อนุมัติ', revision:'ให้แก้ไข' };
   var STATUS_COLOR = { submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#f59e0b', deputy_reviewed:'#8b5cf6', final_approved:'var(--purple)', revision:'#ef4444' };
-  var STATUS_ORDER = { none:0, submitted:1, revision:2, head_reviewed:3, reviewed:3, assistant_reviewed:4, deputy_reviewed:5, final_approved:6 };
+  var STATUS_ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
   var MAX = 6;
 
   container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
@@ -2101,11 +2095,11 @@ function renderTeacherDocBars(t) {
       '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
-      '<span class="docbar-label" title="' + esc(dt.label) + '">' + esc(dt.short || dt.label) + coursesHtml + '</span>' +
+      '<span class="docbar-label" title="' + esc2(dt.label) + '">' + esc2(dt.short || dt.label) + coursesHtml + '</span>' +
       '<div class="docbar-track" style="width:100px;flex-shrink:0;">' +
         '<div class="docbar-fill" style="width:' + pct + '%;background:' + color + ';"></div>' +
       '</div>' +
-      '<span style="font-size:10px;font-weight:800;color:' + (sub?color:'#94a3b8') + ';min-width:80px;text-align:right;">' + esc(label) + '</span>' +
+      '<span style="font-size:10px;font-weight:800;color:' + (sub?color:'#94a3b8') + ';min-width:80px;text-align:right;">' + esc2(label) + '</span>' +
     '</div>';
   }).join('');
   lucide.createIcons();
@@ -2138,7 +2132,7 @@ function renderTeacherSubTable(t) {
         '<i data-lucide="' + dt.icon + '" style="width:15px;height:15px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<div style="flex:1;min-width:0;">' +
-        '<p style="font-size:13px;font-weight:700;color:#0f172a;">' + esc(dt.label) + '</p>';
+        '<p style="font-size:13px;font-weight:700;color:#0f172a;">' + esc2(dt.label) + '</p>';
 
     if (sub && sub._courses) {
       var allFinal = sub._courses.every(function(d){ return d.status === 'final_approved'; });
@@ -2173,10 +2167,10 @@ function renderTeacherSubTable(t) {
           '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">';
 
         if (doc.courseCode) {
-          html += '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>';
+          html += '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc2(doc.courseCode) + '</span>';
         }
         if (doc.courseName) {
-          html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc(doc.courseName) + '</span>';
+          html += '<span style="font-size:11px;font-weight:700;color:#334155;">' + esc2(doc.courseName) + '</span>';
         }
         html += '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:' + dBg + ';color:' + dClr + ';margin-left:auto;">' + dLbl + '</span>';
         /* ปุ่มบันทึกข้อความรายวิชา */
@@ -2190,8 +2184,8 @@ function renderTeacherSubTable(t) {
           var fname = doc.fileName || (doc.files && doc.files[0].fileName) || 'เปิดไฟล์';
           html += '</div><div style="margin-top:6px;display:flex;align-items:center;gap:6px;">' +
             '<i data-lucide="file" style="width:13px;height:13px;color:#94a3b8;flex-shrink:0;"></i>' +
-            '<a href="' + esc(url) + '" target="_blank" style="font-size:12px;color:var(--purple);font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + esc(fname) + '</a>' +
-            '<a href="' + esc(url) + '" target="_blank" style="font-size:11px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 8px;background:var(--purple-light);border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
+            '<a href="' + esc2(url) + '" target="_blank" style="font-size:12px;color:var(--purple);font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + esc2(fname) + '</a>' +
+            '<a href="' + esc2(url) + '" target="_blank" style="font-size:11px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:3px;text-decoration:none;padding:3px 8px;background:var(--purple-light);border-radius:6px;border:1px solid #e9d5ff;flex-shrink:0;">' +
               '<i data-lucide="external-link" style="width:11px;height:11px;"></i> เปิด' +
             '</a>';
         } else {
@@ -2208,7 +2202,7 @@ function renderTeacherSubTable(t) {
         if (doc.note) {
           html += '<div class="note-bubble teacher" style="margin-top:6px;">' +
             '<p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:3px;">📝 บันทึกจากครู</p>' +
-            '<p style="font-size:12px;color:#166534;line-height:1.6;">' + esc(doc.note) + '</p>' +
+            '<p style="font-size:12px;color:#166534;line-height:1.6;">' + esc2(doc.note) + '</p>' +
           '</div>';
         }
 
@@ -2217,7 +2211,7 @@ function renderTeacherSubTable(t) {
           var noteCls = dSt === 'revision' ? 'revision' : 'admin';
           html += '<div class="note-bubble ' + noteCls + '" style="margin-top:6px;">' +
             '<p style="font-size:11px;font-weight:700;color:' + (dSt==='revision'?'#dc2626':'#92400e') + ';margin-bottom:3px;">' + (dSt==='revision'?'⚠ หมายเหตุการแก้ไข':'💬 ความเห็นผู้ตรวจ') + '</p>' +
-            '<p style="font-size:12px;color:' + (dSt==='revision'?'#991b1b':'#78350f') + ';line-height:1.6;">' + esc(doc.adminNote) + '</p>' +
+            '<p style="font-size:12px;color:' + (dSt==='revision'?'#991b1b':'#78350f') + ';line-height:1.6;">' + esc2(doc.adminNote) + '</p>' +
           '</div>';
         }
 
@@ -2248,7 +2242,7 @@ function renderDocTypeRows(docs) {
     var activeLabel = dt.active === false
       ? '<span style="background:#f1f5f9;color:#94a3b8;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ซ่อน</span>'
       : '<span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">ใช้งาน</span>';
-    return '<div class="dt-row" draggable="true" data-index="' + i + '" data-docid="' + esc(dt._id) + '" ' +
+    return '<div class="dt-row" draggable="true" data-index="' + i + '" data-docid="' + esc2(dt._id) + '" ' +
         'ondragstart="dtDragStart(event,' + i + ')" ondragover="dtDragOver(event)" ondrop="dtDrop(event,' + i + ',\'' + esc(dt._id) + '\')" ondragleave="dtDragLeave(event)" ondragend="dtDragEnd()">' +
       '<div class="dt-drag-handle" title="ลากเพื่อเรียงลำดับ">' +
         '<i data-lucide="grip-vertical" style="width:16px;height:16px;"></i>' +
@@ -2258,12 +2252,12 @@ function renderDocTypeRows(docs) {
       '</div>' +
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
-          '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc(dt.label) + '</p>' +
-          (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc(dt.short) + '</span>' : '') +
+          '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc2(dt.label) + '</p>' +
+          (dt.short ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">ย่อ: ' + esc2(dt.short) + '</span>' : '') +
           deptBadge +
           activeLabel +
         '</div>' +
-        '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc(dt.id||dt._id) + ' · ไอคอน: ' + esc(dt.icon||'-') + '</p>' +
+        '<p style="font-size:11px;color:#94a3b8;margin-top:2px;">id: ' + esc2(dt.id||dt._id) + ' · ไอคอน: ' + esc2(dt.icon||'-') + '</p>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-shrink:0;">' +
         '<button onclick="openDocTypeModal(\'' + esc(dt._id) + '\')" style="padding:7px 14px;border:1.5px solid #e2e8f0;background:white;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--purple);display:flex;align-items:center;gap:5px;">' +
@@ -2671,12 +2665,6 @@ function selectFile(idx) {
   renderMultiFileList(sub, sub.files, idx);
 }
 
-/* Override closeModal for convenience */
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-
 function switchSubTab(tab) {
   currentSubTab = tab;
   document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'  ? ' active' : '');
@@ -2725,7 +2713,7 @@ function openNotesModal(uid, docTypeId) {
 
     var dSt = doc.status || 'submitted';
     var courseLabel = doc.courseCode
-      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc(doc.courseName) + '</span>' : '')
+      ? '<span style="font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc2(doc.courseCode) + '</span>' + (doc.courseName ? ' <span style="font-size:11px;color:#334155;font-weight:600;">' + esc2(doc.courseName) + '</span>' : '')
       : '<span style="font-size:11px;color:#64748b;font-weight:600;">รายการเดียว</span>';
 
     html += '<div style="margin-bottom:var(--gap-section);">';
@@ -2821,12 +2809,12 @@ function openNotesModal(uid, docTypeId) {
           '<div class="note-tl-body">' +
             '<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:4px;">' +
               '<span style="font-size:12px;font-weight:800;color:#0f172a;">' + e.label + '</span>' +
-              (e.who ? '<span style="font-size:10px;color:var(--purple);font-weight:700;">โดย ' + esc(e.who) + '</span>' : '') +
+              (e.who ? '<span style="font-size:10px;color:var(--purple);font-weight:700;">โดย ' + esc2(e.who) + '</span>' : '') +
               (e.when ? '<span style="font-size:10px;color:#94a3b8;">' + e.when + '</span>' : '') +
             '</div>' +
             (e.note ?
               '<div style="margin-top:6px;padding:8px 12px;border-radius:8px;border-left:3px solid ' + e.border + ';background:' + e.bg + ';">' +
-                '<p style="font-size:12px;color:#334155;line-height:1.7;">' + esc(e.note) + '</p>' +
+                '<p style="font-size:12px;color:#334155;line-height:1.7;">' + esc2(e.note) + '</p>' +
               '</div>'
             : '<p style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:4px;">ไม่มีบันทึกข้อความ</p>') +
           '</div>' +
