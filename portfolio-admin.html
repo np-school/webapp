@@ -825,6 +825,9 @@ function fakeStatus(s) {
 
 var allSubs     = []; /* all submissions for year+sem */
 var teacherMap  = {}; /* email → {displayName, staffName, email, position, staffGroup, subs:{}} */
+var _initialDataLoaded = false; /* true หลัง loadAllSubmissions() โหลดข้อมูลจริงครั้งแรกสำเร็จ
+                                    กัน renderCharts() ถูกเรียกจาก loadDocTypesFromFirestore()
+                                    ตอน allSubs/teacherMap ยังว่างอยู่ (ทำให้ donut ขึ้น total=0 วูบก่อน) */
 var currentFilter = 'all';
 var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
@@ -1085,6 +1088,7 @@ function loadAllSubmissions() {
         }
       });
 
+      _initialDataLoaded = true;
       updateStats();
       renderView();
     });
@@ -3725,8 +3729,11 @@ function loadDocTypesFromFirestore() {
       if (data.active === false) return; /* กรอง inactive ฝั่ง client */
       DOCUMENT_TYPES.push({ id: data.id||d.id, label: data.label||'', short: data.short||'', icon: data.icon||'file', color: data.color||'var(--purple)', department: data.department||'academic' });
     });
-    /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่ */
-    if (currentSubTab === 'overview') {
+    /* rebuild doc filter bar ตาม DOCUMENT_TYPES ใหม่
+       เรียก renderCharts() เฉพาะตอนที่ allSubs/teacherMap โหลดจริงแล้วเท่านั้น
+       (กันเคส initial load ที่ query นี้เสร็จก่อน loadAllSubmissions() แล้ว
+       renderCharts() ไปวาดด้วยข้อมูลว่าง total=0 วูบก่อนของจริงจะมา) */
+    if (currentSubTab === 'overview' && _initialDataLoaded) {
       buildDocFilterBar();
       renderCharts();
     }
