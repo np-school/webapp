@@ -271,50 +271,128 @@ function filterByPeriod(list, scope) {
   });
 }
 
-/* ── แถบเลือกช่วงเวลา: ปุ่มโหมด + (ถ้าเลือกรายเดือน/รายปี) select เดือน/ปี ── */
+/* ── แถบเลือกช่วงเวลา: ปุ่มโหมด + (ถ้าเลือกรายเดือน/รายปี) ป๊อปอัปเลือกเดือน/ปีแบบสวย ── */
 function renderPeriodBar(containerId, scope) {
   var el = document.getElementById(containerId);
   if (!el) return;
   var st = periodState[scope];
-  var curYear = new Date().getFullYear();
-  var years = [];
-  for (var i = 0; i < PERIOD_MAX_YEARS_BACK; i++) years.push(curYear - i);
 
   var html = ['all', 'week', 'month', 'year'].map(function(p) {
     var active = st.period === p;
     return '<button class="filter-pill' + (active ? ' active' : '') + '" onclick="setPeriodMode(\'' + scope + '\',\'' + p + '\')">' + PERIOD_MODE_LABELS[p] + '</button>';
   }).join('');
 
-  if (st.period === 'month') {
-    html += '<select onchange="setPeriodMonth(\'' + scope + '\',this.value)" style="max-width:110px;">' +
-      THAI_MONTHS.map(function(m, idx) { return '<option value="' + idx + '"' + (idx === st.month ? ' selected' : '') + '>' + m + '</option>'; }).join('') +
-      '</select>' +
-      '<select onchange="setPeriodYear(\'' + scope + '\',this.value)" style="max-width:100px;">' +
-      years.map(function(y) { return '<option value="' + y + '"' + (y === st.year ? ' selected' : '') + '>พ.ศ. ' + (y + 543) + '</option>'; }).join('') +
-      '</select>';
-  } else if (st.period === 'year') {
-    html += '<select onchange="setPeriodYear(\'' + scope + '\',this.value)" style="max-width:100px;">' +
-      years.map(function(y) { return '<option value="' + y + '"' + (y === st.year ? ' selected' : '') + '>พ.ศ. ' + (y + 543) + '</option>'; }).join('') +
-      '</select>';
+  if (st.period === 'month' || st.period === 'year') {
+    var label = st.period === 'month' ? (THAI_MONTHS[st.month] + ' ' + (st.year + 543)) : ('ปี ' + (st.year + 543));
+    html +=
+      '<div class="period-picker" style="position:relative;display:inline-block;">' +
+        '<button type="button" onclick="togglePeriodPopover(\'' + scope + '\')" ' +
+          'style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid var(--border);background:var(--white);font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer;">' +
+          '<i data-lucide="calendar" style="width:13px;height:13px;color:var(--purple);"></i>' + label +
+          '<i data-lucide="chevron-down" style="width:12px;height:12px;color:var(--text3);"></i>' +
+        '</button>' +
+        '<div id="periodPopover-' + scope + '" class="period-popover" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:40;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:12px;min-width:230px;">' +
+          renderPeriodPopoverBody(scope) +
+        '</div>' +
+      '</div>';
   }
   el.innerHTML = html;
+  lucide.createIcons();
 }
+
+function renderPeriodPopoverBody(scope) {
+  var st = periodState[scope];
+  var curYear = new Date().getFullYear();
+  var curMonth = new Date().getMonth();
+  var years = [];
+  for (var i = 0; i < PERIOD_MAX_YEARS_BACK; i++) years.push(curYear - i);
+
+  if (st.period === 'year') {
+    return (
+      '<div style="font-size:10.5px;font-weight:800;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">เลือกปี (ย้อนหลังสูงสุด ' + PERIOD_MAX_YEARS_BACK + ' ปี)</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;">' +
+      years.map(function(y) {
+        var active = y === st.year;
+        return '<button type="button" onclick="setPeriodYear(\'' + scope + '\',' + y + ')" style="text-align:left;padding:9px 12px;border-radius:10px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (active ? '#fff' : 'var(--text)') + ';font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">พ.ศ. ' + (y + 543) + '</button>';
+      }).join('') +
+      '</div>'
+    );
+  }
+
+  /* month mode */
+  var yearIdx = years.indexOf(st.year);
+  var prevDisabled = yearIdx >= years.length - 1; /* ไปปีเก่ากว่านี้ไม่ได้แล้ว (สุดขอบ 3 ปีย้อนหลัง) */
+  var nextDisabled = yearIdx <= 0; /* ไปปีถัดไปไม่ได้ถ้าอยู่ปีปัจจุบันแล้ว */
+
+  var monthsGrid = THAI_MONTHS.map(function(m, idx) {
+    var future = (st.year === curYear && idx > curMonth);
+    var active = idx === st.month;
+    return '<button type="button" ' + (future ? 'disabled' : ('onclick="setPeriodMonth(\'' + scope + '\',' + idx + ')"')) +
+      ' style="padding:8px 0;border-radius:9px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (future ? 'var(--text3)' : (active ? '#fff' : 'var(--text)')) + ';font-size:12.5px;font-weight:700;cursor:' + (future ? 'not-allowed' : 'pointer') + ';opacity:' + (future ? '.4' : '1') + ';">' + m + '</button>';
+  }).join('');
+
+  return (
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+      '<button type="button" ' + (prevDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + scope + '\',-1)"')) +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (prevDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (prevDisabled ? '.35' : '1') + ';"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>' +
+      '<div style="font-size:13.5px;font-weight:800;color:var(--text);">พ.ศ. ' + (st.year + 543) + '</div>' +
+      '<button type="button" ' + (nextDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + scope + '\',1)"')) +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (nextDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (nextDisabled ? '.35' : '1') + ';"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">' + monthsGrid + '</div>'
+  );
+}
+
+/* เปิด/ปิดป๊อปอัปเลือกเดือน-ปี (ปิดตัวอื่นเสมอเวลาเปิดตัวใหม่ และปิดเมื่อคลิกนอกกล่อง) */
+function togglePeriodPopover(scope) {
+  var el = document.getElementById('periodPopover-' + scope);
+  if (!el) return;
+  var willOpen = el.style.display !== 'block';
+  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  el.style.display = willOpen ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('.period-picker')) {
+    document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  }
+});
+
 function rerenderPeriodScope(scope) {
   if (scope === 'active') { renderStats(); renderActivePanel(); }
   else { renderTable(); }
+}
+function reopenPeriodPopover(scope) {
+  /* render ใหม่ทำให้ popover ถูกสร้างใหม่ (ปิดอยู่โดย default) — เปิดกลับให้ทันทีเพื่อให้เลือกต่อได้ลื่นๆ */
+  setTimeout(function() {
+    var el = document.getElementById('periodPopover-' + scope);
+    if (el) el.style.display = 'block';
+  }, 0);
 }
 function setPeriodMode(scope, mode) {
   periodState[scope].period = mode;
   if ((mode === 'month' || mode === 'year') && !periodState[scope].year) periodState[scope].year = new Date().getFullYear();
   rerenderPeriodScope(scope);
+  if (mode === 'month' || mode === 'year') reopenPeriodPopover(scope);
 }
 function setPeriodMonth(scope, m) {
   periodState[scope].month = parseInt(m, 10);
-  rerenderPeriodScope(scope);
+  rerenderPeriodScope(scope); /* เลือกเดือนแล้วถือว่าเสร็จ — ป๊อปอัปปิดตามปกติ */
 }
 function setPeriodYear(scope, y) {
   periodState[scope].year = parseInt(y, 10);
+  rerenderPeriodScope(scope); /* เลือกปีแล้วถือว่าเสร็จ (โหมดรายปี) — ป๊อปอัปปิดตามปกติ */
+}
+function stepPeriodYear(scope, delta) {
+  var curYear = new Date().getFullYear();
+  var minYear = curYear - (PERIOD_MAX_YEARS_BACK - 1);
+  var y = periodState[scope].year + delta;
+  if (y > curYear) y = curYear;
+  if (y < minYear) y = minYear;
+  periodState[scope].year = y;
+  var curMonth = new Date().getMonth();
+  if (y === curYear && periodState[scope].month > curMonth) periodState[scope].month = curMonth;
   rerenderPeriodScope(scope);
+  reopenPeriodPopover(scope); /* ใช้ลูกศรเลื่อนปีอยู่ — เก็บป๊อปอัปให้เปิดค้างไว้เลือกเดือนต่อ */
 }
 
 function setupScrollTopButton() {
