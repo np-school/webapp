@@ -1,3 +1,26 @@
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+   ── ต้องรันก่อน var currentYear ด้านล่าง เพื่อให้ window._defaultYear
+      ถูกตั้งค่าก่อนถูกอ่านไปใช้ ──
+─────────────────────────────────────────── */
+(function() {
+  var now    = new Date();
+  var month  = now.getMonth() + 1;
+  var day    = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1; thYear = ceYear + 543;
+  } else if (month >= 11) {
+    sem = 2; thYear = ceYear + 543;
+  } else {
+    sem = 2; thYear = (ceYear - 1) + 543;
+  }
+  window._defaultYear = thYear;
+  window._defaultSem  = sem;
+})();
+
 /* ══════════════════════ STATE ══════════════════════ */
 /* ════════════════════════════════════════════
    PORTFOLIO ADMIN – portfolio-admin.html
@@ -3102,27 +3125,6 @@ function closeAdminMemoModal() {
 document.addEventListener('DOMContentLoaded', initAdminA4Scaler);
 
 /* ══════════════════════ INIT ══════════════════════ */
-/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
-   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
-   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
-─────────────────────────────────────────── */
-(function() {
-  var now    = new Date();
-  var month  = now.getMonth() + 1;
-  var day    = now.getDate();
-  var ceYear = now.getFullYear();
-  var sem, thYear;
-  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
-    sem = 1; thYear = ceYear + 543;
-  } else if (month >= 11) {
-    sem = 2; thYear = ceYear + 543;
-  } else {
-    sem = 2; thYear = (ceYear - 1) + 543;
-  }
-  window._defaultYear = thYear;
-  window._defaultSem  = sem;
-})(); /* true = superadmin → ตรวจ/เปลี่ยนสถานะได้ทุกขั้น */
-
 /* ── buildPage() — auth guard + shell + sidebar อัตโนมัติ ── */
 buildPage({
   appId:        'adminApp',
