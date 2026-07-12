@@ -669,6 +669,48 @@
           </div>
         </div>
 
+        <!-- ══ iOS Add to Home Screen Card (จำเป็นก่อนเปิดแจ้งเตือนได้บน iPhone/iPad) ══ -->
+        <div id="a2hsCard" style="display:none;margin-top:16px;background:white;border-radius:22px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden;">
+          <!-- Header -->
+          <div style="padding:18px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:9px;">
+            <div style="width:34px;height:34px;background:#eff6ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="smartphone" style="width:17px;height:17px;color:#2563eb;"></i>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:800;color:#0f172a;">เพิ่มลงหน้าจอ Home เพื่อรับการแจ้งเตือน</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:1px;">iPhone/iPad ต้องเพิ่มแอปนี้ไปหน้าจอ Home ก่อน ถึงจะเปิดการแจ้งเตือนได้</div>
+            </div>
+          </div>
+          <div style="padding:18px 20px;display:flex;align-items:stretch;gap:16px;flex-wrap:wrap;">
+            <!-- Highlight Card -->
+            <div style="flex:1;min-width:240px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(37,99,235,.22);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i data-lucide="share" style="width:19px;height:19px;color:white;"></i>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:800;color:white;">ยังไม่ได้เพิ่มลงหน้าจอ Home</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;">ทำตาม 3 ขั้นตอนด้านขวาเพื่อเปิดใช้งาน</div>
+                </div>
+              </div>
+            </div>
+            <!-- Steps + notifications (side by side) -->
+            <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border-radius:12px;padding:10px 14px;">
+                <div style="width:24px;height:24px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">1</div>
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">กดปุ่ม <strong>แชร์</strong> (สี่เหลี่ยมมีลูกศรชี้ขึ้น) แถบด้านล่างของ Safari</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border-radius:12px;padding:10px 14px;">
+                <div style="width:24px;height:24px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">2</div>
+                <div style="font-size:12px;font-weight:700;color:#1e293b;">เลือก <strong>"เพิ่มไปที่หน้าจอโฮม"</strong> (Add to Home Screen)</div>
+              </div>
+              <div style="background:#eff6ff;border-radius:12px;padding:10px 14px;border:1px solid #bfdbfe;">
+                <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i data-lucide="bell" style="width:12px;height:12px;"></i> ขั้นตอนสุดท้าย</div>
+                <div style="font-size:11px;color:#1e40af;line-height:1.6;">เปิดแอปจากไอคอนที่เพิ่มไว้บนหน้าจอ Home แล้วกดปุ่ม <strong>"เปิดการแจ้งเตือน"</strong> ที่จะปรากฏขึ้น</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
 
@@ -714,17 +756,36 @@
 
   var npCurrentUser = null;
 
-  /* แสดง banner เฉพาะตอน browser รองรับ Notification API และยังไม่เคยตอบ allow/block
-     (Safari บน iOS ที่ไม่รองรับ หรือยังไม่ได้ add to home screen จะไม่มี Notification ใน window เลย
-     ทำให้ banner ไม่โชว์ไปเอง — ไม่ต้องเช็ค iOS แยก) */
+  /* iOS 16.4+ Safari มี Notification API ให้เห็นถึงแม้ยังไม่ได้ add to home screen ก็ตาม
+     แต่ requestPermission() จะใช้งานไม่ได้จริงจนกว่าจะเปิดผ่านไอคอนที่ติดตั้งแล้ว (ดู firebase.js)
+     เลยต้องเช็คแยกกรณีนี้ เพื่อโชว์การ์ดแนะนำ "เพิ่มลงหน้าจอ Home" แทนปุ่ม "เปิดการแจ้งเตือน" ปกติ */
+  function _isIOSDevice() { return /iP(hone|od|ad)/.test(navigator.userAgent); }
+  function _isStandaloneMode() {
+    return window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
+  /* แสดง banner เฉพาะตอน browser รองรับ Notification API, ยังไม่เคยตอบ allow/block,
+     และไม่ใช่กรณี iOS ที่ยังไม่ได้ add to home screen (กรณีนั้นให้โชว์การ์ดแนะนำแทน) */
   function checkNotifPermBanner() {
     var banner = document.getElementById('notifPermBanner');
     if (!banner) return;
-    if ('Notification' in window && Notification.permission === 'default') {
+    var needsA2HS = _isIOSDevice() && !_isStandaloneMode();
+    if ('Notification' in window && Notification.permission === 'default' && !needsA2HS) {
       banner.style.display = 'flex';
     } else {
       banner.style.display = 'none';
     }
+  }
+
+  /* แสดงการ์ดแนะนำ "เพิ่มลงหน้าจอ Home" เฉพาะ iOS ที่ยังไม่ได้ add to home screen
+     และยังไม่เคยตอบ allow/block การแจ้งเตือน (ถ้า block ไปแล้วก็ไม่มีประโยชน์จะเตือนซ้ำ) */
+  function checkA2HSCard() {
+    var card = document.getElementById('a2hsCard');
+    if (!card) return;
+    var needsA2HS = _isIOSDevice() && !_isStandaloneMode();
+    var alreadyDenied = ('Notification' in window) && Notification.permission === 'denied';
+    card.style.display = (needsA2HS && !alreadyDenied) ? 'block' : 'none';
   }
 
   /* เรียกตรงนี้จาก onclick ของปุ่ม (user gesture) เท่านั้น — ห้ามเรียกอัตโนมัติ
@@ -762,6 +823,7 @@
       /* ไม่เรียก setupPushNotification อัตโนมัติตรงนี้ — Safari/iOS บล็อก requestPermission()
          ถ้าไม่ได้มาจาก user gesture (เช่น tap ปุ่ม) ต้องให้ผู้ใช้กดปุ่มเองในแบนเนอร์ด้านล่างแทน */
       checkNotifPermBanner();
+      checkA2HSCard();
       pfInit(user.uid, user.email);
       loadDashboardAnnouncements();
       loadDashboardRepairs(user.uid);
