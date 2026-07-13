@@ -1645,31 +1645,53 @@ function doPrintReport() {
   closeModal('printReportModal');
 }
 
+/* สีป้ายสถานะสำหรับหน้าพิมพ์ (คู่กับ getStatusMeta().color) */
+var PRINT_BADGE_COLORS = {
+  amber:  { bg: '#fef3c7', text: '#92400e' },
+  sky:    { bg: '#e0f2fe', text: '#075985' },
+  purple: { bg: '#ede9fe', text: '#5b21b6' },
+  green:  { bg: '#dcfce7', text: '#15803d' },
+  red:    { bg: '#fee2e2', text: '#b91c1c' }
+};
+
 /* การ์ดของรายการเดียว ใช้ร่วมกันทั้งโหมด "สถานะเดียว" และโหมด "ทั้งหมด แยกตามสถานะ" */
 function renderPrintItem(r, idx) {
   var cat = getCategoryMeta(r.category);
   var meta = getStatusMeta(r);
+  var badge = PRINT_BADGE_COLORS[meta.color] || PRINT_BADGE_COLORS.amber;
 
   var photosHtml = '';
   if (r.photos && r.photos.length) {
-    photosHtml = '<div class="photos">' + r.photos.map(function(p) {
-      return '<img src="' + p.url + '" alt="รูปแนบ">';
-    }).join('') + '</div>';
+    photosHtml =
+      '<div class="photos-title">รูปภาพที่แนบ (' + r.photos.length + ' รูป)</div>' +
+      '<div class="photos">' + r.photos.map(function(p) {
+        return '<div class="photo-box"><img src="' + p.url + '" alt="รูปแนบ"></div>';
+      }).join('') + '</div>';
   } else {
-    photosHtml = '<div class="row" style="color:#94a3b8;">ไม่มีรูปภาพแนบ</div>';
+    photosHtml = '<div class="no-photo">ไม่มีรูปภาพแนบ</div>';
   }
 
   return (
     '<div class="item">' +
-      '<h2>' + (idx + 1) + '. ' + esc2(r.title || '(ไม่มีหัวข้อ)') + ' — ' + esc2(meta.label) + (r.priority === 'urgent' ? ' <span class="urgent">เร่งด่วน</span>' : '') + '</h2>' +
-      '<div class="row"><span class="label">ผู้แจ้ง:</span>' + esc2(r.reporterName || r.reporterEmail || '-') + (r.reporterPosition ? (' (' + esc2(r.reporterPosition) + ')') : '') + '</div>' +
-      '<div class="row"><span class="label">เบอร์โทร:</span>' + esc2(r.reporterPhone || '-') + '</div>' +
-      '<div class="row"><span class="label">วันเวลาที่แจ้ง:</span>' + fmtDate(r.createdAt) + '</div>' +
-      '<div class="row"><span class="label">สถานที่:</span>' + esc2(r.location || '-') + '</div>' +
-      '<div class="row"><span class="label">หมวดหมู่:</span>' + esc2(cat.label) + '</div>' +
-      '<div class="row"><span class="label">ผู้รับผิดชอบ:</span>' + esc2(r.technician || '-') + '</div>' +
-      '<div class="row"><span class="label">รายละเอียด:</span>' + esc2(r.description || '-') + '</div>' +
-      photosHtml +
+      '<div class="item-head">' +
+        '<h2>' + (idx + 1) + '. ' + esc2(r.title || '(ไม่มีหัวข้อ)') + '</h2>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
+          (r.priority === 'urgent' ? '<span class="urgent-badge">เร่งด่วน</span>' : '') +
+          '<span class="status-badge" style="background:' + badge.bg + ';color:' + badge.text + ';">' + esc2(meta.label) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="item-body">' +
+        '<div class="info-grid">' +
+          '<div><span class="label">ผู้แจ้ง</span>' + esc2(r.reporterName || r.reporterEmail || '-') + (r.reporterPosition ? (' <span class="dim">(' + esc2(r.reporterPosition) + ')</span>') : '') + '</div>' +
+          '<div><span class="label">เบอร์โทร</span>' + esc2(r.reporterPhone || '-') + '</div>' +
+          '<div><span class="label">วันเวลาที่แจ้ง</span>' + fmtDate(r.createdAt) + '</div>' +
+          '<div><span class="label">สถานที่</span>' + esc2(r.location || '-') + '</div>' +
+          '<div><span class="label">หมวดหมู่</span>' + esc2(cat.label) + '</div>' +
+          '<div><span class="label">ผู้รับผิดชอบ</span>' + esc2(r.technician || '-') + '</div>' +
+        '</div>' +
+        '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">รายละเอียด</span>' + esc2(r.description || '-') + '</div>' +
+        photosHtml +
+      '</div>' +
     '</div>'
   );
 }
@@ -1712,31 +1734,73 @@ function openPrintWindow(list) {
 
   var html =
     '<!doctype html><html lang="th"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
     '<title>รายงานแจ้งซ่อม</title>' +
     '<style>' +
-      'body{font-family:Sarabun,Tahoma,sans-serif;color:#1e293b;padding:26px;margin:0;}' +
-      'h1{font-size:19px;margin:0 0 4px;}' +
-      '.meta{font-size:12.5px;color:#64748b;margin-bottom:20px;line-height:1.7;}' +
-      '.section-title{font-size:14.5px;font-weight:800;color:#4338ca;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #ddd6fe;page-break-after:avoid;}' +
+      '@page{ size: A4; margin: 14mm 12mm; }' +
+      '*{box-sizing:border-box;}' +
+      'body{font-family:Sarabun,Tahoma,sans-serif;color:#1e293b;margin:0;padding:22px;background:#eef0f4;}' +
+      '.page-wrap{max-width:840px;margin:0 auto;background:#fff;padding:26px 30px;border-radius:12px;}' +
+
+      '.report-header{border-bottom:3px solid #4338ca;padding-bottom:14px;margin-bottom:16px;}' +
+      '.report-header h1{font-size:19px;margin:0 0 3px;color:#1e293b;}' +
+      '.report-header .school{font-size:12px;color:#64748b;}' +
+
+      '.meta-box{background:#f1f5f9;border-radius:10px;padding:12px 16px;margin-bottom:20px;' +
+        'display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:#475569;}' +
+      '.meta-box .full{grid-column:1 / -1;border-top:1px solid #e2e8f0;margin-top:4px;padding-top:6px;font-weight:700;color:#334155;}' +
+      '.meta-box b{color:#1e293b;}' +
+
+      '.section-title{font-size:14px;font-weight:800;color:#4338ca;margin:22px 0 10px;padding-bottom:6px;' +
+        'border-bottom:2px solid #ddd6fe;page-break-after:avoid;}' +
       '.section-title:first-of-type{margin-top:0;}' +
-      '.item{border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:14px;page-break-inside:avoid;}' +
-      '.item h2{font-size:14px;margin:0 0 8px;color:#1e293b;}' +
-      '.urgent{color:#b91c1c;font-weight:800;font-size:11.5px;}' +
-      '.row{font-size:12.5px;margin-bottom:4px;line-height:1.5;}' +
-      '.label{font-weight:700;color:#334155;display:inline-block;min-width:112px;}' +
-      '.photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}' +
-      '.photos img{width:92px;height:92px;object-fit:cover;border-radius:6px;border:1px solid #cbd5e1;}' +
-      '.no-print{margin-bottom:18px;}' +
-      '.no-print button{padding:9px 20px;border-radius:9px;border:none;background:#6d28d9;color:#fff;font-weight:700;font-size:13px;cursor:pointer;}' +
-      '@media print{ .no-print{display:none;} body{padding:10px;} .item{border-color:#94a3b8;} }' +
+
+      '.item{border:1px solid #cbd5e1;border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}' +
+      '.item-head{background:#eef2ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #c7d2fe;}' +
+      '.item-head h2{font-size:13.5px;margin:0;color:#312e81;font-weight:800;}' +
+      '.status-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}' +
+      '.urgent-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;background:#fee2e2;color:#b91c1c;white-space:nowrap;}' +
+
+      '.item-body{padding:14px 16px;}' +
+      '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 20px;font-size:12.5px;margin-bottom:12px;}' +
+      '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}' +
+      '.dim{color:#94a3b8;font-size:11.5px;}' +
+
+      '.desc-box{background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;}' +
+      '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}' +
+
+      '.photos-title{font-size:11px;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}' +
+      '.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+      '.photo-box{border-radius:10px;overflow:hidden;border:1px solid #cbd5e1;background:#f8fafc;}' +
+      '.photo-box img{display:block;width:100%;height:280px;object-fit:cover;}' +
+      '.no-photo{font-size:12px;color:#94a3b8;font-style:italic;}' +
+
+      '.no-print{max-width:840px;margin:0 auto 16px;}' +
+      '.no-print button{padding:10px 22px;border-radius:9px;border:none;background:#6d28d9;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;}' +
+
+      '@media print{' +
+        'body{background:#fff;padding:0;}' +
+        '.page-wrap{max-width:none;padding:0;border-radius:0;}' +
+        '.no-print{display:none;}' +
+        '.item{border-color:#94a3b8;}' +
+        '.photo-box img{height:250px;}' +
+      '}' +
     '</style></head><body>' +
       '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
-      '<h1>รายงานการแจ้งซ่อม — โรงเรียนหนองกี่พิทยาคม</h1>' +
-      '<div class="meta">' +
-        'ช่วงเวลา: <b>' + periodLabel + '</b> &nbsp;|&nbsp; สถานะ: <b>' + esc2(statusLabel) + '</b> &nbsp;|&nbsp; ผู้รับผิดชอบ: <b>' + techLabel + '</b><br>' +
-        'จำนวน <b>' + list.length + '</b> รายการ &nbsp;|&nbsp; พิมพ์เมื่อ ' + printedAt +
+      '<div class="page-wrap">' +
+        '<div class="report-header">' +
+          '<h1>รายงานการแจ้งซ่อม</h1>' +
+          '<div class="school">โรงเรียนหนองกี่พิทยาคม</div>' +
+        '</div>' +
+        '<div class="meta-box">' +
+          '<div>ช่วงเวลา: <b>' + periodLabel + '</b></div>' +
+          '<div>สถานะ: <b>' + esc2(statusLabel) + '</b></div>' +
+          '<div>ผู้รับผิดชอบ: <b>' + techLabel + '</b></div>' +
+          '<div>พิมพ์เมื่อ: <b>' + printedAt + '</b></div>' +
+          '<div class="full">รวมทั้งหมด ' + list.length + ' รายการ</div>' +
+        '</div>' +
+        itemsHtml +
       '</div>' +
-      itemsHtml +
     '</body></html>';
 
   win.document.open();
