@@ -238,36 +238,86 @@ function handleLogout() {
    Admin Access Check
    ดึง permissions จริงจาก Firestore แล้วแสดงเฉพาะ
    เมนูที่ user มีสิทธิ์ — ทำงานบนทุกหน้า
+
+   ── แก้ปัญหา "เมนูเจ้าหน้าที่ขึ้นบ้างไม่ขึ้นบ้าง ต้องรีโหลด" ──
+   เดิม: query Firestore ครั้งเดียว ไม่มี cache ไม่มี retry, error ถูก
+   catch เงียบๆ ทิ้ง — ถ้าเน็ตช้า/หลุดตอนโหลดหน้า (เน็ตโรงเรียนมีปัญหา
+   Firestore streaming เป็นทุนเดิม ดู firebase.js) เมนูจะค้างซ่อนไปเลย
+   จนกว่าจะรีโหลดหน้าใหม่แล้วเน็ตดันบังเอิญเสถียรพอ
+
+   แก้โดย:
+   1. cache ผลลัพธ์ล่าสุดไว้ใน localStorage ต่อ email → โหลดหน้าครั้งถัดไป
+      เมนูโผล่ทันทีจาก cache ก่อน ไม่ต้องรอ Firestore
+   2. ยิง Firestore จริงเสมอเพื่ออัปเดต cache ให้ล่าสุด
+   3. ถ้า fail (เน็ตหลุด/timeout) → retry อีก 1 ครั้งหลัง 1.5 วิ แทนที่จะ
+      เงียบทิ้งไปเฉยๆ
+   4. isSA ไม่ต้องรอ doc.exists อีกต่อไป (เดิมถ้า SuperAdmin ไม่มี doc ใน
+      admins/ จะโดน return ก่อนถึงเงื่อนไข isSA ทำให้เมนู SuperAdmin ไม่ขึ้นเลย)
    ════════════════════════════════ */
+var ADMIN_ACCESS_CACHE_PREFIX = 'np_admin_access_cache_';
+
 function checkAdminAccess(email) {
   if (!email) return;
-  var lEmail = email.toLowerCase();
-  var isSA   = lEmail === SUPERADMIN_EMAIL;
+  var lEmail   = email.toLowerCase();
+  var isSA     = lEmail === SUPERADMIN_EMAIL;
+  var cacheKey = ADMIN_ACCESS_CACHE_PREFIX + lEmail;
 
+  /* 1) โชว์จาก cache ก่อนทันที (ถ้ามี) กันเมนูไม่ขึ้นระหว่างรอเน็ต */
+  try {
+    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached || isSA) _applyAdminPermissions(cached, isSA);
+  } catch (e) { /* localStorage/JSON พัง ก็ข้ามไปรอผลจาก Firestore ตรงๆ */ }
+
+  /* 2) ยิง Firestore จริง พร้อม retry 1 ครั้งถ้าล้มเหลว */
+  _fetchAdminDoc(lEmail, isSA, cacheKey, 0);
+}
+
+function _fetchAdminDoc(lEmail, isSA, cacheKey, attempt) {
   db.collection('admins').doc(lEmail).get()
     .then(function(doc) {
-      if (!doc.exists) return;
-      var p = doc.data().permissions || {};
-
-      /* แสดง section wrapper */
-      var sec = document.getElementById('adminSidebarSection');
-      if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
-
-      /* ซ่อน/แสดงแต่ละ item ตาม permission */
-      _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
-      _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
-      _toggleAdminItem('adminMenuItem-repair',     isSA || !!p.repair);
-      _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
-      _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
-      _toggleAdminItem('adminMenuItem-ipad',       isSA || !!p.ipad);
-
-      /* SuperAdmin-only */
-      if (isSA) {
-        var slot = document.getElementById('superadminSidebarSlot');
-        if (slot) { slot.style.display = 'block'; lucide.createIcons(); }
+      if (!doc.exists) {
+        /* ไม่มี doc จริงๆ (ไม่ใช่แค่ query fail) → เคลียร์ cache เก่าทิ้ง
+           แต่ถ้าเป็น SuperAdmin ก็ยังต้องโชว์เมนู SuperAdmin อยู่ดี */
+        try { localStorage.removeItem(cacheKey); } catch (e) {}
+        if (isSA) _applyAdminPermissions(null, true);
+        return;
       }
+      var p = doc.data().permissions || {};
+      try { localStorage.setItem(cacheKey, JSON.stringify(p)); } catch (e) {}
+      _applyAdminPermissions(p, isSA);
     })
-    .catch(function() {});
+    .catch(function(err) {
+      console.warn('checkAdminAccess: โหลดสิทธิ์แอดมินไม่สำเร็จ (attempt ' + attempt + ')', err);
+      if (attempt < 1) {
+        setTimeout(function() {
+          _fetchAdminDoc(lEmail, isSA, cacheKey, attempt + 1);
+        }, 1500);
+      }
+      /* ถ้า retry แล้วยัง fail อีก → ปล่อยให้ค่าจาก cache (ถ้ามี) ที่โชว์ไว้
+         ตั้งแต่ข้อ 1 ค้างอยู่แบบนั้นไปก่อน ดีกว่าซ่อนเมนูทั้งหมดเงียบๆ */
+    });
+}
+
+function _applyAdminPermissions(p, isSA) {
+  p = p || {};
+
+  /* แสดง section wrapper */
+  var sec = document.getElementById('adminSidebarSection');
+  if (sec) { sec.style.display = 'block'; lucide.createIcons(); }
+
+  /* ซ่อน/แสดงแต่ละ item ตาม permission */
+  _toggleAdminItem('adminMenuItem-portfolio',  isSA || !!p.portfolio || !!p.headOfGroup);
+  _toggleAdminItem('adminMenuItem-booking',    isSA || !!p.bookings);
+  _toggleAdminItem('adminMenuItem-repair',     isSA || !!p.repair);
+  _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
+  _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
+  _toggleAdminItem('adminMenuItem-ipad',       isSA || !!p.ipad);
+
+  /* SuperAdmin-only */
+  if (isSA) {
+    var slot = document.getElementById('superadminSidebarSlot');
+    if (slot) { slot.style.display = 'block'; lucide.createIcons(); }
+  }
 }
 
 function _toggleAdminItem(id, show) {
