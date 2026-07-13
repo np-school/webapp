@@ -100,6 +100,17 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">สถานะ</label>
+      <select id="printStatusFilter">
+        <option value="">ทั้งหมด แยกตามสถานะ</option>
+        <option value="reported">แจ้งใหม่ (รออนุมัติ)</option>
+        <option value="progress">กำลังซ่อม</option>
+        <option value="done">รอผู้แจ้งตรวจสอบ</option>
+        <option value="closed">ปิดงานแล้ว</option>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">ผู้รับผิดชอบ</label>
       <select id="printTechnicianFilter"><option value="">ทั้งหมด</option></select>
     </div>

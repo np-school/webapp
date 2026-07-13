@@ -47,6 +47,8 @@ var periodState = {
 };
 /* ผู้รับผิดชอบที่เลือกไว้ในโมดัล "พิมพ์รายงาน" ('' = ทั้งหมด) */
 var printTechnicianFilter = '';
+/* สถานะที่เลือกไว้ในโมดัล "พิมพ์รายงาน" ('' = ทั้งหมด แยกตามสถานะ) */
+var printStatusFilter = '';
 var PERIOD_MODE_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
 var THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var PERIOD_MAX_YEARS_BACK = 3;
@@ -1582,6 +1584,9 @@ function renderPrintTechnicianFilterSelect() {
 function openPrintReportModal() {
   periodState.print = { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() };
   printTechnicianFilter = '';
+  printStatusFilter = '';
+  var statusSel = document.getElementById('printStatusFilter');
+  if (statusSel) statusSel.value = '';
   renderPeriodBar('printPeriodBar', 'print');
   renderPrintTechnicianFilterSelect();
   openModal('printReportModal');
@@ -1595,13 +1600,34 @@ function periodLabelText(scope) {
   return 'ทั้งหมด (ทุกช่วงเวลา)';
 }
 
+var PRINT_STATUS_LABELS = {
+  '': 'ทั้งหมด แยกตามสถานะ',
+  reported: 'แจ้งใหม่ (รออนุมัติ)',
+  progress: 'กำลังซ่อม',
+  done:     'รอผู้แจ้งตรวจสอบ',
+  closed:   'ปิดงานแล้ว'
+};
+function matchesPrintStatus(r, statusFilter) {
+  if (!statusFilter) return true;
+  if (statusFilter === 'reported') return r.status === 'reported';
+  if (statusFilter === 'progress') return ['approved', 'reopened'].indexOf(r.status) !== -1;
+  if (statusFilter === 'done')     return r.status === 'done';
+  if (statusFilter === 'closed')   return r.status === 'closed';
+  return true;
+}
+
 function doPrintReport() {
   var sel = document.getElementById('printTechnicianFilter');
   printTechnicianFilter = sel ? sel.value : '';
+  var statusSel = document.getElementById('printStatusFilter');
+  printStatusFilter = statusSel ? statusSel.value : '';
 
   var list = filterByPeriod(allRepairs, 'print');
   if (printTechnicianFilter) {
     list = list.filter(function(r) { return _normName(r.technician) === _normName(printTechnicianFilter); });
+  }
+  if (printStatusFilter) {
+    list = list.filter(function(r) { return matchesPrintStatus(r, printStatusFilter); });
   }
   /* เรียงจากแจ้งก่อนไปหลังตามวันที่ ให้อ่านเป็นไทม์ไลน์ง่าย */
   list = list.slice().sort(function(a, b) {
@@ -1619,6 +1645,43 @@ function doPrintReport() {
   closeModal('printReportModal');
 }
 
+/* การ์ดของรายการเดียว ใช้ร่วมกันทั้งโหมด "สถานะเดียว" และโหมด "ทั้งหมด แยกตามสถานะ" */
+function renderPrintItem(r, idx) {
+  var cat = getCategoryMeta(r.category);
+  var meta = getStatusMeta(r);
+
+  var photosHtml = '';
+  if (r.photos && r.photos.length) {
+    photosHtml = '<div class="photos">' + r.photos.map(function(p) {
+      return '<img src="' + p.url + '" alt="รูปแนบ">';
+    }).join('') + '</div>';
+  } else {
+    photosHtml = '<div class="row" style="color:#94a3b8;">ไม่มีรูปภาพแนบ</div>';
+  }
+
+  return (
+    '<div class="item">' +
+      '<h2>' + (idx + 1) + '. ' + esc2(r.title || '(ไม่มีหัวข้อ)') + ' — ' + esc2(meta.label) + (r.priority === 'urgent' ? ' <span class="urgent">เร่งด่วน</span>' : '') + '</h2>' +
+      '<div class="row"><span class="label">ผู้แจ้ง:</span>' + esc2(r.reporterName || r.reporterEmail || '-') + (r.reporterPosition ? (' (' + esc2(r.reporterPosition) + ')') : '') + '</div>' +
+      '<div class="row"><span class="label">เบอร์โทร:</span>' + esc2(r.reporterPhone || '-') + '</div>' +
+      '<div class="row"><span class="label">วันเวลาที่แจ้ง:</span>' + fmtDate(r.createdAt) + '</div>' +
+      '<div class="row"><span class="label">สถานที่:</span>' + esc2(r.location || '-') + '</div>' +
+      '<div class="row"><span class="label">หมวดหมู่:</span>' + esc2(cat.label) + '</div>' +
+      '<div class="row"><span class="label">ผู้รับผิดชอบ:</span>' + esc2(r.technician || '-') + '</div>' +
+      '<div class="row"><span class="label">รายละเอียด:</span>' + esc2(r.description || '-') + '</div>' +
+      photosHtml +
+    '</div>'
+  );
+}
+
+/* ลำดับ/หัวข้อของแต่ละกลุ่มสถานะ เวลาเลือก "ทั้งหมด แยกตามสถานะ" */
+var PRINT_STATUS_GROUPS = [
+  { key: 'reported', label: 'แจ้งใหม่ (รออนุมัติ)' },
+  { key: 'progress', label: 'กำลังซ่อม' },
+  { key: 'done',     label: 'รอผู้แจ้งตรวจสอบ' },
+  { key: 'closed',   label: 'ปิดงานแล้ว' }
+];
+
 function openPrintWindow(list) {
   var win = window.open('', '_blank');
   if (!win) {
@@ -1627,38 +1690,25 @@ function openPrintWindow(list) {
   }
 
   var periodLabel = periodLabelText('print');
+  var statusLabel = PRINT_STATUS_LABELS[printStatusFilter] || 'ทั้งหมด แยกตามสถานะ';
   var techLabel = printTechnicianFilter ? esc2(printTechnicianFilter) : 'ทั้งหมด';
   var now = new Date();
   var printedAt = now.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
                   ' ' + now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
 
-  var itemsHtml = list.map(function(r, idx) {
-    var cat = getCategoryMeta(r.category);
-    var meta = getStatusMeta(r);
-
-    var photosHtml = '';
-    if (r.photos && r.photos.length) {
-      photosHtml = '<div class="photos">' + r.photos.map(function(p) {
-        return '<img src="' + p.url + '" alt="รูปแนบ">';
-      }).join('') + '</div>';
-    } else {
-      photosHtml = '<div class="row" style="color:#94a3b8;">ไม่มีรูปภาพแนบ</div>';
-    }
-
-    return (
-      '<div class="item">' +
-        '<h2>' + (idx + 1) + '. ' + esc2(r.title || '(ไม่มีหัวข้อ)') + ' — ' + esc2(meta.label) + (r.priority === 'urgent' ? ' <span class="urgent">เร่งด่วน</span>' : '') + '</h2>' +
-        '<div class="row"><span class="label">ผู้แจ้ง:</span>' + esc2(r.reporterName || r.reporterEmail || '-') + (r.reporterPosition ? (' (' + esc2(r.reporterPosition) + ')') : '') + '</div>' +
-        '<div class="row"><span class="label">เบอร์โทร:</span>' + esc2(r.reporterPhone || '-') + '</div>' +
-        '<div class="row"><span class="label">วันเวลาที่แจ้ง:</span>' + fmtDate(r.createdAt) + '</div>' +
-        '<div class="row"><span class="label">สถานที่:</span>' + esc2(r.location || '-') + '</div>' +
-        '<div class="row"><span class="label">หมวดหมู่:</span>' + esc2(cat.label) + '</div>' +
-        '<div class="row"><span class="label">ผู้รับผิดชอบ:</span>' + esc2(r.technician || '-') + '</div>' +
-        '<div class="row"><span class="label">รายละเอียด:</span>' + esc2(r.description || '-') + '</div>' +
-        photosHtml +
-      '</div>'
-    );
-  }).join('');
+  var itemsHtml;
+  if (!printStatusFilter) {
+    /* "ทั้งหมด แยกตามสถานะ" — จัดกลุ่มเป็นหมวดสถานะ มีหัวข้อคั่นแต่ละกลุ่ม
+       (รายการสถานะ "ไม่อนุมัติ" ไม่รวมอยู่ในตัวเลือกนี้ ถ้าต้องการดูให้เลือกกรองที่ตารางประวัติแทน) */
+    itemsHtml = PRINT_STATUS_GROUPS.map(function(g) {
+      var items = list.filter(function(r) { return matchesPrintStatus(r, g.key); });
+      if (!items.length) return '';
+      return '<div class="section-title">' + g.label + ' (' + items.length + ' รายการ)</div>' +
+        items.map(function(r, idx) { return renderPrintItem(r, idx); }).join('');
+    }).join('');
+  } else {
+    itemsHtml = list.map(function(r, idx) { return renderPrintItem(r, idx); }).join('');
+  }
 
   var html =
     '<!doctype html><html lang="th"><head><meta charset="UTF-8">' +
@@ -1667,6 +1717,8 @@ function openPrintWindow(list) {
       'body{font-family:Sarabun,Tahoma,sans-serif;color:#1e293b;padding:26px;margin:0;}' +
       'h1{font-size:19px;margin:0 0 4px;}' +
       '.meta{font-size:12.5px;color:#64748b;margin-bottom:20px;line-height:1.7;}' +
+      '.section-title{font-size:14.5px;font-weight:800;color:#4338ca;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #ddd6fe;page-break-after:avoid;}' +
+      '.section-title:first-of-type{margin-top:0;}' +
       '.item{border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:14px;page-break-inside:avoid;}' +
       '.item h2{font-size:14px;margin:0 0 8px;color:#1e293b;}' +
       '.urgent{color:#b91c1c;font-weight:800;font-size:11.5px;}' +
@@ -1681,7 +1733,7 @@ function openPrintWindow(list) {
       '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
       '<h1>รายงานการแจ้งซ่อม — โรงเรียนหนองกี่พิทยาคม</h1>' +
       '<div class="meta">' +
-        'ช่วงเวลา: <b>' + periodLabel + '</b> &nbsp;|&nbsp; ผู้รับผิดชอบ: <b>' + techLabel + '</b><br>' +
+        'ช่วงเวลา: <b>' + periodLabel + '</b> &nbsp;|&nbsp; สถานะ: <b>' + esc2(statusLabel) + '</b> &nbsp;|&nbsp; ผู้รับผิดชอบ: <b>' + techLabel + '</b><br>' +
         'จำนวน <b>' + list.length + '</b> รายการ &nbsp;|&nbsp; พิมพ์เมื่อ ' + printedAt +
       '</div>' +
       itemsHtml +
