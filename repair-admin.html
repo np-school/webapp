@@ -78,6 +78,41 @@
   <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
 </button>
 
+<!-- ══════════════════ Modal: พิมพ์รายงาน ══════════════════ -->
+<div id="printReportModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--purple-light);">
+          <i data-lucide="printer" style="color:var(--purple);"></i>
+        </div>
+        <div>
+          <h3>พิมพ์รายงานแจ้งซ่อม</h3>
+          <p>เลือกช่วงเวลาและผู้รับผิดชอบที่ต้องการ</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('printReportModal')"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ช่วงเวลา</label>
+      <div id="printPeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ผู้รับผิดชอบ</label>
+      <select id="printTechnicianFilter"><option value="">ทั้งหมด</option></select>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button class="btn-secondary" style="flex:1;justify-content:center;" onclick="closeModal('printReportModal')">ยกเลิก</button>
+      <button class="btn-primary" style="flex:1;justify-content:center;" onclick="doPrintReport()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════ Modal: รายละเอียด + ดำเนินการ ══════════════════ -->
 <div id="detailModal" class="modal-bg">
   <div class="modal-box wider" id="detailModalBody"></div>

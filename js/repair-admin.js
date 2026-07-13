@@ -42,8 +42,11 @@ var currentCategoryFilter = 'all'; /* กรองตารางประวั
      ปีย้อนหลังเลือกได้สูงสุด 3 ปี (ปีปัจจุบัน + ย้อนหลัง 2 ปี) ── */
 var periodState = {
   active:  { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() },
-  history: { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() }
+  history: { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() },
+  print:   { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() }
 };
+/* ผู้รับผิดชอบที่เลือกไว้ในโมดัล "พิมพ์รายงาน" ('' = ทั้งหมด) */
+var printTechnicianFilter = '';
 var PERIOD_MODE_LABELS = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
 var THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var PERIOD_MAX_YEARS_BACK = 3;
@@ -315,7 +318,8 @@ function positionPeriodPopover(scope) {
 
 function rerenderPeriodScope(scope) {
   if (scope === 'active') { renderStats(); renderActivePanel(); }
-  else { renderTable(); }
+  else if (scope === 'history') { renderTable(); }
+  else if (scope === 'print') { renderPeriodBar('printPeriodBar', 'print'); }
 }
 function reopenPeriodPopover(scope) {
   /* render ใหม่ทำให้ popover ถูกสร้างใหม่ (ปิดอยู่โดย default) — เปิดกลับให้ทันทีเพื่อให้เลือกต่อได้ลื่นๆ */
@@ -370,6 +374,9 @@ function renderPage() {
         '</div>' +
         '<p class="page-sub">ตรวจอนุมัติ มอบหมายช่าง และติดตามงานซ่อมทั้งหมด</p>' +
       '</div>' +
+      '<button class="btn-primary" onclick="openPrintReportModal()">' +
+        '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +
+      '</button>' +
     '</div>' +
 
     '<div class="sub-tab-bar" id="repSubTabBar">' +
@@ -1556,6 +1563,133 @@ function deleteResponsible(id, name) {
   db.collection('repair_responsible').doc(id).delete()
     .then(function() { showToast('ลบแล้ว'); })
     .catch(function(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   พิมพ์รายงาน: เลือกช่วงเวลา (รายสัปดาห์/รายเดือน/รายปี ย้อนหลังได้) +
+   ผู้รับผิดชอบ (หรือ "ทั้งหมด") แล้วเปิดหน้าต่างใหม่สำหรับสั่งพิมพ์
+   ══════════════════════════════════════════════════════════════ */
+function renderPrintTechnicianFilterSelect() {
+  var sel = document.getElementById('printTechnicianFilter');
+  if (!sel) return;
+  var current = printTechnicianFilter;
+  var names = getAssigneeList().map(function(p) { return p.name; }).sort(function(a, b) { return a.localeCompare(b, 'th'); });
+  sel.innerHTML = '<option value="">ทั้งหมด</option>' +
+    names.map(function(n) { return '<option value="' + esc2(n).replace(/"/g, '&quot;') + '">' + esc2(n) + '</option>'; }).join('');
+  sel.value = current;
+}
+
+function openPrintReportModal() {
+  periodState.print = { period: 'all', month: new Date().getMonth(), year: new Date().getFullYear() };
+  printTechnicianFilter = '';
+  renderPeriodBar('printPeriodBar', 'print');
+  renderPrintTechnicianFilterSelect();
+  openModal('printReportModal');
+}
+
+function periodLabelText(scope) {
+  var st = periodState[scope];
+  if (st.period === 'week')  return 'รายสัปดาห์นี้';
+  if (st.period === 'month') return 'เดือน ' + THAI_MONTHS[st.month] + ' พ.ศ. ' + (st.year + 543);
+  if (st.period === 'year')  return 'ปี พ.ศ. ' + (st.year + 543);
+  return 'ทั้งหมด (ทุกช่วงเวลา)';
+}
+
+function doPrintReport() {
+  var sel = document.getElementById('printTechnicianFilter');
+  printTechnicianFilter = sel ? sel.value : '';
+
+  var list = filterByPeriod(allRepairs, 'print');
+  if (printTechnicianFilter) {
+    list = list.filter(function(r) { return _normName(r.technician) === _normName(printTechnicianFilter); });
+  }
+  /* เรียงจากแจ้งก่อนไปหลังตามวันที่ ให้อ่านเป็นไทม์ไลน์ง่าย */
+  list = list.slice().sort(function(a, b) {
+    var at = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+    var bt = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+    return at - bt;
+  });
+
+  if (!list.length) {
+    showToast('ไม่พบรายการแจ้งซ่อมที่ตรงกับเงื่อนไขที่เลือก', 'warn');
+    return;
+  }
+
+  openPrintWindow(list);
+  closeModal('printReportModal');
+}
+
+function openPrintWindow(list) {
+  var win = window.open('', '_blank');
+  if (!win) {
+    showToast('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตป๊อปอัปสำหรับเว็บนี้แล้วลองอีกครั้ง', 'warn');
+    return;
+  }
+
+  var periodLabel = periodLabelText('print');
+  var techLabel = printTechnicianFilter ? esc2(printTechnicianFilter) : 'ทั้งหมด';
+  var now = new Date();
+  var printedAt = now.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) +
+                  ' ' + now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+
+  var itemsHtml = list.map(function(r, idx) {
+    var cat = getCategoryMeta(r.category);
+    var meta = getStatusMeta(r);
+
+    var photosHtml = '';
+    if (r.photos && r.photos.length) {
+      photosHtml = '<div class="photos">' + r.photos.map(function(p) {
+        return '<img src="' + p.url + '" alt="รูปแนบ">';
+      }).join('') + '</div>';
+    } else {
+      photosHtml = '<div class="row" style="color:#94a3b8;">ไม่มีรูปภาพแนบ</div>';
+    }
+
+    return (
+      '<div class="item">' +
+        '<h2>' + (idx + 1) + '. ' + esc2(r.title || '(ไม่มีหัวข้อ)') + ' — ' + esc2(meta.label) + (r.priority === 'urgent' ? ' <span class="urgent">เร่งด่วน</span>' : '') + '</h2>' +
+        '<div class="row"><span class="label">ผู้แจ้ง:</span>' + esc2(r.reporterName || r.reporterEmail || '-') + (r.reporterPosition ? (' (' + esc2(r.reporterPosition) + ')') : '') + '</div>' +
+        '<div class="row"><span class="label">เบอร์โทร:</span>' + esc2(r.reporterPhone || '-') + '</div>' +
+        '<div class="row"><span class="label">วันเวลาที่แจ้ง:</span>' + fmtDate(r.createdAt) + '</div>' +
+        '<div class="row"><span class="label">สถานที่:</span>' + esc2(r.location || '-') + '</div>' +
+        '<div class="row"><span class="label">หมวดหมู่:</span>' + esc2(cat.label) + '</div>' +
+        '<div class="row"><span class="label">ผู้รับผิดชอบ:</span>' + esc2(r.technician || '-') + '</div>' +
+        '<div class="row"><span class="label">รายละเอียด:</span>' + esc2(r.description || '-') + '</div>' +
+        photosHtml +
+      '</div>'
+    );
+  }).join('');
+
+  var html =
+    '<!doctype html><html lang="th"><head><meta charset="UTF-8">' +
+    '<title>รายงานแจ้งซ่อม</title>' +
+    '<style>' +
+      'body{font-family:Sarabun,Tahoma,sans-serif;color:#1e293b;padding:26px;margin:0;}' +
+      'h1{font-size:19px;margin:0 0 4px;}' +
+      '.meta{font-size:12.5px;color:#64748b;margin-bottom:20px;line-height:1.7;}' +
+      '.item{border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:14px;page-break-inside:avoid;}' +
+      '.item h2{font-size:14px;margin:0 0 8px;color:#1e293b;}' +
+      '.urgent{color:#b91c1c;font-weight:800;font-size:11.5px;}' +
+      '.row{font-size:12.5px;margin-bottom:4px;line-height:1.5;}' +
+      '.label{font-weight:700;color:#334155;display:inline-block;min-width:112px;}' +
+      '.photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}' +
+      '.photos img{width:92px;height:92px;object-fit:cover;border-radius:6px;border:1px solid #cbd5e1;}' +
+      '.no-print{margin-bottom:18px;}' +
+      '.no-print button{padding:9px 20px;border-radius:9px;border:none;background:#6d28d9;color:#fff;font-weight:700;font-size:13px;cursor:pointer;}' +
+      '@media print{ .no-print{display:none;} body{padding:10px;} .item{border-color:#94a3b8;} }' +
+    '</style></head><body>' +
+      '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
+      '<h1>รายงานการแจ้งซ่อม — โรงเรียนหนองกี่พิทยาคม</h1>' +
+      '<div class="meta">' +
+        'ช่วงเวลา: <b>' + periodLabel + '</b> &nbsp;|&nbsp; ผู้รับผิดชอบ: <b>' + techLabel + '</b><br>' +
+        'จำนวน <b>' + list.length + '</b> รายการ &nbsp;|&nbsp; พิมพ์เมื่อ ' + printedAt +
+      '</div>' +
+      itemsHtml +
+    '</body></html>';
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 }
 
 /* ══════════════════════ INIT ══════════════════════ */

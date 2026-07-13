@@ -102,6 +102,14 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">ตำแหน่ง</label>
+      <input type="text" id="frPosition" placeholder="เช่น ครูชำนาญการ">
+      <div id="frPositionHint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">
+        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:-1px;"></i> ดึงจากข้อมูลบุคลากรอัตโนมัติ (แก้ไขเองได้ถ้าไม่ถูกต้อง)
+      </div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">หมวดหมู่ *</label>
       <select id="frCategory"></select>
     </div>
@@ -136,7 +144,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">แนบภาพถ่าย (ไม่เกิน 5 รูป)</label>
+      <label class="form-label">แนบภาพถ่าย (ไม่เกิน 5 รูป) *</label>
       <div class="upload-area" id="frUploadArea" onclick="document.getElementById('frFileInput').click()">
         <i data-lucide="image-plus" style="width:26px;height:26px;color:var(--blue);margin-bottom:6px;"></i>
         <div style="font-size:12.5px;font-weight:700;color:var(--text2);">แตะเพื่อเลือกรูปภาพ</div>

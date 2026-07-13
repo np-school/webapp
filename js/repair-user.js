@@ -68,7 +68,7 @@ function loadStaffInfo(user) {
     .then(function(snap) {
       if (!snap.empty) {
         var s = snap.docs[0].data();
-        staffInfo = { name: s.name || '', phone: s.phone || '' };
+        staffInfo = { name: s.name || '', phone: s.phone || '', position: s.position || '' };
       }
     })
     .catch(function(err) { console.error('loadStaffInfo error:', err); });
@@ -529,17 +529,22 @@ function openNewReportModal() {
 function applyStaffAutofill() {
   var nameEl  = document.getElementById('frName');
   var phoneEl = document.getElementById('frPhone');
+  var posEl   = document.getElementById('frPosition');
   var nameHint  = document.getElementById('frNameHint');
   var phoneHint = document.getElementById('frPhoneHint');
+  var posHint   = document.getElementById('frPositionHint');
 
   var hasName  = !!(staffInfo && staffInfo.name);
   var hasPhone = !!(staffInfo && staffInfo.phone);
+  var hasPos   = !!(staffInfo && staffInfo.position);
 
   nameEl.value  = hasName  ? staffInfo.name  : (currentUser.displayName || '');
   phoneEl.value = hasPhone ? staffInfo.phone : '';
+  if (posEl) posEl.value = hasPos ? staffInfo.position : '';
 
   nameHint.style.display  = hasName  ? '' : 'none';
   phoneHint.style.display = hasPhone ? '' : 'none';
+  if (posHint) posHint.style.display = hasPos ? '' : 'none';
 
   lucide.createIcons();
 }
@@ -560,8 +565,10 @@ function openEditModal(id) {
   if (REPAIR_CATEGORIES.length) document.getElementById('frCategory').value = r.category || REPAIR_CATEGORIES[0].id;
   document.getElementById('frName').value = r.reporterName || '';
   document.getElementById('frPhone').value = r.reporterPhone || '';
+  if (document.getElementById('frPosition')) document.getElementById('frPosition').value = r.reporterPosition || '';
   document.getElementById('frNameHint').style.display = 'none';
   document.getElementById('frPhoneHint').style.display = 'none';
+  if (document.getElementById('frPositionHint')) document.getElementById('frPositionHint').style.display = 'none';
   document.querySelector('input[name="frPriority"][value="' + (r.priority === 'urgent' ? 'urgent' : 'normal') + '"]').checked = true;
 
   var buildingName = getBuildingNameFromLocation(r.location);
@@ -627,6 +634,8 @@ function submitReport() {
   var location    = currentLocationText();
   var title       = document.getElementById('frTitle').value.trim();
   var description = document.getElementById('frDescription').value.trim();
+  var positionEl  = document.getElementById('frPosition');
+  var position    = positionEl ? positionEl.value.trim() : '';
 
   if (!name || !phone || !buildingId || !subLocation || !title || !description) {
     showToast('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อผู้แจ้ง / เบอร์โทร / อาคาร / ห้อง-บริเวณ / หัวข้อ / รายละเอียด)', 'warn');
@@ -644,6 +653,11 @@ function submitReport() {
 
   var photos = pendingPhotos.filter(function(p) { return p.status === 'done' && p.url; })
     .map(function(p) { return { url: p.url, name: p.name }; });
+
+  if (!photos.length) {
+    showToast('กรุณาแนบรูปภาพอย่างน้อย 1 รูปก่อนส่งเรื่องแจ้งซ่อม', 'warn');
+    return;
+  }
 
   var btn = document.getElementById('frSubmitBtn');
   var isEdit = !!editingRepairId;
@@ -675,6 +689,7 @@ function submitReport() {
       photos: photos,
       reporterName: name,
       reporterPhone: phone,
+      reporterPosition: position,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       logs: firebase.firestore.FieldValue.arrayUnion({
         status: 'reported', note: 'ผู้แจ้งแก้ไขรายละเอียดคำขอ', byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now()
@@ -704,6 +719,7 @@ function submitReport() {
     reporterName: name,
     reporterEmail: (currentUser.email || '').toLowerCase(),
     reporterPhone: phone,
+    reporterPosition: position,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     logs: [{ status: 'reported', note: 'แจ้งปัญหาเข้าสู่ระบบ', byName: currentUser.displayName || currentUser.email, at: firebase.firestore.Timestamp.now() }]
