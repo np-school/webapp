@@ -38,6 +38,8 @@ var currentFilter = 'all';
 var pendingPhotos = []; /* [{name, mimeType, base64, status:'pending'|'uploading'|'done'|'error', url}] */
 var editingRepairId = null; /* ถ้าไม่ใช่ null = กำลังแก้ไขคำขอเดิม (เฉพาะตอนสถานะยังเป็น 'reported' เท่านั้น) */
 var staffInfo     = null;
+var subLocationTags = []; /* ห้อง/บริเวณที่เพิ่มไว้ในฟอร์มแจ้งซ่อม (เพิ่มได้หลายห้องต่อ 1 เรื่องแจ้ง) */
+var MAX_PHOTOS = 8;
 
 /* ── แถบกรองตามหมวดหมู่ (สร้างใหม่ทุกครั้งที่หมวดหมู่เปลี่ยน, สีของแต่ละปุ่มตรงกับสีหมวดหมู่) ── */
 var currentCategoryFilter = 'all';
@@ -350,11 +352,48 @@ function renderPhotoList() {
   lucide.createIcons();
 }
 
-/* ประกอบข้อความสถานที่จาก "อาคาร - ห้อง/บริเวณ" ที่เลือก/กรอกไว้ */
+/* ── ห้อง/บริเวณ: ใส่ได้หลายห้อง (chip) ── */
+function renderSubLocationChips() {
+  var wrap = document.getElementById('frSubLocationChips');
+  if (!wrap) return;
+  wrap.innerHTML = subLocationTags.map(function(t, idx) {
+    return '<span class="rp-room-chip">' + esc2(t) +
+      '<button type="button" onclick="event.stopPropagation();removeSubLocationTag(' + idx + ')"><i data-lucide="x" style="width:10px;height:10px;"></i></button></span>';
+  }).join('');
+  lucide.createIcons();
+}
+
+function addSubLocationTagFromInput() {
+  var inp = document.getElementById('frSubLocation');
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (!val) return;
+  if (subLocationTags.indexOf(val) === -1) subLocationTags.push(val);
+  inp.value = '';
+  renderSubLocationChips();
+}
+
+function removeSubLocationTag(idx) {
+  subLocationTags.splice(idx, 1);
+  renderSubLocationChips();
+}
+
+function onSubLocationKeydown(ev) {
+  if (ev.key === 'Enter' || ev.key === ',') {
+    ev.preventDefault();
+    addSubLocationTagFromInput();
+  } else if (ev.key === 'Backspace' && !ev.target.value && subLocationTags.length) {
+    /* กด Backspace ตอนช่องว่าง = ลบ chip ล่าสุด (สะดวกเวลาพิมพ์ผิด) */
+    subLocationTags.pop();
+    renderSubLocationChips();
+  }
+}
+
+/* ประกอบข้อความสถานที่จาก "อาคาร - ห้อง/บริเวณ (หลายห้อง คั่นด้วย , )" ที่เลือก/กรอกไว้ */
 function currentLocationText() {
   var buildingId = document.getElementById('frBuilding').value;
   var building = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
-  var sub = document.getElementById('frSubLocation').value.trim();
+  var sub = subLocationTags.join(', ');
   if (!building) return sub;
   return sub ? (building.name + ' - ' + sub) : building.name;
 }
@@ -515,7 +554,9 @@ function openNewReportModal() {
   applyStaffAutofill();
   document.getElementById('frBuilding').value = '';
   onBuildingChange();
+  subLocationTags = [];
   document.getElementById('frSubLocation').value = '';
+  renderSubLocationChips();
   document.getElementById('frTitle').value = '';
   document.getElementById('frDescription').value = '';
   document.querySelector('input[name="frPriority"][value="normal"]').checked = true;
@@ -530,9 +571,7 @@ function applyStaffAutofill() {
   var nameEl  = document.getElementById('frName');
   var phoneEl = document.getElementById('frPhone');
   var posEl   = document.getElementById('frPosition');
-  var nameHint  = document.getElementById('frNameHint');
-  var phoneHint = document.getElementById('frPhoneHint');
-  var posHint   = document.getElementById('frPositionHint');
+  var hint    = document.getElementById('frAutofillHint');
 
   var hasName  = !!(staffInfo && staffInfo.name);
   var hasPhone = !!(staffInfo && staffInfo.phone);
@@ -542,9 +581,7 @@ function applyStaffAutofill() {
   phoneEl.value = hasPhone ? staffInfo.phone : '';
   if (posEl) posEl.value = hasPos ? staffInfo.position : '';
 
-  nameHint.style.display  = hasName  ? '' : 'none';
-  phoneHint.style.display = hasPhone ? '' : 'none';
-  if (posHint) posHint.style.display = hasPos ? '' : 'none';
+  if (hint) hint.style.display = (hasName || hasPhone || hasPos) ? 'flex' : 'none';
 
   lucide.createIcons();
 }
@@ -566,9 +603,8 @@ function openEditModal(id) {
   document.getElementById('frName').value = r.reporterName || '';
   document.getElementById('frPhone').value = r.reporterPhone || '';
   if (document.getElementById('frPosition')) document.getElementById('frPosition').value = r.reporterPosition || '';
-  document.getElementById('frNameHint').style.display = 'none';
-  document.getElementById('frPhoneHint').style.display = 'none';
-  if (document.getElementById('frPositionHint')) document.getElementById('frPositionHint').style.display = 'none';
+  var hintEl = document.getElementById('frAutofillHint');
+  if (hintEl) hintEl.style.display = 'none';
   document.querySelector('input[name="frPriority"][value="' + (r.priority === 'urgent' ? 'urgent' : 'normal') + '"]').checked = true;
 
   var buildingName = getBuildingNameFromLocation(r.location);
@@ -583,7 +619,9 @@ function openEditModal(id) {
   } else {
     subLoc = r.location || '';
   }
-  document.getElementById('frSubLocation').value = subLoc;
+  subLocationTags = subLoc ? subLoc.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+  document.getElementById('frSubLocation').value = '';
+  renderSubLocationChips();
 
   document.getElementById('frTitle').value = r.title || '';
   document.getElementById('frDescription').value = r.description || '';
@@ -599,8 +637,8 @@ function openEditModal(id) {
 }
 
 function handlePhotoSelect(files) {
-  var remain = 5 - pendingPhotos.length;
-  if (remain <= 0) { showToast('แนบได้สูงสุด 5 รูป', 'warn'); return; }
+  var remain = MAX_PHOTOS - pendingPhotos.length;
+  if (remain <= 0) { showToast('แนบได้สูงสุด ' + MAX_PHOTOS + ' รูป', 'warn'); return; }
 
   var arr = Array.prototype.slice.call(files).slice(0, remain);
   arr.forEach(function(file) {
@@ -624,20 +662,22 @@ function removePhoto(idx) {
 }
 
 function submitReport() {
+  /* เผื่อผู้ใช้พิมพ์ห้องสุดท้ายค้างไว้แล้วกดส่งเลยโดยไม่ได้กด Enter */
+  addSubLocationTagFromInput();
+
   var category    = document.getElementById('frCategory').value;
   var name        = document.getElementById('frName').value.trim();
   var phone       = document.getElementById('frPhone').value.trim();
   var priority    = document.querySelector('input[name="frPriority"]:checked').value;
   var buildingId  = document.getElementById('frBuilding').value;
   var building    = REPAIR_BUILDINGS.filter(function(b) { return b.id === buildingId; })[0];
-  var subLocation = document.getElementById('frSubLocation').value.trim();
   var location    = currentLocationText();
   var title       = document.getElementById('frTitle').value.trim();
   var description = document.getElementById('frDescription').value.trim();
   var positionEl  = document.getElementById('frPosition');
   var position    = positionEl ? positionEl.value.trim() : '';
 
-  if (!name || !phone || !buildingId || !subLocation || !title || !description) {
+  if (!name || !phone || !buildingId || !subLocationTags.length || !title || !description) {
     showToast('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อผู้แจ้ง / เบอร์โทร / อาคาร / ห้อง-บริเวณ / หัวข้อ / รายละเอียด)', 'warn');
     return;
   }
@@ -666,9 +706,13 @@ function submitReport() {
   lucide.createIcons();
 
   function saveSubLocationIfNew() {
-    if (building && (!building.subLocations || building.subLocations.indexOf(subLocation) === -1)) {
+    if (!building) return;
+    var newOnes = subLocationTags.filter(function(s) {
+      return !building.subLocations || building.subLocations.indexOf(s) === -1;
+    });
+    if (newOnes.length) {
       db.collection('repair_buildings').doc(buildingId).update({
-        subLocations: firebase.firestore.FieldValue.arrayUnion(subLocation)
+        subLocations: firebase.firestore.FieldValue.arrayUnion.apply(null, newOnes)
       }).catch(function(err) { console.error('save subLocation failed', err); });
     }
   }

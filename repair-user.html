@@ -38,6 +38,20 @@
     .rp-mini-wf i.on{ background:var(--accent); }
     .rp-mini-wf i.bad{ background:var(--red); }
 
+    /* ── ฟอร์มแจ้งซ่อม: ส่วนผู้แจ้งแบบกระชับ (ชื่อเต็มแถว, เบอร์+ตำแหน่งแถวเดียวกัน) ── */
+    .rp-form-row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media(max-width:480px){ .rp-form-row2{ grid-template-columns:1fr; } }
+    .rp-autofill-hint{ font-size:11px; color:var(--text3); margin-top:6px; display:none; align-items:center; gap:4px; }
+
+    /* ── ห้อง/บริเวณ: ใส่ได้หลายห้อง แสดงเป็น chip ── */
+    .rp-tag-input-wrap{ border:1px solid var(--border); border-radius:10px; padding:7px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; background:#fff; }
+    .rp-tag-input-wrap:focus-within{ border-color:var(--accent); }
+    .rp-tag-input-wrap input{ border:none !important; outline:none; flex:1; min-width:120px; padding:5px 4px !important; font-size:14px; box-shadow:none !important; }
+    .rp-room-chip{ display:inline-flex; align-items:center; gap:5px; background:var(--bg-alt); border:1px solid var(--border); border-radius:20px; padding:4px 6px 4px 12px; font-size:12.5px; font-weight:700; color:var(--text2); flex-shrink:0; white-space:nowrap; }
+    .rp-room-chip button{ border:none; background:rgba(0,0,0,.06); color:var(--text2); width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+    .rp-room-chip button:hover{ background:var(--red-light); color:var(--red-dark); }
+    .rp-field-hint{ font-size:11px; color:var(--text3); margin-top:4px; }
+
     /* .rp-photo-thumb .rm / .up เป็น variant เฉพาะหน้านี้ (repair-user มีปุ่มลบ/label upload บน thumbnail ที่ admin ไม่มี) */
     .rp-photo-thumb .rm{ position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:rgba(15,23,42,.65); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .rp-photo-thumb .up{ position:absolute; inset:0; background:rgba(255,255,255,.85); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:var(--text2); text-align:center; padding:2px; }
@@ -88,24 +102,21 @@
     <div class="form-group">
       <label class="form-label">ชื่อผู้แจ้ง *</label>
       <input type="text" id="frName" placeholder="ชื่อ-นามสกุล">
-      <div id="frNameHint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">
-        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:-1px;"></i> ดึงจากข้อมูลบุคลากรอัตโนมัติ
-      </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">เบอร์โทรผู้แจ้ง *</label>
-      <input type="tel" id="frPhone" placeholder="เช่น 081-234-5678" inputmode="tel">
-      <div id="frPhoneHint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">
-        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:-1px;"></i> ดึงจากข้อมูลบุคลากรอัตโนมัติ
+      <div class="rp-form-row2">
+        <div>
+          <label class="form-label">เบอร์โทร *</label>
+          <input type="tel" id="frPhone" placeholder="081-234-5678" inputmode="tel">
+        </div>
+        <div>
+          <label class="form-label">ตำแหน่ง</label>
+          <input type="text" id="frPosition" placeholder="เช่น ครูชำนาญการ">
+        </div>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">ตำแหน่ง</label>
-      <input type="text" id="frPosition" placeholder="เช่น ครูชำนาญการ">
-      <div id="frPositionHint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">
-        <i data-lucide="check-circle-2" style="width:11px;height:11px;vertical-align:-1px;"></i> ดึงจากข้อมูลบุคลากรอัตโนมัติ (แก้ไขเองได้ถ้าไม่ถูกต้อง)
+      <div id="frAutofillHint" class="rp-autofill-hint">
+        <i data-lucide="check-circle-2" style="width:11px;height:11px;"></i> ดึงข้อมูลจากทะเบียนบุคลากรอัตโนมัติ (แก้ไขเองได้ถ้าไม่ถูกต้อง)
       </div>
     </div>
 
@@ -129,7 +140,12 @@
 
     <div class="form-group">
       <label class="form-label">ห้อง / บริเวณ *</label>
-      <input type="text" id="frSubLocation" list="frSubLocationList" placeholder="เช่น ชั้น 3 ห้อง 231 (พิมพ์ใหม่ได้ถ้ายังไม่มีในลิสต์)">
+      <div class="rp-tag-input-wrap" id="frSubLocationWrap" onclick="document.getElementById('frSubLocation').focus()">
+        <span id="frSubLocationChips" style="display:contents;"></span>
+        <input type="text" id="frSubLocation" list="frSubLocationList" placeholder="พิมพ์ห้อง เช่น 4313 แล้วกด Enter"
+          onkeydown="onSubLocationKeydown(event)" onblur="addSubLocationTagFromInput()">
+      </div>
+      <div class="rp-field-hint">พิมพ์เลขห้อง/บริเวณแล้วกด Enter เพื่อเพิ่ม เผื่อแจ้งเรื่องเดียวกันหลายห้องได้</div>
       <datalist id="frSubLocationList"></datalist>
     </div>
 
@@ -144,7 +160,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">แนบภาพถ่าย (ไม่เกิน 5 รูป) *</label>
+      <label class="form-label">แนบภาพถ่าย (ไม่เกิน 8 รูป) *</label>
       <div class="upload-area" id="frUploadArea" onclick="document.getElementById('frFileInput').click()">
         <i data-lucide="image-plus" style="width:26px;height:26px;color:var(--blue);margin-bottom:6px;"></i>
         <div style="font-size:12.5px;font-weight:700;color:var(--text2);">แตะเพื่อเลือกรูปภาพ</div>
