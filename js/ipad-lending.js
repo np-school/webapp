@@ -77,13 +77,15 @@ function refreshStudentRoomFilterOptions() {
 }
 
 function loadStaff() {
-  db.collection('staff').orderBy('name').onSnapshot(function(snap) {
+  /* ดึงครั้งเดียว ไม่ใช้ onSnapshot — หน้านี้ไม่มีจุดเขียนข้อมูล 'staff' เลย
+     (จัดการที่หน้า staff.html) จึงไม่มีความเสี่ยงเรื่องข้อมูลค้าง */
+  db.collection('staff').orderBy('name').get().then(function(snap) {
     STAFF = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderStaffTable();
     renderStatsCharts();
     renderStudentStatsChart();
     if (document.getElementById('borrowFilterGroup')) populateBorrowFilterGroupOptions();
-  }, function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
+  }).catch(function(e) { showToast('โหลดข้อมูลบุคลากรผิดพลาด: ' + e.message, 'error'); });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -119,14 +121,32 @@ function fetchHistoryPage(page) {
 
 /* ══════════════════════════════════════════════════════════════
    Firestore listeners
+
+   ── หมายเหตุ: loadStudents() / loadStaff() เปลี่ยนจาก onSnapshot (realtime)
+   เป็นดึงครั้งเดียว (.get()) ──
+   เหตุผล: ข้อมูลนักเรียน/บุคลากรเป็น "ทะเบียนอ้างอิง" ไม่ใช่สถานะที่ต้อง
+   sync สดตลอดเวลาแบบ ipad_borrows (ที่ยังเป็น onSnapshot เหมือนเดิม 100%
+   เพราะเป็นตัวเดียวที่ตัดสินว่า "เครื่องนี้ว่างไหม" ตอนบันทึกยืม-คืน)
+   การเปิด realtime listener พร้อมกันทีเดียว 5 ตัวตอนโหลดหน้าทำให้ข้อมูล
+   กว่าจะขึ้นช้า (แต่ละตัวคือ 1 long-polling channel ที่ต้อง handshake
+   แยกกัน) ตัดเหลือแค่ตัวที่จำเป็นจริงๆ ช่วยให้หน้าโหลดข้อมูลไวขึ้น
+
+   เพื่อไม่ให้ตารางนักเรียน/บุคลากรค้างข้อมูลเก่าหลังแก้ไขในหน้านี้เอง
+   (เพิ่ม/แก้/ลบนักเรียน, import CSV) ทุกจุดที่เขียนข้อมูลไป
+   'ipad_students' จะอัปเดต STUDENTS ในเครื่อง (optimistic) ทันทีเอง
+   ไม่ต้องรอโหลดหน้าใหม่ — ดูจุด comment "sync STUDENTS local" ในแต่ละฟังก์ชัน
    ══════════════════════════════════════════════════════════════ */
+function _onStudentsChanged() {
+  renderStudentsTable();
+  renderStudentStatsChart();
+  if (document.getElementById('borrowFilterRoom')) populateBorrowFilterRoomOptions();
+}
+
 function loadStudents() {
-  db.collection('ipad_students').onSnapshot(function(snap) {
+  db.collection('ipad_students').get().then(function(snap) {
     STUDENTS = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-    renderStudentsTable();
-    renderStudentStatsChart();
-    if (document.getElementById('borrowFilterRoom')) populateBorrowFilterRoomOptions();
-  }, function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
+    _onStudentsChanged();
+  }).catch(function(e) { showToast('โหลดข้อมูลนักเรียนผิดพลาด: ' + e.message, 'error'); });
 }
 
 function loadDevices() {
@@ -1329,6 +1349,10 @@ function addNewStudentInline() {
     studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(ref) {
+    /* sync STUDENTS local ทันที — STUDENTS ไม่ใช่ onSnapshot อีกแล้ว ต้อง
+       เติมเองให้ saveBorrow() ที่ผู้ใช้จะกดต่อทันทีหาเจอ ไม่งั้นจะเจอ
+       "ไม่พบนักเรียนนี้ในระบบ" ทั้งที่เพิ่งเพิ่มไปหมาดๆ */
+    STUDENTS.push({ id: ref.id, studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room });
     showToast('เพิ่มนักเรียนแล้ว ✅');
     document.getElementById('newStudentHint').style.display = 'none';
     document.getElementById('borrowStudentInput').value = studentId + ' - ' + firstName + ' ' + lastName;
@@ -1567,6 +1591,10 @@ function saveStudent() {
     db.collection('ipad_students').doc(editingStudentId).update({
       firstName: firstName, lastName: lastName, grade: grade, room: room
     }).then(function() {
+      /* sync STUDENTS local — ไม่มี onSnapshot คอยอัปเดตให้แล้ว */
+      var s = STUDENTS.find(function(x) { return x.id === editingStudentId; });
+      if (s) { s.firstName = firstName; s.lastName = lastName; s.grade = grade; s.room = room; }
+      _onStudentsChanged();
       showToast('แก้ไขข้อมูลนักเรียนสำเร็จ ✅');
       closeModal('modalStudent');
       editingStudentId = null;
@@ -1580,7 +1608,10 @@ function saveStudent() {
   db.collection('ipad_students').add({
     studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
+  }).then(function(ref) {
+    /* sync STUDENTS local */
+    STUDENTS.push({ id: ref.id, studentId: studentId, firstName: firstName, lastName: lastName, grade: grade, room: room });
+    _onStudentsChanged();
     showToast('เพิ่มนักเรียนสำเร็จ ✅');
     closeModal('modalStudent');
     document.getElementById('stuId').value = '';
@@ -1593,7 +1624,12 @@ function saveStudent() {
 function deleteStudent(id) {
   if (!confirm('ลบนักเรียนคนนี้ออกจากระบบ?')) return;
   db.collection('ipad_students').doc(id).delete()
-    .then(function() { showToast('ลบแล้ว'); })
+    .then(function() {
+      /* sync STUDENTS local */
+      STUDENTS = STUDENTS.filter(function(s) { return s.id !== id; });
+      _onStudentsChanged();
+      showToast('ลบแล้ว');
+    })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
 
@@ -1921,6 +1957,7 @@ function confirmStudentImport() {
   var batches = [];
   for (var i = 0; i < toAdd.length; i += batchSize) batches.push(toAdd.slice(i, i + batchSize));
 
+  var addedLocally = [];   /* เก็บไว้ sync เข้า STUDENTS local หลัง commit สำเร็จ */
   var chain = Promise.resolve();
   batches.forEach(function(chunk) {
     chain = chain.then(function() {
@@ -1931,12 +1968,18 @@ function confirmStudentImport() {
           studentId: s.studentId, firstName: s.firstName, lastName: s.lastName, grade: s.grade, room: s.room,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        /* ref.id ถูกสร้างฝั่ง client ทันทีตั้งแต่เรียก .doc() ไม่ต้องรอ commit
+           เก็บไว้เติม STUDENTS local ได้เลย ไม่ต้อง re-fetch ทั้ง collection */
+        addedLocally.push({ id: ref.id, studentId: s.studentId, firstName: s.firstName, lastName: s.lastName, grade: s.grade, room: s.room });
       });
       return batch.commit();
     });
   });
 
   chain.then(function() {
+    /* sync STUDENTS local ทั้งหมดทีเดียว */
+    Array.prototype.push.apply(STUDENTS, addedLocally);
+    _onStudentsChanged();
     showToast('นำเข้ารายชื่อนักเรียนสำเร็จ ✅ (' + toAdd.length + ' รายการ)');
     closeModal('modalImportStudents');
     document.getElementById('importStudentPreview').innerHTML = '';
