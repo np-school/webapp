@@ -28,10 +28,9 @@
 │   │                        theme system, date formatters ฯลฯ (ใช้ร่วมทุกหน้า)
 │   └── styles-new.css       Design token system (CSS variables) + ทุก component style
 ├── functions/
-│   ├── index.js             ⚠️ Entry point จริง (ตาม package.json "main") — ดู "ปัญหาที่รู้" ด้านล่าง
-│   ├── functions-index.js   ⚠️ ไฟล์ซ้ำ/ไม่ได้ใช้งานจริง อย่าแก้ไฟล์นี้โดยคิดว่ามีผล deploy
+│   ├── index.js             Entry point จริง (ตาม package.json "main") — export ครบทั้ง booking/repair/portfolio/drive-upload แล้ว
 │   ├── notifications.js     Push notification triggers: booking + repair
-│   ├── portfolio-notifications.js  Push notification triggers: portfolio (ยังไม่ถูก export จาก index.js จริง)
+│   ├── portfolio-notifications.js  Push notification triggers: portfolio (export จาก index.js แล้ว)
 │   └── drive-upload.js      อัปโหลดรูปแจ้งซ่อมไป Google Drive
 ├── manifest.json / sw.js / firebase-messaging-sw.js   PWA + push notification service worker
 └── firebase.json / .firebaserc                        Firebase CLI config (functions only)
@@ -89,12 +88,15 @@
 
 ## ปัญหาที่รู้อยู่แล้ว / ต้องระวัง
 
-1. **`functions/index.js` (entry point จริง) ไม่ได้ export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` มีเขียนอยู่ใน `functions/portfolio-notifications.js` และถูก export ไว้ใน `functions/functions-index.js` เท่านั้น ซึ่งไฟล์นั้นไม่ตรงกับ `main` ใน `functions/package.json` (`"main": "index.js"`) แปลว่า Cloud Functions 3 ตัวนี้**อาจไม่ได้ deploy จริง** ต้องตรวจสอบและรวม export เข้า `index.js` ตัวจริง แล้วลบ/rename `functions-index.js` ทิ้งเพื่อไม่ให้สับสนอีก
-2. **Tailwind CDN v2.2.19 (ปี 2021)** โหลดเต็มทุกหน้าโดยไม่ purge ซ้ำซ้อนกับ design token system ใน `styles-new.css` — ควรพิจารณาตัดออกหรือ build ผ่าน CLI
-3. **ไฟล์ JS ใหญ่เกินไป**: `portfolio-admin.js` (3,240 บรรทัด), `ipad-lending.js`, `portfolio-teacher.js`, `profile.js`, `repair-admin.js` — ควรแตกเป็นโมดูลย่อยเมื่อมีโอกาส
-4. **`js/page-name.js` ไม่ใช่หน้าเว็บจริง** เป็นแค่ template ตัวอย่าง อย่าแก้ไฟล์นี้คิดว่ามีผลกับหน้าใดหน้าหนึ่ง
-5. Favicon/manifest icons อ้างอิง Firebase Storage URL ที่มี access token ฝังอยู่ — ถ้า token หมดอายุ/rule เปลี่ยน ไอคอนทั้งเว็บพังพร้อมกัน
-6. อย่า commit `.DS_Store`, `__MACOSX/`, `node_modules/`, หรือไฟล์ secret (`serviceAccountKey.json`, `*.env`) — มีอยู่ใน `.gitignore` แล้วแต่ต้องเช็คซ้ำก่อน commit ทุกครั้ง
+1. **Tailwind CDN v2.2.19 (ปี 2021)** โหลดเต็มทุกหน้าโดยไม่ purge ซ้ำซ้อนกับ design token system ใน `styles-new.css` — ควรพิจารณาตัดออกหรือ build ผ่าน CLI
+2. **ไฟล์ JS ใหญ่เกินไป**: `portfolio-admin.js` (3,240 บรรทัด), `ipad-lending.js`, `portfolio-teacher.js`, `profile.js`, `repair-admin.js` — ควรแตกเป็นโมดูลย่อยเมื่อมีโอกาส
+3. **`js/page-name.js` ไม่ใช่หน้าเว็บจริง** เป็นแค่ template ตัวอย่าง อย่าแก้ไฟล์นี้คิดว่ามีผลกับหน้าใดหน้าหนึ่ง
+4. Favicon/manifest icons อ้างอิง Firebase Storage URL ที่มี access token ฝังอยู่ — ถ้า token หมดอายุ/rule เปลี่ยน ไอคอนทั้งเว็บพังพร้อมกัน
+5. อย่า commit `.DS_Store`, `__MACOSX/`, `node_modules/`, หรือไฟล์ secret (`serviceAccountKey.json`, `*.env`) — มีอยู่ใน `.gitignore` แล้วแต่ต้องเช็คซ้ำก่อน commit ทุกครั้ง
+
+## แก้ไปแล้ว (Changelog)
+
+- ✅ **`functions/index.js` เพิ่ม export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — เดิม `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` ถูก export ไว้ผิดไฟล์ (`functions/functions-index.js` ซึ่งไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง) ตอนนี้แก้ให้ `index.js` ตัวจริง `require("./portfolio-notifications")` และ export ทั้ง 3 ฟังก์ชันแล้ว — **ต้องลบ `functions/functions-index.js` ทิ้งด้วย** เพื่อไม่ให้สับสนอีกในอนาคต (ถ้ายังไม่ได้ลบ ให้ลบก่อน commit ครั้งถัดไป)
 
 ## คำสั่งที่ใช้บ่อย
 
