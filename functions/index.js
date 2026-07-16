@@ -14,6 +14,12 @@ exports.onNewRepairCreated = notifications.onNewRepairCreated;
 exports.onRepairStatusChanged = notifications.onRepairStatusChanged;
 exports.onRepairReopened = notifications.onRepairReopened;
 
+// ── Push Notification triggers: Portfolio (ดู functions/portfolio-notifications.js) ──
+const portfolioNotifications = require("./portfolio-notifications");
+exports.onNewPortfolioSubmission = portfolioNotifications.onNewPortfolioSubmission;
+exports.onPortfolioResubmitted = portfolioNotifications.onPortfolioResubmitted;
+exports.onPortfolioStatusChanged = portfolioNotifications.onPortfolioStatusChanged;
+
 // ── อัปโหลดรูปแจ้งซ่อมไป Google Drive (ดู functions/drive-upload.js) ──
 exports.uploadRepairPhoto = require("./drive-upload").uploadRepairPhoto;
 
