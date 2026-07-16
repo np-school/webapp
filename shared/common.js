@@ -834,7 +834,7 @@ function buildSidebar(activePage) {
         '</a>' +
         '<a href="settings.html" class="sidebar-btn admin-btn' + (activePage === 'settings' ? ' active' : '') + '" style="padding-left:28px;">' +
           '<i data-lucide="bell" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'settings' ? '' : 'color:#7c3aed;') + '"></i>' +
-          '<span>จัดการประกาศข่าว</span>' +
+          '<span>ตั้งค่าเว็บไซต์</span>' +
         '</a>' +
       '</div>' +
     '</div>';
