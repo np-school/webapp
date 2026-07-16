@@ -120,6 +120,29 @@ async function sendAndCleanup(tokens, title, body, data) {
   await Promise.all(deletions);
 }
 
+/**
+ * ส่งแจ้งเตือนไปยังอีเมลที่ระบุโดยตรง (ใช้กับผู้ตรวจแต่ละขั้นของระบบส่งงาน
+ * ที่ทราบอีเมลอยู่แล้วจาก admins collection — ไม่ต้องวนเช็ค permission ทั้งหมดแบบ sendToPermission)
+ */
+async function sendToEmail(email, title, body, data = {}) {
+  if (!email) return;
+  const tokensSnap = await db
+    .collection("fcmTokens")
+    .where("email", "==", String(email).toLowerCase())
+    .get();
+
+  if (tokensSnap.empty) return;
+
+  const tokens = tokensSnap.docs.map((doc) => doc.id);
+  await sendAndCleanup(tokens, title, body, data);
+}
+
+/* export helper functions ให้ trigger ไฟล์อื่น (เช่น portfolio-notifications.js) เรียกใช้ซ้ำได้
+   โดยไม่ต้องคัดลอกโค้ดส่งแจ้งเตือน/cleanup token ซ้ำ */
+exports.sendToUser = sendToUser;
+exports.sendToEmail = sendToEmail;
+exports.sendToPermission = sendToPermission;
+
 // ===========================================
 // 1) สถานะ booking เปลี่ยน (pending -> approved/rejected) -> แจ้งผู้จอง
 // ===========================================
