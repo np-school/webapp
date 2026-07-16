@@ -401,6 +401,10 @@ function _setAccentVars(data, navTheme) {
   root.setProperty('--accent-tint',  set.tint);
   /* --accent-mid คงไว้เพื่อความเข้ากันได้ย้อนหลัง คำนวณจาก primary */
   root.setProperty('--accent-mid',   _shade(set.primary, 0.25));
+  /* --accent-ring: เงา/glow รอบปุ่มที่ active (เช่น ปุ่มเมนู sidebar) — คำนวณจากสีหลักเสมอ
+     เพื่อให้ "ลิงก์" กับสีที่เลือกจริง ไม่ใช่ค่าคงที่ */
+  var _rgb = _hexToRgb(set.primary);
+  root.setProperty('--accent-ring', 'rgba(' + _rgb.r + ',' + _rgb.g + ',' + _rgb.b + ',.25)');
 }
 
 /* เรียกจาก buildPageShell() ทุกหน้า — ใช้ค่า cache ก่อนกันสีกระพริบ
