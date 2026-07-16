@@ -1,3 +1,33 @@
+/* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน (เหมือน portfolio-teacher.js เป๊ะ)
+   ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
+   ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
+   ── ต้องรันก่อน var pfYear ด้านล่าง เพื่อให้ window._pfDefaultYear
+      ถูกตั้งค่าก่อนถูกอ่านไปใช้ (เดิมอยู่ท้ายไฟล์ ทำให้ pfYear/pfSem
+      ค้างที่ค่า fallback 2568/1 เสมอ ไม่เคยอัปเดตตามวันที่จริง) ──
+─────────────────────────────────────────── */
+(function() {
+  var now   = new Date();
+  var month = now.getMonth() + 1; /* 1–12 */
+  var day   = now.getDate();
+  var ceYear = now.getFullYear();
+  var sem, thYear;
+  /* ภาคเรียน 1: 16 พ.ค. – 31 ต.ค. */
+  if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
+    sem = 1;
+    thYear = ceYear + 543;
+  /* ภาคเรียน 2: 1 พ.ย. – 15 พ.ค. */
+  } else if (month >= 11) {
+    sem = 2;
+    thYear = ceYear + 543;
+  } else {
+    /* ม.ค. – 15 พ.ค.: ยังอยู่ในภาค 2 ของปีการศึกษาก่อน */
+    sem = 2;
+    thYear = (ceYear - 1) + 543;
+  }
+  window._pfDefaultYear = thYear;
+  window._pfDefaultSem  = sem;
+})();
+
 /* ══════════════════════ STATE ══════════════════════ */
   var npCurrentUser = null;
   /* ── Pastel Room Color System (shared) ── */
@@ -68,6 +98,8 @@
   var STATUS_BG    = { none:'#f1f5f9', submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe', final_approved:'#f5f3ff', revision:'#fef9c3' };
   var STATUS_COLOR = { none:'#94a3b8', submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af', final_approved:'#6d28d9', revision:'#92400e' };
   var STATUS_DOT   = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#3b82f6', final_approved:'#7c3aed', revision:'#f59e0b' };
+  /* ลำดับความสำคัญสำหรับจัดเรียงการ์ดเอกสารส่งงาน: ต้องแก้ไข/ยังไม่ส่งก่อน → กำลังตรวจ → อนุมัติแล้วไปท้ายสุด */
+  var STATUS_PRIORITY = { revision:0, none:1, submitted:2, head_reviewed:3, reviewed:4, final_approved:5 };
 
 /* ══════════════════════ DATA LOADING ══════════════════════ */
   function fetchUserStats(uid){
@@ -172,6 +204,8 @@
         var wrap = document.getElementById('pfDocList');
         if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">ไม่พบข้อมูลบุคลากร — ระบบส่งงานสำหรับครูเท่านั้น</div>';
         document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
+        var statEl = document.getElementById('pfStatCount');
+        if (statEl) statEl.textContent = '–';
       });
   }
 
@@ -594,11 +628,25 @@
     if (progBar) progBar.style.width = pct + '%';
     if (progTxt) progTxt.textContent = submittedCount + ' / ' + PF_DOC_TYPES.length + ' รายการ' + (approvedCount ? ' · อนุมัติแล้ว ' + approvedCount : '');
 
+    /* การ์ดสรุปใน Stats Row ด้านบน (งานส่งภาคเรียนนี้) */
+    var statEl = document.getElementById('pfStatCount');
+    if (statEl) statEl.innerHTML = submittedCount + '<span style="font-size:14px;font-weight:700;color:#94a3b8;">/' + PF_DOC_TYPES.length + '</span>';
+
     if (emptyEl) emptyEl.style.display = 'none';
+
+    /* เรียงการ์ดตามความสำคัญ: ต้องแก้ไข/ยังไม่ส่งขึ้นก่อน → กำลังตรวจ → อนุมัติแล้วไปท้ายสุด
+       (เห็นงานที่ต้องทำก่อน ไม่ต้องไล่หาในลิสต์ยาวๆ) */
+    var sortedDocTypes = PF_DOC_TYPES.slice().sort(function(a, b) {
+      var sa = (subs[a.id] && subs[a.id].status) || 'none';
+      var sb = (subs[b.id] && subs[b.id].status) || 'none';
+      var pa = STATUS_PRIORITY[sa] !== undefined ? STATUS_PRIORITY[sa] : 99;
+      var pb = STATUS_PRIORITY[sb] !== undefined ? STATUS_PRIORITY[sb] : 99;
+      return pa - pb;
+    });
 
     /* Doc chips grid */
     wrap.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;">' +
-      PF_DOC_TYPES.map(function(dt) {
+      sortedDocTypes.map(function(dt) {
         var sub    = subs[dt.id];
         var status = sub ? (sub.status || 'submitted') : 'none';
         var label  = STATUS_LABEL[status] || status;
@@ -645,6 +693,8 @@
           var wrap = document.getElementById('pfDocList');
           if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">\u0e23\u0e30\u0e1a\u0e1a\u0e2a\u0e48\u0e07\u0e07\u0e32\u0e19\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e23\u0e39\u0e41\u0e25\u0e30\u0e1a\u0e38\u0e04\u0e25\u0e32\u0e01\u0e23\u0e42\u0e23\u0e07\u0e40\u0e23\u0e35\u0e22\u0e19\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19</div>';
           document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
+          var pfStatEl = document.getElementById('pfStatCount');
+          if (pfStatEl) pfStatEl.textContent = '–';
           return;
         }
         pfIsStaff = true;
@@ -834,24 +884,6 @@
     lucide.createIcons();
   });
   initPublicCalendar();
-
-  /* ── ตรวจภาคเรียนปัจจุบัน (เหมือน portfolio-teacher) ── */
-  (function() {
-    var now = new Date();
-    var month = now.getMonth() + 1;
-    var day   = now.getDate();
-    var ceYear = now.getFullYear();
-    var sem, thYear;
-    if ((month === 5 && day >= 16) || (month >= 6 && month <= 10)) {
-      sem = 1; thYear = ceYear + 543;
-    } else if (month >= 11) {
-      sem = 2; thYear = ceYear + 543;
-    } else {
-      sem = 2; thYear = (ceYear - 1) + 543;
-    }
-    window._pfDefaultYear = thYear;
-    window._pfDefaultSem  = sem;
-  })();
 
   lineHandleCb();
 
