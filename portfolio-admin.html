@@ -438,9 +438,14 @@
             <span style="color:#ef4444;margin-left:4px;">* จำเป็นต้องเซ็นก่อนกดยืนยัน</span>
           </label>
           <div id="existingSigPreview" style="display:none;margin-bottom:var(--gap-tight);padding:8px 12px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;">
-            <p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:6px;">✓ ลายเซ็นที่เซ็นไว้แล้ว</p>
+            <p style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:6px;">✓ ลายเซ็นของคุณที่เคยใช้ล่าสุด</p>
             <img id="existingSigImg" src="" style="max-height:52px;object-fit:contain;display:block;">
-            <p style="font-size:10px;color:#64748b;margin-top:4px;">เซ็นใหม่ด้านล่างเพื่อแทนที่</p>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <button type="button" id="useExistingSigBtn" class="sigpad-mode-btn" style="font-size:11px;padding:5px 10px;" onclick="useMyExistingSignature()">
+                <i data-lucide="check" style="width:12px;height:12px;"></i> ใช้ลายเซ็นนี้
+              </button>
+              <p style="font-size:10px;color:#64748b;margin:0;">หรือเซ็น/แนบไฟล์ใหม่ด้านล่างเพื่อแทนที่</p>
+            </div>
           </div>
 
           <!-- สลับโหมด: วาดเอง / แนบไฟล์ -->
@@ -641,7 +646,7 @@
       </div>
       <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="reviewStatusFilterBar">
         <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">สถานะการตรวจ:</span>
-        <button class="filter-pill active" id="rsAll" onclick="setReviewStatus('all')">ทั้งหมด</button>
+        <button class="filter-pill active" id="rsAll" onclick="setReviewStatusFilter('all')">ทั้งหมด</button>
       </div>
       <div style="margin-top:10px;">
         <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อครู หรืออีเมล..." style="max-width:360px;" oninput="renderView()">
