@@ -3331,14 +3331,29 @@ buildPage({
   var hasFileSig  = false;
   var existingSigURLSelected = ''; /* URL ลายเซ็นเดิมที่กด "ใช้ลายเซ็นนี้" เลือกไว้ */
 
+  /* ความกว้างเส้นอ้างอิง ณ ความกว้าง canvas มาตรฐาน (420px ตามที่ประกาศใน HTML)
+     ⚠️ canvas ใช้ width:100% (ยืดตามความกว้างจอ) แต่สูงคงที่ 90px — ถ้าใช้ lineWidth
+     คงที่ตรงๆ เส้นจะ "ดูหนา" บนจอแคบ (มือถือ) และ "ดูบาง" บนจอกว้าง (คอม) เพราะสัดส่วน
+     เส้นต่อขนาดลายเซ็นไม่เท่ากัน จึงคำนวณ lineWidth ให้ scale ตามความกว้าง canvas จริง
+     เทียบกับความกว้างอ้างอิงเสมอ ทำให้เส้นหนาเท่ากันทุกอุปกรณ์/ทุกขั้นตอนการตรวจ */
+  var SIG_REF_WIDTH = 420;
+  var SIG_REF_LINE_WIDTH = 2;
+
+  function _sigLineWidth(cssWidth) {
+    return SIG_REF_LINE_WIDTH * (cssWidth / SIG_REF_WIDTH);
+  }
+
+  function _applySigPenStyle(cssWidth) {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth   = _sigLineWidth(cssWidth);
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+  }
+
   function initAdminSigPad() {
     canvas = document.getElementById('adminSigCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
 
     var rect = canvas.getBoundingClientRect();
     canvas.width  = Math.floor(rect.width  * (window.devicePixelRatio || 1));
@@ -3347,11 +3362,9 @@ buildPage({
     canvas.style.width  = rect.width  + 'px';
     canvas.style.height = rect.height + 'px';
 
-    /* reset drawing flag & re-setup style after scale */
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
+    /* ตั้ง pen style ครั้งเดียวหลัง scale เสร็จ — คำนวณ lineWidth ตามความกว้างจริง
+       ของ canvas เทียบกับค่าอ้างอิง ไม่ใช้ค่าคงที่ตรงๆ อีกต่อไป */
+    _applySigPenStyle(rect.width);
 
     function getPos(e) {
       var r = canvas.getBoundingClientRect();
