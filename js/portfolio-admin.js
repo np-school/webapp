@@ -1197,6 +1197,18 @@ function fillSingleFileInfo(sub) {
   }
   /* map status → note field */
   var noteFieldMap2 = { head_reviewed:'headNote', reviewed:'headNote', assistant_reviewed:'assistantNote', deputy_reviewed:'deputyNote', final_approved:'directorNote', revision:'adminNote' };
+  /* หา doc ของรายวิชาที่กำลังเลือกอยู่ (เหมือนที่หา curStatus ด้านบน) เพื่อดึง note เก่ามาโชว์
+     ⚠️ เดิมใช้ตัวแปร _targetDocForSig ซึ่งไม่เคยถูกประกาศไว้เลย ทำให้ ReferenceError
+     พัง openReview() ทุกครั้งที่คลิกงาน (ทุกคน ทุกรายการ) — แก้ให้หา doc จริงแทน */
+  var _targetDocForSig = null;
+  if (courseFiles.length > 0 && courseFiles[0]._docId && origSub) {
+    var _ndocs = origSub._courses || [origSub];
+    _targetDocForSig = _ndocs.find(function(d){ return d.id === courseFiles[0]._docId; }) || null;
+  } else if (origSub) {
+    _targetDocForSig = origSub;
+  } else {
+    _targetDocForSig = sub;
+  }
   var prevNoteVal = _targetDocForSig ? (_targetDocForSig[noteFieldMap2[curStatus]] || '') : '';
   if (prevNoteVal) {
     prevNoteRef.style.cssText = 'margin-top:6px;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;font-size:12px;color:#92400e;';
