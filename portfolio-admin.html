@@ -90,6 +90,11 @@
     .review-badge.waiting{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
     .review-badge.head-wait{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;}
     @keyframes pulse-badge{0%,100%{opacity:1;}50%{opacity:.65;}}
+
+    /* ── "ถึงคิวคุณตรวจ" highlight — เด่นกว่าทุกสถานะอื่นเสมอ เพราะเป็นรายการที่ผู้ตรวจปัจจุบันต้องทำต่อ ── */
+    .teacher-row.my-turn{border-color:#7c3aed;border-left:4px solid #7c3aed;box-shadow:0 0 0 3px var(--purple-ring);}
+    .my-turn .teacher-header{background:linear-gradient(90deg,#f5f3ff 0%,white 100%);}
+    .my-turn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:800;background:#7c3aed;color:white;animation:pulse-badge 2s ease-in-out infinite;}
     .sort-label{font-size:10px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:4px;}
 
     /* ── Multi-file list in modal ── */
@@ -602,6 +607,10 @@
       <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="docFilterBar">
         <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">รายการงาน:</span>
         <button class="filter-pill active" id="docAll" onclick="setDocFilter('all')">ทั้งหมด</button>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="reviewStatusFilterBar">
+        <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">สถานะการตรวจ:</span>
+        <button class="filter-pill active" id="rsAll" onclick="setReviewStatus('all')">ทั้งหมด</button>
       </div>
       <div style="margin-top:10px;">
         <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อครู หรืออีเมล..." style="max-width:360px;" oninput="renderView()">

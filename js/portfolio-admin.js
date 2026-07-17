@@ -53,6 +53,7 @@ var currentFilter = 'all';
 var currentView   = 'list';
 var currentGroup  = 'all'; /* subject group filter */
 var currentDocFilter = 'all'; /* doc type filter */
+var currentReviewStatusFilter = 'all'; /* filter ตามสถานะการตรวจ: all/submitted/head_reviewed/assistant_reviewed/deputy_reviewed/final_approved/revision */
 var availableGroups = []; /* กลุ่มสาระที่มีอยู่จริงใน staff (สร้าง dynamic) */
 
 /* กลุ่มสาระที่นับเป็น "ครู" (ไม่รวมผู้บริหาร/เจ้าหน้าที่) */
@@ -125,6 +126,8 @@ function loadAllSubmissions() {
   /* reset doc filter เมื่อ reload */
   currentDocFilter = 'all';
   buildDocFilterBar();
+  currentReviewStatusFilter = 'all';
+  buildReviewStatusFilterBar();
 
   /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
   db.collection('staff').orderBy('name').get().then(function(staffSnap) {
@@ -170,6 +173,7 @@ function loadAllSubmissions() {
       if (bar) bar.style.display = 'none';
     }
     buildDocFilterBar();
+    buildReviewStatusFilterBar();
 
     /* ── 2. ดึง submissions แล้ว join กับ teacherMap ── */
     return db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
@@ -378,6 +382,94 @@ function buildGroupFilterBar() {
   document.getElementById('grpAll').className = 'filter-pill' + (currentGroup === 'all' ? ' active' : '');
 }
 
+/* ── รายการสถานะการตรวจที่เลือกดูได้ ── */
+var REVIEW_STATUS_OPTIONS = [
+  { id:'submitted',          label:'📤 รอหัวหน้าฯ ตรวจ' },
+  { id:'head_reviewed',      label:'👤 รอ ผช.ผอ. ตรวจ' },
+  { id:'assistant_reviewed', label:'🏅 รอรอง ผอ. ตรวจ' },
+  { id:'deputy_reviewed',    label:'👑 รอ ผอ. อนุมัติ' },
+  { id:'final_approved',     label:'✅ อนุมัติแล้ว' },
+  { id:'revision',           label:'⚠️ ให้แก้ไข' }
+];
+
+/* ── สร้าง review-status filter buttons ── */
+function buildReviewStatusFilterBar() {
+  var bar = document.getElementById('reviewStatusFilterBar');
+  if (!bar) return;
+
+  var children = Array.prototype.slice.call(bar.children);
+  children.forEach(function(el) {
+    if (el.id !== 'rsAll' && el.tagName !== 'SPAN') bar.removeChild(el);
+  });
+
+  REVIEW_STATUS_OPTIONS.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-pill' + (currentReviewStatusFilter === opt.id ? ' active' : '');
+    btn.id = 'rs_' + opt.id;
+    btn.textContent = opt.label;
+    btn.onclick = function() { setReviewStatus(opt.id); };
+    bar.appendChild(btn);
+  });
+
+  document.getElementById('rsAll').className = 'filter-pill' + (currentReviewStatusFilter === 'all' ? ' active' : '');
+}
+
+function setReviewStatus(s) {
+  currentReviewStatusFilter = s;
+  document.getElementById('rsAll').className = 'filter-pill' + (s === 'all' ? ' active' : '');
+  REVIEW_STATUS_OPTIONS.forEach(function(opt) {
+    var el = document.getElementById('rs_' + opt.id);
+    if (el) el.className = 'filter-pill' + (s === opt.id ? ' active' : '');
+  });
+  renderView();
+}
+
+/* true ถ้าเอกสารชิ้นใดของครูคนนี้อยู่ในสถานะที่เลือกกรอง (เทียบจาก doc จริงใน _courses) */
+function teacherHasReviewStatus(t, status) {
+  return Object.values(t.subs).some(function(sub) {
+    return (sub._courses || [sub]).some(function(doc) {
+      if (doc._isContainer) return false;
+      var st = doc.status || 'submitted';
+      if (status === 'head_reviewed') return st === 'head_reviewed' || st === 'reviewed';
+      return st === status;
+    });
+  });
+}
+
+/* ── ลำดับขั้นตรวจ: 1=หัวหน้ากลุ่มสาระ 2=ผช.ผอ. 3=รอง ผอ. 4=ผอ. ──
+   คืนค่า true ถ้าผู้ใช้ที่ล็อกอินอยู่ตอนนี้มีสิทธิ์ตรวจ "ขั้นนี้" ของครูคนนี้ */
+function canIReviewStage(stage, t) {
+  if (isSuperAdmin) return true;
+  var p = adminPermissions || {};
+  if (stage === 1) {
+    /* หัวหน้ากลุ่มสาระตรวจได้เฉพาะครูในกลุ่มสาระของตัวเอง */
+    return isHeadOfGroupOnly && !!headOfGroupName && normaliseGroup(t.staffGroup) === headOfGroupName;
+  }
+  if (stage === 2) return !!p.assistantDirectorAcademic;
+  if (stage === 3) return !!p.deputyDirectorAcademic;
+  if (stage === 4) return !!p.director;
+  return false;
+}
+
+/* true ถ้าครูคนนี้มีรายการอย่างน้อย 1 ชิ้นที่ "ถึงคิว" ให้ผู้ตรวจที่ล็อกอินอยู่ตรวจตอนนี้ */
+function hasItemForMeToReview(t) {
+  var found = false;
+  Object.values(t.subs).forEach(function(sub) {
+    if (found) return;
+    (sub._courses || [sub]).forEach(function(doc) {
+      if (found || doc._isContainer) return;
+      var st = doc.status || 'submitted';
+      var stage = st === 'submitted' ? 1
+                : (st === 'head_reviewed' || st === 'reviewed') ? 2
+                : st === 'assistant_reviewed' ? 3
+                : st === 'deputy_reviewed' ? 4
+                : 0;
+      if (stage && canIReviewStage(stage, t)) found = true;
+    });
+  });
+  return found;
+}
+
 /* ── สร้าง doc type filter buttons ── */
 function buildDocFilterBar() {
   var bar = document.getElementById('docFilterBar');
@@ -458,7 +550,9 @@ function getFilteredTeachers() {
     if (currentFilter === 'incomplete') return count < DOCUMENT_TYPES.length;
     if (currentFilter === 'pending')    return currentYear !== 2568 && Object.values(t.subs).some(function(s){ return s.status==='submitted' || s.status==='head_reviewed' || s.status==='assistant_reviewed' || s.status==='deputy_reviewed'; });
     /* doc type filter — กรองเฉพาะครูที่มีงานชนิดนั้น */
-    if (currentDocFilter !== 'all') return t.subs.hasOwnProperty(currentDocFilter);
+    if (currentDocFilter !== 'all' && !t.subs.hasOwnProperty(currentDocFilter)) return false;
+    /* สถานะการตรวจ — กรองเฉพาะครูที่มีเอกสารอยู่ในสถานะที่เลือก */
+    if (currentReviewStatusFilter !== 'all' && !teacherHasReviewStatus(t, currentReviewStatusFilter)) return false;
     return true;
   });
 }
@@ -502,8 +596,10 @@ function renderListView() {
     lucide.createIcons(); return;
   }
 
-  /* ── เรียงลำดับ: งานรอตรวจก่อน → ตามเวลาส่งล่าสุด ── */
+  /* ── เรียงลำดับ: รายการที่ "ถึงคิว" ให้ฉันตรวจก่อนเสมอ → งานรอตรวจก่อน → ตามเวลาส่งล่าสุด ── */
   teachers.sort(function(a, b) {
+    var ma = hasItemForMeToReview(a) ? 1 : 0, mb = hasItemForMeToReview(b) ? 1 : 0;
+    if (mb !== ma) return mb - ma; /* มีสิทธิ์ตรวจอยู่บนสุดเสมอ */
     var pa = getNeedsReviewPriority(a), pb = getNeedsReviewPriority(b);
     if (pb !== pa) return pb - pa; /* งานรอตรวจก่อน */
     return getLatestSubmitTime(b) - getLatestSubmitTime(a); /* ส่งล่าสุดก่อน */
@@ -546,11 +642,13 @@ function renderListView() {
       });
     });
     var reviewPriority = getNeedsReviewPriority(t);
+    var isMyTurn = hasItemForMeToReview(t);
 
-    /* row class ตามสถานะ */
+    /* row class ตามสถานะ — ถ้าถึงคิวให้ "ฉัน" ตรวจ ให้เด่นกว่าทุกสถานะอื่น */
     var rowClass = 'teacher-row';
-    if      (reviewPriority === 2) rowClass += ' needs-head-review';
-    else if (reviewPriority === 1) rowClass += ' needs-review';
+    if      (isMyTurn)                 rowClass += ' my-turn';
+    else if (reviewPriority === 2)     rowClass += ' needs-head-review';
+    else if (reviewPriority === 1)     rowClass += ' needs-review';
 
     /* เวลาส่งล่าสุด */
     var latestTime = getLatestSubmitTime(t);
@@ -564,6 +662,7 @@ function renderListView() {
             '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
               '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc2(t.staffName || t.displayName) + '</p>' +
               (t.position ? '<span style="font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;padding:1px 8px;border-radius:8px;">' + esc2(t.position) + '</span>' : '') +
+              (isMyTurn ? '<span class="my-turn-badge">🔔 ถึงคิวคุณตรวจ</span>' : '') +
               (pendingCount   ? '<span class="review-badge waiting">📤 รอตรวจ ' + pendingCount + ' รายการ</span>' : '') +
               (headRevCount   ? '<span class="review-badge head-wait">👤 รอ ผช.ผอ. ' + headRevCount + ' รายการ</span>' : '') +
               (assistRevCount ? '<span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;">🏅 รอรอง ผอ. ' + assistRevCount + '</span>' : '') +
@@ -763,8 +862,10 @@ function renderMatrixView() {
     return;
   }
 
-  /* เรียงเหมือน list view */
+  /* เรียงเหมือน list view: ถึงคิวฉันตรวจก่อนเสมอ */
   teachers.sort(function(a, b) {
+    var ma = hasItemForMeToReview(a) ? 1 : 0, mb = hasItemForMeToReview(b) ? 1 : 0;
+    if (mb !== ma) return mb - ma;
     var pa = getNeedsReviewPriority(a), pb = getNeedsReviewPriority(b);
     if (pb !== pa) return pb - pa;
     return getLatestSubmitTime(b) - getLatestSubmitTime(a);
@@ -789,7 +890,8 @@ function renderMatrixView() {
   teachers.forEach(function(t) {
     var count = Object.keys(t.subs).length;
     var reviewPriority = getNeedsReviewPriority(t);
-    var rowStyle = reviewPriority === 2 ? 'background:#f0f9ff;' : reviewPriority === 1 ? 'background:#fffdf0;' : '';
+    var isMyTurn = hasItemForMeToReview(t);
+    var rowStyle = isMyTurn ? 'background:#f5f3ff;box-shadow:inset 3px 0 0 #7c3aed;' : reviewPriority === 2 ? 'background:#f0f9ff;' : reviewPriority === 1 ? 'background:#fffdf0;' : '';
     html += '<tr style="' + rowStyle + '"><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:var(--gap-tight);">' +
       '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
       '<div style="overflow:hidden;">' +
