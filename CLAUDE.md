@@ -94,13 +94,19 @@
 
 ## ปัญหาที่รู้อยู่แล้ว / ต้องระวัง
 
-1. **Tailwind CDN v2.2.19 (ปี 2021)** โหลดเต็มทุกหน้าโดยไม่ purge ซ้ำซ้อนกับ design token system ใน `styles-new.css` — ควรพิจารณาตัดออกหรือ build ผ่าน CLI
+1. ~~**Tailwind CDN v2.2.19 (ปี 2021)** โหลดเต็มทุกหน้าโดยไม่ purge ซ้ำซ้อนกับ design token system ใน `styles-new.css`~~ — **แก้แล้ว** ดู Changelog ด้านล่าง (self-hosted + purge) แต่ยังพิจารณาตัดออกทั้งหมดได้ในอนาคต เพราะสแกนแล้วพบว่าโปรเจกต์แทบไม่ได้ใช้ Tailwind utility class เลยจริงๆ (ใช้ custom class จาก `styles-new.css` เป็นหลัก)
 2. **ไฟล์ JS ใหญ่เกินไป**: `portfolio-admin.js` (3,240 บรรทัด), `ipad-lending.js`, `portfolio-teacher.js`, `profile.js`, `repair-admin.js` — ควรแตกเป็นโมดูลย่อยเมื่อมีโอกาส
 3. **`js/page-name.js` ไม่ใช่หน้าเว็บจริง** เป็นแค่ template ตัวอย่าง อย่าแก้ไฟล์นี้คิดว่ามีผลกับหน้าใดหน้าหนึ่ง
 4. Favicon/manifest icons อ้างอิง Firebase Storage URL ที่มี access token ฝังอยู่ — ถ้า token หมดอายุ/rule เปลี่ยน ไอคอนทั้งเว็บพังพร้อมกัน
 5. อย่า commit `.DS_Store`, `__MACOSX/`, `node_modules/`, หรือไฟล์ secret (`serviceAccountKey.json`, `*.env`) — มีอยู่ใน `.gitignore` แล้วแต่ต้องเช็คซ้ำก่อน commit ทุกครั้ง
 
 ## แก้ไปแล้ว (Changelog)
+
+- ✅ **Self-host + purge Tailwind CSS แทนโหลดเต็มจาก jsdelivr CDN** — เดิมทั้ง 15 ไฟล์ HTML โหลด `https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css` แบบเต็มไม่ purge ทุกหน้า ตอนนี้แก้เป็น:
+  1. Build ด้วย Tailwind CLI v2.2.19 (ตรงเวอร์ชันเดิม กัน class เพี้ยน) โดยสแกน content จากทุก `.html` + `js/*.js` + `shared/*.js` (เพราะหน้าเว็บ render HTML ด้วยการต่อ string ใน JS) ได้ผลลัพธ์ purge แล้วที่ `shared/tailwind-built.css` (minified ~5.6 KB จากเดิมโหลดเต็มไฟล์)
+  2. แก้ `<link>` ในทั้ง 15 ไฟล์ (`admin-role.html`, `foodcourt-admin.html`, `guide.html`, `index.html`, `ipad-lending.html`, `page-template.html`, `portfolio-admin.html`, `portfolio-teacher.html`, `profile.html`, `repair-admin.html`, `repair-user.html`, `room-admin.html`, `room-request.html`, `settings.html`, `staff.html`) ให้ชี้ไป `shared/tailwind-built.css` แทน — ลำดับโหลดยังคงเดิม (ก่อน `shared/styles-new.css` เสมอ)
+  3. เก็บ config/วิธี rebuild ไว้ที่ `shared/tailwind-source/` (README + `tailwind.config.js` + `input.css`) — **ไม่มี build step อัตโนมัติ/ไม่มี CI ใหม่** ต้องรันเองตอน dev แล้ว commit ไฟล์ผลลัพธ์เข้า repo ตรงๆ ตาม convention เดิมของโปรเจกต์ (ดูวิธีใน README นั้น)
+  4. **ข้อค้นพบสำคัญ**: สแกน class ที่ใช้จริงทั้งโปรเจกต์แล้วพบว่าแทบไม่มีการใช้ Tailwind utility class เลย (`class="..."` ที่ดูเหมือนใช่ส่วนใหญ่กลับเป็น custom class จาก `styles-new.css` เช่น `empty-block`, `kpi-grid` ที่บังเอิญมีคำว่า block/grid ปนอยู่) ไฟล์ purge แล้วจึงเหลือแค่ CSS reset พื้นฐาน (`modern-normalize`) เป็นหลัก — ถ้ามีเวลา ควรพิจารณาตัด Tailwind ออกทั้งหมดในอนาคต ความเสี่ยงต่ำกว่าที่คาดไว้เดิม
 
 - ✅ **`functions/index.js` เพิ่ม export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — เดิม `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` ถูก export ไว้ผิดไฟล์ (`functions/functions-index.js` ซึ่งไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง) ตอนนี้แก้ให้ `index.js` ตัวจริง `require("./portfolio-notifications")` และ export ทั้ง 3 ฟังก์ชันแล้ว — **ต้องลบ `functions/functions-index.js` ทิ้งด้วย** เพื่อไม่ให้สับสนอีกในอนาคต (ถ้ายังไม่ได้ลบ ให้ลบก่อน commit ครั้งถัดไป)
 
