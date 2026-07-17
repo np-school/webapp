@@ -130,8 +130,20 @@ function loadAllSubmissions() {
   currentReviewStatusFilter = 'all';
   buildReviewStatusFilterBar();
 
-  /* ── 1. ดึง staff ทั้งหมด → สร้าง teacherMap จากชื่อ/ตำแหน่ง/กลุ่มสาระจริง ── */
-  db.collection('staff').orderBy('name').get().then(function(staffSnap) {
+  /* ── ดึง staff + submissions "พร้อมกัน" (ไม่ใช่ต่อคิว) ──
+     ⚠️ เดิม query staff เสร็จก่อนค่อย query submissions (.then ซ้อนกัน) ทั้งที่สอง
+     query นี้ไม่ได้ขึ้นกับกันจริง ๆ แค่ต้องเอาผลมา merge ตอนท้ายเท่านั้น บนเน็ตโรงเรียน
+     ที่บังคับ experimentalForceLongPolling อยู่แล้ว (แต่ละ request มี overhead สูงกว่า
+     ปกติ) การรอสอง request ต่อคิวกันทำให้เวลาโหลดหน้าแรกช้าเกือบสองเท่าโดยไม่จำเป็น
+     → เปลี่ยนเป็นยิงพร้อมกันด้วย Promise.all แล้วค่อยประมวลผลตามลำดับเดิม (staff ก่อน
+     เพื่อสร้าง teacherMap แล้วค่อย merge submissions เข้าไป) */
+  Promise.all([
+    db.collection('staff').orderBy('name').get(),
+    db.collection('portfolio_submissions').where('yearSem','==',key).get()
+  ]).then(function(results) {
+    var staffSnap = results[0];
+    var snap      = results[1];
+
     allSubs = [];
     teacherMap = {};
     availableGroups = [];
@@ -176,58 +188,56 @@ function loadAllSubmissions() {
     buildDocFilterBar();
     buildReviewStatusFilterBar();
 
-    /* ── 2. ดึง submissions แล้ว join กับ teacherMap ── */
-    return db.collection('portfolio_submissions').where('yearSem','==',key).get().then(function(snap) {
-      snap.forEach(function(d) {
-        var data = Object.assign({ id: d.id }, d.data());
-        allSubs.push(data);
-        var eKey = (data.email || '').toLowerCase();
-        if (!eKey) return;
+    /* ── join submissions เข้ากับ teacherMap ── */
+    snap.forEach(function(d) {
+      var data = Object.assign({ id: d.id }, d.data());
+      allSubs.push(data);
+      var eKey = (data.email || '').toLowerCase();
+      if (!eKey) return;
 
-        if (!teacherMap[eKey]) {
-          /* ครูส่งงานแต่ไม่มีใน staff → fallback จาก submission */
-          teacherMap[eKey] = {
-            uid:         data.uid || eKey,
-            email:       eKey,
-            staffName:   data.staffName || data.displayName || eKey,
-            displayName: data.staffName || data.displayName || eKey,
-            position:    data.staffPosition || '',
-            staffGroup:  normaliseGroup(data.staffGroup || data.subjectGroup || ''),
-            isTeacher:   true,
-            subs:        {}
-          };
-        }
+      if (!teacherMap[eKey]) {
+        /* ครูส่งงานแต่ไม่มีใน staff → fallback จาก submission */
+        teacherMap[eKey] = {
+          uid:         data.uid || eKey,
+          email:       eKey,
+          staffName:   data.staffName || data.displayName || eKey,
+          displayName: data.staffName || data.displayName || eKey,
+          position:    data.staffPosition || '',
+          staffGroup:  normaliseGroup(data.staffGroup || data.subjectGroup || ''),
+          isTeacher:   true,
+          subs:        {}
+        };
+      }
 
-        /* Merge หลาย courseCode ใน docTypeId เดียวกัน
-           แต่ละ Firestore doc = 1 รายวิชา เก็บไว้ใน _courses[] แยก
-           sub ที่อยู่ใน teacherMap ทำหน้าที่เป็น container (มี _courses + merged status)
-           ไม่ใช่ตัว doc จริง เพื่อป้องกัน circular reference */
-        var existing = teacherMap[eKey].subs[data.docTypeId];
-        if (!existing) {
-          /* doc แรกของ docTypeId นี้ — สร้าง container ครอบอีกชั้น */
-          teacherMap[eKey].subs[data.docTypeId] = {
-            _isContainer: true,
-            _courses:     [ data ],          /* เก็บ Firestore doc จริง ไม่ใช่ container */
-            status:       data.status || 'submitted',
-            docTypeId:    data.docTypeId,
-            email:        data.email,
-          };
-        } else {
-          /* doc ถัดไปของ docTypeId เดิม — push เข้า _courses เท่านั้น */
-          existing._courses.push(data);
-          /* คำนวณ merged status (ต่ำสุดของทุก doc) */
-          var ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
-          existing.status = existing._courses.reduce(function(acc, c) {
-            var s = c.status || 'submitted';
-            return ORDER[s] < ORDER[acc] ? s : acc;
-          }, 'final_approved');
-        }
-      });
-
-      _initialDataLoaded = true;
-      updateStats();
-      renderView();
+      /* Merge หลาย courseCode ใน docTypeId เดียวกัน
+         แต่ละ Firestore doc = 1 รายวิชา เก็บไว้ใน _courses[] แยก
+         sub ที่อยู่ใน teacherMap ทำหน้าที่เป็น container (มี _courses + merged status)
+         ไม่ใช่ตัว doc จริง เพื่อป้องกัน circular reference */
+      var existing = teacherMap[eKey].subs[data.docTypeId];
+      if (!existing) {
+        /* doc แรกของ docTypeId นี้ — สร้าง container ครอบอีกชั้น */
+        teacherMap[eKey].subs[data.docTypeId] = {
+          _isContainer: true,
+          _courses:     [ data ],          /* เก็บ Firestore doc จริง ไม่ใช่ container */
+          status:       data.status || 'submitted',
+          docTypeId:    data.docTypeId,
+          email:        data.email,
+        };
+      } else {
+        /* doc ถัดไปของ docTypeId เดิม — push เข้า _courses เท่านั้น */
+        existing._courses.push(data);
+        /* คำนวณ merged status (ต่ำสุดของทุก doc) */
+        var ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
+        existing.status = existing._courses.reduce(function(acc, c) {
+          var s = c.status || 'submitted';
+          return ORDER[s] < ORDER[acc] ? s : acc;
+        }, 'final_approved');
+      }
     });
+
+    _initialDataLoaded = true;
+    updateStats();
+    renderView();
   }).catch(function(e) {
     main.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
   });
