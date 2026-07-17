@@ -36,6 +36,12 @@
 └── firebase.json / .firebaserc                        Firebase CLI config (functions only)
 ```
 
+> **`firestore.rules`** (root) — Firestore Security Rules ตัวจริงที่ deploy จริง (`firebase deploy --only firestore:rules`)
+> ทุกครั้งที่เพิ่ม field ใหม่ที่ client เขียนตรงเข้า Firestore (ไม่ผ่าน Cloud Function) **ต้องเช็คไฟล์นี้ด้วยเสมอ**
+> ว่า rule อนุญาตให้เขียนหรือยัง ไม่งั้นจะเจอ `permission-denied` เงียบๆ ตอน production (ไม่ error ตอน dev
+> เพราะมักลืมเทสต์ด้วย account ที่ไม่ใช่ SuperAdmin) — ดู pattern การล็อกแบบ "แก้ได้แค่ doc ตัวเอง + field
+> ที่กำหนดเท่านั้น" ที่ใช้ซ้ำหลายจุดในไฟล์นี้ (เช่น `admins/{id}.lastSignatureURL`, `staff/{id}` self-sync)
+
 ## แผนที่หน้า → ฟีเจอร์
 
 | หน้า | ฟีเจอร์ | สิทธิ์ |
@@ -77,7 +83,7 @@
 
 ## Conventions ที่ต้องรู้ก่อนแก้โค้ด
 
-- โค้ด JS ทุกไฟล์เป็น **global scope** (`var`, ไม่มี module system) — ระวังชื่อฟังก์ชัน/ตัวแปรชนกันข้ามไฟล์
+- โค้ด JS ทุกไฟล์เป็น **global scope** (`var`, ไม่มี module system) — ระวังชื่อฟังก์ชัน/ตัวแปรชนกันข้ามไฟล์ **และภายในไฟล์เดียวกันด้วย** (เคยเกิดจริงใน `portfolio-admin.js`: มี `function setReviewStatus` ประกาศซ้ำ 2 จุดในไฟล์เดียวกันโดยไม่ได้ตั้งใจ ตัวที่ประกาศทีหลังทับตัวแรกเงียบๆ ไม่มี error เตือน) — ถ้าไฟล์ไหนยาวเกิน ~1000 บรรทัด ควร `grep -n "^function ชื่อนี้"` เช็คก่อนตั้งชื่อฟังก์ชันใหม่ทุกครั้ง
 - Render HTML ด้วยการต่อ string (`'<div>' + ... + '</div>'`) ไม่ใช้ template engine — ใช้ `esc()` เมื่อแทรกค่าใน inline `onclick="fn('...')"` และ `esc2()` เมื่อแทรกเป็น HTML text เพื่อกัน XSS
 - Date/เวลา: ใช้ `formatDate()` หรือ `fmtDate()` จาก `common.js` (มีอยู่ 2 ชื่อเพราะเดิมซ้ำกันหลายไฟล์ รวมมาไว้ที่เดียวแล้ว) — อย่าสร้างฟังก์ชัน format วันที่ใหม่ซ้ำ
 - ปีการศึกษาไทยใช้ `getAcademicYear()` (พ.ค.–ต.ค. = เทอม 1, พ.ย.–เม.ย. = เทอม 2)
@@ -97,6 +103,16 @@
 ## แก้ไปแล้ว (Changelog)
 
 - ✅ **`functions/index.js` เพิ่ม export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — เดิม `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` ถูก export ไว้ผิดไฟล์ (`functions/functions-index.js` ซึ่งไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง) ตอนนี้แก้ให้ `index.js` ตัวจริง `require("./portfolio-notifications")` และ export ทั้ง 3 ฟังก์ชันแล้ว — **ต้องลบ `functions/functions-index.js` ทิ้งด้วย** เพื่อไม่ให้สับสนอีกในอนาคต (ถ้ายังไม่ได้ลบ ให้ลบก่อน commit ครั้งถัดไป)
+
+- ✅ **`portfolio-admin.js` แก้ชื่อฟังก์ชันชนกัน `setReviewStatus`** — เดิมมี `function setReviewStatus` ประกาศซ้ำ 2 ที่ในไฟล์เดียวกัน (ทั้งไฟล์เป็น global scope): ตัวแรก (~บรรทัด 417) เป็น filter ปุ่ม "สถานะการตรวจ" ในหน้า Overview, ตัวหลัง (~บรรทัด 1438) เป็นฟังก์ชันอนุมัติ/ตีกลับเอกสารในหน้ารายละเอียด เพราะ JS ให้ประกาศทีหลังทับตัวแรกเสมอ ผลคือกด filter แล้วดันไปรันฟังก์ชันอนุมัติแทน (เด้ง toast "กรุณาเขียนความคิดเห็นก่อนกดยืนยัน" ทั้งที่แค่กำลังกรองรายการ) → เปลี่ยนชื่อฟังก์ชัน filter เป็น `setReviewStatusFilter` (อัปเดตทั้ง `portfolio-admin.js` และ onclick ใน `portfolio-admin.html`) ฟังก์ชันอนุมัติเดิมไม่ต้องแตะ
+
+- ✅ **`portfolio-admin.js`/`.html` เพิ่มฟีเจอร์ "ใช้ลายเซ็นนี้" (reuse ลายเซ็นผู้ตรวจ) + แก้บั๊กโชว์ลายเซ็นผิดคน** — เดิม modal ตรวจงานมีกล่อง "ลายเซ็นที่เซ็นไว้แล้ว" แต่ไปดึงลายเซ็นจาก field ของ**ขั้นตรวจก่อนหน้า** บนตัวเอกสาร (เช่นถ้า `curStatus` เป็น `head_reviewed` จะดึง `headSignatureURL` มาโชว์ ทั้งที่ควรเป็นลายเซ็นของผู้ตรวจขั้นถัดไปที่กำลังจะเซ็น) แก้แล้วให้:
+  1. บันทึกลายเซ็นล่าสุดของผู้ตรวจแต่ละคน (ไม่ใช่ต่อเอกสาร) ไว้ที่ `admins/{email}.lastSignatureURL` ทุกครั้งที่เซ็นสำเร็จ (ทำใน `setReviewStatus()`)
+  2. โหลดค่านี้มาเก็บใน global var `myAdminSignatureURL` ตอน `onAuth` (piggyback กับ query `admins/{email}` ที่มีอยู่แล้วสำหรับเช็ค permission)
+  3. `fillSingleFileInfo()` โชว์ `myAdminSignatureURL` แทนของเดิม พร้อมปุ่ม **"ใช้ลายเซ็นนี้"** (`useMyExistingSignature()`) กดแล้วใช้ได้ทันทีไม่ต้องอัปโหลดซ้ำ — sig pad IIFE เพิ่มโหมด `'existing'` และ `uploadAdminSignatureToStorage()` จะข้ามการอัปโหลดถ้าค่าที่ได้เป็น URL (`http...`) อยู่แล้วแทนที่จะเป็น `data:` URL ใหม่จาก canvas/ไฟล์
+  4. **ต้องอัปเดต `firestore.rules` คู่กันด้วย** — เดิม `admins/{id}` เขียนได้แค่ SuperAdmin เท่านั้น (`allow write: if isSuperAdmin();`) ทำให้ผู้ตรวจคนอื่นเซฟ `lastSignatureURL` ไม่ได้เลย (permission-denied เงียบๆ ใน `.catch()`) → เพิ่ม `allow create/update` แยกเฉพาะกรณีนี้ ล็อกให้แก้ได้แค่ doc ตัวเอง + field `lastSignatureURL` เท่านั้น ห้ามแตะ `permissions`
+
+- ✅ **`portfolio-admin.js` แก้ด่านเข้าเว็บ (accessDenied) บล็อกผู้ตรวจขั้น 2/3/4 ผิด** — ด่านเข้าเว็บใน `onAuth` (บรรทัด ~3270) เดิมเช็คแค่ `p.portfolio` กับ `p.headOfGroup` แต่ระบบตรวจ 4 ขั้นจริง (`canIReviewStage()`) ใช้สิทธิ์คนละฟิลด์ (`p.assistantDirectorAcademic` / `p.deputyDirectorAcademic` / `p.director`) ทำให้ผู้ตรวจขั้น 2/3/4 ที่ตั้งสิทธิ์ผ่าน `admin-role.html` แต่ไม่ได้ติ๊ก `portfolio` ควบคู่ไปด้วย เข้าหน้า `portfolio-admin.html` ไม่ได้เลย (โดน accessDenied ทันที) → เพิ่มตัวแปร `hasReviewerStage` รวมสิทธิ์ทั้ง 3 ขั้นเข้าไปในเงื่อนไขด่านเข้าเว็บด้วย **หมายเหตุ:** ถ้าตั้งสิทธิ์ผู้ตรวจผ่าน `admin-role.html` ควรตรวจสอบว่า UI ของหน้านั้น mapping ฟิลด์ตรงกับที่ `portfolio-admin.js` ใช้จริงด้วย (`portfolio`, `headOfGroup`, `assistantDirectorAcademic`, `deputyDirectorAcademic`, `director` — คนละชุดกับ `permissions.bookings/repair/staff/foodcourt/ipad` ที่ใช้ในหน้าอื่น)
 
 ## คำสั่งที่ใช้บ่อย
 

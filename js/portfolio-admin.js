@@ -3269,12 +3269,18 @@ buildPage({
       isSuperAdmin = isSA;
       var hasPortfolio   = isSA || !!p.portfolio;
       var hasHeadOfGroup = !!p.headOfGroup;
+      /* ⚠️ เดิมด่านเข้าเว็บเช็คแค่ hasPortfolio/hasHeadOfGroup แต่ระบบตรวจ 4 ขั้น
+         (canIReviewStage()) ใช้สิทธิ์คนละฟิลด์กัน (assistantDirectorAcademic /
+         deputyDirectorAcademic / director) ทำให้ผู้ตรวจขั้น 2/3/4 ที่ไม่ได้ติ๊ก
+         'portfolio' ควบคู่ไปด้วย โดนบล็อกที่ accessDenied เข้าเว็บไม่ได้เลย
+         ทั้งที่ควรมีสิทธิ์ตรวจ → รวมสิทธิ์ทั้ง 3 ขั้นเข้ามาด่านเข้าเว็บด้วย */
+      var hasReviewerStage = !!p.assistantDirectorAcademic || !!p.deputyDirectorAcademic || !!p.director;
 
       adminPermissions = isSA
         ? { portfolio:true, assistantDirectorAcademic:true, deputyDirectorAcademic:true, director:true }
         : p;
 
-      if (!hasPortfolio && !hasHeadOfGroup) {
+      if (!hasPortfolio && !hasHeadOfGroup && !hasReviewerStage) {
         document.getElementById('adminApp').style.display = 'none';
         document.getElementById('accessDenied').style.display = 'flex';
         lucide.createIcons();
