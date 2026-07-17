@@ -1646,9 +1646,9 @@ function submitDoc() {
     return;
   }
 
-  /* ── บังคับเซ็นลายเซ็น ── */
+  /* ── บังคับเซ็นลายเซ็น (วาดเอง หรือแนบไฟล์ อย่างใดอย่างหนึ่ง) ── */
   if (typeof isSignatureEmpty === 'function' && isSignatureEmpty()) {
-    showToast('กรุณาเซ็นลายมือชื่อในช่องลายเซ็นก่อนส่ง', 'error');
+    showToast('กรุณาเซ็นลายมือชื่อ หรือแนบไฟล์ลายเซ็น ก่อนส่ง', 'error');
     switchMemoTab('edit');
     return;
   }
@@ -1933,6 +1933,9 @@ buildPage({
 (function() {
   var canvas, ctx, drawing = false, hasSig = false;
   var lastX, lastY;
+  var sigMode = 'draw';      /* 'draw' = วาดเองบน canvas | 'file' = แนบไฟล์รูปภาพ */
+  var fileDataURL = '';
+  var hasFileSig  = false;
 
   function initSignaturePad() {
     canvas = document.getElementById('signatureCanvas');
@@ -1983,22 +1986,73 @@ buildPage({
     canvas.addEventListener('touchend',   end);
   }
 
+  /* ── สลับโหมด วาดเอง / แนบไฟล์ ── */
+  function updateSigModeUI() {
+    var drawBtn  = document.getElementById('sigModeDraw');
+    var fileBtn  = document.getElementById('sigModeFile');
+    var drawPane = document.getElementById('sigDrawPane');
+    var filePane = document.getElementById('sigFilePane');
+    if (drawBtn)  drawBtn.className  = 'sigpad-mode-btn' + (sigMode === 'draw' ? ' active' : '');
+    if (fileBtn)  fileBtn.className  = 'sigpad-mode-btn' + (sigMode === 'file' ? ' active' : '');
+    if (drawPane) drawPane.style.display = sigMode === 'draw' ? 'block' : 'none';
+    if (filePane) filePane.style.display = sigMode === 'file' ? 'block' : 'none';
+  }
+  window.setSigMode = function(mode) {
+    sigMode = mode;
+    updateSigModeUI();
+  };
+
+  /* ── รับไฟล์ที่แนบเข้ามา (ตรวจ/ย่อขนาด ผ่าน readSignatureImageFile() จาก common.js) ── */
+  window.handleSigFile = function(file) {
+    if (typeof readSignatureImageFile !== 'function') return;
+    readSignatureImageFile(file, function(dataURL) {
+      fileDataURL = dataURL;
+      hasFileSig  = true;
+      var img         = document.getElementById('sigFilePreviewImg');
+      var wrap        = document.getElementById('sigFilePreviewWrap');
+      var placeholder = document.getElementById('sigFilePlaceholder');
+      if (img)         img.src = dataURL;
+      if (wrap)        wrap.style.display = 'flex';
+      if (placeholder) placeholder.style.display = 'none';
+    }, function(errMsg) {
+      if (typeof showToast === 'function') showToast('⚠ ' + errMsg, 'warn');
+    });
+  };
+
+  window.clearSigFile = function() {
+    fileDataURL = '';
+    hasFileSig  = false;
+    var input       = document.getElementById('sigFileInput');
+    var wrap        = document.getElementById('sigFilePreviewWrap');
+    var placeholder = document.getElementById('sigFilePlaceholder');
+    if (input)       input.value = '';
+    if (wrap)        wrap.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+  };
+
   window.clearSignature = function() {
     if (!canvas || !ctx) return;
     ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
     hasSig = false;
   };
 
-  window.isSignatureEmpty = function() { return !hasSig; };
+  window.isSignatureEmpty = function() {
+    return sigMode === 'file' ? !hasFileSig : !hasSig;
+  };
 
   window.getSignatureDataURL = function() {
+    if (sigMode === 'file') return fileDataURL;
     if (!canvas) return '';
     return canvas.toDataURL('image/png');
   };
 
-  /* init ทุกครั้งที่ modal เปิด (เพราะ canvas อาจเพิ่งถูก render) */
+  /* init ทุกครั้งที่ modal เปิด (เพราะ canvas อาจเพิ่งถูก render)
+     reset ทั้งโหมดวาดและโหมดไฟล์ กันลายเซ็นเก่าค้างข้ามไปใช้กับงานชิ้นถัดไป */
   window.initSignaturePadNow = function() {
-    hasSig = false;
+    hasSig  = false;
+    sigMode = 'draw';
+    window.clearSigFile();
+    updateSigModeUI();
     setTimeout(initSignaturePad, 80);
   };
 })();

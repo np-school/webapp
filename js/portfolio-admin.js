@@ -1443,18 +1443,19 @@ function setReviewStatus(status) {
     return;
   }
 
-  /* ── บังคับเซ็นลายเซ็นทุกขั้นที่เป็นการ "ผ่าน/อนุมัติ" ── */
+  /* ── บังคับเซ็นลายเซ็นทุกขั้นที่เป็นการ "ผ่าน/อนุมัติ" (วาดเอง หรือแนบไฟล์ อย่างใดอย่างหนึ่ง) ── */
   if (approvalStatuses.indexOf(status) !== -1 && typeof isAdminSigEmpty === 'function' && isAdminSigEmpty()) {
-    var sigCanvas = document.getElementById('adminSigCanvas');
-    if (sigCanvas) {
-      sigCanvas.style.border = '2px solid #ef4444';
-      sigCanvas.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
+    var isFileModeActive = document.getElementById('adminSigFilePane') && document.getElementById('adminSigFilePane').style.display !== 'none';
+    var sigTargetEl = isFileModeActive ? document.getElementById('adminSigFileDrop') : document.getElementById('adminSigCanvas');
+    if (sigTargetEl) {
+      sigTargetEl.style.outline = '2px solid #ef4444';
+      sigTargetEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
       setTimeout(function() {
-        sigCanvas.style.border = '';
-        sigCanvas.style.boxShadow = '';
+        sigTargetEl.style.outline = '';
+        sigTargetEl.style.boxShadow = '';
       }, 2500);
     }
-    showToast('กรุณาเซ็นลายมือชื่อก่อนกดยืนยัน', 'warn');
+    showToast('กรุณาเซ็นลายมือชื่อหรือแนบไฟล์ลายเซ็นก่อนกดยืนยัน', 'warn');
     return;
   }
 
@@ -3284,6 +3285,9 @@ buildPage({
    ════════════════════════════════════════════ */
 (function() {
   var canvas, ctx, drawing = false, hasSig = false;
+  var sigMode = 'draw';      /* 'draw' = วาดเองบน canvas | 'file' = แนบไฟล์รูปภาพ */
+  var fileDataURL = '';
+  var hasFileSig  = false;
 
   function initAdminSigPad() {
     canvas = document.getElementById('adminSigCanvas');
@@ -3325,15 +3329,69 @@ buildPage({
     canvas.addEventListener('touchend',   end);
   }
 
+  /* ── สลับโหมด วาดเอง / แนบไฟล์ ── */
+  function updateAdminSigModeUI() {
+    var drawBtn  = document.getElementById('adminSigModeDraw');
+    var fileBtn  = document.getElementById('adminSigModeFile');
+    var drawPane = document.getElementById('adminSigDrawPane');
+    var filePane = document.getElementById('adminSigFilePane');
+    if (drawBtn)  drawBtn.className  = 'sigpad-mode-btn' + (sigMode === 'draw' ? ' active' : '');
+    if (fileBtn)  fileBtn.className  = 'sigpad-mode-btn' + (sigMode === 'file' ? ' active' : '');
+    if (drawPane) drawPane.style.display = sigMode === 'draw' ? 'block' : 'none';
+    if (filePane) filePane.style.display = sigMode === 'file' ? 'block' : 'none';
+  }
+  window.setAdminSigMode = function(mode) {
+    sigMode = mode;
+    updateAdminSigModeUI();
+  };
+
+  /* ── รับไฟล์ที่แนบเข้ามา (ตรวจ/ย่อขนาด ผ่าน readSignatureImageFile() จาก common.js) ── */
+  window.handleAdminSigFile = function(file) {
+    if (typeof readSignatureImageFile !== 'function') return;
+    readSignatureImageFile(file, function(dataURL) {
+      fileDataURL = dataURL;
+      hasFileSig  = true;
+      var img         = document.getElementById('adminSigFilePreviewImg');
+      var wrap        = document.getElementById('adminSigFilePreviewWrap');
+      var placeholder = document.getElementById('adminSigFilePlaceholder');
+      if (img)         img.src = dataURL;
+      if (wrap)        wrap.style.display = 'flex';
+      if (placeholder) placeholder.style.display = 'none';
+    }, function(errMsg) {
+      if (typeof showToast === 'function') showToast('⚠ ' + errMsg, 'warn');
+    });
+  };
+
+  window.clearAdminSigFile = function() {
+    fileDataURL = '';
+    hasFileSig  = false;
+    var input       = document.getElementById('adminSigFileInput');
+    var wrap        = document.getElementById('adminSigFilePreviewWrap');
+    var placeholder = document.getElementById('adminSigFilePlaceholder');
+    if (input)       input.value = '';
+    if (wrap)        wrap.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+  };
+
   window.clearAdminSignature = function() {
     if (!canvas || !ctx) return;
     ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
     hasSig = false;
   };
-  window.isAdminSigEmpty = function() { return !hasSig; };
-  window.getAdminSigDataURL = function() { return canvas ? canvas.toDataURL('image/png') : ''; };
+  window.isAdminSigEmpty = function() {
+    return sigMode === 'file' ? !hasFileSig : !hasSig;
+  };
+  window.getAdminSigDataURL = function() {
+    if (sigMode === 'file') return fileDataURL;
+    return canvas ? canvas.toDataURL('image/png') : '';
+  };
+  /* init ทุกครั้งที่ modal เปิด — reset ทั้งโหมดวาดและโหมดไฟล์ กันลายเซ็นเก่าค้าง
+     ข้ามไปใช้กับการตรวจงานชิ้นถัดไปโดยไม่ได้ตั้งใจ */
   window.initAdminSigPadNow = function() {
-    hasSig = false;
+    hasSig  = false;
+    sigMode = 'draw';
+    window.clearAdminSigFile();
+    updateAdminSigModeUI();
     setTimeout(initAdminSigPad, 80);
   };
 })();

@@ -2345,3 +2345,35 @@ body::-webkit-scrollbar,
 .rp-log-item:last-child  { border-bottom: none; }
 .rp-log-dot               { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
 
+/* ══ 35. Signature pad — mode tabs (วาดเอง / แนบไฟล์) + file drop zone ═══════
+   ใช้ร่วมกันทั้ง portfolio-teacher.html (#signatureCanvas) และ
+   portfolio-admin.html (#adminSigCanvas) สำหรับฟีเจอร์แนบไฟล์รูปลายเซ็น */
+.sigpad-mode-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.sigpad-mode-btn {
+  flex: 1; padding: 7px 10px; border-radius: 9px; font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all .15s; font-family: 'Sarabun', sans-serif;
+}
+.sigpad-mode-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
+.sigpad-mode-btn:hover:not(.active) { border-color: var(--purple-accent); color: var(--purple); }
+
+.sigpad-file-drop {
+  border: 1.5px dashed var(--border); border-radius: 10px; background: var(--bg);
+  min-height: 90px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 10px; transition: border-color .15s, background .15s;
+}
+.sigpad-file-drop:hover { border-color: var(--purple-accent); background: #f5f3ff; }
+.sigpad-file-placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text3); text-align: center; }
+.sigpad-file-placeholder p { font-size: 11px; font-weight: 600; line-height: 1.5; margin: 0; }
+.sigpad-file-preview { display: flex; align-items: center; gap: 12px; width: 100%; }
+.sigpad-file-preview img {
+  max-height: 70px; max-width: 200px; object-fit: contain; background: repeating-conic-gradient(#e2e8f0 0% 25%, white 0% 50%) 0 0/14px 14px;
+  border-radius: 6px; border: 1px solid var(--border);
+}
+.sigpad-file-remove-btn {
+  padding: 4px 12px; background: white; color: #dc2626; border: 1px solid #fecaca;
+  border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Sarabun', sans-serif;
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.sigpad-file-remove-btn:hover { background: #fef2f2; }

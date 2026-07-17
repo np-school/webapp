@@ -380,10 +380,41 @@
           </div>
           <!-- ลายเซ็นดิจิตอล -->
           <div>
-            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ลายมือชื่อผู้ส่ง <span style="color:#ef4444;">*</span> <span style="color:#94a3b8;font-weight:600;">(วาดลายเซ็นในกล่องด้านล่าง)</span></label>
-            <canvas id="signatureCanvas" width="420" height="100" style="border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:crosshair;touch-action:none;width:100%;max-width:100%;display:block;"></canvas>
-            <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-              <button type="button" onclick="clearSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">ล้างลายเซ็น</button>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">ลายมือชื่อผู้ส่ง <span style="color:#ef4444;">*</span> <span style="color:#94a3b8;font-weight:600;">(วาดเอง หรือแนบไฟล์รูปลายเซ็น)</span></label>
+
+            <!-- สลับโหมด: วาดเอง / แนบไฟล์ -->
+            <div class="sigpad-mode-tabs">
+              <button type="button" class="sigpad-mode-btn active" id="sigModeDraw" onclick="setSigMode('draw')">
+                <i data-lucide="pen-line" style="width:13px;height:13px;"></i> วาดเอง
+              </button>
+              <button type="button" class="sigpad-mode-btn" id="sigModeFile" onclick="setSigMode('file')">
+                <i data-lucide="paperclip" style="width:13px;height:13px;"></i> แนบไฟล์
+              </button>
+            </div>
+
+            <!-- โหมดวาดเอง -->
+            <div id="sigDrawPane">
+              <canvas id="signatureCanvas" width="420" height="100" style="border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:crosshair;touch-action:none;width:100%;max-width:100%;display:block;"></canvas>
+              <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+                <button type="button" onclick="clearSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">ล้างลายเซ็น</button>
+              </div>
+            </div>
+
+            <!-- โหมดแนบไฟล์ -->
+            <div id="sigFilePane" style="display:none;">
+              <input type="file" id="sigFileInput" accept="image/png,image/jpeg" style="display:none;" onchange="handleSigFile(this.files[0])">
+              <div class="sigpad-file-drop" id="sigFileDrop" onclick="document.getElementById('sigFileInput').click()">
+                <div id="sigFilePreviewWrap" class="sigpad-file-preview" style="display:none;">
+                  <img id="sigFilePreviewImg" src="" alt="ลายเซ็นที่แนบ">
+                  <button type="button" class="sigpad-file-remove-btn" onclick="event.stopPropagation();clearSigFile()">
+                    <i data-lucide="trash-2" style="width:12px;height:12px;"></i> ลบไฟล์
+                  </button>
+                </div>
+                <div id="sigFilePlaceholder" class="sigpad-file-placeholder">
+                  <i data-lucide="upload" style="width:20px;height:20px;"></i>
+                  <p>คลิกเพื่อแนบไฟล์รูปลายเซ็น (PNG/JPG)<br>แนะนำ PNG พื้นหลังโปร่งใส</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

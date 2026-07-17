@@ -442,9 +442,40 @@
             <img id="existingSigImg" src="" style="max-height:52px;object-fit:contain;display:block;">
             <p style="font-size:10px;color:#64748b;margin-top:4px;">เซ็นใหม่ด้านล่างเพื่อแทนที่</p>
           </div>
-          <canvas id="adminSigCanvas" class="admin-sig-canvas" width="420" height="90" style="height:90px;"></canvas>
-          <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-            <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid var(--border);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
+
+          <!-- สลับโหมด: วาดเอง / แนบไฟล์ -->
+          <div class="sigpad-mode-tabs">
+            <button type="button" class="sigpad-mode-btn active" id="adminSigModeDraw" onclick="setAdminSigMode('draw')">
+              <i data-lucide="pen-line" style="width:13px;height:13px;"></i> วาดเอง
+            </button>
+            <button type="button" class="sigpad-mode-btn" id="adminSigModeFile" onclick="setAdminSigMode('file')">
+              <i data-lucide="paperclip" style="width:13px;height:13px;"></i> แนบไฟล์
+            </button>
+          </div>
+
+          <!-- โหมดวาดเอง -->
+          <div id="adminSigDrawPane">
+            <canvas id="adminSigCanvas" class="admin-sig-canvas" width="420" height="90" style="height:90px;"></canvas>
+            <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+              <button type="button" onclick="clearAdminSignature()" style="padding:4px 12px;background:#f1f5f9;color:#64748b;border:1px solid var(--border);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;">ล้างลายเซ็น</button>
+            </div>
+          </div>
+
+          <!-- โหมดแนบไฟล์ -->
+          <div id="adminSigFilePane" style="display:none;">
+            <input type="file" id="adminSigFileInput" accept="image/png,image/jpeg" style="display:none;" onchange="handleAdminSigFile(this.files[0])">
+            <div class="sigpad-file-drop" id="adminSigFileDrop" onclick="document.getElementById('adminSigFileInput').click()">
+              <div id="adminSigFilePreviewWrap" class="sigpad-file-preview" style="display:none;">
+                <img id="adminSigFilePreviewImg" src="" alt="ลายเซ็นที่แนบ">
+                <button type="button" class="sigpad-file-remove-btn" onclick="event.stopPropagation();clearAdminSigFile()">
+                  <i data-lucide="trash-2" style="width:12px;height:12px;"></i> ลบไฟล์
+                </button>
+              </div>
+              <div id="adminSigFilePlaceholder" class="sigpad-file-placeholder">
+                <i data-lucide="upload" style="width:20px;height:20px;"></i>
+                <p>คลิกเพื่อแนบไฟล์รูปลายเซ็น (PNG/JPG)<br>แนะนำ PNG พื้นหลังโปร่งใส</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

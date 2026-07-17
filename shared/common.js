@@ -122,6 +122,53 @@ function esc(s)  { return (s || '').toString().replace(/\\/g, '\\\\').replace(/'
 function esc2(s) { return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 /* ════════════════════════════════
+   Signature file upload helper
+   ใช้ร่วมกันทั้งหน้าครูส่งงาน (portfolio-teacher) และหน้าแอดมินตรวจงาน
+   (portfolio-admin) สำหรับฟีเจอร์ "แนบไฟล์ลายเซ็น" แทน/คู่กับการวาดเอง
+
+   รับเฉพาะไฟล์รูปภาพ PNG/JPG — แนะนำ PNG พื้นหลังโปร่งใสให้ผลลัพธ์สวยกว่า
+   ตอนพิมพ์เอกสารราชการ แต่ก็รับรูปถ่ายลายเซ็น (JPG พื้นหลังทึบ) ได้เช่นกัน
+
+   ย่อขนาดภาพด้วย canvas ก่อนแปลงเป็น dataURL กันไฟล์ใหญ่เกินไป (คงพื้นหลัง
+   โปร่งใสของ PNG ไว้เสมอ เพราะ ctx.drawImage บน canvas เปล่าไม่ fill พื้นหลัง)
+   ════════════════════════════════ */
+var SIGNATURE_FILE_MAX_MB  = 5;   /* ขนาดไฟล์ต้นฉบับสูงสุดที่ยอมรับ */
+var SIGNATURE_FILE_MAX_DIM = 500; /* px ด้านยาวสุดหลังย่อ */
+
+function readSignatureImageFile(file, onSuccess, onError) {
+  if (!file) { if (onError) onError('ไม่พบไฟล์'); return; }
+  var okTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+  if (okTypes.indexOf(file.type) === -1) {
+    if (onError) onError('รองรับเฉพาะไฟล์รูปภาพ PNG หรือ JPG เท่านั้น');
+    return;
+  }
+  if (file.size > SIGNATURE_FILE_MAX_MB * 1024 * 1024) {
+    if (onError) onError('ไฟล์ใหญ่เกินไป (สูงสุด ' + SIGNATURE_FILE_MAX_MB + ' MB)');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      var scale = Math.min(1, SIGNATURE_FILE_MAX_DIM / Math.max(w, h));
+      var cw = Math.max(1, Math.round(w * scale));
+      var ch = Math.max(1, Math.round(h * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = cw; canvas.height = ch;
+      var ctx = canvas.getContext('2d');
+      /* ไม่ fill สีพื้นหลัง เพื่อคงความโปร่งใสของ PNG ต้นฉบับไว้ */
+      ctx.drawImage(img, 0, 0, cw, ch);
+      if (onSuccess) onSuccess(canvas.toDataURL('image/png'));
+    };
+    img.onerror = function() { if (onError) onError('ไม่สามารถอ่านไฟล์รูปภาพนี้ได้'); };
+    img.src = e.target.result;
+  };
+  reader.onerror = function() { if (onError) onError('อ่านไฟล์ไม่สำเร็จ'); };
+  reader.readAsDataURL(file);
+}
+
+/* ════════════════════════════════
    Portfolio status order (ใช้เทียบ/sort ลำดับสถานะเอกสาร)
    ✏️ เดิมประกาศซ้ำ 3 จุดใน portfolio-admin.js (ค่าตรงกันทุกจุด) — รวมมาไว้ที่นี่
    หมายเหตุ: ไม่รวมกับ ORDER ใน buildWorkflowBar() ของ portfolio-admin.js
