@@ -598,6 +598,212 @@ function renderDaily(){
     </div>`;
   }).join('');
 }
+// ── REPORT (รายงาน) ──
+let rptWeekRange=8;
+let rptWeekChart,rptMonthChart,rptMonthDonut,rptCompareChart,rptYearChart;
+
+function switchReportSub(panel,el){
+  document.querySelectorAll('#tab-report .sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#tab-report .sub-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panelRpt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
+  if(panel==='week') renderReportWeek();
+  if(panel==='month') renderReportMonth();
+  if(panel==='compare') renderReportCompare();
+  if(panel==='year') renderReportYear();
+}
+
+function renderReportAll(){
+  populateReportSelectors();
+  renderReportWeek();
+}
+
+/* หาเลขสัปดาห์ ISO-like: จันทร์เป็นวันแรกของสัปดาห์ */
+function _weekStart(d){const dt=new Date(d+'T00:00:00');const day=(dt.getDay()+6)%7;dt.setDate(dt.getDate()-day);return dt.toISOString().split('T')[0];}
+function _weekLabel(wStart){const s=new Date(wStart+'T00:00:00');const e=new Date(s);e.setDate(s.getDate()+6);
+  return s.toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' – '+e.toLocaleDateString('th-TH',{day:'numeric',month:'short'});}
+
+function setRptWeekRange(n,el){
+  rptWeekRange=n;
+  document.querySelectorAll('#rptWeekNav .ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderReportWeek();
+}
+
+function populateReportSelectors(){
+  const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort();
+  const monthSel=document.getElementById('rptMonthSelect');
+  const curMonth=monthSel.value;
+  monthSel.innerHTML=months.map(m=>{const d=new Date(m+'-01T00:00:00');return `<option value="${m}">${d.toLocaleDateString('th-TH',{month:'long',year:'numeric'})}</option>`;}).join('');
+  if(months.length) monthSel.value=months.includes(curMonth)?curMonth:months[months.length-1];
+
+  const years=[...new Set(transactions.map(t=>t.date.slice(0,4)))].sort();
+  const yearSel=document.getElementById('rptYearSelect');
+  const curYear=yearSel.value;
+  yearSel.innerHTML=years.map(y=>`<option value="${y}">ปี ${y}</option>`).join('');
+  if(years.length) yearSel.value=years.includes(curYear)?curYear:years[years.length-1];
+}
+
+/* ── รายสัปดาห์ ── */
+function renderReportWeek(){
+  const byWeek={};
+  transactions.forEach(t=>{
+    const w=_weekStart(t.date);
+    if(!byWeek[w]) byWeek[w]={income:0,expense:0};
+    byWeek[w].income+=t.income; byWeek[w].expense+=t.expense;
+  });
+  const weeks=Object.keys(byWeek).sort().slice(-rptWeekRange);
+  const labels=weeks.map(_weekLabel);
+  const incomes=weeks.map(w=>byWeek[w].income);
+  const expenses=weeks.map(w=>byWeek[w].expense);
+  const nets=weeks.map((w,i)=>incomes[i]-expenses[i]);
+
+  const totalIn=incomes.reduce((a,b)=>a+b,0);
+  const totalOut=expenses.reduce((a,b)=>a+b,0);
+  const avgIn=weeks.length?totalIn/weeks.length:0;
+  const bestWeekIdx=nets.length?nets.indexOf(Math.max(...nets)):-1;
+
+  document.getElementById('rptWeekKpi').innerHTML=`
+    <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวม</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${weeks.length} สัปดาห์</div></div>
+    <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวม</div><div class="kpi-value">฿${fmt(totalOut)}</div><div class="kpi-sub">${weeks.length} สัปดาห์</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิรวม</div><div class="kpi-value" style="color:${(totalIn-totalOut)>=0?'var(--green)':'var(--red)'}">฿${fmt(totalIn-totalOut)}</div><div class="kpi-sub">${(totalIn-totalOut)>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/สัปดาห์</div><div class="kpi-value">฿${fmt(avgIn)}</div><div class="kpi-sub">${bestWeekIdx>=0?'สัปดาห์ดีสุด: '+labels[bestWeekIdx]:'-'}</div></div>
+  `;
+
+  if(rptWeekChart) rptWeekChart.destroy();
+  rptWeekChart=new Chart(document.getElementById('rptWeekChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
+      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
+      {type:'line',label:'สุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:3,order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
+  });
+
+  document.getElementById('rptWeekTable').innerHTML=`<table><thead><tr>
+      <th>สัปดาห์</th><th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th><th style="text-align:right">สุทธิ</th>
+    </tr></thead><tbody>
+      ${weeks.map((w,i)=>`<tr>
+        <td style="font-weight:600">${labels[i]}</td>
+        <td class="td-in" style="text-align:right">฿${fmt(incomes[i])}</td>
+        <td class="td-out" style="text-align:right">฿${fmt(expenses[i])}</td>
+        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'var(--green)':'var(--red)'}">฿${fmt(nets[i])}</td>
+      </tr>`).reverse().join('')}
+    </tbody></table>`;
+}
+
+/* ── รายเดือน ── */
+function renderReportMonth(){
+  const month=document.getElementById('rptMonthSelect').value;
+  if(!month) return;
+  const rows=transactions.filter(t=>t.date.startsWith(month));
+  const days=[...new Set(rows.map(t=>t.date))].sort();
+  const labels=days.map(fmtDateShort);
+  const incomes=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
+  const expenses=days.map(d=>rows.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
+
+  const totalIn=rows.reduce((s,t)=>s+t.income,0);
+  const totalOut=rows.reduce((s,t)=>s+t.expense,0);
+  const net=totalIn-totalOut;
+
+  document.getElementById('rptMonthKpi').innerHTML=`
+    <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวม</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${days.length} วันที่มีรายการ</div></div>
+    <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวม</div><div class="kpi-value">฿${fmt(totalOut)}</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิ</div><div class="kpi-value" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/วัน</div><div class="kpi-value">฿${fmt(days.length?totalIn/days.length:0)}</div></div>
+  `;
+
+  if(rptMonthChart) rptMonthChart.destroy();
+  rptMonthChart=new Chart(document.getElementById('rptMonthChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+
+  const shopMap={};
+  rows.filter(t=>t.income>0).forEach(t=>{shopMap[t.name]=(shopMap[t.name]||0)+t.income;});
+  const slabels=Object.keys(shopMap);const sdata=Object.values(shopMap);const bg=slabels.map((_,i)=>colors[i%colors.length]);
+  if(rptMonthDonut) rptMonthDonut.destroy();
+  rptMonthDonut=new Chart(document.getElementById('rptMonthDonut'),{type:'doughnut',data:{labels:slabels,datasets:[{data:sdata,backgroundColor:bg,borderWidth:2,borderColor:'white'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});
+  document.getElementById('rptMonthLegend').innerHTML=slabels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${bg[i]}"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div><div style="font-size:10px;color:var(--text2)">฿${fmt(sdata[i])}</div></div></div>`).join('');
+}
+
+/* ── เปรียบเทียบรายเดือน ── */
+function renderReportCompare(){
+  const byMonth={};
+  transactions.forEach(t=>{
+    const m=t.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m]={income:0,expense:0};
+    byMonth[m].income+=t.income; byMonth[m].expense+=t.expense;
+  });
+  const months=Object.keys(byMonth).sort();
+  const labels=months.map(m=>{const d=new Date(m+'-01T00:00:00');return d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'});});
+  const incomes=months.map(m=>byMonth[m].income);
+  const expenses=months.map(m=>byMonth[m].expense);
+  const nets=months.map((m,i)=>incomes[i]-expenses[i]);
+
+  const bestIdx=nets.length?nets.indexOf(Math.max(...nets)):-1;
+  const worstIdx=nets.length?nets.indexOf(Math.min(...nets)):-1;
+  const avgNet=nets.length?nets.reduce((a,b)=>a+b,0)/nets.length:0;
+  let momChange='-';
+  if(nets.length>=2){
+    const prev=nets[nets.length-2],cur=nets[nets.length-1];
+    const pct=prev!==0?((cur-prev)/Math.abs(prev)*100):0;
+    momChange=(pct>=0?'+':'')+pct.toFixed(1)+'% เทียบเดือนก่อน';
+  }
+
+  document.getElementById('rptCompareKpi').innerHTML=`
+    <div class="kpi balance"><div class="kpi-icon">🏆</div><div class="kpi-label">เดือนดีที่สุด</div><div class="kpi-value" style="font-size:18px">${bestIdx>=0?labels[bestIdx]:'-'}</div><div class="kpi-sub">${bestIdx>=0?'สุทธิ ฿'+fmt(nets[bestIdx]):''}</div></div>
+    <div class="kpi expense"><div class="kpi-icon">📉</div><div class="kpi-label">เดือนต่ำที่สุด</div><div class="kpi-value" style="font-size:18px">${worstIdx>=0?labels[worstIdx]:'-'}</div><div class="kpi-sub">${worstIdx>=0?'สุทธิ ฿'+fmt(nets[worstIdx]):''}</div></div>
+    <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยสุทธิ/เดือน</div><div class="kpi-value">฿${fmt(avgNet)}</div></div>
+    <div class="kpi income"><div class="kpi-icon">📈</div><div class="kpi-label">แนวโน้มล่าสุด</div><div class="kpi-value" style="font-size:16px">${momChange}</div></div>
+  `;
+
+  if(rptCompareChart) rptCompareChart.destroy();
+  rptCompareChart=new Chart(document.getElementById('rptCompareChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
+      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
+      {type:'line',label:'สุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:4,order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
+  });
+
+  document.getElementById('rptCompareTable').innerHTML=`<table><thead><tr>
+      <th>เดือน</th><th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th><th style="text-align:right">สุทธิ</th>
+    </tr></thead><tbody>
+      ${months.map((m,i)=>`<tr>
+        <td style="font-weight:600">${labels[i]}</td>
+        <td class="td-in" style="text-align:right">฿${fmt(incomes[i])}</td>
+        <td class="td-out" style="text-align:right">฿${fmt(expenses[i])}</td>
+        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'var(--green)':'var(--red)'}">฿${fmt(nets[i])}</td>
+      </tr>`).reverse().join('')}
+    </tbody></table>`;
+}
+
+/* ── รายปี ── */
+function renderReportYear(){
+  const year=document.getElementById('rptYearSelect').value;
+  if(!year) return;
+  const rows=transactions.filter(t=>t.date.startsWith(year));
+  const monthNames=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const incomes=monthNames.map((_,i)=>rows.filter(t=>parseInt(t.date.slice(5,7),10)-1===i).reduce((s,t)=>s+t.income,0));
+  const expenses=monthNames.map((_,i)=>rows.filter(t=>parseInt(t.date.slice(5,7),10)-1===i).reduce((s,t)=>s+t.expense,0));
+
+  const totalIn=rows.reduce((s,t)=>s+t.income,0);
+  const totalOut=rows.reduce((s,t)=>s+t.expense,0);
+  const net=totalIn-totalOut;
+  const activeMonths=monthNames.filter((_,i)=>incomes[i]>0||expenses[i]>0).length;
+
+  document.getElementById('rptYearKpi').innerHTML=`
+    <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวมทั้งปี</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${activeMonths} เดือนที่มีข้อมูล</div></div>
+    <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวมทั้งปี</div><div class="kpi-value">฿${fmt(totalOut)}</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิทั้งปี</div><div class="kpi-value" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/เดือน</div><div class="kpi-value">฿${fmt(activeMonths?totalIn/activeMonths:0)}</div></div>
+  `;
+
+  if(rptYearChart) rptYearChart.destroy();
+  rptYearChart=new Chart(document.getElementById('rptYearChart'),{type:'bar',data:{labels:monthNames,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:11}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+}
+
 function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
@@ -627,6 +833,7 @@ function switchTab(id,el){
   if(tabBtn) tabBtn.classList.add('active');
   if(id==='dashboard') renderDashboard();
   if(id==='daily') renderDaily();
+  if(id==='report') renderReportAll();
   if(id==='manage'){ renderManage(); renderDailyEntry(); }
 }
 

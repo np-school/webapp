@@ -231,6 +231,7 @@
         <div class="sub-tab-bar" style="margin-bottom:0">
           <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
           <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
+          <button class="sub-tab" id="sb-report" onclick="switchTab('report',this)">รายงาน</button>
           <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">จัดการ</button>
         </div>
       </div>
@@ -380,6 +381,105 @@
         </div>
 
         <div id="dailyList"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ REPORT (รายงาน) – with subtabs ═══════════ -->
+    <div class="tab-content" id="tab-report">
+      <div class="page-inner" style="padding-top:14px">
+
+        <div class="page-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#d97706,#fde68a);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="bar-chart-3" style="width:20px;height:20px;color:white;"></i>
+              </div>
+              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายงานสรุป</h1>
+            </div>
+            <p style="font-size:13px;color:#64748b;padding-left:50px;">สถิติรายรับ–รายจ่าย แยกตามช่วงเวลา</p>
+          </div>
+        </div>
+
+        <!-- Sub Tab Bar -->
+        <div class="sub-tab-bar">
+          <button class="sub-tab active" id="subRptWeek" onclick="switchReportSub('week',this)">รายสัปดาห์</button>
+          <button class="sub-tab" id="subRptMonth" onclick="switchReportSub('month',this)">รายเดือน</button>
+          <button class="sub-tab" id="subRptCompare" onclick="switchReportSub('compare',this)">เปรียบเทียบรายเดือน</button>
+          <button class="sub-tab" id="subRptYear" onclick="switchReportSub('year',this)">รายปี</button>
+        </div>
+
+        <!-- Panel: Weekly -->
+        <div class="sub-panel active" id="panelRptWeek">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
+            <div style="font-size:12px;color:var(--text2)">แสดงข้อมูลย้อนหลัง 8 สัปดาห์ล่าสุด (จันทร์–อาทิตย์)</div>
+            <div class="period-tabs" id="rptWeekNav">
+              <button class="ptab active" onclick="setRptWeekRange(8,this)">8 สัปดาห์</button>
+              <button class="ptab" onclick="setRptWeekRange(12,this)">12 สัปดาห์</button>
+              <button class="ptab" onclick="setRptWeekRange(26,this)">26 สัปดาห์</button>
+            </div>
+          </div>
+          <div class="kpi-grid" id="rptWeekKpi"></div>
+          <div class="card" style="margin-bottom:var(--gap-section)">
+            <div class="card-title">รายรับ – รายจ่ายรายสัปดาห์</div>
+            <div class="chart-wrap"><canvas id="rptWeekChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">รายละเอียดรายสัปดาห์</div>
+            <div class="tbl-wrap" id="rptWeekTable"></div>
+          </div>
+        </div>
+
+        <!-- Panel: Monthly -->
+        <div class="sub-panel" id="panelRptMonth">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
+            <div style="font-size:12px;color:var(--text2)">สถิติรายวันภายในเดือนที่เลือก</div>
+            <select id="rptMonthSelect" style="width:180px" onchange="renderReportMonth()"></select>
+          </div>
+          <div class="kpi-grid" id="rptMonthKpi"></div>
+          <div class="chart-grid" style="margin-bottom:var(--gap-section)">
+            <div class="card">
+              <div class="card-title">รายรับ – รายจ่ายรายวันในเดือน</div>
+              <div class="chart-wrap"><canvas id="rptMonthChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-title">สัดส่วนรายรับแต่ละร้าน</div>
+              <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight)">
+                <div style="flex:1;min-width:130px"><div class="chart-wrap" style="height:190px"><canvas id="rptMonthDonut"></canvas></div></div>
+                <div class="legend-list" id="rptMonthLegend" style="min-width:130px;justify-content:center;display:flex;flex-direction:column"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel: Compare Months -->
+        <div class="sub-panel" id="panelRptCompare">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
+            <div style="font-size:12px;color:var(--text2)">เปรียบเทียบยอดรวมของแต่ละเดือน (ทุกเดือนที่มีข้อมูล)</div>
+          </div>
+          <div class="kpi-grid" id="rptCompareKpi"></div>
+          <div class="card" style="margin-bottom:var(--gap-section)">
+            <div class="card-title">เปรียบเทียบรายรับ – รายจ่ายรายเดือน</div>
+            <div class="chart-wrap"><canvas id="rptCompareChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">ตารางเปรียบเทียบรายเดือน</div>
+            <div class="tbl-wrap" id="rptCompareTable"></div>
+          </div>
+        </div>
+
+        <!-- Panel: Yearly -->
+        <div class="sub-panel" id="panelRptYear">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
+            <div style="font-size:12px;color:var(--text2)">สรุปยอดรวมรายปี แยกตาม 12 เดือน</div>
+            <select id="rptYearSelect" style="width:140px" onchange="renderReportYear()"></select>
+          </div>
+          <div class="kpi-grid" id="rptYearKpi"></div>
+          <div class="card">
+            <div class="card-title">รายรับ – รายจ่ายรายเดือนในปี</div>
+            <div class="chart-wrap"><canvas id="rptYearChart"></canvas></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
