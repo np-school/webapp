@@ -1166,6 +1166,10 @@ label {
 .tab-content.active { display: block; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
+/* modifier: สำหรับ panel ที่เนื้อหาต้องเป็น flex container ตอน active (ไม่ใช่ block)
+   ใช้คู่กับ class="tab-pane flex" แล้วประกาศ flex-direction/gap เพิ่มเองต่อ panel ผ่าน inline style
+   (3 class selector จึง specificity สูงกว่า .tab-pane.active เฉยๆ ไม่ต้องสนลำดับในไฟล์) */
+.tab-pane.flex.active { display: flex; }
 
 /* ═══════════════════════════════════════════════
    Pill-style sub tabs — CENTRAL component
@@ -1222,6 +1226,17 @@ label {
 /* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
 .sub-tab-bar.compact .sub-tab { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+
+/* modifier: แถบที่มี tab เยอะ (5+) ต้อง scroll แนวนอนได้บนจอแคบ
+   เดิมมาจาก profile.html ที่ประกาศ .subtab-bar ของตัวเองซ้ำเพื่อการนี้โดยเฉพาะ
+   ย้ายมารวมไว้ที่นี่แทน ให้หน้าไหนมี tab เยอะก็ใช้ class="sub-tab-bar scroll" ได้เลย */
+.sub-tab-bar.scroll { width: 100%; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.sub-tab-bar.scroll::-webkit-scrollbar { display: none; }
+.sub-tab-bar.scroll .sub-tab { white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 640px) {
+  .sub-tab-bar.scroll { gap: 2px; }
+  .sub-tab-bar.scroll .sub-tab { padding: 7px 11px; font-size: 12px; }
+}
 
 .sub-panel { display: none; }
 .sub-panel.active { display: block; }

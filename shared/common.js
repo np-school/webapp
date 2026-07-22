@@ -122,6 +122,65 @@ function esc(s)  { return (s || '').toString().replace(/\\/g, '\\\\').replace(/'
 function esc2(s) { return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 /* ════════════════════════════════
+   Subtab system กลาง
+   - แทนที่ switchSubtab/switchSubTab/switchGTab/switchSettingsTab ฯลฯ
+     ที่เดิมประกาศแยกในแต่ละหน้า (profile.js, portfolio-admin.js, room-admin.js,
+     foodcourt-admin.js, settings.js, guide.js) — logic เหมือนกันหมดแค่ id ต่างกัน
+   - ใช้คู่กับ .sub-tab-bar/.sub-tab/.tab-pane ใน shared/styles-new.css
+   - Markup ที่ต้องมี:
+       <div class="sub-tab-bar" id="...">                 <!-- container ที่ส่งเข้า initSubtabs -->
+         <button class="sub-tab" data-tab="bookings">...</button>
+         <button class="sub-tab" data-tab="summary">...</button>
+       </div>
+       <div class="tab-pane" data-panel="bookings">...</div>
+       <div class="tab-pane" data-panel="summary">...</div>
+   - onChange แยก "โหลดข้อมูล/side-effect" ออกจาก "สลับ panel" โดยเจตนา
+     เพื่อไม่ให้ if-chain โตขึ้นเรื่อยๆ ในฟังก์ชันสลับแท็บเหมือนเดิม
+   - รองรับ subtab ซ้อนชั้น (เช่น foodcourt-admin) ได้เพราะ query เฉพาะ
+     ภายใน container ที่ส่งมา ไม่ query แบบ global เหมือนโค้ดเดิมบางหน้า
+   ════════════════════════════════ */
+function initSubtabs(container, opts) {
+  opts = opts || {};
+  var root = typeof container === 'string' ? document.getElementById(container) : container;
+  if (!root) return null;
+
+  var btns = Array.prototype.slice.call(root.querySelectorAll('.sub-tab[data-tab]'));
+  var scope = root.closest('[data-subtab-scope]') || root.parentElement || document;
+  var panels = Array.prototype.slice.call(scope.querySelectorAll('.tab-pane[data-panel]'));
+
+  function activate(tabId, fireOnChange) {
+    for (var i = 0; i < btns.length; i++) {
+      var isMatch = btns[i].getAttribute('data-tab') === tabId;
+      btns[i].classList.toggle('active', isMatch);
+    }
+    for (var j = 0; j < panels.length; j++) {
+      panels[j].classList.toggle('active', panels[j].getAttribute('data-panel') === tabId);
+    }
+    if (fireOnChange !== false && typeof opts.onChange === 'function') {
+      opts.onChange(tabId);
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      activate(this.getAttribute('data-tab'));
+    });
+  });
+
+  var activeBtn = null;
+  for (var k = 0; k < btns.length; k++) {
+    if (btns[k].classList.contains('active')) { activeBtn = btns[k]; break; }
+  }
+  var startTab = opts.default || (activeBtn ? activeBtn.getAttribute('data-tab')
+    : (btns[0] ? btns[0].getAttribute('data-tab') : null));
+
+  if (startTab) activate(startTab, !!opts.fireOnInit);
+
+  return { activate: activate };
+}
+
+/* ════════════════════════════════
    Signature file upload helper
    ใช้ร่วมกันทั้งหน้าครูส่งงาน (portfolio-teacher) และหน้าแอดมินตรวจงาน
    (portfolio-admin) สำหรับฟีเจอร์ "แนบไฟล์ลายเซ็น" แทน/คู่กับการวาดเอง

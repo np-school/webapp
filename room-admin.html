@@ -103,20 +103,20 @@
 
         <!-- Sub-tab bar (ใช้ class กลาง .sub-tab-bar/.sub-tab จาก shared/styles-new.css
              เรียง: คำขอทั้งหมด → สรุปรายห้อง → จัดการห้อง (จัดการ อยู่ท้ายสุดเสมอ) -->
-        <div class="sub-tab-bar" style="margin:0 20px;">
-          <button class="sub-tab active" id="subtab-btn-bookings" onclick="switchSubTab('bookings',this)">
+        <div class="sub-tab-bar" id="roomSubtabBar" style="margin:0 20px;">
+          <button class="sub-tab active" data-tab="bookings">
             <i data-lucide="layout-list" style="width:14px;height:14px;"></i>คำขอทั้งหมด
           </button>
-          <button class="sub-tab" id="subtab-btn-summary" onclick="switchSubTab('summary',this);renderSummary()">
+          <button class="sub-tab" data-tab="summary">
             <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i>สรุปรายห้อง
           </button>
-          <button class="sub-tab" id="subtab-btn-rooms" onclick="switchSubTab('rooms',this)">
+          <button class="sub-tab" data-tab="rooms">
             <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
           </button>
         </div>
 
         <!-- Sub-tab: Bookings -->
-        <div id="tab-bookings" class="tab-pane active" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-bookings" data-panel="bookings" class="tab-pane active" style="padding:20px;flex:1;overflow:auto;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">
             <div style="display:flex;gap:var(--gap-tight);flex-wrap:wrap;">
               <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
@@ -131,7 +131,7 @@
         </div>
 
         <!-- Sub-tab: Rooms -->
-        <div id="tab-rooms" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-rooms" data-panel="rooms" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-section);">
             <h3 style="font-size:15px;font-weight:800;color:var(--text);">รายการห้อง/สถานที่</h3>
             <button class="btn-primary" onclick="openRoomModal()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มห้องใหม่</button>
@@ -140,7 +140,7 @@
         </div>
 
         <!-- Sub-tab: Summary -->
-        <div id="tab-summary" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-summary" data-panel="summary" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
 
           <!-- Header + period pills -->
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">

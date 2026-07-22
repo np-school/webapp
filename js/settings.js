@@ -117,23 +117,23 @@ function renderPage() {
       '</div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar">' +
-      '<button class="sub-tab active" id="stab-theme" onclick="switchSettingsTab(\'theme\')">' +
+    '<div class="sub-tab-bar" id="settingsSubtabBar">' +
+      '<button class="sub-tab active" data-tab="theme">' +
         '<i data-lucide="palette" style="width:14px;height:14px;"></i> ธีมสี' +
       '</button>' +
       (showAnnTab ?
-        '<button class="sub-tab" id="stab-announcements" onclick="switchSettingsTab(\'announcements\')">' +
+        '<button class="sub-tab" data-tab="announcements">' +
           '<i data-lucide="bell" style="width:14px;height:14px;"></i> ประกาศข่าว' +
         '</button>' : '') +
     '</div>' +
 
-    '<div class="tab-pane active" id="spane-theme">' +
+    '<div class="tab-pane active" data-panel="theme">' +
       '<div class="settings-section-title">ธีมสีเว็บไซต์</div>' +
       (isSuperAdmin ? renderThemeEditor() : renderThemeReadOnly()) +
     '</div>' +
 
     (showAnnTab ?
-      '<div class="tab-pane" id="spane-announcements">' +
+      '<div class="tab-pane" data-panel="announcements">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
           '<div class="settings-section-title" style="margin-bottom:0;">ประกาศข่าวสำหรับ Admin</div>' +
           '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--accent,#1d4ed8);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
@@ -500,13 +500,6 @@ function toggleAnnActive(id, current) {
     .then(function() { showToast(!current ? 'เปิดใช้งานแล้ว' : 'ปิดการแสดงผลแล้ว'); loadAnnouncements(); });
 }
 
-function switchSettingsTab(name) {
-  document.querySelectorAll('.sub-tab-bar .sub-tab').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById('stab-'+name).classList.add('active');
-  document.getElementById('spane-'+name).classList.add('active');
-  if (name === 'announcements') loadAnnouncements();
-}
 /* อัปเดต mockup preview สดๆ ตามค่าที่กำลังกรอก (ยังไม่ได้บันทึก)
    navbar และปุ่ม ในเว็บจริงใช้สี "หลัก" (primary) เหมือนกัน ส่วนสี "เข้ม" มีผลแค่ตอน hover
    ทำให้ preview ตรงกับพฤติกรรมจริง ไม่ใช่ผูกกับสีเข้มแบบเดิม */
@@ -580,7 +573,9 @@ buildPage({
         isAdmin = isSuperAdmin || results[0].exists;
         siteThemeConfig = results[1].exists ? results[1].data() : {};
         contentEl.innerHTML = renderPage();
-        lucide.createIcons();
+        initSubtabs('settingsSubtabBar', {
+          onChange: function (tab) { if (tab === 'announcements') loadAnnouncements(); }
+        });
         /* init type radio click handlers */
         document.querySelectorAll('.ann-type-opt').forEach(function(el) {
           el.addEventListener('click', function() { setAnnType(el.dataset.type); });
@@ -591,7 +586,7 @@ buildPage({
         isAdmin = false;
         siteThemeConfig = {};
         contentEl.innerHTML = renderPage();
-        lucide.createIcons();
+        initSubtabs('settingsSubtabBar');
         setupScrollTopButton();
       });
   }

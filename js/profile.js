@@ -1392,20 +1392,19 @@ function selectSemTab(idx){
   buildSemTabs(data);
 }
 
-/* ── Subtab switch ── */
-function switchSubtab(id, btn){
-  document.querySelectorAll('.subtab-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.subtab-btn').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('panel-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='personal')    { loadPersonal(); loadEducation(); }
-  if(id==='career')      loadCareerHistory();
-
-  if(id==='teaching')    loadTeaching();
-  if(id==='duties')      loadDuties();
-  if(id==='development') loadDevelopment();
-  if(id==='media')       loadMedia();
-  if(id==='sar')         renderSarOverview();
+/* ── Subtab init ── */
+function initProfileSubtabs(){
+  initSubtabs('subtabBar', {
+    onChange: function (id) {
+      if (id === 'personal')    { loadPersonal(); loadEducation(); }
+      if (id === 'career')      loadCareerHistory();
+      if (id === 'teaching')    loadTeaching();
+      if (id === 'duties')      loadDuties();
+      if (id === 'development') loadDevelopment();
+      if (id === 'media')       loadMedia();
+      if (id === 'sar')         renderSarOverview();
+    }
+  });
 }
 
 function addEducationItem(editId, prefill){
@@ -1920,6 +1919,7 @@ if (isEmbed) {
       if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
 
       lucide.createIcons();
+      initProfileSubtabs();
       init();
       setupScrollTopButton();
     }

@@ -2812,20 +2812,10 @@ function selectFile(idx) {
   renderMultiFileList(sub, sub.files, idx);
 }
 
-function switchSubTab(tab) {
+function onPortfolioSubtabChange(tab) {
   currentSubTab = tab;
-  document.getElementById('subTabOverview').className  = 'sub-tab' + (tab==='overview'  ? ' active' : '');
-  document.getElementById('subTabGroup').className     = 'sub-tab' + (tab==='group'     ? ' active' : '');
-  document.getElementById('subTabTeacher').className   = 'sub-tab' + (tab==='teacher'   ? ' active' : '');
-  document.getElementById('subTabDocTypes').className  = 'sub-tab' + (tab==='doctypes'  ? ' active' : '');
-  document.getElementById('panelOverview').style.display  = tab==='overview'  ? 'flex' : 'none';
-  document.getElementById('panelGroup').style.display     = tab==='group'     ? 'flex' : 'none';
-  document.getElementById('panelTeacher').style.display   = tab==='teacher'   ? 'flex' : 'none';
-  document.getElementById('panelDocTypes').style.display  = tab==='doctypes'  ? 'flex' : 'none';
-
-  if (tab === 'doctypes') { loadDocTypeList(); lucide.createIcons(); }
-  if (tab === 'teacher')  { lucide.createIcons(); }
-  if (tab === 'group')    { renderGroupPanel(); lucide.createIcons(); }
+  if (tab === 'doctypes') loadDocTypeList();
+  if (tab === 'group')    renderGroupPanel();
 }
 
 /* ════════════════════════════════════════════
@@ -3281,6 +3271,7 @@ buildPage({
     if (tpl) contentEl.appendChild(document.importNode(tpl.content, true));
 
     lucide.createIcons();
+    initSubtabs('portfolioSubtabBar', { onChange: onPortfolioSubtabChange });
     setupScrollTopButton();
 
     /* ── ตรวจสิทธิ์เพิ่มเติม (portfolio / headOfGroup) ── */

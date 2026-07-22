@@ -517,20 +517,6 @@
     });
   }
 
-  /* ════════════════════════════════
-     Sub-tab switching (bookings / rooms)
-     ════════════════════════════════ */
-  function switchSubTab(name, btn) {
-    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
-    document.querySelectorAll('.sub-tab-bar .sub-tab').forEach(function(b){ b.classList.remove('active'); });
-    document.getElementById('tab-' + name).classList.add('active');
-    if (btn) btn.classList.add('active');
-    lucide.createIcons();
-  }
-
-  /* compat: switchTab ยังถูกเรียกจาก common.js */
-  function switchTab(name, btn) { switchSubTab(name, btn); }
-
   function updateStats(){var p=0,a=0,r=0;allBookings.forEach(function(b){if(b.status==='pending')p++;else if(b.status==='approved')a++;else if(b.status==='rejected')r++;});document.getElementById('statPending').textContent=p;document.getElementById('statApproved').textContent=a;document.getElementById('statRejected').textContent=r;document.getElementById('statTotal').textContent=allBookings.length;}
 
   function setFilter(f,el){currentFilter=f;currentPage=1;document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderBookings();}
@@ -704,6 +690,11 @@
       if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
 
       initListeners();
+      initSubtabs('roomSubtabBar', {
+        onChange: function (tab) {
+          if (tab === 'summary') renderSummary();
+        }
+      });
       lucide.createIcons();
       setupScrollTopButton();
     }

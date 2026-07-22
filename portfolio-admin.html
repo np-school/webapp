@@ -515,17 +515,17 @@
 
   <!-- Sub Tab Bar -->
   <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
-    <div class="sub-tab-bar purple">
-      <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
+    <div class="sub-tab-bar purple" id="portfolioSubtabBar">
+      <button class="sub-tab active" data-tab="overview">
         <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
       </button>
-      <button class="sub-tab" id="subTabGroup" onclick="switchSubTab('group')">
+      <button class="sub-tab" data-tab="group">
         <i data-lucide="layers" style="width:14px;height:14px;"></i> รายกลุ่มสาระ
       </button>
-      <button class="sub-tab" id="subTabTeacher" onclick="switchSubTab('teacher')">
+      <button class="sub-tab" data-tab="teacher">
         <i data-lucide="user-search" style="width:14px;height:14px;"></i> รายบุคคล
       </button>
-      <button class="sub-tab" id="subTabDocTypes" onclick="switchSubTab('doctypes')">
+      <button class="sub-tab" data-tab="doctypes">
         <i data-lucide="list-checks" style="width:14px;height:14px;"></i> จัดการหัวข้องาน
       </button>
     </div>
@@ -533,7 +533,7 @@
   </div>
 
   <!-- ══ SUB TAB: OVERVIEW ══ -->
-  <div id="panelOverview" style="display:flex;flex-direction:column;gap:var(--gap-section);">
+  <div id="panelOverview" class="tab-pane flex active" data-panel="overview" style="flex-direction:column;gap:var(--gap-section);">
 
     <!-- Charts Panel -->
     <div id="chartsPanel">
@@ -661,7 +661,7 @@
   </div><!-- end panelOverview -->
 
   <!-- ══ SUB TAB: GROUP SUMMARY ══ -->
-  <div id="panelGroup" style="display:none;flex-direction:column;gap:16px;">
+  <div id="panelGroup" class="tab-pane flex" data-panel="group" style="flex-direction:column;gap:16px;">
     <div class="card" style="padding:20px 22px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-section);">
         <div>
@@ -692,7 +692,7 @@
   </div><!-- end panelGroup -->
 
   <!-- ══ SUB TAB: DOC TYPE MANAGER ══ -->
-  <div id="panelDocTypes" style="display:none;flex-direction:column;gap:16px;">
+  <div id="panelDocTypes" class="tab-pane flex" data-panel="doctypes" style="flex-direction:column;gap:16px;">
     <div class="card" style="padding:20px 22px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
         <div>
@@ -720,7 +720,7 @@
   </div><!-- end panelDocTypes -->
 
   <!-- ══ SUB TAB: INDIVIDUAL TEACHER ══ -->
-  <div id="panelTeacher" style="display:none;flex-direction:column;gap:16px;">
+  <div id="panelTeacher" class="tab-pane flex" data-panel="teacher" style="flex-direction:column;gap:16px;">
     <div class="card" style="padding:18px 20px;">
       <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;">
         <div style="flex:1;min-width:220px;position:relative;">
