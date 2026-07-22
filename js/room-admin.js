@@ -522,7 +522,7 @@
      ════════════════════════════════ */
   function switchSubTab(name, btn) {
     document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
-    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.sub-tab-bar .sub-tab').forEach(function(b){ b.classList.remove('active'); });
     document.getElementById('tab-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
     lucide.createIcons();

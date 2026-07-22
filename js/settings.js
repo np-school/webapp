@@ -117,23 +117,23 @@ function renderPage() {
       '</div>' +
     '</div>' +
 
-    '<div class="settings-tabbar">' +
-      '<button class="settings-tab active" id="stab-theme" onclick="switchSettingsTab(\'theme\')">' +
+    '<div class="sub-tab-bar">' +
+      '<button class="sub-tab active" id="stab-theme" onclick="switchSettingsTab(\'theme\')">' +
         '<i data-lucide="palette" style="width:14px;height:14px;"></i> ธีมสี' +
       '</button>' +
       (showAnnTab ?
-        '<button class="settings-tab" id="stab-announcements" onclick="switchSettingsTab(\'announcements\')">' +
+        '<button class="sub-tab" id="stab-announcements" onclick="switchSettingsTab(\'announcements\')">' +
           '<i data-lucide="bell" style="width:14px;height:14px;"></i> ประกาศข่าว' +
         '</button>' : '') +
     '</div>' +
 
-    '<div class="settings-pane active" id="spane-theme">' +
+    '<div class="tab-pane active" id="spane-theme">' +
       '<div class="settings-section-title">ธีมสีเว็บไซต์</div>' +
       (isSuperAdmin ? renderThemeEditor() : renderThemeReadOnly()) +
     '</div>' +
 
     (showAnnTab ?
-      '<div class="settings-pane" id="spane-announcements">' +
+      '<div class="tab-pane" id="spane-announcements">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
           '<div class="settings-section-title" style="margin-bottom:0;">ประกาศข่าวสำหรับ Admin</div>' +
           '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--accent,#1d4ed8);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
@@ -501,8 +501,8 @@ function toggleAnnActive(id, current) {
 }
 
 function switchSettingsTab(name) {
-  document.querySelectorAll('.settings-tab').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelectorAll('.settings-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.sub-tab-bar .sub-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('stab-'+name).classList.add('active');
   document.getElementById('spane-'+name).classList.add('active');
   if (name === 'announcements') loadAnnouncements();

@@ -1167,7 +1167,27 @@ label {
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
 
-/* Pill-style sub tabs (food court) */
+/* ═══════════════════════════════════════════════
+   Pill-style sub tabs — CENTRAL component
+   ใช้เป็น subtab หลักของทุกหน้า (foodcourt-admin, ipad-lending,
+   repair-admin, portfolio-admin, room-admin, settings ฯลฯ)
+   แก้ style ของ subtab ทั้งระบบ แก้ที่นี่ที่เดียวพอ
+   ห้ามก็อป CSS ก้อนนี้ไปประกาศซ้ำในหน้าอื่นอีก — ให้ import ไฟล์นี้แล้วใช้ class ตรงๆ
+
+   การใช้งานพื้นฐาน:
+     <div class="sub-tab-bar">
+       <button class="sub-tab active" onclick="...">...</button>
+       <button class="sub-tab" onclick="...">...</button>
+     </div>
+     <div class="sub-panel active" id="...">...</div>
+
+   Modifier (สีธีม อื่นนอกจากฟ้า default):
+     .sub-tab-bar.purple  → active tab สีม่วง (เช่น portfolio-admin)
+     .sub-tab-bar.green   → active tab สีเขียว (เผื่อใช้ในอนาคต)
+
+   Modifier (ขนาด สำหรับ subtab ชั้นลึก/ซ้อนภายในอีกที):
+     .sub-tab-bar.compact → padding/font เล็กลง เผื่อใช้เป็น filter bar ย่อยๆ
+   ═══════════════════════════════════════════════ */
 .sub-tab-bar {
   display: flex;
   gap: 4px;
@@ -1194,6 +1214,15 @@ label {
 }
 .sub-tab.active { background: var(--white); color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sub-tab:hover:not(.active) { background: rgba(255,255,255,.6); color: var(--text); }
+
+/* modifier: สีธีม */
+.sub-tab-bar.purple .sub-tab.active { color: var(--purple); }
+.sub-tab-bar.green  .sub-tab.active { color: var(--green); }
+
+/* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
+.sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
+.sub-tab-bar.compact .sub-tab { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+
 .sub-panel { display: none; }
 .sub-panel.active { display: block; }
 

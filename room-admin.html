@@ -101,16 +101,17 @@
       <!-- Main card with sub-tabs -->
       <div class="card" style="overflow:hidden;flex:1;display:flex;flex-direction:column;">
 
-        <!-- Sub-tab bar -->
-        <div style="display:flex;border-bottom:1px solid var(--border);padding:0 20px;background:var(--white);flex-shrink:0;">
-          <button class="tab-btn active" id="subtab-btn-bookings" onclick="switchSubTab('bookings',this)">
-            <i data-lucide="layout-list" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>คำขอทั้งหมด
+        <!-- Sub-tab bar (ใช้ class กลาง .sub-tab-bar/.sub-tab จาก shared/styles-new.css
+             เรียง: คำขอทั้งหมด → สรุปรายห้อง → จัดการห้อง (จัดการ อยู่ท้ายสุดเสมอ) -->
+        <div class="sub-tab-bar" style="margin:0 20px;">
+          <button class="sub-tab active" id="subtab-btn-bookings" onclick="switchSubTab('bookings',this)">
+            <i data-lucide="layout-list" style="width:14px;height:14px;"></i>คำขอทั้งหมด
           </button>
-          <button class="tab-btn" id="subtab-btn-rooms" onclick="switchSubTab('rooms',this)">
-            <i data-lucide="door-open" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>จัดการห้อง
+          <button class="sub-tab" id="subtab-btn-summary" onclick="switchSubTab('summary',this);renderSummary()">
+            <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i>สรุปรายห้อง
           </button>
-          <button class="tab-btn" id="subtab-btn-summary" onclick="switchSubTab('summary',this);renderSummary()">
-            <i data-lucide="bar-chart-2" style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:5px;"></i>สรุปรายห้อง
+          <button class="sub-tab" id="subtab-btn-rooms" onclick="switchSubTab('rooms',this)">
+            <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
           </button>
         </div>
 

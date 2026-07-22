@@ -212,10 +212,8 @@
     #chartsPanel{display:block;}
 
     /* ── Sub Tabs ── */
-    .sub-tab-bar{display:flex;gap:4px;padding:4px;background:var(--bg-alt);border-radius:14px;width:fit-content;}
-    .sub-tab{padding:8px 20px;border-radius:10px;font-size:13px;font-weight:700;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
-    .sub-tab.active{background:white;color:var(--purple);box-shadow:0 2px 8px rgba(0,0,0,.08);}
-    .sub-tab:hover:not(.active){background:rgba(255,255,255,.6);color:#334155;}
+    /* .sub-tab-bar / .sub-tab ย้ายไปเป็น class กลางใน shared/styles-new.css แล้ว
+       (ใช้ modifier .purple ที่ wrapper แทน เพื่อให้ active tab เป็นสีม่วงเหมือนเดิม) */
 
     /* ── Doc Type Manager ── */
     .dt-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border:1.5px solid var(--border);border-radius:14px;transition:border-color .15s;}
@@ -517,7 +515,7 @@
 
   <!-- Sub Tab Bar -->
   <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
-    <div class="sub-tab-bar">
+    <div class="sub-tab-bar purple">
       <button class="sub-tab active" id="subTabOverview" onclick="switchSubTab('overview')">
         <i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม
       </button>
