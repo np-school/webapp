@@ -401,15 +401,15 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subRptWeek" onclick="switchReportSub('week',this)">รายสัปดาห์</button>
-          <button class="sub-tab" id="subRptMonth" onclick="switchReportSub('month',this)">รายเดือน</button>
-          <button class="sub-tab" id="subRptCompare" onclick="switchReportSub('compare',this)">เปรียบเทียบรายเดือน</button>
-          <button class="sub-tab" id="subRptYear" onclick="switchReportSub('year',this)">รายปี</button>
+        <div class="sub-tab-bar" id="fcReportSubtabBar">
+          <button class="sub-tab active" id="subRptWeek" data-tab="week">รายสัปดาห์</button>
+          <button class="sub-tab" id="subRptMonth" data-tab="month">รายเดือน</button>
+          <button class="sub-tab" id="subRptCompare" data-tab="compare">เปรียบเทียบรายเดือน</button>
+          <button class="sub-tab" id="subRptYear" data-tab="year">รายปี</button>
         </div>
 
         <!-- Panel: Weekly -->
-        <div class="sub-panel active" id="panelRptWeek">
+        <div class="tab-pane active" data-panel="week" id="panelRptWeek">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">แสดงข้อมูลย้อนหลัง 8 สัปดาห์ล่าสุด (จันทร์–อาทิตย์)</div>
             <div class="period-tabs" id="rptWeekNav">
@@ -430,7 +430,7 @@
         </div>
 
         <!-- Panel: Monthly -->
-        <div class="sub-panel" id="panelRptMonth">
+        <div class="tab-pane" data-panel="month" id="panelRptMonth">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">สถิติรายวันภายในเดือนที่เลือก</div>
             <select id="rptMonthSelect" style="width:180px" onchange="renderReportMonth()"></select>
@@ -452,7 +452,7 @@
         </div>
 
         <!-- Panel: Compare Months -->
-        <div class="sub-panel" id="panelRptCompare">
+        <div class="tab-pane" data-panel="compare" id="panelRptCompare">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">เปรียบเทียบยอดรวมของแต่ละเดือน (ทุกเดือนที่มีข้อมูล)</div>
           </div>
@@ -468,7 +468,7 @@
         </div>
 
         <!-- Panel: Yearly -->
-        <div class="sub-panel" id="panelRptYear">
+        <div class="tab-pane" data-panel="year" id="panelRptYear">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">สรุปยอดรวมรายปี แยกตาม 12 เดือน</div>
             <select id="rptYearSelect" style="width:140px" onchange="renderReportYear()"></select>
@@ -501,14 +501,14 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subMgmtEntry" onclick="switchManageSub('entry',this)">บันทึกรายวัน</button>
-          <button class="sub-tab" id="subMgmtRec" onclick="switchManageSub('recurring',this)">รายการประจำ</button>
-          <button class="sub-tab" id="subMgmtAdd" onclick="switchManageSub('addnew',this)">เพิ่มรายการประจำ</button>
+        <div class="sub-tab-bar" id="fcManageSubtabBar">
+          <button class="sub-tab active" id="subMgmtEntry" data-tab="entry">บันทึกรายวัน</button>
+          <button class="sub-tab" id="subMgmtRec" data-tab="recurring">รายการประจำ</button>
+          <button class="sub-tab" id="subMgmtAdd" data-tab="addnew">เพิ่มรายการประจำ</button>
         </div>
 
         <!-- Panel: Daily Entry -->
-        <div class="sub-panel active" id="panelMgmtEntry">
+        <div class="tab-pane active" data-panel="entry" id="panelMgmtEntry">
           <div class="card" style="max-width:680px">
             <div class="form-group" style="margin-bottom:var(--gap-section)">
               <label>วันที่</label>
@@ -549,13 +549,13 @@
         </div>
 
         <!-- Panel: Recurring -->
-        <div class="sub-panel" id="panelMgmtRecurring">
+        <div class="tab-pane" data-panel="recurring" id="panelMgmtRecurring">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-section);flex-wrap:wrap;gap:var(--gap-item)">
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text)">รายการประจำทั้งหมด</div>
               <div style="font-size:12px;color:var(--text2);margin-top:2px">คลิกที่รายการเพื่อแก้ไขหรือลบ</div>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="switchManageSub('addnew',document.getElementById('subMgmtAdd'))">+ เพิ่มรายการประจำ</button>
+            <button class="btn btn-primary btn-sm" onclick="fcManageSubtabs.activate('addnew')">+ เพิ่มรายการประจำ</button>
           </div>
 
           <div style="margin-bottom:var(--gap-card)">
@@ -569,7 +569,7 @@
         </div>
 
         <!-- Panel: Add New Recurring -->
-        <div class="sub-panel" id="panelMgmtAddnew">
+        <div class="tab-pane" data-panel="addnew" id="panelMgmtAddnew">
           <div class="card" style="max-width:560px">
             <div class="modal-title" style="margin-bottom:var(--gap-section)">เพิ่มรายการประจำใหม่</div>
 

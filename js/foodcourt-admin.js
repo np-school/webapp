@@ -184,6 +184,7 @@ let modalExtraRows={income:[],expense:[]};
 
 // ── MONTHLY CHART ──
 var monthlyBarChart;
+var fcReportSubtabs, fcManageSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderShell()
 
 // ── AUTH + BOOT ──
 var currentUser = null;
@@ -602,11 +603,7 @@ function renderDaily(){
 let rptWeekRange=8;
 let rptWeekChart,rptMonthChart,rptMonthDonut,rptCompareChart,rptYearChart;
 
-function switchReportSub(panel,el){
-  document.querySelectorAll('#tab-report .sub-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#tab-report .sub-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panelRpt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
+function onFcReportSubtabChange(panel){
   if(panel==='week') renderReportWeek();
   if(panel==='month') renderReportMonth();
   if(panel==='compare') renderReportCompare();
@@ -844,11 +841,7 @@ function switchDailySub(type,el){
   renderDaily();
 }
 
-function switchManageSub(panel,el){
-  document.querySelectorAll('#tab-manage .sub-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#tab-manage .sub-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panelMgmt'+panel.charAt(0).toUpperCase()+panel.slice(1)).classList.add('active');
+function onFcManageSubtabChange(panel){
   if(panel==='recurring') renderManage();
   if(panel==='entry') renderDailyEntry();
 }
@@ -856,7 +849,7 @@ function switchManageSub(panel,el){
 /* ปุ่ม "เพิ่มรายการ" → ไปที่จัดการรายการ → บันทึกรายวัน */
 function goToDailyEntry(){
   switchTab('manage',document.getElementById('sb-manage'));
-  switchManageSub('entry',document.getElementById('subMgmtEntry'));
+  fcManageSubtabs.activate('entry');
 }
 
 function addExtraEntryRow(type){
@@ -1141,6 +1134,9 @@ buildPage({
 
     contentEl.innerHTML = renderShell();
     lucide.createIcons();
+
+    fcReportSubtabs = initSubtabs('fcReportSubtabBar', { onChange: onFcReportSubtabChange });
+    fcManageSubtabs = initSubtabs('fcManageSubtabBar', { onChange: onFcManageSubtabChange });
 
     loadFoodcourtData().then(function(){
       renderDashboard();
