@@ -146,7 +146,11 @@ function initSubtabs(container, opts) {
 
   var btns = Array.prototype.slice.call(root.querySelectorAll('.sub-tab[data-tab]'));
   var scope = root.closest('[data-subtab-scope]') || root.parentElement || document;
-  var panels = Array.prototype.slice.call(scope.querySelectorAll('.tab-pane[data-panel]'));
+  /* :scope > จำกัดให้หาเฉพาะ panel ที่เป็นลูกตรงของ scope เท่านั้น (ไม่ query แบบ recursive ทั้งต้นไม้)
+     เพื่อรองรับ subtab ซ้อนชั้นจริง (เช่น repair-admin: repSubTabBar ชั้นนอก ครอบ repPanelReport
+     ซึ่งข้างในมี repReportNav เป็น subtab ของตัวเองอีกที) — ถ้า query แบบ recursive จะไปเจอ panel
+     ของ subtab ชั้นในด้วย ทำให้ toggle .active ผิดตัวข้ามชั้นกัน */
+  var panels = Array.prototype.slice.call(scope.querySelectorAll(':scope > .tab-pane[data-panel]'));
 
   function activate(tabId, fireOnChange) {
     for (var i = 0; i < btns.length; i++) {

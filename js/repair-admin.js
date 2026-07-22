@@ -33,6 +33,7 @@ var allRepairs     = [];
 var currentFilter  = 'all';
 var currentSearch  = '';
 var currentSubTab  = 'active';
+var repSubTabs, repReportSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderPage()
 var currentActiveBuildingFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายอาคาร */
 var currentActiveCategoryFilter = ''; /* กรองรายการ "การแจ้งซ่อม" (ใหม่/กำลังดำเนินการ) รายหมวดหมู่ */
 var currentCategoryFilter = 'all'; /* กรองตารางประวัติทั้งหมด รายหมวดหมู่ */
@@ -383,15 +384,15 @@ function renderPage() {
     '</div>' +
 
     '<div class="sub-tab-bar" id="repSubTabBar">' +
-      '<button class="sub-tab active" data-tab="active" onclick="switchRepSubTab(\'active\')"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
-      '<button class="sub-tab" data-tab="assignee" onclick="switchRepSubTab(\'assignee\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
-      '<button class="sub-tab" data-tab="history" onclick="switchRepSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
-      '<button class="sub-tab" data-tab="report" onclick="switchRepSubTab(\'report\')"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> รายงาน</button>' +
-      '<button class="sub-tab" data-tab="settings" onclick="switchRepSubTab(\'settings\')"><i data-lucide="settings" style="width:14px;height:14px;"></i> ตั้งค่า</button>' +
+      '<button class="sub-tab active" data-tab="active"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
+      '<button class="sub-tab" data-tab="assignee"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
+      '<button class="sub-tab" data-tab="history"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
+      '<button class="sub-tab" data-tab="report"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> รายงาน</button>' +
+      '<button class="sub-tab" data-tab="settings"><i data-lucide="settings" style="width:14px;height:14px;"></i> ตั้งค่า</button>' +
     '</div>' +
 
     /* ── Panel: การแจ้งซ่อม (ใหม่ / กำลังดำเนินการ) ── */
-    '<div class="sub-panel active" id="repPanelActive">' +
+    '<div class="tab-pane active" data-panel="active" id="repPanelActive">' +
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">' +
         '<span style="font-size:11.5px;color:var(--text3);font-weight:700;white-space:nowrap;"><i data-lucide="calendar-days" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>ช่วงเวลา</span>' +
         '<div id="repActivePeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>' +
@@ -426,12 +427,12 @@ function renderPage() {
     '</div>' +
 
     /* ── Panel: ผู้รับผิดชอบ (สรุปงานที่มอบหมายให้แต่ละคน) ── */
-    '<div class="sub-panel" id="repPanelAssignee">' +
+    '<div class="tab-pane" data-panel="assignee" id="repPanelAssignee">' +
       '<div id="assigneeGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;"></div>' +
     '</div>' +
 
     /* ── Panel: ประวัติทั้งหมด ── */
-    '<div class="sub-panel" id="repPanelHistory">' +
+    '<div class="tab-pane" data-panel="history" id="repPanelHistory">' +
       '<div class="card" style="margin-bottom:16px;">' +
         '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;" id="repFilterBar">' +
@@ -462,16 +463,16 @@ function renderPage() {
     '</div>' +
 
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
-    '<div class="sub-panel" id="repPanelReport">' +
+    '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
       '<div class="sub-tab-bar" id="repReportNav" style="margin-bottom:16px;">' +
-        '<button class="sub-tab active" data-view="week" onclick="switchReportView(\'week\',this)">รายสัปดาห์</button>' +
-        '<button class="sub-tab" data-view="month" onclick="switchReportView(\'month\',this)">รายเดือน</button>' +
-        '<button class="sub-tab" data-view="compare" onclick="switchReportView(\'compare\',this)">เปรียบเทียบรายเดือน</button>' +
-        '<button class="sub-tab" data-view="year" onclick="switchReportView(\'year\',this)">รายปี</button>' +
-        '<button class="sub-tab" data-view="category" onclick="switchReportView(\'category\',this)">แยกตามหมวดหมู่</button>' +
+        '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
+        '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
+        '<button class="sub-tab" data-tab="compare">เปรียบเทียบรายเดือน</button>' +
+        '<button class="sub-tab" data-tab="year">รายปี</button>' +
+        '<button class="sub-tab" data-tab="category">แยกตามหมวดหมู่</button>' +
       '</div>' +
 
-      '<div class="sub-panel active" id="repRptWeek">' +
+      '<div class="tab-pane active" data-panel="week" id="repRptWeek">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
           '<div style="font-size:11.5px;color:var(--text3);font-weight:700;"><i data-lucide="calendar-days" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>แจ้งซ่อมย้อนหลังรายสัปดาห์ (จันทร์–อาทิตย์)</div>' +
           '<div style="display:flex;gap:6px;" id="repRptWeekRangeBar">' +
@@ -484,7 +485,7 @@ function renderPage() {
         '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมต่อสัปดาห์</div><div id="repRptWeekChart"></div></div>' +
       '</div>' +
 
-      '<div class="sub-panel" id="repRptMonth">' +
+      '<div class="tab-pane" data-panel="month" id="repRptMonth">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
           '<div style="font-size:11.5px;color:var(--text3);font-weight:700;">สถิติของเดือนที่เลือก</div>' +
           '<select id="repRptMonthSelect" onchange="setReportMonth(this.value)" style="max-width:200px;"></select>' +
@@ -496,13 +497,13 @@ function renderPage() {
         '</div>' +
       '</div>' +
 
-      '<div class="sub-panel" id="repRptCompare">' +
+      '<div class="tab-pane" data-panel="compare" id="repRptCompare">' +
         '<div style="font-size:11.5px;color:var(--text3);font-weight:700;margin-bottom:12px;">เปรียบเทียบจำนวนแจ้งซ่อมของแต่ละเดือน (ทุกเดือนที่มีข้อมูล)</div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repRptCompareKpi"></div>' +
         '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมรายเดือน</div><div id="repRptCompareChart"></div></div>' +
       '</div>' +
 
-      '<div class="sub-panel" id="repRptYear">' +
+      '<div class="tab-pane" data-panel="year" id="repRptYear">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
           '<div style="font-size:11.5px;color:var(--text3);font-weight:700;">สรุปรายปี แยกตาม 12 เดือน</div>' +
           '<select id="repRptYearSelect" onchange="setReportYear(this.value)" style="max-width:140px;"></select>' +
@@ -511,7 +512,7 @@ function renderPage() {
         '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมรายเดือน</div><div id="repRptYearChart"></div></div>' +
       '</div>' +
 
-      '<div class="sub-panel" id="repRptCategory">' +
+      '<div class="tab-pane" data-panel="category" id="repRptCategory">' +
         '<div style="font-size:11.5px;color:var(--text3);font-weight:700;margin-bottom:12px;">สถิติการแจ้งซ่อมแยกตามหมวดหมู่ (ทั้งหมดทุกช่วงเวลา)</div>' +
         '<div class="chart-grid">' +
           '<div class="chart-card"><div class="chart-title">สัดส่วนตามหมวดหมู่</div><div id="repRptCatDonut"></div></div>' +
@@ -527,7 +528,7 @@ function renderPage() {
     '</div>' +
 
     /* ── Panel: ตั้งค่า (หมวดหมู่ / สถานที่) ── */
-    '<div class="sub-panel" id="repPanelSettings">' +
+    '<div class="tab-pane" data-panel="settings" id="repPanelSettings">' +
       '<div class="rp-settings-grid">' +
 
         '<div class="card">' +
@@ -1473,12 +1474,8 @@ function renderReportPanel() {
   else if (reportView === 'category') renderReportCategory();
 }
 
-function switchReportView(view, el) {
+function onRepReportSubtabChange(view) {
   reportView = view;
-  document.querySelectorAll('#repReportNav .sub-tab').forEach(function(b) { b.classList.remove('active'); });
-  el.classList.add('active');
-  document.querySelectorAll('#repPanelReport > .sub-panel').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById('repRpt' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
   if (view === 'week') renderReportWeek();
   if (view === 'month') renderReportMonth();
   if (view === 'compare') renderReportCompare();
@@ -1657,16 +1654,8 @@ function renderReportCategory() {
   lucide.createIcons();
 }
 
-function switchRepSubTab(tab) {
+function onRepSubtabChange(tab) {
   currentSubTab = tab;
-  document.querySelectorAll('#repSubTabBar .sub-tab').forEach(function(b) {
-    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
-  });
-  document.getElementById('repPanelActive').classList.toggle('active', tab === 'active');
-  document.getElementById('repPanelAssignee').classList.toggle('active', tab === 'assignee');
-  document.getElementById('repPanelHistory').classList.toggle('active', tab === 'history');
-  document.getElementById('repPanelReport').classList.toggle('active', tab === 'report');
-  document.getElementById('repPanelSettings').classList.toggle('active', tab === 'settings');
   if (tab === 'active') renderActivePanel();
   if (tab === 'assignee') renderAssigneePanel();
   if (tab === 'history') renderTable();
@@ -2222,6 +2211,9 @@ buildPage({
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
+
+    repSubTabs = initSubtabs('repSubTabBar', { onChange: onRepSubtabChange });
+    repReportSubtabs = initSubtabs('repReportNav', { onChange: onRepReportSubtabChange });
 
     loadData();
     loadCategories();

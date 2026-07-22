@@ -1,5 +1,6 @@
 /* ══════════════════════ STATE ══════════════════════ */
 var currentUser  = null;
+var ipadSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderPage()
 var STUDENTS     = [];   /* {id, name, grade, room} */
 var DEVICES      = [];   /* {id, friendlyName, assetNumber, serialNumber, status} */
 var BORROWS_OUT  = [];   /* currently borrowed (status = 'out') — real-time, จำนวนน้อยเพราะจำกัดด้วยจำนวน iPad ที่มี */
@@ -248,21 +249,21 @@ function renderPage() {
       '<div style="position:relative;height:260px;"><canvas id="chartStudentStats"></canvas></div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar">' +
-      '<button class="sub-tab active" id="subtab-btn-borrow"   onclick="switchSubTab(\'borrow\')"><i data-lucide="repeat" style="width:14px;height:14px;"></i> ยืม-คืนอุปกรณ์</button>' +
-      '<button class="sub-tab" id="subtab-btn-students" onclick="switchSubTab(\'students\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ข้อมูลนักเรียน</button>' +
-      '<button class="sub-tab" id="subtab-btn-staff" onclick="switchSubTab(\'staff\')"><i data-lucide="id-card" style="width:14px;height:14px;"></i> รายชื่อบุคลากร</button>' +
-      '<button class="sub-tab" id="subtab-btn-devices"  onclick="switchSubTab(\'devices\')"><i data-lucide="tablet" style="width:14px;height:14px;"></i> ข้อมูล iPad</button>' +
-      '<button class="sub-tab" id="subtab-btn-claims"  onclick="switchSubTab(\'claims\')"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i> ส่งเคลม</button>' +
-      '<button class="sub-tab" id="subtab-btn-history"  onclick="switchSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
+    '<div class="sub-tab-bar" id="ipadSubtabBar">' +
+      '<button class="sub-tab active" data-tab="borrow"><i data-lucide="repeat" style="width:14px;height:14px;"></i> ยืม-คืนอุปกรณ์</button>' +
+      '<button class="sub-tab" data-tab="students"><i data-lucide="users" style="width:14px;height:14px;"></i> ข้อมูลนักเรียน</button>' +
+      '<button class="sub-tab" data-tab="staff"><i data-lucide="id-card" style="width:14px;height:14px;"></i> รายชื่อบุคลากร</button>' +
+      '<button class="sub-tab" data-tab="devices"><i data-lucide="tablet" style="width:14px;height:14px;"></i> ข้อมูล iPad</button>' +
+      '<button class="sub-tab" data-tab="claims"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i> ส่งเคลม</button>' +
+      '<button class="sub-tab" data-tab="history"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
     '</div>' +
 
-    '<div class="sub-panel active" id="subpanel-borrow">'   + renderBorrowPanel()   + '</div>' +
-    '<div class="sub-panel" id="subpanel-students">'        + renderStudentsPanel() + '</div>' +
-    '<div class="sub-panel" id="subpanel-staff">'           + renderStaffPanel()    + '</div>' +
-    '<div class="sub-panel" id="subpanel-devices">'         + renderDevicesPanel()  + '</div>' +
-    '<div class="sub-panel" id="subpanel-claims">'          + renderClaimsPanel()   + '</div>' +
-    '<div class="sub-panel" id="subpanel-history">'         + renderHistoryPanel()  + '</div>'
+    '<div class="tab-pane active" data-panel="borrow" id="subpanel-borrow">'   + renderBorrowPanel()   + '</div>' +
+    '<div class="tab-pane" data-panel="students" id="subpanel-students">'        + renderStudentsPanel() + '</div>' +
+    '<div class="tab-pane" data-panel="staff" id="subpanel-staff">'           + renderStaffPanel()    + '</div>' +
+    '<div class="tab-pane" data-panel="devices" id="subpanel-devices">'         + renderDevicesPanel()  + '</div>' +
+    '<div class="tab-pane" data-panel="claims" id="subpanel-claims">'          + renderClaimsPanel()   + '</div>' +
+    '<div class="tab-pane" data-panel="history" id="subpanel-history">'         + renderHistoryPanel()  + '</div>'
   );
 }
 function renderStatsCharts() {
@@ -1214,16 +1215,11 @@ function setupScrollTopButton() {
   });
 }
 
-function switchSubTab(name) {
-  ['borrow','students','staff','devices','claims','history'].forEach(function(k) {
-    document.getElementById('subtab-btn-' + k).classList.toggle('active', k === name);
-    document.getElementById('subpanel-' + k).classList.toggle('active', k === name);
-  });
+function onIpadSubtabChange(name) {
   if (name === 'history') {
     fetchHistoryPage(historyPage || 1);   /* โหลด/รีเฟรชหน้าปัจจุบันทุกครั้งที่เปิดแท็บนี้ */
   }
-  lucide.createIcons();
-}  /* 'all' | 'student' | 'staff' */
+}
 
 function setBorrowFilterType(type) {
   borrowFilterType = type;
@@ -2067,6 +2063,8 @@ buildPage({
 
     contentEl.innerHTML = renderPage();
     lucide.createIcons();
+
+    ipadSubtabs = initSubtabs('ipadSubtabBar', { onChange: onIpadSubtabChange });
 
     document.getElementById('borrowDate').value = todayStr();
     loadStudents();
