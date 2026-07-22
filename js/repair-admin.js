@@ -83,6 +83,7 @@ function loadData() {
       renderActivePanel();
       renderAssigneePanel();
       renderTable();
+      if (currentSubTab === 'report') renderReportPanel();
     }, function(err) {
       console.error(err);
       showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
@@ -385,6 +386,7 @@ function renderPage() {
       '<button class="sub-tab active" data-tab="active" onclick="switchRepSubTab(\'active\')"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
       '<button class="sub-tab" data-tab="assignee" onclick="switchRepSubTab(\'assignee\')"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
       '<button class="sub-tab" data-tab="history" onclick="switchRepSubTab(\'history\')"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
+      '<button class="sub-tab" data-tab="report" onclick="switchRepSubTab(\'report\')"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> รายงาน</button>' +
       '<button class="sub-tab" data-tab="settings" onclick="switchRepSubTab(\'settings\')"><i data-lucide="settings" style="width:14px;height:14px;"></i> ตั้งค่า</button>' +
     '</div>' +
 
@@ -456,6 +458,71 @@ function renderPage() {
           '<tbody id="repairTableBody"></tbody>' +
         '</table>' +
         '<div id="repairEmptyState" style="display:none;"></div>' +
+      '</div>' +
+    '</div>' +
+
+    /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
+    '<div class="sub-panel" id="repPanelReport">' +
+      '<div class="sub-tab-bar" id="repReportNav" style="margin-bottom:16px;">' +
+        '<button class="sub-tab active" data-view="week" onclick="switchReportView(\'week\',this)">รายสัปดาห์</button>' +
+        '<button class="sub-tab" data-view="month" onclick="switchReportView(\'month\',this)">รายเดือน</button>' +
+        '<button class="sub-tab" data-view="compare" onclick="switchReportView(\'compare\',this)">เปรียบเทียบรายเดือน</button>' +
+        '<button class="sub-tab" data-view="year" onclick="switchReportView(\'year\',this)">รายปี</button>' +
+        '<button class="sub-tab" data-view="category" onclick="switchReportView(\'category\',this)">แยกตามหมวดหมู่</button>' +
+      '</div>' +
+
+      '<div class="sub-panel active" id="repRptWeek">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
+          '<div style="font-size:11.5px;color:var(--text3);font-weight:700;"><i data-lucide="calendar-days" style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:3px;"></i>แจ้งซ่อมย้อนหลังรายสัปดาห์ (จันทร์–อาทิตย์)</div>' +
+          '<div style="display:flex;gap:6px;" id="repRptWeekRangeBar">' +
+            '<button class="filter-pill active" onclick="setReportWeekRange(8,this)">8 สัปดาห์</button>' +
+            '<button class="filter-pill" onclick="setReportWeekRange(12,this)">12 สัปดาห์</button>' +
+            '<button class="filter-pill" onclick="setReportWeekRange(26,this)">26 สัปดาห์</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repRptWeekKpi"></div>' +
+        '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมต่อสัปดาห์</div><div id="repRptWeekChart"></div></div>' +
+      '</div>' +
+
+      '<div class="sub-panel" id="repRptMonth">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
+          '<div style="font-size:11.5px;color:var(--text3);font-weight:700;">สถิติของเดือนที่เลือก</div>' +
+          '<select id="repRptMonthSelect" onchange="setReportMonth(this.value)" style="max-width:200px;"></select>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repRptMonthKpi"></div>' +
+        '<div class="chart-grid">' +
+          '<div class="chart-card"><div class="chart-title">แยกตามสถานะ</div><div id="repRptMonthStatusChart"></div></div>' +
+          '<div class="chart-card"><div class="chart-title">แยกตามหมวดหมู่</div><div id="repRptMonthCatChart"></div></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="sub-panel" id="repRptCompare">' +
+        '<div style="font-size:11.5px;color:var(--text3);font-weight:700;margin-bottom:12px;">เปรียบเทียบจำนวนแจ้งซ่อมของแต่ละเดือน (ทุกเดือนที่มีข้อมูล)</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repRptCompareKpi"></div>' +
+        '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมรายเดือน</div><div id="repRptCompareChart"></div></div>' +
+      '</div>' +
+
+      '<div class="sub-panel" id="repRptYear">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
+          '<div style="font-size:11.5px;color:var(--text3);font-weight:700;">สรุปรายปี แยกตาม 12 เดือน</div>' +
+          '<select id="repRptYearSelect" onchange="setReportYear(this.value)" style="max-width:140px;"></select>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap-card);margin-bottom:var(--gap-section);" id="repRptYearKpi"></div>' +
+        '<div class="chart-card"><div class="chart-title">จำนวนแจ้งซ่อมรายเดือน</div><div id="repRptYearChart"></div></div>' +
+      '</div>' +
+
+      '<div class="sub-panel" id="repRptCategory">' +
+        '<div style="font-size:11.5px;color:var(--text3);font-weight:700;margin-bottom:12px;">สถิติการแจ้งซ่อมแยกตามหมวดหมู่ (ทั้งหมดทุกช่วงเวลา)</div>' +
+        '<div class="chart-grid">' +
+          '<div class="chart-card"><div class="chart-title">สัดส่วนตามหมวดหมู่</div><div id="repRptCatDonut"></div></div>' +
+          '<div class="chart-card" style="padding:0;overflow-x:auto;">' +
+            '<div class="chart-title" style="padding:18px 20px 0;">ตารางสรุป</div>' +
+            '<table class="data-table" id="repRptCatTable">' +
+              '<thead><tr><th>หมวดหมู่</th><th style="text-align:right">จำนวน</th><th style="text-align:right">สัดส่วน</th><th style="text-align:right">ปิดงานแล้ว</th></tr></thead>' +
+              '<tbody></tbody>' +
+            '</table>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
     '</div>' +
 
@@ -1267,6 +1334,329 @@ function setupScrollTopButton() {
   });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   รายงาน: สถิติรายสัปดาห์ / รายเดือน / เปรียบเทียบรายเดือน / รายปี / หมวดหมู่
+   ใช้รูปแบบกราฟเดียวกับแท็บ "การแจ้งซ่อม" (hbar-row + donut conic-gradient)
+   นับจากทุกรายการ (allRepairs) ไม่จำกัดสถานะ ยกเว้นรายการที่ไม่มี createdAt
+   ══════════════════════════════════════════════════════════════ */
+var reportView       = 'week';
+var reportWeekRange  = 8;
+var reportMonthSel   = null; /* 'YYYY-MM' */
+var reportYearSel    = null; /* 'YYYY' */
+
+function rDate(r) {
+  if (!r.createdAt) return null;
+  return r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
+}
+function repWeekStart(d) {
+  var dt = new Date(d); dt.setHours(0, 0, 0, 0);
+  var day = (dt.getDay() + 6) % 7; /* จันทร์ = 0 */
+  dt.setDate(dt.getDate() - day);
+  return dt;
+}
+function repWeekKey(d) { return repWeekStart(d).toISOString().split('T')[0]; }
+function repWeekLabel(key) {
+  var s = new Date(key + 'T00:00:00'); var e = new Date(s); e.setDate(s.getDate() + 6);
+  return s.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) + ' – ' + e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+}
+function repMonthKeyOf(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); }
+function repMonthLabelOf(key) {
+  var p = key.split('-'); var idx = parseInt(p[1], 10) - 1;
+  return THAI_MONTHS[idx] + ' ' + (parseInt(p[0], 10) + 543);
+}
+
+function reportKpi(icon, color, bg, val, label) {
+  return (
+    '<div class="stat-card">' +
+      '<div style="width:44px;height:44px;border-radius:12px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+        '<i data-lucide="' + icon + '" style="width:20px;height:20px;color:' + color + ';"></i>' +
+      '</div>' +
+      '<div>' +
+        '<div style="font-size:20px;font-weight:800;color:var(--text);">' + val + '</div>' +
+        '<div style="font-size:11px;color:var(--text2);font-weight:600;">' + label + '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+/* กราฟแท่งแนวนอนทั่วไปแบบไม่คลิกกรอง (ใช้กับกราฟไทม์ไลน์ในหน้ารายงาน) */
+function reportHbarList(rows, color, emptyIcon) {
+  if (!rows.length) {
+    return '<div class="empty-state" style="padding:20px 0;"><i data-lucide="' + (emptyIcon || 'bar-chart-3') + '" style="width:24px;height:24px;color:var(--text3);"></i><p style="margin-top:6px;font-size:12.5px;">ยังไม่มีข้อมูล</p></div>';
+  }
+  var max = Math.max.apply(null, rows.map(function(r) { return r.count; }));
+  if (max <= 0) max = 1;
+  return rows.map(function(r) {
+    var pct = Math.max(3, Math.round(r.count / max * 100));
+    return (
+      '<div class="hbar-row">' +
+        '<div class="hbar-label"><span class="hbar-name">' + esc2(r.label) + '</span><span class="hbar-pct">' + r.count + '</span></div>' +
+        '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%;background:' + (r.color || color) + ';"></div></div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+/* โดนัทหมวดหมู่ทั่วไป (ใช้ซ้ำได้ทั้งในเดือนที่เลือก และภาพรวมทั้งหมด) */
+function reportRenderCategoryDonut(list, el) {
+  var total = list.length;
+  if (!total) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px 0;"><i data-lucide="pie-chart" style="width:24px;height:24px;color:var(--text3);"></i><p style="margin-top:6px;font-size:12.5px;">ยังไม่มีข้อมูล</p></div>';
+    return;
+  }
+  var counts = {};
+  list.forEach(function(r) { var key = r.category || 'other'; counts[key] = (counts[key] || 0) + 1; });
+  var keys = Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; });
+
+  var cursor = 0, gradientParts = [], legendHtml = '';
+  keys.forEach(function(key) {
+    var cat = getCategoryMeta(key);
+    var count = counts[key];
+    var pct = count / total * 100;
+    var color = getCategoryColor(key).text;
+    gradientParts.push(color + ' ' + cursor + '% ' + (cursor + pct) + '%');
+    cursor += pct;
+    legendHtml +=
+      '<div class="legend-row">' +
+        '<span style="display:flex;align-items:center;gap:6px;min-width:0;">' +
+          '<span class="legend-dot" style="background:' + color + ';"></span>' +
+          '<span class="legend-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + cat.label + '</span>' +
+        '</span>' +
+        '<span class="legend-val">' + count + '</span>' +
+      '</div>';
+  });
+
+  el.innerHTML =
+    '<div class="donut-wrap" style="width:130px;height:130px;margin:0 auto;">' +
+      '<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(' + gradientParts.join(',') + ');"></div>' +
+      '<div class="donut-center" style="top:50%;left:50%;transform:translate(-50%,-50%);width:76px;height:76px;background:var(--white);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
+        '<div class="donut-big">' + total + '</div><div class="donut-label">งาน</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="donut-legend">' + legendHtml + '</div>';
+}
+
+function populateReportSelectors() {
+  var withDate = allRepairs.filter(function(r) { return rDate(r); });
+
+  var months = [];
+  withDate.forEach(function(r) { var k = repMonthKeyOf(rDate(r)); if (months.indexOf(k) === -1) months.push(k); });
+  months.sort();
+  var msel = document.getElementById('repRptMonthSelect');
+  if (msel) {
+    msel.innerHTML = months.map(function(m) { return '<option value="' + m + '">' + repMonthLabelOf(m) + '</option>'; }).join('');
+    if (months.length) {
+      reportMonthSel = (reportMonthSel && months.indexOf(reportMonthSel) !== -1) ? reportMonthSel : months[months.length - 1];
+      msel.value = reportMonthSel;
+    }
+  }
+
+  var years = [];
+  withDate.forEach(function(r) { var y = String(rDate(r).getFullYear()); if (years.indexOf(y) === -1) years.push(y); });
+  years.sort();
+  var ysel = document.getElementById('repRptYearSelect');
+  if (ysel) {
+    ysel.innerHTML = years.map(function(y) { return '<option value="' + y + '">ปี ' + (parseInt(y, 10) + 543) + '</option>'; }).join('');
+    if (years.length) {
+      reportYearSel = (reportYearSel && years.indexOf(reportYearSel) !== -1) ? reportYearSel : years[years.length - 1];
+      ysel.value = reportYearSel;
+    }
+  }
+}
+
+function renderReportPanel() {
+  populateReportSelectors();
+  if (reportView === 'week') renderReportWeek();
+  else if (reportView === 'month') renderReportMonth();
+  else if (reportView === 'compare') renderReportCompare();
+  else if (reportView === 'year') renderReportYear();
+  else if (reportView === 'category') renderReportCategory();
+}
+
+function switchReportView(view, el) {
+  reportView = view;
+  document.querySelectorAll('#repReportNav .sub-tab').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('#repPanelReport > .sub-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('repRpt' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+  if (view === 'week') renderReportWeek();
+  if (view === 'month') renderReportMonth();
+  if (view === 'compare') renderReportCompare();
+  if (view === 'year') renderReportYear();
+  if (view === 'category') renderReportCategory();
+}
+
+function setReportWeekRange(n, el) {
+  reportWeekRange = n;
+  document.querySelectorAll('#repRptWeekRangeBar .filter-pill').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  renderReportWeek();
+}
+function setReportMonth(v) { reportMonthSel = v; renderReportMonth(); }
+function setReportYear(v) { reportYearSel = v; renderReportYear(); }
+
+/* ── รายสัปดาห์ ── */
+function renderReportWeek() {
+  var kpiEl = document.getElementById('repRptWeekKpi');
+  var chartEl = document.getElementById('repRptWeekChart');
+  if (!kpiEl || !chartEl) return;
+
+  var withDate = allRepairs.filter(function(r) { return rDate(r); });
+  var byWeek = {};
+  withDate.forEach(function(r) {
+    var k = repWeekKey(rDate(r));
+    if (!byWeek[k]) byWeek[k] = { total: 0, closed: 0, urgent: 0 };
+    byWeek[k].total++;
+    if (r.status === 'closed') byWeek[k].closed++;
+    if (r.priority === 'urgent') byWeek[k].urgent++;
+  });
+  var weeks = Object.keys(byWeek).sort();
+  var shown = weeks.slice(-reportWeekRange);
+
+  var totalAll = shown.reduce(function(s, w) { return s + byWeek[w].total; }, 0);
+  var closedAll = shown.reduce(function(s, w) { return s + byWeek[w].closed; }, 0);
+  var avg = shown.length ? (totalAll / shown.length) : 0;
+  var bestIdx = -1, bestVal = -1;
+  shown.forEach(function(w, i) { if (byWeek[w].total > bestVal) { bestVal = byWeek[w].total; bestIdx = i; } });
+
+  kpiEl.innerHTML =
+    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', totalAll, 'แจ้งซ่อมรวม (' + shown.length + ' สัปดาห์)') +
+    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closedAll, 'ปิดงานแล้ว') +
+    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', avg.toFixed(1), 'เฉลี่ย/สัปดาห์') +
+    reportKpi('flame', 'var(--red)', 'var(--red-light)', bestIdx >= 0 ? repWeekLabel(shown[bestIdx]) : '-', 'สัปดาห์ที่แจ้งมากที่สุด');
+
+  var rows = shown.map(function(w) { return { label: repWeekLabel(w), count: byWeek[w].total }; }).reverse();
+  chartEl.innerHTML = reportHbarList(rows, 'var(--sky)');
+  lucide.createIcons();
+}
+
+/* ── รายเดือน ── */
+function renderReportMonth() {
+  var sel = document.getElementById('repRptMonthSelect');
+  var kpiEl = document.getElementById('repRptMonthKpi');
+  var statusEl = document.getElementById('repRptMonthStatusChart');
+  var catEl = document.getElementById('repRptMonthCatChart');
+  if (!sel || !kpiEl || !statusEl || !catEl) return;
+  var month = reportMonthSel || sel.value;
+  if (!month) { kpiEl.innerHTML = ''; statusEl.innerHTML = ''; catEl.innerHTML = ''; return; }
+
+  var rows = allRepairs.filter(function(r) { var d = rDate(r); return d && repMonthKeyOf(d) === month; });
+  var total = rows.length;
+  var closed = rows.filter(function(r) { return r.status === 'closed'; }).length;
+  var pending = rows.filter(function(r) { return ['reported', 'approved', 'reopened'].indexOf(r.status) !== -1; }).length;
+  var urgent = rows.filter(function(r) { return r.priority === 'urgent'; }).length;
+
+  kpiEl.innerHTML =
+    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', total, 'แจ้งซ่อมรวมในเดือนนี้') +
+    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closed, 'ปิดงานแล้ว') +
+    reportKpi('hourglass', 'var(--amber)', 'var(--amber-light)', pending, 'ยังไม่ปิดงาน') +
+    reportKpi('flame', 'var(--red)', 'var(--red-light)', urgent, 'แจ้งเร่งด่วน');
+
+  var statusCounts = { reported: 0, approved: 0, reopened: 0, done: 0, closed: 0, rejected: 0 };
+  rows.forEach(function(r) { if (statusCounts.hasOwnProperty(r.status)) statusCounts[r.status]++; else statusCounts.reported++; });
+  var statusLabels = { reported: 'รออนุมัติ', approved: 'กำลังซ่อม/รอซ่อม', reopened: 'ซ่อมใหม่', done: 'รอตรวจสอบ', closed: 'ปิดงานแล้ว', rejected: 'ไม่อนุมัติ' };
+  var statusColors = { reported: 'var(--amber)', approved: 'var(--sky)', reopened: 'var(--red)', done: 'var(--purple)', closed: 'var(--green)', rejected: 'var(--text3)' };
+  var statusRows = Object.keys(statusCounts).filter(function(k) { return statusCounts[k] > 0; }).map(function(k) { return { label: statusLabels[k], count: statusCounts[k], color: statusColors[k] }; });
+  statusEl.innerHTML = reportHbarList(statusRows, 'var(--sky)', 'inbox');
+
+  reportRenderCategoryDonut(rows, catEl);
+  lucide.createIcons();
+}
+
+/* ── เปรียบเทียบรายเดือน ── */
+function renderReportCompare() {
+  var kpiEl = document.getElementById('repRptCompareKpi');
+  var chartEl = document.getElementById('repRptCompareChart');
+  if (!kpiEl || !chartEl) return;
+
+  var withDate = allRepairs.filter(function(r) { return rDate(r); });
+  var byMonth = {};
+  withDate.forEach(function(r) {
+    var k = repMonthKeyOf(rDate(r));
+    if (!byMonth[k]) byMonth[k] = { total: 0, closed: 0 };
+    byMonth[k].total++;
+    if (r.status === 'closed') byMonth[k].closed++;
+  });
+  var months = Object.keys(byMonth).sort();
+
+  var bestIdx = -1, bestVal = -1, worstIdx = -1, worstVal = Infinity;
+  months.forEach(function(m, i) {
+    var v = byMonth[m].total;
+    if (v > bestVal) { bestVal = v; bestIdx = i; }
+    if (v < worstVal) { worstVal = v; worstIdx = i; }
+  });
+  var avg = months.length ? (months.reduce(function(s, m) { return s + byMonth[m].total; }, 0) / months.length) : 0;
+  var lastMonth = months.length ? months[months.length - 1] : null;
+  var latestClosedRate = lastMonth ? Math.round(byMonth[lastMonth].closed / (byMonth[lastMonth].total || 1) * 100) : 0;
+
+  kpiEl.innerHTML =
+    reportKpi('trophy', 'var(--green)', 'var(--green-light)', bestIdx >= 0 ? repMonthLabelOf(months[bestIdx]) : '-', 'เดือนที่แจ้งมากที่สุด (' + (bestIdx >= 0 ? bestVal : 0) + ')') +
+    reportKpi('trending-down', 'var(--sky)', 'var(--sky-light)', worstIdx >= 0 ? repMonthLabelOf(months[worstIdx]) : '-', 'เดือนที่แจ้งน้อยที่สุด (' + (worstIdx >= 0 && worstVal !== Infinity ? worstVal : 0) + ')') +
+    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', avg.toFixed(1), 'เฉลี่ย/เดือน') +
+    reportKpi('check-check', 'var(--amber)', 'var(--amber-light)', latestClosedRate + '%', 'ปิดงานแล้ว (เดือนล่าสุด)');
+
+  var rows = months.map(function(m) { return { label: repMonthLabelOf(m), count: byMonth[m].total }; }).reverse();
+  chartEl.innerHTML = reportHbarList(rows, 'var(--purple)');
+  lucide.createIcons();
+}
+
+/* ── รายปี ── */
+function renderReportYear() {
+  var sel = document.getElementById('repRptYearSelect');
+  var kpiEl = document.getElementById('repRptYearKpi');
+  var chartEl = document.getElementById('repRptYearChart');
+  if (!sel || !kpiEl || !chartEl) return;
+  var year = reportYearSel || sel.value;
+  if (!year) { kpiEl.innerHTML = ''; chartEl.innerHTML = ''; return; }
+  year = parseInt(year, 10);
+
+  var rows = allRepairs.filter(function(r) { var d = rDate(r); return d && d.getFullYear() === year; });
+  var monthCounts = [0,0,0,0,0,0,0,0,0,0,0,0];
+  rows.forEach(function(r) { monthCounts[rDate(r).getMonth()]++; });
+  var total = rows.length;
+  var closed = rows.filter(function(r) { return r.status === 'closed'; }).length;
+  var activeMonths = monthCounts.filter(function(c) { return c > 0; }).length;
+  var bestIdx = monthCounts.indexOf(Math.max.apply(null, monthCounts));
+
+  kpiEl.innerHTML =
+    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', total, 'แจ้งซ่อมรวมทั้งปี') +
+    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closed, 'ปิดงานแล้ว') +
+    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', activeMonths ? (total / activeMonths).toFixed(1) : '0', 'เฉลี่ย/เดือน') +
+    reportKpi('flame', 'var(--amber)', 'var(--amber-light)', total ? THAI_MONTHS[bestIdx] : '-', 'เดือนที่แจ้งมากที่สุด');
+
+  var mrows = THAI_MONTHS.map(function(m, i) { return { label: m, count: monthCounts[i] }; });
+  chartEl.innerHTML = reportHbarList(mrows, 'var(--sky)');
+  lucide.createIcons();
+}
+
+/* ── แยกตามหมวดหมู่ (ทั้งหมดทุกช่วงเวลา) ── */
+function renderReportCategory() {
+  var donutEl = document.getElementById('repRptCatDonut');
+  var tblBody = document.querySelector('#repRptCatTable tbody');
+  if (!donutEl || !tblBody) return;
+
+  var list = allRepairs;
+  reportRenderCategoryDonut(list, donutEl);
+
+  var total = list.length;
+  var counts = {}, closedCounts = {};
+  list.forEach(function(r) {
+    var key = r.category || 'other';
+    counts[key] = (counts[key] || 0) + 1;
+    if (r.status === 'closed') closedCounts[key] = (closedCounts[key] || 0) + 1;
+  });
+  var keys = Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; });
+
+  tblBody.innerHTML = keys.length ? keys.map(function(key) {
+    var cat = getCategoryMeta(key);
+    var count = counts[key];
+    var pct = total ? Math.round(count / total * 100) : 0;
+    var closed = closedCounts[key] || 0;
+    return '<tr><td style="font-weight:700;">' + esc2(cat.label) + '</td><td style="text-align:right;">' + count + '</td><td style="text-align:right;">' + pct + '%</td><td style="text-align:right;">' + closed + '</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:16px 0;">ยังไม่มีข้อมูล</td></tr>';
+  lucide.createIcons();
+}
+
 function switchRepSubTab(tab) {
   currentSubTab = tab;
   document.querySelectorAll('#repSubTabBar .sub-tab').forEach(function(b) {
@@ -1275,10 +1665,12 @@ function switchRepSubTab(tab) {
   document.getElementById('repPanelActive').classList.toggle('active', tab === 'active');
   document.getElementById('repPanelAssignee').classList.toggle('active', tab === 'assignee');
   document.getElementById('repPanelHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('repPanelReport').classList.toggle('active', tab === 'report');
   document.getElementById('repPanelSettings').classList.toggle('active', tab === 'settings');
   if (tab === 'active') renderActivePanel();
   if (tab === 'assignee') renderAssigneePanel();
   if (tab === 'history') renderTable();
+  if (tab === 'report') renderReportPanel();
 }
 
 /* ── เรียงรายการแจ้งซ่อม: "เร่งด่วน" อยู่บนสุดเสมอ ไม่ว่าจะแจ้งเมื่อไหร่
