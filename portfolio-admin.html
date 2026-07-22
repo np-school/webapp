@@ -513,7 +513,11 @@
     </div>
   </div>
 
-  <!-- Sub Tab Bar -->
+  <!-- Sub Tab Bar + Panels
+       data-subtab-scope ครอบทั้งบล็อกนี้ เพื่อให้ initSubtabs() ใน shared/common.js หา .tab-pane เจอ
+       (sub-tab-bar ถูกห่อด้วย div เพิ่มอีกชั้นเพื่อจัดวางคู่กับ subTabBadge ทำให้ root.parentElement
+        ไม่ครอบคลุมถึง .tab-pane panels ด้านล่างอีกต่อไป ต้องระบุ scope ตรงๆ) -->
+  <div data-subtab-scope>
   <div style="display:flex;align-items:center;gap:var(--gap-card);flex-wrap:wrap;margin-bottom:var(--gap-section);">
     <div class="sub-tab-bar purple" id="portfolioSubtabBar">
       <button class="sub-tab active" data-tab="overview">
@@ -803,6 +807,7 @@
       <p style="font-size:13px;color:#64748b;">พิมพ์ชื่อหรืออีเมลในช่องค้นหาด้านบน</p>
     </div>
   </div><!-- end panelTeacher -->
+  </div><!-- end data-subtab-scope -->
 
 </template><!-- #portfolioAdminContent -->
 
