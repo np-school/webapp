@@ -124,7 +124,7 @@ var adminMemoPage1Scale = 1;
 /* ══════════════════════ DATA LOADING ══════════════════════ */
 function loadAllSubmissions() {
   var main = document.getElementById('mainContent');
-  main.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);font-size:14px;"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;"></i><p style="margin-top:12px;">กำลังโหลดข้อมูล...</p></div>';
+  main.innerHTML = '<div class="empty-state"><i data-lucide="loader" style="width:28px;height:28px;animation:spin .8s linear infinite;color:var(--purple);"></i><p style="margin-top:12px;font-size:14px;font-weight:600;">กำลังโหลดข้อมูล...</p></div>';
   lucide.createIcons();
 
   var key = currentYear + '_' + currentSem;
@@ -244,7 +244,7 @@ function loadAllSubmissions() {
     updateStats();
     renderView();
   }).catch(function(e) {
-    main.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red-bright);font-size:14px;">เกิดข้อผิดพลาด: ' + e.message + '</div>';
+    main.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--red-dark);font-size:14px;font-weight:600;background:var(--red-pale);border-radius:14px;border:1.5px solid var(--red-mid);">⚠️ เกิดข้อผิดพลาด: ' + e.message + '</div>';
   });
 }
 
@@ -612,7 +612,7 @@ function renderListView() {
   var main = document.getElementById('mainContent');
 
   if (!teachers.length) {
-    main.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);"><i data-lucide="search-x" style="width:36px;height:36px;margin-bottom:12px;"></i><p style="font-size:14px;font-weight:700;">ไม่พบข้อมูล</p></div>';
+    main.innerHTML = '<div class="empty-state"><div style="width:64px;height:64px;border-radius:50%;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i data-lucide="search-x" style="width:30px;height:30px;color:var(--text3);"></i></div><p style="font-size:14px;font-weight:700;color:var(--text2);">ไม่พบข้อมูล</p></div>';
     lucide.createIcons(); return;
   }
 
@@ -874,7 +874,7 @@ function buildWorkflowBar(status) {
     } else {
       cls = 'pending';
     }
-    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"></div>';
+    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"><span class="wf-step-icon">' + step.icon + '</span></div>';
   });
   html += '</div>';
   return html;
@@ -886,7 +886,7 @@ function renderMatrixView() {
   var main = document.getElementById('mainContent');
 
   if (!teachers.length) {
-    main.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);"><p style="font-size:14px;font-weight:700;">ไม่พบข้อมูล</p></div>';
+    main.innerHTML = '<div class="empty-state"><p style="font-size:14px;font-weight:700;color:var(--text2);">ไม่พบข้อมูล</p></div>';
     return;
   }
 
