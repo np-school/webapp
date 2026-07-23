@@ -54,7 +54,7 @@
 
     /* ── Workflow status bar ── */
     .workflow-bar{display:flex;align-items:stretch;margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
-    .wf-step{flex:1;padding:6px 4px;text-align:center;font-size:9px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.3;}
+    .wf-step{flex:1;min-width:0;padding:6px 4px;text-align:center;font-size:9px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.3;overflow-wrap:anywhere;word-break:break-word;}
     .wf-step.done{background:var(--green);color:white;}
     .wf-step.active{background:var(--yellow);color:var(--yellow-dark);}
     .wf-step.revision{background:var(--red);color:white;}
