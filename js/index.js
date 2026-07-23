@@ -793,9 +793,9 @@
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
       var cardBg=isDone?'var(--bg-alt)':p.bg;
       var cardBorder=isDone?'var(--border-mid)':p.border;
-      var cardText=isDone?'#94a3b8':p.text;
+      var cardText=isDone?'var(--text3)':p.text;
       var purposeBg=isDone?'#94a3b822':p.accent+'18';
-      var badgeBg=isDone?'#94a3b8':p.accent;
+      var badgeBg=isDone?'var(--text3)':p.accent;
       return '<div style="padding:14px 16px;background:'+cardBg+';border-radius:14px;margin-bottom:10px;border:1.5px solid '+cardBorder+';">'+
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+

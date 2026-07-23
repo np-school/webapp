@@ -578,7 +578,7 @@ function updateDayView(dateKey, dayBookings) {
     var isDone = !isNaN(eDate) && now > eDate;
     var p = getRoomPastel(b.room || '');
     var cardBg = isDone ? 'var(--bg-alt)' : p.bg, cardBorder = isDone ? 'var(--border-mid)' : p.border, cardText = isDone ? 'var(--text3)' : p.text;
-    var purposeBg = isDone ? '#94a3b822' : p.accent + '22', badgeBg = isDone ? '#94a3b8' : p.accent;
+    var purposeBg = isDone ? '#94a3b822' : p.accent + '22', badgeBg = isDone ? 'var(--text3)' : p.accent;
     var statusTxt = isDone ? '✅ เสร็จสิ้น' : ok ? '✅ อนุมัติ' : '⏳ รอตรวจ';
     var fileBtn = b.hasLayout ? '<button onclick="openFileView(this.dataset.id)" data-id="' + b.id + '" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:var(--indigo-light);border:1px solid var(--indigo-pale);color:var(--violet);border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>' : '';
     return '<div style="padding:14px 16px;background:' + cardBg + ';border-radius:14px;margin-bottom:10px;border:1.5px solid ' + cardBorder + ';">' +

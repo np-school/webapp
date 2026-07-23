@@ -63,9 +63,9 @@ function onPushPermissionNeeded(user) {
       '<i data-lucide="bell" style="width:20px;height:20px;flex-shrink:0;color:#facc15;"></i>' +
       '<span style="flex:1;font-size:12.5px;font-weight:600;line-height:1.4;">เปิดการแจ้งเตือน เพื่อไม่พลาดคำขอ/อัปเดตสถานะการจอง</span>' +
       '<button id="pushPermBtn" style="background:#fff;color:#0d1b2a;border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
-      '<button id="pushPermClose" style="background:transparent;border:none;color:#94a3b8;flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
+      '<button id="pushPermClose" style="background:transparent;border:none;color:var(--text3);flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
     '</div>' +
-    '<div id="pushPermStatus" style="font-size:10.5px;color:#94a3b8;margin-top:6px;padding-left:30px;min-height:14px;"></div>';
+    '<div id="pushPermStatus" style="font-size:10.5px;color:var(--text3);margin-top:6px;padding-left:30px;min-height:14px;"></div>';
   document.body.appendChild(el);
   if (window.lucide) lucide.createIcons();
 
@@ -729,13 +729,13 @@ function updateSidebarProfile(user) {
     if (sub1 && sub2) {
       subHtml =
         '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub1 + '</p>' +
-        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub2 + '</p>';
+        '<p style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub2 + '</p>';
     } else if (sub1 || sub2) {
       subHtml =
         '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + (sub1 || sub2) + '</p>';
     } else {
       subHtml =
-        '<p style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>';
+        '<p style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>';
     }
     el.innerHTML =
       '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;">' +
@@ -884,8 +884,8 @@ function buildSidebar(activePage) {
   GROUP_MENU.forEach(function(g) {
     html +=
       '<div class="sidebar-group-label">' +
-        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#94a3b8;flex-shrink:0;"></i>' +
-        '<span style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:var(--text3);flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
       '</div>';
     if (!g.items.length) {
       html += '<div class="sidebar-dev-note">อยู่ระหว่างพัฒนา</div>';

@@ -57,6 +57,15 @@
 3. **จุดที่ตั้งใจไม่แตะ**: `DEPT_COLORS.academic:'#1d4ed8'` ใน `portfolio-admin.js` ตรงกับค่า default ของ `--accent` (สีธีม) พอดี เว้นไว้ไม่แตะเพราะกำกวมกับสีธีม, color-swatch เลือกสีประเภทเอกสาร (`selectDtColor`) เว้นไว้เหมือนเดิมเพราะบันทึกลง Firestore จริง
 4. **Role colors ที่รวมแล้ว (`--role-*`) ยังไม่ได้ตรวจด้วยตาจริงบนเว็บ** — เปลี่ยน hue ของบางบทบาท (เช่น general/hr จาก blue → sky, dep-budget/dep-general/dep-personnel จาก navy เข้ม → violet-deep) แนะนำเปิด `admin-role.html` เช็ค contrast/ความชัดเจนจริงก่อน deploy
 
+## อัปเดต: รีวิวข้อ 1 แล้ว (`common.js` / `index.js` / `room-request.js`) — 2026-07-23
+
+**สรุป**: เช็ค hex ที่เหลือทั้งหมดในไฟล์เหล่านี้แล้ว เกือบทั้งหมดคือ `ROOM_PASTEL_MAP` / `ROOM_PASTEL_FB` (ชุดสีพาสเทลแยกตามห้อง/สถานที่ ~10 hue) ซ้ำกัน 3 ที่ (common.js, index.js, room-request.js) — **ตัดสินใจว่าเป็น decorative จริง ไม่ merge เข้า 6 สี core** เพราะมีหน้าที่แยกแยะ "ห้อง" ให้ต่างกันชัดเจน คล้ายเคส `selectDtColor` ที่เว้นไว้ก่อนหน้านี้ (แต่ accent ของแต่ละห้องบางอันก็ alias ไปที่ `--c-*` อยู่แล้วบางส่วน)
+
+**แก้จริง**: hex สีเทากลาง `#94a3b8` (ตรงกับ `--text3` เป๊ะ) พบซ้ำ 10 จุดใน 3 ไฟล์ → แทนด้วย `var(--text3)` แล้ว (เช็ค `node --check` ผ่านทั้ง 3 ไฟล์)
+- เหลือ `#94a3b822` (2 จุด, index.js:797 / room-request.js:581) ไว้ตามเดิม เพราะเป็น string concat ต่อท้าย alpha hex ใช้ `var()` ตรงๆ ไม่ได้
+
+**ยังไม่แตะ (ตั้งใจ)**: ชุดสี `ROOM_PASTEL_MAP/FB` ทั้งหมด (decorative), `#06C755` ใน index.js (สีแบรนด์ LINE)
+
 ## คำสั่งที่ใช้ทำงานนี้ (ไว้รันซ้ำ/ตรวจสอบ)
 
 ```bash
