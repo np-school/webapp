@@ -22,21 +22,21 @@ var blockedSlots = [], editingBookingId = null;
 
 /* ══ Room Color (from common.js fallback local copy) ══ */
 var ROOM_PASTEL_MAP = {
-  'ห้องประชุมชวนชม'  : {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
-  'หอประชุมพุทธรักษา': {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
-  'สนามกีฬากลาง'    : {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
+  'ห้องประชุมชวนชม'  : {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'var(--c-sky-deep)'},
+  'หอประชุมพุทธรักษา': {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'var(--c-amber-deep)'},
+  'สนามกีฬากลาง'    : {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'var(--c-green-deep)'},
   'ห้องประชุมราชพฤกษ์': {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
-  'โดมอเนกประสงค์'  : {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
+  'โดมอเนกประสงค์'  : {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'var(--c-amber)'},
   'ห้องประชุมปาริชาต' : {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
   'ห้องประชุมชวนชน'  : {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'}
 };
 var ROOM_PASTEL_FALLBACK = [
-  {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'#2563eb'},
-  {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'#059669'},
+  {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'var(--c-sky-deep)'},
+  {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'var(--c-green-deep)'},
   {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
   {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
-  {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'#ea580c'},
-  {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'#b45309'},
+  {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'var(--c-amber)'},
+  {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'var(--c-amber-deep)'},
   {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'},
   {bg:'#fdf4ff',text:'#581c87',border:'#e9d5ff',accent:'#9333ea'}
 ];
@@ -128,7 +128,7 @@ function mdpRender() {
     el.textContent = d;
     if (isBk) {
       var dot = document.createElement('span');
-      dot.style.cssText = 'position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:' + (isSel ? 'white' : '#f59e0b') + ';';
+      dot.style.cssText = 'position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:' + (isSel ? 'white' : 'var(--c-amber)') + ';';
       el.appendChild(dot);
     }
     (function(dateStr, past) {

@@ -21,11 +21,11 @@ var REPAIR_BUILDINGS  = [];
      หมวดหมู่เดียวกันจะได้สีเดิมเสมอไม่ว่าจะโหลดกี่ครั้งก็ตาม ── */
 var CATEGORY_PALETTE = [
   { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
-  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d',            hex: '#15803d' },
-  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e',            hex: '#92400e' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: 'var(--c-green-deep)',            hex: 'var(--c-green-deep)' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: 'var(--c-amber-deep)',            hex: 'var(--c-amber-deep)' },
   { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
   { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
-  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: 'var(--c-violet-deep)' }
 ];
 
 /* ══ Status meta: label + color + workflow-step states ══ */

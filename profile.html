@@ -67,10 +67,10 @@
     .sem-block{background:white;border-radius:18px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden;margin-bottom:14px;}
     .sem-block:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);}
     .sem-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none;}
-    .sem-badge{background:linear-gradient(135deg,var(--accent),#3b82f6);color:white;font-size:12px;font-weight:800;padding:5px 13px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+    .sem-badge{background:linear-gradient(135deg,var(--accent),var(--c-sky));color:white;font-size:12px;font-weight:800;padding:5px 13px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
     .sem-badge.sem2{background:linear-gradient(135deg,var(--violet),var(--violet-vivid));}
     .sem-progress-bar{flex:1;background:var(--border-soft);border-radius:6px;height:7px;overflow:hidden;}
-    .sem-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#3b82f6);transition:width .6s ease;}
+    .sem-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--c-sky));transition:width .6s ease;}
     .sem-progress-fill.purple{background:linear-gradient(90deg,var(--violet),var(--violet-vivid));}
     .sem-count{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;}
     .sem-chevron{color:var(--text3);transition:transform .3s;flex-shrink:0;}
@@ -97,12 +97,12 @@
 
     /* status badge */
     .s-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;}
-    .s-submitted     {background:var(--role-academic-bg);color:#15803d;}
+    .s-submitted     {background:var(--role-academic-bg);color:var(--c-green-deep);}
     .s-head_reviewed {background:var(--sky-light);color:var(--role-hr-color);}
     .s-reviewed      {background:var(--role-general-bg);color:var(--accent-dark);}
     .s-assistant_reviewed{background:var(--role-hog-bg);color:var(--amber-dark);}
-    .s-deputy_reviewed{background:var(--violet-tint);color:#6d28d9;}
-    .s-final_approved{background:var(--role-budget-bg);color:#065f46;}
+    .s-deputy_reviewed{background:var(--violet-tint);color:var(--c-violet-deep);}
+    .s-final_approved{background:var(--role-budget-bg);color:var(--c-green-deep);}
     .s-revision      {background:var(--yellow-light);color:var(--amber-dark);}
     .s-none          {background:var(--border-soft);color:var(--text3);}
 
@@ -214,7 +214,7 @@
     .sar-teach-total{font-size:12px;font-weight:800;color:var(--orange-mid);padding:8px 0 2px;text-align:right;}
     .sar-dev-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg);}
     .sar-dev-item:last-child{border-bottom:none;}
-    .sar-dev-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:5px;}
+    .sar-dev-dot{width:8px;height:8px;border-radius:50%;background:var(--c-amber);flex-shrink:0;margin-top:5px;}
     .sar-dev-title{font-size:12px;font-weight:700;color:var(--text-dark);margin-bottom:2px;}
     .sar-dev-meta{font-size:10px;font-weight:600;color:var(--text3);}
     .sar-media-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg);}
@@ -228,7 +228,7 @@
     .sar-first-row-ref{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg);}
     .sar-first-row-ref:last-child{border-bottom:none;}
     .sar-school-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-tint);border:1px solid var(--accent-light);border-radius:10px;padding:8px 14px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--accent);}
-    .sar-service-chip{display:inline-flex;align-items:center;gap:5px;background:var(--green-light);border:1px solid #bbf7d0;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#15803d;}
+    .sar-service-chip{display:inline-flex;align-items:center;gap:5px;background:var(--green-light);border:1px solid #bbf7d0;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--c-green-deep);}
     .sar-empty{text-align:center;padding:20px;color:var(--text3);font-size:12px;font-weight:600;}
 
     /* ── Career Timeline ── */
@@ -244,8 +244,8 @@
     .ct-dept{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:9px;}
     .ct-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:2px;}
     .ct-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
-    .ct-now-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:#15803d;background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;}
-    .ct-service-bar{height:4px;border-radius:2px;margin-top:10px;background:linear-gradient(to right,var(--emerald),#3b82f6);}
+    .ct-now-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--c-green-deep);background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;}
+    .ct-service-bar{height:4px;border-radius:2px;margin-top:10px;background:linear-gradient(to right,var(--emerald),var(--c-sky));}
     .ct-service-lbl{font-size:10px;font-weight:700;color:var(--text2);margin-top:4px;}
     @keyframes ct-blink{0%,100%{opacity:1;}50%{opacity:.5;}}
     .ct-now-badge{animation:ct-blink 2.2s infinite;}

@@ -489,7 +489,7 @@ function renderStaffPickerList(query) {
     return;
   }
   var curEmail = (document.getElementById('fEmail').value || '').trim().toLowerCase();
-  var colors = ['#1d4ed8','#0d1b2a','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
+  var colors = ['#1d4ed8','#0d1b2a','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
   listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);
     var ci = 0; for (var i=0;i<s.name.length;i++) ci=(ci*31+s.name.charCodeAt(i))%colors.length;
@@ -542,7 +542,7 @@ function renderHogPickerList(query) {
     listEl.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
     return;
   }
-  var colors = ['#1d4ed8','#0d1b2a','#15803d','#b45309','#0369a1','#be185d','#d97706','#0d9488'];
+  var colors = ['#1d4ed8','#0d1b2a','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
   var curEmail = _selectedHog ? _selectedHog.email : '';
   listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);

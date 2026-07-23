@@ -206,7 +206,7 @@
       ctx.fillText(Math.round(maxVal/4*i),padL-5,yy);
     }
 
-    var barColors=['#22c55e','#f59e0b','#ef4444'];
+    var barColors=['var(--c-green)','var(--c-amber)','var(--c-red-mid)'];
     var barKeys=['approved','pending','rejected'];
     var groupW=chartW/rooms.length;
     var nBars=3,barPadG=groupW*0.12,barW=Math.max(6,(groupW-barPadG*2)/nBars-2);
@@ -323,7 +323,7 @@
     filtered.forEach(function(b){gt.total++;if(b.status==='approved')gt.approved++;else if(b.status==='pending')gt.pending++;else if(b.status==='rejected')gt.rejected++;});
     var totalsEl=document.getElementById('sumTotals');
     if(totalsEl){
-      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'var(--purple-light)',ic:'var(--purple)'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'var(--green)'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'#fef9c3',ic:'#d97706'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'var(--red-light)',ic:'var(--red)'}];
+      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'var(--purple-light)',ic:'var(--purple)'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'var(--green)'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'var(--c-amber-pale)',ic:'var(--c-amber)'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'var(--red-light)',ic:'var(--red)'}];
       totalsEl.innerHTML=grandDefs.map(function(g){return '<div class="sum-grand-card"><div style="width:40px;height:40px;background:'+g.bg+';border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="'+g.icon+'" style="width:18px;height:18px;color:'+g.ic+';"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">'+g.label+'</p><p style="font-size:22px;font-weight:800;line-height:1;color:var(--text);">'+g.val+'</p></div></div>';}).join('');
       lucide.createIcons();
     }
@@ -367,7 +367,7 @@
       var cardId='sum-card-'+d.key;
       var recentItems=d.items.slice(0,5);
       var detailRows=recentItems.map(function(b){
-        var sColor=b.status==='approved'?'#22c55e':b.status==='rejected'?'#ef4444':'#f59e0b';
+        var sColor=b.status==='approved'?'var(--c-green)':b.status==='rejected'?'var(--c-red-mid)':'var(--c-amber)';
         var sLabel=b.status==='approved'?'อนุมัติ':b.status==='rejected'?'ไม่อนุมัติ':'รอพิจารณา';
         return '<div class="sum-booking-row"><span class="sdot" style="background:'+sColor+';"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text);">'+(b.fullName||b.userName||'-')+'</span><span style="color:var(--text2);flex-shrink:0;white-space:nowrap;">'+b.date+'</span><span style="color:var(--text2);flex-shrink:0;white-space:nowrap;">'+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span><span style="background:'+sColor+'22;color:'+sColor+';border-radius:10px;padding:1px 7px;font-weight:700;flex-shrink:0;">'+sLabel+'</span></div>';
       }).join('');
@@ -413,9 +413,9 @@
   /* ── 1. Donut: สถานะ ── */
   function renderDonutChart(){
     var statusConfig=[
-      {key:'approved', label:'อนุมัติแล้ว',   color:'#22c55e'},
-      {key:'pending',  label:'รอพิจารณา',     color:'#f59e0b'},
-      {key:'rejected', label:'ไม่อนุมัติ',    color:'#ef4444'},
+      {key:'approved', label:'อนุมัติแล้ว',   color:'var(--c-green)'},
+      {key:'pending',  label:'รอพิจารณา',     color:'var(--c-amber)'},
+      {key:'rejected', label:'ไม่อนุมัติ',    color:'var(--c-red-mid)'},
     ];
     var counts={approved:0,pending:0,rejected:0};
     allBookings.forEach(function(b){var s=b.status||'pending';if(counts[s]!==undefined)counts[s]++;});

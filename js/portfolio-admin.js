@@ -36,15 +36,15 @@ function cssVar(name) {
    ════════════════════════════════════════════ */
 
 var DOCUMENT_TYPES = [
-  { id:'syllabus',         label:'Course Syllabus',               short:'Syllabus',  icon:'file-text',   color:'#3b82f6' },
-  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',          short:'แผนการ',    icon:'book-open',   color:'#8b5cf6' },
-  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',           short:'เศรษฐกิจ',  icon:'leaf',        color:'#22c55e' },
-  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',             short:'ราโชบาย',   icon:'crown',       color:'#f59e0b' },
+  { id:'syllabus',         label:'Course Syllabus',               short:'Syllabus',  icon:'file-text',   color:'var(--c-sky)' },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',          short:'แผนการ',    icon:'book-open',   color:'var(--c-violet)' },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',           short:'เศรษฐกิจ',  icon:'leaf',        color:'var(--c-green)' },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',             short:'ราโชบาย',   icon:'crown',       color:'var(--c-amber)' },
   { id:'competency',       label:'แผนสมรรถนะ',                   short:'สมรรถนะ',   icon:'zap',         color:'#ec4899' },
-  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',        short:'วิจัย',     icon:'microscope',  color:'#06b6d4' },
-  { id:'student_analysis', label:'วิเคราะห์ผู้เรียนรายบุคคล',     short:'วิเคราะห์', icon:'users',       color:'#f97316' },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',        short:'วิจัย',     icon:'microscope',  color:'var(--c-sky)' },
+  { id:'student_analysis', label:'วิเคราะห์ผู้เรียนรายบุคคล',     short:'วิเคราะห์', icon:'users',       color:'var(--c-amber-tint)' },
   { id:'media_register',   label:'ทะเบียนสื่อ',                  short:'สื่อ',      icon:'library',     color:'#6366f1' },
-  { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'#eab308' },
+  { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'var(--c-amber)' },
 ];
 var currentYear = window._defaultYear || 2568;
 var currentSem  = window._defaultSem  || 1;
@@ -95,7 +95,7 @@ var currentSubTab = 'overview';
 
 var _groupData = {}; /* cache ข้อมูลกลุ่ม */
 
-var SEG_COLORS = { final:'#16a34a', deputy:'#8b5cf6', assist:'#f59e0b', head:'#0ea5e9', submitted:'#22c55e', revision:'#ef4444' };
+var SEG_COLORS = { final:'var(--c-green)', deputy:'var(--c-violet)', assist:'var(--c-amber)', head:'var(--c-sky)', submitted:'var(--c-green)', revision:'var(--c-red-mid)' };
 var SEG_LABELS = { final:'ผอ.อนุมัติ', deputy:'รอง ผอ.ตรวจแล้ว', assist:'ผช.ผอ.ตรวจแล้ว', head:'หัวหน้าฯ ตรวจแล้ว', submitted:'รอตรวจ', revision:'ให้แก้ไข' };
 var SEG_KEYS   = ['final','deputy','assist','head','submitted','revision'];
 
@@ -108,7 +108,7 @@ var teacherDonutCtx    = null;   /* canvas context */
 var teacherDonutChartObj = null;
 
 var editingDocTypeId = null; /* null = new, else Firestore doc id */
-var selectedDtColor  = '#3b82f6';
+var selectedDtColor  = 'var(--c-sky)';
 var dragSrcIndex     = null;
 
 /* ── drag-to-reorder ── */
@@ -760,7 +760,7 @@ function renderListView() {
                     var cCode   = cFiles[0].courseCode || cKey;
                     var cName   = cFiles[0].courseName || '';
                     var cIcon   = { none:'○', submitted:'↑', head_reviewed:'✓', reviewed:'✓', assistant_reviewed:'🏅', deputy_reviewed:'👑', final_approved:'★', revision:'!' }[cStatus] || '·';
-                    var cColor  = { none:'#94a3b8', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#b45309', deputy_reviewed:'#7e22ce', final_approved:'#16a34a', revision:'#f59e0b' }[cStatus] || 'var(--text3)';
+                    var cColor  = { none:'#94a3b8', submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--c-green)', revision:'var(--c-amber)' }[cStatus] || 'var(--text3)';
                     var cBg     = { none:'#f8fafc', submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#f5f3ff', final_approved:'#d1fae5', revision:'#fffbeb' }[cStatus] || 'var(--bg)';
                     var cBorder = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fde68a' }[cStatus] || 'var(--border)';
                     var cDocIdForClick = cFiles[0]._docId || subDocId;
@@ -925,7 +925,7 @@ function renderMatrixView() {
       var status = fakeStatus(sub ? (sub.status||'submitted') : 'none');
       var cellCls = 'matrix-cell cell-' + status;
       var icon = { none:'minus', submitted:'check', head_reviewed:'user-check', reviewed:'user-check', assistant_reviewed:'medal', deputy_reviewed:'crown', final_approved:'gem', revision:'alert-triangle' }[status] || 'minus';
-      var iconColor = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#b45309', deputy_reviewed:'#7e22ce', final_approved:'#16a34a', revision:'#f59e0b' }[status] || 'var(--blue-pale)';
+      var iconColor = { none:'#d1d5db', submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--c-green)', revision:'var(--c-amber)' }[status] || 'var(--blue-pale)';
       html += '<td><div class="' + cellCls + '" onclick="' + (sub?'openReview(\''+sub.id+'\',\''+t.uid+'\',\''+dt.id+'\')':'') + '" title="' + dt.label + (sub?'\nส่งเมื่อ: '+formatDate(sub.submittedAt):'') + '">' +
         '<i data-lucide="' + icon + '" style="width:12px;height:12px;color:' + iconColor + ';"></i>' +
       '</div></td>';
@@ -1173,7 +1173,7 @@ function fillSingleFileInfo(sub) {
     /* หลายไฟล์ในวิชานี้ — แสดง list ลิงก์เปิดแต่ละไฟล์ */
     var fileListHtml = courseFiles.map(function(f, i) {
       var fStatus = f.status || curStatus;
-      var borderColor = {submitted:'#22c55e',head_reviewed:'#0ea5e9',reviewed:'#3b82f6',final_approved:'var(--purple)',revision:'#f59e0b'}[fStatus] || 'var(--border)';
+      var borderColor = {submitted:'var(--c-green)',head_reviewed:'var(--c-sky)',reviewed:'var(--c-sky)',final_approved:'var(--purple)',revision:'var(--c-amber)'}[fStatus] || 'var(--border)';
       return '<div style="display:flex;align-items:center;gap:var(--gap-tight);padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;border-left:3px solid ' + borderColor + ';">' +
         '<i data-lucide="file-text" style="width:13px;height:13px;color:var(--text2);flex-shrink:0;"></i>' +
         '<span style="font-size:11px;font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc2(f.fileName || f.name || 'ไฟล์ที่ ' + (i+1)) + '</span>' +
@@ -1391,13 +1391,13 @@ function fillSingleFileInfo(sub) {
       revision:           '⚠️ ส่งคืนเพื่อแก้ไข'
     };
     var statusColors = {
-      submitted:          { bg:'#f0fdf4', color:'#15803d' },
-      head_reviewed:      { bg:'#e0f2fe', color:'#0369a1' },
-      reviewed:           { bg:'#e0f2fe', color:'#0369a1' },
-      assistant_reviewed: { bg:'#fef3c7', color:'#92400e' },
-      deputy_reviewed:    { bg:'var(--purple-light)', color:'#6d28d9' },
-      final_approved:     { bg:'#d1fae5', color:'#065f46' },
-      revision:           { bg:'#fffbeb', color:'#92400e' }
+      submitted:          { bg:'#f0fdf4', color:'var(--c-green-deep)' },
+      head_reviewed:      { bg:'#e0f2fe', color:'var(--c-sky-deep)' },
+      reviewed:           { bg:'#e0f2fe', color:'var(--c-sky-deep)' },
+      assistant_reviewed: { bg:'#fef3c7', color:'var(--c-amber-deep)' },
+      deputy_reviewed:    { bg:'var(--purple-light)', color:'var(--c-violet-deep)' },
+      final_approved:     { bg:'#d1fae5', color:'var(--c-green-deep)' },
+      revision:           { bg:'#fffbeb', color:'var(--c-amber-deep)' }
     };
     var sc = statusColors[curStatus] || { bg:'#f1f5f9', color:'#64748b' };
     btnBox.innerHTML =
@@ -1657,12 +1657,12 @@ function renderDonutChart() {
   /* เรียงให้ none อยู่แรก วาดเป็น base แล้วสีอื่นทับทีหลัง */
   var statusConfig = [
     { key:'none',               label:'ยังไม่ส่ง',                color:'#e2e8f0' },
-    { key:'revision',           label:'ให้แก้ไข',                 color:'#ef4444' },
-    { key:'submitted',          label:'รอตรวจ',                   color:'#22c55e' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'#0ea5e9' },
-    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'#f59e0b' },
-    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'#8b5cf6' },
-    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'#16a34a' },
+    { key:'revision',           label:'ให้แก้ไข',                 color:'var(--c-red-mid)' },
+    { key:'submitted',          label:'รอตรวจ',                   color:'var(--c-green)' },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'var(--c-sky)' },
+    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'var(--c-amber)' },
+    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'var(--c-violet)' },
+    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'var(--c-green)' },
   ];
 
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
@@ -1721,7 +1721,7 @@ function renderDonutChart() {
   document.getElementById('donutTotal').textContent = total;
 
   /* Legend — แสดงเรียงจาก approved → none */
-  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"#16a34a"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"#8b5cf6"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"#f59e0b"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"#0ea5e9"},{key:"submitted",label:"รอตรวจ",color:"#22c55e"},{key:"revision",label:"ให้แก้ไข",color:"#ef4444"},{key:"none",label:"ยังไม่ส่ง",color:"#e2e8f0"}];
+  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"var(--c-green)"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"var(--c-violet)"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"var(--c-amber)"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"var(--c-sky)"},{key:"submitted",label:"รอตรวจ",color:"var(--c-green)"},{key:"revision",label:"ให้แก้ไข",color:"var(--c-red-mid)"},{key:"none",label:"ยังไม่ส่ง",color:"#e2e8f0"}];
   var leg = document.getElementById("donutLegend");
   leg.innerHTML = legendConfig.map(function(s) {
 
@@ -1774,7 +1774,7 @@ function renderGroupBars() {
   container.innerHTML = sorted.map(function(g) {
     var d   = groupData[g];
     var pct = d.total > 0 ? Math.round((d.approved / d.total) * 100) : 0;
-    var color = pct >= 80 ? 'var(--emerald)' : pct >= 50 ? 'var(--accent-warn)' : '#ef4444';
+    var color = pct >= 80 ? 'var(--emerald)' : pct >= 50 ? 'var(--accent-warn)' : 'var(--c-red-mid)';
     return '<div class="hbar-row">' +
       '<div class="hbar-label">' +
         '<span class="hbar-name" title="' + esc2(g) + '">' + esc2(g) + '</span>' +
@@ -1926,7 +1926,7 @@ function renderGroupBarChart(groups) {
       '</div>' +
       /* pct */
       '<div style="width:' + numW + 'px;text-align:right;flex-shrink:0;padding-left:8px;">' +
-        '<span style="font-size:13px;font-weight:800;color:' + (pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--purple)' : '#f59e0b') + ';">' + pct + '%</span>' +
+        '<span style="font-size:13px;font-weight:800;color:' + (pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--purple)' : 'var(--c-amber)') + ';">' + pct + '%</span>' +
       '</div>' +
     '</div>';
   });
@@ -1969,10 +1969,10 @@ function renderGroupDetail() {
   /* stat row */
   var statCards = [
     { label:'ครูทั้งหมด',   val:d.teachers.length, color:'var(--purple)', bg:'var(--purple-light)', icon:'users' },
-    { label:'ส่งงานแล้ว%', val:pct + '%',           color:'#22c55e', bg:'#dcfce7', icon:'send' },
-    { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'#16a34a', bg:'#bbf7d0', icon:'shield-check' },
-    { label:'รอตรวจ',      val:d.submitted,          color:'#0ea5e9', bg:'#e0f2fe', icon:'clock' },
-    { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'#ef4444', bg:'#fee2e2', icon:'alert-circle' },
+    { label:'ส่งงานแล้ว%', val:pct + '%',           color:'var(--c-green)', bg:'#dcfce7', icon:'send' },
+    { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'var(--c-green)', bg:'#bbf7d0', icon:'shield-check' },
+    { label:'รอตรวจ',      val:d.submitted,          color:'var(--c-sky)', bg:'#e0f2fe', icon:'clock' },
+    { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'var(--c-red-mid)', bg:'#fee2e2', icon:'alert-circle' },
   ].map(function(s) {
     return '<div class="stat-card" style="flex-direction:column;gap:4px;padding:12px 14px;">' +
       '<div style="width:32px;height:32px;border-radius:10px;background:' + s.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
@@ -2025,7 +2025,7 @@ function renderGroupDetail() {
       '<div style="flex:1;display:flex;height:20px;border-radius:6px;overflow:hidden;background:var(--bg);">' +
         segs + noneBar +
       '</div>' +
-      '<span style="font-size:12px;font-weight:800;color:' + (pctHere>=100?'var(--green)':pctHere>=60?'var(--purple)':'#f59e0b') + ';min-width:36px;text-align:right;">' + pctHere + '%</span>' +
+      '<span style="font-size:12px;font-weight:800;color:' + (pctHere>=100?'var(--green)':pctHere>=60?'var(--purple)':'var(--c-amber)') + ';min-width:36px;text-align:right;">' + pctHere + '%</span>' +
     '</div>';
   }).join('');
 
@@ -2033,7 +2033,7 @@ function renderGroupDetail() {
   var teacherRows = d.teachers.slice().sort(function(a,b){ return (b.subs ? Object.keys(b.subs).length : 0) - (a.subs ? Object.keys(a.subs).length : 0); }).map(function(t) {
     var subCount = Object.keys(t.subs).length;
     var pctT = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
-    var barColor = pctT >= 100 ? 'var(--green)' : pctT >= 60 ? 'var(--purple)' : pctT >= 30 ? 'var(--accent-warn)' : '#ef4444';
+    var barColor = pctT >= 100 ? 'var(--green)' : pctT >= 60 ? 'var(--purple)' : pctT >= 30 ? 'var(--accent-warn)' : 'var(--c-red-mid)';
     var docChips = DOCUMENT_TYPES.map(function(dt) {
       var sub = t.subs[dt.id];
       var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
@@ -2170,12 +2170,12 @@ function renderTeacherDetail(t) {
 function renderTeacherDonut(counts) {
   var STATUS_CFG = [
     { key:'none',               label:'ยังไม่ส่ง',               color:'#cbd5e1' },
-    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:'#22c55e' },
-    { key:'revision',           label:'ให้แก้ไข',                color:'#ef4444' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:'#0ea5e9' },
-    { key:'assistant_reviewed', label:'ผช.ผอ. ตรวจแล้ว',         color:'#f59e0b' },
-    { key:'deputy_reviewed',    label:'รอง ผอ. ตรวจแล้ว',        color:'#8b5cf6' },
-    { key:'final_approved',     label:'ผอ. อนุมัติ',              color:'#16a34a' },
+    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:'var(--c-green)' },
+    { key:'revision',           label:'ให้แก้ไข',                color:'var(--c-red-mid)' },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:'var(--c-sky)' },
+    { key:'assistant_reviewed', label:'ผช.ผอ. ตรวจแล้ว',         color:'var(--c-amber)' },
+    { key:'deputy_reviewed',    label:'รอง ผอ. ตรวจแล้ว',        color:'var(--c-violet)' },
+    { key:'final_approved',     label:'ผอ. อนุมัติ',              color:'var(--c-green)' },
   ];
 
   var canvas = document.getElementById('teacherDonutChart');
@@ -2228,7 +2228,7 @@ function renderTeacherDocBars(t) {
   if (!container) return;
 
   var STATUS_LABEL = { submitted:'รอตรวจ', head_reviewed:'หัวหน้าฯ ✓', reviewed:'หัวหน้าฯ ✓', assistant_reviewed:'ผช.ผอ. ✓', deputy_reviewed:'รอง ผอ. ✓', final_approved:'ผอ. อนุมัติ', revision:'ให้แก้ไข' };
-  var STATUS_COLOR = { submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#0ea5e9', assistant_reviewed:'#f59e0b', deputy_reviewed:'#8b5cf6', final_approved:'var(--purple)', revision:'#ef4444' };
+  var STATUS_COLOR = { submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--purple)', revision:'var(--c-red-mid)' };
   var STATUS_ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
   var MAX = 6;
 
@@ -2264,7 +2264,7 @@ function renderTeacherSubTable(t) {
 
   var STATUS_LABEL = { submitted:'📤 รอตรวจ', head_reviewed:'👤 หัวหน้าฯ ✓', reviewed:'👤 หัวหน้าฯ ✓', assistant_reviewed:'🏅 ผช.ผอ. ✓', deputy_reviewed:'👑 รอง ผอ. ✓', final_approved:'🎖 ผอ. อนุมัติ', revision:'⚠ ให้แก้ไข', none:'ยังไม่ส่ง' };
   var STATUS_BG    = { submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--purple-light)', final_approved:'#d1fae5', revision:'#fef2f2', none:'#f8fafc' };
-  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#dc2626', none:'#94a3b8' };
+  var STATUS_COLOR = { submitted:'var(--c-green-deep)', head_reviewed:'var(--c-sky-deep)', reviewed:'var(--c-sky-deep)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet-deep)', final_approved:'var(--c-green-deep)', revision:'var(--c-red)', none:'#94a3b8' };
 
   var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
   document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + DOCUMENT_TYPES.length + ' รายการ';
@@ -2362,7 +2362,7 @@ function renderTeacherSubTable(t) {
         if (doc.adminNote) {
           var noteCls = dSt === 'revision' ? 'revision' : 'admin';
           html += '<div class="note-bubble ' + noteCls + '" style="margin-top:6px;">' +
-            '<p style="font-size:11px;font-weight:700;color:' + (dSt==='revision'?'var(--red)':'#92400e') + ';margin-bottom:3px;">' + (dSt==='revision'?'⚠ หมายเหตุการแก้ไข':'💬 ความเห็นผู้ตรวจ') + '</p>' +
+            '<p style="font-size:11px;font-weight:700;color:' + (dSt==='revision'?'var(--red)':'var(--c-amber-deep)') + ';margin-bottom:3px;">' + (dSt==='revision'?'⚠ หมายเหตุการแก้ไข':'💬 ความเห็นผู้ตรวจ') + '</p>' +
             '<p style="font-size:12px;color:' + (dSt==='revision'?'var(--rose-deep)':'#78350f') + ';line-height:1.6;">' + esc2(doc.adminNote) + '</p>' +
           '</div>';
         }
@@ -2387,8 +2387,8 @@ function renderDocTypeRows(docs) {
 
   list.innerHTML = docs.map(function(dt, i) {
     var DEPT_LABELS = { academic:'ฝ่ายวิชาการ', budget:'ฝ่ายงบประมาณ', personnel:'ฝ่ายบริหารงานบุคคล', general:'ฝ่ายบริหารทั่วไป' };
-    var DEPT_COLORS = { academic:'#1d4ed8', budget:'#16a34a', personnel:'var(--purple)', general:'#ea580c' };
-    var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'#fff7ed' };
+    var DEPT_COLORS = { academic:'#1d4ed8', budget:'var(--c-green)', personnel:'var(--purple)', general:'var(--c-amber)' };
+    var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'var(--c-amber-pale)' };
     var deptKey = dt.department || 'academic';
     var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'var(--bg-alt)') + ';color:' + (DEPT_COLORS[deptKey]||'var(--text2)') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';
     var activeLabel = dt.active === false
@@ -2432,9 +2432,9 @@ function seedDefaultDocTypes() {
     batch.set(ref, { id: dt.id, label: dt.label, short: dt.short||'', icon: dt.icon||'file', color: dt.color||'var(--purple)', order: i, active: true, department: dt.department||'academic' });
   });
   batch.commit().then(function() {
-    showToast('นำเข้าหัวข้อเริ่มต้นสำเร็จ', '#22c55e');
+    showToast('นำเข้าหัวข้อเริ่มต้นสำเร็จ', 'var(--c-green)');
     loadDocTypeList();
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'var(--c-red-mid)'); });
 }
 
 function previewDtIcon() {
@@ -2738,15 +2738,15 @@ function openReview(subId, uid, docTypeId) {
   if (badgeEl) {
     var p2 = adminPermissions || {};
     var badgeCfg = isSuperAdmin
-      ? { label:'⚡ SuperAdmin', bg:'var(--purple-light)', color:'#6d28d9' }
+      ? { label:'⚡ SuperAdmin', bg:'var(--purple-light)', color:'var(--c-violet-deep)' }
       : isHeadOfGroupOnly
-      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'#92400e' }
+      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'var(--c-amber-deep)' }
       : p2.assistantDirectorAcademic && !p2.deputyDirectorAcademic && !p2.director
-      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'#0e7490' }
+      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'var(--c-sky-deep)' }
       : p2.deputyDirectorAcademic && !p2.director
-      ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'#7e22ce' }
+      ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'var(--c-violet)' }
       : p2.director
-      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'#b45309' }
+      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'var(--c-amber-deep)' }
       : { label:'👁 ดูข้อมูลเท่านั้น', bg:'#f1f5f9', color:'#64748b' };
     badgeEl.style.background = badgeCfg.bg;
     badgeEl.style.color = badgeCfg.color;
@@ -2868,7 +2868,7 @@ function openNotesModal(uid, docTypeId) {
     /* 1. Teacher submitted */
     if (doc.submittedAt) {
       entries.push({
-        emoji: '📤', bg: '#dcfce7', border: '#22c55e',
+        emoji: '📤', bg: '#dcfce7', border: 'var(--c-green)',
         label: 'ครูส่งงาน',
         who: t ? (t.staffName || t.displayName) : uid,
         when: formatDate(doc.submittedAt),
@@ -2880,7 +2880,7 @@ function openNotesModal(uid, docTypeId) {
     /* 2. Head note */
     if (doc.headNote || doc.status === 'head_reviewed' || doc.status === 'reviewed') {
       entries.push({
-        emoji: '👤', bg: '#e0f2fe', border: '#0ea5e9',
+        emoji: '👤', bg: '#e0f2fe', border: 'var(--c-sky)',
         label: 'หัวหน้ากลุ่มสาระตรวจ',
         who: doc.headReviewerName || doc.reviewedBy || '',
         when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
@@ -2892,7 +2892,7 @@ function openNotesModal(uid, docTypeId) {
     /* 3. Assistant note */
     if (doc.assistantNote || doc.status === 'assistant_reviewed') {
       entries.push({
-        emoji: '🏅', bg: '#fef3c7', border: '#f59e0b',
+        emoji: '🏅', bg: '#fef3c7', border: 'var(--c-amber)',
         label: 'ผช.ผอ.วิชาการตรวจ',
         who: doc.assistantReviewerName || '',
         when: '',
@@ -2904,7 +2904,7 @@ function openNotesModal(uid, docTypeId) {
     /* 4. Deputy note */
     if (doc.deputyNote || doc.status === 'deputy_reviewed') {
       entries.push({
-        emoji: '👑', bg: 'var(--purple-light)', border: '#8b5cf6',
+        emoji: '👑', bg: 'var(--purple-light)', border: 'var(--c-violet)',
         label: 'รอง ผอ.วิชาการตรวจ',
         who: doc.deputyReviewerName || '',
         when: '',
@@ -2916,7 +2916,7 @@ function openNotesModal(uid, docTypeId) {
     /* 5. Director note */
     if (doc.directorNote || doc.status === 'final_approved') {
       entries.push({
-        emoji: '🎖', bg: '#d1fae5', border: '#16a34a',
+        emoji: '🎖', bg: '#d1fae5', border: 'var(--c-green)',
         label: 'ผู้อำนวยการอนุมัติ',
         who: doc.directorReviewerName || '',
         when: '',
@@ -2928,7 +2928,7 @@ function openNotesModal(uid, docTypeId) {
     /* 6. Revision note */
     if (doc.status === 'revision' && doc.adminNote) {
       entries.push({
-        emoji: '⚠', bg: '#fef2f2', border: '#ef4444',
+        emoji: '⚠', bg: '#fef2f2', border: 'var(--c-red-mid)',
         label: 'ส่งคืนเพื่อแก้ไข',
         who: doc.lastRevisedBy || doc.reviewedBy || '',
         when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
@@ -3040,7 +3040,7 @@ function dtDrop(ev, targetIdx, targetDocId) {
     loadDocTypeList();
     /* อัปเดต DOCUMENT_TYPES ใน memory ด้วย */
     loadDocTypesFromFirestore();
-  }).catch(function(e){ showToast('เรียงลำดับไม่ได้: ' + e.message, '#ef4444'); });
+  }).catch(function(e){ showToast('เรียงลำดับไม่ได้: ' + e.message, 'var(--c-red-mid)'); });
   dragSrcIndex = null;
 }
 
@@ -3052,11 +3052,11 @@ function openDocTypeModal(firestoreId) {
   document.getElementById('dtShort').value  = '';
   document.getElementById('dtId').value     = '';
   document.getElementById('dtIcon').value   = 'file';
-  document.getElementById('dtColor').value  = '#3b82f6';
+  document.getElementById('dtColor').value  = 'var(--c-sky)';
   document.getElementById('dtActive').checked = true;
   document.getElementById('dtDepartment').value = 'academic';
-  selectedDtColor = '#3b82f6';
-  updateColorSwatches('#3b82f6');
+  selectedDtColor = 'var(--c-sky)';
+  updateColorSwatches('var(--c-sky)');
   syncToggleUI();
   previewDtIcon();
 
@@ -3068,10 +3068,10 @@ function openDocTypeModal(firestoreId) {
       document.getElementById('dtShort').value  = data.short  || '';
       document.getElementById('dtId').value     = data.id     || firestoreId;
       document.getElementById('dtIcon').value   = data.icon   || 'file';
-      document.getElementById('dtColor').value  = data.color  || '#3b82f6';
+      document.getElementById('dtColor').value  = data.color  || 'var(--c-sky)';
       document.getElementById('dtActive').checked = data.active !== false;
       document.getElementById('dtDepartment').value = data.department || 'academic';
-      selectedDtColor = data.color || '#3b82f6';
+      selectedDtColor = data.color || 'var(--c-sky)';
       updateColorSwatches(selectedDtColor);
       syncToggleUI();
       previewDtIcon();
@@ -3102,13 +3102,13 @@ function saveDocType() {
   var short  = document.getElementById('dtShort').value.trim();
   var id     = document.getElementById('dtId').value.trim();
   var icon   = document.getElementById('dtIcon').value.trim() || 'file';
-  var color  = document.getElementById('dtColor').value.trim() || '#3b82f6';
+  var color  = document.getElementById('dtColor').value.trim() || 'var(--c-sky)';
   var active = document.getElementById('dtActive').checked;
   var department = document.getElementById('dtDepartment').value || 'academic';
 
-  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', '#ef4444'); return; }
-  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', '#ef4444'); return; }
-  if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', '#ef4444'); return; }
+  if (!label) { showToast('กรุณากรอกชื่อหัวข้อ', 'var(--c-red-mid)'); return; }
+  if (!id)    { showToast('กรุณากรอกรหัสหัวข้อ', 'var(--c-red-mid)'); return; }
+  if (!/^[a-z0-9_]+$/.test(id)) { showToast('รหัสใช้ได้เฉพาะ a-z, 0-9, _', 'var(--c-red-mid)'); return; }
 
   var saveData = { id: id, label: label, short: short, icon: icon, color: color, active: active, department: department };
 
@@ -3126,21 +3126,21 @@ function saveDocType() {
   }
 
   prom.then(function() {
-    showToast(editingDocTypeId ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มหัวข้องานใหม่แล้ว', '#22c55e');
+    showToast(editingDocTypeId ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มหัวข้องานใหม่แล้ว', 'var(--c-green)');
     closeModal('docTypeModal');
     loadDocTypeList();
     loadDocTypesFromFirestore(); /* อัปเดต DOCUMENT_TYPES ใน memory */
-  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, '#ef4444'); });
+  }).catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'var(--c-red-mid)'); });
 }
 
 /* ── delete doc type ── */
 function deleteDocType(firestoreId, label) {
   if (!confirm('ลบหัวข้อ "' + label + '" ออกจากระบบ?\n\nงานที่ครูส่งไปแล้วจะยังอยู่ใน Firestore แต่จะไม่แสดงในมุมมองติดตาม')) return;
   db.collection('portfolio_doc_types').doc(firestoreId).delete().then(function() {
-    showToast('ลบหัวข้อแล้ว', '#f59e0b');
+    showToast('ลบหัวข้อแล้ว', 'var(--c-amber)');
     loadDocTypeList();
     loadDocTypesFromFirestore();
-  }).catch(function(e){ showToast('ลบไม่ได้: ' + e.message, '#ef4444'); });
+  }).catch(function(e){ showToast('ลบไม่ได้: ' + e.message, 'var(--c-red-mid)'); });
 }
 
 function initAdminA4Scaler() {

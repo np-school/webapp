@@ -819,7 +819,7 @@ function renderSarSchoolHistory(){
     el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
     return;
   }
-  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-8)']; /* timeline dot colors — เดิม hardcode ซ้ำกัน 2 จุดในไฟล์นี้ ใช้ --chart-N ให้ตรงกับกราฟหน้าอื่น */
+  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-7)']; /* timeline dot colors — [2026-07] เดิม chart-8 ชนกับ chart-3 (ทั้งคู่ = amber หลังรวมสี) ในชุดเดียวกัน เปลี่ยนเป็น chart-7(ink) กันสีซ้ำ */
   var borderColors= ['var(--green-mid)','var(--blue-mid)','var(--amber-mid)','var(--violet-light)','var(--sky-mid)','var(--red-mid)','var(--orange-mid)'];
   el.innerHTML = '<div class="career-timeline" style="height:100%;">' +
     careerHistoryItems.map(function(item, idx){
@@ -1147,7 +1147,7 @@ function renderCareerHistory(){
     return;
   }
 
-  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-8)']; /* timeline dot colors — เดิม hardcode ซ้ำกัน 2 จุดในไฟล์นี้ ใช้ --chart-N ให้ตรงกับกราฟหน้าอื่น */
+  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-7)']; /* timeline dot colors — [2026-07] เดิม chart-8 ชนกับ chart-3 (ทั้งคู่ = amber หลังรวมสี) ในชุดเดียวกัน เปลี่ยนเป็น chart-7(ink) กันสีซ้ำ */
   var borderColors= ['var(--green-mid)','var(--blue-mid)','var(--amber-mid)','var(--violet-light)','var(--sky-mid)','var(--red-mid)','var(--orange-mid)'];
   var total = careerHistoryItems.length;
 
@@ -1298,7 +1298,7 @@ function renderPortfolioSummary(subs, portYear, portSem) {
 
   var STATUS_LABEL = { submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว',
     assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' };
-  /* ── เดิม revision ที่นี่เป็นสีเหลือง/น้ำตาล (#92400e) แต่จุดเดียวกันด้านบน
+  /* ── เดิม revision ที่นี่เป็นสีเหลือง/น้ำตาล (var(--c-amber-deep)) แต่จุดเดียวกันด้านบน
      (sumItems ใน buildSemBlock) ใช้สีแดงสำหรับ revision — ความหมายเดียวกัน
      แต่สีไม่ตรงกันในไฟล์เดียวกัน จึงรวมมาใช้ token ชุดเดียวกันทั้งหมด ── */
   var STATUS_COLOR = { submitted:'var(--chart-6)', head_reviewed:'var(--chart-1)', reviewed:'var(--accent-dark)',

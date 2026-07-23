@@ -18,11 +18,11 @@ var DEFAULT_CATEGORIES = [
      เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า) ── */
 var CATEGORY_PALETTE = [
   { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
-  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d',            hex: '#15803d' },
-  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e',            hex: '#92400e' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: 'var(--c-green-deep)',            hex: 'var(--c-green-deep)' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: 'var(--c-amber-deep)',            hex: 'var(--c-amber-deep)' },
   { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
   { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
-  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: 'var(--c-violet-deep)' }
 ];
 
 var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
@@ -1175,7 +1175,7 @@ function seedDefaultCategories() {
 
 /* สุ่มสี hex สวยๆ ให้ input color ตอนเปิดฟอร์ม (ผู้ใช้เปลี่ยนเองได้ก่อนกด "เพิ่ม") */
 function randomCatColor() {
-  var pool = ['#2563eb', '#15803d', '#b45309', '#dc2626', '#0369a1', '#7c3aed', '#db2777', '#0f766e', '#4f46e5', '#ca8a04'];
+  var pool = ['var(--c-sky-deep)', 'var(--c-green-deep)', 'var(--c-amber-deep)', 'var(--c-red)', 'var(--c-sky-deep)', '#7c3aed', '#db2777', '#0f766e', '#4f46e5', '#ca8a04'];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -2028,10 +2028,10 @@ function doPrintReport() {
 
 /* สีป้ายสถานะสำหรับหน้าพิมพ์ (คู่กับ getStatusMeta().color) */
 var PRINT_BADGE_COLORS = {
-  amber:  { bg: '#fef3c7', text: '#92400e' },
+  amber:  { bg: '#fef3c7', text: 'var(--c-amber-deep)' },
   sky:    { bg: '#e0f2fe', text: '#075985' },
   purple: { bg: '#ede9fe', text: '#5b21b6' },
-  green:  { bg: '#dcfce7', text: '#15803d' },
+  green:  { bg: '#dcfce7', text: 'var(--c-green-deep)' },
   red:    { bg: '#fee2e2', text: '#b91c1c' }
 };
 

@@ -1,0 +1,68 @@
+# บันทึกความก้าวหน้า: รวมสีทั้งเว็บให้เหลือไม่เกิน 12 สี
+
+> ต่อเนื่องจากงาน "สีทั้งเว็บ" ใน `CLAUDE.md` — เริ่ม 2026-07-23
+> ไม่นับโทนเทา/ข้อความ/เส้นขอบ (grayscale) และไม่นับชุดสีธีม (`--accent`/`--navbar-*`/`--blue`/`--purple` ที่ตั้งค่าได้จาก `settings.html`)
+
+## ผลลัพธ์: เหลือ 6 สี (จากเดิม 11 กลุ่มโทนสี)
+
+| สี | Hex (base) | ใช้กับ |
+|---|---|---|
+| 🟢 Green | `#16a34a` | success / อนุมัติ / งบประมาณ / วิชาการ |
+| 🔴 Red | `#dc2626` | danger / ปฏิเสธ / error |
+| 🟠 Amber | `#d97706` | warning / หัวหน้ากลุ่มสาระ / ผอ. (เข้มขึ้น) — รวม orange+yellow แล้ว |
+| 🔵 Sky | `#0284c7` | info / ทั่วไป / ผู้ช่วย ผอ. — รวม cyan+blue-accent แล้ว |
+| 🟣 Violet | `#7c3aed` | accent พิเศษ / รอง ผอ. ทุกฝ่าย |
+| ⚫ Ink | `#1b263b` | SuperAdmin / role สูงสุด |
+
+แต่ละสีมี 5 เฉดมาตรฐาน: `-pale` (bg อ่อนสุด) / `-tint` (bg รอง) / `-mid` (เส้นขอบ) / base / `-deep` (ตัวหนังสือเข้ม)
+ตัวแปรใหม่อยู่ใน `shared/styles-new.css` ชื่อ `--c-{สี}-{เฉด}` เช่น `--c-green-pale`, `--c-sky-deep`
+
+## สิ่งที่ทำไปแล้ว
+
+### 1. `shared/styles-new.css`
+- เพิ่มบล็อก **Core Content Palette** (30 tokens: 6 สี × 5 เฉด) เป็นแหล่งความจริงเดียว
+- **Alias ทุก token สีเดิมให้ชี้มาที่ core palette** (ไม่ลบชื่อ token เดิม โค้ดหน้าอื่นที่อ้าง `var(--emerald))`, `var(--cyan)`, `var(--orange)`, `var(--yellow)`, `var(--blue-accent)`, `var(--violet-bright)` ฯลฯ ยังใช้ได้ปกติ แต่ค่าจริงรวมเป็นสีเดียวกันแล้ว):
+  - `emerald` → green, `cyan`/`blue-accent`/`blue-bright`/`sky-bright` → sky, `orange`/`yellow` → amber, `violet-bright`/`violet-vivid`/`violet-hover` → violet/violet-mid
+- **รวม Role Colors (17 บทบาท) จาก ~40 hex อิสระ เหลือ 6 hue เดียวกัน** — ใช้หลัก "hue = ระดับชั้น": ผู้ช่วย ผอ. ทุกฝ่าย = sky, รอง ผอ. ทุกฝ่าย = violet, SuperAdmin = ink, ผอ. = amber เข้ม ส่วนหัวหน้ากลุ่ม/ฝ่ายต่างๆ กระจาย green/sky/amber ตามเดิม
+- แก้ **chart palette** (`--chart-1..9`): เดิม `chart-7/8/9` (emerald/orange/cyan) กลายเป็นสีซ้ำกับ `chart-2/3/6` เงียบๆ หลังรวมสี → เปลี่ยน `chart-7` เป็น ink แทน กันไม่ให้กราฟที่ใช้ครบ 7-9 สีมีสีซ้ำในชุดเดียวกัน
+- ลบ `--red-bright` ที่ประกาศซ้ำ 2 จุดในไฟล์เดิม (ตัวหลังทับตัวแรกเงียบๆ แบบเดียวกับบั๊ก `setReviewStatus` ที่เคยเจอ)
+
+### 2. แทนที่ hex hardcode ในไฟล์ `.js`/`.html` ด้วย `var(--c-*)` (mechanical, exact-match เท่านั้น)
+รันสคริปต์แทนที่ hex ที่ตรงกับ family ที่ต้องรวม (emerald/cyan/orange/yellow/blue-accent + สีสถานะที่ใช้ค่าเดียวกันซ้ำในหลายไฟล์) ทั่วโปรเจกต์ ครอบคลุมไฟล์ที่ค้างอยู่ใน `CLAUDE.md` ครบทุกไฟล์:
+
+| ไฟล์ | จุดที่แก้ |
+|---|---|
+| `js/portfolio-admin.js` | 109 |
+| `js/index.js` | 9 |
+| `js/portfolio-teacher.js` | 21 |
+| `js/room-request.js` | 9 |
+| `js/repair-admin.js` | 12 |
+| `js/repair-user.js` | 5 |
+| `js/room-admin.js` | 11 |
+| `js/admin-role.js` | 8 |
+| `js/settings.js` | 4 |
+| `js/staff.js` | 4 |
+| `js/ipad-lending.js` | 5 |
+| `js/profile.js` | 1 (+ แก้ collision สีซ้ำใน timeline array 2 จุด) |
+| `guide.html`, `index.html`, `portfolio-admin.html`, `portfolio-teacher.html`, `profile.html`, `settings.html`, `staff.html` | 3–18 ต่อไฟล์ |
+
+ตรวจ syntax ทุกไฟล์ `.js` ด้วย `node --check` ผ่านหมดแล้ว (ไม่มีไฟล์พัง)
+
+**แก้บั๊กสีซ้ำที่พบระหว่างทำ**: `js/profile.js` มี array สี timeline dot 7 สี ที่หลังรวมสีแล้ว `--chart-8` (amber) ชนกับ `--chart-3` (amber) ในชุดเดียวกัน → เปลี่ยนไปใช้ `--chart-7` (ink) แทนเพื่อให้ยังแยกสีได้ครบ 7 จุด
+
+## ยังไม่ได้ทำ / ต้องรีวิวเพิ่ม
+
+1. **`shared/common.js` (96 hex), `js/index.js` (68 เหลือ), `js/room-request.js` (54 เหลือ)** — ส่วนใหญ่คือชุดสีตกแต่งรายห้อง/รายประเภท (เช่น สีห้องประชุมแต่ละห้อง) ที่ไม่ใช่สีสถานะ/role โดยตรง ต้องรีวิวทีละชุดว่าอันไหนควร map เข้า 6 สี core อันไหนเป็น decorative เฉพาะจุดจริงๆ (คล้ายกรณี color-swatch เลือกสีเอกสารที่ตั้งใจไม่แตะ)
+2. **`js/portfolio-admin.js` ยังเหลือ hex 70 จุด, `index.html` 20 จุด, `settings.html`/`portfolio-admin.html` ~10 จุด** — ส่วนที่เหลือหลัง pass แรกนี้ ส่วนใหญ่เป็น rgba()/สี neutral/สีที่ไม่ตรง exact match กับ dictionary ที่ใช้ ต้องแกะรายจุดต่อ
+3. **จุดที่ตั้งใจไม่แตะ**: `DEPT_COLORS.academic:'#1d4ed8'` ใน `portfolio-admin.js` ตรงกับค่า default ของ `--accent` (สีธีม) พอดี เว้นไว้ไม่แตะเพราะกำกวมกับสีธีม, color-swatch เลือกสีประเภทเอกสาร (`selectDtColor`) เว้นไว้เหมือนเดิมเพราะบันทึกลง Firestore จริง
+4. **Role colors ที่รวมแล้ว (`--role-*`) ยังไม่ได้ตรวจด้วยตาจริงบนเว็บ** — เปลี่ยน hue ของบางบทบาท (เช่น general/hr จาก blue → sky, dep-budget/dep-general/dep-personnel จาก navy เข้ม → violet-deep) แนะนำเปิด `admin-role.html` เช็ค contrast/ความชัดเจนจริงก่อน deploy
+
+## คำสั่งที่ใช้ทำงานนี้ (ไว้รันซ้ำ/ตรวจสอบ)
+
+```bash
+# เช็ค hex ที่เหลือทั้งโปรเจกต์
+grep -rnoI "#[0-9a-fA-F]\{6\}\|#[0-9a-fA-F]\{3\}\b" --include="*.js" --include="*.html" . | grep -v -E "node_modules|/\.git/" | cut -d: -f1 | sort | uniq -c | sort -rn
+
+# เช็ค syntax ไฟล์ JS หลังแก้
+for f in js/*.js; do node --check "$f"; done
+```

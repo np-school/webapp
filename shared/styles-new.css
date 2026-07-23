@@ -55,11 +55,11 @@
   --blue-mid:    #bfdbfe;   /* ไม่มีคู่ตรงใน --accent* ปล่อยเป็นค่าคงที่ */
   --blue-ring:   rgba(29,78,216,.1);
 
-  --purple:      #0d1b2a;   /* Ink Black */
-  --purple-dark: #1b263b;   /* Prussian Blue */
-  --purple-light:#e0e1dd;   /* Alabaster Grey */
-  --purple-mid:  #415a77;   /* Dusk Blue */
-  --purple-accent:#778da9;  /* Lavender Grey */
+  --purple:      var(--c-ink-deep);   /* Ink Black — คือสี "ink" ตัวเดียวกับ core palette (ชื่อ purple สื่อผิด แต่ยังไม่ rename เพราะมี ~208 จุดอ้างอิงทั่วโปรเจกต์ ดู CLAUDE.md) */
+  --purple-dark: var(--c-ink);        /* Prussian Blue */
+  --purple-light:var(--c-ink-pale);   /* Alabaster Grey */
+  --purple-mid:  var(--c-ink-mid);    /* Dusk Blue */
+  --purple-accent:var(--c-ink-tint);  /* Lavender Grey */
   --purple-ring: rgba(13,27,42,.1);
 
   /* ── Navbar Themes ── */
@@ -84,26 +84,73 @@
   --accent-warn:   #f59e0b;
   --text-heading:  #374151;
 
+  /* ── Core Content Palette (2026-07) ──────────────────────────────
+     สีที่ "มีความหมาย" ทั้งเว็บ (ไม่รวมสีธีม --accent/--navbar-*/--blue/--purple
+     ซึ่งเปลี่ยนได้จาก settings.html) ถูกจำกัดเหลือ 6 สีเท่านั้น:
+     green / red / amber / sky / violet / ink
+     ทุกโทนสีเดิมที่ใกล้เคียงกัน (emerald, cyan, orange, yellow, blue-accent)
+     ถูก alias ให้ชี้มาที่ 6 สีนี้ด้านล่าง — ห้ามเพิ่มโทนสีใหม่นอกชุดนี้
+     แต่ละสีมี 4 เฉดมาตรฐาน: -pale (bg อ่อนสุด) / -tint (bg รอง) / base / -deep (ตัวหนังสือเข้ม)
+     ──────────────────────────────────────────────────────────────── */
+  --c-green-pale:  #f0fdf4;
+  --c-green-tint:  #bbf7d0;
+  --c-green-mid:   #86efac;
+  --c-green:       #16a34a;
+  --c-green-deep:  #15803d;
+
+  --c-red-pale:    #fef2f2;
+  --c-red-tint:    #fecaca;
+  --c-red-mid:     #f87171;
+  --c-red:         #dc2626;
+  --c-red-deep:    #b91c1c;
+
+  --c-amber-pale:  #fffbeb;
+  --c-amber-tint:  #fde68a;
+  --c-amber-mid:   #fcd34d;
+  --c-amber:       #d97706;
+  --c-amber-deep:  #92400e;
+
+  --c-sky-pale:    #f0f9ff;
+  --c-sky-tint:    #bae6fd;
+  --c-sky-mid:     #7dd3fc;
+  --c-sky:         #0284c7;
+  --c-sky-deep:    #075985;
+
+  --c-violet-pale: #f5f3ff;
+  --c-violet-tint: #ddd6fe;
+  --c-violet-mid:  #c4b5fd;
+  --c-violet:      #7c3aed;
+  --c-violet-deep: #5b21b6;
+
+  --c-ink-pale:    #e0e1dd;
+  --c-ink-tint:    #778da9;
+  --c-ink-mid:     #415a77;
+  --c-ink:         #1b263b;
+  --c-ink-deep:    #0d1b2a;
+
   /* Status */
-  --green:       #16a34a;
-  --green-light: #f0fdf4;
-  --green-mid:   #86efac;
-  --green-pale:  #bbf7d0;   /* เขียวอ่อนกว่า green-mid ใช้กับ cell สถานะ "อนุมัติสมบูรณ์" */
-  --green-dark:  #15803d;   /* ตัวหนังสือเขียวเข้ม ใช้กับ chip สถานะ "ส่งแล้ว" */
-  --red:         #dc2626;
-  --red-dark:    #b91c1c;
-  --red-light:   #fee2e2;
-  --red-pale:    #fef2f2;   /* แดงอ่อนกว่า red-light ใช้กับ badge/bubble แก้ไข */
-  --red-mid:     #fecaca;
-  --amber:       #d97706;
-  --amber-light: #fffbeb;
-  --amber-mid:   #fde68a;
-  --sky:         #0284c7;
-  --sky-light:   #e0f2fe;
-  --sky-mid:     #7dd3fc;
-  --sky-bright:  #0ea5e9;   /* ฟ้าสว่างกว่า --sky ใช้กับสถานะ "หัวหน้ากลุ่มสาระตรวจแล้ว" */
-  --sky-pale:    #bae6fd;   /* ฟ้าอ่อนกว่า sky-mid ใช้กับ cell/badge สถานะเดียวกัน */
-  --sky-mist:    #f0f9ff;   /* ฟ้าอ่อนสุด ใช้กับพื้นหลังกล่องข้อมูล */
+  /* [2026-07] ทุกตัวด้านล่างนี้ alias ไปที่ Core Content Palette (--c-*) ด้านบนแล้ว
+     ชื่อ token เดิมยังอยู่ครบ (โค้ดหน้าอื่นอ้างชื่อเดิมได้ไม่ต้องแก้) แต่ค่าจริงมาจาก 6 สีเดียวกัน */
+  --green:       var(--c-green);
+  --green-light: var(--c-green-pale);
+  --green-mid:   var(--c-green-mid);
+  --green-pale:  var(--c-green-tint);   /* เขียวอ่อนกว่า green-mid ใช้กับ cell สถานะ "อนุมัติสมบูรณ์" */
+  --green-dark:  var(--c-green-deep);   /* ตัวหนังสือเขียวเข้ม ใช้กับ chip สถานะ "ส่งแล้ว" */
+  --red:         var(--c-red);
+  --red-dark:    var(--c-red-deep);
+  --red-light:   var(--c-red-pale);
+  --red-pale:    var(--c-red-pale);     /* แดงอ่อนกว่า red-light ใช้กับ badge/bubble แก้ไข (เดิมคนละเฉด รวมเป็นเฉดเดียวแล้ว) */
+  --red-mid:     var(--c-red-tint);
+  --red-bright:  var(--c-red-mid);      /* เดิม #ef4444 แดงสว่างกว่า --red → รวมเข้า red-mid */
+  --amber:       var(--c-amber);
+  --amber-light: var(--c-amber-pale);
+  --amber-mid:   var(--c-amber-tint);
+  --sky:         var(--c-sky);
+  --sky-light:   #e0f2fe;               /* พื้นหลังฟ้าอ่อน ใช้เฉพาะจุด ไม่มีคู่ตรงกับ core 5 เฉด */
+  --sky-mid:     var(--c-sky-mid);
+  --sky-bright:  var(--c-sky);          /* เดิม #0ea5e9 ฟ้าสว่างกว่า --sky → รวมเป็นสีเดียวกับ sky แล้ว */
+  --sky-pale:    var(--c-sky-tint);     /* ฟ้าอ่อนกว่า sky-mid ใช้กับ cell/badge สถานะเดียวกัน */
+  --sky-mist:    var(--c-sky-pale);     /* ฟ้าอ่อนสุด ใช้กับพื้นหลังกล่องข้อมูล */
 
   /* Neutral */
   --text:        #1e293b;
@@ -124,30 +171,35 @@
   --text-mid:    #475569;   /* ข้อความรอง เข้มกว่า --text2 (slate-600) */
   --text-slate:  #334155;   /* ใกล้เคียง --text-heading แต่คนละเฉด (slate-700) */
   --border-mid:  #cbd5e1;   /* เส้นขอบเข้มกว่า --border เล็กน้อย (slate-300) */
-  --red-bright:  #ef4444;   /* แดงสว่างกว่า --red ใช้กับไอคอน/ตัวเลขเตือน */
-  --violet:      #7c3aed;   /* ม่วง decorative/แท็ก */
-  --violet-light:#f5f3ff;
-  --violet-bright:#8b5cf6;  /* ม่วงสว่าง ใช้กับสถานะ "รองผู้อำนวยการตรวจแล้ว" */
-  --violet-pale:  #ddd6fe;  /* ม่วงอ่อน ใช้กับ cell สถานะเดียวกัน */
-  --violet-dark:  #6d28d9;  /* ตัวหนังสือม่วงเข้ม ใช้กับ chip สถานะเดียวกัน */
-  --violet-vivid: #a855f7;  /* ม่วง-ชมพูสด ใช้กับ gradient badge/progress */
-  --violet-tint:  #ede9fe;  /* ม่วงอ่อนมาก ใช้กับพื้นหลัง badge/hover */
-  --violet-soft:  #c4b5fd;  /* ม่วงกลาง ใช้กับ timeline gradient/badge bg */
-  --violet-hover: #a78bfa;  /* ใช้กับ border ตอน hover */
-  --blue-accent: #2563eb;   /* น้ำเงิน decorative ทั่วไป (ไม่ผูกกับธีม ต่างจาก --accent) */
-  --blue-bright: #3b82f6;
-  --emerald:     #22c55e;   /* เขียวสว่างกว่า --green */
-  --emerald-dark:#065f46;   /* ตัวหนังสือเขียวเข้ม ใช้กับ chip สถานะ "อนุมัติสมบูรณ์" */
-  --orange:      #ea580c;
-  --orange-light:#fff7ed;
-  --orange-mid:  #f97316;
-  --yellow:      #eab308;
-  --yellow-light:#fef9c3;
-  --yellow-pale: #fef08a;   /* เหลืองอ่อนกว่า yellow-light ใช้กับ cell สถานะ "ผู้ช่วยตรวจแล้ว" */
-  --yellow-dark: #713f12;   /* ตัวหนังสือเหลืองเข้ม ใช้กับ step ที่ active */
-  --amber-dark:  #92400e;
-  --cyan:        #06b6d4;
-  --cyan-light:  #ecfeff;
+  /* --red-bright ย้ายไป alias รวมกับ --c-red-mid ด้านบนแล้ว (เดิมมีประกาศซ้ำ 2 จุดในไฟล์นี้ —
+     ตัวที่อยู่ตรงนี้แต่เดิมทับตัวบนแบบเงียบๆ ตาม CSS last-declaration-wins ลบออกกันเผื่อเกิดซ้ำอีก) */
+  --violet:       var(--c-violet);      /* ม่วง decorative/แท็ก */
+  --violet-light: var(--c-violet-pale);
+  --violet-bright:var(--c-violet);      /* เดิม #8b5cf6 ม่วงสว่างกว่า --violet → รวมเป็นสีเดียวกับ violet แล้ว */
+  --violet-pale:  var(--c-violet-tint); /* ม่วงอ่อน ใช้กับ cell สถานะเดียวกัน */
+  --violet-dark:  var(--c-violet-deep); /* ตัวหนังสือม่วงเข้ม ใช้กับ chip สถานะเดียวกัน */
+  --violet-vivid: var(--c-violet);      /* เดิม #a855f7 ม่วง-ชมพูสด → รวมเป็นสีเดียวกับ violet แล้ว */
+  --violet-tint:  var(--c-violet-pale); /* ม่วงอ่อนมาก ใช้กับพื้นหลัง badge/hover */
+  --violet-soft:  var(--c-violet-mid);  /* ม่วงกลาง ใช้กับ timeline gradient/badge bg */
+  --violet-hover: var(--c-violet-mid);  /* เดิม #a78bfa ใช้กับ border ตอน hover → รวมเข้า violet-mid */
+  /* ── [2026-07] รวมโทนใกล้เคียงเข้ากับ Core Content Palette (6 สี) ──
+     เดิม 5 โทนนี้เป็น hex แยกอิสระ (คนละค่ากับ green/amber/sky แม้จะหน้าตาใกล้กัน)
+     ทำให้จริงๆ แล้วเว็บมีสีมากกว่าที่ตั้งใจ ตอนนี้ alias ทุกตัวไปที่ --c-* แทน
+     ชื่อ token เดิมยังใช้ได้เหมือนเดิมทุกที่ (ไม่ต้องแก้จุดอ้างอิง) แต่ค่าจะรวมเป็นสีเดียวกันแล้ว */
+  --blue-accent: var(--c-sky);        /* เดิม #2563eb (น้ำเงิน decorative) → รวมเข้า sky */
+  --blue-bright: var(--c-sky);        /* เดิม #3b82f6 → รวมเข้า sky */
+  --emerald:     var(--c-green);      /* เดิม #22c55e (เขียวสว่างกว่า green) → รวมเข้า green */
+  --emerald-dark:var(--c-green-deep); /* เดิม #065f46 → รวมเข้า green-deep */
+  --orange:      var(--c-amber);      /* เดิม #ea580c → รวมเข้า amber */
+  --orange-light:var(--c-amber-pale); /* เดิม #fff7ed → รวมเข้า amber-pale */
+  --orange-mid:  var(--c-amber-tint); /* เดิม #f97316 → รวมเข้า amber-tint */
+  --yellow:      var(--c-amber);      /* เดิม #eab308 → รวมเข้า amber */
+  --yellow-light:var(--c-amber-pale); /* เดิม #fef9c3 → รวมเข้า amber-pale */
+  --yellow-pale: var(--c-amber-tint); /* เดิม #fef08a → รวมเข้า amber-tint */
+  --yellow-dark: var(--c-amber-deep); /* เดิม #713f12 → รวมเข้า amber-deep */
+  --amber-dark:  var(--c-amber-deep); /* เดิม #92400e (ค่าเดิมตรงกับ amber-deep พอดี) */
+  --cyan:        var(--c-sky);        /* เดิม #06b6d4 → รวมเข้า sky */
+  --cyan-light:  var(--c-sky-pale);   /* เดิม #ecfeff → รวมเข้า sky-pale */
 
   /* LINE brand color — เดิม hardcode #06C755 กระจายในหลาย inline style */
   --line-green:      #06C755;
@@ -157,91 +209,92 @@
      เปลี่ยนสีได้ที่นี่ที่เดียว — ทุก component จะอัปเดตพร้อมกัน
      ──────────────────────────────────────────────────────────── */
 
-  /* SuperAdmin */
-  --role-super-color:   #0d1b2a;
-  --role-super-bg:      #e0e1dd;
-  --role-super-border:  #778da9;
-  --role-super-badge-bg: linear-gradient(135deg,#0d1b2a,#415a77);
+  /* ── [2026-07] รวม Role Colors ให้เหลือ 6 hue เดียวกับ Core Content Palette ──
+     หลักการ: hue = ระดับชั้น (super=ink, หัวหน้ากลุ่ม=green/sky/amber ตามฝ่าย,
+     ผู้ช่วย ผอ.=sky ทั้งหมด, รอง ผอ.=violet ทั้งหมด, ผอ.=amber เข้ม), เฉด base/deep
+     ใช้แยกย่อยภายใน hue เดียวกัน — เดิมแต่ละ role มี hex อิสระของตัวเอง (~40 ค่า
+     ไม่ซ้ำกันเลย) ทำให้เกินงบ 6 สีไปมาก ตอนนี้ role ที่อยู่ระดับ/กลุ่มใกล้กันจะ
+     ใช้สีชุดเดียวกัน แยกความหมายด้วยข้อความ/ตำแหน่งแถวในตาราง ไม่ใช่สีอีกต่อไป */
 
-  /* กลุ่มบริหารงบประมาณ */
-  --role-budget-color:  #059669;
-  --role-budget-bg:     #d1fae5;
-  --role-budget-border: #6ee7b7;
+  /* SuperAdmin — สูงสุด ใช้ ink เข้มสุด */
+  --role-super-color:   var(--c-ink-deep);
+  --role-super-bg:      var(--c-ink-pale);
+  --role-super-border:  var(--c-ink-tint);
+  --role-super-badge-bg: linear-gradient(135deg,var(--c-ink-deep),var(--c-ink-mid));
 
-  /* กลุ่มบริหารทั่วไป */
-  --role-general-color:  #2563eb;
-  --role-general-bg:     #dbeafe;
-  --role-general-border: #93c5fd;
+  /* กลุ่มบริหารงบประมาณ — green เข้ม */
+  --role-budget-color:  var(--c-green-deep);
+  --role-budget-bg:     var(--c-green-pale);
+  --role-budget-border: var(--c-green-mid);
 
-  /* กลุ่มวิชาการ */
-  --role-academic-color:  #16a34a;
-  --role-academic-bg:     #dcfce7;
-  --role-academic-border: #86efac;
+  /* กลุ่มบริหารทั่วไป — sky เข้ม */
+  --role-general-color:  var(--c-sky-deep);
+  --role-general-bg:     var(--c-sky-pale);
+  --role-general-border: var(--c-sky-mid);
 
-  /* กลุ่มบริหารงานบุคคล */
-  --role-hr-color:  #0369a1;
-  --role-hr-bg:     #e0f2fe;
-  --role-hr-border: #7dd3fc;
+  /* กลุ่มวิชาการ — green ฐาน */
+  --role-academic-color:  var(--c-green);
+  --role-academic-bg:     var(--c-green-pale);
+  --role-academic-border: var(--c-green-mid);
 
-  /* หัวหน้ากลุ่มสาระ */
-  --role-hog-color:  #d97706;
-  --role-hog-bg:     #fef3c7;
-  --role-hog-border: #fcd34d;
+  /* กลุ่มบริหารงานบุคคล — sky ฐาน */
+  --role-hr-color:  var(--c-sky);
+  --role-hr-bg:     var(--c-sky-pale);
+  --role-hr-border: var(--c-sky-mid);
 
-  /* ผู้ช่วย ผอ.ฝ่ายวิชาการ */
-  --role-asst-academic-color:  #0891b2;
-  --role-asst-academic-bg:     #cffafe;
-  --role-asst-academic-border: #67e8f9;
+  /* หัวหน้ากลุ่มสาระ — amber ฐาน */
+  --role-hog-color:  var(--c-amber);
+  --role-hog-bg:     var(--c-amber-pale);
+  --role-hog-border: var(--c-amber-mid);
 
-  /* ผู้ช่วย ผอ.ฝ่ายบริหารงบประมาณ */
-  --role-asst-budget-color:  #0e7490;
-  --role-asst-budget-bg:     #e0f7fa;
-  --role-asst-budget-border: #67e8f9;
+  /* ผู้ช่วย ผอ. ทุกฝ่าย — sky ทั้งหมด (ยกเว้นฝ่ายกิจการนักเรียนที่ยังคง ink ตามเดิม)
+     แยกฝ่ายด้วยเฉด base/deep คู่กัน ความหมายจริงดูจากข้อความ/คอลัมน์ในตาราง */
+  --role-asst-academic-color:  var(--c-sky);
+  --role-asst-academic-bg:     var(--c-sky-pale);
+  --role-asst-academic-border: var(--c-sky-tint);
 
-  /* ผู้ช่วย ผอ.ฝ่ายบริหารทั่วไป */
-  --role-asst-general-color:  #0369a1;
-  --role-asst-general-bg:     #e0f2fe;
-  --role-asst-general-border: #7dd3fc;
+  --role-asst-budget-color:  var(--c-sky-deep);
+  --role-asst-budget-bg:     var(--c-sky-pale);
+  --role-asst-budget-border: var(--c-sky-tint);
 
-  /* ผู้ช่วย ผอ.ฝ่ายบริหารงานบุคคล */
-  --role-asst-personnel-color:  #1d4ed8;
-  --role-asst-personnel-bg:     #dbeafe;
-  --role-asst-personnel-border: #93c5fd;
+  --role-asst-general-color:  var(--c-sky);
+  --role-asst-general-bg:     var(--c-sky-pale);
+  --role-asst-general-border: var(--c-sky-tint);
 
-  /* ผู้ช่วย ผอ.ฝ่ายกิจการนักเรียน */
-  --role-asst-student-color:  #0d1b2a;
-  --role-asst-student-bg:     #e0e1dd;
-  --role-asst-student-border: #778da9;
+  --role-asst-personnel-color:  var(--c-sky-deep);
+  --role-asst-personnel-bg:     var(--c-sky-pale);
+  --role-asst-personnel-border: var(--c-sky-tint);
 
-  /* รองผู้อำนวยการฝ่ายวิชาการ */
-  --role-dep-academic-color:  #7e22ce;
-  --role-dep-academic-bg:     #e0e1dd;
-  --role-dep-academic-border: #778da9;
+  --role-asst-student-color:  var(--c-ink-deep);
+  --role-asst-student-bg:     var(--c-ink-pale);
+  --role-asst-student-border: var(--c-ink-tint);
 
-  /* รองผู้อำนวยการฝ่ายบริหารงบประมาณ */
-  --role-dep-budget-color:  #1b263b;
-  --role-dep-budget-bg:     #e0e1dd;
-  --role-dep-budget-border: #d8b4fe;
+  /* รองผู้อำนวยการ ทุกฝ่าย — violet ทั้งหมด (ระดับใกล้ ผอ. ใช้โทนม่วงเดียวกันทั้งชั้น) */
+  --role-dep-academic-color:  var(--c-violet);
+  --role-dep-academic-bg:     var(--c-violet-pale);
+  --role-dep-academic-border: var(--c-violet-mid);
 
-  /* รองผู้อำนวยการฝ่ายบริหารทั่วไป */
-  --role-dep-general-color:  #0d1b2a;
-  --role-dep-general-bg:     #fdf4ff;
-  --role-dep-general-border: #e9d5ff;
+  --role-dep-budget-color:  var(--c-violet-deep);
+  --role-dep-budget-bg:     var(--c-violet-pale);
+  --role-dep-budget-border: var(--c-violet-mid);
 
-  /* รองผู้อำนวยการฝ่ายบริหารงานบุคคล */
-  --role-dep-personnel-color:  #0a1622;
-  --role-dep-personnel-bg:     #fdf4ff;
-  --role-dep-personnel-border: #f0abfc;
+  --role-dep-general-color:  var(--c-violet-deep);
+  --role-dep-general-bg:     var(--c-violet-pale);
+  --role-dep-general-border: var(--c-violet-mid);
 
-  /* ผู้อำนวยการ */
-  --role-director-color:  #b45309;
-  --role-director-bg:     #fef3c7;
-  --role-director-border: #fcd34d;
+  --role-dep-personnel-color:  var(--c-violet-deep);
+  --role-dep-personnel-bg:     var(--c-violet-pale);
+  --role-dep-personnel-border: var(--c-violet-mid);
 
-  /* ยังไม่มีสิทธิ์ */
-  --role-none-color:  #94a3b8;
-  --role-none-bg:     #f8fafc;
-  --role-none-border: #e2e8f0;
+  /* ผู้อำนวยการ — amber เข้มสุด (สูงกว่าหัวหน้ากลุ่มสาระที่เป็น amber ฐาน) */
+  --role-director-color:  var(--c-amber-deep);
+  --role-director-bg:     var(--c-amber-pale);
+  --role-director-border: var(--c-amber-mid);
+
+  /* ยังไม่มีสิทธิ์ — เทากลาง (โทนเทา ไม่นับใน 6 สี core ตามที่ตกลงไว้) */
+  --role-none-color:  var(--text3);
+  --role-none-bg:     var(--bg-alt);
+  --role-none-border: var(--border);
 
   /* Matrix header colors (ตาราง Permissions) */
   --matrix-budget-color:        var(--role-budget-color);
@@ -281,9 +334,13 @@
   --chart-4: var(--red);
   --chart-5: var(--violet);
   --chart-6: var(--sky);
-  --chart-7: var(--emerald);
-  --chart-8: var(--orange);
-  --chart-9: var(--cyan);
+  /* [2026-07] เดิม chart-7/8/9 คือ emerald/orange/cyan ซึ่งตอนนี้ alias ไปทับ
+     chart-2/chart-3/chart-6 พอดี (สีซ้ำกันเงียบๆ ถ้าใช้ร่วมชุดเดียวกัน) —
+     chart-7 เปลี่ยนไปใช้ ink แทนเพื่อให้กราฟที่ต้องใช้ครบ 7 สียังแยกสีได้จริง
+     ส่วน chart-8/9 คงไว้เป็น alias ซ้ำ (ตั้งใจ ไม่ใช่บั๊ก) สำหรับจุดที่ไม่ได้ใช้ร่วมชุดเดียวกับ 3/6 */
+  --chart-7: var(--c-ink);
+  --chart-8: var(--amber);
+  --chart-9: var(--sky);
 
   /* ── Status Palette — ความหมายตายตัว ใช้ชื่อเดียวกันทุกหน้า
      (booking/repair/portfolio/foodcourt ทุกระบบ status อ้าง token ชุดนี้)

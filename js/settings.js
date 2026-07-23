@@ -18,9 +18,9 @@ var SHADE_SLOTS = [
 /* ══ Announcement helpers ══ */
 var ANN_TYPES = {
   info:    { label: 'ข้อมูล',   icon: 'info',           iconColor: '#1d4ed8', badgeClass: 'ann-badge-info',    wrapClass: 'ann-type-info' },
-  warning: { label: 'แจ้งเตือน', icon: 'alert-triangle', iconColor: '#d97706', badgeClass: 'ann-badge-warning', wrapClass: 'ann-type-warning' },
-  success: { label: 'ข่าวดี',   icon: 'check-circle-2', iconColor: '#16a34a', badgeClass: 'ann-badge-success', wrapClass: 'ann-type-success' },
-  urgent:  { label: 'ด่วน',     icon: 'bell-ring',       iconColor: '#dc2626', badgeClass: 'ann-badge-urgent',  wrapClass: 'ann-type-urgent' },
+  warning: { label: 'แจ้งเตือน', icon: 'alert-triangle', iconColor: 'var(--c-amber)', badgeClass: 'ann-badge-warning', wrapClass: 'ann-type-warning' },
+  success: { label: 'ข่าวดี',   icon: 'check-circle-2', iconColor: 'var(--c-green)', badgeClass: 'ann-badge-success', wrapClass: 'ann-type-success' },
+  urgent:  { label: 'ด่วน',     icon: 'bell-ring',       iconColor: 'var(--c-red)', badgeClass: 'ann-badge-urgent',  wrapClass: 'ann-type-urgent' },
 };
 var currentUserEmail = null;
 var isAdmin          = false;
@@ -69,7 +69,7 @@ function loadAnnouncements() {
             '<button onclick="openAnnModal(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--bg-alt);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--text-mid);font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="edit-3" style="width:12px;height:12px;"></i> แก้ไข' +
             '</button>' +
-            '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? 'var(--orange-light)' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? 'var(--amber-dark)' : '#15803d') + ';font-family:Sarabun,sans-serif;">' +
+            '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? 'var(--orange-light)' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? 'var(--amber-dark)' : 'var(--c-green-deep)') + ';font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="' + (d.active ? 'eye-off' : 'eye') + '" style="width:12px;height:12px;"></i> ' + (d.active ? 'ซ่อน' : 'แสดง') +
             '</button>' +
             '<button onclick="deleteAnn(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--red-light);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--red-dark);font-family:Sarabun,sans-serif;">' +

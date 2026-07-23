@@ -82,7 +82,7 @@
     .pbar-fill{height:100%;border-radius:4px;background:var(--purple);transition:width .4s ease;}
 
     /* ── Needs Review highlight ── */
-    .teacher-row.needs-review{border-color:#f59e0b;border-left:4px solid #f59e0b;}
+    .teacher-row.needs-review{border-color:var(--c-amber);border-left:4px solid var(--c-amber);}
     .teacher-row.needs-head-review{border-color:var(--sky-bright);border-left:4px solid var(--sky-bright);}
     .needs-review .teacher-header{background:linear-gradient(90deg,var(--amber-light) 0%,white 100%);}
     .needs-head-review .teacher-header{background:linear-gradient(90deg,var(--sky-light) 0%,white 100%);}
@@ -103,11 +103,11 @@
     .file-item.selected{border-color:var(--purple);background:var(--violet-light);box-shadow:0 0 0 3px var(--purple-ring);}
     .file-item.fi-submitted{border-left:4px solid var(--emerald);}
     .file-item.fi-head_reviewed{border-left:4px solid var(--sky-bright);}
-    .file-item.fi-reviewed{border-left:4px solid #3b82f6;}
+    .file-item.fi-reviewed{border-left:4px solid var(--c-sky);}
     .file-item.fi-assistant_reviewed{border-left:4px solid var(--yellow);}
     .file-item.fi-deputy_reviewed{border-left:4px solid var(--violet-bright);}
     .file-item.fi-final_approved{border-left:4px solid var(--green);}
-    .file-item.fi-revision{border-left:4px solid #f59e0b;}
+    .file-item.fi-revision{border-left:4px solid var(--c-amber);}
     .file-item.fi-none{border-left:4px solid var(--border);opacity:.6;}
 
     @media(max-width:768px){
@@ -126,7 +126,7 @@
     /* ── Notes button ── */
     .notes-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;border:1.5px solid var(--border);background:white;color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
     .notes-btn:hover{border-color:var(--purple);color:var(--purple);background:var(--violet-light);}
-    .notes-btn.has-note{border-color:#f59e0b;color:var(--role-director-color);background:var(--amber-light);}
+    .notes-btn.has-note{border-color:var(--c-amber);color:var(--role-director-color);background:var(--amber-light);}
     .notes-btn.has-revision{border-color:var(--red-bright);color:var(--red);background:var(--red-pale);animation:pulse-badge 2s ease-in-out infinite;}
 
     /* ── Memo Modal ── */
@@ -171,7 +171,7 @@
     .sub-doc-body.open{display:block;}
     .note-bubble{padding:10px 12px;border-radius:10px;border-left:4px solid;margin-top:6px;}
     .note-bubble.teacher{background:var(--green-light);border-color:var(--emerald);}
-    .note-bubble.admin{background:var(--amber-light);border-color:#f59e0b;}
+    .note-bubble.admin{background:var(--amber-light);border-color:var(--c-amber);}
     .note-bubble.revision{background:var(--red-pale);border-color:var(--red-bright);}
     .course-sub-row{padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);margin-top:8px;background:white;}
 
@@ -349,10 +349,10 @@
         <div>
           <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:var(--gap-tight);">สี</label>
           <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight);" id="dtColorPicker">
-            <div class="color-swatch selected" style="background:var(--blue-bright);" data-color="#3b82f6" onclick="selectDtColor('#3b82f6',this)"></div>
-            <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectDtColor('#8b5cf6',this)"></div>
+            <div class="color-swatch selected" style="background:var(--blue-bright);" data-color="var(--c-sky)" onclick="selectDtColor('var(--c-sky)',this)"></div>
+            <div class="color-swatch" style="background:var(--c-violet);" data-color="var(--c-violet)" onclick="selectDtColor('var(--c-violet)',this)"></div>
             <div class="color-swatch" style="background:var(--emerald);" data-color="var(--emerald)" onclick="selectDtColor('var(--emerald)',this)"></div>
-            <div class="color-swatch" style="background:var(--accent-warn);" data-color="#f59e0b" onclick="selectDtColor('#f59e0b',this)"></div>
+            <div class="color-swatch" style="background:var(--accent-warn);" data-color="var(--c-amber)" onclick="selectDtColor('var(--c-amber)',this)"></div>
             <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectDtColor('#ec4899',this)"></div>
             <div class="color-swatch" style="background:var(--cyan);" data-color="var(--cyan)" onclick="selectDtColor('var(--cyan)',this)"></div>
             <div class="color-swatch" style="background:var(--orange-mid);" data-color="var(--orange-mid)" onclick="selectDtColor('var(--orange-mid)',this)"></div>
@@ -360,9 +360,9 @@
             <div class="color-swatch" style="background:var(--yellow);" data-color="var(--yellow)" onclick="selectDtColor('var(--yellow)',this)"></div>
             <div class="color-swatch" style="background:var(--red-bright);" data-color="var(--red-bright)" onclick="selectDtColor('var(--red-bright)',this)"></div>
             <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectDtColor('#14b8a6',this)"></div>
-            <div class="color-swatch" style="background:#a855f7;" data-color="#a855f7" onclick="selectDtColor('#a855f7',this)"></div>
+            <div class="color-swatch" style="background:var(--c-violet);" data-color="var(--c-violet)" onclick="selectDtColor('var(--c-violet)',this)"></div>
           </div>
-          <input type="text" id="dtColor" value="#3b82f6" maxlength="9" placeholder="#3b82f6" style="margin-top:8px;width:120px;" oninput="syncColorInput()">
+          <input type="text" id="dtColor" value="var(--c-sky)" maxlength="9" placeholder="var(--c-sky)" style="margin-top:8px;width:120px;" oninput="syncColorInput()">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
           <div>
