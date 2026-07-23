@@ -54,13 +54,15 @@
   ];
 
   /* ── Dashboard: Recent Repairs ── */
+  /* ── ใช้ --status-* token กลาง (styles-new.css) แทน hex hardcode เดิม
+     ให้ความหมายสถานะ (เตือน/อันตราย/สำเร็จ/ข้อมูล) ตรงกันทุกหน้าที่มีสถานะแจ้งซ่อม ── */
   var REPAIR_STATUS_META={
-    reported: {label:'รออนุมัติ',        bg:'#fef3c7', color:'#92400e'},
-    rejected: {label:'ไม่อนุมัติ',        bg:'#fee2e2', color:'#991b1b'},
-    approved: {label:'รอซ่อม',           bg:'#e0f2fe', color:'#075985'},
-    done:     {label:'รอตรวจสอบ',        bg:'#ede9fe', color:'#5b21b6'},
-    reopened: {label:'ซ่อมใหม่',         bg:'#fee2e2', color:'#991b1b'},
-    closed:   {label:'ปิดงานแล้ว',       bg:'#d1fae5', color:'#065f46'}
+    reported: {label:'รออนุมัติ',        bg:'var(--status-warning-bg)', color:'var(--status-warning)'},
+    rejected: {label:'ไม่อนุมัติ',        bg:'var(--status-danger-bg)',  color:'var(--status-danger)'},
+    approved: {label:'รอซ่อม',           bg:'var(--status-info-bg)',    color:'var(--status-info)'},
+    done:     {label:'รอตรวจสอบ',        bg:'var(--violet-light)',      color:'var(--violet)'},
+    reopened: {label:'ซ่อมใหม่',         bg:'var(--status-danger-bg)',  color:'var(--status-danger)'},
+    closed:   {label:'ปิดงานแล้ว',       bg:'var(--status-success-bg)', color:'var(--status-success)'}
   };
 
   /* ══ Public Calendar (no login required) ══ */
@@ -75,16 +77,19 @@
 
   /* ════ Portfolio Dashboard ════ */
   /* PF_DOC_TYPES โหลดจาก Firestore (portfolio_doc_types) — ไม่ hardcode */
+  /* ── เดิมแต่ละประเภทเอกสารสุ่มสีของตัวเอง 9 เฉดที่ไม่เกี่ยวกับกราฟ/สถิติหน้าอื่นเลย
+     → เรียงลงบน --chart-1..9 ตัวเดียวกับที่กราฟ Food Court/Repair/Room ใช้ ให้เห็นแล้ว
+     รู้สึกเป็นชุดสีเดียวกันทั้งเว็บ ── */
   var PF_DOC_TYPES = [
-    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
-    { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
-    { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
-    { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
-    { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
-    { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
-    { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
-    { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
-    { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'var(--chart-1)', bg:'var(--accent-tint)' },
+    { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'var(--chart-2)', bg:'var(--green-light)' },
+    { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'var(--chart-3)', bg:'var(--amber-light)' },
+    { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'var(--chart-4)', bg:'var(--red-light)' },
+    { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'var(--chart-5)', bg:'var(--violet-light)' },
+    { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'var(--chart-6)', bg:'var(--sky-light)' },
+    { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'var(--chart-7)', bg:'var(--green-light)' },
+    { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'var(--chart-8)', bg:'var(--orange-light)' },
+    { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'var(--chart-9)', bg:'var(--sky-light)' },
   ]; /* fallback — ถูกแทนที่เมื่อ Firestore โหลดสำเร็จ */
   var _pfDocTypesLoaded = false;
   var _pfDocTypesUnsub  = null;
@@ -95,9 +100,9 @@
   var pfIsStaff = false;
 
   var STATUS_LABEL = { none:'ยังไม่ส่ง', submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าตรวจแล้ว', reviewed:'ตรวจแล้ว', final_approved:'อนุมัติแล้ว', revision:'ขอแก้ไข' };
-  var STATUS_BG    = { none:'#f1f5f9', submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe', final_approved:'#f5f3ff', revision:'#fef9c3' };
-  var STATUS_COLOR = { none:'#94a3b8', submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af', final_approved:'#6d28d9', revision:'#92400e' };
-  var STATUS_DOT   = { none:'#d1d5db', submitted:'#22c55e', head_reviewed:'#0ea5e9', reviewed:'#3b82f6', final_approved:'#7c3aed', revision:'#f59e0b' };
+  var STATUS_BG    = { none:'var(--bg-alt)', submitted:'var(--status-success-bg)', head_reviewed:'var(--status-info-bg)', reviewed:'var(--blue-light)', final_approved:'var(--violet-light)', revision:'var(--amber-light)' };
+  var STATUS_COLOR = { none:'var(--status-neutral)', submitted:'var(--status-success)', head_reviewed:'var(--status-info)', reviewed:'var(--blue-dark)', final_approved:'var(--violet)', revision:'var(--status-warning)' };
+  var STATUS_DOT   = { none:'var(--border-mid)', submitted:'var(--chart-2)', head_reviewed:'var(--chart-6)', reviewed:'var(--chart-1)', final_approved:'var(--chart-5)', revision:'var(--chart-3)' };
   /* ลำดับความสำคัญสำหรับจัดเรียงการ์ดเอกสารส่งงาน: ต้องแก้ไข/ยังไม่ส่งก่อน → กำลังตรวจ → อนุมัติแล้วไปท้ายสุด */
   var STATUS_PRIORITY = { revision:0, none:1, submitted:2, head_reviewed:3, reviewed:4, final_approved:5 };
 
@@ -160,6 +165,8 @@
               label: data.label || '',
               short: data.short || '',
               icon:  data.icon  || 'file',
+              /* หมายเหตุ: ต้องเป็น hex จริง ห้ามใช้ var(--x) เพราะ pfColorToBg()
+                 ต่อ string '15' (alpha) ท้าย hex ตรงๆ — #7c3aed คือค่าเดียวกับ --violet */
               color: data.color || '#7c3aed',
               bg:    pfColorToBg(data.color || '#7c3aed'),
             });
@@ -217,7 +224,11 @@
 
     var ANN_ICON  = { info:'info', warning:'alert-triangle', success:'check-circle-2', urgent:'bell-ring' };
     var ANN_LABEL = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
-    var ANN_CLR   = { info:'#60a5fa', warning:'#fbbf24', success:'#34d399', urgent:'#f87171' };
+    /* ── เดิม ANN_CLR ในฟังก์ชันนี้กับ loadDashboardAnnouncements() ด้านล่าง
+       ใช้เฉดสีคนละชุดสำหรับ type เดียวกัน (เช่น info เป็นคนละสีฟ้า) ทำให้
+       ประกาศแบบเดียวกันดูสีไม่ตรงกันระหว่าง public banner กับ dashboard
+       → รวมมาใช้ --status-* token ชุดเดียวกันทั้งสองจุด ── */
+    var ANN_CLR   = { info:'var(--status-info)', warning:'var(--status-warning)', success:'var(--status-success)', urgent:'var(--status-danger)' };
 
     /* ── ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index ──
        ดึง active=true ทั้งหมด แล้วเรียงและกรองฝั่ง client */
@@ -287,11 +298,11 @@
     var TODAY = new Date().toISOString().slice(0, 10);
     var ANN_ICON  = { info:'info', warning:'alert-triangle', success:'check-circle-2', urgent:'bell-ring' };
     var ANN_LABEL = { info:'ข้อมูล', warning:'แจ้งเตือน', success:'ข่าวดี', urgent:'ด่วน' };
-    var ANN_CLR   = { info:'#3b82f6', warning:'#f59e0b', success:'#10b981', urgent:'#ef4444' };
-    var ANN_BG    = { info:'#eff6ff', warning:'#fffbeb', success:'#f0fdf4', urgent:'#fef2f2' };
-    var ANN_BORDER= { info:'#bfdbfe', warning:'#fde68a', success:'#bbf7d0', urgent:'#fecaca' };
-    var ANN_TEXT  = { info:'#1e40af', warning:'#92400e', success:'#065f46', urgent:'#991b1b' };
-    var ANN_BADGE_BG  = { info:'#dbeafe', warning:'#fef3c7', success:'#d1fae5', urgent:'#fee2e2' };
+    var ANN_CLR   = { info:'var(--status-info)', warning:'var(--status-warning)', success:'var(--status-success)', urgent:'var(--status-danger)' };
+    var ANN_BG    = { info:'var(--sky-light)', warning:'var(--amber-light)', success:'var(--green-light)', urgent:'var(--red-light)' };
+    var ANN_BORDER= { info:'var(--sky-mid)', warning:'var(--amber-mid)', success:'var(--green-mid)', urgent:'var(--red-mid)' };
+    var ANN_TEXT  = { info:'var(--blue-dark)', warning:'var(--amber-dark)', success:'var(--status-success)', urgent:'var(--red-dark)' };
+    var ANN_BADGE_BG  = { info:'var(--blue-mid)', warning:'var(--amber-light)', success:'var(--green-light)', urgent:'var(--red-light)' };
 
     db.collection('announcements')
       .where('active', '==', true)
