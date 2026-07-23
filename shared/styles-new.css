@@ -227,24 +227,24 @@
   --role-none-border: #e2e8f0;
 
   /* Matrix header colors (ตาราง Permissions) */
-  --matrix-budget-color:        #059669;
-  --matrix-general-color:       #2563eb;
-  --matrix-foodcourt-color:     #0284c7;
-  --matrix-academic-color:      #16a34a;
-  --matrix-hr-color:            #0369a1;
-  --matrix-hog-color:           #d97706;
-  --matrix-asst-academic-color: #0891b2;
-  --matrix-asst-budget-color:   #0e7490;
-  --matrix-asst-general-color:  #0369a1;
-  --matrix-asst-personnel-color:#1d4ed8;
-  --matrix-asst-student-color:  #0d1b2a;
-  --matrix-dep-academic-color:  #7e22ce;
-  --matrix-dep-budget-color:    #1b263b;
-  --matrix-dep-general-color:   #0d1b2a;
-  --matrix-dep-personnel-color: #0a1622;
-  --matrix-director-color:      #b45309;
-  --matrix-admin-color:         #0d1b2a;
-  --matrix-action-color:        #64748b;
+  --matrix-budget-color:        var(--role-budget-color);
+  --matrix-general-color:       var(--role-general-color);
+  --matrix-foodcourt-color:     var(--sky);                 /* ไม่มี role คู่ตรง ใช้ --sky ค่าตรงกัน */
+  --matrix-academic-color:      var(--role-academic-color);
+  --matrix-hr-color:            var(--role-hr-color);
+  --matrix-hog-color:           var(--role-hog-color);
+  --matrix-asst-academic-color: var(--role-asst-academic-color);
+  --matrix-asst-budget-color:   var(--role-asst-budget-color);
+  --matrix-asst-general-color:  var(--role-asst-general-color);
+  --matrix-asst-personnel-color:var(--role-asst-personnel-color);
+  --matrix-asst-student-color:  var(--role-asst-student-color);
+  --matrix-dep-academic-color:  var(--role-dep-academic-color);
+  --matrix-dep-budget-color:    var(--role-dep-budget-color);
+  --matrix-dep-general-color:   var(--role-dep-general-color);
+  --matrix-dep-personnel-color: var(--role-dep-personnel-color);
+  --matrix-director-color:      var(--role-director-color);
+  --matrix-admin-color:         var(--role-super-color);     /* ไม่มี role-admin แยก ใช้ role-super ค่าตรงกัน */
+  --matrix-action-color:        var(--text2);                /* ไม่มี role คู่ตรง ใช้ --text2 ค่าตรงกัน */
   /* ── ⚠️ [2026-07] ลบบล็อก "Auto-added tokens (72 colors)" ที่เคยอยู่ตรงนี้ ──
      เดิมมีการรัน script ดึงสี hardcode จากทุกหน้ามาประกาศเป็น token อัตโนมัติ
      โดยไม่ dedupe กับ token ที่ตั้งใจออกแบบไว้แล้วด้านบน (เช่น --green, --blue,
