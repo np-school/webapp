@@ -88,9 +88,12 @@
   --green:       #16a34a;
   --green-light: #f0fdf4;
   --green-mid:   #86efac;
+  --green-pale:  #bbf7d0;   /* เขียวอ่อนกว่า green-mid ใช้กับ cell สถานะ "อนุมัติสมบูรณ์" */
+  --green-dark:  #15803d;   /* ตัวหนังสือเขียวเข้ม ใช้กับ chip สถานะ "ส่งแล้ว" */
   --red:         #dc2626;
   --red-dark:    #b91c1c;
   --red-light:   #fee2e2;
+  --red-pale:    #fef2f2;   /* แดงอ่อนกว่า red-light ใช้กับ badge/bubble แก้ไข */
   --red-mid:     #fecaca;
   --amber:       #d97706;
   --amber-light: #fffbeb;
@@ -98,6 +101,9 @@
   --sky:         #0284c7;
   --sky-light:   #e0f2fe;
   --sky-mid:     #7dd3fc;
+  --sky-bright:  #0ea5e9;   /* ฟ้าสว่างกว่า --sky ใช้กับสถานะ "หัวหน้ากลุ่มสาระตรวจแล้ว" */
+  --sky-pale:    #bae6fd;   /* ฟ้าอ่อนกว่า sky-mid ใช้กับ cell/badge สถานะเดียวกัน */
+  --sky-mist:    #f0f9ff;   /* ฟ้าอ่อนสุด ใช้กับพื้นหลังกล่องข้อมูล */
 
   /* Neutral */
   --text:        #1e293b;
@@ -121,14 +127,20 @@
   --red-bright:  #ef4444;   /* แดงสว่างกว่า --red ใช้กับไอคอน/ตัวเลขเตือน */
   --violet:      #7c3aed;   /* ม่วง decorative/แท็ก */
   --violet-light:#f5f3ff;
+  --violet-bright:#8b5cf6;  /* ม่วงสว่าง ใช้กับสถานะ "รองผู้อำนวยการตรวจแล้ว" */
+  --violet-pale:  #ddd6fe;  /* ม่วงอ่อน ใช้กับ cell สถานะเดียวกัน */
+  --violet-dark:  #6d28d9;  /* ตัวหนังสือม่วงเข้ม ใช้กับ chip สถานะเดียวกัน */
   --blue-accent: #2563eb;   /* น้ำเงิน decorative ทั่วไป (ไม่ผูกกับธีม ต่างจาก --accent) */
   --blue-bright: #3b82f6;
   --emerald:     #22c55e;   /* เขียวสว่างกว่า --green */
+  --emerald-dark:#065f46;   /* ตัวหนังสือเขียวเข้ม ใช้กับ chip สถานะ "อนุมัติสมบูรณ์" */
   --orange:      #ea580c;
   --orange-light:#fff7ed;
   --orange-mid:  #f97316;
   --yellow:      #eab308;
   --yellow-light:#fef9c3;
+  --yellow-pale: #fef08a;   /* เหลืองอ่อนกว่า yellow-light ใช้กับ cell สถานะ "ผู้ช่วยตรวจแล้ว" */
+  --yellow-dark: #713f12;   /* ตัวหนังสือเหลืองเข้ม ใช้กับ step ที่ active */
   --amber-dark:  #92400e;
   --cyan:        #06b6d4;
 

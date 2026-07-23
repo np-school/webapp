@@ -101,6 +101,19 @@
 1. **Hardcoded hex color ใน `js/*.js`** — งานกำลังทำอยู่ (ดู Changelog): แก้แล้ว `index.js`, `profile.js`, `foodcourt-admin.js` (รวม `shared/common.js` → `showToast()`) เปลี่ยนไปใช้ `--chart-N`/`--status-*` token กลางที่เพิ่มใน `styles-new.css` แล้ว — ยังเหลือ `portfolio-admin.js` (~52 จุด), `room-request.js`, `portfolio-teacher.js`, `repair-admin.js`, `staff.js`, `admin-role.js`, `settings.js`, `room-admin.js`, `repair-user.js`, `ipad-lending.js` แก้ยากกว่าไฟล์ `.html` เพราะสีบางจุดขึ้นกับ status/state ของข้อมูล และบางจุดต่อ string เป็น hex+alpha (`hex+'15'`) ที่ใช้ `var()` แทนไม่ได้ ต้องเช็ค context ทีละจุด
 2. **ไฟล์ JS ใหญ่เกินไป ควรแตกโมดูล**: `portfolio-admin.js` (~3,480 บรรทัด), `repair-admin.js` (~2,230), `ipad-lending.js` (~2,080), `portfolio-teacher.js` (~2,060), `profile.js` (~1,950)
 3. **พิจารณาตัด Tailwind ออกทั้งหมด** — สแกนแล้วพบว่าโปรเจกต์แทบไม่ได้ใช้ Tailwind utility class เลย (ดู Changelog) ความเสี่ยงต่ำถ้าจะเอาออก
+4. **รวม token สี `styles-new.css` ให้เป็นชุดเดียว (unify color system)** — เริ่มทำแล้ว ดูสถานะย่อยด้านล่าง:
+   - [x] `--blue` / `--blue-dark` / `--blue-light` ใน `:root` default (theme-blue) alias ไปที่ `--accent` / `--accent-dark` / `--accent-tint` แล้ว — เดิม hardcode แยกขาด ทำให้จุดที่อ้าง `var(--blue)` ไม่ตามสีธีมที่แอดมินตั้งจาก `site_config/theme` (บั๊กจริง ตามที่ `.navbar.blue`/`.navbar.dark` ทำถูกอยู่แล้วแต่จุดอื่นไม่ตาม) ค่า default ไม่เปลี่ยน
+   - [x] `styles-new.css` — แทนที่ hex ที่ซ้ำกับ token เดิมเป๊ะ 55 จุด (นอก `:root`/`body.theme-staff`) ด้วย `var(--token)`
+   - [x] เพิ่ม `--line-green` / `--line-green-dark` (สี LINE brand `#06C755` เดิม hardcode กระจาย ไม่มี token)
+   - [x] `index.html` — แทนที่ `#06C755` ด้วย `var(--line-green)` 12 จุด
+   - [x] Quick win: แทนที่ hex inline ที่ตรงกับ token เดิม (ไม่รวม `--accent`/`--blue`/`--purple`/`--navbar-*` เพื่อไม่ให้เผลอผูกกับธีมไดนามิกโดยไม่ตั้งใจ) — รวม 307 จุด ใน `index.html`, `profile.html`, `portfolio-admin.html`, `guide.html`, `settings.html`, `portfolio-teacher.html`, `ipad-lending.html`, `staff.html`
+   - [x] `--matrix-*` (18 ตัว, ตาราง Permissions) ค่าเหมือน `--role-*-color` เป๊ะ แต่ประกาศแยก → เปลี่ยนเป็น `var(--role-*-color)` ทั้งหมด (3 ตัวที่ไม่มี role คู่ตรงชี้ไปที่ token ฐานแทน: `--matrix-foodcourt-color`→`--sky`, `--matrix-admin-color`→`--role-super-color`, `--matrix-action-color`→`--text2`)
+   - [ ] `--blue-mid` (`#bfdbfe`) และ `--blue-ring` ยังไม่ได้ผูกกับ `--accent` เพราะไม่มีค่าคู่ตรงกันเป๊ะ (`--accent-light`/`--accent-mid` ค่าต่างกัน) ต้องตัดสินใจว่าจะคำนวณ shade ใหม่จาก `--accent` (กระทบสี default เล็กน้อย) หรือปล่อยคงที่
+   - [ ] เปลี่ยนชื่อ `--purple-*` (สื่อผิด จริงคือ navy/ink ไม่ใช่ม่วง) — ยังไม่ rename เพราะมี ~208 จุดอ้างอิงทั่วโปรเจกต์ ต้องเช็ค `common.js`/`buildNavbar` ก่อนว่าไม่มีที่ไหนอ้างชื่อ string ตรงๆ
+   - [ ] inline hex ใน `.html` ที่ยังไม่มี token คู่ (สีเฉพาะโมดูล เช่น portfolio=เขียว/ม่วง, foodcourt=ส้ม) ต้องรีวิวทีละหน้าก่อนตั้ง token ใหม่:
+     - [x] `portfolio-admin.html` — เจอระบบสีตามขั้นตอนตรวจพอร์ตโฟลิโอ (submitted/head/assistant/deputy/final) กระจาย hardcode ใน `<style>` ของไฟล์ → เพิ่ม token ใหม่ 12 ตัวใน `styles-new.css` (`--green-pale`, `--green-dark`, `--red-pale`, `--sky-bright/-pale/-mist`, `--violet-bright/-pale/-dark`, `--emerald-dark`, `--yellow-pale/-dark`) แล้วแทนที่ครบ **ยกเว้น** สี swatch ใน color-picker เลือกสีประเภทเอกสาร (`selectDtColor`) ที่ตั้งใจไม่แตะ เพราะเป็นค่าที่บันทึกลง Firestore จริง ไม่ใช่สีตกแต่ง (เหลือ `#fafbff` 1 จุด decorative เล็กน้อยเกินกว่าจะตั้ง token)
+     - [ ] `profile.html` (23), `index.html` (22), `guide.html` (15), `portfolio-teacher.html` (13), `settings.html` (13), `staff.html` (4), `room-request.html` (3), `foodcourt-admin.html` (1)
+
 
 ### ⚠️ ข้อควรระวัง (ไม่ใช่งานค้าง แค่รู้ไว้กันพลาด)
 
@@ -114,6 +127,8 @@
 
 > สรุปสั้นๆ เรียงใหม่สุดก่อน — รายละเอียดเชิงลึก/ขั้นตอนแก้แบบเต็มดูได้จาก commit message หรือถามได้ถ้าต้องการบริบทเพิ่ม
 
+- ✅ **`styles-new.css` — รวม token สี (ต่อยอดจากงาน "สีทั้งเว็บ" ด้านล่าง)**: alias `--blue`/`--blue-dark`/`--blue-light` ให้ชี้ไปที่ `--accent`* ใน default `:root` (แก้บั๊กจุดที่อ้าง `var(--blue)` ไม่ตามสีธีมที่แอดมินตั้ง), แทนที่ hex ซ้ำกับ token เดิม 55 จุดในไฟล์นี้, เพิ่ม `--line-green`/`--line-green-dark`, และรวม `--matrix-*` (18 ตัว) ให้ชี้ไปที่ `var(--role-*-color)` แทนการ hardcode ซ้ำ (ดูรายละเอียด/ของค้างในหัวข้อ "ต้องทำต่อ" ข้อ 4)
+- ✅ **`index.html`, `profile.html`, `portfolio-admin.html`, `guide.html`, `settings.html`, `portfolio-teacher.html`, `ipad-lending.html`, `staff.html`**: แทนที่ hex inline ที่ตรงกับ token เดิม 307 จุด (ไม่แตะ hex ที่ตรงกับ `--accent`/`--blue`/`--purple`/`--navbar-*` เพื่อไม่ให้เผลอผูกกับธีมไดนามิกโดยไม่ตั้งใจ)
 - ✅ **`firestore.rules` + `firebase.json`**: เพิ่มไฟล์ `firestore.rules` เข้า repo เป็นครั้งแรก (เดิมไม่มีไฟล์นี้อยู่เลย จัดการแยกนอก repo) พร้อมเพิ่ม block `firestore` ใน `firebase.json` ให้ `firebase deploy --only firestore:rules` ใช้ได้ — **ยังไม่ยืนยันว่า deploy จริงแล้วหรือยัง** ต้องเทียบกับกฎที่ใช้งานอยู่บน Console ก่อน deploy เสมอ
 - ✅ **สีทั้งเว็บ — เริ่มงานรวมชุดสีให้เป็นโทนเดียวกัน** (ผู้ใช้แจ้งว่าแต่ละหน้า/กราฟสีไม่เข้ากัน) กำลังทำอยู่ ทำไปแล้ว:
   - **`shared/styles-new.css`**: เจอบั๊ก — เคยมีบล็อก "Auto-added tokens" 72 ตัวที่ประกาศ `--green`/`--blue`/`--amber`/`--violet` ซ้ำชื่อกับ token ที่ตั้งใจออกแบบไว้ด้านบน ด้วยค่าคนละตัว (CSS ใช้ค่าที่ประกาศทีหลังสุดเสมอ ทำให้ token ตัวจริงถูกทับเงียบๆ) → ลบบล็อกนี้ทิ้งทั้งหมด แล้วเพิ่ม **Chart Palette** (`--chart-1` ถึง `--chart-9`) กับ **Status Palette** (`--status-success/warning/danger/info/neutral` + `-bg`) ที่อ้างอิง token เดิม ให้ทุกกราฟ/badge ในเว็บดึงจากชุดเดียวกัน
