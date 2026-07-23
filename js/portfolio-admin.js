@@ -1656,7 +1656,7 @@ function renderCharts() {
 function renderDonutChart() {
   /* เรียงให้ none อยู่แรก วาดเป็น base แล้วสีอื่นทับทีหลัง */
   var statusConfig = [
-    { key:'none',               label:'ยังไม่ส่ง',                color:'var(--border)' },
+    { key:'none',               label:'ยังไม่ส่ง',                color:cssVar('--border') },
     { key:'revision',           label:'ให้แก้ไข',                 color:cssVar('--c-red-mid') },
     { key:'submitted',          label:'รอตรวจ',                   color:cssVar('--c-green') },
     { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:cssVar('--c-sky') },
@@ -2169,7 +2169,7 @@ function renderTeacherDetail(t) {
 /* ── Donut chart for teacher ── */
 function renderTeacherDonut(counts) {
   var STATUS_CFG = [
-    { key:'none',               label:'ยังไม่ส่ง',               color:'var(--border-mid)' },
+    { key:'none',               label:'ยังไม่ส่ง',               color:cssVar('--border-mid') },
     { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:cssVar('--c-green') },
     { key:'revision',           label:'ให้แก้ไข',                color:cssVar('--c-red-mid') },
     { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:cssVar('--c-sky') },
