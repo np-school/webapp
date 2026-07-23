@@ -198,15 +198,15 @@
     var maxVal=1;rooms.forEach(function(r){maxVal=Math.max(maxVal,byRoom[r].total);});
 
     // Y grid + labels
-    ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+    ctx.strokeStyle=cssVar('--border');ctx.lineWidth=1;
     for(var i=0;i<=4;i++){
       var yy=padT+chartH-(chartH/4*i);
       ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(padL+chartW,yy);ctx.stroke();
-      ctx.fillStyle='var(--text3)';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=cssVar('--text3');ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
       ctx.fillText(Math.round(maxVal/4*i),padL-5,yy);
     }
 
-    var barColors=['var(--c-green)','var(--c-amber)','var(--c-red-mid)'];
+    var barColors=[cssVar('--c-green'),cssVar('--c-amber'),cssVar('--c-red-mid')];
     var barKeys=['approved','pending','rejected'];
     var groupW=chartW/rooms.length;
     var nBars=3,barPadG=groupW*0.12,barW=Math.max(6,(groupW-barPadG*2)/nBars-2);
@@ -228,7 +228,7 @@
         ctx.beginPath();
         if(bh>1){ctx.moveTo(bx+rr,by);ctx.lineTo(bx+barW-rr,by);ctx.arcTo(bx+barW,by,bx+barW,by+rr,rr);ctx.lineTo(bx+barW,by+bh);ctx.lineTo(bx,by+bh);ctx.lineTo(bx,by+rr);ctx.arcTo(bx,by,bx+rr,by,rr);}
         ctx.closePath();ctx.fillStyle=barColors[bi];ctx.globalAlpha=0.88;ctx.fill();ctx.globalAlpha=1;
-        if(val>0){ctx.fillStyle='var(--text)';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(val,bx+barW/2,by-1);}
+        if(val>0){ctx.fillStyle=cssVar('--text');ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(val,bx+barW/2,by-1);}
       });
       // total label
       if(d.total>0){
@@ -241,7 +241,7 @@
       var name=room.length>10?room.substring(0,10)+'…':room;
       ctx.fillText(name,lx,padT+chartH+5);
       // sub line
-      ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+      ctx.strokeStyle=cssVar('--border');ctx.lineWidth=1;
       ctx.beginPath();ctx.moveTo(padL+gi*groupW,padT+chartH+3);ctx.lineTo(padL+gi*groupW,padT+chartH);ctx.stroke();
     });
     // axes
@@ -264,11 +264,11 @@
     var chartW=cW-padL-padR,chartH=cH-padT-padB;
     var maxVal=Math.max(1,Math.max.apply(null,buckets.map(function(b){return b.total;})));
 
-    ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+    ctx.strokeStyle=cssVar('--border');ctx.lineWidth=1;
     for(var i=0;i<=4;i++){
       var yy=padT+chartH-(chartH/4*i);
       ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(padL+chartW,yy);ctx.stroke();
-      ctx.fillStyle='var(--text3)';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle=cssVar('--text3');ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
       ctx.fillText(Math.round(maxVal/4*i),padL-4,yy);
     }
 
@@ -292,7 +292,7 @@
       apPts.push({x:x,y:padT+chartH-ah});
 
       var step=buckets.length>20?Math.ceil(buckets.length/10):buckets.length>10?2:1;
-      if(i%step===0){ctx.fillStyle='var(--text2)';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(bk.label,x,padT+chartH+4);}
+      if(i%step===0){ctx.fillStyle=cssVar('--text2');ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(bk.label,x,padT+chartH+4);}
     });
 
     function drawLine(pts,color,lw){
@@ -413,9 +413,9 @@
   /* ── 1. Donut: สถานะ ── */
   function renderDonutChart(){
     var statusConfig=[
-      {key:'approved', label:'อนุมัติแล้ว',   color:'var(--c-green)'},
-      {key:'pending',  label:'รอพิจารณา',     color:'var(--c-amber)'},
-      {key:'rejected', label:'ไม่อนุมัติ',    color:'var(--c-red-mid)'},
+      {key:'approved', label:'อนุมัติแล้ว',   color:cssVar('--c-green')},
+      {key:'pending',  label:'รอพิจารณา',     color:cssVar('--c-amber')},
+      {key:'rejected', label:'ไม่อนุมัติ',    color:cssVar('--c-red-mid')},
     ];
     var counts={approved:0,pending:0,rejected:0};
     allBookings.forEach(function(b){var s=b.status||'pending';if(counts[s]!==undefined)counts[s]++;});
@@ -436,7 +436,7 @@
       ctx.closePath();ctx.fillStyle=s.color;ctx.fill();
       startAngle+=slice;
     });
-    if(total===0){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.arc(cx,cy,r-thick,2*Math.PI,0,true);ctx.closePath();ctx.fillStyle='var(--border)';ctx.fill();}
+    if(total===0){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.arc(cx,cy,r-thick,2*Math.PI,0,true);ctx.closePath();ctx.fillStyle=cssVar('--border');ctx.fill();}
     document.getElementById('donutTotal').textContent=total;
     var leg=document.getElementById('donutLegend');
     leg.innerHTML=statusConfig.map(function(s){

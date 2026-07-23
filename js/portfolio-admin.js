@@ -1657,12 +1657,12 @@ function renderDonutChart() {
   /* เรียงให้ none อยู่แรก วาดเป็น base แล้วสีอื่นทับทีหลัง */
   var statusConfig = [
     { key:'none',               label:'ยังไม่ส่ง',                color:'#e2e8f0' },
-    { key:'revision',           label:'ให้แก้ไข',                 color:'var(--c-red-mid)' },
-    { key:'submitted',          label:'รอตรวจ',                   color:'var(--c-green)' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:'var(--c-sky)' },
-    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:'var(--c-amber)' },
-    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:'var(--c-violet)' },
-    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:'var(--c-green)' },
+    { key:'revision',           label:'ให้แก้ไข',                 color:cssVar('--c-red-mid') },
+    { key:'submitted',          label:'รอตรวจ',                   color:cssVar('--c-green') },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:cssVar('--c-sky') },
+    { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:cssVar('--c-amber') },
+    { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:cssVar('--c-violet') },
+    { key:'final_approved',     label:'ผอ.อนุมัติแล้ว',           color:cssVar('--c-green') },
   ];
 
   var teacherList = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
@@ -2170,12 +2170,12 @@ function renderTeacherDetail(t) {
 function renderTeacherDonut(counts) {
   var STATUS_CFG = [
     { key:'none',               label:'ยังไม่ส่ง',               color:'#cbd5e1' },
-    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:'var(--c-green)' },
-    { key:'revision',           label:'ให้แก้ไข',                color:'var(--c-red-mid)' },
-    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:'var(--c-sky)' },
-    { key:'assistant_reviewed', label:'ผช.ผอ. ตรวจแล้ว',         color:'var(--c-amber)' },
-    { key:'deputy_reviewed',    label:'รอง ผอ. ตรวจแล้ว',        color:'var(--c-violet)' },
-    { key:'final_approved',     label:'ผอ. อนุมัติ',              color:'var(--c-green)' },
+    { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:cssVar('--c-green') },
+    { key:'revision',           label:'ให้แก้ไข',                color:cssVar('--c-red-mid') },
+    { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:cssVar('--c-sky') },
+    { key:'assistant_reviewed', label:'ผช.ผอ. ตรวจแล้ว',         color:cssVar('--c-amber') },
+    { key:'deputy_reviewed',    label:'รอง ผอ. ตรวจแล้ว',        color:cssVar('--c-violet') },
+    { key:'final_approved',     label:'ผอ. อนุมัติ',              color:cssVar('--c-green') },
   ];
 
   var canvas = document.getElementById('teacherDonutChart');

@@ -1,3 +1,10 @@
+/* ── Helper: อ่าน CSS variable จาก :root (ใช้กับ canvas/Chart.js ที่ไม่รองรับ var() ตรงๆ
+     — ถ้าส่ง 'var(--x)' ตรงๆ ให้ Chart.js/canvas fillStyle มันจะ parse สีไม่ได้และ fallback
+     เป็นสีดำเงียบๆ ต้อง resolve เป็นค่าสีจริงผ่าน getComputedStyle ก่อนเสมอ) ── */
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 /* ══════════════════════ STATE ══════════════════════ */
 var currentUser  = null;
 var ipadSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderPage()
@@ -278,7 +285,7 @@ function renderStatsCharts() {
   var staffOutCount   = BORROWS_OUT.filter(function(b){ return b.borrowerType === 'staff'; }).length;
   var studentOutCount = outCount - staffOutCount;
 
-  _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], ['var(--c-green)','var(--c-red)']);
+  _drawChart('chartDeviceStatus', 'doughnut', ['ถูกยืมอยู่','ว่าง'], [outCount, freeCount], [cssVar('--c-green'), cssVar('--c-red')]);
 
   var accTitle = document.getElementById('accessoriesChartTitle');
   if (accTitle) accTitle.textContent = 'อุปกรณ์เสริม (ยืมอยู่ / คงเหลือ) — ชุดละ ' + totalDevices + ' ชิ้น';
@@ -288,7 +295,7 @@ function renderStatsCharts() {
     totalDevices
   );
 
-  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['var(--accent)','var(--c-amber)']);
+  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], [cssVar('--accent'), cssVar('--c-amber')]);
 }
 function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
   var el = document.getElementById('chartAccessories');
@@ -300,7 +307,7 @@ function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
     data: {
       labels: labels,
       datasets: [
-        { label: 'ยืมอยู่',   data: borrowedCounts, backgroundColor: 'var(--c-amber)', borderRadius: 4, maxBarThickness: 26, stack: 'a' },
+        { label: 'ยืมอยู่',   data: borrowedCounts, backgroundColor: cssVar('--c-amber'), borderRadius: 4, maxBarThickness: 26, stack: 'a' },
         { label: 'คงเหลือ', data: remaining,      backgroundColor: '#e2e8f0', borderRadius: 4, maxBarThickness: 26, stack: 'a' }
       ]
     },
@@ -731,8 +738,8 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: datasetLabel1, data: totals, backgroundColor: 'var(--accent)', borderRadius: 4, maxBarThickness: 28 },
-        { label: datasetLabel2, data: borrowing, backgroundColor: 'var(--c-amber)', borderRadius: 4, maxBarThickness: 28 }
+        { label: datasetLabel1, data: totals, backgroundColor: cssVar('--accent'), borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel2, data: borrowing, backgroundColor: cssVar('--c-amber'), borderRadius: 4, maxBarThickness: 28 }
       ]
     },
     options: {
