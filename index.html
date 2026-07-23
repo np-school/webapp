@@ -38,7 +38,7 @@
       /* iOS → แสดง banner (Apple บล็อก intent://) */
       function showBanner() {
         /* ซ่อนทุกอย่างในหน้า แล้วแสดงแค่หน้าแนะนำ */
-        document.body.style.cssText = 'margin:0;padding:0;background:#f8fafc;font-family:Sarabun,sans-serif;';
+        document.body.style.cssText = 'margin:0;padding:0;background:var(--bg);font-family:Sarabun,sans-serif;';
         document.body.innerHTML =
           '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">'
           + '<div style="width:72px;height:72px;background:var(--accent-tint);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">'
@@ -58,7 +58,7 @@
           + '<p style="font-size:13px;color:var(--text-slate);line-height:1.6;">เลือก <strong>"เปิดใน Safari"</strong> หรือ <strong>"เปิดในเบราว์เซอร์"</strong></p>'
           + '</div>'
           + '</div>'
-          + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + currentUrl + '\').then(function(){this.textContent=\'คัดลอกแล้ว ✓\';this.style.background=\'#16a34a\';}).catch(function(){})" '
+          + '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + currentUrl + '\').then(function(){this.textContent=\'คัดลอกแล้ว ✓\';this.style.background=\'var(--green)\';}).catch(function(){})" '
           + 'style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;max-width:320px;">'
           + '📋 คัดลอกลิงก์เพื่อวางใน Safari'
           + '</button>'
@@ -89,20 +89,20 @@
     
     /* ── Public calendar ── */
     .pub-cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid transparent;transition:all .15s;position:relative;}
-    .pub-cal-day:hover:not(.empty){background:#f1f5f9;}
+    .pub-cal-day:hover:not(.empty){background:var(--border-soft);}
     .pub-cal-day.empty{cursor:default;}
-    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:#eab308;border-radius:50%;}
-    .pub-cal-day.is-full{background:#fee2e2!important;color:#b91c1c!important;}
+    .pub-cal-day.has-booking::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;background:var(--yellow);border-radius:50%;}
+    .pub-cal-day.is-full{background:var(--red-light)!important;color:var(--red-dark)!important;}
     .pub-cal-day.is-today{background:var(--accent)!important;color:white!important;box-shadow:0 3px 8px rgba(29,78,216,.35);}
     .pub-cal-day.is-selected{border:2px solid var(--accent);background:var(--accent-tint);}
-    .pub-stat-bar{background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;}
+    .pub-stat-bar{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
     .pub-stat-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
     @media(max-width:700px){#pubCalGrid{grid-template-columns:1fr!important;}}
     @media(max-width:480px){.pub-cal-day{font-size:10px;}}
     @media(max-width:768px){.dashboard-two-col{grid-template-columns:1fr!important;}}
     @media(max-width:900px){.dash-two-col{grid-template-columns:1fr!important;}}
     /* ── New Public UI ── */
-    .pub-hero-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,var(--accent) 100%);position:relative;overflow:hidden;border-radius:28px;}
+    .pub-hero-bg{background:linear-gradient(135deg,var(--text-dark) 0%,#1e3a8a 50%,var(--accent) 100%);position:relative;overflow:hidden;border-radius:28px;}
     .pub-hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(96,165,250,.18) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(99,102,241,.15) 0%,transparent 60%);}
     .pub-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;}
     /* ── Hero illustration mosaic ── */
@@ -117,7 +117,7 @@
     .mc-4{animation-delay:1.5s;}
     @keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
     @media(max-width:768px){.hero-img-block{display:none;}}
-    .service-card{background:white;border-radius:20px;border:1px solid #e2e8f0;padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
+    .service-card{background:white;border-radius:20px;border:1px solid var(--border);padding:24px 20px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:center;position:relative;overflow:hidden;}
     .service-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.1);border-color:var(--accent-light);}
     .service-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform .2s;}
     .service-card:hover .service-icon{transform:scale(1.08);}
@@ -139,10 +139,10 @@
     @media(max-width:768px){#pubCalGrid{grid-template-columns:1fr!important;}}
     /* ── Announcement section (dark theme) ── */
     #annSection {
-      background: #0f172a;
+      background: var(--text-dark);
       padding: 28px 0;
     }
-    #annSection h2 { color: #f1f5f9 !important; }
+    #annSection h2 { color: var(--border-soft) !important; }
     .ann-acc-bar  { width: 4px; height: 26px; background: #f59e0b; border-radius: 4px; flex-shrink: 0; }
 
     .ann-pub-card {
@@ -169,8 +169,8 @@
       font-size: 10px; font-weight: 800; letter-spacing: .3px;
     }
     .ann-pub-badge.info    { background: rgba(96,165,250,.18); color: var(--accent-light); }
-    .ann-pub-badge.warning { background: rgba(251,191,36,.18);  color: #fcd34d; }
-    .ann-pub-badge.success { background: rgba(52,211,153,.18);  color: #6ee7b7; }
+    .ann-pub-badge.warning { background: rgba(251,191,36,.18);  color: var(--role-hog-border); }
+    .ann-pub-badge.success { background: rgba(52,211,153,.18);  color: var(--role-budget-border); }
     .ann-pub-badge.urgent  { background: rgba(248,113,113,.18); color: #fca5a5; }
 
     /* badge ฝ่าย */

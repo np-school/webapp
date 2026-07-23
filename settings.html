@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1b2a">
+  <meta name="theme-color" content="var(--role-super-color)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NP Origins">
   <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
@@ -86,13 +86,13 @@
       grid-template-columns: 52px 1fr;
       gap: 8px;
       padding: 10px;
-      background: #f8fafc;
+      background: var(--bg);
     }
     .mock-sidebar { display: flex; flex-direction: column; gap: 5px; }
-    .mock-sb-item { height: 14px; border-radius: 5px; background: #e2e8f0; }
+    .mock-sb-item { height: 14px; border-radius: 5px; background: var(--border); }
     .mock-content { display: flex; flex-direction: column; gap: 7px; }
     .mock-btn     { height: 20px; border-radius: 6px; width: 64px; align-self: flex-end; }
-    .mock-line    { height: 7px; border-radius: 3px; background: #e2e8f0; }
+    .mock-line    { height: 7px; border-radius: 3px; background: var(--border); }
     .mock-line.s  { width: 55%; }
 
     /* Swatch row */
@@ -131,17 +131,17 @@
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .ann-type-info    { background: #eff6ff; }
-    .ann-type-warning { background: #fffbeb; }
-    .ann-type-success { background: #f0fdf4; }
+    .ann-type-warning { background: var(--amber-light); }
+    .ann-type-success { background: var(--green-light); }
     .ann-type-urgent  { background: #fff1f2; }
     .ann-badge {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
     }
-    .ann-badge-info    { background: #dbeafe; color: #1e40af; }
-    .ann-badge-warning { background: #fef3c7; color: #92400e; }
-    .ann-badge-success { background: #dcfce7; color: #15803d; }
-    .ann-badge-urgent  { background: #fee2e2; color: #b91c1c; }
+    .ann-badge-info    { background: var(--role-general-bg); color: #1e40af; }
+    .ann-badge-warning { background: var(--role-hog-bg); color: var(--amber-dark); }
+    .ann-badge-success { background: var(--role-academic-bg); color: #15803d; }
+    .ann-badge-urgent  { background: var(--red-light); color: var(--red-dark); }
 
     /* ── Ann type radio pills ── */
     .ann-type-radio { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -152,10 +152,10 @@
       font-family: 'Sarabun', sans-serif; user-select: none;
     }
     .ann-type-opt input { display: none; }
-    .ann-type-opt.sel-info    { border-color: #1d4ed8; background: #eff6ff; color: #1e40af; }
-    .ann-type-opt.sel-warning { border-color: #d97706; background: #fffbeb; color: #92400e; }
-    .ann-type-opt.sel-success { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
-    .ann-type-opt.sel-urgent  { border-color: #dc2626; background: #fff1f2; color: #b91c1c; }
+    .ann-type-opt.sel-info    { border-color: var(--role-asst-personnel-color); background: #eff6ff; color: #1e40af; }
+    .ann-type-opt.sel-warning { border-color: var(--amber); background: var(--amber-light); color: var(--amber-dark); }
+    .ann-type-opt.sel-success { border-color: var(--green); background: var(--green-light); color: #15803d; }
+    .ann-type-opt.sel-urgent  { border-color: var(--red); background: #fff1f2; color: var(--red-dark); }
 
     /* ── Ann scope pills (ภายใน / ภายนอก) ── */
     .ann-scope-row { display: flex; gap: 8px; }
@@ -167,7 +167,7 @@
     }
     .ann-scope-opt input { display: none; }
     .ann-scope-opt.sel-internal { border-color: var(--accent); background: var(--accent-tint,#eff6ff); color: var(--accent); }
-    .ann-scope-opt.sel-external { border-color: #7c3aed; background: #faf5ff; color: #6d28d9; }
+    .ann-scope-opt.sel-external { border-color: var(--violet); background: #faf5ff; color: #6d28d9; }
 
     /* ── Date row ── */
     .ann-date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -176,7 +176,7 @@
       display: flex; align-items: center; gap: 8px; margin-top: 8px;
       font-size: 13px; font-weight: 700; color: var(--text); cursor: pointer; user-select: none;
     }
-    .ann-noexpiry-row input { width:16px; height:16px; accent-color: var(--accent,#1d4ed8); cursor:pointer; }
+    .ann-noexpiry-row input { width:16px; height:16px; accent-color: var(--accent,var(--role-asst-personnel-color)); cursor:pointer; }
 
     /* ── Image drop zone ── */
     .ann-img-drop {
@@ -185,8 +185,8 @@
       position: relative; min-height: 88px;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     }
-    .ann-img-drop:hover { border-color: var(--accent,#1d4ed8); background: var(--accent-tint,#eff6ff); }
-    .ann-img-drop.has-file { border-style: solid; border-color: var(--accent,#1d4ed8); background: var(--accent-tint,#eff6ff); }
+    .ann-img-drop:hover { border-color: var(--accent,var(--role-asst-personnel-color)); background: var(--accent-tint,#eff6ff); }
+    .ann-img-drop.has-file { border-style: solid; border-color: var(--accent,var(--role-asst-personnel-color)); background: var(--accent-tint,#eff6ff); }
     .ann-img-drop input[type="file"] { display: none; }
     .ann-img-preview { width:100%; max-height:120px; object-fit:contain; border-radius:8px; display:none; }
     .ann-img-drop.has-file .ann-img-preview { display:block; }
@@ -194,7 +194,7 @@
     .ann-img-placeholder { display:flex; flex-direction:column; align-items:center; gap:6px; }
     .ann-img-remove {
       position:absolute; top:8px; right:8px; width:22px; height:22px;
-      background:#ef4444; border:none; border-radius:50%; color:white;
+      background:var(--red-bright); border:none; border-radius:50%; color:white;
       font-size:12px; cursor:pointer; display:none; align-items:center; justify-content:center;
       line-height:1; z-index:2;
     }
@@ -209,7 +209,7 @@
       display: block; margin-bottom: 6px;
       text-transform: uppercase; letter-spacing: .8px;
     }
-    .ann-modal-box .form-label-sm .req { color: #ef4444; }
+    .ann-modal-box .form-label-sm .req { color: var(--red-bright); }
   </style>
 </head>
 <body>

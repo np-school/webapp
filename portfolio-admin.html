@@ -44,20 +44,20 @@
     .doc-chip{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;border:1.5px solid;cursor:pointer;transition:all .15s;}
     .doc-chip:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.08);}
     .chip-none{background:var(--bg);border-color:var(--border);color:var(--text3);}
-    .chip-submitted{background:#f0fdf4;border-color:#86efac;color:#15803d;}
-    .chip-head_reviewed{background:#e0f2fe;border-color:#7dd3fc;color:#0369a1;}
+    .chip-submitted{background:var(--green-light);border-color:var(--green-mid);color:#15803d;}
+    .chip-head_reviewed{background:var(--sky-light);border-color:var(--sky-mid);color:var(--role-hr-color);}
     .chip-reviewed{background:var(--accent-tint);border-color:var(--accent-light);color:var(--accent-dark);}
-    .chip-assistant_reviewed{background:#fef3c7;border-color:#fcd34d;color:#92400e;}
+    .chip-assistant_reviewed{background:var(--role-hog-bg);border-color:var(--role-hog-border);color:var(--amber-dark);}
     .chip-deputy_reviewed{background:var(--purple-light);border-color:var(--purple-mid);color:#6d28d9;}
-    .chip-final_approved{background:#f0fdf4;border-color:#86efac;color:#065f46;}
-    .chip-revision{background:#fffbeb;border-color:#fde68a;color:#92400e;}
+    .chip-final_approved{background:var(--green-light);border-color:var(--green-mid);color:#065f46;}
+    .chip-revision{background:var(--amber-light);border-color:var(--amber-mid);color:var(--amber-dark);}
 
     /* ── Workflow status bar ── */
     .workflow-bar{display:flex;align-items:stretch;margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
     .wf-step{flex:1;padding:6px 4px;text-align:center;font-size:9px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.3;}
-    .wf-step.done{background:#16a34a;color:white;}
-    .wf-step.active{background:#eab308;color:#713f12;}
-    .wf-step.revision{background:#dc2626;color:white;}
+    .wf-step.done{background:var(--green);color:white;}
+    .wf-step.active{background:var(--yellow);color:#713f12;}
+    .wf-step.revision{background:var(--red);color:white;}
     .wf-step.pending{background:var(--bg-alt);color:var(--text3);}
     .wf-step.final{background:var(--purple);color:white;}
     .wf-divider{width:1px;background:rgba(0,0,0,.08);align-self:stretch;flex-shrink:0;}
@@ -66,16 +66,16 @@
     .matrix-table{width:100%;border-collapse:collapse;}
     .matrix-table th{font-size:10px;font-weight:800;color:var(--text3);text-align:center;padding:6px 4px;border-bottom:1px solid var(--border);}
     .matrix-table td{text-align:center;padding:5px 4px;border-bottom:1px solid var(--border-soft);}
-    .matrix-table tr:hover td{background:#f5f3ff;}
+    .matrix-table tr:hover td{background:var(--violet-light);}
     .matrix-cell{width:22px;height:22px;border-radius:6px;margin:0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;}
     .cell-none{background:var(--bg-alt);}
-    .cell-submitted{background:#dcfce7;}
+    .cell-submitted{background:var(--role-academic-bg);}
     .cell-head_reviewed{background:#bae6fd;}
-    .cell-reviewed{background:#dbeafe;}
+    .cell-reviewed{background:var(--role-general-bg);}
     .cell-assistant_reviewed{background:#fef08a;}
     .cell-deputy_reviewed{background:#ddd6fe;}
     .cell-final_approved{background:#bbf7d0;}
-    .cell-revision{background:#fef9c3;}
+    .cell-revision{background:var(--yellow-light);}
 
     /* ── pbar ── */
     .pbar-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
@@ -84,29 +84,29 @@
     /* ── Needs Review highlight ── */
     .teacher-row.needs-review{border-color:#f59e0b;border-left:4px solid #f59e0b;}
     .teacher-row.needs-head-review{border-color:#0ea5e9;border-left:4px solid #0ea5e9;}
-    .needs-review .teacher-header{background:linear-gradient(90deg,#fffbeb 0%,white 100%);}
-    .needs-head-review .teacher-header{background:linear-gradient(90deg,#e0f2fe 0%,white 100%);}
+    .needs-review .teacher-header{background:linear-gradient(90deg,var(--amber-light) 0%,white 100%);}
+    .needs-head-review .teacher-header{background:linear-gradient(90deg,var(--sky-light) 0%,white 100%);}
     .review-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:800;animation:pulse-badge 2s ease-in-out infinite;}
-    .review-badge.waiting{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
-    .review-badge.head-wait{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;}
+    .review-badge.waiting{background:var(--role-hog-bg);color:var(--role-director-color);border:1px solid var(--amber-mid);}
+    .review-badge.head-wait{background:var(--sky-light);color:var(--role-hr-color);border:1px solid var(--sky-mid);}
     @keyframes pulse-badge{0%,100%{opacity:1;}50%{opacity:.65;}}
 
     /* ── "ถึงคิวคุณตรวจ" highlight — เด่นกว่าทุกสถานะอื่นเสมอ เพราะเป็นรายการที่ผู้ตรวจปัจจุบันต้องทำต่อ ── */
-    .teacher-row.my-turn{border-color:#7c3aed;border-left:4px solid #7c3aed;box-shadow:0 0 0 3px var(--purple-ring);}
-    .my-turn .teacher-header{background:linear-gradient(90deg,#f5f3ff 0%,white 100%);}
-    .my-turn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:800;background:#7c3aed;color:white;animation:pulse-badge 2s ease-in-out infinite;}
+    .teacher-row.my-turn{border-color:var(--violet);border-left:4px solid var(--violet);box-shadow:0 0 0 3px var(--purple-ring);}
+    .my-turn .teacher-header{background:linear-gradient(90deg,var(--violet-light) 0%,white 100%);}
+    .my-turn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:800;background:var(--violet);color:white;animation:pulse-badge 2s ease-in-out infinite;}
     .sort-label{font-size:10px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:4px;}
 
     /* ── Multi-file list in modal ── */
     .file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;margin-bottom:8px;}
-    .file-item:hover{border-color:var(--purple-accent);background:#f5f3ff;}
-    .file-item.selected{border-color:var(--purple);background:#f5f3ff;box-shadow:0 0 0 3px var(--purple-ring);}
-    .file-item.fi-submitted{border-left:4px solid #22c55e;}
+    .file-item:hover{border-color:var(--purple-accent);background:var(--violet-light);}
+    .file-item.selected{border-color:var(--purple);background:var(--violet-light);box-shadow:0 0 0 3px var(--purple-ring);}
+    .file-item.fi-submitted{border-left:4px solid var(--emerald);}
     .file-item.fi-head_reviewed{border-left:4px solid #0ea5e9;}
     .file-item.fi-reviewed{border-left:4px solid #3b82f6;}
-    .file-item.fi-assistant_reviewed{border-left:4px solid #eab308;}
+    .file-item.fi-assistant_reviewed{border-left:4px solid var(--yellow);}
     .file-item.fi-deputy_reviewed{border-left:4px solid #8b5cf6;}
-    .file-item.fi-final_approved{border-left:4px solid #16a34a;}
+    .file-item.fi-final_approved{border-left:4px solid var(--green);}
     .file-item.fi-revision{border-left:4px solid #f59e0b;}
     .file-item.fi-none{border-left:4px solid var(--border);opacity:.6;}
 
@@ -125,14 +125,14 @@
 
     /* ── Notes button ── */
     .notes-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;border:1.5px solid var(--border);background:white;color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
-    .notes-btn:hover{border-color:var(--purple);color:var(--purple);background:#f5f3ff;}
-    .notes-btn.has-note{border-color:#f59e0b;color:#b45309;background:#fffbeb;}
-    .notes-btn.has-revision{border-color:#ef4444;color:#dc2626;background:#fef2f2;animation:pulse-badge 2s ease-in-out infinite;}
+    .notes-btn:hover{border-color:var(--purple);color:var(--purple);background:var(--violet-light);}
+    .notes-btn.has-note{border-color:#f59e0b;color:var(--role-director-color);background:var(--amber-light);}
+    .notes-btn.has-revision{border-color:var(--red-bright);color:var(--red);background:#fef2f2;animation:pulse-badge 2s ease-in-out infinite;}
 
     /* ── Memo Modal ── */
     .memo-modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:1100;align-items:flex-start;justify-content:center;padding:24px;backdrop-filter:blur(6px);overflow-y:auto;}
     .memo-modal-bg.open{display:flex;}
-    .memo-paper{background:#94a3b8;border-radius:8px;width:100%;max-width:820px;font-family:'Sarabun',sans-serif;margin:auto;padding:16px 16px 32px;}
+    .memo-paper{background:var(--text3);border-radius:8px;width:100%;max-width:820px;font-family:'Sarabun',sans-serif;margin:auto;padding:16px 16px 32px;}
     .memo-a4-scaler{display:block;overflow:hidden;position:relative;}
     #adminMemoContent{display:block;transform-origin:top left;box-shadow:0 2px 20px rgba(0,0,0,.25);}
     @media print{
@@ -162,7 +162,7 @@
     @media(max-width:800px){#teacherChartsRow{grid-template-columns:1fr!important;}}
 
     .teacher-search-item{padding:10px 14px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:10px;transition:background .12s;}
-    .teacher-search-item:hover{background:#f5f3ff;}
+    .teacher-search-item:hover{background:var(--violet-light);}
 
     .sub-doc-row{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;transition:border-color .15s;}
     .sub-doc-row:hover{border-color:var(--purple-accent);}
@@ -170,9 +170,9 @@
     .sub-doc-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border-soft);background:#fafbff;}
     .sub-doc-body.open{display:block;}
     .note-bubble{padding:10px 12px;border-radius:10px;border-left:4px solid;margin-top:6px;}
-    .note-bubble.teacher{background:#f0fdf4;border-color:#22c55e;}
-    .note-bubble.admin{background:#fffbeb;border-color:#f59e0b;}
-    .note-bubble.revision{background:#fef2f2;border-color:#ef4444;}
+    .note-bubble.teacher{background:var(--green-light);border-color:var(--emerald);}
+    .note-bubble.admin{background:var(--amber-light);border-color:#f59e0b;}
+    .note-bubble.revision{background:#fef2f2;border-color:var(--red-bright);}
     .course-sub-row{padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);margin-top:8px;background:white;}
 
     /* ── Charts Section ── */
@@ -186,18 +186,18 @@
     /* Donut */
     .donut-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
     .donut-center{position:absolute;text-align:center;pointer-events:none;}
-    .donut-big{font-size:26px;font-weight:800;color:#0f172a;line-height:1;}
+    .donut-big{font-size:26px;font-weight:800;color:var(--text-dark);line-height:1;}
     .donut-label{font-size:10px;color:var(--text3);font-weight:700;margin-top:2px;}
     .donut-legend{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
     .legend-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
     .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-    .legend-label{font-size:11px;color:#475569;font-weight:600;flex:1;}
-    .legend-val{font-size:12px;font-weight:800;color:#0f172a;}
+    .legend-label{font-size:11px;color:var(--text-mid);font-weight:600;flex:1;}
+    .legend-val{font-size:12px;font-weight:800;color:var(--text-dark);}
 
     /* Horizontal bar */
     .hbar-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
     .hbar-label{display:flex;justify-content:space-between;align-items:center;}
-    .hbar-name{font-size:11px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
+    .hbar-name{font-size:11px;font-weight:700;color:var(--text-slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
     .hbar-pct{font-size:11px;font-weight:800;color:var(--purple);}
     .hbar-track{background:var(--bg-alt);border-radius:6px;height:8px;overflow:hidden;}
     .hbar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--purple),var(--purple-accent));transition:width .5s ease;}
@@ -205,7 +205,7 @@
     /* Doc type mini bars */
     .docbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
     .docbar-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .docbar-label{font-size:11px;font-weight:700;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .docbar-label{font-size:11px;font-weight:700;color:var(--text-slate);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .docbar-track{width:80px;background:var(--bg-alt);border-radius:4px;height:6px;overflow:hidden;flex-shrink:0;}
     .docbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
     .docbar-num{font-size:10px;font-weight:800;color:var(--text2);min-width:28px;text-align:right;}
@@ -219,13 +219,13 @@
     .dt-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border:1.5px solid var(--border);border-radius:14px;transition:border-color .15s;}
     .dt-row:hover{border-color:var(--purple-accent);}
     .dt-icon-preview{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .dt-drag-handle{cursor:grab;color:#cbd5e1;display:flex;align-items:center;padding:4px;border-radius:6px;flex-shrink:0;}
+    .dt-drag-handle{cursor:grab;color:var(--border-mid);display:flex;align-items:center;padding:4px;border-radius:6px;flex-shrink:0;}
     .dt-drag-handle:hover{background:var(--bg-alt);color:var(--purple);}
     .dt-drag-handle:active{cursor:grabbing;}
-    .dt-row.drag-over{border-color:var(--purple);border-style:dashed;background:#f5f3ff;}
+    .dt-row.drag-over{border-color:var(--purple);border-style:dashed;background:var(--violet-light);}
     .dt-row.dragging{opacity:.45;border-style:dashed;}
     .color-swatch{width:20px;height:20px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
-    .color-swatch.selected{border-color:#0f172a;}
+    .color-swatch.selected{border-color:var(--text-dark);}
   </style>
 </head>
 <body>
@@ -351,14 +351,14 @@
           <div style="display:flex;flex-wrap:wrap;gap:var(--gap-tight);" id="dtColorPicker">
             <div class="color-swatch selected" style="background:var(--blue-bright);" data-color="#3b82f6" onclick="selectDtColor('#3b82f6',this)"></div>
             <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectDtColor('#8b5cf6',this)"></div>
-            <div class="color-swatch" style="background:var(--emerald);" data-color="#22c55e" onclick="selectDtColor('#22c55e',this)"></div>
+            <div class="color-swatch" style="background:var(--emerald);" data-color="var(--emerald)" onclick="selectDtColor('var(--emerald)',this)"></div>
             <div class="color-swatch" style="background:var(--accent-warn);" data-color="#f59e0b" onclick="selectDtColor('#f59e0b',this)"></div>
             <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectDtColor('#ec4899',this)"></div>
-            <div class="color-swatch" style="background:var(--cyan);" data-color="#06b6d4" onclick="selectDtColor('#06b6d4',this)"></div>
-            <div class="color-swatch" style="background:var(--orange-mid);" data-color="#f97316" onclick="selectDtColor('#f97316',this)"></div>
+            <div class="color-swatch" style="background:var(--cyan);" data-color="var(--cyan)" onclick="selectDtColor('var(--cyan)',this)"></div>
+            <div class="color-swatch" style="background:var(--orange-mid);" data-color="var(--orange-mid)" onclick="selectDtColor('var(--orange-mid)',this)"></div>
             <div class="color-swatch" style="background:#6366f1;" data-color="#6366f1" onclick="selectDtColor('#6366f1',this)"></div>
-            <div class="color-swatch" style="background:var(--yellow);" data-color="#eab308" onclick="selectDtColor('#eab308',this)"></div>
-            <div class="color-swatch" style="background:var(--red-bright);" data-color="#ef4444" onclick="selectDtColor('#ef4444',this)"></div>
+            <div class="color-swatch" style="background:var(--yellow);" data-color="var(--yellow)" onclick="selectDtColor('var(--yellow)',this)"></div>
+            <div class="color-swatch" style="background:var(--red-bright);" data-color="var(--red-bright)" onclick="selectDtColor('var(--red-bright)',this)"></div>
             <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectDtColor('#14b8a6',this)"></div>
             <div class="color-swatch" style="background:#a855f7;" data-color="#a855f7" onclick="selectDtColor('#a855f7',this)"></div>
           </div>
