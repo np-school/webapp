@@ -1,21 +1,23 @@
 /* ══════════════════════ STATE ══════════════════════ */
-/* DOCUMENT_TYPES fallback (จะถูก override จาก Firestore) */
+/* DOCUMENT_TYPES fallback (จะถูก override จาก Firestore)
+   ── ใช้ --chart-1..9 ชุดเดียวกับ index.js (PF_DOC_TYPES) และกราฟหน้าอื่น
+      ให้ป้ายประเภทเอกสารสีตรงกันไม่ว่าจะดูจากหน้า dashboard หรือหน้า profile ── */
 var DOCUMENT_TYPES = [
-  {id:'syllabus',         label:'Course Syllabus',                  icon:'file-text',  color:'#3b82f6', bg:'#eff6ff', department:'academic'},
-  {id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',             icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff', department:'academic'},
-  {id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',              icon:'leaf',       color:'#22c55e', bg:'#f0fdf4', department:'academic'},
-  {id:'royal_policy',     label:'แผนพระบรมราโชบาย',                icon:'crown',      color:'#f59e0b', bg:'#fffbeb', department:'academic'},
-  {id:'competency',       label:'แผนสมรรถนะ',                      icon:'zap',        color:'#ec4899', bg:'#fdf2f8', department:'academic'},
-  {id:'research',         label:'รายงานวิจัยในชั้นเรียน',           icon:'microscope', color:'#06b6d4', bg:'#ecfeff', department:'academic'},
-  {id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed', department:'academic'},
-  {id:'media_register',   label:'ทะเบียนสื่อ',                     icon:'library',    color:'#6366f1', bg:'#eef2ff', department:'academic'},
-  {id:'student_work',     label:'ผลงานนักเรียน',                    icon:'star',       color:'#eab308', bg:'#fefce8', department:'academic'},
+  {id:'syllabus',         label:'Course Syllabus',                  icon:'file-text',  color:'var(--chart-1)', bg:'var(--accent-tint)',  department:'academic'},
+  {id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',             icon:'book-open',  color:'var(--chart-2)', bg:'var(--green-light)',  department:'academic'},
+  {id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',              icon:'leaf',       color:'var(--chart-3)', bg:'var(--amber-light)',  department:'academic'},
+  {id:'royal_policy',     label:'แผนพระบรมราโชบาย',                icon:'crown',      color:'var(--chart-4)', bg:'var(--red-light)',    department:'academic'},
+  {id:'competency',       label:'แผนสมรรถนะ',                      icon:'zap',        color:'var(--chart-5)', bg:'var(--violet-light)', department:'academic'},
+  {id:'research',         label:'รายงานวิจัยในชั้นเรียน',           icon:'microscope', color:'var(--chart-6)', bg:'var(--sky-light)',    department:'academic'},
+  {id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'var(--chart-7)', bg:'var(--green-light)',  department:'academic'},
+  {id:'media_register',   label:'ทะเบียนสื่อ',                     icon:'library',    color:'var(--chart-8)', bg:'var(--orange-light)', department:'academic'},
+  {id:'student_work',     label:'ผลงานนักเรียน',                    icon:'star',       color:'var(--chart-9)', bg:'var(--sky-light)',    department:'academic'},
 ];
 var DEPARTMENTS = [
   {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)'},
-  {id:'budget',    label:'ฝ่ายงบประมาณ',       icon:'banknote',       color:'#16a34a', bg:'#f0fdf4'},
-  {id:'personnel', label:'ฝ่ายบริหารงานบุคคล',icon:'users',          color:'#7c3aed', bg:'#f5f3ff'},
-  {id:'general',   label:'ฝ่ายบริหารทั่วไป',  icon:'building-2',     color:'#ea580c', bg:'#fff7ed'},
+  {id:'budget',    label:'ฝ่ายงบประมาณ',       icon:'banknote',       color:'var(--chart-2)', bg:'var(--green-light)'},
+  {id:'personnel', label:'ฝ่ายบริหารงานบุคคล',icon:'users',          color:'var(--chart-5)', bg:'var(--violet-light)'},
+  {id:'general',   label:'ฝ่ายบริหารทั่วไป',  icon:'building-2',     color:'var(--chart-8)', bg:'var(--orange-light)'},
 ];
 var STATUS_LABEL = {
   submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ',
@@ -44,8 +46,8 @@ var currentSemIdx = 0;
 /* ─── SECTION: ประวัติการศึกษา ─── */
 var educationItems = [];
 var EDU_LEVEL_OPTS = ['ต่ำกว่าปริญญาตรี','ปริญญาตรี','ปริญญาโท','ปริญญาเอก'];
-var EDU_COLORS = { 'ต่ำกว่าปริญญาตรี':'#64748b', 'ปริญญาตรี':'#1d4ed8', 'ปริญญาโท':'#7c3aed', 'ปริญญาเอก':'#0369a1' };
-var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'#f1f5f9', 'ปริญญาตรี':'#eff6ff', 'ปริญญาโท':'#f5f3ff', 'ปริญญาเอก':'#e0f2fe' };
+var EDU_COLORS = { 'ต่ำกว่าปริญญาตรี':'var(--status-neutral)', 'ปริญญาตรี':'var(--chart-1)', 'ปริญญาโท':'var(--chart-5)', 'ปริญญาเอก':'var(--chart-6)' };
+var EDU_BG    = { 'ต่ำกว่าปริญญาตรี':'var(--bg-alt)', 'ปริญญาตรี':'var(--accent-tint)', 'ปริญญาโท':'var(--violet-light)', 'ปริญญาเอก':'var(--sky-light)' };
 
 /* ─── SECTION: ข้อมูลส่วนตัว ─── */
 var personalData  = {};  /* user-owned fields */
@@ -70,17 +72,20 @@ var devItems=[];
 var mediaItems=[];
 var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wordwall','flipgrid','book','image','video','music','code-2','globe','file-text'];
 
-/* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
+/* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้)
+   ── เดิมเป็นสำเนาที่ 3 ของชุดสีเดียวกับ DOCUMENT_TYPES ด้านบน (คนละตัวแปร คนละ hex)
+      ทำให้ 2 จุดในไฟล์เดียวกันมีโอกาสสีเพี้ยนออกจากกันได้เมื่อแก้แค่จุดเดียว
+      → ใช้ --chart-1..9 ชุดเดียวกันทั้งหมด ── */
 var _sarDocTypes = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
-  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
-  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
-  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
-  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8' },
-  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'#06b6d4', bg:'#ecfeff' },
-  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'#f97316', bg:'#fff7ed' },
-  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff' },
-  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'#eab308', bg:'#fefce8' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'var(--chart-1)', bg:'var(--accent-tint)' },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'var(--chart-2)', bg:'var(--green-light)' },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'var(--chart-3)', bg:'var(--amber-light)' },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'var(--chart-4)', bg:'var(--red-light)' },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'var(--chart-5)', bg:'var(--violet-light)' },
+  { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'var(--chart-6)', bg:'var(--sky-light)' },
+  { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'var(--chart-7)', bg:'var(--green-light)' },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'var(--chart-8)', bg:'var(--orange-light)' },
+  { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'var(--chart-9)', bg:'var(--sky-light)' },
 ];
 var _sarPortSubs = null; /* cache */
 var _sarDocTypesLoaded = false;
@@ -591,8 +596,8 @@ function buildSemTabs(data){
     var isSem2 = sem.sem === 2;
     var isActive = idx === currentSemIdx;
     var bg    = isActive ? (isSem2 ? 'var(--violet)' : 'var(--accent)') : 'white';
-    var color = isActive ? 'white' : '#475569';
-    var border= isActive ? 'transparent' : '#e2e8f0';
+    var color = isActive ? 'white' : 'var(--text-mid)';
+    var border= isActive ? 'transparent' : 'var(--border)';
     var label = 'ภาค ' + sem.sem + '/' + sem.year;
     return '<button onclick="selectSemTab('+idx+')" style="' +
       'flex-shrink:0;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;' +
@@ -642,13 +647,13 @@ function buildSemBlock(sem, openByDefault){
     statusCounts[st]=(statusCounts[st]||0)+1;
   });
   var sumItems=[
-    {key:'submitted',key2:'head_reviewed|reviewed',lbl:'ส่งแล้ว',          color:'#15803d'},
-    {key:'head_reviewed',                           lbl:'หัวหน้าตรวจ',     color:'#0369a1'},
+    {key:'submitted',key2:'head_reviewed|reviewed',lbl:'ส่งแล้ว',          color:'var(--chart-6)'},
+    {key:'head_reviewed',                           lbl:'หัวหน้าตรวจ',     color:'var(--chart-1)'},
     {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'var(--accent-dark)'},
-    {key:'assistant_reviewed',                      lbl:'ผช.ผอ.ตรวจ',      color:'#92400e'},
-    {key:'deputy_reviewed',                         lbl:'รอง ผอ.ตรวจ',     color:'#6d28d9'},
-    {key:'final_approved',                          lbl:'อนุมัติ',         color:'#065f46'},
-    {key:'revision',                                lbl:'แก้ไข',           color:'#dc2626'},
+    {key:'assistant_reviewed',                      lbl:'ผช.ผอ.ตรวจ',      color:'var(--status-warning)'},
+    {key:'deputy_reviewed',                         lbl:'รอง ผอ.ตรวจ',     color:'var(--chart-5)'},
+    {key:'final_approved',                          lbl:'อนุมัติ',         color:'var(--status-success)'},
+    {key:'revision',                                lbl:'แก้ไข',           color:'var(--status-danger)'},
   ].filter(function(i){ return (statusCounts[i.key]||0)>0; });
 
   var sumHtml='';
@@ -704,7 +709,7 @@ function buildDeptSections(sem){
   var unmapped=[];
   Object.keys(sem.docs).forEach(function(dtId){
     var found=DOCUMENT_TYPES.find(function(x){ return x.id===dtId; });
-    if(!found) unmapped.push({id:dtId, label:dtId, icon:'file', color:'#64748b', bg:'#f8fafc', department:'other'});
+    if(!found) unmapped.push({id:dtId, label:dtId, icon:'file', color:'var(--status-neutral)', bg:'var(--bg-alt)', department:'other'});
   });
   unmapped.forEach(function(dt){
     var courses=sem.docs[dt.id]||[];
@@ -729,7 +734,7 @@ function buildDocGroup(dt, courses){
   else if(allReviewed){ groupBadge='อยู่ระหว่างตรวจ'; groupBadgeClass='s-reviewed'; }
   else { groupBadge='ส่งแล้ว '+courses.length+' วิชา'; groupBadgeClass='s-submitted'; }
 
-  var borderLeft = anyRevision ? 'var(--accent-warn)' : allFinal ? 'var(--violet)' : '#22c55e';
+  var borderLeft = anyRevision ? 'var(--accent-warn)' : allFinal ? 'var(--violet)' : 'var(--status-success)';
 
   var courseRows='';
   courses.forEach(function(c){
@@ -814,8 +819,8 @@ function renderSarSchoolHistory(){
     el.innerHTML = '<div class="sar-empty">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
     return;
   }
-  var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
-  var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
+  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-8)']; /* timeline dot colors — เดิม hardcode ซ้ำกัน 2 จุดในไฟล์นี้ ใช้ --chart-N ให้ตรงกับกราฟหน้าอื่น */
+  var borderColors= ['var(--green-mid)','var(--blue-mid)','var(--amber-mid)','var(--violet-light)','var(--sky-mid)','var(--red-mid)','var(--orange-mid)'];
   el.innerHTML = '<div class="career-timeline" style="height:100%;">' +
     careerHistoryItems.map(function(item, idx){
       var col = colors[idx % colors.length];
@@ -875,7 +880,7 @@ function renderSarTeaching(){
 function renderSarDuties(){
   var el=document.getElementById('sar-duties-body');
   if(!dutyItems.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div>'; return; }
-  var colors=['#f97316','#1d4ed8','#7c3aed','#16a34a','#e11d48','#0891b2'];
+  var colors=['var(--chart-8)','var(--chart-1)','var(--chart-5)','var(--chart-2)','var(--chart-4)','var(--chart-6)'];
   el.innerHTML=dutyItems.map(function(item,i){
     return '<div class="sar-row" style="align-items:flex-start;">' +
       '<div class="sar-duty-dot" style="width:8px;height:8px;border-radius:50%;background:'+colors[i%colors.length]+';flex-shrink:0;margin-top:5px;"></div>' +
@@ -1142,8 +1147,8 @@ function renderCareerHistory(){
     return;
   }
 
-  var colors      = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#06b6d4','#7c3aed','#f97316'];
-  var borderColors= ['#bbf7d0','#bfdbfe','#fde68a','#fbcfe8','#a5f3fc','#c4b5fd','#fed7aa'];
+  var colors      = ['var(--chart-2)','var(--chart-1)','var(--chart-3)','var(--chart-5)','var(--chart-9)','var(--chart-4)','var(--chart-8)']; /* timeline dot colors — เดิม hardcode ซ้ำกัน 2 จุดในไฟล์นี้ ใช้ --chart-N ให้ตรงกับกราฟหน้าอื่น */
+  var borderColors= ['var(--green-mid)','var(--blue-mid)','var(--amber-mid)','var(--violet-light)','var(--sky-mid)','var(--red-mid)','var(--orange-mid)'];
   var total = careerHistoryItems.length;
 
   el.innerHTML = '<div class="career-timeline">' +
@@ -1260,7 +1265,7 @@ function renderMedia(){
 }
 
 function _getDocTypeInfo(id) {
-  return _sarDocTypes.find(function(d){ return d.id === id; }) || { id:id, label:id, icon:'file', color:'#64748b', bg:'#f1f5f9' };
+  return _sarDocTypes.find(function(d){ return d.id === id; }) || { id:id, label:id, icon:'file', color:'var(--status-neutral)', bg:'var(--bg-alt)' };
 }
 
 function renderPortfolioSummary(subs, portYear, portSem) {
@@ -1293,10 +1298,13 @@ function renderPortfolioSummary(subs, portYear, portSem) {
 
   var STATUS_LABEL = { submitted:'ส่งแล้ว', head_reviewed:'หัวหน้าฯ ตรวจ', reviewed:'ตรวจแล้ว',
     assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' };
-  var STATUS_COLOR = { submitted:'#15803d', head_reviewed:'#0369a1', reviewed:'#1e40af',
-    assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' };
-  var STATUS_BG    = { submitted:'#dcfce7', head_reviewed:'#e0f2fe', reviewed:'#dbeafe',
-    assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' };
+  /* ── เดิม revision ที่นี่เป็นสีเหลือง/น้ำตาล (#92400e) แต่จุดเดียวกันด้านบน
+     (sumItems ใน buildSemBlock) ใช้สีแดงสำหรับ revision — ความหมายเดียวกัน
+     แต่สีไม่ตรงกันในไฟล์เดียวกัน จึงรวมมาใช้ token ชุดเดียวกันทั้งหมด ── */
+  var STATUS_COLOR = { submitted:'var(--chart-6)', head_reviewed:'var(--chart-1)', reviewed:'var(--accent-dark)',
+    assistant_reviewed:'var(--status-warning)', deputy_reviewed:'var(--chart-5)', final_approved:'var(--status-success)', revision:'var(--status-danger)' };
+  var STATUS_BG    = { submitted:'var(--sky-light)', head_reviewed:'var(--accent-tint)', reviewed:'var(--blue-light)',
+    assistant_reviewed:'var(--amber-light)', deputy_reviewed:'var(--violet-light)', final_approved:'var(--status-success-bg)', revision:'var(--status-danger-bg)' };
 
   var html = '<div style="display:grid;gap:2px;">';
 
