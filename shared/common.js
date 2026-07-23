@@ -56,13 +56,13 @@ function onPushPermissionNeeded(user) {
   el.id = 'pushPermBanner';
   el.style.cssText =
     'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;' +
-    'max-width:420px;margin:0 auto;background:#0d1b2a;color:#fff;' +
+    'max-width:420px;margin:0 auto;background:var(--accent);color:#fff;' +
     'padding:14px 14px;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.3);';
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;">' +
       '<i data-lucide="bell" style="width:20px;height:20px;flex-shrink:0;color:#facc15;"></i>' +
       '<span style="flex:1;font-size:12.5px;font-weight:600;line-height:1.4;">เปิดการแจ้งเตือน เพื่อไม่พลาดคำขอ/อัปเดตสถานะการจอง</span>' +
-      '<button id="pushPermBtn" style="background:#fff;color:#0d1b2a;border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
+      '<button id="pushPermBtn" style="background:#fff;color:var(--accent);border:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:12px;flex-shrink:0;cursor:pointer;">เปิดเลย</button>' +
       '<button id="pushPermClose" style="background:transparent;border:none;color:var(--text3);flex-shrink:0;padding:6px;cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
     '</div>' +
     '<div id="pushPermStatus" style="font-size:10.5px;color:var(--text3);margin-top:6px;padding-left:30px;min-height:14px;"></div>';
@@ -728,21 +728,21 @@ function updateSidebarProfile(user) {
     var subHtml = '';
     if (sub1 && sub2) {
       subHtml =
-        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub1 + '</p>' +
+        '<p style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub1 + '</p>' +
         '<p style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + sub2 + '</p>';
     } else if (sub1 || sub2) {
       subHtml =
-        '<p style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + (sub1 || sub2) + '</p>';
+        '<p style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">' + (sub1 || sub2) + '</p>';
     } else {
       subHtml =
         '<p style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (user.email || '') + '</p>';
     }
     el.innerHTML =
-      '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;">' +
+      '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid var(--border);">' +
         '<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">' +
-          '<img src="' + ph + '" alt="' + esc2(name || 'ผู้ใช้') + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid #e2e8f0;">' +
+          '<img src="' + ph + '" alt="' + esc2(name || 'ผู้ใช้') + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid var(--border);">' +
           '<div style="overflow:hidden;min-width:0;">' +
-            '<p style="font-size:12px;font-weight:800;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
+            '<p style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
             subHtml +
           '</div>' +
         '</div>' +
@@ -866,8 +866,8 @@ function buildSidebar(activePage) {
   /* ── close button ── */
   var html =
     '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
-      '<button onclick="closeSidebar()" style="padding:7px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;">' +
-        '<i data-lucide="x" style="width:16px;height:16px;color:#64748b;"></i>' +
+      '<button onclick="closeSidebar()" style="padding:7px;background:var(--bg-alt);border:none;border-radius:8px;cursor:pointer;display:flex;">' +
+        '<i data-lucide="x" style="width:16px;height:16px;color:var(--text2);"></i>' +
       '</button>' +
     '</div>';
 
@@ -908,9 +908,9 @@ function buildSidebar(activePage) {
 
       var cls = 'sidebar-btn admin-btn' + (isActive ? ' active' : '');
       var inner =
-        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:#7c3aed;') + '"></i>' +
+        '<i data-lucide="' + item.icon + '" style="width:16px;height:16px;flex-shrink:0;' + (isActive ? '' : 'color:var(--c-violet);') + '"></i>' +
         '<span>' + item.label + '</span>' +
-        (item.badge ? '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
+        (item.badge ? '<span style="margin-left:auto;font-size:9px;background:var(--c-violet);color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">' + item.badge + '</span>' : '');
 
       var wrapId = item.id ? ' id="' + item.id + '"' : '';
       if (item.href) {
@@ -924,8 +924,8 @@ function buildSidebar(activePage) {
 
     adminGroupHtml +=
       '<div class="sidebar-group-label">' +
-        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:#a78bfa;flex-shrink:0;"></i>' +
-        '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
+        '<i data-lucide="' + g.icon + '" style="width:12px;height:12px;color:var(--violet-hover);flex-shrink:0;"></i>' +
+        '<span style="font-size:10px;font-weight:800;color:var(--violet-hover);letter-spacing:.4px;text-transform:uppercase;">' + g.group + '</span>' +
       '</div>' +
       rowsHtml;
   });
@@ -933,21 +933,21 @@ function buildSidebar(activePage) {
   html +=
     '<div id="adminSidebarSection" style="display:none;">' +
       '<div class="sidebar-admin-divider"></div>' +
-      '<div class="sec-label" style="color:#7c3aed;">สำหรับเจ้าหน้าที่</div>' +
+      '<div class="sec-label" style="color:var(--c-violet);">สำหรับเจ้าหน้าที่</div>' +
       adminGroupHtml +
       /* SuperAdmin-only slot */
       '<div id="superadminSidebarSlot" style="display:none;">' +
         '<div class="sidebar-superadmin-label">' +
-          '<i data-lucide="shield" style="width:10px;height:10px;color:#a78bfa;flex-shrink:0;"></i>' +
-          '<span style="font-size:10px;font-weight:800;color:#a78bfa;letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
+          '<i data-lucide="shield" style="width:10px;height:10px;color:var(--violet-hover);flex-shrink:0;"></i>' +
+          '<span style="font-size:10px;font-weight:800;color:var(--violet-hover);letter-spacing:.4px;text-transform:uppercase;">SuperAdmin</span>' +
         '</div>' +
         '<a href="admin-role.html" class="sidebar-btn admin-btn' + (activePage === 'admin-role' ? ' active' : '') + '" style="padding-left:28px;">' +
-          '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:#7c3aed;') + '"></i>' +
+          '<i data-lucide="shield-check" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'admin-role' ? '' : 'color:var(--c-violet);') + '"></i>' +
           '<span>จัดการสิทธิ์ Admin</span>' +
-          '<span style="margin-left:auto;font-size:9px;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
+          '<span style="margin-left:auto;font-size:9px;background:var(--c-violet);color:white;padding:2px 7px;border-radius:10px;font-weight:800;flex-shrink:0;">ADMIN</span>' +
         '</a>' +
         '<a href="settings.html" class="sidebar-btn admin-btn' + (activePage === 'settings' ? ' active' : '') + '" style="padding-left:28px;">' +
-          '<i data-lucide="bell" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'settings' ? '' : 'color:#7c3aed;') + '"></i>' +
+          '<i data-lucide="bell" style="width:16px;height:16px;flex-shrink:0;' + (activePage === 'settings' ? '' : 'color:var(--c-violet);') + '"></i>' +
           '<span>ตั้งค่าเว็บไซต์</span>' +
         '</a>' +
       '</div>' +

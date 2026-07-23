@@ -136,3 +136,41 @@ grep -rnoI "#[0-9a-fA-F]\{6\}\|#[0-9a-fA-F]\{3\}\b" --include="*.js" --include="
 # เช็ค syntax ไฟล์ JS หลังแก้
 for f in js/*.js; do node --check "$f"; done
 ```
+
+## อัปเดต: รวม hex เข้า CSS variable รอบใหม่ + รวมมาตรฐานสถานะใน portfolio-admin.js — 2026-07-23 (ต่อ)
+
+### `shared/common.js` — แก้จริง 19 จุด
+- `#64748b`→`var(--text2)` (3), `#e2e8f0`→`var(--border)` (2), `#1e293b`→`var(--text)` (1),
+  `#f1f5f9`→`var(--bg-alt)` (1), `#7c3aed`→`var(--c-violet)` (6), `#a78bfa`→`var(--violet-hover)` (4),
+  `#0d1b2a`→`var(--accent)` (2) — เลือก `--accent` เพราะเป็น banner แจ้งเตือน push notification ตั้งใจให้เป็นสีธีมหลัก ไม่ใช่สีสถานะตายตัว (กำกวมกับ `--c-ink-deep` ที่ค่าตรงกันพอดี ผู้ใช้ยืนยันแล้ว)
+- เหลือไม่แตะ: `#fff`/`#facc15` (ไม่มี token ตรงเป๊ะ), ROOM_PASTEL_MAP/FB (decorative ตามเดิม)
+
+### `js/room-request.js` — ตรวจแล้ว ไม่ต้องแก้เพิ่ม
+- ที่เหลือทั้งหมดคือ ROOM_PASTEL (decorative) + `#94a3b822` (string concat alpha ที่มีบันทึกไว้แล้วว่าใช้ `var()` ตรงๆ ไม่ได้)
+
+### `js/index.js` — แก้จริง 1 จุด
+- `REPAIR_STATUS_META` fallback: `bg:'#f1f5f9',color:'#64748b'` → `bg:'var(--bg-alt)',color:'var(--text2)'`
+- ไม่แตะ: ROOM_PASTEL, `#7c3aed` ใน `pfColorToBg()` (มีคอมเมนต์กำกับชัดเจนว่าต้องเป็น hex จริงเพราะฟังก์ชันต่อ string alpha ท้าย hex ตรงๆ ใช้ `var()` ไม่ได้), `#06C755` (สีแบรนด์ LINE), `#94a3b822`
+
+### `js/portfolio-admin.js` — รวมมาตรฐานสถานะ 4 ชุด (`cBg`/`cBorder`/`chipColor`/`STATUS_BG`) ให้ตรงกันทั้งหมด
+พบว่า 4 ชุดที่ทำหน้าที่เดียวกัน (แสดงสีตามสถานะการตรวจ portfolio) ใช้เฉดไม่ตรงกันเอง แก้โดยกำหนดมาตรฐานเดียว:
+
+| สถานะ | bg | border |
+|---|---|---|
+| none | `--bg` | `--border` |
+| submitted | `--c-green-pale` | `--c-green-mid` |
+| head_reviewed / reviewed | `--sky-light` | `--c-sky-mid` |
+| assistant_reviewed | `--c-amber-pale` | `--c-amber-mid` |
+| deputy_reviewed | `--c-violet-pale` | `--c-violet-mid` |
+| final_approved | `--c-green-tint` (เข้มกว่า submitted) | `--c-green-mid` |
+| revision | `--c-red-pale` | `--c-red-mid` |
+
+**การตัดสินใจที่มีผลต่อหน้าตาจริง (ผู้ใช้ยืนยันแล้ว)**:
+1. `revision` เดิมมี 2/4 จุดใช้โทน amber อีก 2/4 ใช้โทนแดง → เลือก**แดง**เป็นมาตรฐาน (กันชนกับ `assistant_reviewed` ที่เป็น amber อยู่แล้ว และสื่อความเร่งด่วนกว่า)
+2. `deputy_reviewed` เดิมบางจุดใช้ `--purple-mid`/`--purple-light` ซึ่ง**แกว่งค่าตามธีมที่แอดมินตั้ง** (เพราะ `body.theme-staff` override `--purple-*` ให้ผูกกับ `--accent` แทน) → เปลี่ยนเป็น `--c-violet-*` ที่ตายตัว ไม่ผูกธีม เพื่อให้สถานะนี้หน้าตาเหมือนกันทุกธีม
+
+**ผลกระทบที่มองเห็นได้จริง (ควรรีวิวก่อน deploy)**: badge "ส่งกลับแก้ไข" เปลี่ยนจากส้ม/เหลืองเป็นแดงใน 2 จุดที่เคยเป็น amber, badge "รอง ผอ. ตรวจ" อาจเปลี่ยนสีเล็กน้อยถ้าธีมปัจจุบันไม่ใช่ default
+
+### ยังไม่ได้ทำ (รอบถัดไป)
+- `js/portfolio-teacher.js` (20 hex), `js/repair-admin.js` (18), `js/repair-user.js` (4), `js/admin-role.js` (11), `js/settings.js`/`js/staff.js`/`js/foodcourt-admin.js`/`js/room-admin.js` (เหลือน้อย)
+- ไฟล์ `.html` ทั้งหมด (~9 ไฟล์ ที่ยังมี inline style hex)

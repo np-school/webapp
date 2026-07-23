@@ -453,7 +453,7 @@
     }
     if(empty)empty.style.display='none';
     wrap.innerHTML=list.map(function(r){
-      var st=REPAIR_STATUS_META[r.status]||{label:r.status||'-',bg:'#f1f5f9',color:'#64748b'};
+      var st=REPAIR_STATUS_META[r.status]||{label:r.status||'-',bg:'var(--bg-alt)',color:'var(--text2)'};
       if(r.status==='approved'&&r.repairStatus==='in_progress'){st=Object.assign({},st,{label:'กำลังซ่อม'});}
       if(r.status==='reopened'&&r.repairStatus==='in_progress'){st=Object.assign({},st,{label:'ซ่อมใหม่ (กำลังซ่อม)'});}
       var dateStr='';

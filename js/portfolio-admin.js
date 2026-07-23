@@ -761,8 +761,8 @@ function renderListView() {
                     var cName   = cFiles[0].courseName || '';
                     var cIcon   = { none:'○', submitted:'↑', head_reviewed:'✓', reviewed:'✓', assistant_reviewed:'🏅', deputy_reviewed:'👑', final_approved:'★', revision:'!' }[cStatus] || '·';
                     var cColor  = { none:'var(--text3)', submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--c-green)', revision:'var(--c-amber)' }[cStatus] || 'var(--text3)';
-                    var cBg     = { none:'var(--bg)', submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--c-violet-pale)', final_approved:'#d1fae5', revision:'var(--c-amber-pale)' }[cStatus] || 'var(--bg)';
-                    var cBorder = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'var(--c-amber-tint)' }[cStatus] || 'var(--border)';
+                    var cBg     = { none:'var(--bg)', submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'var(--c-amber-pale)', deputy_reviewed:'var(--c-violet-pale)', final_approved:'var(--c-green-tint)', revision:'var(--c-red-pale)' }[cStatus] || 'var(--bg)';
+                    var cBorder = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--c-violet-mid)', final_approved:'var(--c-green-mid)', revision:'var(--c-red-mid)' }[cStatus] || 'var(--border)';
                     var cDocIdForClick = cFiles[0]._docId || subDocId;
                     return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + cDocIdForClick + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
                       '<div style="display:flex;align-items:center;gap:4px;">' +
@@ -2037,7 +2037,7 @@ function renderGroupDetail() {
     var docChips = DOCUMENT_TYPES.map(function(dt) {
       var sub = t.subs[dt.id];
       var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
-      var chipColor = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || 'var(--border)';
+      var chipColor = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--c-violet-mid)', final_approved:'var(--c-green-mid)', revision:'var(--c-red-mid)' }[st] || 'var(--border)';
       return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc2(dt.label) + '"></div>';
     }).join('');
 
@@ -2263,7 +2263,7 @@ function renderTeacherSubTable(t) {
   if (!container) return;
 
   var STATUS_LABEL = { submitted:'📤 รอตรวจ', head_reviewed:'👤 หัวหน้าฯ ✓', reviewed:'👤 หัวหน้าฯ ✓', assistant_reviewed:'🏅 ผช.ผอ. ✓', deputy_reviewed:'👑 รอง ผอ. ✓', final_approved:'🎖 ผอ. อนุมัติ', revision:'⚠ ให้แก้ไข', none:'ยังไม่ส่ง' };
-  var STATUS_BG    = { submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--purple-light)', final_approved:'#d1fae5', revision:'var(--c-red-pale)', none:'var(--bg)' };
+  var STATUS_BG    = { submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'var(--c-amber-pale)', deputy_reviewed:'var(--c-violet-pale)', final_approved:'var(--c-green-tint)', revision:'var(--c-red-pale)', none:'var(--bg)' };
   var STATUS_COLOR = { submitted:'var(--c-green-deep)', head_reviewed:'var(--c-sky-deep)', reviewed:'var(--c-sky-deep)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet-deep)', final_approved:'var(--c-green-deep)', revision:'var(--c-red)', none:'var(--text3)' };
 
   var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
