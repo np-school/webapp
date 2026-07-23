@@ -76,7 +76,7 @@
   /* ════ Portfolio Dashboard ════ */
   /* PF_DOC_TYPES โหลดจาก Firestore (portfolio_doc_types) — ไม่ hardcode */
   var PF_DOC_TYPES = [
-    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
+    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
     { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
     { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
     { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
@@ -202,7 +202,7 @@
       .catch(function(e) {
         /* อาจไม่ใช่บุคลากร — ซ่อน section */
         var wrap = document.getElementById('pfDocList');
-        if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">ไม่พบข้อมูลบุคลากร — ระบบส่งงานสำหรับครูเท่านั้น</div>';
+        if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:var(--text3);font-style:italic;">ไม่พบข้อมูลบุคลากร — ระบบส่งงานสำหรับครูเท่านั้น</div>';
         document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
         var statEl = document.getElementById('pfStatCount');
         if (statEl) statEl.textContent = '–';
@@ -266,7 +266,7 @@
                   (d.department ? '<span class="ann-pub-dept"><i data-lucide="building-2" style="width:10px;height:10px;"></i>' + esc2(d.department) + '</span>' : '') +
                   (dateStr ? '<span class="ann-pub-date">' + dateStr + '</span>' : '') +
                 '</div>' +
-                '<div style="font-size:14px;font-weight:800;color:#f1f5f9;line-height:1.4;">' + esc2(d.title||'') + '</div>' +
+                '<div style="font-size:14px;font-weight:800;color:var(--bg-alt);line-height:1.4;">' + esc2(d.title||'') + '</div>' +
                 (d.body ? '<div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;margin-top:5px;">' + esc2(d.body) + '</div>' : '') +
                 (d.imageUrl ? '<img src="' + esc2(d.imageUrl) + '" class="ann-pub-img" alt="ภาพประกาศ" loading="lazy">' : '') +
               '</div>' +
@@ -324,7 +324,7 @@
           try { dateStr = d.createdAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); } catch(e){}
 
           html +=
-            '<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 4px;border-bottom:1px solid #f8fafc;">' +
+            '<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 4px;border-bottom:1px solid var(--bg);">' +
               '<div style="width:42px;height:42px;background:' + (ANN_BG[type]||'#eff6ff') + ';border-radius:11px;' +
                 'border:1.5px solid ' + (ANN_BORDER[type]||'#bfdbfe') + ';' +
                 'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
@@ -335,12 +335,12 @@
                   '<span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;' +
                     'background:' + (ANN_BADGE_BG[type]||'#dbeafe') + ';color:' + (ANN_TEXT[type]||'#1e40af') + ';">' +
                     (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
-                  (d.department ? '<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#f1f5f9;color:#64748b;">' + esc2(d.department) + '</span>' : '') +
-                  (dateStr ? '<span style="font-size:10px;color:#94a3b8;font-weight:600;margin-left:auto;white-space:nowrap;">' + dateStr + '</span>' : '') +
+                  (d.department ? '<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--bg-alt);color:var(--text2);">' + esc2(d.department) + '</span>' : '') +
+                  (dateStr ? '<span style="font-size:10px;color:var(--text3);font-weight:600;margin-left:auto;white-space:nowrap;">' + dateStr + '</span>' : '') +
                 '</div>' +
-                '<div style="font-size:13px;font-weight:800;color:#0f172a;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(d.title||'') + '</div>' +
-                (d.body ? '<div style="font-size:12px;color:#64748b;line-height:1.6;margin-top:4px;">' + esc2(d.body) + '</div>' : '') +
-                (d.imageUrl ? '<img src="' + esc2(d.imageUrl) + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:10px;border:1px solid #e2e8f0;" alt="ภาพประกาศ" loading="lazy">' : '') +
+                '<div style="font-size:13px;font-weight:800;color:var(--text-dark);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(d.title||'') + '</div>' +
+                (d.body ? '<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:4px;">' + esc2(d.body) + '</div>' : '') +
+                (d.imageUrl ? '<img src="' + esc2(d.imageUrl) + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:10px;border:1px solid var(--border);" alt="ภาพประกาศ" loading="lazy">' : '') +
               '</div>' +
             '</div>';
         });
@@ -414,17 +414,17 @@
       var isDone=ok&&!isNaN(eDate)&&now>eDate;
       var p=getRoomPastel(b.room||'');var color=p.accent;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
-      var statusBg=isDone?'#f1f5f9;color:#64748b':ok?'#d1fae5;color:#065f46':rej?'#fee2e2;color:#991b1b':'#fef9c3;color:#92400e';
+      var statusBg=isDone?'var(--bg-alt);color:var(--text2)':ok?'var(--role-budget-bg);color:#065f46':rej?'var(--red-light);color:#991b1b':'var(--yellow-light);color:var(--amber-dark)';
       var dateStr='';
       try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--bg);">'+
         '<div style="width:42px;height:42px;background:'+p.accent+';border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'+
           '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.8);line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}):'')+'</span>'+
           '<span style="font-size:14px;font-weight:900;color:white;line-height:1;">'+(b.date?new Date(b.date+'T00:00:00').getDate():'')+'</span>'+
         '</div>'+
         '<div style="flex:1;min-width:0;">'+
           '<div style="font-size:13px;font-weight:800;color:'+p.text+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.room+'</div>'+
-          '<div style="font-size:11px;color:#64748b;">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
+          '<div style="font-size:11px;color:var(--text2);">'+(b.startTime||'?')+' – '+(b.endTime||'?')+' &nbsp;·&nbsp; '+(b.purpose||'-')+'</div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;background:'+statusBg+';">'+statusTxt+'</span>'+
       '</div>';
@@ -447,13 +447,13 @@
       if(r.status==='reopened'&&r.repairStatus==='in_progress'){st=Object.assign({},st,{label:'ซ่อมใหม่ (กำลังซ่อม)'});}
       var dateStr='';
       try{dateStr=r.createdAt.toDate().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){}
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f8fafc;">'+
-        '<div style="width:42px;height:42px;background:#fff7ed;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
-          '<i data-lucide="wrench" style="width:18px;height:18px;color:#ea580c;"></i>'+
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--bg);">'+
+        '<div style="width:42px;height:42px;background:var(--orange-light);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<i data-lucide="wrench" style="width:18px;height:18px;color:var(--orange);"></i>'+
         '</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.title||'-')+'</div>'+
-          '<div style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.location||'-')+(dateStr?' &nbsp;·&nbsp; '+dateStr:'')+'</div>'+
+          '<div style="font-size:13px;font-weight:800;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.title||'-')+'</div>'+
+          '<div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc2(r.location||'-')+(dateStr?' &nbsp;·&nbsp; '+dateStr:'')+'</div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;background:'+st.bg+';color:'+st.color+';">'+st.label+'</span>'+
       '</div>';
@@ -508,19 +508,19 @@
       if(!b.date||b.date.indexOf(prefix)!==0)return;
       if(!counts[b.room])counts[b.room]=0;counts[b.room]++;
     });
-    if(!pubRooms.length){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:10px;">ยังไม่มีข้อมูล</div>';return;}
+    if(!pubRooms.length){wrap.innerHTML='<div style="font-size:11px;color:var(--text3);text-align:center;padding:10px;">ยังไม่มีข้อมูล</div>';return;}
     var max=0;pubRooms.forEach(function(r){if((counts[r.name]||0)>max)max=(counts[r.name]||0);});
-    if(max===0){wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';return;}
+    if(max===0){wrap.innerHTML='<div style="font-size:11px;color:var(--text3);text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';return;}
     wrap.innerHTML=pubRooms.map(function(r){
       var c=counts[r.name]||0;if(!c)return'';
       var p=getRoomPastel(r.name);var color=p.accent;
       var pct=max>0?(c/max*100):0;
-      return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;">'+
+      return '<div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px;">'+
         '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;color:'+color+';">'+r.name+'</span>'+
         '<span style="color:'+color+';flex-shrink:0;">'+c+' ครั้ง</span></div>'+
         '<div class="pub-stat-bar"><div class="pub-stat-fill" style="width:'+pct+'%;background:'+color+';"></div></div></div>';
     }).filter(Boolean).join('');
-    if(!wrap.innerHTML)wrap.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';
+    if(!wrap.innerHTML)wrap.innerHTML='<div style="font-size:11px;color:var(--text3);text-align:center;padding:6px;">ไม่มีการจองในเดือนนี้</div>';
   }
 
   // Load public data (bookings + rooms) without auth
@@ -630,7 +630,7 @@
 
     /* การ์ดสรุปใน Stats Row ด้านบน (งานส่งภาคเรียนนี้) */
     var statEl = document.getElementById('pfStatCount');
-    if (statEl) statEl.innerHTML = submittedCount + '<span style="font-size:14px;font-weight:700;color:#94a3b8;">/' + PF_DOC_TYPES.length + '</span>';
+    if (statEl) statEl.innerHTML = submittedCount + '<span style="font-size:14px;font-weight:700;color:var(--text3);">/' + PF_DOC_TYPES.length + '</span>';
 
     if (emptyEl) emptyEl.style.display = 'none';
 
@@ -661,20 +661,20 @@
           } catch(e) {}
         }
         var borderLeft = status === 'none' ? '' : 'border-left:3px solid ' + dot + ';';
-        return '<div style="background:white;border:1.5px solid #e2e8f0;' + borderLeft + 'border-radius:12px;padding:12px 13px;display:flex;align-items:flex-start;gap:9px;">' +
+        return '<div style="background:white;border:1.5px solid var(--border);' + borderLeft + 'border-radius:12px;padding:12px 13px;display:flex;align-items:flex-start;gap:9px;">' +
           '<div style="width:32px;height:32px;border-radius:9px;background:' + dt.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
             '<i data-lucide="' + dt.icon + '" style="width:15px;height:15px;color:' + dt.color + ';"></i>' +
           '</div>' +
           '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:11px;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + dt.label + '</div>' +
+            '<div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + dt.label + '</div>' +
             '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
               '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:' + bg + ';color:' + color + ';white-space:nowrap;">' +
                 '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:' + dot + ';margin-right:3px;vertical-align:middle;"></span>' +
                 label +
               '</span>' +
-              (updatedAt ? '<span style="font-size:10px;color:#94a3b8;">' + updatedAt + '</span>' : '') +
+              (updatedAt ? '<span style="font-size:10px;color:var(--text3);">' + updatedAt + '</span>' : '') +
             '</div>' +
-            (status === 'revision' && sub && sub.adminNote ? '<div style="font-size:10px;color:#92400e;margin-top:5px;background:#fffbeb;padding:3px 7px;border-radius:6px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (sub.adminNote||'') + '">💬 ' + (sub.adminNote||'') + '</div>' : '') +
+            (status === 'revision' && sub && sub.adminNote ? '<div style="font-size:10px;color:var(--amber-dark);margin-top:5px;background:var(--amber-light);padding:3px 7px;border-radius:6px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (sub.adminNote||'') + '">💬 ' + (sub.adminNote||'') + '</div>' : '') +
           '</div>' +
         '</div>';
       }).join('') +
@@ -691,7 +691,7 @@
         if (snap.empty) {
           /* ไม่ใช่ staff — แสดงข้อความแจ้ง */
           var wrap = document.getElementById('pfDocList');
-          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:#94a3b8;font-style:italic;">\u0e23\u0e30\u0e1a\u0e1a\u0e2a\u0e48\u0e07\u0e07\u0e32\u0e19\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e23\u0e39\u0e41\u0e25\u0e30\u0e1a\u0e38\u0e04\u0e25\u0e32\u0e01\u0e23\u0e42\u0e23\u0e07\u0e40\u0e23\u0e35\u0e22\u0e19\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19</div>';
+          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:12px;color:var(--text3);font-style:italic;">\u0e23\u0e30\u0e1a\u0e1a\u0e2a\u0e48\u0e07\u0e07\u0e32\u0e19\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e23\u0e39\u0e41\u0e25\u0e30\u0e1a\u0e38\u0e04\u0e25\u0e32\u0e01\u0e23\u0e42\u0e23\u0e07\u0e40\u0e23\u0e35\u0e22\u0e19\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19</div>';
           document.getElementById('pfProgressWrap') && (document.getElementById('pfProgressWrap').style.display = 'none');
           var pfStatEl = document.getElementById('pfStatCount');
           if (pfStatEl) pfStatEl.textContent = '–';
@@ -771,7 +771,7 @@
     if(!list)return;
     label.textContent=new Date(dateKey+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
     if(!dayBookings||!dayBookings.length){
-      list.innerHTML='<div style="text-align:center;padding:60px 0;color:#cbd5e1;font-size:14px;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
+      list.innerHTML='<div style="text-align:center;padding:60px 0;color:var(--border-mid);font-size:14px;font-style:italic;">ไม่มีข้อมูลการจองในวันที่เลือก</div>';
       return;
     }
     list.innerHTML=dayBookings.map(function(b){

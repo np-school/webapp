@@ -12,7 +12,7 @@ var DOCUMENT_TYPES = [
   {id:'student_work',     label:'ผลงานนักเรียน',                    icon:'star',       color:'#eab308', bg:'#fefce8', department:'academic'},
 ];
 var DEPARTMENTS = [
-  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)'},
+  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff'},
   {id:'budget',    label:'ฝ่ายงบประมาณ',       icon:'banknote',       color:'#16a34a', bg:'#f0fdf4'},
   {id:'personnel', label:'ฝ่ายบริหารงานบุคคล',icon:'users',          color:'#7c3aed', bg:'#f5f3ff'},
   {id:'general',   label:'ฝ่ายบริหารทั่วไป',  icon:'building-2',     color:'#ea580c', bg:'#fff7ed'},
@@ -72,7 +72,7 @@ var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wor
 
 /* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
 var _sarDocTypes = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
@@ -580,17 +580,17 @@ function buildSemTabs(data){
   if(!data || !data.length){
     bar.innerHTML = '';
     document.getElementById('semDetail').innerHTML =
-      '<div style="text-align:center;padding:56px 20px;background:white;border-radius:18px;border:1.5px solid #e2e8f0;">' +
+      '<div style="text-align:center;padding:56px 20px;background:white;border-radius:18px;border:1.5px solid var(--border);">' +
       '<div style="font-size:38px;margin-bottom:14px;">📂</div>' +
-      '<div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px;">ยังไม่มีข้อมูลการส่งงาน</div>' +
-      '<div style="font-size:13px;color:#94a3b8;">ข้อมูลจะแสดงเมื่อมีการส่งงานในระบบ</div></div>';
+      '<div style="font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:6px;">ยังไม่มีข้อมูลการส่งงาน</div>' +
+      '<div style="font-size:13px;color:var(--text3);">ข้อมูลจะแสดงเมื่อมีการส่งงานในระบบ</div></div>';
     return;
   }
   /* data is sorted newest first — index 0 = current */
   bar.innerHTML = data.map(function(sem, idx){
     var isSem2 = sem.sem === 2;
     var isActive = idx === currentSemIdx;
-    var bg    = isActive ? (isSem2 ? '#7c3aed' : 'var(--accent)') : 'white';
+    var bg    = isActive ? (isSem2 ? '#7c3aed' : '#1d4ed8') : 'white';
     var color = isActive ? 'white' : '#475569';
     var border= isActive ? 'transparent' : '#e2e8f0';
     var label = 'ภาค ' + sem.sem + '/' + sem.year;
@@ -644,7 +644,7 @@ function buildSemBlock(sem, openByDefault){
   var sumItems=[
     {key:'submitted',key2:'head_reviewed|reviewed',lbl:'ส่งแล้ว',          color:'#15803d'},
     {key:'head_reviewed',                           lbl:'หัวหน้าตรวจ',     color:'#0369a1'},
-    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'var(--accent-dark)'},
+    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'#1e40af'},
     {key:'assistant_reviewed',                      lbl:'ผช.ผอ.ตรวจ',      color:'#92400e'},
     {key:'deputy_reviewed',                         lbl:'รอง ผอ.ตรวจ',     color:'#6d28d9'},
     {key:'final_approved',                          lbl:'อนุมัติ',         color:'#065f46'},
@@ -689,7 +689,7 @@ function buildDeptSections(sem){
       '<div style="width:28px;height:28px;border-radius:8px;background:'+dep.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="'+dep.icon+'" style="width:14px;height:14px;color:'+dep.color+';"></i>' +
       '</div>' +
-      '<span style="font-size:13px;font-weight:800;color:#0f172a;">'+dep.label+'</span>' +
+      '<span style="font-size:13px;font-weight:800;color:var(--text-dark);">'+dep.label+'</span>' +
       '<div class="dept-divider"></div>' +
     '</div>';
 
@@ -833,8 +833,8 @@ function renderSarSchoolHistory(){
         if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
       }
       var labelBadge = '';
-      if(isFirst)   labelBadge += '<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
-      if(isCurrent) labelBadge += '<span style="font-size:10px;font-weight:800;color:#0369a1;background:#e0f2fe;padding:2px 8px;border-radius:20px;">ปัจจุบัน</span>';
+      if(isFirst)   labelBadge += '<span style="font-size:10px;font-weight:800;color:#15803d;background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isCurrent) labelBadge += '<span style="font-size:10px;font-weight:800;color:var(--role-hr-color);background:var(--sky-light);padding:2px 8px;border-radius:20px;">ปัจจุบัน</span>';
       return '<div class="ct-node">' +
         '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
           '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
@@ -846,7 +846,7 @@ function renderSarSchoolHistory(){
           (item.department?'<div class="ct-dept">'+esc2(item.department)+'</div>':'') +
           '<div class="ct-chips">' +
             (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc2(item.position)+'</span>':'') +
-            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc2(item.academic_rank)+'</span>':'') +
+            (item.academic_rank?'<span class="ct-chip" style="background:var(--amber-light);color:var(--role-director-color);">'+esc2(item.academic_rank)+'</span>':'') +
           '</div>' +
           (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
         '</div>' +
@@ -902,8 +902,8 @@ function renderSarMedia(){
   if(!mediaItems.length){ el.innerHTML='<div class="sar-empty">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">' +
     mediaItems.map(function(item){
-      return '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:9px;">' +
-        '<div class="sar-media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:15px;height:15px;color:#06b6d4;"></i></div>' +
+      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:9px;">' +
+        '<div class="sar-media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:15px;height:15px;color:var(--cyan);"></i></div>' +
         '<div style="min-width:0;"><div class="sar-media-name">'+esc2(item.name||'')+'</div>' +
           (item.subject?'<div class="sar-media-sub">'+esc2(item.subject)+'</div>':'') +
           (item.url?'<a href="'+esc2(item.url)+'" target="_blank" style="font-size:10px;color:var(--accent);font-weight:700;">เปิดลิงก์</a>':'') +
@@ -918,8 +918,8 @@ function renderEducation(){
   if(!educationItems.length){
     el.innerHTML = '<div class="empty-block" style="padding:24px 16px;">' +
       '<div style="font-size:28px;margin-bottom:8px;">🎓</div>' +
-      '<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px;">ยังไม่มีข้อมูลการศึกษา</div>' +
-      '<div style="font-size:12px;color:#94a3b8;">กด "+ เพิ่ม" เพื่อบันทึกประวัติการศึกษา</div>' +
+      '<div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:3px;">ยังไม่มีข้อมูลการศึกษา</div>' +
+      '<div style="font-size:12px;color:var(--text3);">กด "+ เพิ่ม" เพื่อบันทึกประวัติการศึกษา</div>' +
     '</div>';
     return;
   }
@@ -933,17 +933,17 @@ function renderEducation(){
         '<div style="flex:1;min-width:0;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
             '<span style="font-size:10px;font-weight:800;color:'+col+';background:white;border:1px solid '+col+'44;padding:2px 9px;border-radius:20px;">'+esc2(item.level||'')+'</span>' +
-            (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc2(item.degree)+'</span>' : '') +
+            (item.degree ? '<span style="font-size:12px;font-weight:700;color:var(--text-dark);">'+esc2(item.degree)+'</span>' : '') +
           '</div>' +
-          (item.institution ? '<div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px;">'+esc2(item.institution)+'</div>' : '') +
-          (item.major ? '<div style="font-size:11px;font-weight:600;color:#64748b;">วิชาเอก: '+esc2(item.major)+'</div>' : '') +
-          (item.grad_year ? '<div style="font-size:11px;font-weight:600;color:#94a3b8;margin-top:3px;">ปีที่สำเร็จการศึกษา: '+esc2(item.grad_year)+'</div>' : '') +
+          (item.institution ? '<div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:3px;">'+esc2(item.institution)+'</div>' : '') +
+          (item.major ? '<div style="font-size:11px;font-weight:600;color:var(--text2);">วิชาเอก: '+esc2(item.major)+'</div>' : '') +
+          (item.grad_year ? '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-top:3px;">ปีที่สำเร็จการศึกษา: '+esc2(item.grad_year)+'</div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:5px;flex-shrink:0;">' +
           '<button class="del-btn" style="background:var(--accent-tint);" onclick="editEducationItem(\''+item._id+'\')" title="แก้ไข">' +
             '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
           '<button class="del-btn" onclick="deleteEducationItem(\''+item._id+'\')" title="ลบ">' +
-            '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+            '<i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
         '</div>' +
       '</div>';
     }).join('') +
@@ -967,11 +967,11 @@ function renderSarEducation(){
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">' +
           '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';border:1px solid '+col+'44;padding:1px 7px;border-radius:20px;">'+esc2(item.level||'')+'</span>' +
-          (item.degree ? '<span style="font-size:12px;font-weight:700;color:#0f172a;">'+esc2(item.degree)+'</span>' : '') +
+          (item.degree ? '<span style="font-size:12px;font-weight:700;color:var(--text-dark);">'+esc2(item.degree)+'</span>' : '') +
         '</div>' +
-        (item.institution ? '<div style="font-size:12px;font-weight:600;color:#334155;">'+esc2(item.institution)+'</div>' : '') +
-        (item.major ? '<div style="font-size:11px;color:#94a3b8;">วิชาเอก: '+esc2(item.major)+'</div>' : '') +
-        (item.grad_year ? '<div style="font-size:11px;color:#94a3b8;">สำเร็จการศึกษา พ.ศ. '+esc2(item.grad_year)+'</div>' : '') +
+        (item.institution ? '<div style="font-size:12px;font-weight:600;color:var(--text-slate);">'+esc2(item.institution)+'</div>' : '') +
+        (item.major ? '<div style="font-size:11px;color:var(--text3);">วิชาเอก: '+esc2(item.major)+'</div>' : '') +
+        (item.grad_year ? '<div style="font-size:11px;color:var(--text3);">สำเร็จการศึกษา พ.ศ. '+esc2(item.grad_year)+'</div>' : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -1033,7 +1033,7 @@ function renderPersonalView(){
 }
 function buildCareerTimelineHTML(c){
   if(!c || (!c.start_date && !c.cur_school && !c.first_school)){
-    return '<div style="text-align:center;padding:32px 16px;color:#94a3b8;font-size:13px;font-weight:600;">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
+    return '<div style="text-align:center;padding:32px 16px;color:var(--text3);font-size:13px;font-weight:600;">ยังไม่มีข้อมูลประวัติการทำงาน</div>';
   }
   var html = '';
   var pos   = c.cur_position || (currentStaff&&currentStaff.position) || 'ครู';
@@ -1052,7 +1052,7 @@ function buildCareerTimelineHTML(c){
       svc1=yy+' ปี '+mm+' เดือน';
     }
     html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#22c55e;background:#dcfce7;">' +
+      '<div class="ct-dot" style="color:var(--emerald);background:var(--role-academic-bg);">' +
         '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:#bbf7d0;">' +
@@ -1061,8 +1061,8 @@ function buildCareerTimelineHTML(c){
         (c.department?'<div class="ct-dept">'+esc2(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
           '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc2(pos)+'</span>' +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc2(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc2(major)+'</span>':'') +
+          (group?'<span class="ct-chip" style="background:var(--violet-light);color:var(--violet);">'+esc2(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:var(--bg);color:var(--text-mid);">วิชาเอก : '+esc2(major)+'</span>':'') +
         '</div>' +
         (svc1?'<div class="ct-service-bar"></div><div class="ct-service-lbl">ระยะเวลา '+svc1+'</div>':'') +
       '</div>' +
@@ -1074,7 +1074,7 @@ function buildCareerTimelineHTML(c){
   if(showCur){
     var svcNow = calcService(c.cur_school_date || c.start_date);
     html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
+      '<div class="ct-dot" style="color:var(--blue-bright);background:var(--accent-tint);">' +
         '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
@@ -1087,9 +1087,9 @@ function buildCareerTimelineHTML(c){
         (c.department?'<div class="ct-dept">'+esc2(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
           '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc2(pos)+'</span>' +
-          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc2(rank)+'</span>':'') +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc2(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc2(major)+'</span>':'') +
+          (rank?'<span class="ct-chip" style="background:var(--amber-light);color:var(--role-director-color);">วิทยฐานะ : '+esc2(rank)+'</span>':'') +
+          (group?'<span class="ct-chip" style="background:var(--violet-light);color:var(--violet);">'+esc2(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:var(--bg);color:var(--text-mid);">วิชาเอก : '+esc2(major)+'</span>':'') +
         '</div>' +
         (svcNow?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+calcService(c.start_date)+(svcNow?' · โรงเรียนนี้ '+svcNow:'')+'</div>':'') +
       '</div>' +
@@ -1098,7 +1098,7 @@ function buildCareerTimelineHTML(c){
     /* มีแค่โรงเรียนเดียว */
     var svcNow2 = calcService(c.start_date);
     html += '<div class="ct-node">' +
-      '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
+      '<div class="ct-dot" style="color:var(--blue-bright);background:var(--accent-tint);">' +
         '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
@@ -1110,9 +1110,9 @@ function buildCareerTimelineHTML(c){
         (c.department?'<div class="ct-dept">'+esc2(c.department)+'</div>':'') +
         '<div class="ct-chips">' +
           '<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc2(pos)+'</span>' +
-          (rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">วิทยฐานะ : '+esc2(rank)+'</span>':'') +
-          (group?'<span class="ct-chip" style="background:#f5f3ff;color:#7c3aed;">'+esc2(group)+'</span>':'') +
-          (major?'<span class="ct-chip" style="background:#f8fafc;color:#475569;">วิชาเอก : '+esc2(major)+'</span>':'') +
+          (rank?'<span class="ct-chip" style="background:var(--amber-light);color:var(--role-director-color);">วิทยฐานะ : '+esc2(rank)+'</span>':'') +
+          (group?'<span class="ct-chip" style="background:var(--violet-light);color:var(--violet);">'+esc2(group)+'</span>':'') +
+          (major?'<span class="ct-chip" style="background:var(--bg);color:var(--text-mid);">วิชาเอก : '+esc2(major)+'</span>':'') +
         '</div>' +
         (svcNow2?'<div class="ct-service-bar"></div><div class="ct-service-lbl">อายุราชการรวม '+svcNow2+'</div>':'') +
       '</div>' +
@@ -1136,8 +1136,8 @@ function renderCareerHistory(){
   if(!careerHistoryItems.length){
     el.innerHTML = '<div class="empty-block" style="padding:32px 20px;">' +
       '<div style="font-size:32px;margin-bottom:10px;">🏫</div>' +
-      '<div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:4px;">ยังไม่มีข้อมูลโรงเรียน</div>' +
-      '<div style="font-size:12px;color:#94a3b8;">กด "+ เพิ่มโรงเรียน" เพื่อบันทึกทุกโรงเรียนตั้งแต่แรกบรรจุจนถึงปัจจุบัน</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:4px;">ยังไม่มีข้อมูลโรงเรียน</div>' +
+      '<div style="font-size:12px;color:var(--text3);">กด "+ เพิ่มโรงเรียน" เพื่อบันทึกทุกโรงเรียนตั้งแต่แรกบรรจุจนถึงปัจจุบัน</div>' +
     '</div>';
     return;
   }
@@ -1169,7 +1169,7 @@ function renderCareerHistory(){
 
       /* label badges */
       var labelBadge = '';
-      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#15803d;background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
       if(isCurrent) labelBadge += '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>';
 
       return '<div class="ct-node">' +
@@ -1183,14 +1183,14 @@ function renderCareerHistory(){
           (item.department?'<div class="ct-dept">'+esc2(item.department)+'</div>':'') +
           '<div class="ct-chips">' +
             (item.position?'<span class="ct-chip" style="background:var(--accent-tint);color:var(--accent);">'+esc2(item.position)+'</span>':'') +
-            (item.academic_rank?'<span class="ct-chip" style="background:#fffbeb;color:#b45309;">'+esc2(item.academic_rank)+'</span>':'') +
+            (item.academic_rank?'<span class="ct-chip" style="background:var(--amber-light);color:var(--role-director-color);">'+esc2(item.academic_rank)+'</span>':'') +
           '</div>' +
           (durStr?'<div class="ct-service-bar" style="margin-top:8px;"></div><div class="ct-service-lbl">ระยะเวลา '+durStr+'</div>':'') +
           '<div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">' +
             '<button class="del-btn" onclick="editCareerHistoryItem(\''+item._id+'\')" title="แก้ไข" style="background:var(--accent-tint);">' +
               '<i data-lucide="pencil" style="width:13px;height:13px;color:var(--accent);"></i></button>' +
             '<button class="del-btn" onclick="deleteCareerHistoryItem(\''+item._id+'\')" title="ลบ">' +
-              '<i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+              '<i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1209,7 +1209,7 @@ function renderTeaching(){
       '<div style="flex:1;min-width:0;"><div class="teach-name">'+esc2(item.name||'')+'</div></div>' +
       '<span class="teach-periods">'+esc2(String(item.periods||0))+' คาบ</span>' +
       '<span class="teach-level">'+esc2(item.level||'')+'</span>' +
-      '<button class="del-btn" onclick="deleteTeachItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+      '<button class="del-btn" onclick="deleteTeachItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
     '</div>';
   }).join('');
   document.getElementById('teachTotal').textContent='รวม '+total+' คาบ/สัปดาห์';
@@ -1223,7 +1223,7 @@ function renderDuties(){
       '<div class="duty-dot"></div>' +
       '<div class="duty-text">'+esc2(item.task||'')+'</div>' +
       (item.group?'<span class="duty-group">'+esc2(item.group)+'</span>':'') +
-      '<button class="del-btn" onclick="deleteDutyItem(\''+item._id+'\')" title="ลบ" style="margin-left:6px;"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+      '<button class="del-btn" onclick="deleteDutyItem(\''+item._id+'\')" title="ลบ" style="margin-left:6px;"><i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
     '</div>';
   }).join('')+'</div>';
   lucide.createIcons();
@@ -1238,7 +1238,7 @@ function renderDev(){
         '<div class="dev-title">'+esc2(item.title||'')+'</div>' +
         '<div class="dev-meta">'+(item.organizer?esc2(item.organizer)+' · ':'')+esc2(item.date_str||'')+(item.hours?' · '+item.hours+' ชั่วโมง':'')+'</div>' +
       '</div>' +
-      '<button class="del-btn" onclick="deleteDevItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+      '<button class="del-btn" onclick="deleteDevItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
     '</div>';
   }).join('');
   lucide.createIcons();
@@ -1248,12 +1248,12 @@ function renderMedia(){
   if(!mediaItems.length){ el.innerHTML='<div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div>'; return; }
   el.innerHTML=mediaItems.map(function(item){
     return '<div class="media-item">' +
-      '<div class="media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:20px;height:20px;color:#06b6d4;"></i></div>' +
+      '<div class="media-icon"><i data-lucide="'+(item.icon||'layout-grid')+'" style="width:20px;height:20px;color:var(--cyan);"></i></div>' +
       '<div style="flex:1;">' +
         '<div class="media-name">'+esc2(item.name||'')+'</div>' +
         '<div class="media-subject">'+esc2(item.subject||'')+(item.url?'<a href="'+esc2(item.url)+'" target="_blank" style="color:var(--accent);margin-left:8px;font-size:11px;"> เปิดลิงก์</a>':'')+'</div>' +
       '</div>' +
-      '<button class="del-btn" onclick="deleteMediaItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:#ef4444;"></i></button>' +
+      '<button class="del-btn" onclick="deleteMediaItem(\''+item._id+'\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;color:var(--red-bright);"></i></button>' +
     '</div>';
   }).join('');
   lucide.createIcons();
@@ -1307,7 +1307,7 @@ function renderPortfolioSummary(subs, portYear, portSem) {
     /* ไอคอนสถานะรวม */
     var overallBadge = '';
     if (!hasAny) {
-      overallBadge = '<span style="font-size:10px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:1px 8px;border-radius:20px;">ยังไม่ส่ง</span>';
+      overallBadge = '<span style="font-size:10px;font-weight:700;color:var(--text3);background:var(--bg-alt);padding:1px 8px;border-radius:20px;">ยังไม่ส่ง</span>';
     } else {
       var anyRevision = courses.some(function(k){ return subs[k].status === 'revision'; });
       var allFinal    = courses.every(function(k){ return subs[k].status === 'final_approved'; });
@@ -1411,19 +1411,19 @@ function addEducationItem(editId, prefill){
   prefill = prefill || {};
   var html = '<div id="eduModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:440px;padding:26px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:18px;">'+(editId?'แก้ไข':'เพิ่ม')+' ประวัติการศึกษา</h3>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:18px;">'+(editId?'แก้ไข':'เพิ่ม')+' ประวัติการศึกษา</h3>' +
     '<div style="display:grid;gap:13px;">' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ระดับการศึกษา</div>' +
-        '<select id="em_level" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;">' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ระดับการศึกษา</div>' +
+        '<select id="em_level" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;">' +
           EDU_LEVEL_OPTS.map(function(l){ return '<option'+(prefill.level===l?' selected':'')+'>'+l+'</option>'; }).join('') +
         '</select></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">สถาบันที่เรียน</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">สถาบันที่เรียน</div>' +
         '<input type="text" id="em_institution" value="'+esc2(prefill.institution||'')+'" placeholder="เช่น มหาวิทยาลัยราชภัฏบุรีรัมย์"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วุฒิการศึกษา</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วุฒิการศึกษา</div>' +
         '<input type="text" id="em_degree" value="'+esc2(prefill.degree||'')+'" placeholder="เช่น ครุศาสตรบัณฑิต, วท.บ."></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วิชาเอก / สาขาวิชา</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วิชาเอก / สาขาวิชา</div>' +
         '<input type="text" id="em_major" value="'+esc2(prefill.major||'')+'" placeholder="เช่น คอมพิวเตอร์ศึกษา"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ปีที่สำเร็จการศึกษา (พ.ศ.)</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ปีที่สำเร็จการศึกษา (พ.ศ.)</div>' +
         '<input type="text" id="em_grad_year" value="'+esc2(prefill.grad_year||'')+'" placeholder="เช่น 2558" maxlength="4"></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">' +
@@ -1643,27 +1643,27 @@ function addCareerHistoryItem(editId, prefill){
 
   var html = '<div id="'+modalId+'" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:460px;padding:26px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;">'+(editId?'แก้ไข':'เพิ่ม')+' โรงเรียน</h3>' +
-    '<p style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:18px;">ถ้าไม่ใส่วันสิ้นสุด ระบบจะถือว่าเป็นโรงเรียนปัจจุบัน</p>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:4px;">'+(editId?'แก้ไข':'เพิ่ม')+' โรงเรียน</h3>' +
+    '<p style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:18px;">ถ้าไม่ใส่วันสิ้นสุด ระบบจะถือว่าเป็นโรงเรียนปัจจุบัน</p>' +
     '<div style="display:grid;gap:13px;">' +
 
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ชื่อโรงเรียน <span style="color:#ef4444;">*</span></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ชื่อโรงเรียน <span style="color:var(--red-bright);">*</span></div>' +
       '<input type="text" id="ch_school" placeholder="เช่น โรงเรียนหนองกี่พิทยาคม" value="'+esc2(prefill.school||'')+'"></div>' +
 
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">สังกัด สพม./สพป.</div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">สังกัด สพม./สพป.</div>' +
       '<input type="text" id="ch_department" placeholder="เช่น สพม. บุรีรัมย์" value="'+esc2(prefill.department||'')+'"></div>' +
 
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วันที่เริ่มงาน</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วันที่เริ่มงาน</div>' +
         '<input type="date" id="ch_start_date" value="'+esc2(prefill.start_date||'')+'"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วันที่สิ้นสุด <span style="color:#94a3b8;font-weight:600;">(เว้นถ้าปัจจุบัน)</span></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วันที่สิ้นสุด <span style="color:var(--text3);font-weight:600;">(เว้นถ้าปัจจุบัน)</span></div>' +
         '<input type="date" id="ch_end_date" value="'+esc2(prefill.end_date||'')+'"></div>' +
     '</div>' +
 
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ตำแหน่ง</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ตำแหน่ง</div>' +
         '<input type="text" id="ch_position" placeholder="เช่น ครู" value="'+esc2(prefill.position||'')+'"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วิทยฐานะ</div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วิทยฐานะ</div>' +
         '<select id="ch_academic_rank">' +
           '<option value="">ไม่มี/ไม่ระบุ</option>' +
           '<option'+(prefill.academic_rank==='ครูชำนาญการ'?' selected':'')+'>ครูชำนาญการ</option>' +
@@ -1729,13 +1729,13 @@ function addTeachRow(){
   /* simple inline modal */
   var html='<div id="teachModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:420px;padding:24px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:16px;">เพิ่มรายวิชา</h3>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:16px;">เพิ่มรายวิชา</h3>' +
     '<div style="display:grid;gap:12px;">' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">รหัสวิชา</div><input type="text" id="tm_code" placeholder="เช่น ท22102"></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ชื่อวิชา</div><input type="text" id="tm_name" placeholder="เช่น ภาษาไทยพื้นฐาน"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">รหัสวิชา</div><input type="text" id="tm_code" placeholder="เช่น ท22102"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ชื่อวิชา</div><input type="text" id="tm_name" placeholder="เช่น ภาษาไทยพื้นฐาน"></div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">คาบ/สัปดาห์</div><input type="number" id="tm_periods" placeholder="0" min="0"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ระดับชั้น</div><input type="text" id="tm_level" placeholder="เช่น ม.5/10"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">คาบ/สัปดาห์</div><input type="number" id="tm_periods" placeholder="0" min="0"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ระดับชั้น</div><input type="text" id="tm_level" placeholder="เช่น ม.5/10"></div>' +
     '</div></div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
     '<button class="btn-secondary" onclick="document.getElementById(\'teachModal\').remove()">ยกเลิก</button>' +
@@ -1765,10 +1765,10 @@ function deleteTeachItem(id){
 function addDutyRow(){
   var html='<div id="dutyModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:420px;padding:24px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:16px;">เพิ่มงานที่ได้รับมอบหมาย</h3>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:16px;">เพิ่มงานที่ได้รับมอบหมาย</h3>' +
     '<div style="display:grid;gap:12px;">' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">กลุ่มงาน</div><input type="text" id="dm_group" placeholder="เช่น งานหลักสูตรสถานศึกษา"></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">รายละเอียดงาน</div><textarea id="dm_task" rows="3" placeholder="อธิบายงานที่ได้รับมอบหมาย"></textarea></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">กลุ่มงาน</div><input type="text" id="dm_group" placeholder="เช่น งานหลักสูตรสถานศึกษา"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">รายละเอียดงาน</div><textarea id="dm_task" rows="3" placeholder="อธิบายงานที่ได้รับมอบหมาย"></textarea></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
     '<button class="btn-secondary" onclick="document.getElementById(\'dutyModal\').remove()">ยกเลิก</button>' +
@@ -1796,13 +1796,13 @@ function deleteDutyItem(id){
 function addDevItem(){
   var html='<div id="devModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:440px;padding:24px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:16px;">เพิ่มการพัฒนาตนเอง</h3>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:16px;">เพิ่มการพัฒนาตนเอง</h3>' +
     '<div style="display:grid;gap:12px;">' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ชื่อการอบรม/กิจกรรม</div><input type="text" id="dv_title" placeholder="เช่น อบรมการจัดการเรียนรู้เชิงรุก"></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">หน่วยงานที่จัด</div><input type="text" id="dv_organizer" placeholder="เช่น สพม. นครราชสีมา"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ชื่อการอบรม/กิจกรรม</div><input type="text" id="dv_title" placeholder="เช่น อบรมการจัดการเรียนรู้เชิงรุก"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">หน่วยงานที่จัด</div><input type="text" id="dv_organizer" placeholder="เช่น สพม. นครราชสีมา"></div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">วันที่/ช่วงเวลา</div><input type="text" id="dv_date" placeholder="เช่น 14-16 มิ.ย. 2567"></div>' +
-      '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">จำนวนชั่วโมง</div><input type="number" id="dv_hours" placeholder="0" min="0"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">วันที่/ช่วงเวลา</div><input type="text" id="dv_date" placeholder="เช่น 14-16 มิ.ย. 2567"></div>' +
+      '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">จำนวนชั่วโมง</div><input type="number" id="dv_hours" placeholder="0" min="0"></div>' +
     '</div></div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
     '<button class="btn-secondary" onclick="document.getElementById(\'devModal\').remove()">ยกเลิก</button>' +
@@ -1832,16 +1832,16 @@ function deleteDevItem(id){
 function addMediaItem(){
   var html='<div id="mediaModal" style="position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">' +
     '<div style="background:white;border-radius:20px;width:100%;max-width:440px;padding:24px;">' +
-    '<h3 style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:16px;">เพิ่มสื่อนวัตกรรม</h3>' +
+    '<h3 style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:16px;">เพิ่มสื่อนวัตกรรม</h3>' +
     '<div style="display:grid;gap:12px;">' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ชื่อสื่อ/นวัตกรรม</div><input type="text" id="mm_name" placeholder="เช่น แบบฝึกภาษา จับใจความ"></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">รายวิชา/กลุ่มสาระ</div><input type="text" id="mm_subject" placeholder="เช่น ภาษาไทย ม.5"></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ลิงก์ (ถ้ามี)</div><input type="text" id="mm_url" placeholder="https://..."></div>' +
-    '<div><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px;">ประเภทสื่อ</div><select id="mm_icon"><option value="layout-grid">ทั่วไป</option><option value="youtube">YouTube</option><option value="image">รูปภาพ/Infographic</option><option value="video">วิดีโอ</option><option value="file-text">เอกสาร/ใบงาน</option><option value="globe">เว็บไซต์</option><option value="code-2">แอปพลิเคชัน</option><option value="music">เสียง/Podcast</option></select></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ชื่อสื่อ/นวัตกรรม</div><input type="text" id="mm_name" placeholder="เช่น แบบฝึกภาษา จับใจความ"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">รายวิชา/กลุ่มสาระ</div><input type="text" id="mm_subject" placeholder="เช่น ภาษาไทย ม.5"></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ลิงก์ (ถ้ามี)</div><input type="text" id="mm_url" placeholder="https://..."></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ประเภทสื่อ</div><select id="mm_icon"><option value="layout-grid">ทั่วไป</option><option value="youtube">YouTube</option><option value="image">รูปภาพ/Infographic</option><option value="video">วิดีโอ</option><option value="file-text">เอกสาร/ใบงาน</option><option value="globe">เว็บไซต์</option><option value="code-2">แอปพลิเคชัน</option><option value="music">เสียง/Podcast</option></select></div>' +
     '</div>' +
     '<div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">' +
     '<button class="btn-secondary" onclick="document.getElementById(\'mediaModal\').remove()">ยกเลิก</button>' +
-    '<button class="btn-approve" style="background:#06b6d4;" onclick="saveMediaItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
+    '<button class="btn-approve" style="background:var(--cyan);" onclick="saveMediaItem()"><i data-lucide="check" style="width:14px;height:14px;"></i> บันทึก</button></div>' +
     '</div></div>';
   document.body.insertAdjacentHTML('beforeend',html);
   lucide.createIcons();

@@ -17,12 +17,12 @@ var DEFAULT_CATEGORIES = [
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ต้อง sync logic เดียวกับ repair-user.html
      เพื่อให้หมวดหมู่เดียวกันได้สีเดียวกันทั้งสองหน้า) ── */
 var CATEGORY_PALETTE = [
-  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
-  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d',            hex: '#15803d' },
-  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e',            hex: '#92400e' },
-  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
-  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
-  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
+  { bg: '#eff6ff',   border: '#bfdbfe',   text: '#1e40af',   hex: '#1d4ed8' },
+  { bg: '#f0fdf4',  border: '#86efac',  text: '#15803d',            hex: '#15803d' },
+  { bg: '#fffbeb',  border: '#fde68a',  text: '#92400e',            hex: '#92400e' },
+  { bg: '#fee2e2',    border: '#fecaca',    text: '#b91c1c',    hex: '#b91c1c' },
+  { bg: '#e0f2fe',    border: '#7dd3fc',    text: '#075985',            hex: '#075985' },
+  { bg: '#e0e1dd', border: '#415a77', text: '#1b263b', hex: '#6d28d9' }
 ];
 
 var WF_LABELS = ['แจ้งปัญหา','อนุมัติ','ดำเนินการ','ตรวจสอบ','ปิดงาน'];
@@ -258,7 +258,7 @@ function renderPeriodPopoverBody(scope) {
       '<div style="display:flex;flex-direction:column;gap:6px;">' +
       years.map(function(y) {
         var active = y === st.year;
-        return '<button type="button" onclick="setPeriodYear(\'' + scope + '\',' + y + ')" style="text-align:left;padding:9px 12px;border-radius:10px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (active ? '#fff' : 'var(--text)') + ';font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">พ.ศ. ' + (y + 543) + '</button>';
+        return '<button type="button" onclick="setPeriodYear(\'' + scope + '\',' + y + ')" style="text-align:left;padding:9px 12px;border-radius:10px;border:1px solid ' + (active ? '#0d1b2a' : '#e2e8f0') + ';background:' + (active ? '#0d1b2a' : '#ffffff') + ';color:' + (active ? '#fff' : '#1e293b') + ';font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">พ.ศ. ' + (y + 543) + '</button>';
       }).join('') +
       '</div>'
     );
@@ -273,7 +273,7 @@ function renderPeriodPopoverBody(scope) {
     var future = (st.year === curYear && idx > curMonth);
     var active = idx === st.month;
     return '<button type="button" ' + (future ? 'disabled' : ('onclick="setPeriodMonth(\'' + scope + '\',' + idx + ')"')) +
-      ' style="padding:8px 0;border-radius:9px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (future ? 'var(--text3)' : (active ? '#fff' : 'var(--text)')) + ';font-size:12.5px;font-weight:700;cursor:' + (future ? 'not-allowed' : 'pointer') + ';opacity:' + (future ? '.4' : '1') + ';">' + m + '</button>';
+      ' style="padding:8px 0;border-radius:9px;border:1px solid ' + (active ? '#0d1b2a' : '#e2e8f0') + ';background:' + (active ? '#0d1b2a' : '#ffffff') + ';color:' + (future ? '#94a3b8' : (active ? '#fff' : '#1e293b')) + ';font-size:12.5px;font-weight:700;cursor:' + (future ? 'not-allowed' : 'pointer') + ';opacity:' + (future ? '.4' : '1') + ';">' + m + '</button>';
   }).join('');
 
   return (
@@ -596,10 +596,10 @@ function renderStats() {
   var el = document.getElementById('repStatGrid');
   if (!el) return;
   el.innerHTML =
-    stat('inbox',          'var(--amber)',  'var(--amber-light)',  reported,   'รออนุมัติ') +
-    stat('hammer',         'var(--sky)',    'var(--sky-light)',    progress,   'กำลังซ่อม') +
-    stat('eye',            'var(--purple)', 'var(--purple-light)', waitReview, 'รอผู้แจ้งตรวจสอบ') +
-    stat('check-check',    'var(--green)',  'var(--green-light)',  closed,     'ปิดงานแล้ว');
+    stat('inbox',          '#d97706',  '#fffbeb',  reported,   'รออนุมัติ') +
+    stat('hammer',         '#0284c7',    '#e0f2fe',    progress,   'กำลังซ่อม') +
+    stat('eye',            '#0d1b2a', '#e0e1dd', waitReview, 'รอผู้แจ้งตรวจสอบ') +
+    stat('check-check',    '#16a34a',  '#f0fdf4',  closed,     'ปิดงานแล้ว');
   lucide.createIcons();
 }
 
@@ -660,7 +660,7 @@ function renderBuildingChart(list) {
     return (
       '<div class="hbar-row" style="cursor:pointer;" onclick="setActiveBuildingFilter(\'' + (active ? '' : k.replace(/'/g, "\\'")) + '\')" title="คลิกเพื่อ' + (active ? 'ยกเลิกการกรอง' : 'กรองตามอาคารนี้') + '">' +
         '<div class="hbar-label"><span class="hbar-name" style="' + (active ? 'color:var(--purple);' : '') + '">' + esc2(k) + (active ? ' ✓' : '') + '</span><span class="hbar-pct">' + count + '</span></div>' +
-        '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%;background:' + (active ? 'var(--purple)' : 'var(--sky)') + ';"></div></div>' +
+        '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%;background:' + (active ? '#0d1b2a' : '#0284c7') + ';"></div></div>' +
       '</div>'
     );
   }).join('');
@@ -1026,8 +1026,8 @@ function renderTechPickerList(suffix, query) {
       '<div class="staff-picker-item" data-idx="' + idx + '">' +
         '<i data-lucide="user-round" style="width:14px;height:14px;color:var(--text3);flex-shrink:0;pointer-events:none;"></i>' +
         '<div style="min-width:0;pointer-events:none;">' +
-          '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
-          '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+          '<p style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+          '<p style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
             (s.position ? esc2(s.position) : '') + (s.group ? (' · ' + esc2(s.group)) : '') +
           '</p>' +
         '</div>' +
@@ -1257,8 +1257,8 @@ function renderRespPickerList(query) {
       '<div class="staff-picker-item" data-idx="' + idx + '">' +
         '<i data-lucide="user-round" style="width:14px;height:14px;color:var(--text3);flex-shrink:0;pointer-events:none;"></i>' +
         '<div style="min-width:0;pointer-events:none;">' +
-          '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
-          '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+          '<p style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+          '<p style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
             (s.position ? esc2(s.position) : '') + (s.group ? (' · ' + esc2(s.group)) : '') +
           '</p>' +
         '</div>' +
@@ -1517,13 +1517,13 @@ function renderReportWeek() {
   shown.forEach(function(w, i) { if (byWeek[w].total > bestVal) { bestVal = byWeek[w].total; bestIdx = i; } });
 
   kpiEl.innerHTML =
-    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', totalAll, 'แจ้งซ่อมรวม (' + shown.length + ' สัปดาห์)') +
-    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closedAll, 'ปิดงานแล้ว') +
-    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', avg.toFixed(1), 'เฉลี่ย/สัปดาห์') +
-    reportKpi('flame', 'var(--red)', 'var(--red-light)', bestIdx >= 0 ? repWeekLabel(shown[bestIdx]) : '-', 'สัปดาห์ที่แจ้งมากที่สุด');
+    reportKpi('inbox', '#0284c7', '#e0f2fe', totalAll, 'แจ้งซ่อมรวม (' + shown.length + ' สัปดาห์)') +
+    reportKpi('check-check', '#16a34a', '#f0fdf4', closedAll, 'ปิดงานแล้ว') +
+    reportKpi('bar-chart-3', '#0d1b2a', '#e0e1dd', avg.toFixed(1), 'เฉลี่ย/สัปดาห์') +
+    reportKpi('flame', '#dc2626', '#fee2e2', bestIdx >= 0 ? repWeekLabel(shown[bestIdx]) : '-', 'สัปดาห์ที่แจ้งมากที่สุด');
 
   var rows = shown.map(function(w) { return { label: repWeekLabel(w), count: byWeek[w].total }; }).reverse();
-  chartEl.innerHTML = reportHbarList(rows, 'var(--sky)');
+  chartEl.innerHTML = reportHbarList(rows, '#0284c7');
   lucide.createIcons();
 }
 
@@ -1544,17 +1544,17 @@ function renderReportMonth() {
   var urgent = rows.filter(function(r) { return r.priority === 'urgent'; }).length;
 
   kpiEl.innerHTML =
-    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', total, 'แจ้งซ่อมรวมในเดือนนี้') +
-    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closed, 'ปิดงานแล้ว') +
-    reportKpi('hourglass', 'var(--amber)', 'var(--amber-light)', pending, 'ยังไม่ปิดงาน') +
-    reportKpi('flame', 'var(--red)', 'var(--red-light)', urgent, 'แจ้งเร่งด่วน');
+    reportKpi('inbox', '#0284c7', '#e0f2fe', total, 'แจ้งซ่อมรวมในเดือนนี้') +
+    reportKpi('check-check', '#16a34a', '#f0fdf4', closed, 'ปิดงานแล้ว') +
+    reportKpi('hourglass', '#d97706', '#fffbeb', pending, 'ยังไม่ปิดงาน') +
+    reportKpi('flame', '#dc2626', '#fee2e2', urgent, 'แจ้งเร่งด่วน');
 
   var statusCounts = { reported: 0, approved: 0, reopened: 0, done: 0, closed: 0, rejected: 0 };
   rows.forEach(function(r) { if (statusCounts.hasOwnProperty(r.status)) statusCounts[r.status]++; else statusCounts.reported++; });
   var statusLabels = { reported: 'รออนุมัติ', approved: 'กำลังซ่อม/รอซ่อม', reopened: 'ซ่อมใหม่', done: 'รอตรวจสอบ', closed: 'ปิดงานแล้ว', rejected: 'ไม่อนุมัติ' };
-  var statusColors = { reported: 'var(--amber)', approved: 'var(--sky)', reopened: 'var(--red)', done: 'var(--purple)', closed: 'var(--green)', rejected: 'var(--text3)' };
+  var statusColors = { reported: '#d97706', approved: '#0284c7', reopened: '#dc2626', done: '#0d1b2a', closed: '#16a34a', rejected: '#94a3b8' };
   var statusRows = Object.keys(statusCounts).filter(function(k) { return statusCounts[k] > 0; }).map(function(k) { return { label: statusLabels[k], count: statusCounts[k], color: statusColors[k] }; });
-  statusEl.innerHTML = reportHbarList(statusRows, 'var(--sky)', 'inbox');
+  statusEl.innerHTML = reportHbarList(statusRows, '#0284c7', 'inbox');
 
   reportRenderCategoryDonut(rows, catEl);
   lucide.createIcons();
@@ -1587,13 +1587,13 @@ function renderReportCompare() {
   var latestClosedRate = lastMonth ? Math.round(byMonth[lastMonth].closed / (byMonth[lastMonth].total || 1) * 100) : 0;
 
   kpiEl.innerHTML =
-    reportKpi('trophy', 'var(--green)', 'var(--green-light)', bestIdx >= 0 ? repMonthLabelOf(months[bestIdx]) : '-', 'เดือนที่แจ้งมากที่สุด (' + (bestIdx >= 0 ? bestVal : 0) + ')') +
-    reportKpi('trending-down', 'var(--sky)', 'var(--sky-light)', worstIdx >= 0 ? repMonthLabelOf(months[worstIdx]) : '-', 'เดือนที่แจ้งน้อยที่สุด (' + (worstIdx >= 0 && worstVal !== Infinity ? worstVal : 0) + ')') +
-    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', avg.toFixed(1), 'เฉลี่ย/เดือน') +
-    reportKpi('check-check', 'var(--amber)', 'var(--amber-light)', latestClosedRate + '%', 'ปิดงานแล้ว (เดือนล่าสุด)');
+    reportKpi('trophy', '#16a34a', '#f0fdf4', bestIdx >= 0 ? repMonthLabelOf(months[bestIdx]) : '-', 'เดือนที่แจ้งมากที่สุด (' + (bestIdx >= 0 ? bestVal : 0) + ')') +
+    reportKpi('trending-down', '#0284c7', '#e0f2fe', worstIdx >= 0 ? repMonthLabelOf(months[worstIdx]) : '-', 'เดือนที่แจ้งน้อยที่สุด (' + (worstIdx >= 0 && worstVal !== Infinity ? worstVal : 0) + ')') +
+    reportKpi('bar-chart-3', '#0d1b2a', '#e0e1dd', avg.toFixed(1), 'เฉลี่ย/เดือน') +
+    reportKpi('check-check', '#d97706', '#fffbeb', latestClosedRate + '%', 'ปิดงานแล้ว (เดือนล่าสุด)');
 
   var rows = months.map(function(m) { return { label: repMonthLabelOf(m), count: byMonth[m].total }; }).reverse();
-  chartEl.innerHTML = reportHbarList(rows, 'var(--purple)');
+  chartEl.innerHTML = reportHbarList(rows, '#0d1b2a');
   lucide.createIcons();
 }
 
@@ -1616,13 +1616,13 @@ function renderReportYear() {
   var bestIdx = monthCounts.indexOf(Math.max.apply(null, monthCounts));
 
   kpiEl.innerHTML =
-    reportKpi('inbox', 'var(--sky)', 'var(--sky-light)', total, 'แจ้งซ่อมรวมทั้งปี') +
-    reportKpi('check-check', 'var(--green)', 'var(--green-light)', closed, 'ปิดงานแล้ว') +
-    reportKpi('bar-chart-3', 'var(--purple)', 'var(--purple-light)', activeMonths ? (total / activeMonths).toFixed(1) : '0', 'เฉลี่ย/เดือน') +
-    reportKpi('flame', 'var(--amber)', 'var(--amber-light)', total ? THAI_MONTHS[bestIdx] : '-', 'เดือนที่แจ้งมากที่สุด');
+    reportKpi('inbox', '#0284c7', '#e0f2fe', total, 'แจ้งซ่อมรวมทั้งปี') +
+    reportKpi('check-check', '#16a34a', '#f0fdf4', closed, 'ปิดงานแล้ว') +
+    reportKpi('bar-chart-3', '#0d1b2a', '#e0e1dd', activeMonths ? (total / activeMonths).toFixed(1) : '0', 'เฉลี่ย/เดือน') +
+    reportKpi('flame', '#d97706', '#fffbeb', total ? THAI_MONTHS[bestIdx] : '-', 'เดือนที่แจ้งมากที่สุด');
 
   var mrows = THAI_MONTHS.map(function(m, i) { return { label: m, count: monthCounts[i] }; });
-  chartEl.innerHTML = reportHbarList(mrows, 'var(--sky)');
+  chartEl.innerHTML = reportHbarList(mrows, '#0284c7');
   lucide.createIcons();
 }
 
@@ -2120,41 +2120,41 @@ function openPrintWindow(list) {
     '<style>' +
       '@page{ size: A4; margin: 14mm 12mm; }' +
       '*{box-sizing:border-box;}' +
-      'body{font-family:Sarabun,Tahoma,sans-serif;color:#1e293b;margin:0;padding:22px;background:#eef0f4;}' +
+      'body{font-family:Sarabun,Tahoma,sans-serif;color:var(--text);margin:0;padding:22px;background:#eef0f4;}' +
       '.page-wrap{max-width:840px;margin:0 auto;background:#fff;padding:26px 30px;border-radius:12px;}' +
 
       '.report-header{border-bottom:3px solid #4338ca;padding-bottom:14px;margin-bottom:16px;}' +
-      '.report-header h1{font-size:19px;margin:0 0 3px;color:#1e293b;}' +
-      '.report-header .school{font-size:12px;color:#64748b;}' +
+      '.report-header h1{font-size:19px;margin:0 0 3px;color:var(--text);}' +
+      '.report-header .school{font-size:12px;color:var(--text2);}' +
 
-      '.meta-box{background:#f1f5f9;border-radius:10px;padding:12px 16px;margin-bottom:20px;' +
-        'display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:#475569;}' +
-      '.meta-box .full{grid-column:1 / -1;border-top:1px solid #e2e8f0;margin-top:4px;padding-top:6px;font-weight:700;color:#334155;}' +
-      '.meta-box b{color:#1e293b;}' +
+      '.meta-box{background:var(--bg-alt);border-radius:10px;padding:12px 16px;margin-bottom:20px;' +
+        'display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:var(--text-mid);}' +
+      '.meta-box .full{grid-column:1 / -1;border-top:1px solid var(--border);margin-top:4px;padding-top:6px;font-weight:700;color:var(--text-slate);}' +
+      '.meta-box b{color:var(--text);}' +
 
       '.section-title{font-size:14px;font-weight:800;color:#4338ca;margin:22px 0 10px;padding-bottom:6px;' +
         'border-bottom:2px solid #ddd6fe;page-break-after:avoid;}' +
       '.section-title:first-of-type{margin-top:0;}' +
 
-      '.item{border:1px solid #cbd5e1;border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}' +
+      '.item{border:1px solid var(--border-mid);border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}' +
       '.item-head{background:#eef2ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #c7d2fe;}' +
       '.item-head h2{font-size:13.5px;margin:0;color:#312e81;font-weight:800;}' +
       '.status-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}' +
-      '.urgent-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;background:#fee2e2;color:#b91c1c;white-space:nowrap;}' +
+      '.urgent-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;background:var(--red-light);color:var(--red-dark);white-space:nowrap;}' +
 
       '.item-body{padding:14px 16px;}' +
       '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 20px;font-size:12.5px;margin-bottom:12px;}' +
-      '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}' +
-      '.dim{color:#94a3b8;font-size:11.5px;}' +
+      '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}' +
+      '.dim{color:var(--text3);font-size:11.5px;}' +
 
-      '.desc-box{background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;}' +
-      '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}' +
+      '.desc-box{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;}' +
+      '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}' +
 
-      '.photos-title{font-size:11px;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}' +
+      '.photos-title{font-size:11px;font-weight:800;color:var(--text-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}' +
       '.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
-      '.photo-box{border-radius:10px;overflow:hidden;border:1px solid #cbd5e1;background:#f8fafc;}' +
+      '.photo-box{border-radius:10px;overflow:hidden;border:1px solid var(--border-mid);background:var(--bg);}' +
       '.photo-box img{display:block;width:100%;height:280px;object-fit:cover;}' +
-      '.no-photo{font-size:12px;color:#94a3b8;font-style:italic;}' +
+      '.no-photo{font-size:12px;color:var(--text3);font-style:italic;}' +
 
       '.no-print{max-width:840px;margin:0 auto 16px;}' +
       '.no-print button{padding:10px 22px;border-radius:9px;border:none;background:#6d28d9;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;}' +
@@ -2163,7 +2163,7 @@ function openPrintWindow(list) {
         'body{background:#fff;padding:0;}' +
         '.page-wrap{max-width:none;padding:0;border-radius:0;}' +
         '.no-print{display:none;}' +
-        '.item{border-color:#94a3b8;}' +
+        '.item{border-color:var(--text3);}' +
         '.photo-box img{height:250px;}' +
       '}' +
     '</style></head><body>' +

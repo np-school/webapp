@@ -34,7 +34,7 @@ function renderPage() {
 
     /* เนื้อหา */
     '<div class="card" id="mainContent">' +
-      '<p style="padding:40px;text-align:center;color:#94a3b8;">กำลังโหลด...</p>' +
+      '<p style="padding:40px;text-align:center;color:var(--text3);">กำลังโหลด...</p>' +
     '</div>'
   );
 }

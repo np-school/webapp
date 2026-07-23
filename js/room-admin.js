@@ -72,7 +72,7 @@
               '<span style="font-size:15px;font-weight:800;color:var(--text);">'+b.room+'</span><span class="'+sCls+'">'+sLabel+'</span>' +
               (b.hasLayout?'<span style="font-size:10px;font-weight:700;background:var(--purple-light);color:var(--purple);padding:2px 8px;border-radius:20px;cursor:pointer;" onclick="openFileViewAdmin(\''+b.id+'\')">📎 ดูไฟล์แนบ</span>':'')+
             '</div>' +
-            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:2px 14px;font-size:12px;color:#475569;margin-bottom:7px;">' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:2px 14px;font-size:12px;color:var(--text-mid);margin-bottom:7px;">' +
               '<span><b style="color:var(--text);">วันที่:</b> '+b.date+'</span>' +
               '<span><b style="color:var(--text);">เวลา:</b> '+(b.startTime||'-')+' – '+(b.endTime||'-')+'</span>' +
               '<span><b style="color:var(--text);">ผู้จอง:</b> '+(b.fullName||b.userName||'-')+'</span>' +
@@ -81,8 +81,8 @@
               '<span><b style="color:var(--text);">ผู้เข้าร่วม:</b> '+(b.attendees||'-')+' คน</span>' +
               '<span><b style="color:var(--text);">วัตถุประสงค์:</b> '+b.purpose+'</span>' +
             '</div>' +
-            (equip?'<div style="font-size:11px;color:#475569;background:var(--bg);padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
-            (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:#dcfce7;color:#15803d;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
+            (equip?'<div style="font-size:11px;color:var(--text-mid);background:var(--bg);padding:5px 10px;border-radius:8px;margin-bottom:5px;">🔧 '+equip+'</div>':'')+
+            (b.approveNote&&b.status==='approved'?'<div style="font-size:12px;background:var(--role-academic-bg);color:#15803d;padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">💬 '+b.approveNote+'</div>':'')+
             (b.approvedBy&&b.status==='approved'?'<div style="font-size:11px;color:#15803d;margin-top:3px;opacity:.8;">✅ อนุมัติโดย: '+b.approvedBy+'</div>':'')+
             (b.rejectReason?'<div style="font-size:12px;background:var(--red-light);color:var(--red-dark);padding:6px 12px;border-radius:8px;font-weight:600;margin-top:4px;">❌ เหตุผล: '+b.rejectReason+'</div>':'')+
             (b.rejectedBy&&b.status==='rejected'?'<div style="font-size:11px;color:var(--red-dark);margin-top:3px;opacity:.8;">❌ ไม่อนุมัติโดย: '+b.rejectedBy+'</div>':'')+
@@ -198,11 +198,11 @@
     var maxVal=1;rooms.forEach(function(r){maxVal=Math.max(maxVal,byRoom[r].total);});
 
     // Y grid + labels
-    ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
     for(var i=0;i<=4;i++){
       var yy=padT+chartH-(chartH/4*i);
       ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(padL+chartW,yy);ctx.stroke();
-      ctx.fillStyle='var(--text3)';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle='#94a3b8';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
       ctx.fillText(Math.round(maxVal/4*i),padL-5,yy);
     }
 
@@ -228,7 +228,7 @@
         ctx.beginPath();
         if(bh>1){ctx.moveTo(bx+rr,by);ctx.lineTo(bx+barW-rr,by);ctx.arcTo(bx+barW,by,bx+barW,by+rr,rr);ctx.lineTo(bx+barW,by+bh);ctx.lineTo(bx,by+bh);ctx.lineTo(bx,by+rr);ctx.arcTo(bx,by,bx+rr,by,rr);}
         ctx.closePath();ctx.fillStyle=barColors[bi];ctx.globalAlpha=0.88;ctx.fill();ctx.globalAlpha=1;
-        if(val>0){ctx.fillStyle='var(--text)';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(val,bx+barW/2,by-1);}
+        if(val>0){ctx.fillStyle='#1e293b';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(val,bx+barW/2,by-1);}
       });
       // total label
       if(d.total>0){
@@ -237,15 +237,15 @@
       }
       // room name
       var lx=padL+gi*groupW+groupW/2;
-      ctx.fillStyle='#334155';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillStyle=cssVar('--text-slate');ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
       var name=room.length>10?room.substring(0,10)+'…':room;
       ctx.fillText(name,lx,padT+chartH+5);
       // sub line
-      ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+      ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
       ctx.beginPath();ctx.moveTo(padL+gi*groupW,padT+chartH+3);ctx.lineTo(padL+gi*groupW,padT+chartH);ctx.stroke();
     });
     // axes
-    ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1.5;
+    ctx.strokeStyle=cssVar('--border-mid');ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(padL,padT+chartH);ctx.lineTo(padL+chartW,padT+chartH);ctx.stroke();
     ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+chartH);ctx.stroke();
   }
@@ -264,11 +264,11 @@
     var chartW=cW-padL-padR,chartH=cH-padT-padB;
     var maxVal=Math.max(1,Math.max.apply(null,buckets.map(function(b){return b.total;})));
 
-    ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
     for(var i=0;i<=4;i++){
       var yy=padT+chartH-(chartH/4*i);
       ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(padL+chartW,yy);ctx.stroke();
-      ctx.fillStyle='var(--text3)';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle='#94a3b8';ctx.font='bold 9px Sarabun,sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
       ctx.fillText(Math.round(maxVal/4*i),padL-4,yy);
     }
 
@@ -292,7 +292,7 @@
       apPts.push({x:x,y:padT+chartH-ah});
 
       var step=buckets.length>20?Math.ceil(buckets.length/10):buckets.length>10?2:1;
-      if(i%step===0){ctx.fillStyle='var(--text2)';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(bk.label,x,padT+chartH+4);}
+      if(i%step===0){ctx.fillStyle='#64748b';ctx.font='bold 8px Sarabun,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(bk.label,x,padT+chartH+4);}
     });
 
     function drawLine(pts,color,lw){
@@ -304,7 +304,7 @@
     }
     drawLine(totalPts,cssVar('--purple'),2.5);
 
-    ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1.5;
+    ctx.strokeStyle=cssVar('--border-mid');ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(padL,padT+chartH);ctx.lineTo(padL+chartW,padT+chartH);ctx.stroke();
     ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+chartH);ctx.stroke();
   }
@@ -323,7 +323,7 @@
     filtered.forEach(function(b){gt.total++;if(b.status==='approved')gt.approved++;else if(b.status==='pending')gt.pending++;else if(b.status==='rejected')gt.rejected++;});
     var totalsEl=document.getElementById('sumTotals');
     if(totalsEl){
-      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'var(--purple-light)',ic:'var(--purple)'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'var(--green)'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'#fef9c3',ic:'#d97706'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'var(--red-light)',ic:'var(--red)'}];
+      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'#e0e1dd',ic:'#0d1b2a'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'#16a34a'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'#fef9c3',ic:'#d97706'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'#fee2e2',ic:'#dc2626'}];
       totalsEl.innerHTML=grandDefs.map(function(g){return '<div class="sum-grand-card"><div style="width:40px;height:40px;background:'+g.bg+';border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="'+g.icon+'" style="width:18px;height:18px;color:'+g.ic+';"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">'+g.label+'</p><p style="font-size:22px;font-weight:800;line-height:1;color:var(--text);">'+g.val+'</p></div></div>';}).join('');
       lucide.createIcons();
     }
@@ -390,9 +390,9 @@
           '<i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--text3);flex-shrink:0;transition:transform .2s;" id="chev-'+cardId+'"></i>'+
         '</div>'+
         '<div class="sum-room-body" id="sum-body-'+cardId+'" style="display:none;">'+
-          '<p style="font-size:11px;font-weight:800;color:#475569;margin-bottom:6px;">แนวโน้มรายห้อง — <span style="color:var(--purple);">'+periodLabel(sumPeriod)+'</span></p>'+
+          '<p style="font-size:11px;font-weight:800;color:var(--text-mid);margin-bottom:6px;">แนวโน้มรายห้อง — <span style="color:var(--purple);">'+periodLabel(sumPeriod)+'</span></p>'+
           '<div style="overflow-x:auto;margin-bottom:var(--gap-card);"><canvas id="mini-'+cardId+'" height="100" style="display:block;min-width:200px;"></canvas></div>'+
-          '<p style="font-size:11px;font-weight:800;color:#475569;margin-bottom:6px;">รายการล่าสุด</p>'+
+          '<p style="font-size:11px;font-weight:800;color:var(--text-mid);margin-bottom:6px;">รายการล่าสุด</p>'+
           '<div class="sum-booking-list">'+detailRows+'</div>'+moreNote+
         '</div>'+
       '</div>';
@@ -436,7 +436,7 @@
       ctx.closePath();ctx.fillStyle=s.color;ctx.fill();
       startAngle+=slice;
     });
-    if(total===0){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.arc(cx,cy,r-thick,2*Math.PI,0,true);ctx.closePath();ctx.fillStyle='var(--border)';ctx.fill();}
+    if(total===0){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.arc(cx,cy,r-thick,2*Math.PI,0,true);ctx.closePath();ctx.fillStyle='#e2e8f0';ctx.fill();}
     document.getElementById('donutTotal').textContent=total;
     var leg=document.getElementById('donutLegend');
     leg.innerHTML=statusConfig.map(function(s){

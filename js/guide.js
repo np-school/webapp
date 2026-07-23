@@ -80,9 +80,9 @@ function renderOverview() {
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
         '<div class="page-icon blue"><i data-lucide="layout-dashboard" style="width:18px;height:18px;color:white;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">NP Origins คืออะไร</span>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">NP Origins คืออะไร</span>' +
       '</div>' +
-      '<p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:18px;">' +
+      '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:18px;">' +
         'NP Origins คือ<strong>ระบบบริการออนไลน์ของโรงเรียนหนองกี่พิทยาคม</strong> ที่รวบรวมบริการต่างๆ ไว้ในที่เดียว เข้าใช้งานได้ผ่าน Google Account ของโรงเรียน <strong>(@nongki.ac.th)</strong> ปัจจุบันเปิดให้บริการ 2 ระบบหลัก' +
       '</p>' +
       '<div class="sys-grid">' +
@@ -126,7 +126,7 @@ function renderRoomUser() {
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
         '<div class="page-icon blue"><i data-lucide="calendar-plus" style="width:18px;height:18px;color:white;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">ขั้นตอนการขอใช้ห้อง/สถานที่</span>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">ขั้นตอนการขอใช้ห้อง/สถานที่</span>' +
       '</div>' +
       '<div class="g-step"><div class="g-num" style="background:var(--accent-tint);color:var(--accent);">1</div><div>' +
         '<div class="g-step-title">เข้าสู่ระบบด้วย Google Account</div>' +
@@ -148,11 +148,11 @@ function renderRoomUser() {
         '<div class="g-step-title">แนบไฟล์ผังที่นั่ง (ถ้ามี)</div>' +
         '<div class="g-step-desc">หากมีการจัดผังที่นั่งหรือแผนผังการใช้งาน สามารถแนบไฟล์ภาพได้ เพื่อให้เจ้าหน้าที่พิจารณาได้สะดวกขึ้น</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#dcfce7;color:#15803d;">6</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">6</div><div>' +
         '<div class="g-step-title">รอการพิจารณาและรับแจ้งผล</div>' +
         '<div class="g-step-desc">เจ้าหน้าที่จะพิจารณาภายใน 1–2 วันทำการ ผลจะแสดงในหน้า "การจองของฉัน" และแจ้งผ่าน LINE หากเชื่อมต่อไว้</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#dcfce7;color:#15803d;">✓</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">✓</div><div>' +
         '<div class="g-step-title">นำหลักฐานติดต่อห้องบริหารทั่วไป</div>' +
         '<div class="g-step-desc">เมื่อได้รับการอนุมัติ ให้แคปหน้าจอสถานะ "อนุมัติ" หรือพิมพ์ใบยืนยัน ไปแสดงที่ห้องบริหารทั่วไปก่อนใช้งานสถานที่</div>' +
       '</div></div>' +
@@ -164,17 +164,17 @@ function renderRoomUser() {
 
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#fef9c3;"><i data-lucide="calendar-days" style="width:18px;height:18px;color:#b45309;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">ฟีเจอร์บนหน้าปฏิทิน</span>' +
+        '<div class="page-icon" style="background:var(--yellow-light);"><i data-lucide="calendar-days" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">ฟีเจอร์บนหน้าปฏิทิน</span>' +
       '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#475569;">' +
-        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#fef3c7;color:#b45309;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">จุดเหลือง</span><span>วันที่มีการจองบางช่วงเวลา (ยังจองได้ในช่วงที่ว่าง)</span></div>' +
-        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:#fee2e2;color:#b91c1c;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันแดง</span><span>วันที่มีการจองเต็มทั้งวัน ไม่สามารถจองเพิ่มได้</span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--text-mid);">' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--role-hog-bg);color:var(--role-director-color);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">จุดเหลือง</span><span>วันที่มีการจองบางช่วงเวลา (ยังจองได้ในช่วงที่ว่าง)</span></div>' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--red-light);color:var(--red-dark);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันแดง</span><span>วันที่มีการจองเต็มทั้งวัน ไม่สามารถจองเพิ่มได้</span></div>' +
         '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--accent);color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">วันนี้</span><span>วันปัจจุบัน แสดงด้วยพื้นหลังน้ำเงิน</span></div>' +
         '<div style="display:flex;gap:12px;align-items:flex-start;"><span style="background:var(--accent-tint);color:var(--accent);border:1.5px solid var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;flex-shrink:0;">เลือกแล้ว</span><span>วันที่คุณเลือกสำหรับคำขอปัจจุบัน</span></div>' +
       '</div>' +
       '<div class="sdiv" style="margin-top:18px;">ฟีเจอร์เสริม</div>' +
-      '<div style="font-size:13px;color:#475569;line-height:1.9;">' +
+      '<div style="font-size:13px;color:var(--text-mid);line-height:1.9;">' +
         '• <strong>จองหลายวัน:</strong> เลือกหลายวันพร้อมกันได้ในคำขอเดียว ระบบจะแสดงวันที่เลือกเป็น Tag สีฟ้า<br>' +
         '• <strong>สถิติห้องรายเดือน:</strong> แถบด้านข้างแสดงห้องที่ถูกจองบ่อยที่สุดในเดือนนั้น<br>' +
         '• <strong>ตัวกรอง:</strong> กรองดูคำขอตามสถานะ (รอตรวจ/อนุมัติ/ไม่อนุมัติ) หรือค้นหาชื่อผู้จอง' +
@@ -187,14 +187,14 @@ function renderRoomStatus() {
   return (
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:16px;">' +
-        '<div class="page-icon" style="background:#fef9c3;"><i data-lucide="clock" style="width:18px;height:18px;color:#b45309;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">ความหมายของสถานะคำขอจองห้อง</span>' +
+        '<div class="page-icon" style="background:var(--yellow-light);"><i data-lucide="clock" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">ความหมายของสถานะคำขอจองห้อง</span>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;">' +
-        '<div class="status-row"><span class="sbadge sb-pending" style="flex-shrink:0;">⏳ รอตรวจ</span><div style="font-size:13px;color:#475569;line-height:1.6;">คำขอถูกส่งเรียบร้อยแล้ว กำลังรอเจ้าหน้าที่ห้องบริหารทั่วไปพิจารณา ยังไม่มีการตัดสินใจ</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-approved" style="flex-shrink:0;">✅ อนุมัติ</span><div style="font-size:13px;color:#475569;line-height:1.6;">คำขอได้รับการอนุมัติ สามารถใช้งานสถานที่ได้ตามวันเวลาที่ขอ อย่าลืมนำหลักฐานไปแสดงที่ห้องบริหารทั่วไป</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-rejected" style="flex-shrink:0;">✗ ไม่อนุมัติ</span><div style="font-size:13px;color:#475569;line-height:1.6;">คำขอไม่ผ่านการอนุมัติ อาจเนื่องจากสถานที่ถูกจองซ้อน หรือข้อมูลไม่ครบ ดูเหตุผลในรายละเอียดแล้วส่งใหม่ได้</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-done" style="flex-shrink:0;">✅ เสร็จสิ้น</span><div style="font-size:13px;color:#475569;line-height:1.6;">การจองผ่านพ้นวันเวลาที่ระบุแล้ว ระบบเปลี่ยนสถานะโดยอัตโนมัติ แสดงด้วยสีเทาเพื่อแยกจากการจองที่ยังใช้งานอยู่</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-pending" style="flex-shrink:0;">⏳ รอตรวจ</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">คำขอถูกส่งเรียบร้อยแล้ว กำลังรอเจ้าหน้าที่ห้องบริหารทั่วไปพิจารณา ยังไม่มีการตัดสินใจ</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-approved" style="flex-shrink:0;">✅ อนุมัติ</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">คำขอได้รับการอนุมัติ สามารถใช้งานสถานที่ได้ตามวันเวลาที่ขอ อย่าลืมนำหลักฐานไปแสดงที่ห้องบริหารทั่วไป</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-rejected" style="flex-shrink:0;">✗ ไม่อนุมัติ</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">คำขอไม่ผ่านการอนุมัติ อาจเนื่องจากสถานที่ถูกจองซ้อน หรือข้อมูลไม่ครบ ดูเหตุผลในรายละเอียดแล้วส่งใหม่ได้</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-done" style="flex-shrink:0;">✅ เสร็จสิ้น</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">การจองผ่านพ้นวันเวลาที่ระบุแล้ว ระบบเปลี่ยนสถานะโดยอัตโนมัติ แสดงด้วยสีเทาเพื่อแยกจากการจองที่ยังใช้งานอยู่</div></div>' +
       '</div>' +
       '<div class="g-alert g-alert-blue">' +
         '<i data-lucide="info" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>' +
@@ -205,7 +205,7 @@ function renderRoomStatus() {
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
         '<div class="page-icon blue"><i data-lucide="git-branch" style="width:18px;height:18px;color:white;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">Flow การทำงานของระบบจองห้อง</span>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">Flow การทำงานของระบบจองห้อง</span>' +
       '</div>' +
       '<div style="overflow-x:auto;"><div style="min-width:460px;">' +
         '<div class="flow-row"><div class="flow-box fb-blue">ครูส่งคำขอ</div><div class="flow-arrow">→</div><div class="flow-box fb-yellow">รอตรวจ</div><div class="flow-arrow">→</div><div class="flow-box fb-gray">Admin ตรวจสอบ</div></div>' +
@@ -227,38 +227,38 @@ function renderRoomAdmin() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:#7c3aed;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">คู่มือสำหรับ Admin ห้อง</span>' +
+        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">คู่มือสำหรับ Admin ห้อง</span>' +
       '</div>' +
-      '<p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:16px;">' +
+      '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'Admin มีหน้าจัดการพิเศษ (<strong>admin-room.html</strong>) ที่ครูทั่วไปไม่สามารถเข้าถึงได้ ระบบตรวจสอบสิทธิ์ผ่าน email list ที่กำหนดไว้ใน Firestore' +
       '</p>' +
       '<div class="sdiv">การพิจารณาคำขอ</div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">1</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">1</div><div>' +
         '<div class="g-step-title">เข้าหน้า Admin Dashboard</div>' +
         '<div class="g-step-desc">เข้าสู่ระบบด้วยบัญชีที่มีสิทธิ์ Admin ระบบจะแสดง Dashboard พร้อมสรุปคำขอแยกตามสถานะ และสถิติห้องที่ถูกจองบ่อย</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">2</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">2</div><div>' +
         '<div class="g-step-title">กรองและค้นหาคำขอ</div>' +
         '<div class="g-step-desc">ใช้ filter pill (รอตรวจ/อนุมัติ/ไม่อนุมัติ) หรือช่องค้นหาเพื่อหาคำขอที่ต้องการ คำขอ "รอตรวจ" จะแสดงขอบซ้ายสีส้ม</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">3</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">3</div><div>' +
         '<div class="g-step-title">อนุมัติหรือปฏิเสธคำขอ</div>' +
-        '<div class="g-step-desc">คลิกปุ่ม <strong style="color:#16a34a;">✓ อนุมัติ</strong> หรือ <strong style="color:#dc2626;">✗ ปฏิเสธ</strong> (พร้อมใส่หมายเหตุ) ระบบจะส่ง LINE แจ้งผู้ขอทันทีผ่าน Cloud Function</div>' +
+        '<div class="g-step-desc">คลิกปุ่ม <strong style="color:var(--green);">✓ อนุมัติ</strong> หรือ <strong style="color:var(--red);">✗ ปฏิเสธ</strong> (พร้อมใส่หมายเหตุ) ระบบจะส่ง LINE แจ้งผู้ขอทันทีผ่าน Cloud Function</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">4</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">4</div><div>' +
         '<div class="g-step-title">ดูไฟล์แนบผังที่นั่ง</div>' +
         '<div class="g-step-desc">กดปุ่ม "ดูไฟล์" บนการ์ดคำขอ ระบบจะแสดงรูปภาพผังที่นั่งที่ผู้ขอแนบมา</div>' +
       '</div></div>' +
       '<div class="sdiv">การจัดการห้อง/สถานที่</div>' +
-      '<div style="font-size:13px;color:#475569;line-height:1.9;">' +
+      '<div style="font-size:13px;color:var(--text-mid);line-height:1.9;">' +
         '• <strong>เพิ่มห้อง:</strong> กรอกชื่อห้อง ความจุ รายละเอียด และอัปโหลดรูปภาพห้อง<br>' +
         '• <strong>แก้ไขห้อง:</strong> คลิกที่รายการห้องแล้วแก้ไขข้อมูลได้ทันที<br>' +
         '• <strong>ลบห้อง:</strong> ลบออกจากระบบ (คำขอที่ผูกกับห้องนั้นยังแสดงอยู่)<br>' +
         '• <strong>จัดการอุปกรณ์:</strong> เพิ่ม/ลบรายการอุปกรณ์ที่ให้เลือกในแบบฟอร์ม' +
       '</div>' +
       '<div class="sdiv">แผงสถิติ</div>' +
-      '<div style="font-size:13px;color:#475569;line-height:1.9;">' +
+      '<div style="font-size:13px;color:var(--text-mid);line-height:1.9;">' +
         '• <strong>Donut Chart:</strong> สัดส่วนคำขอ รอตรวจ / อนุมัติ / ไม่อนุมัติ<br>' +
         '• <strong>Bar Chart:</strong> ห้องที่ถูกจองบ่อยที่สุดในเดือนปัจจุบัน<br>' +
         '• <strong>Line Chart:</strong> แนวโน้มจำนวนคำขอรายวันในเดือนนั้น' +
@@ -271,29 +271,29 @@ function renderPortfolioTeacher() {
   return (
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:#7c3aed;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">ขั้นตอนการส่งงานประจำภาคเรียน</span>' +
+        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">ขั้นตอนการส่งงานประจำภาคเรียน</span>' +
       '</div>' +
-      '<p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:16px;">' +
+      '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'ระบบนี้สำหรับ<strong>ครูผู้สอน</strong>ส่งเอกสารภาระงานประจำภาคเรียน เช่น แผนการจัดการเรียนรู้ บันทึกหลังสอน และเอกสารประกอบอื่นๆ ผ่านกระบวนการตรวจสอบหลายขั้นตอน' +
       '</p>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">1</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">1</div><div>' +
         '<div class="g-step-title">เข้าสู่ระบบและเลือกเมนู "ส่งงานประจำภาคเรียน"</div>' +
         '<div class="g-step-desc">ล็อกอินด้วย <strong>@nongki.ac.th</strong> แล้วเลือกเมนู <strong>ส่งงานประจำภาคเรียน</strong> จาก Sidebar</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">2</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">2</div><div>' +
         '<div class="g-step-title">เลือกภาคเรียนที่ต้องการส่ง</div>' +
         '<div class="g-step-desc">กดปุ่มภาคเรียน (เช่น 1/2567 หรือ 2/2567) ที่ด้านบน ระบบจะแสดงรายการเอกสารที่ต้องส่ง</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">3</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">3</div><div>' +
         '<div class="g-step-title">ดูรายการเอกสารที่ต้องส่ง</div>' +
         '<div class="g-step-desc">ระบบแสดงรายการเอกสารทั้งหมด พร้อมสถานะปัจจุบัน มีแถบ Progress Ring แสดงเปอร์เซ็นต์ความสำเร็จโดยรวม</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:#7c3aed;">4</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">4</div><div>' +
         '<div class="g-step-title">คลิกที่รายการเอกสารเพื่ออัปโหลด</div>' +
         '<div class="g-step-desc">คลิกการ์ดเอกสาร กดพื้นที่อัปโหลดหรือลากไฟล์มาวาง รองรับ PDF, Word (.docx, .doc), ภาพ (.jpg, .png) ขนาดไม่เกิน <strong>10 MB</strong></div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#dcfce7;color:#15803d;">✓</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">✓</div><div>' +
         '<div class="g-step-title">รอการอนุมัติขั้นสุดท้าย</div>' +
         '<div class="g-step-desc">เมื่อผ่านครบทุกขั้นตอนจนสถานะเป็น <span class="sbadge sb-final_approved" style="font-size:10px;">● อนุมัติแล้ว</span> ถือว่าการส่งงานเสร็จสมบูรณ์</div>' +
       '</div></div>' +
@@ -305,10 +305,10 @@ function renderPortfolioTeacher() {
 
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#fef9c3;"><i data-lucide="zap" style="width:18px;height:18px;color:#b45309;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">ฟีเจอร์สำคัญในหน้าส่งงาน</span>' +
+        '<div class="page-icon" style="background:var(--yellow-light);"><i data-lucide="zap" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">ฟีเจอร์สำคัญในหน้าส่งงาน</span>' +
       '</div>' +
-      '<div style="font-size:13px;color:#475569;line-height:1.9;">' +
+      '<div style="font-size:13px;color:var(--text-mid);line-height:1.9;">' +
         '• <strong>Progress Ring:</strong> แสดงเปอร์เซ็นต์งานที่ส่งครบแล้วในภาคเรียน (นับเฉพาะที่อนุมัติแล้ว)<br>' +
         '• <strong>แยกตามภาคเรียน:</strong> กดปุ่มเลือกภาคเรียนได้ ระบบจะโหลดรายการเอกสารของภาคนั้น<br>' +
         '• <strong>อัปโหลดซ้ำ:</strong> กดปุ่ม "เปลี่ยนไฟล์" บนการ์ดเอกสารที่ส่งแล้ว เพื่ออัปโหลดไฟล์ใหม่แทน<br>' +
@@ -323,10 +323,10 @@ function renderPortfolioWorkflow() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="git-branch" style="width:18px;height:18px;color:#7c3aed;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">Workflow สถานะเอกสารส่งงาน (5 ขั้นตอน)</span>' +
+        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="git-branch" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">Workflow สถานะเอกสารส่งงาน (5 ขั้นตอน)</span>' +
       '</div>' +
-      '<p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:16px;">' +
+      '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'เอกสารแต่ละชิ้นผ่านกระบวนการตรวจสอบหลายขั้น ตั้งแต่ครูส่งจนถึงผู้บริหารอนุมัติขั้นสุดท้าย' +
       '</p>' +
       '<div class="wf-bar" style="margin-bottom:20px;">' +
@@ -341,13 +341,13 @@ function renderPortfolioWorkflow() {
         '<div class="wf-step wf-final"><i data-lucide="shield-check" style="width:12px;height:12px;"></i><span>อนุมัติแล้ว</span></div>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;">' +
-        '<div class="status-row"><span class="sbadge" style="background:#f1f5f9;color:#64748b;white-space:nowrap;flex-shrink:0;">— ยังไม่ส่ง</span><div style="font-size:13px;color:#475569;line-height:1.6;">ยังไม่มีการอัปโหลดไฟล์ การ์ดมีขอบซ้ายสีเทา</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-submitted" style="white-space:nowrap;flex-shrink:0;">● ส่งแล้ว</span><div style="font-size:13px;color:#475569;line-height:1.6;">อัปโหลดไฟล์สำเร็จ รอหัวหน้ากลุ่มสาระตรวจสอบ การ์ดมีขอบซ้ายสีเขียว</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-head_reviewed" style="white-space:nowrap;flex-shrink:0;">● หัวหน้าตรวจแล้ว</span><div style="font-size:13px;color:#475569;line-height:1.6;">หัวหน้ากลุ่มสาระตรวจสอบผ่านแล้ว ส่งต่อให้ผู้ตรวจสอบระดับถัดไป การ์ดมีขอบซ้ายสีฟ้า</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-reviewed" style="white-space:nowrap;flex-shrink:0;">● ผู้ตรวจสอบตรวจแล้ว</span><div style="font-size:13px;color:#475569;line-height:1.6;">ผ่านการตรวจสอบระดับกลาง รอรองผู้อำนวยการพิจารณา</div></div>' +
-        '<div class="status-row"><span class="sbadge sb-deputy_reviewed" style="white-space:nowrap;flex-shrink:0;">● รองผอ. ตรวจแล้ว</span><div style="font-size:13px;color:#475569;line-height:1.6;">ผ่านการตรวจสอบจากรองผู้อำนวยการ รอผู้บริหารอนุมัติขั้นสุดท้าย</div></div>' +
-        '<div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:#f5f3ff;border-radius:12px;border:1px solid #e9d5ff;"><span class="sbadge sb-final_approved" style="white-space:nowrap;flex-shrink:0;">● อนุมัติแล้ว</span><div style="font-size:13px;color:#475569;line-height:1.6;">ผ่านการอนุมัติขั้นสุดท้าย เอกสารชิ้นนี้เสร็จสมบูรณ์ ไม่ต้องดำเนินการใดเพิ่มเติม</div></div>' +
-        '<div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:#fffbeb;border-radius:12px;border:1px solid #fde68a;"><span class="sbadge sb-revision" style="white-space:nowrap;flex-shrink:0;">⚠ ขอแก้ไข</span><div style="font-size:13px;color:#475569;line-height:1.6;">ผู้ตรวจสอบขอให้แก้ไขเอกสาร อ่านข้อเสนอแนะ แก้ไขไฟล์ แล้วอัปโหลดใหม่ สถานะจะกลับเป็น "ส่งแล้ว" เพื่อรอตรวจรอบใหม่</div></div>' +
+        '<div class="status-row"><span class="sbadge" style="background:var(--bg-alt);color:var(--text2);white-space:nowrap;flex-shrink:0;">— ยังไม่ส่ง</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">ยังไม่มีการอัปโหลดไฟล์ การ์ดมีขอบซ้ายสีเทา</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-submitted" style="white-space:nowrap;flex-shrink:0;">● ส่งแล้ว</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">อัปโหลดไฟล์สำเร็จ รอหัวหน้ากลุ่มสาระตรวจสอบ การ์ดมีขอบซ้ายสีเขียว</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-head_reviewed" style="white-space:nowrap;flex-shrink:0;">● หัวหน้าตรวจแล้ว</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">หัวหน้ากลุ่มสาระตรวจสอบผ่านแล้ว ส่งต่อให้ผู้ตรวจสอบระดับถัดไป การ์ดมีขอบซ้ายสีฟ้า</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-reviewed" style="white-space:nowrap;flex-shrink:0;">● ผู้ตรวจสอบตรวจแล้ว</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">ผ่านการตรวจสอบระดับกลาง รอรองผู้อำนวยการพิจารณา</div></div>' +
+        '<div class="status-row"><span class="sbadge sb-deputy_reviewed" style="white-space:nowrap;flex-shrink:0;">● รองผอ. ตรวจแล้ว</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">ผ่านการตรวจสอบจากรองผู้อำนวยการ รอผู้บริหารอนุมัติขั้นสุดท้าย</div></div>' +
+        '<div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:var(--violet-light);border-radius:12px;border:1px solid var(--role-dep-general-border);"><span class="sbadge sb-final_approved" style="white-space:nowrap;flex-shrink:0;">● อนุมัติแล้ว</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">ผ่านการอนุมัติขั้นสุดท้าย เอกสารชิ้นนี้เสร็จสมบูรณ์ ไม่ต้องดำเนินการใดเพิ่มเติม</div></div>' +
+        '<div style="display:flex;align-items:flex-start;gap:14px;padding:13px;background:var(--amber-light);border-radius:12px;border:1px solid var(--amber-mid);"><span class="sbadge sb-revision" style="white-space:nowrap;flex-shrink:0;">⚠ ขอแก้ไข</span><div style="font-size:13px;color:var(--text-mid);line-height:1.6;">ผู้ตรวจสอบขอให้แก้ไขเอกสาร อ่านข้อเสนอแนะ แก้ไขไฟล์ แล้วอัปโหลดใหม่ สถานะจะกลับเป็น "ส่งแล้ว" เพื่อรอตรวจรอบใหม่</div></div>' +
       '</div>' +
       '<div class="g-alert g-alert-yellow">' +
         '<i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>' +
@@ -361,10 +361,10 @@ function renderPortfolioAdmin() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:#7c3aed;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">คู่มือสำหรับ Admin งาน</span>' +
+        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">คู่มือสำหรับ Admin งาน</span>' +
       '</div>' +
-      '<p style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:16px;">' +
+      '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'มีหน้าจัดการพิเศษ (<strong>admin-portfolio.html</strong>) สำหรับผู้ที่มีสิทธิ์ตรวจสอบ ระบบแบ่งตามบทบาท ดังนี้' +
       '</p>' +
       '<table class="role-table">' +
@@ -402,7 +402,7 @@ function renderFaq() {
       return '<div class="faq-item">' +
         '<button class="faq-q" onclick="toggleFaq(this)">' +
           '<span>' + f[0] + '</span>' +
-          '<i data-lucide="chevron-down" style="width:16px;height:16px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>' +
+          '<i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--text3);flex-shrink:0;transition:transform .2s;"></i>' +
         '</button>' +
         '<div class="faq-a">' + f[1] + '</div>' +
       '</div>';
@@ -413,14 +413,14 @@ function renderFaq() {
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:16px;">' +
         '<div class="page-icon blue"><i data-lucide="calendar" style="width:18px;height:18px;color:white;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">คำถามเกี่ยวกับระบบจองห้อง</span>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">คำถามเกี่ยวกับระบบจองห้อง</span>' +
       '</div>' +
       makeFaqs(faqsRoom, 'room') +
     '</div>' +
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:16px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:#7c3aed;"></i></div>' +
-        '<span style="font-size:16px;font-weight:800;color:#1e293b;">คำถามเกี่ยวกับระบบส่งงาน</span>' +
+        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<span style="font-size:16px;font-weight:800;color:var(--text);">คำถามเกี่ยวกับระบบส่งงาน</span>' +
       '</div>' +
       makeFaqs(faqsPortfolio, 'portfolio') +
     '</div>' +

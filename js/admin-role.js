@@ -498,10 +498,10 @@ function renderStaffPickerList(query) {
     return '<div class="staff-picker-item' + (isSel?' selected':'') + '" data-idx="' + idx + '">' +
       '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;pointer-events:none;">' + initials + '</div>' +
       '<div style="min-width:0;pointer-events:none;">' +
-        '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
-        '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+        '<p style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+        '<p style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
           (s.group ? esc2(s.group) : '') +
-          (isHead ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
+          (isHead ? ' · <span style="color:var(--amber);font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
           (s.email ? ' · ' + esc2(s.email) : '') +
         '</p>' +
       '</div>' +
@@ -552,10 +552,10 @@ function renderHogPickerList(query) {
     return '<div class="staff-picker-item' + (isSel?' selected':'') + '" data-hog-idx="' + idx + '">' +
       '<div style="width:30px;height:30px;border-radius:50%;background:' + colors[ci] + ';display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0;pointer-events:none;">' + initials + '</div>' +
       '<div style="min-width:0;pointer-events:none;">' +
-        '<p style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
-        '<p style="font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+        '<p style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(s.name) + '</p>' +
+        '<p style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
           (s.group ? esc2(s.group) : '') +
-          (isHead ? ' · <span style="color:#d97706;font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
+          (isHead ? ' · <span style="color:var(--amber);font-weight:700;">⭐ หัวหน้ากลุ่มสาระ</span>' : '') +
           (s.email ? ' · ' + esc2(s.email) : '') +
         '</p>' +
       '</div>' +
@@ -609,13 +609,13 @@ function renderStats(){
     {label:'กลุ่มงาน',      val:16, icon:'layout-grid',         get color(){return cssVar('--role-hr-color');},       get bg(){return cssVar('--role-hr-bg');}},
   ];
   document.getElementById('statsRow').innerHTML=statData.map(function(s){
-    return '<div style="background:white;border-radius:14px;border:1px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:var(--gap-item);box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
+    return '<div style="background:white;border-radius:14px;border:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:var(--gap-item);box-shadow:0 2px 6px rgba(0,0,0,.04);">' +
       '<div style="width:38px;height:38px;background:'+s.bg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="'+s.icon+'" style="width:17px;height:17px;color:'+s.color+';"></i>' +
       '</div>' +
       '<div>' +
-        '<p style="font-size:10px;color:#64748b;font-weight:700;">'+s.label+'</p>' +
-        '<p style="font-size:22px;font-weight:800;line-height:1.1;color:#1e293b;">'+s.val+'</p>' +
+        '<p style="font-size:10px;color:var(--text2);font-weight:700;">'+s.label+'</p>' +
+        '<p style="font-size:22px;font-weight:800;line-height:1.1;color:var(--text);">'+s.val+'</p>' +
       '</div></div>';
   }).join('');
   lucide.createIcons();
@@ -641,13 +641,13 @@ function renderGroupView(){
     html+='<i data-lucide="'+g.icon+'" style="width:16px;height:16px;color:'+g.color+';"></i></div>';
     html+='<div style="flex:1;min-width:0;">';
     html+='<p style="font-weight:800;font-size:14px;color:'+g.color+';">'+g.label+'</p>';
-    html+='<p style="font-size:11px;color:#64748b;">'+g.subtitle+'</p></div>';
+    html+='<p style="font-size:11px;color:var(--text2);">'+g.subtitle+'</p></div>';
     html+='<span style="font-size:11px;font-weight:800;background:'+g.color+';color:white;padding:2px 9px;border-radius:20px;flex-shrink:0;">'+members.length+' คน</span>';
     html+='</div>';
     /* Members */
     html+='<div style="padding:12px;display:flex;flex-direction:column;gap:var(--gap-tight);">';
     if(isEmpty){
-      html+='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;font-style:italic;">ไม่มี Admin ในกลุ่มนี้</div>';
+      html+='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-style:italic;">ไม่มี Admin ในกลุ่มนี้</div>';
     } else {
       members.forEach(function(a){
         html+=renderAdminMiniCard(a, g.key==='super');
@@ -669,7 +669,7 @@ function renderAdminMiniCard(a, isSuperCard){
     return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
       '<i data-lucide="'+p.icon+'" style="width:9px;height:9px;"></i>'+p.label+'</span>';
   }).join('');
-  if(!permBadges) permBadges='<span style="font-size:10px;color:#94a3b8;font-style:italic;">ยังไม่มีสิทธิ์</span>';
+  if(!permBadges) permBadges='<span style="font-size:10px;color:var(--text3);font-style:italic;">ยังไม่มีสิทธิ์</span>';
 
   var superBadge=isSA?'<span style="font-size:9px;background:'+cssVar('--role-super-badge-bg')+';color:white;padding:1px 7px;border-radius:7px;font-weight:800;">⭐ SuperAdmin</span>':'';
 
@@ -681,14 +681,14 @@ function renderAdminMiniCard(a, isSuperCard){
       '</div>';
   }
 
-  return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
-    '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
+  return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid var(--bg-alt);border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\'var(--bg-alt)\'">' +
+    '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
     '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px;">' +
-        '<p style="font-size:13px;font-weight:700;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>' +
+        '<p style="font-size:13px;font-weight:700;color:var(--text);">'+esc2(a.data.name||a.email)+'</p>' +
         superBadge +
       '</div>' +
-      '<p style="font-size:11px;color:#94a3b8;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc2(a.email)+'</p>' +
+      '<p style="font-size:11px;color:var(--text3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc2(a.email)+'</p>' +
       '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+permBadges+'</div>' +
     '</div>' +
     actions +
@@ -699,7 +699,7 @@ function renderAdminMiniCard(a, isSuperCard){
 function renderListView(){
   var el=document.getElementById('adminListEl');
   var list=filterAdmins(allAdmins);
-  if(!list.length){el.innerHTML='<div class="empty-state"><i data-lucide="search-x" style="width:40px;height:40px;margin:0 auto 10px;display:block;color:#cbd5e1;"></i>ไม่พบผลลัพธ์</div>';lucide.createIcons();return;}
+  if(!list.length){el.innerHTML='<div class="empty-state"><i data-lucide="search-x" style="width:40px;height:40px;margin:0 auto 10px;display:block;color:var(--border-mid);"></i>ไม่พบผลลัพธ์</div>';lucide.createIcons();return;}
   el.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
@@ -710,22 +710,22 @@ function renderListView(){
       return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
         '<i data-lucide="'+p.icon+'" style="width:9px;height:9px;"></i>'+p.label+'</span>';
     }).join('');
-    if(!permBadges) permBadges='<span style="font-size:11px;color:#94a3b8;font-style:italic;">ยังไม่มีสิทธิ์</span>';
+    if(!permBadges) permBadges='<span style="font-size:11px;color:var(--text3);font-style:italic;">ยังไม่มีสิทธิ์</span>';
 
-    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#0d1b2a,#415a77);color:white;padding:2px 8px;border-radius:8px;font-weight:800;">⭐ SuperAdmin</span>':'';
+    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,var(--purple),var(--purple-mid));color:white;padding:2px 8px;border-radius:8px;font-weight:800;">⭐ SuperAdmin</span>':'';
     var actions=isSA?'':
       '<div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">' +
         '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" style="background:var(--accent-tint);color:var(--accent);"><i data-lucide="settings-2" style="width:13px;height:13px;"></i><span style="font-size:11px;font-weight:700;margin-left:3px;">แก้ไขสิทธิ์</span></button>' +
         '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
-    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
+    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
       '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#778da9':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+
-          '<p style="font-weight:700;font-size:14px;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
+          '<p style="font-weight:700;font-size:14px;color:var(--text);">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
         '</div>'+
-        '<p style="font-size:11px;color:#94a3b8;margin-bottom:6px;">'+esc2(a.email)+'</p>'+
+        '<p style="font-size:11px;color:var(--text3);margin-bottom:6px;">'+esc2(a.email)+'</p>'+
         '<div style="display:flex;flex-wrap:wrap;gap:5px;">'+permBadges+'</div>'+
       '</div>'+
       actions+
@@ -738,7 +738,7 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="19" style="text-align:center;padding:52px;color:#94a3b8;font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="19" style="text-align:center;padding:52px;color:var(--text3);font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
@@ -751,45 +751,45 @@ function renderMatrix(){
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
       var canToggle=!isSA&&pk!=='admins';
       if(canToggle){
-        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--bg-alt);">' +
           '<button onclick="openQuickPerm(\''+esc(a.email)+'\',\''+pk+'\','+has+')" title="คลิกเพื่อเปลี่ยน" style="background:none;border:none;cursor:pointer;padding:0;">' +
             (has
               ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:'+pd.bg+';border-radius:8px;border:1.5px solid '+pd.border+';">' +
                   '<i data-lucide="check" style="width:13px;height:13px;color:'+pd.color+';"></i></span>'
-              : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f8fafc;border-radius:8px;border:1.5px solid #e2e8f0;">' +
-                  '<i data-lucide="minus" style="width:11px;height:11px;color:#cbd5e1;"></i></span>'
+              : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">' +
+                  '<i data-lucide="minus" style="width:11px;height:11px;color:var(--border-mid);"></i></span>'
             ) +
           '</button></td>';
       } else {
-        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+        return '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--bg-alt);">' +
           (has
             ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:'+pd.bg+';border-radius:8px;border:1.5px solid '+pd.border+';margin:0 auto;">' +
                 '<i data-lucide="check" style="width:13px;height:13px;color:'+pd.color+';"></i></span>'
-            : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f8fafc;border-radius:8px;border:1.5px solid #e2e8f0;margin:0 auto;">' +
-                '<i data-lucide="minus" style="width:11px;height:11px;color:#cbd5e1;"></i></span>'
+            : '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);margin:0 auto;">' +
+                '<i data-lucide="minus" style="width:11px;height:11px;color:var(--border-mid);"></i></span>'
           ) +
         '</td>';
       }
     }).join('');
 
     var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=48';
-    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,#0d1b2a,#415a77);color:white;padding:1px 6px;border-radius:6px;font-weight:800;margin-left:4px;">SA</span>':'';
+    var superBadge=isSA?'<span style="font-size:9px;background:linear-gradient(135deg,var(--purple),var(--purple-mid));color:white;padding:1px 6px;border-radius:6px;font-weight:800;margin-left:4px;">SA</span>':'';
 
     var actionCell=isSA
-      ? '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">–</td>'
-      : '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;">' +
+      ? '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--bg-alt);">–</td>'
+      : '<td style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--bg-alt);">' +
           '<div style="display:flex;align-items:center;justify-content:center;gap:5px;">' +
             '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" title="แก้ไข"><i data-lucide="settings-2" style="width:12px;height:12px;"></i></button>' +
             '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>' +
           '</div></td>';
 
     return '<tr style="background:'+(isSA?'#e0e1dd':'white')+';">' +
-      '<td style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">' +
+      '<td style="padding:10px 16px;border-bottom:1px solid var(--bg-alt);">' +
         '<div style="display:flex;align-items:center;gap:9px;">' +
-          '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +
+          '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +
           '<div>' +
-            '<p style="font-size:12px;font-weight:700;color:#1e293b;display:inline;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
-            '<p style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">'+esc2(a.email)+'</p>' +
+            '<p style="font-size:12px;font-weight:700;color:var(--text);display:inline;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
+            '<p style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">'+esc2(a.email)+'</p>' +
           '</div>' +
         '</div></td>' +
       cells +

@@ -98,7 +98,7 @@ function fetchHistoryPage(page) {
   historyLoading = true;
 
   var tbody = document.getElementById('historyTbody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>';
 
   var query = db.collection('ipad_borrows').orderBy('createdAt', 'desc').limit(HISTORY_PAGE_SIZE);
   if (page > 1 && historyPageCursors[page - 2]) {
@@ -114,7 +114,7 @@ function fetchHistoryPage(page) {
     updateHistoryPagerUI();
   }).catch(function(e) {
     showToast('โหลดประวัติผิดพลาด: ' + e.message, 'error');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--red-bright);">โหลดข้อมูลไม่สำเร็จ</td></tr>';
   }).then(function() {
     historyLoading = false;
   });
@@ -288,7 +288,7 @@ function renderStatsCharts() {
     totalDevices
   );
 
-  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['var(--accent)','#f59e0b']);
+  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['#1d4ed8','#f59e0b']);
 }
 function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
   var el = document.getElementById('chartAccessories');
@@ -397,7 +397,7 @@ function renderBorrowPanel() {
       '<div class="tbl-wrap"><table class="data-table borrow-out-table"><thead><tr>' +
         '<th>ผู้ยืม</th><th>ชั้น/ห้อง หรือ กลุ่มสาระ</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th></th>' +
       '</tr></thead><tbody id="borrowOutTbody">' +
-        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -434,18 +434,18 @@ function renderBorrowOutTable() {
            (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
   });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบรายการที่ถูกยืมอยู่</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">ไม่พบรายการที่ถูกยืมอยู่</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(b) {
     var isStaff = b.borrowerType === 'staff';
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + '<br>' + (isStaff ? '<span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '<span style="font-size:10px;color:var(--accent);font-weight:700;">(นักเรียน)</span>') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + '<br>' + (isStaff ? '<span style="font-size:10px;color:var(--accent-warn);font-weight:700;">(บุคลากร)</span>' : '<span style="font-size:10px;color:var(--accent);font-weight:700;">(นักเรียน)</span>') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
+        '<td style="white-space:nowrap;">' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:var(--text3);">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
+        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:var(--text3);">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
         '<td><div style="display:flex;gap:6px;">' +
           '<button class="btn-icon" onclick="openEditBorrowModal(\'' + b.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>' +
           '<button class="btn-icon" onclick="openReturnModal(\'' + b.id + '\')" title="คืนอุปกรณ์"><i data-lucide="corner-down-left" style="width:14px;height:14px;"></i></button>' +
@@ -525,7 +525,7 @@ function onBorrowDeviceInput() {
   } else {
     var bOut = borrowedMap[d.id];
     if (bOut) {
-      hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ' + esc2(d.friendlyName) +
+      hint.innerHTML = '<span style="color:var(--red);font-weight:700;">⚠️ ' + esc2(d.friendlyName) +
         ' ถูกยืมอยู่แล้ว โดย ' + esc2(bOut.studentName) + ' (ห้อง ' + esc2(bOut.grade) + '/' + esc2(bOut.room) + ')</span>';
     } else {
       hint.textContent = d.friendlyName + '  — ว่าง พร้อมให้ยืม';
@@ -558,7 +558,7 @@ function renderDeviceAcList(listEl, items, borrowedMap, input) {
     var sub = document.createElement('div');
     sub.className = 'ac-sub';
     if (bOut) {
-      sub.innerHTML = esc2(dv.serialNumber) + ' — <span style="color:#dc2626;">ถูกยืมโดย ' + esc2(bOut.studentName) + '</span>';
+      sub.innerHTML = esc2(dv.serialNumber) + ' — <span style="color:var(--red);">ถูกยืมโดย ' + esc2(bOut.studentName) + '</span>';
     } else {
       sub.textContent = dv.serialNumber;
     }
@@ -629,7 +629,7 @@ function renderStudentsPanel() {
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>เลขประจำตัว</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>สถานะยืม iPad</th><th></th>' +
       '</tr></thead><tbody id="studentsTbody">' +
-        '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -731,7 +731,7 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: datasetLabel1, data: totals, backgroundColor: 'var(--accent)', borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel1, data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
         { label: datasetLabel2, data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
       ]
     },
@@ -763,7 +763,7 @@ function renderStudentsTable() {
     return true;
   }).sort(function(a,b) { return (a.grade+a.room+a.studentId).localeCompare(b.grade+b.room+b.studentId, 'th'); });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีข้อมูลนักเรียน</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">ไม่มีข้อมูลนักเรียน</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(s) {
@@ -803,7 +803,7 @@ function renderStaffPanel() {
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>กลุ่มสาระ/งาน</th><th>สถานะยืม iPad</th>' +
       '</tr></thead><tbody id="staffTbody">' +
-        '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -820,7 +820,7 @@ function renderStaffTable() {
     return ((s.name||'') + (s.position||'') + (s.group||'')).toLowerCase().indexOf(q) !== -1;
   }).sort(function(a,b) { return (a.name||'').localeCompare(b.name||'', 'th'); });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูลบุคลากร</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text3);">ไม่พบข้อมูลบุคลากร</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(s) {
@@ -857,7 +857,7 @@ function renderDevicesPanel() {
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>Friendly Name</th><th>Asset Number</th><th>Serial Number</th><th>สถานะ</th><th></th>' +
       '</tr></thead><tbody id="devicesTbody">' +
-        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -867,7 +867,7 @@ function renderDevicesTable() {
   var tbody = document.getElementById('devicesTbody');
   if (!tbody) return;
   if (!DEVICES.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ยังไม่มีข้อมูล iPad — ลองนำเข้าไฟล์ CSV</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text3);">ยังไม่มีข้อมูล iPad — ลองนำเข้าไฟล์ CSV</td></tr>';
     return;
   }
   var q = (document.getElementById('deviceSearch') ? document.getElementById('deviceSearch').value : '').trim().toLowerCase();
@@ -880,7 +880,7 @@ function renderDevicesTable() {
     return (a.assetNumber||'').localeCompare((b.assetNumber||''), 'th', { numeric: true, sensitivity: 'base' });
   });
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(function(d) {
@@ -924,7 +924,7 @@ function onClaimDeviceInput() {
     claimSelectedBorrow = null;
     document.getElementById('claimSwapGroup').style.display = 'none';
   } else if (d.condition === 'claim') {
-    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ เครื่องนี้ถูกส่งเคลมอยู่แล้ว</span>';
+    hint.innerHTML = '<span style="color:var(--red);font-weight:700;">⚠️ เครื่องนี้ถูกส่งเคลมอยู่แล้ว</span>';
     claimSelectedDeviceId = null;
     claimSelectedBorrow = null;
     document.getElementById('claimSwapGroup').style.display = 'none';
@@ -932,7 +932,7 @@ function onClaimDeviceInput() {
     claimSelectedDeviceId = d.id;
     claimSelectedBorrow = borrowedMap[d.id] || null;
     if (claimSelectedBorrow) {
-      hint.innerHTML = '<span style="color:#b45309;font-weight:700;">' + esc2(d.friendlyName) +
+      hint.innerHTML = '<span style="color:var(--role-director-color);font-weight:700;">' + esc2(d.friendlyName) +
         ' — กำลังถูกยืมอยู่โดย ' + esc2(claimSelectedBorrow.studentName) + ' (ห้อง ' + esc2(claimSelectedBorrow.grade) + '/' + esc2(claimSelectedBorrow.room) + ')</span>';
       document.getElementById('claimSwapBorrowerName').textContent = claimSelectedBorrow.studentName;
       document.getElementById('claimSwapGroup').style.display = 'block';
@@ -977,7 +977,7 @@ function onClaimNewDeviceInput() {
     hint.innerHTML = v ? 'ไม่พบข้อมูลเครื่องนี้ในระบบ' : '';
     claimNewDeviceId = null;
   } else if (d.id === claimSelectedDeviceId || d.condition === 'claim' || borrowedMap[d.id]) {
-    hint.innerHTML = '<span style="color:#dc2626;font-weight:700;">⚠️ ไม่สามารถเลือกเครื่องนี้ได้ (ถูกยืม/ส่งเคลมอยู่ หรือเป็นเครื่องเดิม)</span>';
+    hint.innerHTML = '<span style="color:var(--red);font-weight:700;">⚠️ ไม่สามารถเลือกเครื่องนี้ได้ (ถูกยืม/ส่งเคลมอยู่ หรือเป็นเครื่องเดิม)</span>';
     claimNewDeviceId = null;
   } else {
     claimNewDeviceId = d.id;
@@ -1016,7 +1016,7 @@ function renderClaimsPanel() {
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>เครื่อง</th><th>Serial</th><th>รายละเอียดปัญหา</th><th>วันที่ส่งเคลม</th><th>แจ้งโดย</th><th></th>' +
       '</tr></thead><tbody id="claimsTbody">' +
-        '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>' +
 
@@ -1028,7 +1028,7 @@ function renderClaimsPanel() {
       '<div class="tbl-wrap"><table class="data-table"><thead><tr>' +
         '<th>อุปกรณ์เสริม</th><th>รายละเอียดปัญหา</th><th>วันที่แจ้ง</th><th>แจ้งโดย</th><th></th>' +
       '</tr></thead><tbody id="accClaimsTbody">' +
-        '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
     '</div>'
   );
@@ -1048,7 +1048,7 @@ function renderClaimsTable() {
   });
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">' +
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);">' +
       (claimed.length ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีเครื่องที่ส่งเคลมอยู่ในขณะนี้ 🎉') + '</td></tr>';
     return;
   }
@@ -1058,9 +1058,9 @@ function renderClaimsTable() {
       '<tr>' +
         '<td style="font-weight:700;">' + esc2(d.friendlyName) + '</td>' +
         '<td>' + esc2(d.serialNumber) + '</td>' +
-        '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td>' + (d.claimNote ? esc2(d.claimNote) : '<span style="color:var(--text3);">— ไม่ได้ระบุ —</span>') + '</td>' +
         '<td style="white-space:nowrap;">' + (d.claimDate ? fmtDate(d.claimDate) : '-') + '</td>' +
-        '<td>' + esc2(d.claimReportedBy || '-') + (d.claimUpdatedBy ? '<br><span style="font-size:10px;color:#94a3b8;">บันทึกโดย ' + esc2(d.claimUpdatedBy) + '</span>' : '') + '</td>' +
+        '<td>' + esc2(d.claimReportedBy || '-') + (d.claimUpdatedBy ? '<br><span style="font-size:10px;color:var(--text3);">บันทึกโดย ' + esc2(d.claimUpdatedBy) + '</span>' : '') + '</td>' +
         '<td><button class="btn-secondary btn-sm" onclick="openClaimStatusModal(\'' + d.id + '\')"><i data-lucide="wrench" style="width:14px;height:14px;"></i> จัดการ</button></td>' +
       '</tr>'
     );
@@ -1082,7 +1082,7 @@ function renderAccessoryClaimsTable() {
   if (countEl) countEl.textContent = ACCESSORY_CLAIMS.length;
 
   if (!ACCESSORY_CLAIMS.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">ไม่มีอุปกรณ์เสริมที่ส่งเคลมอยู่ในขณะนี้ 🎉</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text3);">ไม่มีอุปกรณ์เสริมที่ส่งเคลมอยู่ในขณะนี้ 🎉</td></tr>';
     return;
   }
 
@@ -1090,7 +1090,7 @@ function renderAccessoryClaimsTable() {
     return (
       '<tr>' +
         '<td style="font-weight:700;"><span class="badge-claim">' + esc2(c.name) + '</span></td>' +
-        '<td>' + (c.note ? esc2(c.note) : '<span style="color:#94a3b8;">— ไม่ได้ระบุ —</span>') + '</td>' +
+        '<td>' + (c.note ? esc2(c.note) : '<span style="color:var(--text3);">— ไม่ได้ระบุ —</span>') + '</td>' +
         '<td style="white-space:nowrap;">' + fmtDate(c.createdAt) + '</td>' +
         '<td>' + esc2(c.reportedBy || '-') + '</td>' +
         '<td><button class="btn-secondary btn-sm" onclick="resolveAccessoryClaim(\'' + c.id + '\')"><i data-lucide="check" style="width:14px;height:14px;"></i> ปิดเคลม</button></td>' +
@@ -1160,7 +1160,7 @@ function renderHistoryPanel() {
       '<div class="tbl-wrap"><table class="data-table history-table"><thead><tr>' +
         '<th>นักเรียน</th><th>ชั้น/ห้อง</th><th>เครื่อง (Serial)</th><th>อุปกรณ์เสริม</th><th>วันที่ยืม</th><th>วันที่คืน</th><th>สถานะ</th>' +
       '</tr></thead><tbody id="historyTbody">' +
-        '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">กำลังโหลด...</td></tr>' +
+        '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">กำลังโหลด...</td></tr>' +
       '</tbody></table></div>' +
       '<div style="display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap;">' +
         '<button class="btn-secondary" id="historyPrevBtn" onclick="historyPrevPage()" disabled><i data-lucide="chevron-left" style="width:14px;height:14px;"></i> หน้าก่อนหน้า</button>' +
@@ -1182,18 +1182,18 @@ function renderHistoryTable() {
            (b.serialNumber || '').toLowerCase().indexOf(q) !== -1;
   });
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">ไม่พบข้อมูล</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(b) {
     return (
       '<tr>' +
-        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? '<br><span style="font-size:10px;color:#f59e0b;font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
+        '<td style="font-weight:700;">' + esc2(b.studentName) + (b.borrowerType === 'staff' ? '<br><span style="font-size:10px;color:var(--accent-warn);font-weight:700;">(บุคลากร)</span>' : '') + '</td>' +
         '<td>' + esc2(b.grade) + ' / ' + esc2(b.room) + '</td>' +
-        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:#94a3b8;">' + esc2(b.serialNumber) + '</span></td>' +
+        '<td>' + esc2(b.friendlyName) + '<br><span style="font-size:11px;color:var(--text3);">' + esc2(b.serialNumber) + '</span></td>' +
         '<td>' + accBadges(b.accessories, b.status) + '</td>' +
-        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
-        '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:#94a3b8;">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
+        '<td>' + fmtDate(b.borrowDate) + (b.recordedBy ? '<br><span style="font-size:10px;color:var(--text3);">โดย ' + esc2(b.recordedBy) + '</span>' : '') + '</td>' +
+        '<td>' + (b.status === 'in' ? (fmtDate(b.returnDate) + (b.returnedBy ? '<br><span style="font-size:10px;color:var(--text3);">โดย ' + esc2(b.returnedBy) + '</span>' : '')) : '-') + '</td>' +
         '<td>' + (b.status === 'in' ? (b.returnCondition === 'claim' ? '<span class="badge-claim">คืนแล้ว (ส่งเคลม)</span>' : '<span class="ipad-badge-free">คืนแล้ว</span>') : '<span class="ipad-badge-borrowed">ยังไม่คืน</span>') + '</td>' +
       '</tr>'
     );
@@ -1441,7 +1441,7 @@ function openReturnModal(id) {
     var icon = RETURN_ACC_ICONS[name] || 'package';
     return buildReturnRow('retAcc_' + i, icon, name, null);
   }).join('');
-  if (!accs.length) html += '<p style="font-size:12px;color:#94a3b8;">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
+  if (!accs.length) html += '<p style="font-size:12px;color:var(--text3);">(ไม่มีอุปกรณ์เสริมที่ยืมเพิ่ม)</p>';
   document.getElementById('returnItemsList').innerHTML = html;
   document.getElementById('returnClaimNote').value = '';
   document.getElementById('returnClaimNoteGroup').style.display = 'none';

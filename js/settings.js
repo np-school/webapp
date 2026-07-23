@@ -39,11 +39,11 @@ var annImgExistUrl = '';
 function loadAnnouncements() {
   var wrap = document.getElementById('annListWrap');
   if (!wrap) return;
-  wrap.innerHTML = '<div style="text-align:center;padding:32px 0;color:#94a3b8;font-size:13px;">กำลังโหลด...</div>';
+  wrap.innerHTML = '<div style="text-align:center;padding:32px 0;color:var(--text3);font-size:13px;">กำลังโหลด...</div>';
   db.collection('announcements').orderBy('createdAt','desc').limit(50).get()
     .then(function(snap) {
       if (snap.empty) {
-        wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8;font-size:13px;">ยังไม่มีประกาศ</div>';
+        wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px;">ยังไม่มีประกาศ</div>';
         return;
       }
       wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">';
@@ -59,20 +59,20 @@ function loadAnnouncements() {
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
               '<span class="ann-badge ' + t.badgeClass + '">' + t.label + '</span>' +
-              (d.active ? '' : '<span class="ann-badge" style="background:#f1f5f9;color:#94a3b8;">ซ่อนอยู่</span>') +
-              '<span style="font-size:11px;color:#94a3b8;margin-left:auto;">' + date + '</span>' +
+              (d.active ? '' : '<span class="ann-badge" style="background:var(--bg-alt);color:var(--text3);">ซ่อนอยู่</span>') +
+              '<span style="font-size:11px;color:var(--text3);margin-left:auto;">' + date + '</span>' +
             '</div>' +
-            '<div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">' + (d.title||'') + '</div>' +
-            (d.body ? '<div style="font-size:13px;color:#64748b;line-height:1.6;">' + (d.body||'') + '</div>' : '') +
+            '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">' + (d.title||'') + '</div>' +
+            (d.body ? '<div style="font-size:13px;color:var(--text2);line-height:1.6;">' + (d.body||'') + '</div>' : '') +
           '</div>' +
           '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
-            '<button onclick="openAnnModal(\'' + doc.id + '\')" style="padding:6px 10px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#475569;font-family:Sarabun,sans-serif;">' +
+            '<button onclick="openAnnModal(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--bg-alt);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--text-mid);font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="edit-3" style="width:12px;height:12px;"></i> แก้ไข' +
             '</button>' +
             '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? '#fff7ed' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? '#92400e' : '#15803d') + ';font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="' + (d.active ? 'eye-off' : 'eye') + '" style="width:12px;height:12px;"></i> ' + (d.active ? 'ซ่อน' : 'แสดง') +
             '</button>' +
-            '<button onclick="deleteAnn(\'' + doc.id + '\')" style="padding:6px 10px;background:#fee2e2;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#b91c1c;font-family:Sarabun,sans-serif;">' +
+            '<button onclick="deleteAnn(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--red-light);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--red-dark);font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="trash-2" style="width:12px;height:12px;"></i> ลบ' +
             '</button>' +
           '</div>' +
@@ -81,7 +81,7 @@ function loadAnnouncements() {
       wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">' + html + '</div>';
       lucide.createIcons();
     })
-    .catch(function() { wrap.innerHTML = '<div style="text-align:center;padding:32px;color:#ef4444;font-size:13px;">โหลดข้อมูลไม่ได้</div>'; });
+    .catch(function() { wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--red-bright);font-size:13px;">โหลดข้อมูลไม่ได้</div>'; });
 }
 
 /* ══════════════════════ RENDER ══════════════════════ */
@@ -136,11 +136,11 @@ function renderPage() {
       '<div class="tab-pane" data-panel="announcements">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
           '<div class="settings-section-title" style="margin-bottom:0;">ประกาศข่าวสำหรับ Admin</div>' +
-          '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--accent,#1d4ed8);color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
+          '<button onclick="openAnnModal(null)" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--accent,var(--blue));color:white;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;">' +
             '<i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มประกาศ' +
           '</button>' +
         '</div>' +
-        '<div id="annListWrap"><div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">คลิกแท็บนี้เพื่อโหลดประกาศ</div></div>' +
+        '<div id="annListWrap"><div style="text-align:center;padding:40px;color:var(--text3);font-size:13px;">คลิกแท็บนี้เพื่อโหลดประกาศ</div></div>' +
       '</div>' : '')
   );
 }
@@ -156,15 +156,15 @@ function getRoleShades(roleKey) {
 /* ══ ธีมสีทั้งเว็บ — read-only (ผู้ใช้ทั่วไป/แอดมินธรรมดา) ══ */
 function renderThemeReadOnly() {
   return (
-    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:16px;">สีของเว็บไซต์ถูกกำหนดโดยผู้ดูแลระบบส่วนกลาง ใช้ค่าเดียวกันทุกหน้า/ทุกผู้ใช้</p>' +
+    '<p style="font-size:13px;color:var(--text2,var(--text2));margin-bottom:16px;">สีของเว็บไซต์ถูกกำหนดโดยผู้ดูแลระบบส่วนกลาง ใช้ค่าเดียวกันทุกหน้า/ทุกผู้ใช้</p>' +
     '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
       ['member', 'staff'].map(function(roleKey) {
         var shades = getRoleShades(roleKey);
         var meta = THEME_ROLES[roleKey];
         return (
-          '<div style="padding:14px 18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;min-width:230px;">' +
-            '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
-            '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">' + meta.desc + '</div>' +
+          '<div style="padding:14px 18px;border:1px solid var(--border,var(--border));border-radius:14px;min-width:230px;">' +
+            '<div style="font-weight:700;font-size:13px;color:var(--text);">' + meta.label + '</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">' + meta.desc + '</div>' +
             '<div style="display:flex;gap:6px;">' +
               SHADE_SLOTS.map(function(slot) {
                 return '<div title="' + slot.label + ' (' + slot.hint + '): ' + shades[slot.key] + '" style="width:32px;height:32px;border-radius:8px;background:' + shades[slot.key] + ';box-shadow:0 2px 6px rgba(0,0,0,.12);"></div>';
@@ -182,7 +182,7 @@ function renderThemeReadOnly() {
    เป็นค่าเริ่มต้น แล้วปรับทีละสีต่อได้อิสระ พร้อม preview สดใน mockup การ์ด */
 function renderThemeEditor() {
   return (
-    '<p style="font-size:13px;color:var(--text2,#64748b);margin-bottom:18px;">กรอกสีหลักแล้วกด "สร้างเฉดอัตโนมัติ" เพื่อได้ชุดสี 4 ระดับ จากนั้นปรับแต่ละสีเพิ่มเติมได้ตามต้องการ</p>' +
+    '<p style="font-size:13px;color:var(--text2,var(--text2));margin-bottom:18px;">กรอกสีหลักแล้วกด "สร้างเฉดอัตโนมัติ" เพื่อได้ชุดสี 4 ระดับ จากนั้นปรับแต่ละสีเพิ่มเติมได้ตามต้องการ</p>' +
     '<div class="theme-cards-row" style="max-width:none;grid-template-columns:1fr 1fr;">' +
       ['member', 'staff'].map(renderThemeEditorCard).join('') +
     '</div>' +
@@ -194,7 +194,7 @@ function renderThemeEditorCard(roleKey) {
   var meta   = THEME_ROLES[roleKey];
   var shades = getRoleShades(roleKey);
   return (
-    '<div style="border:1px solid var(--border,#e2e8f0);border-radius:14px;overflow:hidden;">' +
+    '<div style="border:1px solid var(--border,var(--border));border-radius:14px;overflow:hidden;">' +
       /* live preview mockup */
       '<div id="preview-navbar-' + roleKey + '" class="theme-navbar-strip" style="background:' + shades.primary + ';">' +
         '<div class="strip-circle"></div>' +
@@ -208,15 +208,15 @@ function renderThemeEditorCard(roleKey) {
           '<div class="mock-line"></div><div class="mock-line s"></div>' +
         '</div>' +
       '</div>' +
-      '<div style="padding:14px 16px;border-top:1px solid var(--border,#e2e8f0);">' +
-        '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + meta.label + '</div>' +
-        '<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">' + meta.desc + '</div>' +
+      '<div style="padding:14px 16px;border-top:1px solid var(--border,var(--border));">' +
+        '<div style="font-weight:700;font-size:13px;color:var(--text);">' + meta.label + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:12px;">' + meta.desc + '</div>' +
 
         /* สีหลัก + ปุ่มสร้างเฉดอัตโนมัติ */
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
           '<input type="color" id="color-' + roleKey + '-primary" value="' + shades.primary + '" oninput="onShadeInput(\'' + roleKey + '\',\'primary\')" style="width:38px;height:38px;border:none;border-radius:9px;cursor:pointer;padding:0;background:none;">' +
-          '<input type="text" id="hex-' + roleKey + '-primary" value="' + shades.primary + '" oninput="onShadeHexInput(\'' + roleKey + '\',\'primary\')" maxlength="7" style="width:82px;padding:7px 9px;border:1px solid var(--border,#e2e8f0);border-radius:8px;font-size:11px;font-family:monospace;text-transform:uppercase;">' +
-          '<button onclick="autoGenerateShades(\'' + roleKey + '\')" title="สร้างเฉดอัตโนมัติจากสีหลัก" style="margin-left:auto;padding:7px 10px;border:1px solid var(--border,#e2e8f0);background:#f8fafc;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2,#64748b);font-family:Sarabun,sans-serif;">↻ สร้างเฉดอัตโนมัติ</button>' +
+          '<input type="text" id="hex-' + roleKey + '-primary" value="' + shades.primary + '" oninput="onShadeHexInput(\'' + roleKey + '\',\'primary\')" maxlength="7" style="width:82px;padding:7px 9px;border:1px solid var(--border,var(--border));border-radius:8px;font-size:11px;font-family:monospace;text-transform:uppercase;">' +
+          '<button onclick="autoGenerateShades(\'' + roleKey + '\')" title="สร้างเฉดอัตโนมัติจากสีหลัก" style="margin-left:auto;padding:7px 10px;border:1px solid var(--border,var(--border));background:var(--bg);border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2,var(--text2));font-family:Sarabun,sans-serif;">↻ สร้างเฉดอัตโนมัติ</button>' +
         '</div>' +
 
         /* dark / light / tint แก้ทีละสี */
@@ -225,8 +225,8 @@ function renderThemeEditorCard(roleKey) {
             var slot = SHADE_SLOTS.filter(function(s) { return s.key === slotKey; })[0];
             return (
               '<div style="flex:1;">' +
-                '<div style="font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:2px;">' + slot.label + '</div>' +
-                '<div style="font-size:9px;color:#cbd5e1;margin-bottom:4px;">' + slot.hint + '</div>' +
+                '<div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:2px;">' + slot.label + '</div>' +
+                '<div style="font-size:9px;color:var(--border-mid);margin-bottom:4px;">' + slot.hint + '</div>' +
                 '<input type="color" id="color-' + roleKey + '-' + slotKey + '" value="' + shades[slotKey] + '" oninput="onShadeInput(\'' + roleKey + '\',\'' + slotKey + '\')" style="width:100%;height:30px;border:none;border-radius:7px;cursor:pointer;padding:0;background:none;">' +
               '</div>'
             );

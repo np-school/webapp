@@ -1,3 +1,8 @@
+
+/* ── Helper: อ่าน CSS variable จาก :root (ใช้กับ canvas ที่ไม่รองรับ var() ตรงๆ) ── */
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
 /* ── คำนวณปีการศึกษาและภาคเรียนอัตโนมัติจากวันที่ปัจจุบัน ──
    ภาคเรียนที่ 1: เปิด 16 พ.ค.  → ถึง 31 ต.ค.
    ภาคเรียนที่ 2: เปิด  1 พ.ย.  → ถึง 15 พ.ค. ปีถัดไป
@@ -47,7 +52,7 @@ var _sharedDriveId = null;
 
 /* ─── 4 ฝ่ายบริหาร ─── */
 var DEPARTMENTS = [
-  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)' },
+  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff' },
   { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'#16a34a', bg:'#f0fdf4' },
   { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'#7c3aed', bg:'#f5f3ff' },
   { id:'general',   label:'ฝ่ายบริหารทั่วไป',   icon:'building-2',     color:'#ea580c', bg:'#fff7ed' },
@@ -362,9 +367,9 @@ function renderDocList() {
         '<div style="width:32px;height:32px;border-radius:9px;background:' + dep.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
           '<i data-lucide="' + dep.icon + '" style="width:16px;height:16px;color:' + dep.color + ';"></i>' +
         '</div>' +
-        '<span style="font-size:14px;font-weight:800;color:#0f172a;">' + dep.label + '</span>' +
-        '<div style="flex:1;height:1px;background:#e2e8f0;"></div>' +
-        '<span style="font-size:11px;font-weight:700;color:#94a3b8;">' + items.length + ' รายการ</span>' +
+        '<span style="font-size:14px;font-weight:800;color:var(--text-dark);">' + dep.label + '</span>' +
+        '<div style="flex:1;height:1px;background:var(--border);"></div>' +
+        '<span style="font-size:11px;font-weight:700;color:var(--text3);">' + items.length + ' รายการ</span>' +
       '</div>';
 
     /* รายการงานในฝ่ายนี้ */
@@ -386,7 +391,7 @@ function renderDocList() {
         } else if (allFinal) {
           statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
         } else if (allReviewed) {
-          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = 'var(--accent-dark)';
+          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
         } else {
           statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
         }
@@ -402,7 +407,7 @@ function renderDocList() {
             '</div>' +
             '<div style="flex:1;min-width:0;">' +
               '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + idx + '. ' + dt.label + '</p>' +
+                '<p style="font-size:14px;font-weight:800;color:var(--text-dark);">' + idx + '. ' + dt.label + '</p>' +
                 '<span style="padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusColor + ';">' + statusLabel + '</span>' +
               '</div>' +
 
@@ -416,32 +421,32 @@ function renderDocList() {
                       var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || '#dcfce7';
                       var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || '#15803d';
                       var files   = sub.files || [];
-                      return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">' +
+                      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
                           '<span style="font-size:12px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:2px 8px;border-radius:6px;">' + esc2(sub.courseCode) + '</span>' +
-                          '<span style="font-size:12px;font-weight:600;color:#1e293b;">' + esc2(sub.courseName) + '</span>' +
+                          '<span style="font-size:12px;font-weight:600;color:var(--text);">' + esc2(sub.courseName) + '</span>' +
                           '<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:' + sbg + ';color:' + scol + ';">' + slabel + '</span>' +
-                          '<span style="font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+                          '<span style="font-size:10px;font-weight:800;color:var(--text2);background:var(--bg-alt);padding:2px 8px;border-radius:10px;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
                         '</div>' +
-                        (sub.note ? '<p style="font-size:11px;color:#94a3b8;margin-top:4px;">· ' + esc2(sub.note) + '</p>' : '') +
+                        (sub.note ? '<p style="font-size:11px;color:var(--text3);margin-top:4px;">· ' + esc2(sub.note) + '</p>' : '') +
                         (status === 'revision' && sub.adminNote
-                          ? '<div style="margin-top:4px;padding:5px 8px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;"><p style="font-size:11px;color:#92400e;font-weight:700;">💬 ' + esc2(sub.adminNote) + '</p></div>'
+                          ? '<div style="margin-top:4px;padding:5px 8px;background:var(--amber-light);border-radius:6px;border:1px solid var(--amber-mid);"><p style="font-size:11px;color:var(--amber-dark);font-weight:700;">💬 ' + esc2(sub.adminNote) + '</p></div>'
                           : '') +
                         '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
-                          '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#f8fafc;color:#475569;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;gap:4px;">' +
+                          '<button onclick="openManageCourseModal(\'' + esc(dt.id) + '\',\'' + esc(subKey) + '\')" style="padding:5px 12px;background:var(--bg);color:var(--text-mid);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                             '<i data-lucide="pencil" style="width:11px;height:11px;"></i> จัดการไฟล์' +
                           '</button>' +
                           '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:var(--accent-tint);color:var(--accent);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--accent-light);cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                             '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
                           '</button>' +
-                          '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:#dc2626;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #fecaca;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
+                          '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:var(--red);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--red-mid);cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
                             '<i data-lucide="trash-2" style="width:11px;height:11px;"></i> ลบงาน' +
                           '</button>' +
                         '</div>' +
                       '</div>';
                     }).join('') +
                   '</div>'
-                : '<p style="font-size:11px;color:#94a3b8;margin-top:3px;">ยังไม่มีการส่งงาน</p>'
+                : '<p style="font-size:11px;color:var(--text3);margin-top:3px;">ยังไม่มีการส่งงาน</p>'
               ) +
             '</div>' +
             '<div style="flex-shrink:0;">' +
@@ -470,11 +475,11 @@ function renderCourseRows() {
   var html = '';
   courseRows.forEach(function(row, idx) {
     html +=
-      '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;">' +
+      '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px;">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
-          '<span style="font-size:12px;font-weight:800;color:#64748b;background:#e2e8f0;padding:2px 8px;border-radius:6px;">วิชาที่ ' + (idx+1) + '</span>' +
+          '<span style="font-size:12px;font-weight:800;color:var(--text2);background:var(--border);padding:2px 8px;border-radius:6px;">วิชาที่ ' + (idx+1) + '</span>' +
           (courseRows.length > 1
-            ? '<button onclick="removeCourseRow(' + idx + ')" style="margin-left:auto;padding:3px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">ลบ</button>'
+            ? '<button onclick="removeCourseRow(' + idx + ')" style="margin-left:auto;padding:3px 8px;background:var(--red-light);color:var(--red);border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">ลบ</button>'
             : '') +
         '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-bottom:8px;">' +
@@ -485,7 +490,7 @@ function renderCourseRows() {
         '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
           '<i data-lucide="file-up" style="width:22px;height:22px;color:var(--accent-light);margin-bottom:4px;"></i>' +
           '<p style="font-size:12px;font-weight:700;color:var(--accent);">คลิกเพื่อเพิ่ม PDF</p>' +
-          '<p style="font-size:10px;color:#94a3b8;margin-top:2px;">สูงสุด ' + MAX_FILES_PER_TOPIC + ' ไฟล์, PDF, 20MB</p>' +
+          '<p style="font-size:10px;color:var(--text3);margin-top:2px;">สูงสุด ' + MAX_FILES_PER_TOPIC + ' ไฟล์, PDF, 20MB</p>' +
         '</div>' +
         '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>' +
       '</div>';
@@ -505,16 +510,16 @@ function renderCourseFilePanels() {
     var files  = sub ? (sub.files || []) : [];
     var canAdd = files.length < MAX_FILES_PER_TOPIC;
     html +=
-      '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;">' +
+      '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px;">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
           '<span style="font-size:13px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:3px 10px;border-radius:8px;">' + esc2(sub ? sub.courseCode : '') + '</span>' +
-          '<span style="font-size:13px;font-weight:700;color:#1e293b;">' + esc2(sub ? sub.courseName : '') + '</span>' +
-          '<span style="font-size:11px;font-weight:800;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
+          '<span style="font-size:13px;font-weight:700;color:var(--text);">' + esc2(sub ? sub.courseName : '') + '</span>' +
+          '<span style="font-size:11px;font-weight:800;color:var(--text2);background:var(--bg-alt);padding:2px 8px;border-radius:10px;margin-left:auto;">' + files.length + '/' + MAX_FILES_PER_TOPIC + ' ไฟล์</span>' +
         '</div>' +
         '<div id="existFileList_' + idx + '">' +
           files.map(function(f, fi) {
             return '<div class="file-entry" id="ef_' + idx + '_' + fi + '">' +
-              '<i data-lucide="file-text" style="width:16px;height:16px;color:#3b82f6;flex-shrink:0;"></i>' +
+              '<i data-lucide="file-text" style="width:16px;height:16px;color:var(--blue-bright);flex-shrink:0;"></i>' +
               '<span class="file-slot-badge">' + (fi+1) + '</span>' +
               '<span class="file-entry-name" title="' + esc2(f.fileName) + '">' + esc2(f.fileName) + '</span>' +
               '<a href="' + esc2(f.fileUrl) + '" target="_blank" class="file-entry-link"><i data-lucide="external-link" style="width:14px;height:14px;"></i></a>' +
@@ -523,11 +528,11 @@ function renderCourseFilePanels() {
             '</div>' +
             '<div id="mReplaceZone_' + idx + '_' + fi + '" style="display:none;margin-bottom:6px;">' +
               '<div class="replace-zone" onclick="triggerManageReplace(\'' + esc(subKey) + '\',' + fi + ')">' +
-                '<i data-lucide="upload-cloud" style="width:18px;height:18px;color:#f59e0b;margin-bottom:3px;"></i>' +
-                '<p style="font-size:12px;font-weight:700;color:#b45309;">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (fi+1) + '</p>' +
+                '<i data-lucide="upload-cloud" style="width:18px;height:18px;color:var(--accent-warn);margin-bottom:3px;"></i>' +
+                '<p style="font-size:12px;font-weight:700;color:var(--role-director-color);">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (fi+1) + '</p>' +
               '</div>' +
               '<div id="mReplaceProgress_' + idx + '_' + fi + '" style="display:none;margin-top:6px;">' +
-                '<div class="pbar-bg"><div id="mReplaceBar_' + idx + '_' + fi + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>' +
+                '<div class="pbar-bg"><div id="mReplaceBar_' + idx + '_' + fi + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,var(--accent-warn),#fbbf24);"></div></div>' +
               '</div>' +
             '</div>';
           }).join('') +
@@ -537,7 +542,7 @@ function renderCourseFilePanels() {
               '<p style="font-size:12px;font-weight:700;color:var(--accent);">+ เพิ่มไฟล์ PDF</p>' +
             '</div>' +
             '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>'
-          : '<p style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center;">ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว</p>'
+          : '<p style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center;">ครบ ' + MAX_FILES_PER_TOPIC + ' ไฟล์แล้ว</p>'
         ) +
       '</div>';
   });
@@ -569,7 +574,7 @@ function renderCourseQueuedFiles(rowIdx) {
   row.files.forEach(function(f, i) {
     html +=
       '<div class="file-entry">' +
-        '<i data-lucide="file-text" style="width:15px;height:15px;color:#22c55e;flex-shrink:0;"></i>' +
+        '<i data-lucide="file-text" style="width:15px;height:15px;color:var(--emerald);flex-shrink:0;"></i>' +
         '<span class="file-entry-name">' + esc2(f.name) + '</span>' +
         '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + 'MB</span>' +
         '<button class="file-entry-del" onclick="removeCourseFile(' + rowIdx + ',' + i + ')" aria-label="ลบไฟล์"><i data-lucide="x" style="width:13px;height:13px;"></i></button>' +
@@ -1863,20 +1868,20 @@ function switchMemoTab(tab) {
     editPane.style.display    = 'none';
     previewPane.style.display = 'block';
     tabEdit.style.background    = 'white';
-    tabEdit.style.color         = 'var(--accent)';
-    tabEdit.style.borderColor   = 'var(--accent-light)';
-    tabPreview.style.background = 'var(--accent)';
+    tabEdit.style.color         = '#1d4ed8';
+    tabEdit.style.borderColor   = '#93c5fd';
+    tabPreview.style.background = '#1d4ed8';
     tabPreview.style.color      = 'white';
-    tabPreview.style.borderColor= 'var(--accent)';
+    tabPreview.style.borderColor= '#1d4ed8';
   } else {
     editPane.style.display    = 'flex';
     previewPane.style.display = 'none';
-    tabEdit.style.background    = 'var(--accent)';
+    tabEdit.style.background    = '#1d4ed8';
     tabEdit.style.color         = 'white';
-    tabEdit.style.borderColor   = 'var(--accent)';
+    tabEdit.style.borderColor   = '#1d4ed8';
     tabPreview.style.background = 'white';
-    tabPreview.style.color      = 'var(--accent)';
-    tabPreview.style.borderColor= 'var(--accent-light)';
+    tabPreview.style.color      = '#1d4ed8';
+    tabPreview.style.borderColor= '#93c5fd';
   }
 }
 
@@ -1941,7 +1946,7 @@ buildPage({
     canvas = document.getElementById('signatureCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e293b';
+    ctx.strokeStyle = cssVar('--text');
     ctx.lineWidth   = 2;
     ctx.lineCap     = 'round';
     ctx.lineJoin    = 'round';

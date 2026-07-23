@@ -78,34 +78,34 @@ function renderStaff() {
     var groupLabel = groupLabelMap[s.group] || (s.group || '-');
 
     return '<tr>' +
-      '<td style="color:#94a3b8;font-size:12px;">' + (idx + 1) + '</td>' +
+      '<td style="color:var(--text3);font-size:12px;">' + (idx + 1) + '</td>' +
       '<td>' +
         '<div style="display:flex;align-items:center;gap:var(--gap-item);">' +
           '<div class="avatar-initials" style="background:' + avatarColor + ';">' + initials + '</div>' +
           '<div>' +
             '<a href="javascript:void(0)" onclick="openSarModal(\'' + s.id + '\',\'' + esc(s.email||'') + '\')" ' +
-              'style="font-weight:700;color:#0f172a;font-size:13px;text-decoration:none;cursor:pointer;" ' +
-              'onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'#0f172a\'">' +
+              'style="font-weight:700;color:var(--text-dark);font-size:13px;text-decoration:none;cursor:pointer;" ' +
+              'onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'var(--text-dark)\'">' +
               esc2(s.name || '') +
             '</a>' +
-            (s.subject ? '<p style="font-size:11px;color:#94a3b8;">วิชา: ' + esc2(s.subject) + '</p>' : '') +
+            (s.subject ? '<p style="font-size:11px;color:var(--text3);">วิชา: ' + esc2(s.subject) + '</p>' : '') +
           '</div>' +
         '</div>' +
       '</td>' +
       '<td><span class="pos-tag">' + esc2(s.position || '-') + '</span>' +
-        (s.role ? '<br><span style="font-size:10px;color:#7c3aed;font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc2(s.role) + '</span>' : '') +
+        (s.role ? '<br><span style="font-size:10px;color:var(--violet);font-weight:700;margin-top:3px;display:inline-block;">⭐ ' + esc2(s.role) + '</span>' : '') +
       '</td>' +
       '<td><span class="group-badge" data-group="' + esc2(s.group||'') + '">' + esc2(groupLabel) + '</span></td>' +
       '<td class="hide-mobile">' +
-        (s.email ? '<a href="mailto:' + esc2(s.email) + '" style="color:var(--accent);font-weight:600;font-size:12px;text-decoration:none;">' + esc2(s.email) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.email ? '<a href="mailto:' + esc2(s.email) + '" style="color:var(--accent);font-weight:600;font-size:12px;text-decoration:none;">' + esc2(s.email) + '</a>' : '<span style="color:var(--border-mid);">-</span>') +
       '</td>' +
       '<td class="hide-mobile" style="font-size:12px;">' +
-        (s.phone ? '<a href="tel:' + esc2(s.phone) + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' + esc2(s.phone) + '</a>' : '<span style="color:#cbd5e1;">-</span>') +
+        (s.phone ? '<a href="tel:' + esc2(s.phone) + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' + esc2(s.phone) + '</a>' : '<span style="color:var(--border-mid);">-</span>') +
       '</td>' +
       '<td>' +
         '<div style="display:flex;gap:5px;justify-content:center;">' +
           (canWrite ? '<button class="btn-icon" onclick="openEditModal(\'' + s.id + '\')" title="แก้ไข"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>' : '') +
-          (canWrite ? '<button class="btn-icon red" onclick="openDeleteModal(\'' + s.id + '\',\'' + esc(s.name) + '\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' : '<span style="font-size:11px;color:#cbd5e1;">-</span>') +
+          (canWrite ? '<button class="btn-icon red" onclick="openDeleteModal(\'' + s.id + '\',\'' + esc(s.name) + '\')" title="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' : '<span style="font-size:11px;color:var(--border-mid);">-</span>') +
         '</div>' +
       '</td>' +
     '</tr>';
@@ -395,10 +395,10 @@ function switchImportTab(tab) {
   importTab = tab;
   document.getElementById('importFilePanel').style.display = tab === 'file' ? '' : 'none';
   document.getElementById('importPastePanel').style.display = tab === 'paste' ? '' : 'none';
-  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? 'var(--accent)' : 'transparent';
-  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? 'var(--accent)' : 'transparent';
-  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? 'var(--accent)' : '#64748b';
-  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? 'var(--accent)' : '#64748b';
+  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? '#1d4ed8' : 'transparent';
+  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? '#1d4ed8' : 'transparent';
+  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? '#1d4ed8' : '#64748b';
+  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? '#1d4ed8' : '#64748b';
 }
 
 function handleCsvDrop(e) {
@@ -439,7 +439,7 @@ function showImportPreview(rows, headers, warnings) {
     previewCols.forEach(function(c) { tbody += '<td>' + esc2(r[c] || '') + '</td>'; });
     tbody += '</tr>';
   });
-  if (rows.length > 10) tbody += '<tr><td colspan="4" style="text-align:center;color:#94a3b8;font-style:italic;">... และอีก ' + (rows.length - 10) + ' รายการ</td></tr>';
+  if (rows.length > 10) tbody += '<tr><td colspan="4" style="text-align:center;color:var(--text3);font-style:italic;">... และอีก ' + (rows.length - 10) + ' รายการ</td></tr>';
   document.getElementById('previewBody').innerHTML = tbody;
 
   if (warnings.length) {
