@@ -59,19 +59,19 @@
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
 </div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Access Denied -->
 <div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;">ไม่มีสิทธิ์เข้าถึง</h2>
-    <p style="color:#64748b;font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาต</p>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">บัญชีของคุณไม่ได้รับอนุญาต</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
@@ -148,7 +148,7 @@
       </div>
       <button class="modal-close" onclick="closeShopCountModal()"><i data-lucide="x"></i></button>
     </div>
-    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:var(--gap-section);font-size:13px;color:var(--text2)">
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:var(--gap-section);font-size:13px;color:var(--text2)">
       คำนวณจากจำนวนร้านค้า × <strong style="color:var(--text)">50 บาท/ร้าน</strong>
     </div>
     <div class="form-group" style="margin-bottom:var(--gap-card)">
@@ -179,8 +179,8 @@
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--amber-lt,#fef9c3);">
-          <i data-lucide="zap" style="width:18px;height:18px;color:var(--amber,#d97706);"></i>
+        <div class="modal-title-icon" style="width:34px;height:34px;border-radius:10px;background:var(--amber-lt,var(--yellow-light));">
+          <i data-lucide="zap" style="width:18px;height:18px;color:var(--amber,var(--amber));"></i>
         </div>
         <div>
           <div class="modal-title" id="quickLogTitle">บันทึกรายการ</div>
@@ -220,12 +220,12 @@
         <div class="page-header" style="margin-bottom:var(--gap-card)">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#86efac);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="utensils" style="width:20px;height:20px;color:white;"></i>
               </div>
-              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">บัญชีรายได้ Food Court</h1>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);">บัญชีรายได้ Food Court</h1>
             </div>
-            <p style="font-size:13px;color:#64748b;padding-left:50px;">บันทึกและติดตามรายรับ–รายจ่าย Food Court โรงเรียนหนองกี่พิทยาคม</p>
+            <p style="font-size:13px;color:var(--text2);padding-left:50px;">บันทึกและติดตามรายรับ–รายจ่าย Food Court โรงเรียนหนองกี่พิทยาคม</p>
           </div>
         </div>
         <div class="sub-tab-bar" style="margin-bottom:0">
@@ -243,13 +243,13 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#86efac);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="chart-bar" style="width:20px;height:20px;color:white;"></i>
               </div>
-              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">ภาพรวมบัญชี Food Court</h1>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);">ภาพรวมบัญชี Food Court</h1>
             </div>
             <div style="display:flex;align-items:center;gap:var(--gap-tight);padding-left:50px;flex-wrap:wrap;">
-              <p style="font-size:13px;color:#64748b;">โรงเรียนหนองกี่พิทยาคม</p>
+              <p style="font-size:13px;color:var(--text2);">โรงเรียนหนองกี่พิทยาคม</p>
               <div id="lastUpdatedChip" class="chip" style="display:none;">บันทึกล่าสุด: <span id="lastUpdated"></span></div>
             </div>
           </div>
@@ -341,12 +341,12 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#2563eb,var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--blue-accent),var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="list" style="width:20px;height:20px;color:white;"></i>
               </div>
-              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายการทั้งหมด</h1>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);">รายการทั้งหมด</h1>
             </div>
-            <p style="font-size:13px;color:#64748b;padding-left:50px;">รายรับ – รายจ่าย แบ่งตามวัน</p>
+            <p style="font-size:13px;color:var(--text2);padding-left:50px;">รายรับ – รายจ่าย แบ่งตามวัน</p>
           </div>
           <button class="btn btn-primary" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
         </div>
@@ -391,12 +391,12 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#d97706,#fde68a);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--amber),var(--amber-mid));border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="bar-chart-3" style="width:20px;height:20px;color:white;"></i>
               </div>
-              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">รายงานสรุป</h1>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);">รายงานสรุป</h1>
             </div>
-            <p style="font-size:13px;color:#64748b;padding-left:50px;">สถิติรายรับ–รายจ่าย แยกตามช่วงเวลา</p>
+            <p style="font-size:13px;color:var(--text2);padding-left:50px;">สถิติรายรับ–รายจ่าย แยกตามช่วงเวลา</p>
           </div>
         </div>
 
@@ -490,12 +490,12 @@
         <div class="page-header">
           <div>
             <div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:4px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#c4b5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--violet),#c4b5fd);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i data-lucide="settings-2" style="width:20px;height:20px;color:white;"></i>
               </div>
-              <h1 style="font-size:22px;font-weight:800;color:#1e293b;">จัดการรายการ</h1>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);">จัดการรายการ</h1>
             </div>
-            <p style="font-size:13px;color:#64748b;padding-left:50px;">บันทึกรายวันและรายการประจำ</p>
+            <p style="font-size:13px;color:var(--text2);padding-left:50px;">บันทึกรายวันและรายการประจำ</p>
           </div>
           <button class="btn btn-primary" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
         </div>

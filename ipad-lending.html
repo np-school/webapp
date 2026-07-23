@@ -82,7 +82,7 @@
 <!-- Loading -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
 </div>
 
 <!-- Sidebar overlay (mobile) -->
@@ -90,12 +90,12 @@
 
 <!-- Access Denied -->
 <div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
-    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
@@ -157,7 +157,7 @@
         <input type="text" id="borrowDeviceInput" placeholder="พิมพ์หรือเลือก Serial Number..." autocomplete="off" oninput="onBorrowDeviceInput()" onfocus="onBorrowDeviceInput()" onblur="setTimeout(function(){ document.getElementById('deviceAcList').classList.remove('show'); }, 150);">
         <div class="ac-list" id="deviceAcList"></div>
       </div>
-      <p id="deviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
+      <p id="deviceInfoHint" style="font-size:12px;color:var(--text2);margin-top:6px;"></p>
     </div>
 
     <div class="form-group">
@@ -197,7 +197,7 @@
     <div class="form-group">
       <label class="form-label">แตะเลือกสถานะของแต่ละชิ้น</label>
       <div id="returnItemsList" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;"></div>
-      <p style="font-size:11.5px;color:#94a3b8;margin-top:8px;">"ชำรุด" จะถูกส่งเข้ารายการเคลมให้อัตโนมัติ</p>
+      <p style="font-size:11.5px;color:var(--text3);margin-top:8px;">"ชำรุด" จะถูกส่งเข้ารายการเคลมให้อัตโนมัติ</p>
     </div>
 
     <div class="form-group" id="returnClaimNoteGroup" style="display:none;">
@@ -225,7 +225,7 @@
     <div class="form-group">
       <label class="form-label">เลขประจำตัวนักเรียน</label>
       <input type="text" id="stuId" placeholder="เช่น 12345">
-      <p id="stuIdLockHint" style="display:none;font-size:11.5px;color:#94a3b8;margin-top:6px;">แก้ไขเลขประจำตัวไม่ได้ (ใช้เป็นรหัสอ้างอิงในระบบ)</p>
+      <p id="stuIdLockHint" style="display:none;font-size:11.5px;color:var(--text3);margin-top:6px;">แก้ไขเลขประจำตัวไม่ได้ (ใช้เป็นรหัสอ้างอิงในระบบ)</p>
     </div>
     <div style="display:flex;gap:10px;">
       <div class="form-group" style="flex:1;">
@@ -288,7 +288,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>ปรับสถานะเคลม</h3><p id="claimStatusSub"></p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalClaimStatus')"><i data-lucide="x"></i></button>
@@ -316,7 +316,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>เคลมไอแพด</h3><p>เลือกเครื่องที่ต้องการส่งเคลม (เลือกได้ทั้งเครื่องที่ว่างและเครื่องที่ถูกยืมอยู่)</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalClaimDevice')"><i data-lucide="x"></i></button>
@@ -328,7 +328,7 @@
         <input type="text" id="claimDeviceInput" placeholder="พิมพ์หรือเลือก Serial Number..." autocomplete="off" oninput="onClaimDeviceInput()" onfocus="onClaimDeviceInput()" onblur="setTimeout(function(){ document.getElementById('claimDeviceAcList').classList.remove('show'); }, 150);">
         <div class="ac-list" id="claimDeviceAcList"></div>
       </div>
-      <p id="claimDeviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
+      <p id="claimDeviceInfoHint" style="font-size:12px;color:var(--text2);margin-top:6px;"></p>
     </div>
 
     <div class="form-group">
@@ -348,7 +348,7 @@
           <input type="text" id="claimNewDeviceInput" placeholder="พิมพ์หรือเลือก Serial Number เครื่องใหม่..." autocomplete="off" oninput="onClaimNewDeviceInput()" onfocus="onClaimNewDeviceInput()" onblur="setTimeout(function(){ document.getElementById('claimNewDeviceAcList').classList.remove('show'); }, 150);">
           <div class="ac-list" id="claimNewDeviceAcList"></div>
         </div>
-        <p id="claimNewDeviceInfoHint" style="font-size:12px;color:#64748b;margin-top:6px;"></p>
+        <p id="claimNewDeviceInfoHint" style="font-size:12px;color:var(--text2);margin-top:6px;"></p>
       </div>
     </div>
 
@@ -364,7 +364,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:#b45309;"></i></div>
+        <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>เพิ่มเคลมอุปกรณ์เสริม</h3><p>ไม่ต้องระบุรหัสเครื่อง ใส่แค่ชื่ออุปกรณ์เสริมที่ชำรุด</p></div>
       </div>
       <button class="modal-close" onclick="closeModal('modalAccessoryClaim')"><i data-lucide="x"></i></button>
@@ -404,7 +404,7 @@
     <div class="form-group">
       <input type="file" id="csvFileInput" accept=".csv" onchange="handleCsvFile(event)">
     </div>
-    <div id="importPreview" style="font-size:13px;color:#64748b;"></div>
+    <div id="importPreview" style="font-size:13px;color:var(--text2);"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
       <button class="btn-secondary" onclick="closeModal('modalImport')">ยกเลิก</button>
       <button class="btn-primary" id="importConfirmBtn" onclick="confirmImport()" disabled>นำเข้าข้อมูล</button>
@@ -428,7 +428,7 @@
     <div class="form-group">
       <input type="file" id="csvStudentFileInput" accept=".csv" onchange="handleStudentCsvFile(event)">
     </div>
-    <div id="importStudentPreview" style="font-size:13px;color:#64748b;"></div>
+    <div id="importStudentPreview" style="font-size:13px;color:var(--text2);"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
       <button class="btn-secondary" onclick="closeModal('modalImportStudents')">ยกเลิก</button>
       <button class="btn-primary" id="importStudentConfirmBtn" onclick="confirmStudentImport()" disabled>นำเข้าข้อมูล</button>

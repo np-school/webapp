@@ -29,7 +29,7 @@
 <!-- Loading -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
 </div>
 
 <!-- Sidebar overlay (mobile) -->
@@ -37,12 +37,12 @@
 
 <!-- Access Denied (ใช้เมื่อ requireAdmin ไม่ผ่าน) -->
 <div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
-    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
   <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>

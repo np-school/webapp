@@ -103,6 +103,29 @@
   --bg:          #f8fafc;
   --bg-alt:      #f1f5f9;
   --white:       #ffffff;
+  --black:       #000;
+
+  /* ── Extended Neutral / Accent Palette (เพิ่ม 2026-07 ตอนแก้ hardcoded hex) ──
+     สีเหล่านี้ถูกใช้ hardcode ซ้ำๆ ในหน้าเว็บ (inline style) มาก่อน แต่ไม่เคยมี
+     token รองรับ เลยเพิ่มไว้ที่นี่แทนที่จะปล่อยให้ hardcode ต่อไป
+     ──────────────────────────────────────────────────────────── */
+  --text-dark:   #0f172a;   /* หัวข้อสีเข้มมาก (slate-900) */
+  --text-mid:    #475569;   /* ข้อความรอง เข้มกว่า --text2 (slate-600) */
+  --text-slate:  #334155;   /* ใกล้เคียง --text-heading แต่คนละเฉด (slate-700) */
+  --border-mid:  #cbd5e1;   /* เส้นขอบเข้มกว่า --border เล็กน้อย (slate-300) */
+  --red-bright:  #ef4444;   /* แดงสว่างกว่า --red ใช้กับไอคอน/ตัวเลขเตือน */
+  --violet:      #7c3aed;   /* ม่วง decorative/แท็ก */
+  --violet-light:#f5f3ff;
+  --blue-accent: #2563eb;   /* น้ำเงิน decorative ทั่วไป (ไม่ผูกกับธีม ต่างจาก --accent) */
+  --blue-bright: #3b82f6;
+  --emerald:     #22c55e;   /* เขียวสว่างกว่า --green */
+  --orange:      #ea580c;
+  --orange-light:#fff7ed;
+  --orange-mid:  #f97316;
+  --yellow:      #eab308;
+  --yellow-light:#fef9c3;
+  --amber-dark:  #92400e;
+  --cyan:        #06b6d4;
 
   /* ── Role / Group Colors (admin-role) ─────────────────────────
      เปลี่ยนสีได้ที่นี่ที่เดียว — ทุก component จะอัปเดตพร้อมกัน

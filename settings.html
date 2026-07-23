@@ -216,20 +216,20 @@
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <p style="color:#64748b;font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
 </div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-    <i data-lucide="shield-off" style="width:36px;height:36px;color:#dc2626;"></i>
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
   </div>
   <div style="text-align:center;">
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
-    <p style="color:#64748b;font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
   </div>
-  <a href="index.html" style="padding:10px 24px;background:var(--accent,#1d4ed8);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent,var(--accent));color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
 </div>
 
 <div id="settingsApp" style="display:none;"></div>
@@ -250,8 +250,8 @@
     <!-- Header -->
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-title-icon" style="background:var(--accent-tint,#eff6ff);">
-          <i data-lucide="bell-plus" style="color:var(--accent,#1d4ed8);"></i>
+        <div class="modal-title-icon" style="background:var(--accent-tint,var(--accent-tint));">
+          <i data-lucide="bell-plus" style="color:var(--accent,var(--accent));"></i>
         </div>
         <div>
           <h3 id="annModalTitle">เพิ่มประกาศใหม่</h3>
@@ -265,7 +265,7 @@
 
     <!-- ① ประเภทประกาศ ภายใน / ภายนอก -->
     <div class="form-group">
-      <label class="form-label">ประเภทประกาศ <span style="color:#ef4444;">*</span></label>
+      <label class="form-label">ประเภทประกาศ <span style="color:var(--red-bright);">*</span></label>
       <div class="ann-scope-row" id="annScopeRow">
         <label class="ann-scope-opt sel-external" data-scope="external">
           <input type="radio" name="annScope" value="external">
@@ -283,7 +283,7 @@
     <!-- ② หมวดหมู่สี -->
     <div class="ann-row-2">
       <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">หมวดหมู่ <span style="color:#ef4444;">*</span></label>
+        <label class="form-label">หมวดหมู่ <span style="color:var(--red-bright);">*</span></label>
         <div class="ann-type-radio" id="annTypeRadio">
           <label class="ann-type-opt sel-info" data-type="info">
             <input type="radio" name="annType" value="info" checked> ข้อมูล
@@ -305,7 +305,7 @@
 
     <!-- ③ ชื่อเรื่อง -->
     <div class="form-group">
-      <label class="form-label">ชื่อเรื่อง / หัวข้อประกาศ <span style="color:#ef4444;">*</span></label>
+      <label class="form-label">ชื่อเรื่อง / หัวข้อประกาศ <span style="color:var(--red-bright);">*</span></label>
       <input type="text" id="annTitle" placeholder="เช่น ประกาศรับสมัครนักเรียน ปีการศึกษา 2568" maxlength="200">
     </div>
 
@@ -322,13 +322,13 @@
         <input type="file" id="annImgFile" accept="image/*" onchange="handleAnnImage(event)">
         <button class="ann-img-remove" id="annImgRemove" onclick="removeAnnImage(event)">✕</button>
         <div class="ann-img-placeholder">
-          <div style="width:40px;height:40px;background:var(--bg-alt,#f1f5f9);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-            <i data-lucide="image-plus" style="width:20px;height:20px;color:var(--text3,#94a3b8);"></i>
+          <div style="width:40px;height:40px;background:var(--bg-alt,var(--border-soft));border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="image-plus" style="width:20px;height:20px;color:var(--text3,var(--text3));"></i>
           </div>
           <p style="font-size:12px;color:var(--text2);margin:0;font-weight:700;">คลิกเพื่อเลือกรูปภาพ</p>
         </div>
         <img id="annImgPreview" class="ann-img-preview" alt="preview">
-        <p id="annImgName" style="font-size:11px;color:var(--accent,#1d4ed8);font-weight:700;margin:4px 0 0;display:none;"></p>
+        <p id="annImgName" style="font-size:11px;color:var(--accent,var(--accent));font-weight:700;margin:4px 0 0;display:none;"></p>
       </div>
     </div>
 
@@ -355,7 +355,7 @@
 
     <!-- ⑦ ฝ่าย/หน่วยงาน -->
     <div class="form-group">
-      <label class="form-label">ฝ่าย / หน่วยงานที่ประกาศ <span style="color:#ef4444;">*</span></label>
+      <label class="form-label">ฝ่าย / หน่วยงานที่ประกาศ <span style="color:var(--red-bright);">*</span></label>
       <select id="annDeptSelect" onchange="onDeptChange(this.value)">
         <option value="">— เลือกฝ่าย/หน่วยงาน —</option>
         <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
@@ -378,7 +378,7 @@
     <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:0;">
       <label class="form-label" style="margin:0;">สถานะ</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);">
-        <input type="checkbox" id="annActive" checked style="width:16px;height:16px;accent-color:var(--accent,#1d4ed8);">
+        <input type="checkbox" id="annActive" checked style="width:16px;height:16px;accent-color:var(--accent,var(--accent));">
         เปิดใช้งาน
       </label>
     </div>

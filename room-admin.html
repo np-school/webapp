@@ -92,8 +92,8 @@
 
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap-card);margin-bottom:var(--gap-section);">
-        <div class="stat-card"><div style="width:42px;height:42px;background:#fef9c3;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:#d97706;"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
-        <div class="stat-card"><div style="width:42px;height:42px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:var(--green);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">อนุมัติแล้ว</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statApproved">0</p></div></div>
+        <div class="stat-card"><div style="width:42px;height:42px;background:var(--yellow-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="clock" style="width:20px;height:20px;color:var(--amber);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">รอพิจารณา</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statPending">0</p></div></div>
+        <div class="stat-card"><div style="width:42px;height:42px;background:var(--role-academic-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:20px;height:20px;color:var(--green);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">อนุมัติแล้ว</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statApproved">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:var(--red-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:20px;height:20px;color:var(--red);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">ไม่อนุมัติ</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statRejected">0</p></div></div>
         <div class="stat-card"><div style="width:42px;height:42px;background:var(--purple-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="calendar" style="width:20px;height:20px;color:var(--purple);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">ทั้งหมด</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statTotal">0</p></div></div>
       </div>
@@ -163,10 +163,10 @@
             <p class="chart-sub">แสดงจำนวนคำขอแยกตามสถานะ (กราฟแท่งกลุ่ม)</p>
             <!-- Legend -->
             <div style="display:flex;gap:var(--gap-card);margin-bottom:12px;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--purple);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">ทั้งหมด</span></div>
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#22c55e;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">อนุมัติ</span></div>
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">รอพิจารณา</span></div>
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#ef4444;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">ไม่อนุมัติ</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--purple);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">ทั้งหมด</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--emerald);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">อนุมัติ</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--accent-warn);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">รอพิจารณา</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--red-bright);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">ไม่อนุมัติ</span></div>
             </div>
             <div style="overflow-x:auto;">
               <canvas id="sumBarChart" height="220" style="display:block;min-width:300px;"></canvas>
@@ -179,8 +179,8 @@
             <p class="chart-title">แนวโน้มคำขอตามช่วงเวลา</p>
             <p class="chart-sub" id="sumTrendSub">จำนวนคำขอรวมทุกห้องแยกตามช่วงย่อย</p>
             <div style="display:flex;gap:var(--gap-card);margin-bottom:12px;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--purple);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">ทั้งหมด</span></div>
-              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#22c55e;display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:#475569;">อนุมัติ</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--purple);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">ทั้งหมด</span></div>
+              <div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--emerald);display:inline-block;"></span><span style="font-size:11px;font-weight:700;color:var(--text-mid);">อนุมัติ</span></div>
             </div>
             <div style="overflow-x:auto;">
               <canvas id="sumTrendChart" height="160" style="display:block;min-width:300px;"></canvas>
@@ -199,10 +199,10 @@
 <div id="approveModal" class="modal-bg">
   <div class="modal-box">
     <div style="display:flex;align-items:center;gap:var(--gap-card);margin-bottom:var(--gap-section);">
-      <div style="width:40px;height:40px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:18px;height:18px;color:var(--green);"></i></div>
+      <div style="width:40px;height:40px;background:var(--role-academic-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="check-circle" style="width:18px;height:18px;color:var(--green);"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:var(--text);">อนุมัติคำขอ</h3><p style="font-size:12px;color:var(--text2);" id="approveModalSub"></p></div>
     </div>
-    <div style="margin-bottom:var(--gap-section);"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">หมายเหตุ (ไม่บังคับ)</label><textarea id="approveNote" rows="3" placeholder="เช่น อนุมัติตามที่ขอ..."></textarea></div>
+    <div style="margin-bottom:var(--gap-section);"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">หมายเหตุ (ไม่บังคับ)</label><textarea id="approveNote" rows="3" placeholder="เช่น อนุมัติตามที่ขอ..."></textarea></div>
     <div style="display:flex;gap:var(--gap-item);"><button class="btn-secondary" style="flex:1;" onclick="closeModal('approveModal')">ยกเลิก</button><button class="btn-approve" style="flex:2;justify-content:center;padding:11px;" onclick="confirmApprove()"><i data-lucide="check" style="width:14px;height:14px;"></i> ยืนยันอนุมัติ</button></div>
   </div>
 </div>
@@ -214,7 +214,7 @@
       <div style="width:40px;height:40px;background:var(--red-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="x-circle" style="width:18px;height:18px;color:var(--red);"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:var(--text);">ไม่อนุมัติคำขอ</h3><p style="font-size:12px;color:var(--text2);" id="rejectModalSub"></p></div>
     </div>
-    <div style="margin-bottom:var(--gap-section);"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">เหตุผล <span style="color:var(--red);">*</span></label><textarea id="rejectReason" rows="3" placeholder="ระบุเหตุผล..."></textarea></div>
+    <div style="margin-bottom:var(--gap-section);"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">เหตุผล <span style="color:var(--red);">*</span></label><textarea id="rejectReason" rows="3" placeholder="ระบุเหตุผล..."></textarea></div>
     <div style="display:flex;gap:var(--gap-item);"><button class="btn-secondary" style="flex:1;" onclick="closeModal('rejectModal')">ยกเลิก</button><button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmReject()"><i data-lucide="x" style="width:14px;height:14px;"></i> ยืนยันไม่อนุมัติ</button></div>
   </div>
 </div>
@@ -226,7 +226,7 @@
       <div style="width:40px;height:40px;background:var(--red-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="trash-2" style="width:18px;height:18px;color:var(--red);"></i></div>
       <div><h3 style="font-size:16px;font-weight:800;color:var(--text);">ลบคำขอ</h3><p style="font-size:12px;color:var(--text2);">ไม่สามารถกู้คืนได้</p></div>
     </div>
-    <p style="font-size:14px;color:#475569;margin-bottom:var(--gap-section);padding:12px;background:var(--bg);border-radius:10px;" id="deleteModalText"></p>
+    <p style="font-size:14px;color:var(--text-mid);margin-bottom:var(--gap-section);padding:12px;background:var(--bg);border-radius:10px;" id="deleteModalText"></p>
     <div style="display:flex;gap:var(--gap-item);"><button class="btn-secondary" style="flex:1;" onclick="closeModal('deleteModal')">ยกเลิก</button><button class="btn-reject" style="flex:2;justify-content:center;padding:11px;" onclick="confirmDelete()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> ยืนยันลบ</button></div>
   </div>
 </div>
@@ -243,12 +243,12 @@
       </div>
       <button class="modal-close" onclick="closeModal('roomModal')"><i data-lucide="x"></i></button>
     </div>
-    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ชื่อห้อง/สถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2"></div>
-    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">ความจุ (คน)</label><input type="text" id="roomCapacity" placeholder="เช่น 50"></div>
-    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">รายละเอียด</label><input type="text" id="roomDetail" placeholder="เช่น มีโปรเจคเตอร์, แอร์"></div>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:5px;">ชื่อห้อง/สถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2"></div>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:5px;">ความจุ (คน)</label><input type="text" id="roomCapacity" placeholder="เช่น 50"></div>
+    <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:5px;">รายละเอียด</label><input type="text" id="roomDetail" placeholder="เช่น มีโปรเจคเตอร์, แอร์"></div>
     <!-- Room image upload -->
     <div style="margin-bottom:var(--gap-section);">
-      <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:7px;">🖼️ รูปภาพห้อง (ไม่บังคับ)</label>
+      <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:7px;">🖼️ รูปภาพห้อง (ไม่บังคับ)</label>
       <input type="file" id="roomImageFile" accept="image/*" style="display:none;" onchange="handleRoomImage(this)">
       <div class="upload-area" id="roomUploadArea" onclick="document.getElementById('roomImageFile').click()">
         <div id="roomUploadDefault"><i data-lucide="image-plus" style="width:28px;height:28px;color:var(--purple-accent);margin:0 auto 6px;display:block;"></i><p style="font-size:13px;font-weight:700;color:var(--purple);">คลิกเพื่อเลือกรูปภาพห้อง</p><p style="font-size:11px;color:var(--text3);margin-top:2px;">JPG, PNG — ไม่เกิน 5MB</p></div>
