@@ -43,11 +43,16 @@
   --gap-item:    10px;   /* ระยะห่างระหว่าง list item / row */
   --gap-tight:    8px;   /* ระยะห่างแคบ (doc chips, badges) */
 
-  /* Brand */
-  --blue:        #1d4ed8;
-  --blue-dark:   #1e40af;
-  --blue-light:  #eff6ff;
-  --blue-mid:    #bfdbfe;
+  /* Brand
+     ⚠️ [2026-07] --blue / --blue-dark / --blue-light เดิม hardcode ค่าซ้ำกับ
+     --accent / --accent-dark / --accent-tint พอดี แต่ไม่ได้ผูกกัน ผลคือปุ่ม/badge
+     ที่อ้าง var(--blue) ไม่ขยับตามเมื่อแอดมินเปลี่ยนสีธีมจาก site_config/theme
+     (ในขณะที่ navbar ผ่าน .navbar.blue ที่ผูกกับ --accent อยู่แล้ว) จึงเปลี่ยนให้
+     --blue* alias ไปที่ --accent* แทน ให้ทุกจุดตามสีธีมเดียวกัน — ค่าเริ่มต้นเท่าเดิมทุกประการ */
+  --blue:        var(--accent);
+  --blue-dark:   var(--accent-dark);
+  --blue-light:  var(--accent-tint);
+  --blue-mid:    #bfdbfe;   /* ไม่มีคู่ตรงใน --accent* ปล่อยเป็นค่าคงที่ */
   --blue-ring:   rgba(29,78,216,.1);
 
   --purple:      #0d1b2a;   /* Ink Black */
@@ -126,6 +131,10 @@
   --yellow-light:#fef9c3;
   --amber-dark:  #92400e;
   --cyan:        #06b6d4;
+
+  /* LINE brand color — เดิม hardcode #06C755 กระจายในหลาย inline style */
+  --line-green:      #06C755;
+  --line-green-dark: #00a541;
 
   /* ── Role / Group Colors (admin-role) ─────────────────────────
      เปลี่ยนสีได้ที่นี่ที่เดียว — ทุก component จะอัปเดตพร้อมกัน
@@ -523,8 +532,8 @@ body {
   justify-content: center;
   flex-shrink: 0;
 }
-.page-icon.blue   { background: linear-gradient(135deg, var(--blue),   #3b82f6); }
-.page-icon.purple { background: linear-gradient(135deg, var(--purple), #475569); }
+.page-icon.blue   { background: linear-gradient(135deg, var(--blue),   var(--blue-bright)); }
+.page-icon.purple { background: linear-gradient(135deg, var(--purple), var(--text-mid)); }
 
 
 /* ── 4. Navbar ────────────────────────────────────────────────── */
@@ -693,7 +702,7 @@ body {
 
 /* Admin variant — เมนูลัดไปหน้าแอดมิน อาจโผล่แม้อยู่ในหน้าสมาชิก (ธีมน้ำเงิน)
    จึงต้องคงสี ink-black ไว้ตายตัว ไม่อ้างอิง var(--accent-*) ที่เปลี่ยนตามธีมหน้าปัจจุบัน */
-.sidebar-btn.admin-btn { color: #415a77; }
+.sidebar-btn.admin-btn { color: var(--purple-mid); }
 .sidebar-btn.admin-btn:hover { background: #e0e1dd; }
 .sidebar-btn.admin-btn.active {
   background: #0d1b2a;
@@ -722,7 +731,7 @@ body {
 .sidebar-dev-note {
   padding: 5px 14px 4px 36px;
   font-size: 11px;
-  color: #cbd5e1;
+  color: var(--border-mid);
   font-style: italic;
 }
 .sidebar-admin-divider {
@@ -867,7 +876,7 @@ body {
 /* Secondary */
 .btn-secondary {
   background: var(--bg-alt);
-  color: #475569;
+  color: var(--text-mid);
   border: none;
   padding: 9px 16px;
   border-radius: 10px;
@@ -1031,7 +1040,7 @@ textarea:focus {
   border-bottom: 1px solid #f1f5f9;
 }
 .ac-item:last-child { border-bottom: none; }
-.ac-item:hover, .ac-item:active { background: #eff6ff; }
+.ac-item:hover, .ac-item:active { background: var(--accent-tint); }
 .ac-item .ac-sub { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
 .ac-empty { padding: 10px 14px; font-size: 12.5px; color: #94a3b8; }
 
@@ -1171,13 +1180,13 @@ label {
 
 /* ── 12. Badges & Pills ───────────────────────────────────────── */
 /* Compact status badges */
-.badge-g { background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-size: 9px;  font-weight: 700; }
-.badge-a { background: #fef9c3; color: #b45309;  padding: 2px 8px; border-radius: 4px; font-size: 9px;  font-weight: 700; }
+.badge-g { background: var(--role-academic-bg); color: #15803d; padding: 2px 8px; border-radius: 4px; font-size: 9px;  font-weight: 700; }
+.badge-a { background: var(--yellow-light); color: #b45309;  padding: 2px 8px; border-radius: 4px; font-size: 9px;  font-weight: 700; }
 .badge-r { background: var(--red-light); color: var(--red-dark); padding: 2px 8px; border-radius: 4px; font-size: 9px;  font-weight: 700; }
 
 /* Booking status (room admin) */
-.badge-pending  { background: #fef9c3; color: #b45309; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
-.badge-approved { background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-pending  { background: var(--yellow-light); color: #b45309; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-approved { background: var(--role-academic-bg); color: #15803d; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
 .badge-rejected { background: var(--red-light); color: var(--red-dark); padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
 
 /* Generic inline badge */
@@ -1194,11 +1203,11 @@ label {
 /* Inline status pill (portfolio) */
 .status-badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
 .status-badge.none           { background: #f1f5f9; color: var(--text3); }
-.status-badge.submitted      { background: #dcfce7; color: #15803d; }
+.status-badge.submitted      { background: var(--role-academic-bg); color: #15803d; }
 .status-badge.head_reviewed  { background: var(--sky-light); color: #0369a1; }
-.status-badge.reviewed       { background: #dbeafe; color: #1e40af; }
+.status-badge.reviewed       { background: #dbeafe; color: var(--accent-dark); }
 .status-badge.final_approved { background: var(--purple-light); color: var(--purple-dark); }
-.status-badge.revision       { background: #fef9c3; color: #92400e; }
+.status-badge.revision       { background: var(--yellow-light); color: var(--amber-dark); }
 
 
 /* ── 13. Tabs & View Toggles ──────────────────────────────────── */
@@ -1477,7 +1486,7 @@ label {
 .data-table td {
   padding: 12px 14px;
   font-size: 13px;
-  color: #334155;
+  color: var(--text-slate);
   border-bottom: 1px solid var(--border-soft);
   vertical-align: middle;
 }
@@ -1586,7 +1595,7 @@ tr:hover td { background: #fafbfd; }
   box-sizing: border-box;
 }
 .cal-day:hover:not(.empty) { background: #f1f5f9; }
-.cal-day.has-booking::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: #eab308; border-radius: 50%; }
+.cal-day.has-booking::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: var(--yellow); border-radius: 50%; }
 .cal-day.is-full     { background: var(--red-light) !important; color: var(--red-dark) !important; border-color: var(--red-mid); }
 .cal-day.is-today    { background: var(--blue) !important; color: white !important; box-shadow: 0 4px 10px rgba(29,78,216,.35); }
 .cal-day.is-today::after { background: white !important; }
@@ -1648,15 +1657,15 @@ tr:hover td { background: #fafbfd; }
 /* Donut */
 .donut-wrap   { position: relative; display: flex; align-items: center; justify-content: center; }
 .donut-center { position: absolute; text-align: center; pointer-events: none; }
-.donut-big    { font-size: 26px; font-weight: 800; color: #0f172a; line-height: 1; }
+.donut-big    { font-size: 26px; font-weight: 800; color: var(--text-dark); line-height: 1; }
 .donut-label  { font-size: 10px; color: var(--text3); font-weight: 700; margin-top: 2px; }
 
 /* Legends */
 .donut-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
 .legend-row   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .legend-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-label { font-size: 11px; color: #475569; font-weight: 600; flex: 1; }
-.legend-val   { font-size: 12px; font-weight: 800; color: #0f172a; }
+.legend-label { font-size: 11px; color: var(--text-mid); font-weight: 600; flex: 1; }
+.legend-val   { font-size: 12px; font-weight: 800; color: var(--text-dark); }
 
 .legend-list  { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .legend-item  { display: flex; align-items: center; gap: 8px; font-size: 12px; }
@@ -1664,7 +1673,7 @@ tr:hover td { background: #fafbfd; }
 /* Horizontal bars */
 .hbar-row   { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
 .hbar-label { display: flex; justify-content: space-between; align-items: center; }
-.hbar-name  { font-size: 11px; font-weight: 700; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.hbar-name  { font-size: 11px; font-weight: 700; color: var(--text-slate); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
 .hbar-pct   { font-size: 11px; font-weight: 800; color: var(--blue); }
 .hbar-track { background: var(--bg-alt); border-radius: 6px; height: 8px; overflow: hidden; }
 .hbar-fill  { height: 100%; border-radius: 6px; transition: width .5s ease; }
@@ -1672,7 +1681,7 @@ tr:hover td { background: #fafbfd; }
 /* Thin bars (tbar) */
 .tbar-row   { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .tbar-icon  { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.tbar-label { font-size: 11px; font-weight: 700; color: #334155; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbar-label { font-size: 11px; font-weight: 700; color: var(--text-slate); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tbar-track { width: 80px; background: var(--bg-alt); border-radius: 4px; height: 6px; overflow: hidden; flex-shrink: 0; }
 .tbar-fill  { height: 100%; border-radius: 4px; transition: width .5s ease; }
 .tbar-num   { font-size: 10px; font-weight: 800; color: var(--text2); min-width: 28px; text-align: right; }
@@ -1795,7 +1804,7 @@ tr:hover td { background: #fafbfd; }
   line-height: 1.3;
 }
 .wf-step.done     { background: #16a34a; color: white; }
-.wf-step.active   { background: #eab308; color: #713f12; }
+.wf-step.active   { background: var(--yellow); color: #713f12; }
 .wf-step.revision { background: var(--red); color: white; }
 .wf-step.pending  { background: #f1f5f9; color: var(--text3); }
 .wf-step.final    { background: var(--purple); color: white; }
@@ -1818,19 +1827,19 @@ tr:hover td { background: #fafbfd; }
 .doc-item:hover              { border-color: var(--blue-mid); box-shadow: 0 4px 12px rgba(29,78,216,.06); }
 .doc-item.submitted          { border-left: 4px solid var(--green); }
 .doc-item.pending            { border-left: 4px solid var(--border); }
-.doc-item.reviewed           { border-left: 4px solid #3b82f6; }
+.doc-item.reviewed           { border-left: 4px solid var(--blue-bright); }
 .doc-item.head_reviewed      { border-left: 4px solid #0ea5e9; }
 .doc-item.final_approved     { border-left: 4px solid var(--purple); }
-.doc-item.revision           { border-left: 4px solid #f59e0b; }
+.doc-item.revision           { border-left: 4px solid var(--accent-warn); }
 
 /* Status dot */
 .status-dot         { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dot-none           { background: #d1d5db; }
 .dot-submitted      { background: var(--green); }
 .dot-head_reviewed  { background: #0ea5e9; }
-.dot-reviewed       { background: #3b82f6; }
+.dot-reviewed       { background: var(--blue-bright); }
 .dot-final_approved { background: var(--purple); }
-.dot-revision       { background: #f59e0b; }
+.dot-revision       { background: var(--accent-warn); }
 
 /* Doc chip (admin grid) */
 .doc-chip {
@@ -1849,11 +1858,11 @@ tr:hover td { background: #fafbfd; }
 .chip-none           { background: var(--bg); border-color: var(--border); color: var(--text3); }
 .chip-submitted      { background: var(--green-light); border-color: var(--green-mid); color: #15803d; }
 .chip-head_reviewed  { background: var(--sky-light);   border-color: var(--sky-mid);   color: #0369a1; }
-.chip-reviewed       { background: var(--blue-light);  border-color: #93c5fd;          color: #1e40af; }
-.chip-assistant_reviewed { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+.chip-reviewed       { background: var(--blue-light);  border-color: #93c5fd;          color: var(--accent-dark); }
+.chip-assistant_reviewed { background: #fef3c7; border-color: #fcd34d; color: var(--amber-dark); }
 .chip-deputy_reviewed    { background: var(--purple-light); border-color: var(--purple-mid); color: var(--purple-dark); }
 .chip-final_approved { background: var(--green-light); border-color: var(--green-mid); color: #065f46; }
-.chip-revision       { background: var(--amber-light); border-color: var(--amber-mid); color: #92400e; }
+.chip-revision       { background: var(--amber-light); border-color: var(--amber-mid); color: var(--amber-dark); }
 
 /* Teacher row */
 .teacher-row    { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color .15s; }
@@ -1868,11 +1877,11 @@ tr:hover td { background: #fafbfd; }
 /* Matrix cell */
 .matrix-cell          { width: 22px; height: 22px; border-radius: 6px; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .cell-none            { background: #f1f5f9; }
-.cell-submitted       { background: #dcfce7; }
+.cell-submitted       { background: var(--role-academic-bg); }
 .cell-head_reviewed   { background: #bae6fd; }
 .cell-reviewed        { background: #dbeafe; }
 .cell-final_approved  { background: #e2e8f0; }
-.cell-revision        { background: #fef9c3; }
+.cell-revision        { background: var(--yellow-light); }
 
 
 /* ── 24. Page — Admin Role ────────────────────────────────────── */
@@ -1938,7 +1947,7 @@ tr:hover td { background: #fafbfd; }
   transition: border-color .15s;
   font-family: 'Sarabun', sans-serif;
 }
-.staff-picker-input:focus { border-color: #415a77; box-shadow: 0 0 0 3px rgba(13,27,42,.1); }
+.staff-picker-input:focus { border-color: var(--purple-mid); box-shadow: 0 0 0 3px rgba(13,27,42,.1); }
 .staff-picker-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -1997,7 +2006,7 @@ tr:hover td { background: #fafbfd; }
   transition: border-color .15s;
 }
 .booking-card:hover             { border-color: var(--purple-mid); }
-.booking-card.status-pending    { border-left: 4px solid #f59e0b; }
+.booking-card.status-pending    { border-left: 4px solid var(--accent-warn); }
 .booking-card.status-approved   { border-left: 4px solid var(--green); }
 .booking-card.status-rejected   { border-left: 4px solid var(--red); }
 
@@ -2023,17 +2032,17 @@ tr:hover td { background: #fafbfd; }
 .sum-room-body       { padding: 14px 18px; }
 .sum-badge           { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; }
 .sum-badge-total     { background: #e2e8f0; color: var(--purple-dark); }
-.sum-badge-approved  { background: #dcfce7; color: #15803d; }
-.sum-badge-pending   { background: #fef9c3; color: #b45309; }
+.sum-badge-approved  { background: var(--role-academic-bg); color: #15803d; }
+.sum-badge-pending   { background: var(--yellow-light); color: #b45309; }
 .sum-badge-rejected  { background: var(--red-light); color: var(--red-dark); }
 
 /* Summary bars / booking lists / grand totals */
 .sum-bar-wrap  { margin-bottom: 8px; }
-.sum-bar-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 3px; }
+.sum-bar-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-slate); margin-bottom: 3px; }
 .sum-bar-track { background: var(--bg-alt); border-radius: 6px; height: 10px; overflow: hidden; }
 .sum-bar-fill  { height: 100%; border-radius: 6px; transition: width .5s ease; }
 .sum-booking-list { margin-top: 10px; display: flex; flex-direction: column; gap: var(--gap-tight); max-height: 260px; overflow-y: auto; }
-.sum-booking-row  { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--bg); border-radius: 9px; font-size: 11px; color: #475569; }
+.sum-booking-row  { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--bg); border-radius: 9px; font-size: 11px; color: var(--text-mid); }
 .sum-booking-row .sdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .sum-toggle    { font-size: 10px; color: var(--purple); font-weight: 700; cursor: pointer; background: none; border: none; padding: 0; margin-left: auto; }
 .sum-grand-card { padding: 16px 18px; border-radius: 14px; display: flex; align-items: center; gap: 12px; border: 1.5px solid var(--border); background: var(--white); }
@@ -2124,8 +2133,8 @@ tr:hover td { background: #fafbfd; }
   user-select: none;
 }
 .mdp-day:hover:not(.mdp-other):not(.mdp-past) { background: var(--blue-light); color: var(--blue); }
-.mdp-day.mdp-other    { color: #cbd5e1; cursor: default; }
-.mdp-day.mdp-past     { color: #cbd5e1; cursor: not-allowed; }
+.mdp-day.mdp-other    { color: var(--border-mid); cursor: default; }
+.mdp-day.mdp-past     { color: var(--border-mid); cursor: not-allowed; }
 .mdp-day.mdp-selected { background: var(--blue); color: white; font-weight: 800; }
 .mdp-day.mdp-has-booking { position: relative; }
 .mdp-day.mdp-has-booking::after {
@@ -2137,7 +2146,7 @@ tr:hover td { background: #fafbfd; }
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--accent-warn);
 }
 .mdp-day.mdp-selected.mdp-has-booking::after { background: white; }
 
@@ -2200,7 +2209,7 @@ tr:hover td { background: #fafbfd; }
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-mid);
   cursor: pointer;
   background: var(--white);
   transition: all .12s;
@@ -2227,7 +2236,7 @@ tr:hover td { background: #fafbfd; }
 .equip-row:hover  { border-color: #93c5fd; background: #f8faff; }
 .equip-row.checked { border-color: var(--blue); background: var(--blue-light); }
 .equip-cb    { width: 16px; height: 16px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
-.equip-label { font-size: 13px; font-weight: 600; color: #374151; flex: 1; }
+.equip-label { font-size: 13px; font-weight: 600; color: var(--text-heading); flex: 1; }
 .equip-qty   { width: 76px !important; padding: 5px 8px !important; font-size: 12px !important; border-radius: 7px !important; }
 
 
@@ -2355,26 +2364,26 @@ tr:hover td { background: #fafbfd; }
 /* ── 28. Page — Staff ─────────────────────────────────────────── */
 /* Group badge */
 .group-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
-.group-badge[data-group="วิทยาศาสตร์"]                       { background: #dbeafe; color: #1e40af; }
+.group-badge[data-group="วิทยาศาสตร์"]                       { background: #dbeafe; color: var(--accent-dark); }
 .group-badge[data-group="เทคโนโลยี"]                         { background: #e0f2fe; color: #0369a1; }
-.group-badge[data-group="คณิตศาสตร์"]                        { background: #fef9c3; color: #b45309; }
+.group-badge[data-group="คณิตศาสตร์"]                        { background: var(--yellow-light); color: #b45309; }
 .group-badge[data-group="ภาษาไทย"]                           { background: var(--red-light); color: var(--red-dark); }
-.group-badge[data-group="สังคมศึกษา ศาสนา และวัฒนธรรม"]     { background: #dcfce7; color: #15803d; }
-.group-badge[data-group="สุขศึกษาและพลศึกษา"]               { background: #d1fae5; color: #065f46; }
+.group-badge[data-group="สังคมศึกษา ศาสนา และวัฒนธรรม"]     { background: var(--role-academic-bg); color: #15803d; }
+.group-badge[data-group="สุขศึกษาและพลศึกษา"]               { background: var(--role-budget-bg); color: #065f46; }
 .group-badge[data-group="ภาษาต่างประเทศ"]                   { background: #ede9fe; color: #5b21b6; }
 .group-badge[data-group="ศิลปะ"]                             { background: #fce7f3; color: #be185d; }
-.group-badge[data-group="การงานอาชีพ"]                       { background: #fef3c7; color: #92400e; }
-.group-badge[data-group="แนะแนว"]                            { background: #fff7ed; color: #c2410c; }
+.group-badge[data-group="การงานอาชีพ"]                       { background: #fef3c7; color: var(--amber-dark); }
+.group-badge[data-group="แนะแนว"]                            { background: var(--orange-light); color: #c2410c; }
 .group-badge[data-group="ผู้บริหาร"]                         { background: #fdf4ff; color: #7e22ce; }
-.group-badge[data-group="เจ้าหน้าที่"]                       { background: var(--bg-alt); color: #475569; }
+.group-badge[data-group="เจ้าหน้าที่"]                       { background: var(--bg-alt); color: var(--text-mid); }
 
 /* Position tag */
-.pos-tag { background: var(--bg-alt); color: #475569; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.pos-tag { background: var(--bg-alt); color: var(--text-mid); padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
 
 /* Staff table alias */
 .staff-table        { width: 100%; border-collapse: collapse; }
 .staff-table th     { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid var(--border); background: var(--bg); white-space: nowrap; }
-.staff-table td     { padding: 12px 14px; font-size: 13px; color: #334155; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+.staff-table td     { padding: 12px 14px; font-size: 13px; color: var(--text-slate); border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
 .staff-table tr:last-child td { border-bottom: none; }
 .staff-table tbody tr { transition: background .12s; }
 .staff-table tbody tr:hover { background: #f8faff; }
@@ -2437,7 +2446,7 @@ body::-webkit-scrollbar,
    ✏️ เดิมประกาศซ้ำเป๊ะใน repair-admin.html และ repair-user.html
    หมายเหตุ: .rp-status (base rule) ไม่ได้ย้ายมา เพราะสองไฟล์มีค่าต่างกันเล็กน้อย
    (repair-admin.html มี white-space:nowrap เพิ่ม) ยังคงไว้ local ในแต่ละไฟล์ */
-.rp-status.c-amber  { background: var(--amber-light); color: #92400e; }
+.rp-status.c-amber  { background: var(--amber-light); color: var(--amber-dark); }
 .rp-status.c-sky    { background: var(--sky-light);   color: #075985; }
 .rp-status.c-green  { background: var(--green-light); color: #15803d; }
 .rp-status.c-red    { background: var(--red-light);   color: var(--red-dark); }
@@ -2466,7 +2475,7 @@ body::-webkit-scrollbar,
   min-height: 90px; display: flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 10px; transition: border-color .15s, background .15s;
 }
-.sigpad-file-drop:hover { border-color: var(--purple-accent); background: #f5f3ff; }
+.sigpad-file-drop:hover { border-color: var(--purple-accent); background: var(--violet-light); }
 .sigpad-file-placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text3); text-align: center; }
 .sigpad-file-placeholder p { font-size: 11px; font-weight: 600; line-height: 1.5; margin: 0; }
 .sigpad-file-preview { display: flex; align-items: center; gap: 12px; width: 100%; }
@@ -2475,7 +2484,7 @@ body::-webkit-scrollbar,
   border-radius: 6px; border: 1px solid var(--border);
 }
 .sigpad-file-remove-btn {
-  padding: 4px 12px; background: white; color: #dc2626; border: 1px solid #fecaca;
+  padding: 4px 12px; background: white; color: var(--red); border: 1px solid var(--red-mid);
   border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Sarabun', sans-serif;
   display: flex; align-items: center; gap: 4px; flex-shrink: 0;
 }
