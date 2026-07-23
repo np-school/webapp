@@ -1,0 +1,467 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/admins/$(myEmail()));
+    }
+    function isSuperAdmin() {
+      return myEmail() == 'nattapol@nongki.ac.th';
+    }
+    function adminData() {
+      return get(/databases/$(database)/documents/admins/$(myEmail())).data;
+    }
+    function hasPerm(perm) {
+      return isSuperAdmin() || (isAdmin() && adminData().permissions[perm] == true);
+    }
+
+    match /announcements/{annId} {
+      allow read: if resource.data.scope == 'external' || isAuthed();
+
+      allow create: if (isSuperAdmin() || isAdmin()) &&
+        request.resource.data.keys().hasAll([
+          'title', 'type', 'scope', 'active',
+          'noExpiry', 'department', 'createdAt', 'createdBy', 'updatedAt'
+        ]) &&
+        request.resource.data.type  in ['info', 'warning', 'success', 'urgent'] &&
+        request.resource.data.scope in ['internal', 'external'] &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() >= 1 &&
+        request.resource.data.title.size() <= 200 &&
+        request.resource.data.active   is bool &&
+        request.resource.data.noExpiry is bool &&
+        request.resource.data.department is string &&
+        request.resource.data.department.size() >= 1 &&
+        request.resource.data.createdBy == myEmail();
+
+      allow update: if (isSuperAdmin() || isAdmin()) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['createdAt', 'createdBy']) &&
+        'updatedAt' in request.resource.data &&
+        (!('type'  in request.resource.data) ||
+          request.resource.data.type  in ['info', 'warning', 'success', 'urgent']) &&
+        (!('scope' in request.resource.data) ||
+          request.resource.data.scope in ['internal', 'external']) &&
+        (!('title' in request.resource.data) || (
+          request.resource.data.title is string &&
+          request.resource.data.title.size() >= 1 &&
+          request.resource.data.title.size() <= 200));
+
+      allow delete: if isSuperAdmin() || isAdmin();
+    }
+
+    /* ══════════════════════════════
+       rooms / bookings (room-admin.html / room-request.html)
+       ✏️ แก้: ใช้ hasPerm('bookings') แทน isAdmin() เดิม
+       เดิม isAdmin() เช็คแค่ "มี doc ใน admins" เฉยๆ ไม่ได้เช็ค permission
+       เฉพาะ ทำให้แอดมินที่ไม่มีสิทธิ์ bookings (เช่นมีแค่สิทธิ์ staff/ipad)
+       ยังลบห้อง/แก้ไขการจองของคนอื่นได้ทั้งที่ UI ซ่อนเมนูนี้ไว้แล้ว
+       ══════════════════════════════ */
+    match /rooms/{id} {
+      allow read: if true;
+      allow write: if hasPerm('bookings');
+    }
+    match /bookings/{id} {
+      allow read: if true;
+      allow create: if isAuthed();
+      allow update: if hasPerm('bookings') || request.auth.uid == resource.data.userId;
+      allow delete: if hasPerm('bookings') || request.auth.uid == resource.data.userId;
+    }
+
+    /* ══════════════════════════════
+       admins — เอกสารสิทธิ์ + ข้อมูลส่วนตัวของแอดมินแต่ละคน
+       เขียนสิทธิ์ (permissions) ได้แค่ SuperAdmin เท่านั้น (เหมือนเดิม)
+
+       ✏️ เพิ่ม: ผู้ตรวจ portfolio แต่ละคน (ทุกขั้น ไม่ใช่แค่ SuperAdmin) ต้อง
+       บันทึก "ลายเซ็นล่าสุดของตัวเอง" ไว้ใช้ซ้ำได้เอง (portfolio-admin.js →
+       setReviewStatus() เขียน field lastSignatureURL หลังเซ็นสำเร็จแต่ละครั้ง
+       เพื่อให้ปุ่ม "ใช้ลายเซ็นนี้" ทำงานได้โดยไม่ต้องอัปโหลดซ้ำ)
+       เดิม allow write: if isSuperAdmin(); บล็อกไว้หมด ทำให้คนอื่นที่ไม่ใช่
+       SuperAdmin เซฟลายเซ็นตัวเองไม่ได้เลย (permission-denied เงียบๆ)
+       → เพิ่ม allow create/update แยกเฉพาะกรณีนี้ ล็อกเข้มมาก:
+         - แก้ได้แค่ doc ของตัวเอง (myEmail() == id) เท่านั้น
+         - แก้/สร้างได้แค่ field เดียวคือ lastSignatureURL เท่านั้น
+         - ห้ามแตะ permissions หรือ field อื่นใดผ่านทางนี้เด็ดขาด กัน
+           privilege escalation (ไม่งั้นใครก็ตั้งสิทธิ์ตัวเองได้ผ่านช่องนี้)
+       ══════════════════════════════ */
+    match /admins/{id} {
+      allow read: if isAuthed() && (myEmail() == id || isAdmin());
+
+      allow update: if isAuthed() && myEmail() == id &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSignatureURL']) &&
+        request.resource.data.lastSignatureURL is string;
+
+      allow create: if isAuthed() && myEmail() == id &&
+        request.resource.data.keys().hasOnly(['lastSignatureURL']) &&
+        request.resource.data.lastSignatureURL is string;
+
+      allow write: if isSuperAdmin();
+    }
+
+    /* ══════════════════════════════
+       users — LINE linkage (index.html เขียนแค่ doc ของตัวเองเท่านั้น
+       ที่ db.collection('users').doc(u.uid))
+       ✏️ แก้: เดิม allow write: if isAuthed(); ไม่ได้เช็คว่า uid ตรงกับ
+       คนที่ login เลย ทำให้ใครก็ได้ที่ login แล้วเขียนทับ/ยึด doc ของ
+       คนอื่นได้ผ่าน Console ตรงๆ — ล็อกให้แก้ได้แค่ doc ของตัวเองเท่านั้น
+       ══════════════════════════════ */
+    match /users/{uid} {
+      allow read:  if isAuthed() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAuthed() && request.auth.uid == uid;
+    }
+
+    match /fcmTokens/{token} {
+      allow get, list: if isAuthed() && resource.data.userId == request.auth.uid;
+
+      allow create, update: if isAuthed() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.email.lower() == myEmail() &&
+        'updatedAt' in request.resource.data;
+      allow delete: if isAuthed() && resource.data.userId == request.auth.uid;
+    }
+
+    /* ══════════════════════════════
+       staff — ข้อมูลบุคลากรหลัก
+       แอดมินที่มีสิทธิ์ 'staff' จัดการได้ทุก field
+       เจ้าของ record เอง (uid ตรงกัน) แก้ไขได้เฉพาะ field ที่ profile.html
+       sync กลับมา (ชื่อ/ตำแหน่ง/กลุ่มสาระ/วิทยฐานะ/เบอร์โทร) เท่านั้น
+       ห้ามแตะ email/note/role/createdAt ผ่านทางนี้
+       ══════════════════════════════ */
+    match /staff/{id} {
+      allow read: if isAuthed() &&
+        (resource == null ||
+         resource.data.email == myEmail() ||
+         isAdmin());
+
+      allow write: if hasPerm('staff');
+
+      /* เคลม uid ครั้งแรก (profile.html sync ตอน login) — เฉพาะ record ที่ email
+         ตรงกับ token ของตัวเอง และแก้ได้แค่ field 'uid' เท่านั้น */
+      allow update: if isAuthed() &&
+        resource.data.email == myEmail() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid']) &&
+        request.resource.data.uid == request.auth.uid;
+
+      /* เจ้าของ record (ผูก uid แล้ว) แก้ไขข้อมูลส่วนตัวที่ลิงก์กับ profile.html ได้ */
+      allow update: if isAuthed() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+          ['name', 'position', 'group', 'academic_rank', 'phone', 'updatedAt']
+        );
+    }
+
+    match /staff_profile/{uid} {
+      allow read: if isAuthed() &&
+        (request.auth.uid == uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.auth.uid == uid &&
+        request.resource.data.uid == uid;
+      allow update: if isAuthed() &&
+        request.auth.uid == uid;
+      allow delete: if isAuthed() &&
+        request.auth.uid == uid;
+    }
+
+    /* ══════════════════════════════
+       staff_profile_sync — ค่ากลางระหว่าง staff.html <-> profile.html
+       keyed by email. แอดมินที่มีสิทธิ์ 'staff' เขียนได้ทุก field
+       เจ้าของอีเมลนี้เขียนเองได้เฉพาะ field ที่ profile.html sync กลับมา
+       ══════════════════════════════ */
+    match /staff_profile_sync/{email} {
+      allow read: if isAuthed() &&
+        (myEmail() == email || isAdmin());
+
+      allow write: if hasPerm('staff');
+
+      allow create: if isAuthed() &&
+        myEmail() == email &&
+        request.resource.data.email == email &&
+        request.resource.data.keys().hasOnly(
+          ['email', 'name', 'position', 'group', 'academic_rank', 'phone', 'syncedAt', 'syncedBy']
+        );
+
+      allow update: if isAuthed() &&
+        myEmail() == email &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+          ['name', 'position', 'group', 'academic_rank', 'phone', 'syncedAt', 'syncedBy']
+        );
+    }
+
+    match /staff_teaching/{id} {
+      allow read: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthed() &&
+        resource.data.uid == request.auth.uid;
+      allow delete: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /staff_duties/{id} {
+      allow read: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthed() &&
+        resource.data.uid == request.auth.uid;
+      allow delete: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /staff_development/{id} {
+      allow read: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthed() &&
+        resource.data.uid == request.auth.uid;
+      allow delete: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /staff_media/{id} {
+      allow read: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthed() &&
+        resource.data.uid == request.auth.uid;
+      allow delete: if isAuthed() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /staff_career_history/{docId} {
+      allow read: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.auth.uid == request.resource.data.uid;
+      allow update, delete: if isAuthed() &&
+        request.auth.uid == resource.data.uid;
+    }
+
+    match /staff_education/{docId} {
+      allow read: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.auth.uid == request.resource.data.uid;
+      allow update, delete: if isAuthed() &&
+        request.auth.uid == resource.data.uid;
+    }
+
+    match /portfolio_submissions/{id} {
+      allow read: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.auth.uid == request.resource.data.uid;
+      allow update: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow delete: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+    }
+
+    match /portfolio_doc_types/{id} {
+      allow read: if isAuthed();
+      allow write: if hasPerm('portfolio');
+    }
+
+    match /portfolio_memos/{id} {
+      allow read: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthed() &&
+        request.auth.uid == request.resource.data.uid;
+      allow update: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+      allow delete: if isAuthed() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+    }
+
+    match /foodcourt_transactions/{docId} {
+      allow read, write: if hasPerm('foodcourt');
+    }
+    match /foodcourt_meta/{docId} {
+      allow read, write: if hasPerm('foodcourt');
+    }
+
+/* ══════════════════════════════
+       ระบบแจ้งซ่อม (repair-user.html / repair-admin.html)
+       ผู้แจ้งอ่าน/แก้ไขได้เฉพาะงานของตัวเอง (แค่ตอนตรวจรับ/ปิดงาน/ส่งกลับ)
+       เจ้าหน้าที่ที่มีสิทธิ์ 'repair' อ่าน/แก้ไขได้ทุกงาน
+
+       ✏️ อัปเดต (คู่กับ repair-user.html/js เวอร์ชันใหม่):
+       1) บังคับแนบรูปอย่างน้อย 1 รูปตอนแจ้ง/แก้ไข — เดิมเช็คแค่ฝั่ง client
+          (submitReport()) เท่านั้น เพิ่มเช็คซ้ำในกฎนี้ด้วย กันคนเรียก
+          Firestore ตรงๆ ข้าม client validation
+       2) เพิ่มฟิลด์ 'reporterPosition' (ตำแหน่งผู้แจ้ง ดึงจาก staff อัตโนมัติ
+          แต่แก้ไขเองได้) เข้าลิสต์ field ที่ผู้แจ้งแก้ไขคำขอตัวเองได้
+       3) เพิ่ม 'reporterName' เข้าลิสต์เดียวกันด้วย — เดิมโค้ด client
+          (openEditModal → submitReport) ส่ง reporterName มาด้วยเสมอตอนแก้ไข
+          แต่ไม่เคยอยู่ใน hasOnly มาก่อน ทำให้ถ้าผู้แจ้งแก้ชื่อของตัวเองในฟอร์ม
+          แก้ไขคำขอ จะโดน rule นี้ปฏิเสธ (permission-denied) ทันที
+       ══════════════════════════════ */
+    match /repairs/{id} {
+      allow read: if isAuthed() &&
+        (resource.data.reporterUid == request.auth.uid || hasPerm('repair'));
+
+      allow create: if isAuthed() &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.status == 'reported' &&
+        request.resource.data.keys().hasAll(
+          ['category', 'priority', 'location', 'title', 'description', 'reporterUid', 'createdAt']
+        ) &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() >= 1;
+
+      allow update: if isAuthed() && (
+        hasPerm('repair') ||
+        /* ผู้แจ้งแก้ไขรายละเอียดคำขอเองได้ เฉพาะตอนสถานะยังเป็น 'reported' (ยังไม่ถูกพิจารณา)
+           และห้ามเปลี่ยนสถานะ/reporterUid ผ่านทางนี้
+           - 'reporterPhone' / 'reporterName' / 'reporterPosition' อยู่ในลิสต์นี้เพราะฟอร์ม
+             แก้ไขคำขอส่งค่าทั้งสามฟิลด์นี้กลับมาพร้อมกันเสมอ (เติมอัตโนมัติจากข้อมูล
+             บุคลากร แต่ผู้แจ้งแก้ไขเองได้ก่อนกดบันทึก)
+           - บังคับว่าต้องมีรูปแนบอย่างน้อย 1 รูปเสมอ เหมือนตอนสร้างใหม่ */
+        (resource.data.reporterUid == request.auth.uid &&
+         resource.data.status == 'reported' &&
+         request.resource.data.status == 'reported' &&
+         request.resource.data.reporterUid == resource.data.reporterUid &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['category', 'priority', 'location', 'title', 'description', 'photos',
+                     'updatedAt', 'logs', 'reporterPhone', 'reporterName', 'reporterPosition']) &&
+         request.resource.data.photos is list &&
+         request.resource.data.photos.size() >= 1) ||
+        (resource.data.reporterUid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'reviewResult', 'reviewNote', 'reviewedAt', 'closedAt', 'updatedAt', 'logs']))
+      );
+
+      allow delete: if hasPerm('repair') ||
+        (isAuthed() &&
+         resource.data.reporterUid == request.auth.uid &&
+         resource.data.status == 'reported');
+    }
+
+/* ══════════════════════════════
+       ตั้งค่าระบบแจ้งซ่อม: หมวดหมู่ / อาคาร-สถานที่ / ผู้รับผิดชอบ
+       หมวดหมู่: เจ้าหน้าที่สิทธิ์ repair เท่านั้นที่เพิ่ม/ลบได้
+       อาคาร: เจ้าหน้าที่สร้าง/ลบอาคาร แต่สมาชิกทุกคนเพิ่ม "สถานที่ย่อย" เองได้
+              (จำกัดให้แก้ได้แค่ field subLocations เท่านั้น กันแก้ชื่ออาคาร/ข้อมูลอื่น)
+       ผู้รับผิดชอบ: เจ้าหน้าที่สิทธิ์ repair เท่านั้นที่เพิ่ม/ลบได้ (เหมือนหมวดหมู่)
+       ══════════════════════════════ */
+    match /repair_categories/{id} {
+      allow read: if isAuthed();
+      allow write: if hasPerm('repair');
+    }
+
+    match /repair_buildings/{id} {
+      allow read: if isAuthed();
+      allow create, delete: if hasPerm('repair');
+      allow update: if hasPerm('repair') || (
+        isAuthed() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subLocations'])
+      );
+    }
+
+    match /repair_responsible/{id} {
+      allow read: if isAuthed();
+      allow write: if hasPerm('repair');
+    }
+
+/* ══════════════════════════════
+       ธีมสีทั้งเว็บ (Admin-controlled) — SuperAdmin เท่านั้นที่แก้ได้
+       เพราะมีผลกับทุกหน้า/ทุกคนที่เข้าเว็บ
+       ══════════════════════════════ */
+    match /site_config/{id} {
+      allow read: if true;
+      allow write: if isSuperAdmin() &&
+        (!('memberAccent' in request.resource.data) ||
+          request.resource.data.memberAccent.matches('^#[0-9a-fA-F]{6}$')) &&
+        (!('staffAccent' in request.resource.data) ||
+          request.resource.data.staffAccent.matches('^#[0-9a-fA-F]{6}$'));
+    }
+
+/* ══════════════════════════════
+       ระบบยืม-คืนไอแพด (เฉพาะแอดมินที่มีสิทธิ์ ipad)
+       ══════════════════════════════ */
+    match /ipad_students/{id} {
+      allow read: if hasPerm('ipad');
+      allow create: if hasPerm('ipad') &&
+        request.resource.data.keys().hasAll(['studentId', 'firstName', 'lastName', 'grade', 'room', 'createdAt']) &&
+        request.resource.data.studentId is string && request.resource.data.studentId.size() >= 1 &&
+        request.resource.data.firstName is string && request.resource.data.firstName.size() >= 1 &&
+        request.resource.data.lastName  is string && request.resource.data.lastName.size() >= 1 &&
+        request.resource.data.grade in ['ม.4', 'ม.5', 'ม.6'] &&
+        request.resource.data.room  is string && request.resource.data.room.size() >= 1;
+      allow update: if hasPerm('ipad') &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['studentId', 'firstName', 'lastName', 'grade', 'room', 'updatedBy', 'updatedAt']) &&
+        request.resource.data.studentId is string && request.resource.data.studentId.size() >= 1 &&
+        request.resource.data.firstName is string && request.resource.data.firstName.size() >= 1 &&
+        request.resource.data.lastName  is string && request.resource.data.lastName.size() >= 1 &&
+        request.resource.data.grade in ['ม.4', 'ม.5', 'ม.6'];
+      allow delete: if hasPerm('ipad');
+    }
+
+    match /ipad_devices/{id} {
+      allow read: if hasPerm('ipad');
+      allow create: if hasPerm('ipad') &&
+        request.resource.data.keys().hasAll(['friendlyName', 'assetNumber', 'serialNumber', 'createdAt']) &&
+        request.resource.data.friendlyName is string &&
+        request.resource.data.serialNumber  is string && request.resource.data.serialNumber.size() >= 1;
+      allow update: if hasPerm('ipad') &&
+        request.resource.data.serialNumber is string && request.resource.data.serialNumber.size() >= 1 &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['friendlyName', 'assetNumber', 'serialNumber', 'condition',
+                    'claimNote', 'claimDate', 'claimReportedBy', 'claimUpdatedBy']) &&
+        (!('condition' in request.resource.data) || request.resource.data.condition in ['ok', 'claim']);
+      allow delete: if hasPerm('ipad');
+    }
+
+    match /ipad_borrows/{id} {
+      allow read: if hasPerm('ipad');
+      allow create: if hasPerm('ipad') &&
+        request.resource.data.keys().hasAll([
+          'studentId', 'studentIdNum', 'studentName', 'grade', 'room', 'borrowerType',
+          'deviceId', 'friendlyName', 'serialNumber', 'accessories',
+          'borrowDate', 'returnDate', 'status', 'createdBy', 'createdAt'
+        ]) &&
+        request.resource.data.borrowerType in ['student', 'staff'] &&
+        request.resource.data.status    == 'out' &&
+        request.resource.data.createdBy == myEmail();
+
+      allow update: if hasPerm('ipad') && (
+        (
+          resource.data.status == 'out' &&
+          request.resource.data.status == 'in' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'returnDate', 'returnCondition', 'accessories',
+                      'deviceReturned', 'deviceReturnDate', 'returnedBy', 'claimNote']) &&
+          (!('returnCondition' in request.resource.data) || request.resource.data.returnCondition in ['ok', 'claim'])
+        ) ||
+        (
+          resource.data.status == 'out' &&
+          request.resource.data.status == 'out' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['accessories', 'deviceId', 'friendlyName', 'serialNumber', 'borrowDate',
+                      'deviceReturned', 'deviceReturnDate', 'returnCondition', 'recordedBy']) &&
+          (!('returnCondition' in request.resource.data) || request.resource.data.returnCondition in ['ok', 'claim'])
+        )
+      );
+
+      allow delete: if hasPerm('ipad');
+    }
+
+    match /ipad_accessory_claims/{id} {
+      allow read: if hasPerm('ipad');
+      allow create: if hasPerm('ipad') &&
+        request.resource.data.keys().hasAll(['name', 'note', 'reportedBy', 'createdAt']) &&
+        request.resource.data.name is string && request.resource.data.name.size() >= 1;
+      allow delete: if hasPerm('ipad');
+    }
+  }
+}
