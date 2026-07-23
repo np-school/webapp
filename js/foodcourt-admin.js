@@ -165,7 +165,9 @@ let recurringItems=[
 const fmt=n=>Math.round(n).toLocaleString('th-TH');
 const fmtDateShort=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
 const today=()=>new Date().toISOString().split('T')[0];
-const colors=['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#b45309'];
+/* ── ใช้ --chart-1..9 ชุดเดียวกับกราฟหน้าอื่นในเว็บ (index.js/profile.js) แทน hex เดิม
+   ที่ผสมกันเองแบบสุ่ม ให้กราฟ Food Court เข้าชุดสีเดียวกับทั้งเว็บ ── */
+const colors=['var(--chart-1)','var(--chart-2)','var(--chart-3)','var(--chart-4)','var(--chart-5)','var(--chart-6)','var(--chart-7)','var(--chart-8)','var(--chart-9)'];
 
 // ── FIRESTORE PERSISTENCE ──
 const FC_TX_COLL = 'foodcourt_transactions';
@@ -888,7 +890,7 @@ function updateEntrySumBar(){
 
 function saveDailyEntry(){
   const date=document.getElementById('entryDate').value;
-  if(!date){showToast('กรุณาเลือกวันที่','#dc2626');return;}
+  if(!date){showToast('กรุณาเลือกวันที่','error');return;}
   let count=0;
   let newTx=[];
 
@@ -919,7 +921,7 @@ function saveDailyEntry(){
     });
   });
 
-  if(!count){showToast('ไม่มีรายการที่จะบันทึก','#dc2626');return;}
+  if(!count){showToast('ไม่มีรายการที่จะบันทึก','error');return;}
 
   recomputeBalance();
   newTx.forEach(t=>fcSaveTransaction(t));
@@ -927,7 +929,7 @@ function saveDailyEntry(){
   populateMonthFilter();
   renderDailyEntry();
   renderDashboard();
-  showToast('บันทึกรายวันแล้ว '+count+' รายการ','#16a34a');
+  showToast('บันทึกรายวันแล้ว '+count+' รายการ');
 }
 function openQuickLog(recId){
   _quickLogRec=recurringItems.find(r=>r.id===recId);if(!_quickLogRec) return;
@@ -944,12 +946,12 @@ function saveQuickLog(){
   const date=document.getElementById('quickLogDate').value;
   const amount=parseFloat(document.getElementById('quickLogAmount').value)||0;
   const note=document.getElementById('quickLogNote').value.trim();
-  if(!date||!amount){showToast('กรุณากรอกข้อมูลให้ครบ','#dc2626');return;}
+  if(!date||!amount){showToast('กรุณากรอกข้อมูลให้ครบ','error');return;}
   const isIncome=_quickLogRec.type==='income';
   const t={id:Date.now(),date,name:_quickLogRec.name,income:isIncome?amount:0,expense:isIncome?0:amount,balance:0,note,recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeQuickLogModal();renderDashboard();
-  showToast('บันทึก "'+_quickLogRec.name+'" แล้ว','#16a34a');
+  showToast('บันทึก "'+_quickLogRec.name+'" แล้ว');
 }
 
 // ── SHOP COUNT MODAL ──
@@ -970,13 +972,13 @@ function saveShopCount(){
   const date=document.getElementById('shopCountDate').value;
   const count=parseInt(document.getElementById('shopCountNum').value)||0;
   const note=document.getElementById('shopCountNote').value.trim();
-  if(!date){showToast('กรุณาเลือกวันที่','#dc2626');return;}
-  if(!count){showToast('กรุณาใส่จำนวนร้าน','#dc2626');return;}
+  if(!date){showToast('กรุณาเลือกวันที่','error');return;}
+  if(!count){showToast('กรุณาใส่จำนวนร้าน','error');return;}
   const amount=count*50;
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'var(--accent)');
+  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount));
 }
 
 function openAddModal(){
@@ -1023,7 +1025,7 @@ function updateModalSumBar(){
 
 function saveModalEntry(){
   const date=document.getElementById('addDate').value;
-  if(!date){showToast('กรุณาเลือกวันที่','#dc2626');return;}
+  if(!date){showToast('กรุณาเลือกวันที่','error');return;}
   let count=0; let newTx=[];
   recurringItems.forEach(r=>{
     if(r.shopCount){
@@ -1041,33 +1043,33 @@ function saveModalEntry(){
       if(name&&amount>0){ const t={id:Date.now()+Math.random(),date,name,income:type==='income'?amount:0,expense:type==='expense'?amount:0,balance:0,note:'',recurring:false}; transactions.push(t);newTx.push(t);count++; }
     });
   });
-  if(!count){showToast('ไม่มีรายการที่จะบันทึก','#dc2626');return;}
+  if(!count){showToast('ไม่มีรายการที่จะบันทึก','error');return;}
   recomputeBalance();
   newTx.forEach(t=>fcSaveTransaction(t));
   populateMonthFilter();
   closeAddModal();
   renderDashboard();
-  showToast('บันทึกแล้ว '+count+' รายการ','#16a34a');
+  showToast('บันทึกแล้ว '+count+' รายการ');
 }
 function saveRecurring(){
   const name=document.getElementById('recName').value.trim();
   const amount=parseFloat(document.getElementById('recAmount').value)||0;
   const desc=document.getElementById('recDesc').value.trim();
-  if(!name){showToast('กรุณาใส่ชื่อรายการ','#dc2626');return;}
+  if(!name){showToast('กรุณาใส่ชื่อรายการ','error');return;}
   recurringItems.push({id:Date.now(),type:recType,name,amount,desc});
   document.getElementById('recName').value='';
   document.getElementById('recAmount').value='';
   document.getElementById('recDesc').value='';
   fcSaveRecurring();
   renderManage();renderDashboardRecurring();
-  showToast('เพิ่มรายการประจำแล้ว','#16a34a');
+  showToast('เพิ่มรายการประจำแล้ว');
 }
 function deleteRec(id){
   if(!confirm('ลบรายการประจำนี้?')) return;
   recurringItems=recurringItems.filter(r=>r.id!==id);
   fcSaveRecurring();
   renderManage();renderDashboardRecurring();
-  showToast('ลบรายการประจำแล้ว','#dc2626');
+  showToast('ลบรายการประจำแล้ว','error');
 }
 
 // ── POPULATE MONTH FILTER ──

@@ -34,7 +34,7 @@ function closeSidebar() {
 function showToast(msg, type) {
   var t = document.createElement('div');
   t.className = 'toast';
-  t.style.background = type === 'error' ? '#ef4444' : type === 'warn' ? '#f59e0b' : '#22c55e';
+  t.style.background = type === 'error' ? 'var(--status-danger)' : type === 'warn' ? 'var(--status-warning)' : 'var(--status-success)';
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(function() {

@@ -98,7 +98,7 @@
 
 ### 🔲 ต้องทำต่อ (ยังไม่แก้)
 
-1. **Hardcoded hex color ใน `js/*.js` (~1,375 จุด)** — มากสุดที่ `portfolio-admin.js` (~384) และ `profile.js` (~230) แก้ยากกว่าไฟล์ `.html` เพราะสีบางจุดขึ้นกับ status/state ของข้อมูล ต้องเช็ค context ทีละจุด (รายละเอียดใน Changelog)
+1. **Hardcoded hex color ใน `js/*.js`** — งานกำลังทำอยู่ (ดู Changelog): แก้แล้ว `index.js`, `profile.js`, `foodcourt-admin.js` (รวม `shared/common.js` → `showToast()`) เปลี่ยนไปใช้ `--chart-N`/`--status-*` token กลางที่เพิ่มใน `styles-new.css` แล้ว — ยังเหลือ `portfolio-admin.js` (~52 จุด), `room-request.js`, `portfolio-teacher.js`, `repair-admin.js`, `staff.js`, `admin-role.js`, `settings.js`, `room-admin.js`, `repair-user.js`, `ipad-lending.js` แก้ยากกว่าไฟล์ `.html` เพราะสีบางจุดขึ้นกับ status/state ของข้อมูล และบางจุดต่อ string เป็น hex+alpha (`hex+'15'`) ที่ใช้ `var()` แทนไม่ได้ ต้องเช็ค context ทีละจุด
 2. **ไฟล์ JS ใหญ่เกินไป ควรแตกโมดูล**: `portfolio-admin.js` (~3,480 บรรทัด), `repair-admin.js` (~2,230), `ipad-lending.js` (~2,080), `portfolio-teacher.js` (~2,060), `profile.js` (~1,950)
 3. **พิจารณาตัด Tailwind ออกทั้งหมด** — สแกนแล้วพบว่าโปรเจกต์แทบไม่ได้ใช้ Tailwind utility class เลย (ดู Changelog) ความเสี่ยงต่ำถ้าจะเอาออก
 
@@ -106,7 +106,7 @@
 
 - `js/page-name.js` **ไม่ใช่หน้าเว็บจริง** เป็นแค่ template คู่กับ `page-template.html` อย่าแก้คิดว่ามีผลกับหน้าไหน
 - Favicon/manifest icons อ้าง Firebase Storage URL ที่มี access token ฝังอยู่ — token หมดอายุ/rule เปลี่ยน = ไอคอนพังทั้งเว็บพร้อมกัน
-- **`firestore.rules` ไม่อยู่ใน repo นี้** — ก่อนแก้โค้ดฝั่ง client ที่เขียน field ใหม่เข้า Firestore ต้องเช็คกับทีม/Firebase Console ก่อนเสมอ ไม่งั้นเจอ `permission-denied` เงียบๆ ตอน production
+- **`firestore.rules` เพิ่งถูกเพิ่มเข้า repo แล้ว** (ก่อนหน้านี้ไม่มีไฟล์นี้อยู่เลย) พร้อม `firebase.json` ที่เพิ่ม block `firestore.rules` — **ยังไม่ได้ยืนยันว่า deploy จริงหรือยัง** ก่อนแก้โค้ดฝั่ง client ที่เขียน field ใหม่เข้า Firestore ควรเช็คให้แน่ใจก่อนว่า deploy แล้วและตรงกับที่ใช้งานจริงบน Console ไม่งั้นเจอ `permission-denied` เงียบๆ ตอน production
 - **CI (`.github/workflows/deploy-functions.yml`) deploy อัตโนมัติแค่ 2 function** (`onBookingStatusChanged`, `onNewBookingCreated`) — function อื่น (repair/portfolio/drive-upload) ต้อง deploy มือเสมอ
 - อย่า commit `.DS_Store`, `__MACOSX/`, `node_modules/`, หรือไฟล์ secret (`serviceAccountKey.json`, `*.env`) — มีอยู่ใน `.gitignore` แล้วแต่ต้องเช็คซ้ำก่อน commit ทุกครั้ง
 
@@ -114,8 +114,15 @@
 
 > สรุปสั้นๆ เรียงใหม่สุดก่อน — รายละเอียดเชิงลึก/ขั้นตอนแก้แบบเต็มดูได้จาก commit message หรือถามได้ถ้าต้องการบริบทเพิ่ม
 
+- ✅ **`firestore.rules` + `firebase.json`**: เพิ่มไฟล์ `firestore.rules` เข้า repo เป็นครั้งแรก (เดิมไม่มีไฟล์นี้อยู่เลย จัดการแยกนอก repo) พร้อมเพิ่ม block `firestore` ใน `firebase.json` ให้ `firebase deploy --only firestore:rules` ใช้ได้ — **ยังไม่ยืนยันว่า deploy จริงแล้วหรือยัง** ต้องเทียบกับกฎที่ใช้งานอยู่บน Console ก่อน deploy เสมอ
+- ✅ **สีทั้งเว็บ — เริ่มงานรวมชุดสีให้เป็นโทนเดียวกัน** (ผู้ใช้แจ้งว่าแต่ละหน้า/กราฟสีไม่เข้ากัน) กำลังทำอยู่ ทำไปแล้ว:
+  - **`shared/styles-new.css`**: เจอบั๊ก — เคยมีบล็อก "Auto-added tokens" 72 ตัวที่ประกาศ `--green`/`--blue`/`--amber`/`--violet` ซ้ำชื่อกับ token ที่ตั้งใจออกแบบไว้ด้านบน ด้วยค่าคนละตัว (CSS ใช้ค่าที่ประกาศทีหลังสุดเสมอ ทำให้ token ตัวจริงถูกทับเงียบๆ) → ลบบล็อกนี้ทิ้งทั้งหมด แล้วเพิ่ม **Chart Palette** (`--chart-1` ถึง `--chart-9`) กับ **Status Palette** (`--status-success/warning/danger/info/neutral` + `-bg`) ที่อ้างอิง token เดิม ให้ทุกกราฟ/badge ในเว็บดึงจากชุดเดียวกัน
+  - **`js/index.js`**: ย้าย `REPAIR_STATUS_META`, `STATUS_BG/COLOR/DOT` (mini progress portfolio), `PF_DOC_TYPES` ไปใช้ token กลาง + แก้บั๊ก `ANN_CLR` ของประกาศสาธารณะกับประกาศบนแดชบอร์ดใช้เฉดสีคนละชุดสำหรับ type เดียวกัน (ตอนนี้ใช้ token เดียวกันทั้งคู่)
+  - **`js/profile.js`**: เจอชุดสีประเภทเอกสาร (9 สี) hardcode ซ้ำกัน **3 จุด** ในไฟล์/โปรเจกต์ (`DOCUMENT_TYPES`, `_sarDocTypes` ในไฟล์นี้ + `PF_DOC_TYPES` ใน `index.js`) → รวมเป็น `--chart-N` ชุดเดียว, แก้บั๊ก `STATUS_COLOR`/`STATUS_BG` ของ workflow ตรวจ portfolio ที่มี 2 บล็อกในไฟล์เดียวกันให้สี `revision` ไม่ตรงกัน (จุดหนึ่งแดง อีกจุดเหลือง) ให้ใช้ token เดียวกัน, รวม timeline color array ที่ซ้ำกัน 2 จุด
+  - **`js/foodcourt-admin.js` + `shared/common.js`**: แก้บั๊กจริง — `showToast(msg, type)` ใน `common.js` เช็คแค่ `type === 'error'`/`'warn'` แต่ `foodcourt-admin.js` ส่ง hex ตรงๆ (`'#dc2626'`/`'#16a34a'`) เข้าไปแทน ทำให้ไม่ตรงเงื่อนไขไหนเลย **toast แจ้งเตือน error ทุกอันเลยตกไปแสดงเป็นสีเขียว (สำเร็จ) ผิดความหมาย** → เปลี่ยนไปส่ง `'error'` ตรงๆ และแก้ `common.js`/กราฟ Food Court (`colors` array) ให้ใช้ `--chart-N`/`--status-*`
+  - ⏳ **ยังไม่แก้**: `portfolio-admin.js`, `room-request.js`, `portfolio-teacher.js`, `repair-admin.js`, `staff.js`, `admin-role.js`, `settings.js`, `room-admin.js`, `repair-user.js`, `ipad-lending.js` (ดูหัวข้อ "ต้องทำต่อ" ด้านบน)
 - ✅ **Accessibility**: เพิ่ม `alt` ให้ `<img>` ทุกตัว (28 จุด), `aria-hidden` ให้ `<svg>` ตกแต่ง (12 จุด), `aria-label` ให้ปุ่มไอคอนล้วน (49 จุด) ทั่วโปรเจกต์ — convention ใหม่ดูหัวข้อ "Conventions ที่ต้องรู้ก่อนแก้โค้ด" → Accessibility
-- ✅ **Hex color → CSS variable ใน inline style ของทุกไฟล์ `.html`**: แทนที่ไป 741/786 จุด + เพิ่ม token ใหม่ใน `styles-new.css` (ยกเว้นสี LINE brand ที่ตั้งใจไม่แตะ) — เหลือ hex hardcode ใน `js/*.js` อีก ~1,375 จุดเป็นงานค้าง (ดูหัวข้อด้านบน)
+- ✅ **Hex color → CSS variable ใน inline style ของทุกไฟล์ `.html`**: แทนที่ไป 741/786 จุด + เพิ่ม token ใหม่ใน `styles-new.css` (ยกเว้นสี LINE brand ที่ตั้งใจไม่แตะ) — ส่วน `js/*.js` ดูหัวข้อ "สีทั้งเว็บ" ด้านบน (กำลังทำอยู่)
 - ✅ **Self-host + purge Tailwind CSS** แทนโหลดเต็มจาก jsdelivr CDN — build ไว้ที่ `shared/tailwind-built.css`, source/วิธี rebuild อยู่ที่ `shared/tailwind-source/` (ไม่มี build step อัตโนมัติ ต้องรันเองแล้ว commit ผลลัพธ์)
 - ✅ **`functions/index.js` export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอที่หายไป** (`onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged`) — เดิม export ผิดไฟล์ที่ไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง, ลบไฟล์เก่าทิ้งแล้ว
 - ✅ **`portfolio-admin.js`**: แก้ฟังก์ชันชื่อชนกัน `setReviewStatus` (2 จุดในไฟล์เดียวกัน ตัวหลังทับตัวแรกเงียบๆ) → เปลี่ยนตัว filter เป็น `setReviewStatusFilter`
