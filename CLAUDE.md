@@ -26,21 +26,22 @@
 │   ├── firebase.js          Firebase config + init, LINE config, push notification setup
 │   ├── common.js            buildPage()/buildPageShell() — navbar, sidebar, auth guard, toast,
 │   │                        theme system, date formatters ฯลฯ (ใช้ร่วมทุกหน้า)
-│   └── styles-new.css       Design token system (CSS variables) + ทุก component style
+│   ├── styles-new.css       Design token system (CSS variables) + ทุก component style
+│   ├── tailwind-built.css   Tailwind ที่ build+purge แล้ว (ไฟล์ที่ทุกหน้า `<link>` จริง)
+│   └── tailwind-source/     Config/README สำหรับ rebuild tailwind-built.css (ไม่มี build step อัตโนมัติ)
 ├── functions/
 │   ├── index.js             Entry point จริง (ตาม package.json "main") — export ครบทั้ง booking/repair/portfolio/drive-upload แล้ว
 │   ├── notifications.js     Push notification triggers: booking + repair
 │   ├── portfolio-notifications.js  Push notification triggers: portfolio (export จาก index.js แล้ว)
 │   └── drive-upload.js      อัปโหลดรูปแจ้งซ่อมไป Google Drive
+├── .github/workflows/deploy-functions.yml   CI: auto-deploy **เฉพาะ** onBookingStatusChanged + onNewBookingCreated
+│                                            เมื่อ push เข้า main ที่แตะ functions/**, firebase.json, .firebaserc
+│                                            (function อื่นทั้งหมด รวม repair/portfolio/drive-upload ยังต้อง deploy มือ — ดูหัวข้อ "คำสั่งที่ใช้บ่อย")
 ├── manifest.json / sw.js / firebase-messaging-sw.js   PWA + push notification service worker
 └── firebase.json / .firebaserc                        Firebase CLI config (functions only)
 ```
 
-> **`firestore.rules`** (root) — Firestore Security Rules ตัวจริงที่ deploy จริง (`firebase deploy --only firestore:rules`)
-> ทุกครั้งที่เพิ่ม field ใหม่ที่ client เขียนตรงเข้า Firestore (ไม่ผ่าน Cloud Function) **ต้องเช็คไฟล์นี้ด้วยเสมอ**
-> ว่า rule อนุญาตให้เขียนหรือยัง ไม่งั้นจะเจอ `permission-denied` เงียบๆ ตอน production (ไม่ error ตอน dev
-> เพราะมักลืมเทสต์ด้วย account ที่ไม่ใช่ SuperAdmin) — ดู pattern การล็อกแบบ "แก้ได้แค่ doc ตัวเอง + field
-> ที่กำหนดเท่านั้น" ที่ใช้ซ้ำหลายจุดในไฟล์นี้ (เช่น `admins/{id}.lastSignatureURL`, `staff/{id}` self-sync)
+> **`firestore.rules`** — **ไม่มีไฟล์นี้อยู่ใน repo ที่ track ด้วย git เลย** (เช็คแล้วไม่เคยมีใน git history ของ repo นี้มาก่อน) ทั้งที่โค้ดหลายจุด (เช่น `admins/{id}.lastSignatureURL`, `staff/{id}` self-sync ที่พูดถึงใน Changelog ด้านล่าง) พึ่งพา rule ที่ควรจะอยู่ในไฟล์นี้ — แปลว่า Firestore Security Rules ตัวจริงถูกจัดการแยกอยู่นอก repo นี้ (เช่นแก้ตรงผ่าน Firebase Console หรือเก็บใน repo/ที่เก็บอื่น) **ก่อนแก้โค้ดฝั่ง client ที่เขียนตรงเข้า Firestore field ใหม่ ต้องถามทีม/เช็ค Firebase Console ก่อนเสมอว่า rule อนุญาตหรือยัง** เพราะจะเจอ `permission-denied` เงียบๆ ตอน production โดยไม่มีไฟล์ในเครื่องให้ตรวจสอบล่วงหน้า
 
 ## แผนที่หน้า → ฟีเจอร์
 
@@ -96,11 +97,11 @@
 ## ปัญหาที่รู้อยู่แล้ว / ต้องระวัง
 
 1. ~~**Tailwind CDN v2.2.19 (ปี 2021)** โหลดเต็มทุกหน้าโดยไม่ purge ซ้ำซ้อนกับ design token system ใน `styles-new.css`~~ — **แก้แล้ว** ดู Changelog ด้านล่าง (self-hosted + purge) แต่ยังพิจารณาตัดออกทั้งหมดได้ในอนาคต เพราะสแกนแล้วพบว่าโปรเจกต์แทบไม่ได้ใช้ Tailwind utility class เลยจริงๆ (ใช้ custom class จาก `styles-new.css` เป็นหลัก)
-2. **ไฟล์ JS ใหญ่เกินไป**: `portfolio-admin.js` (3,240 บรรทัด), `ipad-lending.js`, `portfolio-teacher.js`, `profile.js`, `repair-admin.js` — ควรแตกเป็นโมดูลย่อยเมื่อมีโอกาส
+2. **ไฟล์ JS ใหญ่เกินไป**: `portfolio-admin.js` (~3,480 บรรทัด), `ipad-lending.js` (~2,080), `repair-admin.js` (~2,230), `portfolio-teacher.js` (~2,060), `profile.js` (~1,950) — ควรแตกเป็นโมดูลย่อยเมื่อมีโอกาส
 3. **`js/page-name.js` ไม่ใช่หน้าเว็บจริง** เป็นแค่ template ตัวอย่าง อย่าแก้ไฟล์นี้คิดว่ามีผลกับหน้าใดหน้าหนึ่ง
 4. Favicon/manifest icons อ้างอิง Firebase Storage URL ที่มี access token ฝังอยู่ — ถ้า token หมดอายุ/rule เปลี่ยน ไอคอนทั้งเว็บพังพร้อมกัน
 5. อย่า commit `.DS_Store`, `__MACOSX/`, `node_modules/`, หรือไฟล์ secret (`serviceAccountKey.json`, `*.env`) — มีอยู่ใน `.gitignore` แล้วแต่ต้องเช็คซ้ำก่อน commit ทุกครั้ง
-6. **Hardcoded hex color ใน `js/*.js` (~1,477 จุด) ยังไม่ได้แก้** — แก้เฉพาะ inline style ในไฟล์ `.html` ไปแล้ว (ดู Changelog) แต่โค้ด JS ที่ render HTML ด้วยการต่อ string ยังมี hex hardcode เยอะมาก โดยเฉพาะ `portfolio-admin.js` (385 จุด) และ `profile.js` (230 จุด) — ถ้าจะแก้ต่อควรเช็ค context การใช้สีทีละจุดมากกว่าไฟล์ HTML เพราะ logic ซับซ้อนกว่า (เช่น สีที่ขึ้นกับ status/state ของข้อมูล ไม่ใช่แค่ดีไซน์คงที่)
+6. **Hardcoded hex color ใน `js/*.js` (~1,375 จุด ณ การนับล่าสุด) ยังไม่ได้แก้** — แก้เฉพาะ inline style ในไฟล์ `.html` ไปแล้ว (ดู Changelog) แต่โค้ด JS ที่ render HTML ด้วยการต่อ string ยังมี hex hardcode เยอะมาก โดยเฉพาะ `portfolio-admin.js` (~384 จุด) และ `profile.js` (~230 จุด) — ถ้าจะแก้ต่อควรเช็ค context การใช้สีทีละจุดมากกว่าไฟล์ HTML เพราะ logic ซับซ้อนกว่า (เช่น สีที่ขึ้นกับ status/state ของข้อมูล ไม่ใช่แค่ดีไซน์คงที่)
 
 ## แก้ไปแล้ว (Changelog)
 
@@ -116,7 +117,7 @@
   3. **ข้อยกเว้นที่ตั้งใจไม่แตะ**: สี LINE brand (`#06C755`, `#00a541`) ที่ใช้ในการ์ด "เชื่อมต่อ LINE" — เป็นสีตาม brand guideline ของ LINE ไม่ใช่สีของระบบธีมเรา จึงไม่ควรผูกกับ `var(--accent)` หรือ token อื่นของเรา
   4. เหลือ hex hardcode อีก **~33 จุด** เป็นสี decorative แบบ one-off ที่ใช้แค่ 1-4 ครั้งทั่วโปรเจกต์ (เช่น `#8b5cf6`, `#ec4899`, `#14b8a6` ในการ์ดไอคอนต่างๆ) ยังไม่คุ้มที่จะสร้าง token ใหม่ให้ — ถ้าเจอสีซ้ำพวกนี้เพิ่มในอนาคตค่อยพิจารณาเพิ่ม token
   5. **หมายเหตุสำคัญสำหรับ dev ในอนาคต**: hex บางค่าตรงกับ token มากกว่า 1 ชื่อ (เช่น `#1d4ed8` ตรงกับทั้ง `--accent`, `--blue`, `--navbar-bg`, `--role-asst-personnel-color`) สคริปต์เลือกใช้ **ชื่อ token ทั่วไปที่สุด** เป็นค่าเริ่มต้นเสมอ (เช่นเลือก `--accent` แทน `--role-asst-personnel-color`) เพราะค่าที่ได้เหมือนกันทุกประการ แต่ถ้าจุดที่ถูกแทนที่อยู่ใน `admin-role.html`/`staff.html` และตั้งใจสื่อถึงสีของ role/permission กลุ่มใดกลุ่มหนึ่งโดยเฉพาะ ควรตรวจสอบว่าชื่อ token ที่ได้ยังสื่อความหมายถูกต้องหรือไม่ (ไม่กระทบภาพที่แสดงผล กระทบแค่ความสื่อความหมายของชื่อตัวแปร)
-  6. **ยังไม่ได้แก้**: hex hardcode ในไฟล์ `js/*.js` ที่ render HTML ด้วยการต่อ string (พบอีก **1,477 จุด**, เยอะที่สุดคือ `portfolio-admin.js` 385 จุด และ `profile.js` 230 จุด) กับใน `<style>` block ฝังในไฟล์ `.html` — เป็นงานรอบถัดไป ขอบเขตใหญ่กว่านี้มากเพราะเป็นโค้ด logic ไม่ใช่แค่ markup ต้องระวังเรื่อง context การใช้สีในแต่ละจุดมากกว่า
+  6. **ยังไม่ได้แก้**: hex hardcode ในไฟล์ `js/*.js` ที่ render HTML ด้วยการต่อ string (พบอีก **~1,375 จุด ณ การนับล่าสุด**, เยอะที่สุดคือ `portfolio-admin.js` ~384 จุด และ `profile.js` ~230 จุด) กับใน `<style>` block ฝังในไฟล์ `.html` — เป็นงานรอบถัดไป ขอบเขตใหญ่กว่านี้มากเพราะเป็นโค้ด logic ไม่ใช่แค่ markup ต้องระวังเรื่อง context การใช้สีในแต่ละจุดมากกว่า (ดูหัวข้อ "ปัญหาที่รู้อยู่แล้ว" ข้อ 6 ด้วย)
 
 - ✅ **Self-host + purge Tailwind CSS แทนโหลดเต็มจาก jsdelivr CDN** — เดิมทั้ง 15 ไฟล์ HTML โหลด `https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css` แบบเต็มไม่ purge ทุกหน้า ตอนนี้แก้เป็น:
   1. Build ด้วย Tailwind CLI v2.2.19 (ตรงเวอร์ชันเดิม กัน class เพี้ยน) โดยสแกน content จากทุก `.html` + `js/*.js` + `shared/*.js` (เพราะหน้าเว็บ render HTML ด้วยการต่อ string ใน JS) ได้ผลลัพธ์ purge แล้วที่ `shared/tailwind-built.css` (minified ~5.6 KB จากเดิมโหลดเต็มไฟล์)
@@ -124,7 +125,7 @@
   3. เก็บ config/วิธี rebuild ไว้ที่ `shared/tailwind-source/` (README + `tailwind.config.js` + `input.css`) — **ไม่มี build step อัตโนมัติ/ไม่มี CI ใหม่** ต้องรันเองตอน dev แล้ว commit ไฟล์ผลลัพธ์เข้า repo ตรงๆ ตาม convention เดิมของโปรเจกต์ (ดูวิธีใน README นั้น)
   4. **ข้อค้นพบสำคัญ**: สแกน class ที่ใช้จริงทั้งโปรเจกต์แล้วพบว่าแทบไม่มีการใช้ Tailwind utility class เลย (`class="..."` ที่ดูเหมือนใช่ส่วนใหญ่กลับเป็น custom class จาก `styles-new.css` เช่น `empty-block`, `kpi-grid` ที่บังเอิญมีคำว่า block/grid ปนอยู่) ไฟล์ purge แล้วจึงเหลือแค่ CSS reset พื้นฐาน (`modern-normalize`) เป็นหลัก — ถ้ามีเวลา ควรพิจารณาตัด Tailwind ออกทั้งหมดในอนาคต ความเสี่ยงต่ำกว่าที่คาดไว้เดิม
 
-- ✅ **`functions/index.js` เพิ่ม export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — เดิม `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` ถูก export ไว้ผิดไฟล์ (`functions/functions-index.js` ซึ่งไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง) ตอนนี้แก้ให้ `index.js` ตัวจริง `require("./portfolio-notifications")` และ export ทั้ง 3 ฟังก์ชันแล้ว — **ต้องลบ `functions/functions-index.js` ทิ้งด้วย** เพื่อไม่ให้สับสนอีกในอนาคต (ถ้ายังไม่ได้ลบ ให้ลบก่อน commit ครั้งถัดไป)
+- ✅ **`functions/index.js` เพิ่ม export ฟังก์ชันแจ้งเตือนพอร์ตโฟลิโอ** — เดิม `onNewPortfolioSubmission`, `onPortfolioResubmitted`, `onPortfolioStatusChanged` ถูก export ไว้ผิดไฟล์ (`functions/functions-index.js` ซึ่งไม่ตรงกับ `main` ใน `package.json` เลยไม่เคย deploy จริง) ตอนนี้แก้ให้ `index.js` ตัวจริง `require("./portfolio-notifications")` และ export ทั้ง 3 ฟังก์ชันแล้ว — ลบ `functions/functions-index.js` ทิ้งเรียบร้อยแล้ว (เช็คแล้วไม่มีไฟล์นี้ใน repo อีกต่อไป)
 
 - ✅ **`portfolio-admin.js` แก้ชื่อฟังก์ชันชนกัน `setReviewStatus`** — เดิมมี `function setReviewStatus` ประกาศซ้ำ 2 ที่ในไฟล์เดียวกัน (ทั้งไฟล์เป็น global scope): ตัวแรก (~บรรทัด 417) เป็น filter ปุ่ม "สถานะการตรวจ" ในหน้า Overview, ตัวหลัง (~บรรทัด 1438) เป็นฟังก์ชันอนุมัติ/ตีกลับเอกสารในหน้ารายละเอียด เพราะ JS ให้ประกาศทีหลังทับตัวแรกเสมอ ผลคือกด filter แล้วดันไปรันฟังก์ชันอนุมัติแทน (เด้ง toast "กรุณาเขียนความคิดเห็นก่อนกดยืนยัน" ทั้งที่แค่กำลังกรองรายการ) → เปลี่ยนชื่อฟังก์ชัน filter เป็น `setReviewStatusFilter` (อัปเดตทั้ง `portfolio-admin.js` และ onclick ใน `portfolio-admin.html`) ฟังก์ชันอนุมัติเดิมไม่ต้องแตะ
 
@@ -148,5 +149,7 @@ firebase deploy --only functions:onBookingStatusChanged
 # ติดตั้ง dependencies ของ functions
 cd functions && npm install
 ```
+
+> **CI (`.github/workflows/deploy-functions.yml`) ทำงานอัตโนมัติแค่บางส่วน**: push เข้า main ที่แตะ `functions/**`/`firebase.json`/`.firebaserc` จะ trigger deploy อัตโนมัติ แต่ deploy แค่ 2 function เท่านั้น (`onBookingStatusChanged`, `onNewBookingCreated`) — function อื่นทั้งหมด (repair notifications, portfolio notifications, drive-upload) **ต้อง deploy มือด้วยคำสั่งด้านบนเสมอ** ไม่งั้นโค้ดที่แก้ใน `functions/notifications.js`/`functions/portfolio-notifications.js`/`functions/drive-upload.js` จะไม่ถูก deploy จริงทั้งที่ push ขึ้น main แล้ว
 
 > โปรเจกต์นี้ไม่มี build step สำหรับ frontend (ไม่มี `npm run build`/bundler) — แก้ไฟล์ `.html`/`.js`/`.css` แล้ว push ขึ้น GitHub Pages ได้เลย
