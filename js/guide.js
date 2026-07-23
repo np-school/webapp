@@ -148,11 +148,11 @@ function renderRoomUser() {
         '<div class="g-step-title">แนบไฟล์ผังที่นั่ง (ถ้ามี)</div>' +
         '<div class="g-step-desc">หากมีการจัดผังที่นั่งหรือแผนผังการใช้งาน สามารถแนบไฟล์ภาพได้ เพื่อให้เจ้าหน้าที่พิจารณาได้สะดวกขึ้น</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">6</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:var(--green-deep);">6</div><div>' +
         '<div class="g-step-title">รอการพิจารณาและรับแจ้งผล</div>' +
         '<div class="g-step-desc">เจ้าหน้าที่จะพิจารณาภายใน 1–2 วันทำการ ผลจะแสดงในหน้า "การจองของฉัน" และแจ้งผ่าน LINE หากเชื่อมต่อไว้</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">✓</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:var(--green-deep);">✓</div><div>' +
         '<div class="g-step-title">นำหลักฐานติดต่อห้องบริหารทั่วไป</div>' +
         '<div class="g-step-desc">เมื่อได้รับการอนุมัติ ให้แคปหน้าจอสถานะ "อนุมัติ" หรือพิมพ์ใบยืนยัน ไปแสดงที่ห้องบริหารทั่วไปก่อนใช้งานสถานที่</div>' +
       '</div></div>' +
@@ -227,26 +227,26 @@ function renderRoomAdmin() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<div class="page-icon" style="background:var(--indigo-light);"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:var(--text);">คู่มือสำหรับ Admin ห้อง</span>' +
       '</div>' +
       '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'Admin มีหน้าจัดการพิเศษ (<strong>admin-room.html</strong>) ที่ครูทั่วไปไม่สามารถเข้าถึงได้ ระบบตรวจสอบสิทธิ์ผ่าน email list ที่กำหนดไว้ใน Firestore' +
       '</p>' +
       '<div class="sdiv">การพิจารณาคำขอ</div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">1</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">1</div><div>' +
         '<div class="g-step-title">เข้าหน้า Admin Dashboard</div>' +
         '<div class="g-step-desc">เข้าสู่ระบบด้วยบัญชีที่มีสิทธิ์ Admin ระบบจะแสดง Dashboard พร้อมสรุปคำขอแยกตามสถานะ และสถิติห้องที่ถูกจองบ่อย</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">2</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">2</div><div>' +
         '<div class="g-step-title">กรองและค้นหาคำขอ</div>' +
         '<div class="g-step-desc">ใช้ filter pill (รอตรวจ/อนุมัติ/ไม่อนุมัติ) หรือช่องค้นหาเพื่อหาคำขอที่ต้องการ คำขอ "รอตรวจ" จะแสดงขอบซ้ายสีส้ม</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">3</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">3</div><div>' +
         '<div class="g-step-title">อนุมัติหรือปฏิเสธคำขอ</div>' +
         '<div class="g-step-desc">คลิกปุ่ม <strong style="color:var(--green);">✓ อนุมัติ</strong> หรือ <strong style="color:var(--red);">✗ ปฏิเสธ</strong> (พร้อมใส่หมายเหตุ) ระบบจะส่ง LINE แจ้งผู้ขอทันทีผ่าน Cloud Function</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">4</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">4</div><div>' +
         '<div class="g-step-title">ดูไฟล์แนบผังที่นั่ง</div>' +
         '<div class="g-step-desc">กดปุ่ม "ดูไฟล์" บนการ์ดคำขอ ระบบจะแสดงรูปภาพผังที่นั่งที่ผู้ขอแนบมา</div>' +
       '</div></div>' +
@@ -271,29 +271,29 @@ function renderPortfolioTeacher() {
   return (
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<div class="page-icon" style="background:var(--indigo-light);"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:var(--text);">ขั้นตอนการส่งงานประจำภาคเรียน</span>' +
       '</div>' +
       '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
         'ระบบนี้สำหรับ<strong>ครูผู้สอน</strong>ส่งเอกสารภาระงานประจำภาคเรียน เช่น แผนการจัดการเรียนรู้ บันทึกหลังสอน และเอกสารประกอบอื่นๆ ผ่านกระบวนการตรวจสอบหลายขั้นตอน' +
       '</p>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">1</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">1</div><div>' +
         '<div class="g-step-title">เข้าสู่ระบบและเลือกเมนู "ส่งงานประจำภาคเรียน"</div>' +
         '<div class="g-step-desc">ล็อกอินด้วย <strong>@nongki.ac.th</strong> แล้วเลือกเมนู <strong>ส่งงานประจำภาคเรียน</strong> จาก Sidebar</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">2</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">2</div><div>' +
         '<div class="g-step-title">เลือกภาคเรียนที่ต้องการส่ง</div>' +
         '<div class="g-step-desc">กดปุ่มภาคเรียน (เช่น 1/2567 หรือ 2/2567) ที่ด้านบน ระบบจะแสดงรายการเอกสารที่ต้องส่ง</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">3</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">3</div><div>' +
         '<div class="g-step-title">ดูรายการเอกสารที่ต้องส่ง</div>' +
         '<div class="g-step-desc">ระบบแสดงรายการเอกสารทั้งหมด พร้อมสถานะปัจจุบัน มีแถบ Progress Ring แสดงเปอร์เซ็นต์ความสำเร็จโดยรวม</div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:#ede9fe;color:var(--violet);">4</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--indigo-light);color:var(--violet);">4</div><div>' +
         '<div class="g-step-title">คลิกที่รายการเอกสารเพื่ออัปโหลด</div>' +
         '<div class="g-step-desc">คลิกการ์ดเอกสาร กดพื้นที่อัปโหลดหรือลากไฟล์มาวาง รองรับ PDF, Word (.docx, .doc), ภาพ (.jpg, .png) ขนาดไม่เกิน <strong>10 MB</strong></div>' +
       '</div></div>' +
-      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:#15803d;">✓</div><div>' +
+      '<div class="g-step"><div class="g-num" style="background:var(--role-academic-bg);color:var(--green-deep);">✓</div><div>' +
         '<div class="g-step-title">รอการอนุมัติขั้นสุดท้าย</div>' +
         '<div class="g-step-desc">เมื่อผ่านครบทุกขั้นตอนจนสถานะเป็น <span class="sbadge sb-final_approved" style="font-size:10px;">● อนุมัติแล้ว</span> ถือว่าการส่งงานเสร็จสมบูรณ์</div>' +
       '</div></div>' +
@@ -323,7 +323,7 @@ function renderPortfolioWorkflow() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="git-branch" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<div class="page-icon" style="background:var(--indigo-light);"><i data-lucide="git-branch" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:var(--text);">Workflow สถานะเอกสารส่งงาน (5 ขั้นตอน)</span>' +
       '</div>' +
       '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
@@ -361,7 +361,7 @@ function renderPortfolioAdmin() {
   return (
     '<div class="card">' +
       '<div class="page-title-row" style="margin-bottom:12px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<div class="page-icon" style="background:var(--indigo-light);"><i data-lucide="shield-check" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:var(--text);">คู่มือสำหรับ Admin งาน</span>' +
       '</div>' +
       '<p style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:16px;">' +
@@ -419,7 +419,7 @@ function renderFaq() {
     '</div>' +
     '<div class="card" style="margin-bottom:16px;">' +
       '<div class="page-title-row" style="margin-bottom:16px;">' +
-        '<div class="page-icon" style="background:#ede9fe;"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
+        '<div class="page-icon" style="background:var(--indigo-light);"><i data-lucide="send" style="width:18px;height:18px;color:var(--violet);"></i></div>' +
         '<span style="font-size:16px;font-weight:800;color:var(--text);">คำถามเกี่ยวกับระบบส่งงาน</span>' +
       '</div>' +
       makeFaqs(faqsPortfolio, 'portfolio') +

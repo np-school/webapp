@@ -69,7 +69,7 @@ function loadAnnouncements() {
             '<button onclick="openAnnModal(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--bg-alt);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--text-mid);font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="edit-3" style="width:12px;height:12px;"></i> แก้ไข' +
             '</button>' +
-            '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? '#fff7ed' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? '#92400e' : '#15803d') + ';font-family:Sarabun,sans-serif;">' +
+            '<button onclick="toggleAnnActive(\'' + doc.id + '\',' + d.active + ')" style="padding:6px 10px;background:' + (d.active ? 'var(--orange-light)' : '#f0fdf4') + ';border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + (d.active ? 'var(--amber-dark)' : '#15803d') + ';font-family:Sarabun,sans-serif;">' +
               '<i data-lucide="' + (d.active ? 'eye-off' : 'eye') + '" style="width:12px;height:12px;"></i> ' + (d.active ? 'ซ่อน' : 'แสดง') +
             '</button>' +
             '<button onclick="deleteAnn(\'' + doc.id + '\')" style="padding:6px 10px;background:var(--red-light);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--red-dark);font-family:Sarabun,sans-serif;">' +

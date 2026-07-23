@@ -288,7 +288,7 @@ function renderStatsCharts() {
     totalDevices
   );
 
-  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['#1d4ed8','#f59e0b']);
+  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], ['var(--accent)','#f59e0b']);
 }
 function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
   var el = document.getElementById('chartAccessories');
@@ -731,7 +731,7 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: datasetLabel1, data: totals, backgroundColor: '#1d4ed8', borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel1, data: totals, backgroundColor: 'var(--accent)', borderRadius: 4, maxBarThickness: 28 },
         { label: datasetLabel2, data: borrowing, backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 28 }
       ]
     },
@@ -1835,7 +1835,7 @@ function handleCsvFile(evt) {
     var newCount = parsedCsvRows.filter(function(x) { return x.isNew; }).length;
     document.getElementById('importPreview').innerHTML =
       'พบเครื่องทั้งหมด <b>' + parsedCsvRows.length + '</b> รายการในไฟล์ — ' +
-      '<span style="color:#15803d;font-weight:700;">' + newCount + ' รายการใหม่</span> จะถูกเพิ่มเข้าระบบ ' +
+      '<span style="color:var(--green-deep);font-weight:700;">' + newCount + ' รายการใหม่</span> จะถูกเพิ่มเข้าระบบ ' +
       '(รายการที่มี Serial Number ซ้ำกับที่มีอยู่แล้วจะถูกข้าม)';
     document.getElementById('importConfirmBtn').disabled = (newCount === 0);
   };
@@ -1935,7 +1935,7 @@ function handleStudentCsvFile(evt) {
     var newCount = parsedStudentCsvRows.filter(function(x) { return x.isNew; }).length;
     document.getElementById('importStudentPreview').innerHTML =
       'พบนักเรียนทั้งหมด <b>' + parsedStudentCsvRows.length + '</b> รายการในไฟล์ — ' +
-      '<span style="color:#15803d;font-weight:700;">' + newCount + ' รายการใหม่</span> จะถูกเพิ่มเข้าระบบ ' +
+      '<span style="color:var(--green-deep);font-weight:700;">' + newCount + ' รายการใหม่</span> จะถูกเพิ่มเข้าระบบ ' +
       '(รายการที่มีเลขประจำตัวซ้ำกับที่มีอยู่แล้วจะถูกข้าม' +
       (skippedInvalidGrade ? ', ' + skippedInvalidGrade + ' แถวถูกข้ามเพราะชั้นไม่ถูกต้อง' : '') + ')';
     document.getElementById('importStudentConfirmBtn').disabled = (newCount === 0);

@@ -719,8 +719,8 @@ function renderListView(){
         '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
-    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
-      '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#778da9':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
+    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'var(--accent-light)':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'var(--accent-tint)':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\''+(isSA?'var(--accent-light)':'#e2e8f0')+'\'">'+
+      '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'var(--accent-light)':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+
           '<p style="font-weight:700;font-size:14px;color:var(--text);">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
@@ -783,7 +783,7 @@ function renderMatrix(){
             '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" title="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button>' +
           '</div></td>';
 
-    return '<tr style="background:'+(isSA?'#e0e1dd':'white')+';">' +
+    return '<tr style="background:'+(isSA?'var(--accent-tint)':'white')+';">' +
       '<td style="padding:10px 16px;border-bottom:1px solid var(--bg-alt);">' +
         '<div style="display:flex;align-items:center;gap:9px;">' +
           '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +

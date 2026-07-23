@@ -76,7 +76,7 @@
   /* ════ Portfolio Dashboard ════ */
   /* PF_DOC_TYPES โหลดจาก Firestore (portfolio_doc_types) — ไม่ hardcode */
   var PF_DOC_TYPES = [
-    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+    { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
     { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
     { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
     { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
@@ -259,7 +259,7 @@
           html +=
             '<div class="ann-pub-card type-' + esc2(type) + '">' +
               '<i data-lucide="' + (ANN_ICON[type]||'info') + '" ' +
-                'style="width:18px;height:18px;flex-shrink:0;margin-top:3px;color:' + (ANN_CLR[type]||'#60a5fa') + ';"></i>' +
+                'style="width:18px;height:18px;flex-shrink:0;margin-top:3px;color:' + (ANN_CLR[type]||'var(--accent-mid)') + ';"></i>' +
               '<div style="flex:1;min-width:0;">' +
                 '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;">' +
                   '<span class="ann-pub-badge ' + esc2(type) + '">' + (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
@@ -325,15 +325,15 @@
 
           html +=
             '<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 4px;border-bottom:1px solid var(--bg);">' +
-              '<div style="width:42px;height:42px;background:' + (ANN_BG[type]||'#eff6ff') + ';border-radius:11px;' +
-                'border:1.5px solid ' + (ANN_BORDER[type]||'#bfdbfe') + ';' +
+              '<div style="width:42px;height:42px;background:' + (ANN_BG[type]||'var(--blue-light)') + ';border-radius:11px;' +
+                'border:1.5px solid ' + (ANN_BORDER[type]||'var(--blue-mid)') + ';' +
                 'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-                '<i data-lucide="' + (ANN_ICON[type]||'info') + '" style="width:18px;height:18px;color:' + (ANN_CLR[type]||'#3b82f6') + ';"></i>' +
+                '<i data-lucide="' + (ANN_ICON[type]||'info') + '" style="width:18px;height:18px;color:' + (ANN_CLR[type]||'var(--blue-bright)') + ';"></i>' +
               '</div>' +
               '<div style="flex:1;min-width:0;">' +
                 '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:5px;">' +
                   '<span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;' +
-                    'background:' + (ANN_BADGE_BG[type]||'#dbeafe') + ';color:' + (ANN_TEXT[type]||'#1e40af') + ';">' +
+                    'background:' + (ANN_BADGE_BG[type]||'var(--role-general-bg)') + ';color:' + (ANN_TEXT[type]||'var(--blue-dark)') + ';">' +
                     (ANN_LABEL[type]||'ข้อมูล') + '</span>' +
                   (d.department ? '<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--bg-alt);color:var(--text2);">' + esc2(d.department) + '</span>' : '') +
                   (dateStr ? '<span style="font-size:10px;color:var(--text3);font-weight:600;margin-left:auto;white-space:nowrap;">' + dateStr + '</span>' : '') +
@@ -414,7 +414,7 @@
       var isDone=ok&&!isNaN(eDate)&&now>eDate;
       var p=getRoomPastel(b.room||'');var color=p.accent;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':rej?'❌ ปฏิเสธ':'⏳ รอตรวจ';
-      var statusBg=isDone?'var(--bg-alt);color:var(--text2)':ok?'var(--role-budget-bg);color:#065f46':rej?'var(--red-light);color:#991b1b':'var(--yellow-light);color:var(--amber-dark)';
+      var statusBg=isDone?'var(--bg-alt);color:var(--text2)':ok?'var(--role-budget-bg);color:var(--teal-dark)':rej?'var(--red-light);color:var(--rose-deep)':'var(--yellow-light);color:var(--amber-dark)';
       var dateStr='';
       try{dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});}catch(e){dateStr=b.date||'';}
       return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--bg);">'+
@@ -566,13 +566,13 @@
       txt.textContent = '\u2705 \u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e41\u0e25\u0e49\u0e27' + (name?' \u00b7 '+name:'');
       sub.textContent = '\u0e04\u0e38\u0e13\u0e08\u0e30\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e1c\u0e48\u0e32\u0e19 LINE \u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34';
       btn.textContent = '\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d';
-      btn.style.color = '#dc2626';
+      btn.style.color = 'var(--red)';
       btn.onclick = lineDisconnect;
     } else {
       txt.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19';
       sub.textContent = '\u0e23\u0e31\u0e1a\u0e41\u0e08\u0e49\u0e07\u0e1c\u0e25\u0e04\u0e33\u0e02\u0e2d \u0e41\u0e25\u0e30\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e16\u0e36\u0e07\u0e40\u0e27\u0e25\u0e32\u0e08\u0e2d\u0e07 15 \u0e19\u0e32\u0e17\u0e35';
       btn.textContent = '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d LINE';
-      btn.style.color = '#06C755';
+      btn.style.color = 'var(--green)';
       btn.onclick = lineConnect;
     }
   }
@@ -598,7 +598,7 @@
   function lineToast(msg, type) {
     var t = document.createElement('div');
     t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;color:white;font-weight:700;font-size:14px;font-family:Sarabun,sans-serif;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15);';
-    t.style.background = type==='e'?'#ef4444':type==='w'?'#f59e0b':'#06C755';
+    t.style.background = type==='e'?'var(--red-bright)':type==='w'?'var(--accent-warn)':'#06C755';
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); }, 4000);
@@ -650,9 +650,9 @@
         var sub    = subs[dt.id];
         var status = sub ? (sub.status || 'submitted') : 'none';
         var label  = STATUS_LABEL[status] || status;
-        var bg     = STATUS_BG[status]    || '#f1f5f9';
-        var color  = STATUS_COLOR[status] || '#94a3b8';
-        var dot    = STATUS_DOT[status]   || '#d1d5db';
+        var bg     = STATUS_BG[status]    || 'var(--bg-alt)';
+        var color  = STATUS_COLOR[status] || 'var(--text3)';
+        var dot    = STATUS_DOT[status]   || 'var(--blue-pale)';
         var updatedAt = '';
         if (sub && sub.updatedAt) {
           try {
@@ -780,8 +780,8 @@
       var now=new Date();var eDate=new Date(dateKey+'T'+(b.endTime||'23:59')+':00');
       var isDone=!isNaN(eDate)&&now>eDate;
       var statusTxt=isDone?'✅ เสร็จสิ้น':ok?'✅ อนุมัติ':'⏳ รอตรวจ';
-      var cardBg=isDone?'#f1f5f9':p.bg;
-      var cardBorder=isDone?'#cbd5e1':p.border;
+      var cardBg=isDone?'var(--bg-alt)':p.bg;
+      var cardBorder=isDone?'var(--border-mid)':p.border;
       var cardText=isDone?'#94a3b8':p.text;
       var purposeBg=isDone?'#94a3b822':p.accent+'18';
       var badgeBg=isDone?'#94a3b8':p.accent;

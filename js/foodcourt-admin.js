@@ -267,7 +267,7 @@ function renderDashboard(){
       <div class="kpi-sub">ค่าใช้จ่ายทั้งหมด</div></div>
     <div class="kpi balance"><div class="kpi-icon">🏦</div>
       <div class="kpi-label">คงเหลือสุทธิ</div>
-      <div class="kpi-value" style="color:${balance>=0?'#16a34a':'#dc2626'}">฿${fmt(balance)}</div>
+      <div class="kpi-value" style="color:${balance>=0?'var(--green)':'var(--red)'}">฿${fmt(balance)}</div>
       <div class="kpi-sub">${balance>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
     <div class="kpi avg"><div class="kpi-icon">📊</div>
       <div class="kpi-label">เฉลี่ยรายได้/วัน</div>
@@ -299,7 +299,7 @@ function renderLineChart(){
   const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDateShort);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'#1d4ed8',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:'var(--accent)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
@@ -352,9 +352,9 @@ function renderDashboardRecurring() {
       <div style="font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">รายจ่าย</div>
       <div style="font-size:20px;font-weight:800;color:var(--red)">฿${fmt(totalOut)}</div>
     </div>
-    <div style="background:${net>=0?'var(--blue-lt)':'var(--red-lt)'};border:1px solid ${net>=0?'#bfdbfe':'#fecaca'};border-radius:12px;padding:14px 16px">
-      <div style="font-size:10px;font-weight:800;color:${net>=0?'#1d4ed8':'#dc2626'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
-      <div style="font-size:20px;font-weight:800;color:${net>=0?'#1d4ed8':'#dc2626'}">฿${fmt(net)}</div>
+    <div style="background:${net>=0?'var(--blue-lt)':'var(--red-lt)'};border:1px solid ${net>=0?'var(--blue-mid)':'var(--red-mid)'};border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">สุทธิ</div>
+      <div style="font-size:20px;font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">฿${fmt(net)}</div>
     </div>
   `;
 
@@ -522,7 +522,7 @@ function renderMonthlyChart(month){
     <span style="color:var(--text2)">|</span>
     <span style="font-weight:800;color:var(--red)">จ่าย ฿${fmt(totalOut)}</span>
     <span style="color:var(--text2)">|</span>
-    <span style="font-weight:800;color:${net>=0?'#1d4ed8':'#dc2626'}">สุทธิ ฿${fmt(net)}</span>
+    <span style="font-weight:800;color:${net>=0?'var(--blue)':'var(--red)'}">สุทธิ ฿${fmt(net)}</span>
   `;
 
   // Group by date
@@ -560,7 +560,7 @@ function renderDaily(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'#16a34a':'#dc2626'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
     <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
   `;
 
@@ -663,7 +663,7 @@ function renderReportWeek(){
   document.getElementById('rptWeekKpi').innerHTML=`
     <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวม</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${weeks.length} สัปดาห์</div></div>
     <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวม</div><div class="kpi-value">฿${fmt(totalOut)}</div><div class="kpi-sub">${weeks.length} สัปดาห์</div></div>
-    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิรวม</div><div class="kpi-value" style="color:${(totalIn-totalOut)>=0?'#16a34a':'#dc2626'}">฿${fmt(totalIn-totalOut)}</div><div class="kpi-sub">${(totalIn-totalOut)>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิรวม</div><div class="kpi-value" style="color:${(totalIn-totalOut)>=0?'var(--green)':'var(--red)'}">฿${fmt(totalIn-totalOut)}</div><div class="kpi-sub">${(totalIn-totalOut)>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
     <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/สัปดาห์</div><div class="kpi-value">฿${fmt(avgIn)}</div><div class="kpi-sub">${bestWeekIdx>=0?'สัปดาห์ดีสุด: '+labels[bestWeekIdx]:'-'}</div></div>
   `;
 
@@ -673,7 +673,7 @@ function renderReportWeek(){
     data:{labels,datasets:[
       {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
       {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
-      {type:'line',label:'สุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:3,order:1}
+      {type:'line',label:'สุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:3,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
   });
@@ -685,7 +685,7 @@ function renderReportWeek(){
         <td style="font-weight:600">${labels[i]}</td>
         <td class="td-in" style="text-align:right">฿${fmt(incomes[i])}</td>
         <td class="td-out" style="text-align:right">฿${fmt(expenses[i])}</td>
-        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'#16a34a':'#dc2626'}">฿${fmt(nets[i])}</td>
+        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'var(--green)':'var(--red)'}">฿${fmt(nets[i])}</td>
       </tr>`).reverse().join('')}
     </tbody></table>`;
 }
@@ -707,7 +707,7 @@ function renderReportMonth(){
   document.getElementById('rptMonthKpi').innerHTML=`
     <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวม</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${days.length} วันที่มีรายการ</div></div>
     <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวม</div><div class="kpi-value">฿${fmt(totalOut)}</div></div>
-    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิ</div><div class="kpi-value" style="color:${net>=0?'#16a34a':'#dc2626'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิ</div><div class="kpi-value" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
     <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/วัน</div><div class="kpi-value">฿${fmt(days.length?totalIn/days.length:0)}</div></div>
   `;
 
@@ -759,7 +759,7 @@ function renderReportCompare(){
     data:{labels,datasets:[
       {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
       {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
-      {type:'line',label:'สุทธิ',data:nets,borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:4,order:1}
+      {type:'line',label:'สุทธิ',data:nets,borderColor:'var(--accent)',backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:4,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
   });
@@ -771,7 +771,7 @@ function renderReportCompare(){
         <td style="font-weight:600">${labels[i]}</td>
         <td class="td-in" style="text-align:right">฿${fmt(incomes[i])}</td>
         <td class="td-out" style="text-align:right">฿${fmt(expenses[i])}</td>
-        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'#16a34a':'#dc2626'}">฿${fmt(nets[i])}</td>
+        <td style="text-align:right;font-weight:700;color:${nets[i]>=0?'var(--green)':'var(--red)'}">฿${fmt(nets[i])}</td>
       </tr>`).reverse().join('')}
     </tbody></table>`;
 }
@@ -793,7 +793,7 @@ function renderReportYear(){
   document.getElementById('rptYearKpi').innerHTML=`
     <div class="kpi income"><div class="kpi-icon">💰</div><div class="kpi-label">รายรับรวมทั้งปี</div><div class="kpi-value">฿${fmt(totalIn)}</div><div class="kpi-sub">${activeMonths} เดือนที่มีข้อมูล</div></div>
     <div class="kpi expense"><div class="kpi-icon">💸</div><div class="kpi-label">รายจ่ายรวมทั้งปี</div><div class="kpi-value">฿${fmt(totalOut)}</div></div>
-    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิทั้งปี</div><div class="kpi-value" style="color:${net>=0?'#16a34a':'#dc2626'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
+    <div class="kpi balance"><div class="kpi-icon">🏦</div><div class="kpi-label">สุทธิทั้งปี</div><div class="kpi-value" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div><div class="kpi-sub">${net>=0?'✅ กำไร':'⚠️ ขาดทุน'}</div></div>
     <div class="kpi avg"><div class="kpi-icon">📊</div><div class="kpi-label">เฉลี่ยรายรับ/เดือน</div><div class="kpi-value">฿${fmt(activeMonths?totalIn/activeMonths:0)}</div></div>
   `;
 
@@ -882,7 +882,7 @@ function updateEntrySumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'#16a34a':'#dc2626'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
 }
 
@@ -932,7 +932,7 @@ function saveDailyEntry(){
 function openQuickLog(recId){
   _quickLogRec=recurringItems.find(r=>r.id===recId);if(!_quickLogRec) return;
   document.getElementById('quickLogTitle').textContent='📝 '+_quickLogRec.name;
-  document.getElementById('quickLogTypeBadge').innerHTML=`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${_quickLogRec.type==='income'?'var(--green-lt)':'var(--red-lt)'};color:${_quickLogRec.type==='income'?'#16a34a':'#dc2626'}">${_quickLogRec.type==='income'?'รายรับ':'รายจ่าย'}</span>`;
+  document.getElementById('quickLogTypeBadge').innerHTML=`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${_quickLogRec.type==='income'?'var(--green-lt)':'var(--red-lt)'};color:${_quickLogRec.type==='income'?'var(--green)':'var(--red)'}">${_quickLogRec.type==='income'?'รายรับ':'รายจ่าย'}</span>`;
   document.getElementById('quickLogDate').value=today();
   document.getElementById('quickLogAmount').value=_quickLogRec.amount||'';
   document.getElementById('quickLogNote').value='';
@@ -976,7 +976,7 @@ function saveShopCount(){
   const t={id:Date.now(),date,name:SHOP_TRANSFER_NAME,income:0,expense:amount,balance:0,note:(note||count+' ร้าน'),recurring:true};
   transactions.push(t);
   recomputeBalance();fcSaveTransaction(t);closeShopCountModal();renderDashboard();
-  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'#1d4ed8');
+  showToast('บันทึกแล้ว: '+count+' ร้าน = ฿'+fmt(amount),'var(--accent)');
 }
 
 function openAddModal(){
@@ -1017,7 +1017,7 @@ function updateModalSumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'#16a34a':'#dc2626'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
 }
 

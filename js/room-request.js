@@ -121,10 +121,10 @@ function mdpRender() {
     var isBk   = !!bookedDates[ds];
     var el = document.createElement('div');
     el.style.cssText = 'aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:all .12s;position:relative;';
-    if (isPast)    { el.style.color = '#cbd5e1'; el.style.cursor = 'not-allowed'; }
-    else if (isSel){ el.style.background = '#1d4ed8'; el.style.color = 'white'; el.style.fontWeight = '800'; }
-    else           { el.style.color = '#1e293b'; }
-    if (isBk && !isSel) { el.style.background = '#fef9c3'; el.style.color = '#b45309'; }
+    if (isPast)    { el.style.color = 'var(--border-mid)'; el.style.cursor = 'not-allowed'; }
+    else if (isSel){ el.style.background = 'var(--accent)'; el.style.color = 'white'; el.style.fontWeight = '800'; }
+    else           { el.style.color = 'var(--text)'; }
+    if (isBk && !isSel) { el.style.background = 'var(--yellow-light)'; el.style.color = 'var(--role-director-color)'; }
     el.textContent = d;
     if (isBk) {
       var dot = document.createElement('span');
@@ -132,8 +132,8 @@ function mdpRender() {
       el.appendChild(dot);
     }
     (function(dateStr, past) {
-      if (!past) el.onmouseenter = function() { if (selectedDates.indexOf(dateStr) === -1) el.style.background = '#eff6ff'; };
-      if (!past) el.onmouseleave = function() { if (selectedDates.indexOf(dateStr) === -1) el.style.background = isBk ? '#fef9c3' : ''; };
+      if (!past) el.onmouseenter = function() { if (selectedDates.indexOf(dateStr) === -1) el.style.background = 'var(--accent-tint)'; };
+      if (!past) el.onmouseleave = function() { if (selectedDates.indexOf(dateStr) === -1) el.style.background = isBk ? 'var(--yellow-light)' : ''; };
       el.onclick = function() { mdpToggleDay(dateStr, past); };
     })(ds, isPast);
     grid.appendChild(el);
@@ -318,11 +318,11 @@ function renderBookingTable() {
       var badgeCls   = isDone ? 'badge-d' : ok ? 'badge-g' : rej ? 'badge-r' : 'badge-a';
       var badgeLabel = isDone ? '✅ เสร็จสิ้น' : ok ? '✅ อนุมัติ' : rej ? '❌ ปฏิเสธ' : '⏳ รอตรวจ';
       var canEdit = b.status === 'pending' && currentUser && b.userId === currentUser.uid;
-      var fileBtn = b.hasLayout ? '<button onclick="event.stopPropagation();openFileView(this.dataset.id)" data-id="' + b.id + '" style="background:#ede9fe;border:1.5px solid #c4b5fd;color:var(--violet);border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>' : '—';
-      var personLabel = b.personType === 'external' ? '<span style="font-size:10px;background:var(--orange-light);color:#c2410c;border:1px solid #fdba74;border-radius:8px;padding:1px 7px;font-weight:700;">ภายนอก</span>' : '<span style="font-size:10px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);border-radius:8px;padding:1px 7px;font-weight:700;">ภายใน</span>';
+      var fileBtn = b.hasLayout ? '<button onclick="event.stopPropagation();openFileView(this.dataset.id)" data-id="' + b.id + '" style="background:var(--indigo-light);border:1.5px solid var(--indigo-pale);color:var(--violet);border-radius:8px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์</button>' : '—';
+      var personLabel = b.personType === 'external' ? '<span style="font-size:10px;background:var(--orange-light);color:var(--orange);border:1px solid var(--amber-pale);border-radius:8px;padding:1px 7px;font-weight:700;">ภายนอก</span>' : '<span style="font-size:10px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);border-radius:8px;padding:1px 7px;font-weight:700;">ภายใน</span>';
       var actionBtns = '';
       if (canEdit) actionBtns += '<button onclick="event.stopPropagation();toggleModal(this.dataset.id)" data-id="' + b.id + '" style="background:var(--blue-light);border:1.5px solid var(--blue-mid);color:var(--blue);border-radius:8px;padding:4px 8px;font-weight:700;font-size:11px;cursor:pointer;margin-bottom:3px;">✏️ แก้ไข</button> ';
-      if (canEdit) actionBtns += '<button onclick="event.stopPropagation();cancelBooking(this.dataset.id)" data-id="' + b.id + '" style="background:#fff1f2;border:1.5px solid #fecdd3;color:#be123c;border-radius:8px;padding:4px 8px;font-weight:700;font-size:11px;cursor:pointer;">✕ ยกเลิก</button>';
+      if (canEdit) actionBtns += '<button onclick="event.stopPropagation();cancelBooking(this.dataset.id)" data-id="' + b.id + '" style="background:var(--rose-light-4);border:1.5px solid var(--rose-light-5);color:var(--rose-3);border-radius:8px;padding:4px 8px;font-weight:700;font-size:11px;cursor:pointer;">✕ ยกเลิก</button>';
       if (!actionBtns) actionBtns = '—';
       tbl += '<tr onclick="viewDate(this.dataset.date)" data-date="' + esc(b.date) + '" style="border-left:3px solid ' + rp.accent + ';cursor:pointer;">' +
         '<td style="text-align:center;color:var(--text3);font-family:monospace;padding:11px 14px;">' + globalIdx + '</td>' +
@@ -577,10 +577,10 @@ function updateDayView(dateKey, dayBookings) {
     var eDate = new Date(dateKey + 'T' + (b.endTime || '23:59') + ':00');
     var isDone = !isNaN(eDate) && now > eDate;
     var p = getRoomPastel(b.room || '');
-    var cardBg = isDone ? '#f1f5f9' : p.bg, cardBorder = isDone ? '#cbd5e1' : p.border, cardText = isDone ? '#94a3b8' : p.text;
-    var purposeBg = isDone ? 'var(--text3)22' : p.accent + '22', badgeBg = isDone ? '#94a3b8' : p.accent;
+    var cardBg = isDone ? 'var(--bg-alt)' : p.bg, cardBorder = isDone ? 'var(--border-mid)' : p.border, cardText = isDone ? 'var(--text3)' : p.text;
+    var purposeBg = isDone ? '#94a3b822' : p.accent + '22', badgeBg = isDone ? '#94a3b8' : p.accent;
     var statusTxt = isDone ? '✅ เสร็จสิ้น' : ok ? '✅ อนุมัติ' : '⏳ รอตรวจ';
-    var fileBtn = b.hasLayout ? '<button onclick="openFileView(this.dataset.id)" data-id="' + b.id + '" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#ede9fe;border:1px solid #c4b5fd;color:var(--violet);border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>' : '';
+    var fileBtn = b.hasLayout ? '<button onclick="openFileView(this.dataset.id)" data-id="' + b.id + '" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:var(--indigo-light);border:1px solid var(--indigo-pale);color:var(--violet);border-radius:6px;padding:3px 8px;font-weight:700;font-size:10px;cursor:pointer;">📎 ดูไฟล์แนบ</button>' : '';
     return '<div style="padding:14px 16px;background:' + cardBg + ';border-radius:14px;margin-bottom:10px;border:1.5px solid ' + cardBorder + ';">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
         '<div style="flex:1;min-width:0;">' +

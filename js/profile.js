@@ -12,7 +12,7 @@ var DOCUMENT_TYPES = [
   {id:'student_work',     label:'ผลงานนักเรียน',                    icon:'star',       color:'#eab308', bg:'#fefce8', department:'academic'},
 ];
 var DEPARTMENTS = [
-  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff'},
+  {id:'academic',  label:'ฝ่ายวิชาการ',        icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)'},
   {id:'budget',    label:'ฝ่ายงบประมาณ',       icon:'banknote',       color:'#16a34a', bg:'#f0fdf4'},
   {id:'personnel', label:'ฝ่ายบริหารงานบุคคล',icon:'users',          color:'#7c3aed', bg:'#f5f3ff'},
   {id:'general',   label:'ฝ่ายบริหารทั่วไป',  icon:'building-2',     color:'#ea580c', bg:'#fff7ed'},
@@ -72,7 +72,7 @@ var MEDIA_ICONS=['youtube','canva','kahoot','quizizz','padlet','mentimeter','wor
 
 /* DOCUMENT_TYPES fallback (แต่จะโหลดจาก Firestore ถ้าทำได้) */
 var _sarDocTypes = [
-  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'#eff6ff' },
+  { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'#3b82f6', bg:'var(--accent-tint)' },
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'#8b5cf6', bg:'#f5f3ff' },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'#22c55e', bg:'#f0fdf4' },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'#f59e0b', bg:'#fffbeb' },
@@ -590,7 +590,7 @@ function buildSemTabs(data){
   bar.innerHTML = data.map(function(sem, idx){
     var isSem2 = sem.sem === 2;
     var isActive = idx === currentSemIdx;
-    var bg    = isActive ? (isSem2 ? '#7c3aed' : '#1d4ed8') : 'white';
+    var bg    = isActive ? (isSem2 ? 'var(--violet)' : 'var(--accent)') : 'white';
     var color = isActive ? 'white' : '#475569';
     var border= isActive ? 'transparent' : '#e2e8f0';
     var label = 'ภาค ' + sem.sem + '/' + sem.year;
@@ -644,7 +644,7 @@ function buildSemBlock(sem, openByDefault){
   var sumItems=[
     {key:'submitted',key2:'head_reviewed|reviewed',lbl:'ส่งแล้ว',          color:'#15803d'},
     {key:'head_reviewed',                           lbl:'หัวหน้าตรวจ',     color:'#0369a1'},
-    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'#1e40af'},
+    {key:'reviewed',                                lbl:'ตรวจแล้ว',        color:'var(--accent-dark)'},
     {key:'assistant_reviewed',                      lbl:'ผช.ผอ.ตรวจ',      color:'#92400e'},
     {key:'deputy_reviewed',                         lbl:'รอง ผอ.ตรวจ',     color:'#6d28d9'},
     {key:'final_approved',                          lbl:'อนุมัติ',         color:'#065f46'},
@@ -729,7 +729,7 @@ function buildDocGroup(dt, courses){
   else if(allReviewed){ groupBadge='อยู่ระหว่างตรวจ'; groupBadgeClass='s-reviewed'; }
   else { groupBadge='ส่งแล้ว '+courses.length+' วิชา'; groupBadgeClass='s-submitted'; }
 
-  var borderLeft = anyRevision ? '#f59e0b' : allFinal ? '#7c3aed' : '#22c55e';
+  var borderLeft = anyRevision ? 'var(--accent-warn)' : allFinal ? 'var(--violet)' : '#22c55e';
 
   var courseRows='';
   courses.forEach(function(c){
@@ -833,7 +833,7 @@ function renderSarSchoolHistory(){
         if(yy>0||mm>0) durStr = yy+' ปี '+mm+' เดือน';
       }
       var labelBadge = '';
-      if(isFirst)   labelBadge += '<span style="font-size:10px;font-weight:800;color:#15803d;background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isFirst)   labelBadge += '<span style="font-size:10px;font-weight:800;color:var(--green-deep);background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
       if(isCurrent) labelBadge += '<span style="font-size:10px;font-weight:800;color:var(--role-hr-color);background:var(--sky-light);padding:2px 8px;border-radius:20px;">ปัจจุบัน</span>';
       return '<div class="ct-node">' +
         '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
@@ -928,7 +928,7 @@ function renderEducation(){
   el.innerHTML = '<div style="display:grid;gap:10px;">' +
     sorted.map(function(item){
       var col = EDU_COLORS[item.level] || '#64748b';
-      var bg  = EDU_BG[item.level]    || '#f8fafc';
+      var bg  = EDU_BG[item.level]    || 'var(--bg)';
       return '<div style="background:'+bg+';border:1.5px solid '+col+'22;border-left:4px solid '+col+';border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">' +
         '<div style="flex:1;min-width:0;">' +
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
@@ -961,7 +961,7 @@ function renderSarEducation(){
   var sorted = educationItems.slice().sort(function(a,b){ return (levelOrder[a.level]||0)-(levelOrder[b.level]||0); });
   el.innerHTML = sorted.map(function(item){
     var col = EDU_COLORS[item.level] || '#64748b';
-    var bg  = EDU_BG[item.level]    || '#f8fafc';
+    var bg  = EDU_BG[item.level]    || 'var(--bg)';
     return '<div class="sar-row" style="align-items:flex-start;gap:10px;padding:8px 0;">' +
       '<div style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:5px;"></div>' +
       '<div style="flex:1;min-width:0;">' +
@@ -1053,9 +1053,9 @@ function buildCareerTimelineHTML(c){
     }
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:var(--emerald);background:var(--role-academic-bg);">' +
-        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="var(--emerald)"/></svg>' +
       '</div>' +
-      '<div class="ct-card" style="border-color:#bbf7d0;">' +
+      '<div class="ct-card" style="border-color:var(--green-pale);">' +
         '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' · เริ่มรับราชการ</div>' +
         '<div class="ct-school">'+esc2(c.first_school)+'</div>' +
         (c.department?'<div class="ct-dept">'+esc2(c.department)+'</div>':'') +
@@ -1075,7 +1075,7 @@ function buildCareerTimelineHTML(c){
     var svcNow = calcService(c.cur_school_date || c.start_date);
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:var(--blue-bright);background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="var(--blue-bright)"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
@@ -1099,7 +1099,7 @@ function buildCareerTimelineHTML(c){
     var svcNow2 = calcService(c.start_date);
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:var(--blue-bright);background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="var(--blue-bright)"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
@@ -1169,7 +1169,7 @@ function renderCareerHistory(){
 
       /* label badges */
       var labelBadge = '';
-      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#15803d;background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
+      if(isFirst)   labelBadge += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:var(--green-deep);background:var(--role-academic-bg);border:1px solid var(--green-mid);padding:2px 8px;border-radius:20px;margin-right:4px;">🟢 แรกบรรจุ</span>';
       if(isCurrent) labelBadge += '<span class="ct-now-badge"><i data-lucide="radio" style="width:9px;height:9px;"></i> ปัจจุบัน</span>';
 
       return '<div class="ct-node">' +
@@ -1312,9 +1312,9 @@ function renderPortfolioSummary(subs, portYear, portSem) {
       var anyRevision = courses.some(function(k){ return subs[k].status === 'revision'; });
       var allFinal    = courses.every(function(k){ return subs[k].status === 'final_approved'; });
       var obg, ocol, olbl;
-      if (anyRevision)  { obg = '#fef9c3'; ocol = '#92400e'; olbl = 'มีรายวิชาแก้ไข'; }
-      else if (allFinal){ obg = '#d1fae5'; ocol = '#065f46'; olbl = 'ผอ.อนุมัติครบ'; }
-      else              { obg = '#dcfce7'; ocol = '#15803d'; olbl = 'ส่งแล้ว ' + courses.length + ' วิชา'; }
+      if (anyRevision)  { obg = 'var(--yellow-light)'; ocol = 'var(--amber-dark)'; olbl = 'มีรายวิชาแก้ไข'; }
+      else if (allFinal){ obg = 'var(--role-budget-bg)'; ocol = 'var(--teal-dark)'; olbl = 'ผอ.อนุมัติครบ'; }
+      else              { obg = 'var(--role-academic-bg)'; ocol = 'var(--green-deep)'; olbl = 'ส่งแล้ว ' + courses.length + ' วิชา'; }
       overallBadge = '<span style="font-size:10px;font-weight:700;color:'+ocol+';background:'+obg+';padding:1px 8px;border-radius:20px;">'+olbl+'</span>';
     }
 
@@ -1327,8 +1327,8 @@ function renderPortfolioSummary(subs, portYear, portSem) {
         var status = sub.status || 'submitted';
         var files  = sub.files  || [];
         var chipClass = 'port-course-chip' + (status === 'revision' ? ' revision' : (files.length ? ' has-files' : ''));
-        var stBg  = STATUS_BG[status]    || '#dcfce7';
-        var stCol = STATUS_COLOR[status] || '#15803d';
+        var stBg  = STATUS_BG[status]    || 'var(--role-academic-bg)';
+        var stCol = STATUS_COLOR[status] || 'var(--green-deep)';
         var stLbl = STATUS_LABEL[status] || 'ส่งแล้ว';
 
         chipsHtml +=

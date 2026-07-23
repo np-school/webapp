@@ -52,7 +52,7 @@ var _sharedDriveId = null;
 
 /* ─── 4 ฝ่ายบริหาร ─── */
 var DEPARTMENTS = [
-  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'#1d4ed8', bg:'#eff6ff' },
+  { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)' },
   { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'#16a34a', bg:'#f0fdf4' },
   { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'#7c3aed', bg:'#f5f3ff' },
   { id:'general',   label:'ฝ่ายบริหารทั่วไป',   icon:'building-2',     color:'#ea580c', bg:'#fff7ed' },
@@ -381,23 +381,23 @@ function renderDocList() {
 
       var statusLabel, statusBg, statusColor;
       if (!hasAny) {
-        statusLabel = 'ยังไม่ส่ง'; statusBg = '#f1f5f9'; statusColor = '#94a3b8';
+        statusLabel = 'ยังไม่ส่ง'; statusBg = 'var(--bg-alt)'; statusColor = 'var(--text3)';
       } else {
         var allReviewed  = courses.every(function(k){ return ['head_reviewed','reviewed','assistant_reviewed','deputy_reviewed','final_approved'].indexOf(submissions[k].status||'submitted') >= 0; });
         var anyRevision  = courses.some(function(k){ return (submissions[k].status||'submitted') === 'revision'; });
         var allFinal     = courses.every(function(k){ return (submissions[k].status||'submitted') === 'final_approved'; });
         if (anyRevision) {
-          statusLabel = 'มีรายวิชาแก้ไข'; statusBg = '#fef9c3'; statusColor = '#92400e';
+          statusLabel = 'มีรายวิชาแก้ไข'; statusBg = 'var(--yellow-light)'; statusColor = 'var(--amber-dark)';
         } else if (allFinal) {
-          statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = '#d1fae5'; statusColor = '#065f46';
+          statusLabel = 'ผอ.อนุมัติครบทุกวิชา'; statusBg = 'var(--role-budget-bg)'; statusColor = 'var(--teal-dark)';
         } else if (allReviewed) {
-          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = '#dbeafe'; statusColor = '#1e40af';
+          statusLabel = 'อยู่ระหว่างตรวจสอบ'; statusBg = 'var(--role-general-bg)'; statusColor = 'var(--accent-dark)';
         } else {
-          statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = '#dcfce7'; statusColor = '#15803d';
+          statusLabel = 'ส่งแล้ว ' + courses.length + ' วิชา'; statusBg = 'var(--role-academic-bg)'; statusColor = 'var(--green-deep)';
         }
       }
 
-      var borderColor = !hasAny ? '#e2e8f0' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? '#f59e0b' : '#22c55e';
+      var borderColor = !hasAny ? 'var(--border)' : courses.some(function(k){ return (submissions[k].status||'') === 'revision'; }) ? 'var(--accent-warn)' : '#22c55e';
 
       html +=
         '<div style="background:white;border:1.5px solid ' + borderColor + ';border-left:4px solid ' + borderColor + ';border-radius:14px;padding:16px 18px;transition:all .2s;">' +
@@ -418,8 +418,8 @@ function renderDocList() {
                       var sub     = submissions[subKey];
                       var status  = sub.status || 'submitted';
                       var slabel  = { submitted:'ส่งแล้ว', reviewed:'หัวหน้าฯ ตรวจ', head_reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
-                      var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || '#dcfce7';
-                      var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || '#15803d';
+                      var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'#fef9c3' }[status] || 'var(--role-academic-bg)';
+                      var scol    = { submitted:'#15803d', reviewed:'#0369a1', head_reviewed:'#0369a1', assistant_reviewed:'#92400e', deputy_reviewed:'#6d28d9', final_approved:'#065f46', revision:'#92400e' }[status] || 'var(--green-deep)';
                       var files   = sub.files || [];
                       return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
@@ -439,7 +439,7 @@ function renderDocList() {
                           '<button onclick="openMemoModal(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:var(--accent-tint);color:var(--accent);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--accent-light);cursor:pointer;display:flex;align-items:center;gap:4px;">' +
                             '<i data-lucide="file-text" style="width:11px;height:11px;"></i> บันทึกข้อความ' +
                           '</button>' +
-                          '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:#fff0f0;color:var(--red);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--red-mid);cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
+                          '<button onclick="promptDeleteSubmission(\'' + esc(subKey) + '\')" style="padding:5px 12px;background:var(--rose-light-3);color:var(--red);border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--red-mid);cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบงานที่ส่งนี้ทั้งหมด">' +
                             '<i data-lucide="trash-2" style="width:11px;height:11px;"></i> ลบงาน' +
                           '</button>' +
                         '</div>' +
@@ -487,7 +487,7 @@ function renderCourseRows() {
           '<input type="text" placeholder="ชื่อวิชา เช่น ฟิสิกส์ 1" value="' + esc2(row.name) + '" onchange="courseRows[' + idx + '].name=this.value.trim()" style="font-size:13px;">' +
         '</div>' +
         /* upload zone สำหรับวิชานี้ */
-        '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8faff;transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
+        '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:var(--blue-light-2);transition:all .2s;" onclick="triggerFileInput(' + idx + ')" id="zone_' + idx + '">' +
           '<i data-lucide="file-up" style="width:22px;height:22px;color:var(--accent-light);margin-bottom:4px;"></i>' +
           '<p style="font-size:12px;font-weight:700;color:var(--accent);">คลิกเพื่อเพิ่ม PDF</p>' +
           '<p style="font-size:10px;color:var(--text3);margin-top:2px;">สูงสุด ' + MAX_FILES_PER_TOPIC + ' ไฟล์, PDF, 20MB</p>' +
@@ -532,13 +532,13 @@ function renderCourseFilePanels() {
                 '<p style="font-size:12px;font-weight:700;color:var(--role-director-color);">คลิกเพื่อเลือก PDF ใหม่แทนไฟล์ที่ ' + (fi+1) + '</p>' +
               '</div>' +
               '<div id="mReplaceProgress_' + idx + '_' + fi + '" style="display:none;margin-top:6px;">' +
-                '<div class="pbar-bg"><div id="mReplaceBar_' + idx + '_' + fi + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,var(--accent-warn),#fbbf24);"></div></div>' +
+                '<div class="pbar-bg"><div id="mReplaceBar_' + idx + '_' + fi + '" class="pbar-fill" style="width:0%;background:linear-gradient(90deg,var(--accent-warn),var(--amber));"></div></div>' +
               '</div>' +
             '</div>';
           }).join('') +
         '</div>' +
         (canAdd
-          ? '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#f8faff;margin-top:8px;" onclick="triggerFileInput(' + idx + ')">' +
+          ? '<div style="border:2px dashed var(--accent-light);border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:var(--blue-light-2);margin-top:8px;" onclick="triggerFileInput(' + idx + ')">' +
               '<p style="font-size:12px;font-weight:700;color:var(--accent);">+ เพิ่มไฟล์ PDF</p>' +
             '</div>' +
             '<div id="queued_' + idx + '" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>'
@@ -1868,20 +1868,20 @@ function switchMemoTab(tab) {
     editPane.style.display    = 'none';
     previewPane.style.display = 'block';
     tabEdit.style.background    = 'white';
-    tabEdit.style.color         = '#1d4ed8';
-    tabEdit.style.borderColor   = '#93c5fd';
-    tabPreview.style.background = '#1d4ed8';
+    tabEdit.style.color         = 'var(--accent)';
+    tabEdit.style.borderColor   = 'var(--accent-light)';
+    tabPreview.style.background = 'var(--accent)';
     tabPreview.style.color      = 'white';
-    tabPreview.style.borderColor= '#1d4ed8';
+    tabPreview.style.borderColor= 'var(--accent)';
   } else {
     editPane.style.display    = 'flex';
     previewPane.style.display = 'none';
-    tabEdit.style.background    = '#1d4ed8';
+    tabEdit.style.background    = 'var(--accent)';
     tabEdit.style.color         = 'white';
-    tabEdit.style.borderColor   = '#1d4ed8';
+    tabEdit.style.borderColor   = 'var(--accent)';
     tabPreview.style.background = 'white';
-    tabPreview.style.color      = '#1d4ed8';
-    tabPreview.style.borderColor= '#93c5fd';
+    tabPreview.style.color      = 'var(--accent)';
+    tabPreview.style.borderColor= 'var(--accent-light)';
   }
 }
 

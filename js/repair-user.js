@@ -20,12 +20,12 @@ var REPAIR_BUILDINGS  = [];
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ไม่ต้องตั้งค่าเพิ่มในแอดมิน)
      หมวดหมู่เดียวกันจะได้สีเดิมเสมอไม่ว่าจะโหลดกี่ครั้งก็ตาม ── */
 var CATEGORY_PALETTE = [
-  { bg: '#eff6ff',   border: '#bfdbfe',   text: '#1e40af',   hex: '#1d4ed8' },
-  { bg: '#f0fdf4',  border: '#86efac',  text: '#15803d',            hex: '#15803d' },
-  { bg: '#fffbeb',  border: '#fde68a',  text: '#92400e',            hex: '#92400e' },
-  { bg: '#fee2e2',    border: '#fecaca',    text: '#b91c1c',    hex: '#b91c1c' },
-  { bg: '#e0f2fe',    border: '#7dd3fc',    text: '#075985',            hex: '#075985' },
-  { bg: '#e0e1dd', border: '#415a77', text: '#1b263b', hex: '#6d28d9' }
+  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
+  { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: '#15803d',            hex: '#15803d' },
+  { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: '#92400e',            hex: '#92400e' },
+  { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
+  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
+  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: '#6d28d9' }
 ];
 
 /* ══ Status meta: label + color + workflow-step states ══ */
@@ -210,10 +210,10 @@ function renderStats() {
   }
 
   document.getElementById('repStatGrid').innerHTML =
-    stat('clipboard-list', '#1d4ed8',   '#eff6ff',   all,        'แจ้งซ่อมทั้งหมด') +
-    stat('loader-circle',  '#0284c7',    '#e0f2fe',    open,       'กำลังดำเนินการ') +
-    stat('eye',            '#0d1b2a', '#e0e1dd', waitReview, 'รอฉันตรวจสอบ') +
-    stat('check-check',    '#16a34a',  '#f0fdf4',  closed,     'ปิดงานแล้ว');
+    stat('clipboard-list', 'var(--blue)',   'var(--blue-light)',   all,        'แจ้งซ่อมทั้งหมด') +
+    stat('loader-circle',  'var(--sky)',    'var(--sky-light)',    open,       'กำลังดำเนินการ') +
+    stat('eye',            'var(--purple)', 'var(--purple-light)', waitReview, 'รอฉันตรวจสอบ') +
+    stat('check-check',    'var(--green)',  'var(--green-light)',  closed,     'ปิดงานแล้ว');
   lucide.createIcons();
 }
 function renderCategoryFilterBar() {
@@ -228,7 +228,7 @@ function renderCategoryFilterBar() {
     var isActive = currentCategoryFilter === c.id;
     html += '<button class="filter-pill' + (isActive ? ' active' : '') + '" data-cf="' + c.id + '" ' +
       'onclick="setCategoryFilter(\'' + c.id + '\')" ' +
-      'style="' + (isActive ? ('background:' + col.text + ';border-color:' + col.text + ';color:#fff;') : ('color:' + col.text + ';border-color:' + col.border + ';')) + '">' +
+      'style="' + (isActive ? ('background:' + col.text + ';border-color:' + col.text + ';color:var(--gray-light);') : ('color:' + col.text + ';border-color:' + col.border + ';')) + '">' +
       '<i data-lucide="' + (c.icon || 'wrench') + '" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i>' + esc2(c.label) +
     '</button>';
   });

@@ -236,6 +236,81 @@
   --matrix-director-color:      #b45309;
   --matrix-admin-color:         #0d1b2a;
   --matrix-action-color:        #64748b;
+  /* ── Auto-added tokens (72 colors) — ชื่อเดาโดยอัลกอริทึม ควรตรวจทาน ── */
+  --green-deep: #15803d;  /* count=32 */
+  --indigo-light: #ede9fe;  /* count=23 */
+  --teal-dark: #065f46;  /* count=17 */
+  --indigo: #6d28d9;  /* count=17 */
+  --sky: #0ea5e9;  /* count=15 */
+  --indigo-2: #8b5cf6;  /* count=11 */
+  --indigo-pale: #c4b5fd;  /* count=8 */
+  --pink: #ec4899;  /* count=7 */
+  --gray-light: #fff;  /* count=7 */
+  --pink-2: #db2777;  /* count=6 */
+  --sky-deep: #075985;  /* count=6 */
+  --orange-deep: #78350f;  /* count=5 */
+  --amber-light: #ffedd5;  /* count=5 */
+  --amber-pale: #fdba74;  /* count=5 */
+  --rose-deep: #991b1b;  /* count=5 */
+  --indigo-3: #6366f1;  /* count=5 */
+  --blue-light: #eef2ff;  /* count=5 */
+  --green-pale: #bbf7d0;  /* count=5 */
+  --teal-deep: #0d9488;  /* count=4 */
+  --blue-deep: #1e3a8a;  /* count=4 */
+  --teal-dark-2: #064e3b;  /* count=4 */
+  --purple-light: #fce7f3;  /* count=4 */
+  --pink-deep: #831843;  /* count=4 */
+  --purple-pale: #f9a8d4;  /* count=4 */
+  --orange-deep-2: #7c2d12;  /* count=4 */
+  --indigo-deep: #4c1d95;  /* count=4 */
+  --sky-dark: #0c4a6e;  /* count=4 */
+  --purple-light-2: #fdf2f8;  /* count=4 */
+  --teal-light: #ecfeff;  /* count=4 */
+  --yellow-light: #fefce8;  /* count=4 */
+  --blue-pale: #d1d5db;  /* count=4 */
+  --pink-3: #be185d;  /* count=3 */
+  --indigo-4: #5b21b6;  /* count=3 */
+  --rose-light: #fef2f2;  /* count=3 */
+  --violet-deep: #581c87;  /* count=2 */
+  --violet: #9333ea;  /* count=2 */
+  --amber: #fbbf24;  /* count=2 */
+  --green: #06c755;  /* count=2 */
+  --blue: #94a3b822;  /* count=2 */
+  --rose-pale: #fca5a5;  /* count=2 */
+  --blue-light-2: #f8faff;  /* count=2 */
+  --purple-light-3: #fbcfe8;  /* count=2 */
+  --sky-pale: #a5f3fc;  /* count=2 */
+  --amber-pale-2: #fed7aa;  /* count=2 */
+  --indigo-5: #4338ca;  /* count=2 */
+  --green-deep-2: #65a30d;  /* count=1 */
+  --teal-light-2: #ccfbf1;  /* count=1 */
+  --teal-dark-3: #134e4a;  /* count=1 */
+  --teal: #5eead4;  /* count=1 */
+  --green-dark: #14532d;  /* count=1 */
+  --teal-2: #34d399;  /* count=1 */
+  --rose: #f87171;  /* count=1 */
+  --teal-deep-2: #10b981;  /* count=1 */
+  --yellow-light-2: #fffdf5;  /* count=1 */
+  --orange-deep-3: #9a3412;  /* count=1 */
+  --amber-2: #f59e0b33;  /* count=1 */
+  --sky-light: #f0f9ff;  /* count=1 */
+  --yellow-light-3: #fffdf0;  /* count=1 */
+  --green-dark-2: #166534;  /* count=1 */
+  --rose-light-2: #fff5f5;  /* count=1 */
+  --rose-light-3: #fff0f0;  /* count=1 */
+  --rose-2: #e11d48;  /* count=1 */
+  --teal-deep-3: #0f766e;  /* count=1 */
+  --indigo-6: #4f46e5;  /* count=1 */
+  --amber-3: #ca8a04;  /* count=1 */
+  --blue-light-3: #eef0f4;  /* count=1 */
+  --indigo-light-2: #ddd6fe;  /* count=1 */
+  --blue-light-4: #c7d2fe;  /* count=1 */
+  --indigo-deep-2: #312e81;  /* count=1 */
+  --orange: #c2410c;  /* count=1 */
+  --rose-light-4: #fff1f2;  /* count=1 */
+  --rose-light-5: #fecdd3;  /* count=1 */
+  --rose-3: #be123c;  /* count=1 */
+
 }
 
 

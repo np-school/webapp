@@ -395,10 +395,10 @@ function switchImportTab(tab) {
   importTab = tab;
   document.getElementById('importFilePanel').style.display = tab === 'file' ? '' : 'none';
   document.getElementById('importPastePanel').style.display = tab === 'paste' ? '' : 'none';
-  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? '#1d4ed8' : 'transparent';
-  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? '#1d4ed8' : 'transparent';
-  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? '#1d4ed8' : '#64748b';
-  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? '#1d4ed8' : '#64748b';
+  document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? 'var(--accent)' : 'transparent';
+  document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? 'var(--accent)' : 'transparent';
+  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? 'var(--accent)' : '#64748b';
+  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? 'var(--accent)' : '#64748b';
 }
 
 function handleCsvDrop(e) {
