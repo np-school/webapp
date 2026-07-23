@@ -308,7 +308,7 @@ function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
       labels: labels,
       datasets: [
         { label: 'ยืมอยู่',   data: borrowedCounts, backgroundColor: cssVar('--c-amber'), borderRadius: 4, maxBarThickness: 26, stack: 'a' },
-        { label: 'คงเหลือ', data: remaining,      backgroundColor: '#e2e8f0', borderRadius: 4, maxBarThickness: 26, stack: 'a' }
+        { label: 'คงเหลือ', data: remaining,      backgroundColor: cssVar('--border'), borderRadius: 4, maxBarThickness: 26, stack: 'a' }
       ]
     },
     options: {

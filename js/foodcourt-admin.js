@@ -171,6 +171,16 @@ const today=()=>new Date().toISOString().split('T')[0];
 function cssVar(name){
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#64748b';
 }
+/* แปลง hex → rgba() พร้อม alpha (ใช้ร่วมกับ cssVar() เพื่อให้กราฟดึงสีจาก token กลางได้
+   แม้ต้องการความโปร่งใส ซึ่ง CSS var เฉยๆ ทำไม่ได้ตรงๆ) */
+function hexToRgba(hex, alpha){
+  hex = (hex || '').replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(function(ch){ return ch + ch; }).join('');
+  var r = parseInt(hex.substring(0,2),16); if (isNaN(r)) r = 100;
+  var g = parseInt(hex.substring(2,4),16); if (isNaN(g)) g = 100;
+  var b = parseInt(hex.substring(4,6),16); if (isNaN(b)) b = 100;
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+}
 const colors=['--chart-1','--chart-2','--chart-3','--chart-4','--chart-5','--chart-6','--chart-7','--chart-8','--chart-9'].map(cssVar);
 
 // ── FIRESTORE PERSISTENCE ──
@@ -298,14 +308,14 @@ function renderBarChart(){
   const incomes=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income,0));
   const expenses=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.expense,0));
   if(barChart) barChart.destroy();
-  barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderLineChart(){
   const days=[...new Set(transactions.map(t=>t.date))].sort();const labels=days.map(fmtDateShort);
   const nets=days.map(d=>transactions.filter(t=>t.date===d).reduce((s,t)=>s+t.income-t.expense,0));
   if(lineChart) lineChart.destroy();
-  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:'rgba(29,78,216,.08)',fill:true,tension:.35,pointBackgroundColor:cssVar('--accent'),pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'กำไร/ขาดทุนสุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:hexToRgba(cssVar('--accent'),.08),fill:true,tension:.35,pointBackgroundColor:cssVar('--accent'),pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
@@ -541,8 +551,8 @@ function renderMonthlyChart(month){
   monthlyBarChart=new Chart(document.getElementById('monthlyBarChart'),{
     type:'bar',
     data:{labels,datasets:[
-      {label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:5},
-      {label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:5}
+      {label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:5},
+      {label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:5}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:11}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
   });
@@ -677,9 +687,9 @@ function renderReportWeek(){
   rptWeekChart=new Chart(document.getElementById('rptWeekChart'),{
     type:'bar',
     data:{labels,datasets:[
-      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
-      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
-      {type:'line',label:'สุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:3,order:1}
+      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:6,order:2},
+      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:6,order:2},
+      {type:'line',label:'สุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:hexToRgba(cssVar('--accent'),.08),tension:.3,pointRadius:3,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
   });
@@ -718,7 +728,7 @@ function renderReportMonth(){
   `;
 
   if(rptMonthChart) rptMonthChart.destroy();
-  rptMonthChart=new Chart(document.getElementById('rptMonthChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  rptMonthChart=new Chart(document.getElementById('rptMonthChart'),{type:'bar',data:{labels,datasets:[{label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:9}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 
   const shopMap={};
   rows.filter(t=>t.income>0).forEach(t=>{shopMap[t.name]=(shopMap[t.name]||0)+t.income;});
@@ -763,9 +773,9 @@ function renderReportCompare(){
   rptCompareChart=new Chart(document.getElementById('rptCompareChart'),{
     type:'bar',
     data:{labels,datasets:[
-      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6,order:2},
-      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,order:2},
-      {type:'line',label:'สุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:'rgba(29,78,216,.08)',tension:.3,pointRadius:4,order:1}
+      {type:'bar',label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:6,order:2},
+      {type:'bar',label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:6,order:2},
+      {type:'line',label:'สุทธิ',data:nets,borderColor:cssVar('--accent'),backgroundColor:hexToRgba(cssVar('--accent'),.08),tension:.3,pointRadius:4,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:10}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}
   });
@@ -804,7 +814,7 @@ function renderReportYear(){
   `;
 
   if(rptYearChart) rptYearChart.destroy();
-  rptYearChart=new Chart(document.getElementById('rptYearChart'),{type:'bar',data:{labels:monthNames,datasets:[{label:'รายรับ',data:incomes,backgroundColor:'rgba(22,163,74,.75)',borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:'rgba(220,38,38,.65)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:11}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
+  rptYearChart=new Chart(document.getElementById('rptYearChart'),{type:'bar',data:{labels:monthNames,datasets:[{label:'รายรับ',data:incomes,backgroundColor:hexToRgba(cssVar('--c-green'),.75),borderRadius:6},{label:'รายจ่าย',data:expenses,backgroundColor:hexToRgba(cssVar('--c-red'),.65),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sarabun',size:12}}}},scales:{x:{ticks:{font:{family:'Sarabun',size:11}}},y:{ticks:{font:{family:'Sarabun',size:10},callback:v=>'฿'+v.toLocaleString()}}}}});
 }
 
 function scrollToTopContent() {

@@ -24,7 +24,7 @@ var CATEGORY_PALETTE = [
   { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: 'var(--c-green-deep)',            hex: 'var(--c-green-deep)' },
   { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: 'var(--c-amber-deep)',            hex: 'var(--c-amber-deep)' },
   { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
-  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: '#075985',            hex: '#075985' },
+  { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: 'var(--c-sky-deep)',  hex: '#075985' },
   { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: 'var(--c-violet-deep)' }
 ];
 
