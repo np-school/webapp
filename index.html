@@ -160,7 +160,7 @@
     .ann-pub-card.type-info    { border-left-color: var(--accent-mid); }
     .ann-pub-card.type-warning { border-left-color: #fbbf24; }
     .ann-pub-card.type-success { border-left-color: #34d399; }
-    .ann-pub-card.type-urgent  { border-left-color: #f87171; background: rgba(239,68,68,.08); }
+    .ann-pub-card.type-urgent  { border-left-color: var(--c-red-mid); background: rgba(239,68,68,.08); }
 
     /* ป้ายหมวดสี */
     .ann-pub-badge {
@@ -394,7 +394,7 @@
             <div style="padding:12px;">
               <div id="pubMonthLabel" style="text-align:center;font-weight:700;font-size:13px;color:var(--text-slate);margin-bottom:8px;"></div>
               <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:9px;font-weight:800;color:var(--text3);margin-bottom:5px;text-align:center;">
-                <div style="color:#f87171;">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:var(--accent-mid);">ส</div>
+                <div style="color:var(--c-red-mid);">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div style="color:var(--accent-mid);">ส</div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;" id="pubCalGrid2"></div>
               <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:9px;font-weight:700;color:var(--text3);border-top:1px solid var(--border-soft);padding-top:9px;">
@@ -527,7 +527,7 @@
             </div>
           </div>
           <!-- Quick link: Guide -->
-          <a href="guide.html" style="background:linear-gradient(135deg,var(--green-light),var(--role-academic-bg));padding:20px;border-radius:20px;border:1px solid #bbf7d0;box-shadow:0 2px 12px rgba(0,0,0,.04);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <a href="guide.html" style="background:linear-gradient(135deg,var(--green-light),var(--role-academic-bg));padding:20px;border-radius:20px;border:1px solid var(--c-green-tint);box-shadow:0 2px 12px rgba(0,0,0,.04);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="width:40px;height:40px;background:white;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
               <i data-lucide="book-open" style="width:19px;height:19px;color:var(--green);"></i>
             </div>
@@ -657,7 +657,7 @@
                 <div style="width:24px;height:24px;background:linear-gradient(135deg,var(--line-green),var(--line-green-dark));color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;">2</div>
                 <div style="font-size:12px;font-weight:700;color:var(--text);">กดปุ่ม "เชื่อมต่อ LINE" ด้านซ้าย</div>
               </div>
-              <div style="background:var(--green-light);border-radius:12px;padding:10px 14px;border:1px solid #bbf7d0;">
+              <div style="background:var(--green-light);border-radius:12px;padding:10px 14px;border:1px solid var(--c-green-tint);">
                 <div style="font-size:11px;font-weight:700;color:var(--c-green-deep);margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i data-lucide="bell" style="width:12px;height:12px;"></i> แจ้งเตือนที่จะได้รับ</div>
                 <div style="display:flex;flex-direction:column;gap:4px;">
                   <div style="font-size:11px;color:#166534;display:flex;align-items:center;gap:5px;"><span style="width:4px;height:4px;background:var(--line-green);border-radius:50%;flex-shrink:0;display:inline-block;"></span>ผลอนุมัติ/ไม่อนุมัติคำขอจอง</div>

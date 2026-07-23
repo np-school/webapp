@@ -284,7 +284,7 @@ function loadDocTypeList() {
 
 function syncToggleUI() {
   var on = document.getElementById('dtActive').checked;
-  document.getElementById('dtActiveToggle').style.background = on ? 'var(--purple)' : '#e2e8f0';
+  document.getElementById('dtActiveToggle').style.background = on ? 'var(--purple)' : 'var(--border)';
   document.getElementById('dtActiveKnob').style.transform    = on ? 'translateX(20px)' : 'translateX(0)';
 }
 
@@ -760,9 +760,9 @@ function renderListView() {
                     var cCode   = cFiles[0].courseCode || cKey;
                     var cName   = cFiles[0].courseName || '';
                     var cIcon   = { none:'○', submitted:'↑', head_reviewed:'✓', reviewed:'✓', assistant_reviewed:'🏅', deputy_reviewed:'👑', final_approved:'★', revision:'!' }[cStatus] || '·';
-                    var cColor  = { none:'#94a3b8', submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--c-green)', revision:'var(--c-amber)' }[cStatus] || 'var(--text3)';
-                    var cBg     = { none:'#f8fafc', submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#f5f3ff', final_approved:'#d1fae5', revision:'#fffbeb' }[cStatus] || 'var(--bg)';
-                    var cBorder = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fde68a' }[cStatus] || 'var(--border)';
+                    var cColor  = { none:'var(--text3)', submitted:'var(--c-green)', head_reviewed:'var(--c-sky)', reviewed:'var(--c-sky)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet)', final_approved:'var(--c-green)', revision:'var(--c-amber)' }[cStatus] || 'var(--text3)';
+                    var cBg     = { none:'var(--bg)', submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--c-violet-pale)', final_approved:'#d1fae5', revision:'var(--c-amber-pale)' }[cStatus] || 'var(--bg)';
+                    var cBorder = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'var(--c-amber-tint)' }[cStatus] || 'var(--border)';
                     var cDocIdForClick = cFiles[0]._docId || subDocId;
                     return '<div style="border:1.5px solid ' + cBorder + ';background:' + cBg + ';border-radius:8px;padding:4px 6px;cursor:pointer;" onclick="event.stopPropagation();openReviewCourse(\'' + cDocIdForClick + '\',\'' + t.uid + '\',\'' + dt.id + '\',\'' + esc(cKey) + '\')">' +
                       '<div style="display:flex;align-items:center;gap:4px;">' +
@@ -931,7 +931,7 @@ function renderMatrixView() {
       '</div></td>';
     });
 
-    html += '<td style="text-align:center;"><span style="font-size:13px;font-weight:800;color:' + (count===DOCUMENT_TYPES.length?'var(--purple)':'#64748b') + ';">' + count + '/' + DOCUMENT_TYPES.length + '</span></td>';
+    html += '<td style="text-align:center;"><span style="font-size:13px;font-weight:800;color:' + (count===DOCUMENT_TYPES.length?'var(--purple)':'var(--text2)') + ';">' + count + '/' + DOCUMENT_TYPES.length + '</span></td>';
     html += '</tr>';
   });
 
@@ -1391,15 +1391,15 @@ function fillSingleFileInfo(sub) {
       revision:           '⚠️ ส่งคืนเพื่อแก้ไข'
     };
     var statusColors = {
-      submitted:          { bg:'#f0fdf4', color:'var(--c-green-deep)' },
-      head_reviewed:      { bg:'#e0f2fe', color:'var(--c-sky-deep)' },
-      reviewed:           { bg:'#e0f2fe', color:'var(--c-sky-deep)' },
+      submitted:          { bg:'var(--c-green-pale)', color:'var(--c-green-deep)' },
+      head_reviewed:      { bg:'var(--sky-light)', color:'var(--c-sky-deep)' },
+      reviewed:           { bg:'var(--sky-light)', color:'var(--c-sky-deep)' },
       assistant_reviewed: { bg:'#fef3c7', color:'var(--c-amber-deep)' },
       deputy_reviewed:    { bg:'var(--purple-light)', color:'var(--c-violet-deep)' },
       final_approved:     { bg:'#d1fae5', color:'var(--c-green-deep)' },
-      revision:           { bg:'#fffbeb', color:'var(--c-amber-deep)' }
+      revision:           { bg:'var(--c-amber-pale)', color:'var(--c-amber-deep)' }
     };
-    var sc = statusColors[curStatus] || { bg:'#f1f5f9', color:'#64748b' };
+    var sc = statusColors[curStatus] || { bg:'var(--bg-alt)', color:'var(--text2)' };
     btnBox.innerHTML =
       '<div style="width:100%;padding:10px 14px;border-radius:10px;background:' + sc.bg + ';display:flex;align-items:center;gap:var(--gap-tight);">' +
         '<i data-lucide="eye" style="width:14px;height:14px;color:' + sc.color + ';flex-shrink:0;"></i>' +
@@ -1656,7 +1656,7 @@ function renderCharts() {
 function renderDonutChart() {
   /* เรียงให้ none อยู่แรก วาดเป็น base แล้วสีอื่นทับทีหลัง */
   var statusConfig = [
-    { key:'none',               label:'ยังไม่ส่ง',                color:'#e2e8f0' },
+    { key:'none',               label:'ยังไม่ส่ง',                color:'var(--border)' },
     { key:'revision',           label:'ให้แก้ไข',                 color:cssVar('--c-red-mid') },
     { key:'submitted',          label:'รอตรวจ',                   color:cssVar('--c-green') },
     { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:cssVar('--c-sky') },
@@ -1721,7 +1721,7 @@ function renderDonutChart() {
   document.getElementById('donutTotal').textContent = total;
 
   /* Legend — แสดงเรียงจาก approved → none */
-  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"var(--c-green)"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"var(--c-violet)"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"var(--c-amber)"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"var(--c-sky)"},{key:"submitted",label:"รอตรวจ",color:"var(--c-green)"},{key:"revision",label:"ให้แก้ไข",color:"var(--c-red-mid)"},{key:"none",label:"ยังไม่ส่ง",color:"#e2e8f0"}];
+  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"var(--c-green)"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"var(--c-violet)"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"var(--c-amber)"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"var(--c-sky)"},{key:"submitted",label:"รอตรวจ",color:"var(--c-green)"},{key:"revision",label:"ให้แก้ไข",color:"var(--c-red-mid)"},{key:"none",label:"ยังไม่ส่ง",color:"var(--border)"}];
   var leg = document.getElementById("donutLegend");
   leg.innerHTML = legendConfig.map(function(s) {
 
@@ -1731,8 +1731,8 @@ function renderDonutChart() {
     var isZero = counts[s.key] === 0;
     return '<div style="display:flex;align-items:center;gap:var(--gap-item);">' +
       '<div style="width:12px;height:12px;border-radius:50%;background:' + s.color + ';flex-shrink:0;' + (isZero?'opacity:.45;':'') + '"></div>' +
-      '<span style="font-size:13px;font-weight:600;color:' + (isZero?'var(--text3)':'#475569') + ';flex:1;">' + s.label + '</span>' +
-      '<span style="font-size:13px;font-weight:800;color:' + (isZero?'var(--text3)':'#0f172a') + ';">' + counts[s.key] +
+      '<span style="font-size:13px;font-weight:600;color:' + (isZero?'var(--text3)':'var(--text-mid)') + ';flex:1;">' + s.label + '</span>' +
+      '<span style="font-size:13px;font-weight:800;color:' + (isZero?'var(--text3)':'var(--text-dark)') + ';">' + counts[s.key] +
         ' <span style="font-size:11px;font-weight:600;color:var(--text3);">(' + pct + '%)</span>' +
       '</span>' +
     '</div>';
@@ -1970,8 +1970,8 @@ function renderGroupDetail() {
   var statCards = [
     { label:'ครูทั้งหมด',   val:d.teachers.length, color:'var(--purple)', bg:'var(--purple-light)', icon:'users' },
     { label:'ส่งงานแล้ว%', val:pct + '%',           color:'var(--c-green)', bg:'#dcfce7', icon:'send' },
-    { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'var(--c-green)', bg:'#bbf7d0', icon:'shield-check' },
-    { label:'รอตรวจ',      val:d.submitted,          color:'var(--c-sky)', bg:'#e0f2fe', icon:'clock' },
+    { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'var(--c-green)', bg:'var(--c-green-tint)', icon:'shield-check' },
+    { label:'รอตรวจ',      val:d.submitted,          color:'var(--c-sky)', bg:'var(--sky-light)', icon:'clock' },
     { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'var(--c-red-mid)', bg:'#fee2e2', icon:'alert-circle' },
   ].map(function(s) {
     return '<div class="stat-card" style="flex-direction:column;gap:4px;padding:12px 14px;">' +
@@ -2037,7 +2037,7 @@ function renderGroupDetail() {
     var docChips = DOCUMENT_TYPES.map(function(dt) {
       var sub = t.subs[dt.id];
       var st = fakeStatus(sub ? (sub.status || 'submitted') : 'none');
-      var chipColor = { none:'#e2e8f0', submitted:'#86efac', head_reviewed:'#7dd3fc', reviewed:'#7dd3fc', assistant_reviewed:'#fcd34d', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || 'var(--border)';
+      var chipColor = { none:'var(--border)', submitted:'var(--c-green-mid)', head_reviewed:'var(--c-sky-mid)', reviewed:'var(--c-sky-mid)', assistant_reviewed:'var(--c-amber-mid)', deputy_reviewed:'var(--purple-mid)', final_approved:'#6ee7b7', revision:'#fca5a5' }[st] || 'var(--border)';
       return '<div style="width:18px;height:18px;border-radius:5px;background:' + chipColor + ';" title="' + esc2(dt.label) + '"></div>';
     }).join('');
 
@@ -2049,7 +2049,7 @@ function renderGroupDetail() {
           '<div style="flex:1;height:4px;background:var(--bg-alt);border-radius:4px;overflow:hidden;">' +
             '<div style="width:' + pctT + '%;height:100%;background:' + barColor + ';border-radius:4px;"></div>' +
           '</div>' +
-          '<span style="font-size:10px;font-weight:800;color:#64748b;min-width:32px;text-align:right;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
+          '<span style="font-size:10px;font-weight:800;color:var(--text2);min-width:32px;text-align:right;">' + subCount + '/' + DOCUMENT_TYPES.length + '</span>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:3px;flex-wrap:wrap;max-width:200px;justify-content:flex-end;">' + docChips + '</div>' +
@@ -2169,7 +2169,7 @@ function renderTeacherDetail(t) {
 /* ── Donut chart for teacher ── */
 function renderTeacherDonut(counts) {
   var STATUS_CFG = [
-    { key:'none',               label:'ยังไม่ส่ง',               color:'#cbd5e1' },
+    { key:'none',               label:'ยังไม่ส่ง',               color:'var(--border-mid)' },
     { key:'submitted',          label:'รอตรวจ (ครูส่งแล้ว)',      color:cssVar('--c-green') },
     { key:'revision',           label:'ให้แก้ไข',                color:cssVar('--c-red-mid') },
     { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',       color:cssVar('--c-sky') },
@@ -2251,7 +2251,7 @@ function renderTeacherDocBars(t) {
       '<div class="docbar-track" style="width:100px;flex-shrink:0;">' +
         '<div class="docbar-fill" style="width:' + pct + '%;background:' + color + ';"></div>' +
       '</div>' +
-      '<span style="font-size:10px;font-weight:800;color:' + (sub?color:'#94a3b8') + ';min-width:80px;text-align:right;">' + esc2(label) + '</span>' +
+      '<span style="font-size:10px;font-weight:800;color:' + (sub?color:'var(--text3)') + ';min-width:80px;text-align:right;">' + esc2(label) + '</span>' +
     '</div>';
   }).join('');
   lucide.createIcons();
@@ -2263,8 +2263,8 @@ function renderTeacherSubTable(t) {
   if (!container) return;
 
   var STATUS_LABEL = { submitted:'📤 รอตรวจ', head_reviewed:'👤 หัวหน้าฯ ✓', reviewed:'👤 หัวหน้าฯ ✓', assistant_reviewed:'🏅 ผช.ผอ. ✓', deputy_reviewed:'👑 รอง ผอ. ✓', final_approved:'🎖 ผอ. อนุมัติ', revision:'⚠ ให้แก้ไข', none:'ยังไม่ส่ง' };
-  var STATUS_BG    = { submitted:'#f0fdf4', head_reviewed:'#e0f2fe', reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--purple-light)', final_approved:'#d1fae5', revision:'#fef2f2', none:'#f8fafc' };
-  var STATUS_COLOR = { submitted:'var(--c-green-deep)', head_reviewed:'var(--c-sky-deep)', reviewed:'var(--c-sky-deep)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet-deep)', final_approved:'var(--c-green-deep)', revision:'var(--c-red)', none:'#94a3b8' };
+  var STATUS_BG    = { submitted:'var(--c-green-pale)', head_reviewed:'var(--sky-light)', reviewed:'var(--sky-light)', assistant_reviewed:'#fef3c7', deputy_reviewed:'var(--purple-light)', final_approved:'#d1fae5', revision:'var(--c-red-pale)', none:'var(--bg)' };
+  var STATUS_COLOR = { submitted:'var(--c-green-deep)', head_reviewed:'var(--c-sky-deep)', reviewed:'var(--c-sky-deep)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet-deep)', final_approved:'var(--c-green-deep)', revision:'var(--c-red)', none:'var(--text3)' };
 
   var sentCount = DOCUMENT_TYPES.filter(function(dt){ return t.subs[dt.id]; }).length;
   document.getElementById('teacherSubCount').textContent = 'ส่งแล้ว ' + sentCount + '/' + DOCUMENT_TYPES.length + ' รายการ';
@@ -2388,7 +2388,7 @@ function renderDocTypeRows(docs) {
   list.innerHTML = docs.map(function(dt, i) {
     var DEPT_LABELS = { academic:'ฝ่ายวิชาการ', budget:'ฝ่ายงบประมาณ', personnel:'ฝ่ายบริหารงานบุคคล', general:'ฝ่ายบริหารทั่วไป' };
     var DEPT_COLORS = { academic:'#1d4ed8', budget:'var(--c-green)', personnel:'var(--purple)', general:'var(--c-amber)' };
-    var DEPT_BG     = { academic:'#eff6ff', budget:'#f0fdf4', personnel:'#f5f3ff', general:'var(--c-amber-pale)' };
+    var DEPT_BG     = { academic:'var(--accent-tint)', budget:'var(--c-green-pale)', personnel:'var(--c-violet-pale)', general:'var(--c-amber-pale)' };
     var deptKey = dt.department || 'academic';
     var deptBadge = '<span style="background:' + (DEPT_BG[deptKey]||'var(--bg-alt)') + ';color:' + (DEPT_COLORS[deptKey]||'var(--text2)') + ';font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;">' + (DEPT_LABELS[deptKey]||deptKey) + '</span>';
     var activeLabel = dt.active === false
@@ -2747,7 +2747,7 @@ function openReview(subId, uid, docTypeId) {
       ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'var(--c-violet)' }
       : p2.director
       ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'var(--c-amber-deep)' }
-      : { label:'👁 ดูข้อมูลเท่านั้น', bg:'#f1f5f9', color:'#64748b' };
+      : { label:'👁 ดูข้อมูลเท่านั้น', bg:'var(--bg-alt)', color:'var(--text2)' };
     badgeEl.style.background = badgeCfg.bg;
     badgeEl.style.color = badgeCfg.color;
     badgeEl.textContent = badgeCfg.label;
@@ -2880,7 +2880,7 @@ function openNotesModal(uid, docTypeId) {
     /* 2. Head note */
     if (doc.headNote || doc.status === 'head_reviewed' || doc.status === 'reviewed') {
       entries.push({
-        emoji: '👤', bg: '#e0f2fe', border: 'var(--c-sky)',
+        emoji: '👤', bg: 'var(--sky-light)', border: 'var(--c-sky)',
         label: 'หัวหน้ากลุ่มสาระตรวจ',
         who: doc.headReviewerName || doc.reviewedBy || '',
         when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',
@@ -2928,7 +2928,7 @@ function openNotesModal(uid, docTypeId) {
     /* 6. Revision note */
     if (doc.status === 'revision' && doc.adminNote) {
       entries.push({
-        emoji: '⚠', bg: '#fef2f2', border: 'var(--c-red-mid)',
+        emoji: '⚠', bg: 'var(--c-red-pale)', border: 'var(--c-red-mid)',
         label: 'ส่งคืนเพื่อแก้ไข',
         who: doc.lastRevisedBy || doc.reviewedBy || '',
         when: doc.reviewedAt ? formatDate(doc.reviewedAt) : '',

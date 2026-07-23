@@ -66,6 +66,20 @@
 
 **ยังไม่แตะ (ตั้งใจ)**: ชุดสี `ROOM_PASTEL_MAP/FB` ทั้งหมด (decorative), `#06C755` ใน index.js (สีแบรนด์ LINE)
 
+## อัปเดต: รีวิวข้อ 2 แล้ว (`portfolio-admin.js` / `index.html`) — 2026-07-23
+
+**แก้จริง (exact-match กับ token ที่มีอยู่แล้ว)**:
+- `portfolio-admin.js`: 19 ค่า hex → แทนด้วย token เดิม เช่น `#e0f2fe`→`var(--sky-light)`, `#e2e8f0`→`var(--border)`, `#f0fdf4`→`var(--c-green-pale)`, `#7dd3fc`→`var(--c-sky-mid)`, `#64748b`→`var(--text2)`, `#94a3b8`→`var(--text3)`, `#fcd34d`→`var(--c-amber-mid)`, `#f8fafc`→`var(--bg)`, `#f5f3ff`→`var(--c-violet-pale)`, `#86efac`→`var(--c-green-mid)`, `#fde68a`→`var(--c-amber-tint)`, `#f1f5f9`→`var(--bg-alt)` ฯลฯ (`node --check` ผ่าน)
+- `index.html`: `#f87171`→`var(--c-red-mid)`, `#bbf7d0`→`var(--c-green-tint)`
+
+**พบบั๊ก/ความไม่สม่ำเสมอที่ควรรีวิวต่อ (ไม่ใช่ exact-match เลยยังไม่แตะ)**: ใน `portfolio-admin.js` มีแผนที่สถานะ (`STATUS_BG`/`cBg`/`cBorder`/`chipColor`) 4 ชุดที่ทำหน้าที่เดียวกัน (none/submitted/head_reviewed/assistant_reviewed/deputy_reviewed/final_approved/revision) แต่ใช้เฉดสีไม่ตรงกันเอง เช่น:
+  - `final_approved` bg ใช้ `#d1fae5` (ไม่ตรง core), border บางที่ใช้ `#6ee7b7` บางที่ใช้ `--c-green-mid`
+  - `revision` border ใช้ `#fde68a`(→amber-tint แล้ว) ในชุดหนึ่ง แต่ใช้ `#fca5a5` ในอีกชุด (คนละสีกันเลย)
+  - `#78350f` (adminNote สีน้ำตาลเข้ม) ใกล้เคียงแต่ไม่ตรง `--c-amber-deep`
+  → ต้องตัดสินใจเชิงความหมายว่าใช้เฉดไหนเป็นมาตรฐาน ไม่ใช่แค่แทนที่กลไก แนะนำรีวิวแยกเป็นงานถัดไป
+
+**เหลือเป็น decorative ตั้งใจไม่แตะ**: `#ec4899`/`#6366f1`/`#cffafe` (สีแท็บ/badge เฉพาะจุด), `rgba(255,255,255,.9)`, `rgba(239,68,68,.15)`, และ `#1d4ed8` ใน `DEPT_COLORS.academic` (ตามที่บันทึกไว้เดิมว่ากำกวมกับสีธีม) — ใน `index.html` เช่นกัน: `#166534`/`#1e3a8a`/`#fdba74`/`#fbbf24`/`#34d399`/`#a78bfa`/`#4285F4`/`#ede9fe` ไม่ตรง token ใดเป๊ะ เก็บไว้รีวิวทีหลัง
+
 ## คำสั่งที่ใช้ทำงานนี้ (ไว้รันซ้ำ/ตรวจสอบ)
 
 ```bash
