@@ -384,7 +384,7 @@
             '</div>'+
           '</div>'+
           '<div style="display:flex;flex-direction:column;gap:2px;min-width:90px;flex-shrink:0;">'+
-            '<div class="sum-bar-track" style="height:12px;"><div class="sum-bar-fill" style="width:'+totalBarPct+'%;background:linear-gradient(90deg,var(--purple),var(--purple-accent));"></div></div>'+
+            '<div class="sum-bar-track" style="height:12px;"><div class="sum-bar-fill" style="width:'+totalBarPct+'%;background:linear-gradient(90deg,var(--c-ink),var(--c-ink-mid));"></div></div>'+
             '<p style="font-size:10px;color:var(--text3);font-weight:600;text-align:right;">'+totalBarPct+'%</p>'+
           '</div>'+
           '<i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--text3);flex-shrink:0;transition:transform .2s;" id="chev-'+cardId+'"></i>'+
@@ -464,7 +464,7 @@
     container.innerHTML=sorted.map(function(room){
       var cnt=roomCount[room];
       var pct=Math.round((cnt/max)*100);
-      var color=pct>=80?'linear-gradient(90deg,var(--blue),var(--accent-mid))':pct>=50?'linear-gradient(90deg,var(--purple),var(--purple-accent))':'linear-gradient(90deg,var(--sky),var(--sky-mid))';
+      var color=pct>=80?'linear-gradient(90deg,var(--c-violet),var(--c-violet-deep))':pct>=50?'linear-gradient(90deg,var(--c-ink),var(--c-ink-deep))':'linear-gradient(90deg,var(--c-sky),var(--c-sky-mid))';
       return '<div class="hbar-row">'+
         '<div class="hbar-label">'+
           '<span class="hbar-name" title="'+room+'">'+room+'</span>'+
@@ -499,7 +499,7 @@
       return '<div class="tbar-row" style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px;">'+
         '<span style="font-size:10px;font-weight:700;color:var(--text2);min-width:44px;flex-shrink:0;">'+m.label+'</span>'+
         '<div style="flex:1;background:var(--bg-alt);border-radius:4px;height:8px;overflow:hidden;">'+
-          '<div style="height:100%;border-radius:4px;width:'+pct+'%;background:linear-gradient(90deg,var(--purple),var(--purple-accent));transition:width .5s ease;"></div>'+
+          '<div style="height:100%;border-radius:4px;width:'+pct+'%;background:linear-gradient(90deg,var(--c-ink),var(--c-ink-mid));transition:width .5s ease;"></div>'+
         '</div>'+
         '<span style="font-size:10px;font-weight:800;color:var(--text2);min-width:24px;text-align:right;">'+m.count+'</span>'+
       '</div>';

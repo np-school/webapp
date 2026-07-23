@@ -295,7 +295,7 @@ function renderStatsCharts() {
     totalDevices
   );
 
-  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], [cssVar('--accent'), cssVar('--c-amber')]);
+  _drawChart('chartBorrowerType', 'doughnut', ['นักเรียน','บุคลากร'], [studentOutCount, staffOutCount], [cssVar('--chart-1'), cssVar('--c-amber')]);
 }
 function _drawAccessoriesChart(labels, borrowedCounts, totalDevices) {
   var el = document.getElementById('chartAccessories');
@@ -738,7 +738,7 @@ function renderStudentStatsChart() {
     data: {
       labels: labels,
       datasets: [
-        { label: datasetLabel1, data: totals, backgroundColor: cssVar('--accent'), borderRadius: 4, maxBarThickness: 28 },
+        { label: datasetLabel1, data: totals, backgroundColor: cssVar('--chart-1'), borderRadius: 4, maxBarThickness: 28 },
         { label: datasetLabel2, data: borrowing, backgroundColor: cssVar('--c-amber'), borderRadius: 4, maxBarThickness: 28 }
       ]
     },

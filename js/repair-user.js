@@ -20,12 +20,12 @@ var REPAIR_BUILDINGS  = [];
 /* ── สีประจำหมวดหมู่: สุ่มคงที่จาก id ของหมวดหมู่ (ไม่ต้องตั้งค่าเพิ่มในแอดมิน)
      หมวดหมู่เดียวกันจะได้สีเดิมเสมอไม่ว่าจะโหลดกี่ครั้งก็ตาม ── */
 var CATEGORY_PALETTE = [
-  { bg: 'var(--blue-light)',   border: 'var(--blue-mid)',   text: 'var(--blue-dark)',   hex: '#1d4ed8' },
+  { bg: 'var(--c-violet-pale)', border: 'var(--c-violet-mid)', text: 'var(--c-violet-deep)', hex: '#5b21b6' },
   { bg: 'var(--green-light)',  border: 'var(--green-mid)',  text: 'var(--c-green-deep)',            hex: 'var(--c-green-deep)' },
   { bg: 'var(--amber-light)',  border: 'var(--amber-mid)',  text: 'var(--c-amber-deep)',            hex: 'var(--c-amber-deep)' },
   { bg: 'var(--red-light)',    border: 'var(--red-mid)',    text: 'var(--red-dark)',    hex: '#b91c1c' },
   { bg: 'var(--sky-light)',    border: 'var(--sky-mid)',    text: 'var(--c-sky-deep)',  hex: '#075985' },
-  { bg: 'var(--purple-light)', border: 'var(--purple-mid)', text: 'var(--purple-dark)', hex: 'var(--c-violet-deep)' }
+  { bg: 'var(--c-ink-pale)',   border: 'var(--c-ink-mid)',   text: 'var(--c-ink)',       hex: '#1b263b' }
 ];
 
 /* ══ Status meta: label + color + workflow-step states ══ */

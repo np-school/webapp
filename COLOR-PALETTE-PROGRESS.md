@@ -91,6 +91,22 @@
 
 **ยังไม่ได้แตะ (นอกสโคป "กราฟ" ของรอบนี้)**: สีพาสเทลรายห้อง (`ROOM_PASTEL_MAP/FB`), gradient แถบ `--blue/--purple/--sky` ใน `room-admin.js` (`renderRoomBars`/`renderMonthBars` — เป็นสีธีมที่ตั้งใจแยกจาก core 6 สีตามบันทึกเดิม), และปัญหา `STATUS_BG`/`chipColor` 4 ชุดไม่ตรงกันใน `portfolio-admin.js` ที่บันทึกไว้แล้วด้านบน (ไม่ใช่กราฟ เป็น badge/chip)
 
+## อัปเดต: แยกสี "กราฟ" ออกจากสีธีม (`--accent`/`--blue`/`--purple`) ให้ตายตัว — 2026-07-23 (รอบถัดไปอีกครั้ง)
+
+**โจทย์**: เดิมกราฟบางจุดอ้างสีธีม (`--accent`, `--blue`, `--purple`) ทางอ้อม ทำให้กราฟเปลี่ยนสีไปด้วยทุกครั้งที่แอดมินปรับสีธีมใน `settings.html` (ตั้งใจให้ธีมกระทบแค่ navbar/ปุ่ม/ไอคอน ไม่ควรกระทบกราฟ) — จุดที่ผูกกับธีมโดยไม่ตั้งใจคือ `--blue*` (alias ไปที่ `--accent*`) และ `--purple*` (ปกติ alias ไปที่ `--c-ink*` แต่ถูก override เป็น `--accent*` อีกทีใน `body.theme-staff`) ส่วน `--c-*` (core 6 สี), `--sky*`, `--green*`, `--red*`, `--amber*`, `--violet*` **ไม่เคยถูก override ด้วยธีมเลย** จึงใช้เป็นฐานที่ตายตัวจริงได้
+
+**แก้**:
+- `shared/styles-new.css`: `--chart-1` เดิม alias `var(--accent)` → เปลี่ยนเป็นค่าคงที่ `#1d4ed8` ตรงๆ (ค่าเริ่มต้นเท่าเดิม แต่จากนี้ไม่ขยับตามธีม) — กระทบเป็นวงกว้างเพราะ `--chart-1` ถูกใช้ซ้ำใน `profile.js`/`index.js` สำหรับสี doc-type/badge สถานะด้วย
+- `js/foodcourt-admin.js`: กราฟเส้น "สุทธิ" (3 จุด) เดิมใช้ `cssVar('--accent')` → เปลี่ยนเป็น `cssVar('--chart-1')`
+- `js/ipad-lending.js`: โดนัท "นักเรียน/บุคลากร" และแท่ง "จำนวนนักเรียน/บุคลากร" เดิมใช้ `cssVar('--accent')` → เปลี่ยนเป็น `cssVar('--chart-1')`
+- `js/repair-admin.js` + `js/repair-user.js` (`CATEGORY_PALETTE` sync กันสองไฟล์): entry แรก (`var(--blue-*)`) → เปลี่ยนเป็น `var(--c-violet-*)` ตายตัว, entry สุดท้าย (`var(--purple-*)` ซึ่งโดน override เป็นสีธีมใน `body.theme-staff`) → เปลี่ยนเป็น `var(--c-ink-*)` ตรงๆ
+- `js/room-admin.js`: กราฟแท่งแนวนอน "ห้องที่ใช้บ่อย" (`renderRoomBars`), "คำขอรายเดือน" (`renderMonthBars`), และแถบสรุปรวม (`sum-bar-fill`) เดิมไล่เฉดผ่าน `var(--blue)/var(--accent-mid)` และ `var(--purple)/var(--purple-accent)` → เปลี่ยนเป็นชุด `var(--c-violet)/var(--c-violet-deep)` (สูงสุด), `var(--c-ink)/var(--c-ink-deep|mid)` (กลาง/รวม), `var(--sky)/var(--sky-mid)` เดิม (ต่ำสุด — ตัวนี้ตายตัวอยู่แล้วไม่ต้องแก้)
+- ตรวจ `node --check` ผ่านทุกไฟล์ที่แก้
+
+**ไม่แตะ (ตั้งใจ — เป็น UI chrome ไม่ใช่กราฟ)**: ปุ่ม/แท็บ/badge/ไอคอนที่อ้าง `var(--purple)`/`var(--accent)` ใน `repair-admin.js`, `room-admin.js`, `portfolio-admin.js` (เช่นปุ่ม "นำเข้าค่าเริ่มต้น", badge จำนวนเอกสาร, ไอคอนหัวโมดัล) — ตามที่ต้องการให้ธีมยังคุมส่วนนี้ต่อไปตามปกติ, และ `DEPT_COLORS.academic:'#1d4ed8'` ใน `portfolio-admin.js` ที่เป็น literal hex อยู่แล้ว (ไม่ใช่ `var()`) จึงตายตัวอยู่แล้วโดยไม่ต้องแก้
+
+**พบแต่ไม่แตะ (นอกสโคป)**: `CATEGORY_PALETTE` entry ที่ 2/3 (`hex: 'var(--c-green-deep)'`, `hex: 'var(--c-amber-deep)'`) ใส่ CSS var() ไว้ในฟิลด์ `hex` ซึ่งใช้เป็นค่า `<input type="color">` — ช่องนี้รับได้แค่ literal hex เท่านั้น ถ้าเปิดแก้ไขหมวดหมู่นั้นใน UI color picker อาจไม่ขึ้นสีที่ถูกต้อง (คนละปัญหากับเรื่องธีม แนะนำแก้แยกเป็นอีกงาน)
+
 ## คำสั่งที่ใช้ทำงานนี้ (ไว้รันซ้ำ/ตรวจสอบ)
 
 ```bash
