@@ -874,7 +874,7 @@ function buildWorkflowBar(status) {
     } else {
       cls = 'pending';
     }
-    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"><span class="wf-step-icon">' + step.icon + '</span></div>';
+    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"></div>';
   });
   html += '</div>';
   return html;
