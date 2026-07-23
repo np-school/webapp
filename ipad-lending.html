@@ -117,7 +117,7 @@
         <div class="modal-title-icon"><i data-lucide="tablet-smartphone" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3 id="borrowModalTitle">บันทึกการยืม iPad</h3><p id="borrowModalSub">เลือกนักเรียนและอุปกรณ์ที่ต้องการยืม</p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalBorrow')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalBorrow')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
 
     <div class="form-group">
@@ -191,7 +191,7 @@
         <div class="modal-title-icon"><i data-lucide="corner-down-left" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>บันทึกการคืนอุปกรณ์</h3><p id="returnModalSub"></p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalReturn')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalReturn')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
 
     <div class="form-group">
@@ -220,7 +220,7 @@
         <div class="modal-title-icon"><i data-lucide="user-plus" id="studentModalIcon" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3 id="studentModalTitle">เพิ่มนักเรียน</h3></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalStudent')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalStudent')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <label class="form-label">เลขประจำตัวนักเรียน</label>
@@ -262,7 +262,7 @@
         <div class="modal-title-icon"><i data-lucide="tablet" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>เพิ่ม iPad</h3></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalDevice')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalDevice')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <label class="form-label">Friendly Name</label>
@@ -291,7 +291,7 @@
         <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>ปรับสถานะเคลม</h3><p id="claimStatusSub"></p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalClaimStatus')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalClaimStatus')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <label class="form-label">สถานะเครื่อง</label>
@@ -319,7 +319,7 @@
         <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>เคลมไอแพด</h3><p>เลือกเครื่องที่ต้องการส่งเคลม (เลือกได้ทั้งเครื่องที่ว่างและเครื่องที่ถูกยืมอยู่)</p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalClaimDevice')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalClaimDevice')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
 
     <div class="form-group">
@@ -367,7 +367,7 @@
         <div class="modal-title-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px;color:var(--role-director-color);"></i></div>
         <div><h3>เพิ่มเคลมอุปกรณ์เสริม</h3><p>ไม่ต้องระบุรหัสเครื่อง ใส่แค่ชื่ออุปกรณ์เสริมที่ชำรุด</p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalAccessoryClaim')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalAccessoryClaim')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <label class="form-label">อุปกรณ์เสริม</label>
@@ -399,7 +399,7 @@
         <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>นำเข้าไฟล์รายการ iPad (CSV)</h3><p>ระบบจะดึงเฉพาะคอลัมน์ Friendly Name, Asset Number, Serial Number</p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalImport')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalImport')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div class="form-group">
       <input type="file" id="csvFileInput" accept=".csv" onchange="handleCsvFile(event)">
@@ -420,7 +420,7 @@
         <div class="modal-title-icon"><i data-lucide="upload" style="width:18px;height:18px;color:var(--accent);"></i></div>
         <div><h3>นำเข้ารายชื่อนักเรียน (CSV)</h3><p>คอลัมน์ที่ต้องมี: เลขประจำตัว, ชื่อ, นามสกุล, ชั้น, ห้อง</p></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modalImportStudents')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('modalImportStudents')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div style="margin-bottom:14px;">
       <button type="button" class="btn-secondary btn-sm" onclick="downloadStudentCsvTemplate()"><i data-lucide="file-down" style="width:14px;height:14px;"></i> ดาวน์โหลดไฟล์ตัวอย่าง</button>

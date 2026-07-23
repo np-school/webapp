@@ -837,7 +837,7 @@ function renderSarSchoolHistory(){
       if(isCurrent) labelBadge += '<span style="font-size:10px;font-weight:800;color:#0369a1;background:#e0f2fe;padding:2px 8px;border-radius:20px;">ปัจจุบัน</span>';
       return '<div class="ct-node">' +
         '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
-          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
+          '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
         '</div>' +
         '<div class="ct-card" style="border-color:'+bdr+';">' +
           (labelBadge ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+labelBadge+'</div>' : '') +
@@ -1053,7 +1053,7 @@ function buildCareerTimelineHTML(c){
     }
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:#22c55e;background:#dcfce7;">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#22c55e"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:#bbf7d0;">' +
         '<div class="ct-period"><i data-lucide="calendar" style="width:11px;height:11px;"></i>'+thDate(c.start_date)+' · เริ่มรับราชการ</div>' +
@@ -1075,7 +1075,7 @@ function buildCareerTimelineHTML(c){
     var svcNow = calcService(c.cur_school_date || c.start_date);
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
@@ -1099,7 +1099,7 @@ function buildCareerTimelineHTML(c){
     var svcNow2 = calcService(c.start_date);
     html += '<div class="ct-node">' +
       '<div class="ct-dot" style="color:#3b82f6;background:var(--accent-tint);">' +
-        '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
+        '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="#3b82f6"/></svg>' +
       '</div>' +
       '<div class="ct-card" style="border-color:var(--accent-light);">' +
         '<div class="ct-period">' +
@@ -1174,7 +1174,7 @@ function renderCareerHistory(){
 
       return '<div class="ct-node">' +
         '<div class="ct-dot" style="color:'+col+';background:'+bdr+';">' +
-          '<svg viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
+          '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="'+col+'"/></svg>' +
         '</div>' +
         '<div class="ct-card" style="border-color:'+bdr+';">' +
           (labelBadge ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+labelBadge+'</div>' : '') +

@@ -343,9 +343,9 @@ function renderPhotoList() {
   pendingPhotos.forEach(function(p, idx) {
     html +=
       '<div class="rp-photo-thumb">' +
-        '<img src="' + p.localSrc + '">' +
+        '<img src="' + p.localSrc + '" alt="รูปแนบแจ้งซ่อม ' + (idx + 1) + '">' +
         (p.status !== 'done' ? '<div class="up">' + (p.status === 'uploading' ? 'กำลังอัปโหลด...' : p.status === 'error' ? 'อัปโหลดไม่สำเร็จ' : 'รออัปโหลด') + '</div>' : '') +
-        '<button class="rm" onclick="event.stopPropagation();removePhoto(' + idx + ')"><i data-lucide="x" style="width:11px;height:11px;"></i></button>' +
+        '<button class="rm" onclick="event.stopPropagation();removePhoto(' + idx + ')" aria-label="ลบไฟล์"><i data-lucide="x" style="width:11px;height:11px;"></i></button>' +
       '</div>';
   });
   wrap.innerHTML = html;
@@ -358,7 +358,7 @@ function renderSubLocationChips() {
   if (!wrap) return;
   wrap.innerHTML = subLocationTags.map(function(t, idx) {
     return '<span class="rp-room-chip">' + esc2(t) +
-      '<button type="button" onclick="event.stopPropagation();removeSubLocationTag(' + idx + ')"><i data-lucide="x" style="width:10px;height:10px;"></i></button></span>';
+      '<button type="button" onclick="event.stopPropagation();removeSubLocationTag(' + idx + ')" aria-label="ลบรายการห้อง/บริเวณ"><i data-lucide="x" style="width:10px;height:10px;"></i></button></span>';
   }).join('');
   lucide.createIcons();
 }
@@ -405,8 +405,8 @@ function renderDetailBody(r) {
   var photosHtml = '';
   if (r.photos && r.photos.length) {
     photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
-      r.photos.map(function(p) {
-        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
+      r.photos.map(function(p, i) {
+        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '" alt="รูปแนบแจ้งซ่อม ' + (i + 1) + '"></a>';
       }).join('') + '</div>';
   }
 
@@ -455,7 +455,7 @@ function renderDetailBody(r) {
         '<div class="modal-title-icon" style="background:var(--amber-light);"><i data-lucide="' + cat.icon + '" style="color:var(--amber);"></i></div>' +
         '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
       '</div>' +
-      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
+      '<button class="modal-close" onclick="closeModal(\'detailModal\')" aria-label="ปิด"><i data-lucide="x"></i></button>' +
     '</div>' +
 
     '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +

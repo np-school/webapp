@@ -97,8 +97,8 @@
         <div style="padding:13px 15px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">
           <span style="display:flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:13px;"><i data-lucide="calendar" style="width:15px;height:15px;"></i> ปฏิทิน</span>
           <div style="display:flex;gap:2px;">
-            <button onclick="changeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>
-            <button onclick="changeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>
+            <button onclick="changeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;" aria-label="เดือนก่อนหน้า"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>
+            <button onclick="changeMonth(1)"  style="padding:4px;background:none;border:none;cursor:pointer;color:var(--blue);display:flex;border-radius:5px;" aria-label="เดือนถัดไป"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>
           </div>
         </div>
         <div class="cal-card-body">
@@ -203,7 +203,7 @@
         </div>
         <div class="modal-title" id="modalTitle">แบบฟอร์มการจอง</div>
       </div>
-      <button class="modal-close" onclick="toggleModal()"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="toggleModal()" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <form id="bookingForm" style="padding:22px;overflow-y:auto;flex:1;" onsubmit="submitBooking(event)">
       <input type="hidden" id="editBookingId">
@@ -288,7 +288,7 @@
         <input type="file" id="layoutFile" accept="image/*" style="display:none;" onchange="handleFile(this)">
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('layoutFile').click()">
           <div id="uploadDefault"><i data-lucide="upload-cloud" style="width:30px;height:30px;color:var(--accent-light);margin:0 auto 7px;display:block;"></i><p style="font-size:13px;font-weight:700;color:var(--blue);">คลิกเพื่อแนบรูปภาพ / ถ่ายจากกล้อง</p><p style="font-size:11px;color:var(--text3);margin-top:3px;">JPG, PNG — รองรับมือถือ ขนาดสูงสุด 15MB (ระบบจะบีบอัดให้อัตโนมัติ)</p></div>
-          <div id="uploadPreview" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><img id="previewImg" src="" onclick="openFileView(null)" title="คลิกเพื่อขยาย" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid var(--blue-mid);flex-shrink:0;cursor:zoom-in;"><div style="text-align:left;"><p id="fileName" style="font-size:13px;font-weight:700;color:var(--text);word-break:break-all;"></p><p id="fileSize" style="font-size:11px;color:var(--text2);"></p></div></div><button type="button" onclick="clearFile(event)" style="background:var(--red-light);border:none;color:var(--red-dark);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
+          <div id="uploadPreview" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><img id="previewImg" src="" alt="ตัวอย่างรูปผังโต๊ะที่แนบ" onclick="openFileView(null)" title="คลิกเพื่อขยาย" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid var(--blue-mid);flex-shrink:0;cursor:zoom-in;"><div style="text-align:left;"><p id="fileName" style="font-size:13px;font-weight:700;color:var(--text);word-break:break-all;"></p><p id="fileSize" style="font-size:11px;color:var(--text2);"></p></div></div><button type="button" onclick="clearFile(event)" style="background:var(--red-light);border:none;color:var(--red-dark);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
         </div>
         <p id="fileError" style="display:none;font-size:12px;color:var(--red-bright);margin-top:5px;font-weight:600;"></p>
       </div>
@@ -317,7 +317,7 @@
       <button onclick="closeFileView()" class="btn-secondary" style="padding:6px 12px;font-size:12px;">✕ ปิด</button>
     </div>
     <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:var(--bg);">
-      <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
+      <img id="fileViewImg" src="" alt="ไฟล์แนบผังการจัดโต๊ะ" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
       <div id="fileViewError" style="display:none;padding:40px;color:var(--text3);">ไม่สามารถแสดงไฟล์ได้</div>
       <p id="fileViewName" style="font-size:12px;color:var(--text2);margin-top:10px;font-weight:600;"></p>
     </div>

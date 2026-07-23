@@ -672,7 +672,7 @@ function renderListView() {
     html +=
       '<div class="' + rowClass + '">' +
         '<div class="teacher-header" onclick="toggleTeacher(\'' + t.uid + '\')">' +
-          '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=40" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
+          '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=40" alt="' + esc2(t.staffName||t.displayName) + '" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div style="display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap;">' +
               '<p style="font-size:14px;font-weight:800;color:#0f172a;">' + esc2(t.staffName || t.displayName) + '</p>' +
@@ -908,7 +908,7 @@ function renderMatrixView() {
     var isMyTurn = hasItemForMeToReview(t);
     var rowStyle = isMyTurn ? 'background:#f5f3ff;box-shadow:inset 3px 0 0 #7c3aed;' : reviewPriority === 2 ? 'background:#f0f9ff;' : reviewPriority === 1 ? 'background:#fffdf0;' : '';
     html += '<tr style="' + rowStyle + '"><td style="padding:8px 8px;"><div style="display:flex;align-items:center;gap:var(--gap-tight);">' +
-      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
+      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.displayName) + '&background=7c3aed&color=fff&size=28" alt="' + esc2(t.staffName||t.displayName) + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">' +
       '<div style="overflow:hidden;">' +
         '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc2(t.staffName || t.displayName) + '</p>' +
         (t.staffGroup ? '<p style="font-size:9px;color:var(--purple);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">' + esc2(t.staffGroup) + '</p>' : '') +
@@ -2037,7 +2037,7 @@ function renderGroupDetail() {
     }).join('');
 
     return '<div style="display:flex;align-items:center;gap:var(--gap-item);padding:8px 0;border-bottom:1px solid #f8fafc;">' +
-      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.email) + '&background=7c3aed&color=fff&size=28" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">' +
+      '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(t.staffName||t.email) + '&background=7c3aed&color=fff&size=28" alt="' + esc2(t.staffName||t.email) + '" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">' +
       '<div style="flex:1;min-width:0;">' +
         '<p style="font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(t.staffName||t.email) + '</p>' +
         '<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">' +
@@ -2094,7 +2094,7 @@ function renderTeacherDropdown() {
     var name = t.staffName || t.displayName || t.email;
     var avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7c3aed&color=fff&size=40';
     return '<div class="teacher-search-item" onclick="selectTeacher(\'' + esc(t.email) + '\')">' +
-      '<img src="' + avatar + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">' +
+      '<img src="' + avatar + '" alt="' + esc2(name) + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">' +
       '<div style="min-width:0;">' +
         '<p style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc2(name) + '</p>' +
         '<p style="font-size:11px;color:var(--purple);font-weight:600;">' + esc2(t.staffGroup || '') + (t.position ? ' · ' + esc2(t.position) : '') + '</p>' +

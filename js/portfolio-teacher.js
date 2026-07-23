@@ -572,7 +572,7 @@ function renderCourseQueuedFiles(rowIdx) {
         '<i data-lucide="file-text" style="width:15px;height:15px;color:#22c55e;flex-shrink:0;"></i>' +
         '<span class="file-entry-name">' + esc2(f.name) + '</span>' +
         '<span class="file-entry-status">' + (f.size/1024/1024).toFixed(1) + 'MB</span>' +
-        '<button class="file-entry-del" onclick="removeCourseFile(' + rowIdx + ',' + i + ')"><i data-lucide="x" style="width:13px;height:13px;"></i></button>' +
+        '<button class="file-entry-del" onclick="removeCourseFile(' + rowIdx + ',' + i + ')" aria-label="ลบไฟล์"><i data-lucide="x" style="width:13px;height:13px;"></i></button>' +
       '</div>';
   });
   container.innerHTML = html;

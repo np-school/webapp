@@ -42,7 +42,7 @@
         document.body.innerHTML =
           '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">'
           + '<div style="width:72px;height:72px;background:var(--accent-tint);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">'
-          + '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          + '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
           + '</div>'
           + '<h1 style="font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:8px;">กรุณาเปิดใน Safari</h1>'
           + '<p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:28px;">'
@@ -215,7 +215,7 @@
     <h3 id="loginGateTitle" style="font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:8px;">เข้าสู่ระบบก่อนใช้งาน</h3>
     <p id="loginGateDesc" style="font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6;">กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้บริการนี้</p>
     <button onclick="handleLogin()" style="width:100%;padding:14px;background:var(--accent);color:white;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 20px rgba(29,78,216,.3);margin-bottom:12px;">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       เข้าสู่ระบบด้วย Google
     </button>
     <button onclick="closeLoginGate()" style="width:100%;padding:11px;background:var(--border-soft);color:var(--text2);font-weight:700;border-radius:12px;border:none;cursor:pointer;font-size:14px;">ยกเลิก</button>
@@ -241,7 +241,7 @@
 
           <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
             <button onclick="handleLogin()" style="padding:13px 24px;background:white;color:var(--accent);font-weight:800;border-radius:14px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(15,23,42,.25);">
-              <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+              <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
               เข้าสู่ระบบด้วย Google
             </button>
             <a href="guide.html" style="padding:13px 22px;background:rgba(255,255,255,.08);color:white;font-weight:700;border-radius:14px;border:1px solid rgba(255,255,255,.22);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:8px;">
@@ -270,7 +270,7 @@
               <div><div class="hero-mosaic-title">ขอใช้ห้อง/สถานที่</div><div class="hero-mosaic-sub">จองง่าย เห็นผลทันที</div></div>
             </div>
             <div class="hero-mosaic-card mc-4">
-              <div class="hero-mosaic-icon" style="background:var(--role-academic-bg);"><svg width="20" height="20" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg></div>
+              <div class="hero-mosaic-icon" style="background:var(--role-academic-bg);"><svg width="20" height="20" viewBox="0 0 48 48" fill="#06C755" aria-hidden="true"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg></div>
               <div><div class="hero-mosaic-title">แจ้งเตือนผ่าน LINE</div><div class="hero-mosaic-sub">ไม่พลาดทุกการอัปเดต</div></div>
             </div>
           </div>
@@ -358,7 +358,7 @@
         <!-- แจ้งเตือน LINE -->
         <div class="service-card" onclick="showLoginGate('แจ้งเตือนผ่าน LINE','กรุณาเข้าสู่ระบบก่อนเชื่อมต่อ LINE เพื่อรับการแจ้งเตือน','bell')">
           <div class="service-icon" style="background:var(--green-light);">
-            <svg style="width:26px;height:26px;" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+            <svg style="width:26px;height:26px;" viewBox="0 0 48 48" fill="#06C755" aria-hidden="true"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
           </div>
           <div style="font-size:14px;font-weight:800;color:var(--text-dark);margin-bottom:6px;">แจ้งเตือนผ่าน LINE</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.5;">รับแจ้งผลคำขอและเตือนก่อนถึงเวลาใช้งาน</div>
@@ -387,8 +387,8 @@
             <div style="padding:12px 14px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">
               <span style="font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px;"><i data-lucide="calendar" style="width:14px;height:14px;"></i> ปฏิทิน</span>
               <div style="display:flex;gap:2px;">
-                <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
-                <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+                <button onclick="pubChangeMonth(-1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;" aria-label="เดือนก่อนหน้า"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
+                <button onclick="pubChangeMonth(1)" style="padding:4px;background:none;border:none;cursor:pointer;color:var(--accent);border-radius:5px;display:flex;" aria-label="เดือนถัดไป"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
               </div>
             </div>
             <div style="padding:12px;">
@@ -623,7 +623,7 @@
           <!-- Header -->
           <div style="padding:18px 20px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:9px;">
             <div style="width:34px;height:34px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="17" height="17" viewBox="0 0 48 48" fill="#06C755"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+              <svg width="17" height="17" viewBox="0 0 48 48" fill="#06C755" aria-hidden="true"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
             </div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:800;color:var(--text-dark);">รับการแจ้งเตือนผ่าน LINE</div>
@@ -635,7 +635,7 @@
             <div id="lineCard" style="flex:1;min-width:240px;background:linear-gradient(135deg,#06C755,#00a541);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(6,199,85,.22);">
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="20" height="20" viewBox="0 0 48 48" fill="white"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 48 48" fill="white" aria-hidden="true"><path d="M24 4C12.95 4 4 11.82 4 21.4c0 6.08 3.74 11.42 9.4 14.64-.41 1.53-1.49 5.56-1.71 6.43-.27 1.06.39 1.05 1.04.76.52-.23 8.26-5.46 11.62-7.67.53.07 1.07.1 1.65.1 11.05 0 20-7.82 20-17.46S35.05 4 24 4z"/></svg>
                 </div>
                 <div>
                   <div id="lineTxt" style="font-size:13px;font-weight:800;color:white;">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือน</div>

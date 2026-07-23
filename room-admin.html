@@ -241,7 +241,7 @@
         </div>
         <h3 style="font-size:16px;font-weight:800;color:var(--text);" id="roomModalTitle">เพิ่มห้องใหม่</h3>
       </div>
-      <button class="modal-close" onclick="closeModal('roomModal')"><i data-lucide="x"></i></button>
+      <button class="modal-close" onclick="closeModal('roomModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
     </div>
     <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:5px;">ชื่อห้อง/สถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="roomName" placeholder="เช่น ห้องประชุมชั้น 2"></div>
     <div style="margin-bottom:13px;"><label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:5px;">ความจุ (คน)</label><input type="text" id="roomCapacity" placeholder="เช่น 50"></div>
@@ -252,7 +252,7 @@
       <input type="file" id="roomImageFile" accept="image/*" style="display:none;" onchange="handleRoomImage(this)">
       <div class="upload-area" id="roomUploadArea" onclick="document.getElementById('roomImageFile').click()">
         <div id="roomUploadDefault"><i data-lucide="image-plus" style="width:28px;height:28px;color:var(--purple-accent);margin:0 auto 6px;display:block;"></i><p style="font-size:13px;font-weight:700;color:var(--purple);">คลิกเพื่อเลือกรูปภาพห้อง</p><p style="font-size:11px;color:var(--text3);margin-top:2px;">JPG, PNG — ไม่เกิน 5MB</p></div>
-        <div id="roomUploadPreview" style="display:none;"><div style="display:flex;align-items:center;gap:var(--gap-item);"><img id="roomPreviewImg" src="" style="width:60px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;"><div style="text-align:left;flex:1;min-width:0;"><p id="roomFileName" style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p><p id="roomFileSize" style="font-size:11px;color:var(--text2);"></p></div><button type="button" onclick="clearRoomImage(event)" style="background:var(--red-light);border:none;color:var(--red-dark);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
+        <div id="roomUploadPreview" style="display:none;"><div style="display:flex;align-items:center;gap:var(--gap-item);"><img id="roomPreviewImg" src="" alt="ตัวอย่างรูปห้อง" style="width:60px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;"><div style="text-align:left;flex:1;min-width:0;"><p id="roomFileName" style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p><p id="roomFileSize" style="font-size:11px;color:var(--text2);"></p></div><button type="button" onclick="clearRoomImage(event)" style="background:var(--red-light);border:none;color:var(--red-dark);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;">ลบ</button></div></div>
       </div>
     </div>
     <div style="display:flex;gap:var(--gap-item);"><button class="btn-secondary" style="flex:1;" onclick="closeModal('roomModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveRoom()"><i data-lucide="save" style="width:14px;height:14px;"></i> บันทึก</button></div>
@@ -267,7 +267,7 @@
       <button onclick="closeFileView()" style="background:var(--bg-alt);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;font-size:12px;color:var(--text2);">✕ ปิด</button>
     </div>
     <div style="flex:1;overflow:auto;padding:20px;text-align:center;background:var(--bg);">
-      <img id="fileViewImg" src="" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
+      <img id="fileViewImg" src="" alt="ไฟล์แนบผังการจัดโต๊ะ" style="max-width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);" onerror="this.style.display='none';document.getElementById('fileViewError').style.display='block'">
       <div id="fileViewError" style="display:none;padding:40px;color:var(--text3);"></div>
       <p id="fileViewName" style="font-size:12px;color:var(--text2);margin-top:10px;font-weight:600;"></p>
     </div>

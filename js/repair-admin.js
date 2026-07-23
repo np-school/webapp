@@ -279,10 +279,10 @@ function renderPeriodPopoverBody(scope) {
   return (
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
       '<button type="button" ' + (prevDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + scope + '\',-1)"')) +
-        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (prevDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (prevDisabled ? '.35' : '1') + ';"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>' +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (prevDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (prevDisabled ? '.35' : '1') + ';" aria-label="ปีก่อนหน้า"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>' +
       '<div style="font-size:13.5px;font-weight:800;color:var(--text);">พ.ศ. ' + (st.year + 543) + '</div>' +
       '<button type="button" ' + (nextDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + scope + '\',1)"')) +
-        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (nextDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (nextDisabled ? '.35' : '1') + ';"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (nextDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (nextDisabled ? '.35' : '1') + ';" aria-label="ปีถัดไป"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">' + monthsGrid + '</div>'
   );
@@ -924,7 +924,7 @@ function renderTable() {
           (r.reporterPhone ? '<div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px;"><i data-lucide="phone" style="width:10px;height:10px;"></i>' + esc2(r.reporterPhone) + '</div>' : '') +
         '</td>' +
         '<td><span class="rp-status c-' + meta.color + '">' + meta.label + '</span></td>' +
-        '<td><button class="btn-icon" onclick="event.stopPropagation();openDetail(\'' + r.id + '\')"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button></td>' +
+        '<td><button class="btn-icon" onclick="event.stopPropagation();openDetail(\'' + r.id + '\')" aria-label="ดูรายละเอียด"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button></td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
@@ -938,8 +938,8 @@ function renderDetailBody(r) {
   var photosHtml = '';
   if (r.photos && r.photos.length) {
     photosHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' +
-      r.photos.map(function(p) {
-        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '"></a>';
+      r.photos.map(function(p, i) {
+        return '<a href="' + p.url + '" target="_blank" rel="noopener" class="rp-photo-thumb"><img src="' + p.url + '" alt="รูปแนบแจ้งซ่อม ' + (i + 1) + '"></a>';
       }).join('') + '</div>';
   } else {
     photosHtml = '<p style="font-size:12px;color:var(--text3);margin-top:4px;">ไม่มีรูปภาพแนบ</p>';
@@ -968,7 +968,7 @@ function renderDetailBody(r) {
         '<div class="modal-title-icon" style="background:var(--purple-light);"><i data-lucide="' + cat.icon + '" style="color:var(--purple);"></i></div>' +
         '<div><h3>' + esc2(r.title || '') + '</h3><p>' + cat.label + ' · ' + esc2(r.location || '') + '</p></div>' +
       '</div>' +
-      '<button class="modal-close" onclick="closeModal(\'detailModal\')"><i data-lucide="x"></i></button>' +
+      '<button class="modal-close" onclick="closeModal(\'detailModal\')" aria-label="ปิด"><i data-lucide="x"></i></button>' +
     '</div>' +
 
     '<span class="rp-status c-' + meta.color + '">' + meta.label + '</span>' +

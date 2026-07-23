@@ -898,7 +898,7 @@ function renderDevicesTable() {
         '<td>' + statusBadge + '</td>' +
         '<td style="white-space:nowrap;">' +
           '<button class="btn-icon" onclick="openClaimStatusModal(\'' + d.id + '\')" title="ปรับสถานะเคลม"><i data-lucide="triangle-alert" style="width:14px;height:14px;"></i></button> ' +
-          '<button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
+          '<button class="btn-icon danger" onclick="deleteDevice(\'' + d.id + '\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>' +
         '</td>' +
       '</tr>'
     );

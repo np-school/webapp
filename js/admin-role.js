@@ -682,7 +682,7 @@ function renderAdminMiniCard(a, isSuperCard){
   }
 
   return '<div style="display:flex;align-items:flex-start;gap:var(--gap-item);padding:10px;border:1px solid #f1f5f9;border-radius:10px;background:white;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\'#f1f5f9\'">' +
-    '<img src="'+ph+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
+    '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:38px;height:38px;border-radius:50%;border:2px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">' +
     '<div style="flex:1;min-width:0;">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px;">' +
         '<p style="font-size:13px;font-weight:700;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>' +
@@ -716,11 +716,11 @@ function renderListView(){
     var actions=isSA?'':
       '<div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">' +
         '<button class="btn-icon" onclick="openEditModal(\''+esc(a.email)+'\')" style="background:var(--accent-tint);color:var(--accent);"><i data-lucide="settings-2" style="width:13px;height:13px;"></i><span style="font-size:11px;font-weight:700;margin-left:3px;">แก้ไขสิทธิ์</span></button>' +
-        '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
+        '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
     return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'#778da9':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'#e0e1dd':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'#778da9\'" onmouseleave="this.style.borderColor=\''+(isSA?'#778da9':'#e2e8f0')+'\'">'+
-      '<img src="'+ph+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#778da9':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
+      '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'#778da9':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+
           '<p style="font-weight:700;font-size:14px;color:#1e293b;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
@@ -786,7 +786,7 @@ function renderMatrix(){
     return '<tr style="background:'+(isSA?'#e0e1dd':'white')+';">' +
       '<td style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">' +
         '<div style="display:flex;align-items:center;gap:9px;">' +
-          '<img src="'+ph+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +
+          '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e2e8f0;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=48\'">' +
           '<div>' +
             '<p style="font-size:12px;font-weight:700;color:#1e293b;display:inline;">'+esc2(a.data.name||a.email)+'</p>'+superBadge+
             '<p style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">'+esc2(a.email)+'</p>' +

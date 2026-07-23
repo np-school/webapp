@@ -694,7 +694,7 @@ function updateNavUser(user) {
   var ph = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'U') + '&background=1d4ed8&color=fff';
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;">' +
-      '<img src="' + ph + '" class="navbar-user-avatar">' +
+      '<img src="' + ph + '" alt="' + esc2(user.displayName || user.email || 'ผู้ใช้') + '" class="navbar-user-avatar">' +
       '<button onclick="handleLogout()" class="navbar-logout-btn">' +
         '<i data-lucide="log-out" style="width:18px;height:18px;"></i>' +
       '</button>' +
@@ -740,7 +740,7 @@ function updateSidebarProfile(user) {
     el.innerHTML =
       '<div style="background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;">' +
         '<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">' +
-          '<img src="' + ph + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid #e2e8f0;">' +
+          '<img src="' + ph + '" alt="' + esc2(name || 'ผู้ใช้') + '" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid #e2e8f0;">' +
           '<div style="overflow:hidden;min-width:0;">' +
             '<p style="font-size:12px;font-weight:800;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</p>' +
             subHtml +
