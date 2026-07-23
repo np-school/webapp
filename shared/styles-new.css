@@ -130,6 +130,10 @@
   --violet-bright:#8b5cf6;  /* ม่วงสว่าง ใช้กับสถานะ "รองผู้อำนวยการตรวจแล้ว" */
   --violet-pale:  #ddd6fe;  /* ม่วงอ่อน ใช้กับ cell สถานะเดียวกัน */
   --violet-dark:  #6d28d9;  /* ตัวหนังสือม่วงเข้ม ใช้กับ chip สถานะเดียวกัน */
+  --violet-vivid: #a855f7;  /* ม่วง-ชมพูสด ใช้กับ gradient badge/progress */
+  --violet-tint:  #ede9fe;  /* ม่วงอ่อนมาก ใช้กับพื้นหลัง badge/hover */
+  --violet-soft:  #c4b5fd;  /* ม่วงกลาง ใช้กับ timeline gradient/badge bg */
+  --violet-hover: #a78bfa;  /* ใช้กับ border ตอน hover */
   --blue-accent: #2563eb;   /* น้ำเงิน decorative ทั่วไป (ไม่ผูกกับธีม ต่างจาก --accent) */
   --blue-bright: #3b82f6;
   --emerald:     #22c55e;   /* เขียวสว่างกว่า --green */
@@ -143,6 +147,7 @@
   --yellow-dark: #713f12;   /* ตัวหนังสือเหลืองเข้ม ใช้กับ step ที่ active */
   --amber-dark:  #92400e;
   --cyan:        #06b6d4;
+  --cyan-light:  #ecfeff;
 
   /* LINE brand color — เดิม hardcode #06C755 กระจายในหลาย inline style */
   --line-green:      #06C755;

@@ -68,10 +68,10 @@
     .sem-block:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);}
     .sem-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none;}
     .sem-badge{background:linear-gradient(135deg,var(--accent),#3b82f6);color:white;font-size:12px;font-weight:800;padding:5px 13px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
-    .sem-badge.sem2{background:linear-gradient(135deg,var(--violet),#a855f7);}
+    .sem-badge.sem2{background:linear-gradient(135deg,var(--violet),var(--violet-vivid));}
     .sem-progress-bar{flex:1;background:var(--border-soft);border-radius:6px;height:7px;overflow:hidden;}
     .sem-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#3b82f6);transition:width .6s ease;}
-    .sem-progress-fill.purple{background:linear-gradient(90deg,var(--violet),#a855f7);}
+    .sem-progress-fill.purple{background:linear-gradient(90deg,var(--violet),var(--violet-vivid));}
     .sem-count{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;}
     .sem-chevron{color:var(--text3);transition:transform .3s;flex-shrink:0;}
     .sem-block.open .sem-chevron{transform:rotate(180deg);}
@@ -101,7 +101,7 @@
     .s-head_reviewed {background:var(--sky-light);color:var(--role-hr-color);}
     .s-reviewed      {background:var(--role-general-bg);color:var(--accent-dark);}
     .s-assistant_reviewed{background:var(--role-hog-bg);color:var(--amber-dark);}
-    .s-deputy_reviewed{background:#ede9fe;color:#6d28d9;}
+    .s-deputy_reviewed{background:var(--violet-tint);color:#6d28d9;}
     .s-final_approved{background:var(--role-budget-bg);color:#065f46;}
     .s-revision      {background:var(--yellow-light);color:var(--amber-dark);}
     .s-none          {background:var(--border-soft);color:var(--text3);}
@@ -219,7 +219,7 @@
     .sar-dev-meta{font-size:10px;font-weight:600;color:var(--text3);}
     .sar-media-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg);}
     .sar-media-item:last-child{border-bottom:none;}
-    .sar-media-icon{width:30px;height:30px;border-radius:8px;background:#ecfeff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .sar-media-icon{width:30px;height:30px;border-radius:8px;background:var(--cyan-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .sar-media-name{font-size:12px;font-weight:700;color:var(--text-dark);flex:1;}
     .sar-media-sub{font-size:10px;font-weight:600;color:var(--text2);}
     .sar-duty-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
@@ -233,7 +233,7 @@
 
     /* ── Career Timeline ── */
     .career-timeline{position:relative;padding:4px 0 4px 32px;flex:1;}
-    .career-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,var(--accent-light),#c4b5fd);border-radius:2px;}
+    .career-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#bbf7d0,var(--accent-light),var(--violet-soft));border-radius:2px;}
     .ct-node{position:relative;margin-bottom:22px;}
     .ct-node:last-child{margin-bottom:0;}
     .ct-dot{position:absolute;left:-25px;top:13px;width:16px;height:16px;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 2.5px currentColor;display:flex;align-items:center;justify-content:center;}
@@ -266,12 +266,12 @@
     .port-file-link:hover { background:var(--role-general-bg); }
 
   
-    .ct-transfer-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--violet);background:var(--violet-light);border:1px solid #c4b5fd;padding:2px 8px;border-radius:20px;}
+    .ct-transfer-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--violet);background:var(--violet-light);border:1px solid var(--violet-soft);padding:2px 8px;border-radius:20px;}
     .ct-node-history .ct-card{border-color:var(--role-dep-general-border);}
     .ct-history-section{margin-top:10px;padding-top:12px;border-top:1px dashed var(--border);}
     .ct-history-section-title{font-size:10px;font-weight:800;color:var(--violet);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-    .ch-add-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--violet-light);color:var(--violet);border:1.5px dashed #c4b5fd;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;}
-    .ch-add-btn:hover{background:#ede9fe;border-color:#a78bfa;}
+    .ch-add-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--violet-light);color:var(--violet);border:1.5px dashed var(--violet-soft);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;}
+    .ch-add-btn:hover{background:var(--violet-tint);border-color:var(--violet-hover);}
   </style>
 </head>
 <body style="background:var(--bg);min-height:100vh;">
@@ -438,7 +438,7 @@
           <!-- สื่อนวัตกรรม (full width) -->
           <div class="sar-card" style="grid-column:1/-1;">
             <div class="sar-card-head">
-              <div class="sar-card-icon" style="background:#ecfeff;"><i data-lucide="layout-grid" style="width:17px;height:17px;color:var(--cyan);"></i></div>
+              <div class="sar-card-icon" style="background:var(--cyan-light);"><i data-lucide="layout-grid" style="width:17px;height:17px;color:var(--cyan);"></i></div>
               <div class="sar-card-title">สื่อนวัตกรรมการเรียนรู้</div>
             </div>
             <div class="sar-card-body" id="sar-media-body">

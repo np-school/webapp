@@ -112,7 +112,8 @@
    - [ ] เปลี่ยนชื่อ `--purple-*` (สื่อผิด จริงคือ navy/ink ไม่ใช่ม่วง) — ยังไม่ rename เพราะมี ~208 จุดอ้างอิงทั่วโปรเจกต์ ต้องเช็ค `common.js`/`buildNavbar` ก่อนว่าไม่มีที่ไหนอ้างชื่อ string ตรงๆ
    - [ ] inline hex ใน `.html` ที่ยังไม่มี token คู่ (สีเฉพาะโมดูล เช่น portfolio=เขียว/ม่วง, foodcourt=ส้ม) ต้องรีวิวทีละหน้าก่อนตั้ง token ใหม่:
      - [x] `portfolio-admin.html` — เจอระบบสีตามขั้นตอนตรวจพอร์ตโฟลิโอ (submitted/head/assistant/deputy/final) กระจาย hardcode ใน `<style>` ของไฟล์ → เพิ่ม token ใหม่ 12 ตัวใน `styles-new.css` (`--green-pale`, `--green-dark`, `--red-pale`, `--sky-bright/-pale/-mist`, `--violet-bright/-pale/-dark`, `--emerald-dark`, `--yellow-pale/-dark`) แล้วแทนที่ครบ **ยกเว้น** สี swatch ใน color-picker เลือกสีประเภทเอกสาร (`selectDtColor`) ที่ตั้งใจไม่แตะ เพราะเป็นค่าที่บันทึกลง Firestore จริง ไม่ใช่สีตกแต่ง (เหลือ `#fafbff` 1 จุด decorative เล็กน้อยเกินกว่าจะตั้ง token)
-     - [ ] `profile.html` (23), `index.html` (22), `guide.html` (15), `portfolio-teacher.html` (13), `settings.html` (13), `staff.html` (4), `room-request.html` (3), `foodcourt-admin.html` (1)
+     - [x] `profile.html` — เพิ่ม token violet-family เพิ่มเติม (`--violet-vivid/-tint/-soft/-hover`) + `--cyan-light` แล้วแทนที่ครบ (เหลือ `#1e3a8a`, `#f8fbff` 2 จุด decorative one-off ไม่คุ้มตั้ง token)
+     - [ ] `index.html` (22), `guide.html` (15), `portfolio-teacher.html` (13), `settings.html` (13), `staff.html` (4), `room-request.html` (3), `foodcourt-admin.html` (1)
 
 
 ### ⚠️ ข้อควรระวัง (ไม่ใช่งานค้าง แค่รู้ไว้กันพลาด)
