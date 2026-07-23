@@ -165,9 +165,13 @@ let recurringItems=[
 const fmt=n=>Math.round(n).toLocaleString('th-TH');
 const fmtDateShort=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
 const today=()=>new Date().toISOString().split('T')[0];
-/* ── ใช้ --chart-1..9 ชุดเดียวกับกราฟหน้าอื่นในเว็บ (index.js/profile.js) แทน hex เดิม
-   ที่ผสมกันเองแบบสุ่ม ให้กราฟ Food Court เข้าชุดสีเดียวกับทั้งเว็บ ── */
-const colors=['var(--chart-1)','var(--chart-2)','var(--chart-3)','var(--chart-4)','var(--chart-5)','var(--chart-6)','var(--chart-7)','var(--chart-8)','var(--chart-9)'];
+/* ── สี --chart-N เป็น CSS variable ใช้ตรงๆ กับ Chart.js/Canvas ไม่ได้
+   (canvas fillStyle ไม่รู้จัก var(), เงียบๆ fallback เป็นสีดำ — นี่คือสาเหตุที่กราฟ/โดนัทเพี้ยน)
+   ต้อง resolve เป็นค่าสีจริงผ่าน getComputedStyle ก่อนเสมอ ── */
+function cssVar(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#64748b';
+}
+const colors=['--chart-1','--chart-2','--chart-3','--chart-4','--chart-5','--chart-6','--chart-7','--chart-8','--chart-9'].map(cssVar);
 
 // ── FIRESTORE PERSISTENCE ──
 const FC_TX_COLL = 'foodcourt_transactions';
