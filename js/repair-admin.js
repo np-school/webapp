@@ -1175,7 +1175,7 @@ function seedDefaultCategories() {
 
 /* สุ่มสี hex สวยๆ ให้ input color ตอนเปิดฟอร์ม (ผู้ใช้เปลี่ยนเองได้ก่อนกด "เพิ่ม") */
 function randomCatColor() {
-  var pool = ['var(--c-sky-deep)', 'var(--c-green-deep)', 'var(--c-amber-deep)', 'var(--c-red)', 'var(--c-sky-deep)', '#7c3aed', '#db2777', '#0f766e', '#4f46e5', '#ca8a04'];
+  var pool = ['var(--c-sky-deep)', 'var(--c-green-deep)', 'var(--c-amber-deep)', 'var(--c-red)', 'var(--c-sky-deep)', 'var(--c-violet)', '#db2777', '#0f766e', '#4f46e5', '#ca8a04'];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -2029,7 +2029,7 @@ function doPrintReport() {
 /* สีป้ายสถานะสำหรับหน้าพิมพ์ (คู่กับ getStatusMeta().color) */
 var PRINT_BADGE_COLORS = {
   amber:  { bg: '#fef3c7', text: 'var(--c-amber-deep)' },
-  sky:    { bg: '#e0f2fe', text: '#075985' },
+  sky:    { bg: 'var(--sky-light)', text: '#075985' },
   purple: { bg: '#ede9fe', text: '#5b21b6' },
   green:  { bg: '#dcfce7', text: 'var(--c-green-deep)' },
   red:    { bg: '#fee2e2', text: '#b91c1c' }

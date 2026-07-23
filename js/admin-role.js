@@ -489,7 +489,7 @@ function renderStaffPickerList(query) {
     return;
   }
   var curEmail = (document.getElementById('fEmail').value || '').trim().toLowerCase();
-  var colors = ['#1d4ed8','#0d1b2a','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
+  var colors = ['#1d4ed8','var(--c-ink-deep)','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
   listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);
     var ci = 0; for (var i=0;i<s.name.length;i++) ci=(ci*31+s.name.charCodeAt(i))%colors.length;
@@ -542,7 +542,7 @@ function renderHogPickerList(query) {
     listEl.innerHTML = '<div class="staff-picker-empty">ไม่พบรายชื่อ</div>';
     return;
   }
-  var colors = ['#1d4ed8','#0d1b2a','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
+  var colors = ['#1d4ed8','var(--c-ink-deep)','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
   var curEmail = _selectedHog ? _selectedHog.email : '';
   listEl.innerHTML = filtered.map(function(s, idx) {
     var initials = getInitialsSP(s.name);
@@ -719,8 +719,8 @@ function renderListView(){
         '<button class="btn-icon danger" onclick="openDeleteModal(\''+esc(a.email)+'\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
       '</div>';
 
-    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'var(--accent-light)':'#e2e8f0')+';border-radius:14px;background:'+(isSA?'var(--accent-tint)':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\''+(isSA?'var(--accent-light)':'#e2e8f0')+'\'">'+
-      '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'var(--accent-light)':'#e2e8f0')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
+    return '<div style="display:flex;align-items:center;gap:var(--gap-card);padding:14px 16px;border:1.5px solid '+(isSA?'var(--accent-light)':'var(--border)')+';border-radius:14px;background:'+(isSA?'var(--accent-tint)':'white')+';transition:border-color .15s;" onmouseenter="this.style.borderColor=\'var(--accent-light)\'" onmouseleave="this.style.borderColor=\''+(isSA?'var(--accent-light)':'var(--border)')+'\'">'+
+      '<img src="'+ph+'" alt="'+esc2(a.data.name||a.email)+'" style="width:44px;height:44px;border-radius:50%;border:2px solid '+(isSA?'var(--accent-light)':'var(--border)')+';flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&size=64\'">'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px;">'+
           '<p style="font-weight:700;font-size:14px;color:var(--text);">'+esc2(a.data.name||a.email)+'</p>'+superBadge+

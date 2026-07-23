@@ -7,7 +7,7 @@ var SUPER_ADMIN_EMAIL = 'nattapol@nongki.ac.th';
 
 /* ════ Render Table ════ */
 var GROUP_COLORS = { 'วิทยาศาสตร์':'วิทยาศาสตร์','เทคโนโลยี':'เทคโนโลยี','คณิตศาสตร์':'คณิตศาสตร์','ภาษาไทย':'ภาษาไทย','สังคมศึกษา ศาสนา และวัฒนธรรม':'สังคมศึกษา ศาสนา และวัฒนธรรม','สุขศึกษาและพลศึกษา':'สุขศึกษาและพลศึกษา','ภาษาต่างประเทศ':'ภาษาต่างประเทศ','ศิลปะ':'ศิลปะ','การงานอาชีพ':'การงานอาชีพ','แนะแนว':'แนะแนว','เจ้าหน้าที่':'เจ้าหน้าที่','ผู้บริหาร':'ผู้บริหาร' };
-var AVATAR_COLORS = ['#1d4ed8','#7c3aed','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
+var AVATAR_COLORS = ['#1d4ed8','var(--c-violet)','var(--c-green-deep)','var(--c-amber-deep)','var(--c-sky-deep)','#be185d','var(--c-amber)','#0d9488'];
 
 /* ════ Import CSV / Paste ════ */
 var importTab = 'file';
@@ -397,8 +397,8 @@ function switchImportTab(tab) {
   document.getElementById('importPastePanel').style.display = tab === 'paste' ? '' : 'none';
   document.getElementById('tabFileBtn').style.borderBottomColor  = tab === 'file'  ? 'var(--accent)' : 'transparent';
   document.getElementById('tabPasteBtn').style.borderBottomColor = tab === 'paste' ? 'var(--accent)' : 'transparent';
-  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? 'var(--accent)' : '#64748b';
-  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? 'var(--accent)' : '#64748b';
+  document.getElementById('tabFileBtn').style.color  = tab === 'file'  ? 'var(--accent)' : 'var(--text2)';
+  document.getElementById('tabPasteBtn').style.color = tab === 'paste' ? 'var(--accent)' : 'var(--text2)';
 }
 
 function handleCsvDrop(e) {

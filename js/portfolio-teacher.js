@@ -53,17 +53,17 @@ var _sharedDriveId = null;
 /* ─── 4 ฝ่ายบริหาร ─── */
 var DEPARTMENTS = [
   { id:'academic',  label:'ฝ่ายวิชาการ',         icon:'graduation-cap', color:'var(--accent)', bg:'var(--accent-tint)' },
-  { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'var(--c-green)', bg:'#f0fdf4' },
-  { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'#7c3aed', bg:'#f5f3ff' },
+  { id:'budget',    label:'ฝ่ายงบประมาณ',        icon:'banknote',       color:'var(--c-green)', bg:'var(--c-green-pale)' },
+  { id:'personnel', label:'ฝ่ายบริหารงานบุคคล', icon:'users',          color:'var(--c-violet)', bg:'var(--c-violet-pale)' },
   { id:'general',   label:'ฝ่ายบริหารทั่วไป',   icon:'building-2',     color:'var(--c-amber)', bg:'var(--c-amber-pale)' },
 ];
 
 /* DOCUMENT_TYPES โหลดจาก Firestore (portfolio_doc_types) — fallback hardcode ถ้า collection ว่าง */
 var DOCUMENT_TYPES = [
   { id:'syllabus',         label:'Course Syllabus',                 icon:'file-text',  color:'var(--c-sky)', bg:'#eff6ff', department:'academic'  },
-  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'var(--c-violet)', bg:'#f5f3ff', department:'academic'  },
-  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'var(--c-green)', bg:'#f0fdf4', department:'academic'  },
-  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'var(--c-amber)', bg:'#fffbeb', department:'academic'  },
+  { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'var(--c-violet)', bg:'var(--c-violet-pale)', department:'academic'  },
+  { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'var(--c-green)', bg:'var(--c-green-pale)', department:'academic'  },
+  { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'var(--c-amber)', bg:'var(--c-amber-pale)', department:'academic'  },
   { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8', department:'academic'  },
   { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'var(--c-sky)', bg:'var(--c-sky-pale)', department:'academic'  },
   { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'var(--c-amber-tint)', bg:'var(--c-amber-pale)', department:'academic'  },
@@ -418,7 +418,7 @@ function renderDocList() {
                       var sub     = submissions[subKey];
                       var status  = sub.status || 'submitted';
                       var slabel  = { submitted:'ส่งแล้ว', reviewed:'หัวหน้าฯ ตรวจ', head_reviewed:'หัวหน้าฯ ตรวจ', assistant_reviewed:'ผช.ผอ. ตรวจ', deputy_reviewed:'รอง ผอ. ตรวจ', final_approved:'ผอ.อนุมัติ', revision:'แก้ไข' }[status] || 'ส่งแล้ว';
-                      var sbg     = { submitted:'#dcfce7', reviewed:'#e0f2fe', head_reviewed:'#e0f2fe', assistant_reviewed:'#fef3c7', deputy_reviewed:'#ede9fe', final_approved:'#d1fae5', revision:'var(--c-amber-pale)' }[status] || 'var(--role-academic-bg)';
+                      var sbg     = { submitted:'var(--c-green-pale)', reviewed:'var(--sky-light)', head_reviewed:'var(--sky-light)', assistant_reviewed:'var(--c-amber-pale)', deputy_reviewed:'var(--c-violet-pale)', final_approved:'var(--c-green-tint)', revision:'var(--c-red-pale)' }[status] || 'var(--role-academic-bg)';
                       var scol    = { submitted:'var(--c-green-deep)', reviewed:'var(--c-sky-deep)', head_reviewed:'var(--c-sky-deep)', assistant_reviewed:'var(--c-amber-deep)', deputy_reviewed:'var(--c-violet-deep)', final_approved:'var(--c-green-deep)', revision:'var(--c-amber-deep)' }[status] || 'var(--green-deep)';
                       var files   = sub.files || [];
                       return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">' +

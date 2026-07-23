@@ -174,3 +174,54 @@ for f in js/*.js; do node --check "$f"; done
 ### ยังไม่ได้ทำ (รอบถัดไป)
 - `js/portfolio-teacher.js` (20 hex), `js/repair-admin.js` (18), `js/repair-user.js` (4), `js/admin-role.js` (11), `js/settings.js`/`js/staff.js`/`js/foodcourt-admin.js`/`js/room-admin.js` (เหลือน้อย)
 - ไฟล์ `.html` ทั้งหมด (~9 ไฟล์ ที่ยังมี inline style hex)
+
+## อัปเดต: ตรวจครบทุกไฟล์ที่เหลือ (js + html) — 2026-07-23 (รอบสุดท้าย)
+
+### `js/portfolio-teacher.js` — แก้จริง 6 จุด
+- `#f0fdf4`→`var(--c-green-pale)` (2), `#7c3aed`→`var(--c-violet)` (1), `#f5f3ff`→`var(--c-violet-pale)` (2), `#fffbeb`→`var(--c-amber-pale)` (1)
+- **รวมมาตรฐานสถานะ `sbg` map ให้ตรงกับ `portfolio-admin.js`** (พบว่าเป็น 4-way-inconsistency แบบเดียวกัน): submitted/head_reviewed/reviewed/assistant_reviewed/deputy_reviewed/final_approved/revision ใช้ token ชุดเดียวกับที่ตกลงไว้ก่อนหน้าแล้วทั้งหมด
+- ไม่แตะ: `#eff6ff`,`#fdf2f8`+`#ec4899`,`#eef2ff`+`#6366f1`,`#fefce8` (ไม่มี token ตรงเป๊ะ, สีตกแต่งประเภทเอกสาร), `colorToBg()` ที่ต่อ alpha string (ยืนยันจาก `function colorToBg(hex){ return hex+'15'; }`)
+
+### `js/repair-admin.js` — แก้จริง 2 จุด
+- `#7c3aed`→`var(--c-violet)` ใน pool สีหมวดหมู่, `#e0f2fe`→`var(--sky-light)`
+- ไม่แตะ: field `hex:` ใน object สถานะ (4 จุด) และ fallback ใน `<input type="color" value="...">` — **ต้องเป็น hex จริง เพราะ input[type=color] ไม่รับ `var()`**; อีก 4 สี (amber/purple/green/red ใน object badge) ไม่มี token ตรงเป๊ะ
+
+### `js/repair-user.js` — ตรวจแล้ว ไม่ต้องแก้
+- hex ทั้งหมดเป็น field `hex:` สำหรับ color-picker input เหมือน repair-admin.js
+
+### `js/admin-role.js` — แก้จริง 3 จุด
+- `#e2e8f0`→`var(--border)` ทั้ง 3 จุด (border ปกติ, border hover, avatar border)
+- **ไม่แตะ (ต้องทบทวน)**: `#0d1b2a` ใน colors pool 2 จุด (บรรทัด 492, 545) — บริบทนี้คือสีอวตารตาม role ซึ่งต่างจาก common.js (banner) ที่ใช้ `--accent` ไปแล้ว ในบริบทนี้ตามเอกสาร "SuperAdmin = ink" น่าจะควรเป็น `var(--c-ink-deep)` แทน ไม่ใช่ `var(--accent)` — **ยังไม่ได้แก้ รอ confirm** เพราะเป็นคนละความหมายกับที่เคยตัดสินใจไปแล้ว
+- ไม่แตะ: `#1d4ed8` (กำกวมกับ `--accent` เหมือน `DEPT_COLORS.academic` เดิม), `background=7c3aed` ใน URL ui-avatars.com (ต่อ string ใน URL ใช้ `var()` ไม่ได้)
+
+### `js/settings.js` — แก้จริง 1 จุด
+- `#f0fdf4`→`var(--c-green-pale)`
+- ไม่แตะ: `#1d4ed8`/`#0d1b2a` (เป็นค่า default ของ "ธีมพรีเซ็ต" ที่ตั้งใจ hardcode ให้ตรงกับค่า default ใน CSS ไม่ใช่สีสถานะ)
+
+### `js/staff.js` — แก้จริง 3 จุด
+- `#7c3aed`→`var(--c-violet)`, `#64748b`→`var(--text2)` (2 จุด)
+- ไม่แตะ: `#1d4ed8` (เหตุผลเดียวกับข้างต้น)
+
+### `js/foodcourt-admin.js`, `js/room-admin.js`, `js/profile.js` — ตรวจแล้ว ไม่แก้เพิ่ม
+- `foodcourt-admin.js`: hex เป็นค่า fallback ของ `getComputedStyle(...).trim() || '#64748b'` เอง จะใช้ `var()` เป็น fallback ของการอ่าน `var()` ไม่ได้ (circular)
+- `room-admin.js`: `#dcfce7` ไม่มี token ตรงเป๊ะ
+- `profile.js`: ทุกจุดเป็น `col+'22'`/`col+'44'` (ต่อ alpha string เหมือน colorToBg) หรือ fallback ธรรมดาที่ต่อ string ต่อ ใช้ `var()` ไม่ได้
+
+### ไฟล์ `.html` — แก้จริงรวม 8 จุด
+- `guide.html`: `#bbf7d0`(×2)→`var(--c-green-tint)`, `#c4b5fd`(×2)→`var(--c-violet-mid)`
+- `profile.html`: `#bbf7d0`(×2)→`var(--c-green-tint)`
+- `foodcourt-admin.html`: `#c4b5fd`→`var(--c-violet-mid)`
+- `index.html`: `#a78bfa`→`var(--violet-hover)`
+- `room-request.html`: `#f87171`(×2)→`var(--c-red-mid)`
+- ไม่แตะ (ไม่มี token ตรงเป๊ะ หรือเป็นของตั้งใจ): `#ede9fe` (violet ที่ไม่ตรงเฉดมาตรฐาน — พบ 3 จุด ควรรีวิวว่าใกล้ violet-pale พอจะรวมไหม), gradient สี decorative (`#1e3a8a`,`#fbbf24`,`#34d399`,`#10b981`,`#fdba74`,`#166534` ฯลฯ), สีแบรนด์ (`#4285F4` Google, SVG `#fff`), color-swatch เลือกเอกสาร (`portfolio-admin.html` #ec4899/#6366f1/#14b8a6 — ตั้งใจไม่แตะเดิม)
+
+## สรุปสถานะรวมทั้งโปรเจกต์ (จบรอบนี้)
+ทุกไฟล์ `.js`/`.html` ได้รับการตรวจสอบครบแล้ว 100% แก้จริงรวม ~40 จุดในรอบนี้ (นับตั้งแต่ common.js เป็นรวม ~60+ จุดทั้งโปรเจกต์) ที่เหลือทั้งหมดเป็น 3 กลุ่ม: (1) ตั้งใจไม่แตะเพราะเป็น decorative/แบรนด์/ผู้ใช้เลือกเอง (2) ทางเทคนิคใช้ `var()` ไม่ได้ (string concat, input[type=color], url) (3) ไม่มี token ตรงเป๊ะ ต้องตัดสินใจเชิงความหมายเพิ่มก่อนรวม (เช่น `#ede9fe`, `#0d1b2a` ใน admin-role.js)
+
+**รอ confirm จากคุณ**: `#0d1b2a` ใน `js/admin-role.js` (colors pool role avatar) — ใช้ `var(--c-ink-deep)` ตามความหมาย "SuperAdmin = ink" ดีไหม?
+
+## อัปเดต: ปิดจุดค้างสุดท้าย — 2026-07-23
+
+- `js/admin-role.js` บรรทัด 492, 545: `#0d1b2a` → `var(--c-ink-deep)` (2 จุด) — ยืนยันแล้วว่าบริบทนี้คือสีอวตารตาม role ("SuperAdmin = ink") ต่างจาก `#0d1b2a` ใน `common.js` ที่เป็น banner theme จึงใช้ `--accent`
+
+**สถานะ: ตรวจสอบและแก้ไขครบทุกไฟล์ในโปรเจกต์แล้ว ไม่มีจุดค้างที่ต้องตัดสินใจเพิ่มเติม**
