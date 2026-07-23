@@ -643,7 +643,20 @@ function renderListView() {
     '</div>';
   }
 
-  var html = summaryHtml + '<div style="display:flex;flex-direction:column;gap:var(--gap-item);">';
+  var wfLegend =
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:8px 14px;background:var(--bg-alt);border-radius:10px;font-size:11px;color:var(--text2);">' +
+      '<span style="font-weight:800;color:var(--text);flex-shrink:0;">ลำดับการตรวจ:</span>' +
+      '<span style="white-space:nowrap;">① ครูส่งงาน → ② หัวหน้ากลุ่มสาระ → ③ ผช.ผอ.วิชาการ → ④ รอง ผอ.วิชาการ → ⑤ ผู้อำนวยการ</span>' +
+      '<span style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">' +
+        '<span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--c-green);display:inline-block;"></span>ผ่านแล้ว</span>' +
+        '<span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--yellow);display:inline-block;"></span>กำลังรอ</span>' +
+        '<span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--bg-alt);border:1px solid var(--border);display:inline-block;"></span>ยังไม่ถึง</span>' +
+        '<span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--purple);display:inline-block;"></span>อนุมัติสมบูรณ์</span>' +
+        '<span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);display:inline-block;"></span>ให้แก้ไข</span>' +
+      '</span>' +
+    '</div>';
+
+  var html = wfLegend + summaryHtml + '<div style="display:flex;flex-direction:column;gap:var(--gap-item);">';
   teachers.forEach(function(t) {
     var subCount = Object.keys(t.subs).length;
     var pct = Math.round((subCount / DOCUMENT_TYPES.length) * 100);
@@ -846,27 +859,22 @@ function buildWorkflowBar(status) {
   var html = '<div class="workflow-bar">';
   steps.forEach(function(step, i) {
     if (i > 0) html += '<div class="wf-divider"></div>';
-    var cls, label;
+    var cls;
     if (isRevision) {
-      if (i === 0) { cls = 'revision'; label = '⚠ ให้แก้ไข'; }
-      else { cls = 'pending'; label = step.label; }
+      cls = (i === 0) ? 'revision' : 'pending';
     } else if (i < cur) {
       /* ขั้นที่ผ่านแล้ว */
       cls = 'done';
-      label = '✓ ' + step.label;
     } else if (i === cur) {
       /* ขั้นล่าสุดที่ผ่าน (หรือ final_approved) */
       cls = (status === 'final_approved') ? 'final' : 'done';
-      label = '✓ ' + step.label;
     } else if (i === cur + 1) {
       /* ขั้นถัดไปที่กำลังรอ */
       cls = (status === 'final_approved') ? 'final' : 'active';
-      label = (status === 'final_approved') ? '✓ ' + step.label : '⏳ ' + step.label;
     } else {
       cls = 'pending';
-      label = step.label;
     }
-    html += '<div class="wf-step ' + cls + '">' + label + '</div>';
+    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"></div>';
   });
   html += '</div>';
   return html;

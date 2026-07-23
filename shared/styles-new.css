@@ -1871,18 +1871,7 @@ tr:hover td { background: var(--bg); }
 .wf-step {
   flex: 1;
   min-width: 0;
-  padding: 6px 4px;
-  text-align: center;
-  font-size: 9px;
-  font-weight: 800;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  height: 16px;
 }
 .wf-step.done     { background: var(--c-green); color: white; }
 .wf-step.active   { background: var(--yellow); color: #713f12; }
