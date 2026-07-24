@@ -23,21 +23,21 @@ var blockedSlots = [], editingBookingId = null;
 /* ══ Room Color (from common.js fallback local copy) ══ */
 var ROOM_PASTEL_MAP = {
   'ห้องประชุมชวนชม'  : {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'var(--c-sky-deep)'},
-  'หอประชุมพุทธรักษา': {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'var(--c-amber-deep)'},
+  'หอประชุมพุทธรักษา': {bg:'#fef3c7',text:'#78350f',border:'var(--c-amber-mid)',accent:'var(--c-amber-deep)'},
   'สนามกีฬากลาง'    : {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'var(--c-green-deep)'},
   'ห้องประชุมราชพฤกษ์': {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
   'โดมอเนกประสงค์'  : {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'var(--c-amber)'},
-  'ห้องประชุมปาริชาต' : {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
-  'ห้องประชุมชวนชน'  : {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'}
+  'ห้องประชุมปาริชาต' : {bg:'#ede9fe',text:'#4c1d95',border:'var(--c-violet-mid)',accent:'var(--c-violet)'},
+  'ห้องประชุมชวนชน'  : {bg:'#e0f2fe',text:'#0c4a6e',border:'var(--c-sky-mid)',accent:'var(--c-sky)'}
 };
 var ROOM_PASTEL_FALLBACK = [
   {bg:'#dbeafe',text:'#1e3a8a',border:'#93c5fd',accent:'var(--c-sky-deep)'},
   {bg:'#d1fae5',text:'#064e3b',border:'#6ee7b7',accent:'var(--c-green-deep)'},
-  {bg:'#ede9fe',text:'#4c1d95',border:'#c4b5fd',accent:'#7c3aed'},
+  {bg:'#ede9fe',text:'#4c1d95',border:'var(--c-violet-mid)',accent:'var(--c-violet)'},
   {bg:'#fce7f3',text:'#831843',border:'#f9a8d4',accent:'#db2777'},
   {bg:'#ffedd5',text:'#7c2d12',border:'#fdba74',accent:'var(--c-amber)'},
-  {bg:'#fef3c7',text:'#78350f',border:'#fcd34d',accent:'var(--c-amber-deep)'},
-  {bg:'#e0f2fe',text:'#0c4a6e',border:'#7dd3fc',accent:'#0284c7'},
+  {bg:'#fef3c7',text:'#78350f',border:'var(--c-amber-mid)',accent:'var(--c-amber-deep)'},
+  {bg:'#e0f2fe',text:'#0c4a6e',border:'var(--c-sky-mid)',accent:'var(--c-sky)'},
   {bg:'#fdf4ff',text:'#581c87',border:'#e9d5ff',accent:'#9333ea'}
 ];
 

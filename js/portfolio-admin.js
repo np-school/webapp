@@ -40,10 +40,10 @@ var DOCUMENT_TYPES = [
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',          short:'แผนการ',    icon:'book-open',   color:'var(--c-violet)' },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',           short:'เศรษฐกิจ',  icon:'leaf',        color:'var(--c-green)' },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',             short:'ราโชบาย',   icon:'crown',       color:'var(--c-amber)' },
-  { id:'competency',       label:'แผนสมรรถนะ',                   short:'สมรรถนะ',   icon:'zap',         color:'#ec4899' },
+  { id:'competency',       label:'แผนสมรรถนะ',                   short:'สมรรถนะ',   icon:'zap',         color:'var(--c-red)' },
   { id:'research',         label:'รายงานวิจัยในชั้นเรียน',        short:'วิจัย',     icon:'microscope',  color:'var(--c-sky)' },
   { id:'student_analysis', label:'วิเคราะห์ผู้เรียนรายบุคคล',     short:'วิเคราะห์', icon:'users',       color:'var(--c-amber-tint)' },
-  { id:'media_register',   label:'ทะเบียนสื่อ',                  short:'สื่อ',      icon:'library',     color:'#6366f1' },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                  short:'สื่อ',      icon:'library',     color:'var(--c-ink)' },
   { id:'student_work',     label:'ผลงานนักเรียน',                 short:'ผลงาน',    icon:'star',        color:'var(--c-amber)' },
 ];
 var currentYear = window._defaultYear || 2568;
@@ -1402,9 +1402,9 @@ function fillSingleFileInfo(sub) {
       submitted:          { bg:'var(--c-green-pale)', color:'var(--c-green-deep)' },
       head_reviewed:      { bg:'var(--sky-light)', color:'var(--c-sky-deep)' },
       reviewed:           { bg:'var(--sky-light)', color:'var(--c-sky-deep)' },
-      assistant_reviewed: { bg:'#fef3c7', color:'var(--c-amber-deep)' },
+      assistant_reviewed: { bg:'var(--yellow-pale)', color:'var(--c-amber-deep)' },
       deputy_reviewed:    { bg:'var(--purple-light)', color:'var(--c-violet-deep)' },
-      final_approved:     { bg:'#d1fae5', color:'var(--c-green-deep)' },
+      final_approved:     { bg:'var(--green-pale)', color:'var(--c-green-deep)' },
       revision:           { bg:'var(--c-amber-pale)', color:'var(--c-amber-deep)' }
     };
     var sc = statusColors[curStatus] || { bg:'var(--bg-alt)', color:'var(--text2)' };
@@ -1977,10 +1977,10 @@ function renderGroupDetail() {
   /* stat row */
   var statCards = [
     { label:'ครูทั้งหมด',   val:d.teachers.length, color:'var(--purple)', bg:'var(--purple-light)', icon:'users' },
-    { label:'ส่งงานแล้ว%', val:pct + '%',           color:'var(--c-green)', bg:'#dcfce7', icon:'send' },
+    { label:'ส่งงานแล้ว%', val:pct + '%',           color:'var(--c-green)', bg:'var(--green-pale)', icon:'send' },
     { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'var(--c-green)', bg:'var(--c-green-tint)', icon:'shield-check' },
     { label:'รอตรวจ',      val:d.submitted,          color:'var(--c-sky)', bg:'var(--sky-light)', icon:'clock' },
-    { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'var(--c-red-mid)', bg:'#fee2e2', icon:'alert-circle' },
+    { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'var(--c-red-mid)', bg:'var(--red-pale)', icon:'alert-circle' },
   ].map(function(s) {
     return '<div class="stat-card" style="flex-direction:column;gap:4px;padding:12px 14px;">' +
       '<div style="width:32px;height:32px;border-radius:10px;background:' + s.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
@@ -2371,7 +2371,7 @@ function renderTeacherSubTable(t) {
           var noteCls = dSt === 'revision' ? 'revision' : 'admin';
           html += '<div class="note-bubble ' + noteCls + '" style="margin-top:6px;">' +
             '<p style="font-size:11px;font-weight:700;color:' + (dSt==='revision'?'var(--red)':'var(--c-amber-deep)') + ';margin-bottom:3px;">' + (dSt==='revision'?'⚠ หมายเหตุการแก้ไข':'💬 ความเห็นผู้ตรวจ') + '</p>' +
-            '<p style="font-size:12px;color:' + (dSt==='revision'?'var(--rose-deep)':'#78350f') + ';line-height:1.6;">' + esc2(doc.adminNote) + '</p>' +
+            '<p style="font-size:12px;color:' + (dSt==='revision'?'var(--rose-deep)':'var(--yellow-dark)') + ';line-height:1.6;">' + esc2(doc.adminNote) + '</p>' +
           '</div>';
         }
 
@@ -2748,13 +2748,13 @@ function openReview(subId, uid, docTypeId) {
     var badgeCfg = isSuperAdmin
       ? { label:'⚡ SuperAdmin', bg:'var(--purple-light)', color:'var(--c-violet-deep)' }
       : isHeadOfGroupOnly
-      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'#fef3c7', color:'var(--c-amber-deep)' }
+      ? { label:'⭐ หัวหน้ากลุ่มสาระ', bg:'var(--yellow-pale)', color:'var(--c-amber-deep)' }
       : p2.assistantDirectorAcademic && !p2.deputyDirectorAcademic && !p2.director
-      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'#cffafe', color:'var(--c-sky-deep)' }
+      ? { label:'🏅 ผช.ผอ.วิชาการ (ขั้น 2)', bg:'var(--sky-mist)', color:'var(--c-sky-deep)' }
       : p2.deputyDirectorAcademic && !p2.director
       ? { label:'👑 รอง ผอ.วิชาการ (ขั้น 3)', bg:'var(--purple-light)', color:'var(--c-violet)' }
       : p2.director
-      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'#fef3c7', color:'var(--c-amber-deep)' }
+      ? { label:'🎖 ผู้อำนวยการ (ขั้น 4)', bg:'var(--yellow-pale)', color:'var(--c-amber-deep)' }
       : { label:'👁 ดูข้อมูลเท่านั้น', bg:'var(--bg-alt)', color:'var(--text2)' };
     badgeEl.style.background = badgeCfg.bg;
     badgeEl.style.color = badgeCfg.color;
@@ -2876,7 +2876,7 @@ function openNotesModal(uid, docTypeId) {
     /* 1. Teacher submitted */
     if (doc.submittedAt) {
       entries.push({
-        emoji: '📤', bg: '#dcfce7', border: 'var(--c-green)',
+        emoji: '📤', bg: 'var(--green-pale)', border: 'var(--c-green)',
         label: 'ครูส่งงาน',
         who: t ? (t.staffName || t.displayName) : uid,
         when: formatDate(doc.submittedAt),
@@ -2900,7 +2900,7 @@ function openNotesModal(uid, docTypeId) {
     /* 3. Assistant note */
     if (doc.assistantNote || doc.status === 'assistant_reviewed') {
       entries.push({
-        emoji: '🏅', bg: '#fef3c7', border: 'var(--c-amber)',
+        emoji: '🏅', bg: 'var(--yellow-pale)', border: 'var(--c-amber)',
         label: 'ผช.ผอ.วิชาการตรวจ',
         who: doc.assistantReviewerName || '',
         when: '',
@@ -2924,7 +2924,7 @@ function openNotesModal(uid, docTypeId) {
     /* 5. Director note */
     if (doc.directorNote || doc.status === 'final_approved') {
       entries.push({
-        emoji: '🎖', bg: '#d1fae5', border: 'var(--c-green)',
+        emoji: '🎖', bg: 'var(--green-pale)', border: 'var(--c-green)',
         label: 'ผู้อำนวยการอนุมัติ',
         who: doc.directorReviewerName || '',
         when: '',

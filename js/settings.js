@@ -17,7 +17,7 @@ var SHADE_SLOTS = [
 
 /* ══ Announcement helpers ══ */
 var ANN_TYPES = {
-  info:    { label: 'ข้อมูล',   icon: 'info',           iconColor: '#1d4ed8', badgeClass: 'ann-badge-info',    wrapClass: 'ann-type-info' },
+  info:    { label: 'ข้อมูล',   icon: 'info',           iconColor: 'var(--c-sky)', badgeClass: 'ann-badge-info',    wrapClass: 'ann-type-info' },
   warning: { label: 'แจ้งเตือน', icon: 'alert-triangle', iconColor: 'var(--c-amber)', badgeClass: 'ann-badge-warning', wrapClass: 'ann-type-warning' },
   success: { label: 'ข่าวดี',   icon: 'check-circle-2', iconColor: 'var(--c-green)', badgeClass: 'ann-badge-success', wrapClass: 'ann-type-success' },
   urgent:  { label: 'ด่วน',     icon: 'bell-ring',       iconColor: 'var(--c-red)', badgeClass: 'ann-badge-urgent',  wrapClass: 'ann-type-urgent' },

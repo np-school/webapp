@@ -64,10 +64,10 @@ var DOCUMENT_TYPES = [
   { id:'lesson_plan',      label:'แผนการจัดการเรียนรู้',            icon:'book-open',  color:'var(--c-violet)', bg:'var(--c-violet-pale)', department:'academic'  },
   { id:'sufficiency',      label:'แผนเศรษฐกิจพอเพียง',             icon:'leaf',       color:'var(--c-green)', bg:'var(--c-green-pale)', department:'academic'  },
   { id:'royal_policy',     label:'แผนพระบรมราโชบาย',               icon:'crown',      color:'var(--c-amber)', bg:'var(--c-amber-pale)', department:'academic'  },
-  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'#ec4899', bg:'#fdf2f8', department:'academic'  },
+  { id:'competency',       label:'แผนสมรรถนะ',                     icon:'zap',        color:'var(--c-red)', bg:'var(--c-red-pale)', department:'academic'  },
   { id:'research',         label:'รายงานวิจัยในชั้นเรียน',          icon:'microscope', color:'var(--c-sky)', bg:'var(--c-sky-pale)', department:'academic'  },
   { id:'student_analysis', label:'รายงานวิเคราะห์ผู้เรียนรายบุคคล', icon:'users',      color:'var(--c-amber-tint)', bg:'var(--c-amber-pale)', department:'academic'  },
-  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'#6366f1', bg:'#eef2ff', department:'academic'  },
+  { id:'media_register',   label:'ทะเบียนสื่อ',                    icon:'library',    color:'var(--c-ink)', bg:'var(--c-ink-pale)', department:'academic'  },
   { id:'student_work',     label:'ผลงานนักเรียน',                   icon:'star',       color:'var(--c-amber)', bg:'#fefce8', department:'academic'  },
 ];
 var _docTypesLoaded = false;

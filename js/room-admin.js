@@ -323,7 +323,7 @@
     filtered.forEach(function(b){gt.total++;if(b.status==='approved')gt.approved++;else if(b.status==='pending')gt.pending++;else if(b.status==='rejected')gt.rejected++;});
     var totalsEl=document.getElementById('sumTotals');
     if(totalsEl){
-      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'var(--purple-light)',ic:'var(--purple)'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'#dcfce7',ic:'var(--green)'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'var(--c-amber-pale)',ic:'var(--c-amber)'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'var(--red-light)',ic:'var(--red)'}];
+      var grandDefs=[{label:'ทั้งหมด',val:gt.total,icon:'calendar',bg:'var(--purple-light)',ic:'var(--purple)'},{label:'อนุมัติแล้ว',val:gt.approved,icon:'check-circle',bg:'var(--green-light)',ic:'var(--green)'},{label:'รอพิจารณา',val:gt.pending,icon:'clock',bg:'var(--c-amber-pale)',ic:'var(--c-amber)'},{label:'ไม่อนุมัติ',val:gt.rejected,icon:'x-circle',bg:'var(--red-light)',ic:'var(--red)'}];
       totalsEl.innerHTML=grandDefs.map(function(g){return '<div class="sum-grand-card"><div style="width:40px;height:40px;background:'+g.bg+';border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="'+g.icon+'" style="width:18px;height:18px;color:'+g.ic+';"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">'+g.label+'</p><p style="font-size:22px;font-weight:800;line-height:1;color:var(--text);">'+g.val+'</p></div></div>';}).join('');
       lucide.createIcons();
     }
