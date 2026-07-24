@@ -171,88 +171,51 @@
   }
 
   var RPT_STATUS_LABELS={pending:'รอพิจารณา',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'};
-  var RPT_STATUS_COLORS={
-    pending:{bg:'#fef3c7',text:'#92400e'},
-    approved:{bg:'#dcfce7',text:'#15803d'},
-    rejected:{bg:'#fee2e2',text:'#b91c1c'}
-  };
+  var RPT_STATUS_BADGE_COLOR={pending:'amber',approved:'green',rejected:'red'};
+
   function renderRptItem(b,idx){
     var status=b.status||'pending';
-    var badge=RPT_STATUS_COLORS[status]||RPT_STATUS_COLORS.pending;
     var equip=(b.equipment&&b.equipment.length)?b.equipment.join(' · '):'-';
-    return (
-      '<div class="item">'+
-        '<div class="item-head">'+
-          '<h2>'+(idx+1)+'. '+esc2(b.room||'-')+'</h2>'+
-          '<span class="status-badge" style="background:'+badge.bg+';color:'+badge.text+';">'+esc2(RPT_STATUS_LABELS[status]||status)+'</span>'+
-        '</div>'+
-        '<div class="item-body">'+
-          '<div class="info-grid">'+
-            '<div><span class="label">วันที่ใช้ห้อง</span>'+esc2(b.date||'-')+'</div>'+
-            '<div><span class="label">เวลา</span>'+esc2((b.startTime||'-')+' – '+(b.endTime||'-'))+'</div>'+
-            '<div><span class="label">ผู้จอง</span>'+esc2(b.fullName||b.userName||'-')+'</div>'+
-            '<div><span class="label">ตำแหน่ง</span>'+esc2(b.position||'-')+'</div>'+
-            '<div><span class="label">เบอร์โทร</span>'+esc2(b.phone||'-')+'</div>'+
-            '<div><span class="label">ผู้เข้าร่วม</span>'+esc2((b.attendees||'-')+' คน')+'</div>'+
-          '</div>'+
-          '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">วัตถุประสงค์</span>'+esc2(b.purpose||'-')+'</div>'+
-          '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">อุปกรณ์ที่ขอเพิ่มเติม</span>'+esc2(equip)+'</div>'+
-          (b.rejectReason?('<div class="desc-box" style="background:#fee2e2;"><span class="label" style="display:block;margin-bottom:3px;">เหตุผลไม่อนุมัติ</span>'+esc2(b.rejectReason)+'</div>'):'')+
-        '</div>'+
-      '</div>'
-    );
-  }
-  function openRoomReportPrintWindow(list){
-    var win=window.open('','_blank');
-    if(!win){showToast('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตป๊อปอัปสำหรับเว็บนี้แล้วลองอีกครั้ง','warn');return;}
+    var descBoxes=[
+      {label:'วัตถุประสงค์',value:b.purpose||'-'},
+      {label:'อุปกรณ์ที่ขอเพิ่มเติม',value:equip}
+    ];
+    if(b.rejectReason) descBoxes.push({label:'เหตุผลไม่อนุมัติ',value:b.rejectReason});
 
-    var roomLabel=rptRoom?esc2(rptRoom):'ทุกห้อง / สถานที่';
+    return printReportItemHTML({
+      index:idx,
+      title:b.room||'-',
+      badges:[{label:RPT_STATUS_LABELS[status]||status,color:RPT_STATUS_BADGE_COLOR[status]||'slate'}],
+      infoRows:[
+        {label:'วันที่ใช้ห้อง',value:b.date||'-'},
+        {label:'เวลา',value:(b.startTime||'-')+' – '+(b.endTime||'-')},
+        {label:'ผู้จอง',value:b.fullName||b.userName||'-'},
+        {label:'ตำแหน่ง',value:b.position||'-'},
+        {label:'เบอร์โทร',value:b.phone||'-'},
+        {label:'ผู้เข้าร่วม',value:(b.attendees||'-')+' คน'}
+      ],
+      descBoxes:descBoxes
+    });
+  }
+
+  function openRoomReportPrintWindow(list){
+    var roomLabel=rptRoom?rptRoom:'ทุกห้อง / สถานที่';
     var now=new Date();
     var printedAt=now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
     var itemsHtml=list.map(function(b,idx){return renderRptItem(b,idx);}).join('');
 
-    var html=
-      '<!doctype html><html lang="th"><head><meta charset="UTF-8">'+
-      '<meta name="viewport" content="width=device-width, initial-scale=1.0">'+
-      '<title>รายงานการขอใช้ห้อง/สถานที่</title>'+
-      '<style>'+
-        '@page{ size: A4; margin: 14mm 12mm; }'+
-        '*{box-sizing:border-box;}'+
-        'body{font-family:Sarabun,Tahoma,sans-serif;color:#1f2937;margin:0;padding:22px;background:#eef2f9;}'+
-        '.page-wrap{max-width:840px;margin:0 auto;background:#fff;padding:26px 30px;border-radius:12px;}'+
-        printReportHeaderCSS()+
-        '.meta-box{background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:#334155;}'+
-        '.meta-box .full{grid-column:1 / -1;border-top:1px solid #e5e7eb;margin-top:4px;padding-top:6px;font-weight:700;color:#334155;}'+
-        '.meta-box b{color:#111827;}'+
-        '.item{border:1px solid #d1d5db;border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}'+
-        '.item-head{background:#eef2ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e0e7ff;}'+
-        '.item-head h2{font-size:13.5px;margin:0;color:#3730a3;font-weight:800;}'+
-        '.status-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}'+
-        '.item-body{padding:14px 16px;}'+
-        '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 20px;font-size:12.5px;margin-bottom:12px;}'+
-        '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}'+
-        '.desc-box{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;}'+
-        '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}'+
-        '.no-print{max-width:840px;margin:0 auto 16px;}'+
-        '.no-print button{padding:10px 22px;border-radius:9px;border:none;background:#4338ca;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;}'+
-        '@media print{ body{background:#fff;padding:0;} .page-wrap{max-width:none;padding:0;border-radius:0;} .no-print{display:none;} .item{border-color:#9ca3af;} }'+
-      '</style></head><body>'+
-        '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>'+
-        '<div class="page-wrap">'+
-          printReportHeaderHTML('รายงานการขอใช้ห้อง/สถานที่','ระบบจัดการขอใช้ห้อง/สถานที่')+
-          '<div class="meta-box">'+
-            '<div>ห้อง/สถานที่: <b>'+roomLabel+'</b></div>'+
-            '<div>ช่วงเวลา: <b>'+esc2(periodLabel(rptPeriod))+'</b></div>'+
-            '<div>พิมพ์เมื่อ: <b>'+printedAt+'</b></div>'+
-            '<div class="full">รวมทั้งหมด '+list.length+' รายการ</div>'+
-          '</div>'+
-          itemsHtml+
-        '</div>'+
-      '</body></html>';
-
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    openPrintReportWindow({
+      docTitle:'รายงานการขอใช้ห้อง/สถานที่',
+      reportTitle:'รายงานการขอใช้ห้อง/สถานที่',
+      systemName:'ระบบจัดการขอใช้ห้อง/สถานที่',
+      metaRows:[
+        {label:'ห้อง/สถานที่',value:roomLabel},
+        {label:'ช่วงเวลา',value:periodLabel(rptPeriod)},
+        {label:'พิมพ์เมื่อ',value:printedAt}
+      ],
+      metaFull:'รวมทั้งหมด '+list.length+' รายการ',
+      bodyHtml:itemsHtml
+    });
   }
 
   function clearRoomImageUI(){document.getElementById('roomImageFile').value='';document.getElementById('roomUploadDefault').style.display='block';document.getElementById('roomUploadPreview').style.display='none';document.getElementById('roomUploadArea').classList.remove('has-file');}

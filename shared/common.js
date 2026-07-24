@@ -108,15 +108,27 @@ function onPushPermissionNeeded(user) {
 window.onPushPermissionNeeded = onPushPermissionNeeded;
 
 /* ════════════════════════════════
-   Printed reports — รูปแบบหัวรายงานกลาง
-   ใช้ร่วมกันทุกหน้าที่มีปุ่ม "พิมพ์รายงาน" (repair-admin, room-admin, ฯลฯ)
-   เพื่อให้ทุกรายงานมีโลโก้โรงเรียน + ชื่อโรงเรียน + ชื่อระบบที่พิมพ์ ในรูปแบบเดียวกัน
+   Printed reports — รูปแบบรายงานกลาง (หัว + เนื้อหา + หน้าต่างพิมพ์)
+   ใช้ร่วมกันทุกหน้าที่มีปุ่ม "พิมพ์รายงาน" (repair-admin, room-admin, และหน้าอื่นๆ ในอนาคต)
+   แก้รูปแบบรายงานที่นี่ที่เดียว มีผลกับทุกหน้าที่เรียกใช้
    ════════════════════════════════ */
 var SCHOOL_NAME = 'โรงเรียนหนองกี่พิทยาคม';
 var SCHOOL_LOGO_URL = 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f';
 
-/* CSS ของหัวรายงาน — ใช้ค่า hex ตรงๆ (ไม่ใช้ var(--...)) เพราะหน้าต่างพิมพ์เปิดด้วย window.open()
-   แยกต่างหาก ไม่ได้ <link> โยง stylesheet หลัก ดังนั้น CSS variable จะไม่มีค่าให้ resolve */
+/* สีป้ายสถานะมาตรฐานของรายงาน — เรียกผ่าน printReportBadgeColor('amber'|'sky'|'purple'|'green'|'red')
+   ใช้ hex ตรงๆ ทั้งหมด (ห้ามใช้ var(--...)) เพราะหน้าต่างพิมพ์เปิดด้วย window.open() แยกเอกสาร
+   ไม่ได้ <link> โยง stylesheet หลัก CSS variable จึงไม่มีค่าให้ resolve ในหน้าต่างพิมพ์ */
+var PRINT_REPORT_BADGE_COLORS = {
+  amber:  { bg: '#fef3c7', text: '#92400e' },
+  sky:    { bg: '#e0f2fe', text: '#075985' },
+  purple: { bg: '#ede9fe', text: '#5b21b6' },
+  green:  { bg: '#dcfce7', text: '#15803d' },
+  red:    { bg: '#fee2e2', text: '#b91c1c' },
+  slate:  { bg: '#f1f5f9', text: '#334155' }
+};
+function printReportBadgeColor(key) { return PRINT_REPORT_BADGE_COLORS[key] || PRINT_REPORT_BADGE_COLORS.slate; }
+
+/* CSS ของหัวรายงาน: โลโก้โรงเรียน(เล็ก) + ชื่อโรงเรียน + ชื่อระบบที่พิมพ์ */
 function printReportHeaderCSS() {
   return (
     '.report-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #4338ca;padding-bottom:14px;margin-bottom:16px;}' +
@@ -141,6 +153,147 @@ function printReportHeaderHTML(reportTitle, systemName) {
       '</div>' +
     '</div>'
   );
+}
+
+/* CSS ของ "เนื้อหา" รายงาน — โครง page-wrap, กล่องข้อมูลสรุป (meta-box), หัวข้อคั่นกลุ่ม (section-title),
+   การ์ดรายการ (item), ป้ายสถานะ (status-badge/urgent-badge), กล่องรายละเอียด (desc-box), รูปภาพแนบ (photos)
+   ทุกหน้าใช้ชุดเดียวกันนี้ — ถ้าจะปรับหน้าตารายงานทั้งระบบ แก้ตรงนี้ที่เดียวพอ */
+function printReportBodyCSS() {
+  return (
+    '*{box-sizing:border-box;}' +
+    'body{font-family:Sarabun,Tahoma,sans-serif;color:#1f2937;margin:0;padding:22px;background:#eef2f9;}' +
+    '.page-wrap{max-width:840px;margin:0 auto;background:#fff;padding:26px 30px;border-radius:12px;}' +
+    printReportHeaderCSS() +
+    '.meta-box{background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:#334155;}' +
+    '.meta-box .full{grid-column:1 / -1;border-top:1px solid #e5e7eb;margin-top:4px;padding-top:6px;font-weight:700;color:#334155;}' +
+    '.meta-box b{color:#111827;}' +
+    '.section-title{font-size:14px;font-weight:800;color:#3730a3;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #e0e7ff;page-break-after:avoid;}' +
+    '.section-title:first-of-type{margin-top:0;}' +
+    '.item{border:1px solid #d1d5db;border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}' +
+    '.item-head{background:#eef2ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e0e7ff;}' +
+    '.item-head h2{font-size:13.5px;margin:0;color:#3730a3;font-weight:800;}' +
+    '.status-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}' +
+    '.urgent-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;background:#fee2e2;color:#b91c1c;white-space:nowrap;}' +
+    '.item-body{padding:14px 16px;}' +
+    '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 20px;font-size:12.5px;margin-bottom:12px;}' +
+    '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}' +
+    '.dim{color:#9ca3af;font-size:11.5px;}' +
+    '.desc-box{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;}' +
+    '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}' +
+    '.photos-title{font-size:11px;font-weight:800;color:#4b5563;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}' +
+    '.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.photo-box{border-radius:10px;overflow:hidden;border:1px solid #d1d5db;background:#f9fafb;}' +
+    '.photo-box img{display:block;width:100%;height:280px;object-fit:cover;}' +
+    '.no-photo{font-size:12px;color:#9ca3af;font-style:italic;}' +
+    '.no-print{max-width:840px;margin:0 auto 16px;}' +
+    '.no-print button{padding:10px 22px;border-radius:9px;border:none;background:#4338ca;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;}' +
+    '@media print{ body{background:#fff;padding:0;} .page-wrap{max-width:none;padding:0;border-radius:0;} .no-print{display:none;} .item{border-color:#9ca3af;} .photo-box img{height:250px;} }'
+  );
+}
+
+/* กล่องสรุปเงื่อนไข/จำนวนรายการด้านบนของรายงาน
+   rows: [{label, value}]  → แสดงเป็นตาราง 2 คอลัมน์
+   fullLine: ข้อความแถวเต็มความกว้างด้านล่าง (เช่น "รวมทั้งหมด 12 รายการ") — ไม่ระบุก็ได้ */
+function printReportMetaBoxHTML(rows, fullLine) {
+  var html = '<div class="meta-box">' +
+    (rows || []).map(function(r) {
+      return '<div>' + esc2(r.label) + ': <b>' + esc2(r.value) + '</b></div>';
+    }).join('');
+  if (fullLine) html += '<div class="full">' + esc2(fullLine) + '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* การ์ดของรายการเดียวในรายงาน
+   opts = {
+     index,                         // ลำดับ (0-based) — แสดงเป็น index+1
+     title,                         // หัวข้อการ์ด
+     badges: [{label, color}],      // ป้ายมุมขวาบน เช่น สถานะ/เร่งด่วน — color = key ใน PRINT_REPORT_BADGE_COLORS หรือ 'urgent'
+     infoRows: [{label, value}],    // แถวข้อมูล 2 คอลัมน์ (ผู้แจ้ง/วันที่/สถานที่ ฯลฯ)
+     descBoxes: [{label, value}],   // กล่องรายละเอียดเต็มความกว้าง (รายละเอียด/หมายเหตุ ฯลฯ)
+     photos: [{url}]                // รูปภาพแนบ (ไม่ระบุ = ไม่แสดงส่วนรูปภาพเลย)
+   } */
+function printReportItemHTML(opts) {
+  opts = opts || {};
+  var badgesHtml = (opts.badges || []).map(function(b) {
+    if (b.color === 'urgent') return '<span class="urgent-badge">' + esc2(b.label) + '</span>';
+    var c = printReportBadgeColor(b.color);
+    return '<span class="status-badge" style="background:' + c.bg + ';color:' + c.text + ';">' + esc2(b.label) + '</span>';
+  }).join('');
+
+  var infoHtml = (opts.infoRows || []).map(function(r) {
+    return '<div><span class="label">' + esc2(r.label) + '</span>' + esc2(r.value != null ? r.value : '-') + '</div>';
+  }).join('');
+
+  var descHtml = (opts.descBoxes || []).map(function(d) {
+    return '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">' + esc2(d.label) + '</span>' + esc2(d.value != null ? d.value : '-') + '</div>';
+  }).join('');
+
+  var photosHtml = '';
+  if (opts.photos) {
+    photosHtml = opts.photos.length
+      ? ('<div class="photos-title">รูปภาพที่แนบ (' + opts.photos.length + ' รูป)</div>' +
+         '<div class="photos">' + opts.photos.map(function(p) {
+           return '<div class="photo-box"><img src="' + p.url + '" alt="รูปแนบ"></div>';
+         }).join('') + '</div>')
+      : '<div class="no-photo">ไม่มีรูปภาพแนบ</div>';
+  }
+
+  return (
+    '<div class="item">' +
+      '<div class="item-head">' +
+        '<h2>' + ((opts.index != null) ? (opts.index + 1) + '. ' : '') + esc2(opts.title || '') + '</h2>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' + badgesHtml + '</div>' +
+      '</div>' +
+      '<div class="item-body">' +
+        (infoHtml ? ('<div class="info-grid">' + infoHtml + '</div>') : '') +
+        descHtml +
+        photosHtml +
+      '</div>' +
+    '</div>'
+  );
+}
+
+/* เปิดหน้าต่างพิมพ์รายงาน ใช้รูปแบบกลางทั้งหมด (หัว + เนื้อหา + ปุ่มพิมพ์)
+   opts = {
+     docTitle,     // <title> ของหน้าต่างที่เปิด
+     reportTitle,  // หัวข้อใหญ่ในรายงาน
+     systemName,   // ชื่อระบบที่พิมพ์รายงาน
+     metaRows,     // [{label,value}] สำหรับ printReportMetaBoxHTML
+     metaFull,     // ข้อความแถวเต็มความกว้างในกล่องสรุป (เช่น "รวมทั้งหมด N รายการ")
+     bodyHtml,     // เนื้อหารายงาน (ต่อกันจาก printReportItemHTML หรือ HTML เองก็ได้)
+     extraCSS      // CSS เพิ่มเติมเฉพาะหน้า (ไม่บังคับ)
+   }
+   คืนค่า window ที่เปิดไว้ (หรือ null ถ้าโดนบล็อกป๊อปอัป) */
+function openPrintReportWindow(opts) {
+  opts = opts || {};
+  var win = window.open('', '_blank');
+  if (!win) {
+    showToast('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตป๊อปอัปสำหรับเว็บนี้แล้วลองอีกครั้ง', 'warn');
+    return null;
+  }
+
+  var html =
+    '<!doctype html><html lang="th"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<title>' + esc2(opts.docTitle || opts.reportTitle || 'รายงาน') + '</title>' +
+    '<style>' +
+      '@page{ size: A4; margin: 14mm 12mm; }' +
+      printReportBodyCSS() +
+      (opts.extraCSS || '') +
+    '</style></head><body>' +
+      '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
+      '<div class="page-wrap">' +
+        printReportHeaderHTML(opts.reportTitle || 'รายงาน', opts.systemName) +
+        printReportMetaBoxHTML(opts.metaRows, opts.metaFull) +
+        (opts.bodyHtml || '') +
+      '</div>' +
+    '</body></html>';
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  return win;
 }
 
 /* ════════════════════════════════
