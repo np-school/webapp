@@ -1353,7 +1353,7 @@ label {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
-  border: none;
+  border: 1.5px solid transparent;
   background: transparent;
   color: var(--text2);
   cursor: pointer;
@@ -1363,15 +1363,17 @@ label {
   gap: 6px;
   font-family: 'Sarabun', sans-serif;
 }
-/* active = พื้นหลังสีธีมโทนอ่อน + ตัวหนังสือสีธีมโทนเข้ม (อ่านง่าย)
+/* active = พื้นหลังสีธีมโทนอ่อน + ตัวหนังสือสีธีมโทนเข้ม (อ่านง่าย) + กรอบสีธีมเข้ม
+   (จำเป็นต้องมีกรอบ เพราะสีพื้นอ่อน เช่น --blue-light/--purple-light โทนใกล้เคียงกับ
+   --bg-alt ของพื้นแถบมาก ถ้าไม่มีกรอบ ปุ่ม active จะกลืนไปกับพื้นแถบ มองไม่เห็นว่า active)
    ใช้ token คู่เดียวกับ badge/chip สถานะที่มีอยู่แล้วทั่วโปรเจกต์ (เช่น .status-badge.final_approved,
    .chip-reviewed, .rp-status.c-purple → background: var(--X-light); color: var(--X-dark);) */
-.sub-tab.active { background: var(--blue-light); color: var(--blue-dark); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.sub-tab.active { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sub-tab:hover:not(.active) { background: rgba(255,255,255,.6); color: var(--text); }
 
-/* modifier: สีธีม (พื้นหลัง+ตัวหนังสือ active) */
-.sub-tab-bar.purple .sub-tab.active { background: var(--purple-light); color: var(--purple-dark); }
-.sub-tab-bar.green  .sub-tab.active { background: var(--green-light);  color: var(--green-dark); }
+/* modifier: สีธีม (พื้นหลัง+ตัวหนังสือ+กรอบ active) */
+.sub-tab-bar.purple .sub-tab.active { background: var(--purple-light); color: var(--purple-dark); border-color: var(--purple); }
+.sub-tab-bar.green  .sub-tab.active { background: var(--green-light);  color: var(--green-dark);  border-color: var(--green); }
 
 /* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
