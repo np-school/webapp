@@ -71,10 +71,15 @@
 <template id="staffContent">
 
       <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);">
+      <div class="page-header">
         <div>
-          <h2 style="font-size:20px;font-weight:800;color:var(--text-dark);">จัดการข้อมูลบุคลากร</h2>
-          <p style="font-size:13px;color:var(--text2);margin-top:3px;">รายชื่อครูและบุคลากรโรงเรียนหนองกี่พิทยาคม</p>
+          <div class="page-title-row">
+            <div class="page-icon" style="background:linear-gradient(135deg,var(--purple),var(--purple-mid));">
+              <i data-lucide="users" style="width:20px;height:20px;color:white;"></i>
+            </div>
+            <h1 class="page-title">จัดการข้อมูลบุคลากร</h1>
+          </div>
+          <p class="page-sub">รายชื่อครูและบุคลากรโรงเรียนหนองกี่พิทยาคม</p>
         </div>
         <div style="display:flex;gap:var(--gap-item);flex-wrap:wrap;">
           <button class="btn-secondary write-gated" onclick="downloadTemplate()" style="display:flex;align-items:center;gap:6px;" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV">
