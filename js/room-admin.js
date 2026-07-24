@@ -143,6 +143,13 @@
       allRooms.map(function(r){return '<option value="'+esc2(r.name)+'">'+esc2(r.name)+'</option>';}).join('');
     if(current && allRooms.some(function(r){return r.name===current;})) sel.value=current;
   }
+  /* เปิดโมดัล "พิมพ์รายงาน" — เลือกห้อง/สถานที่ + ช่วงเวลา (รูปแบบเดียวกับ openPrintReportModal ของ repair-admin) */
+  function openRoomPrintReportModal(){
+    resetPeriodScope('room:report');
+    renderRptRoomSelect();
+    renderPeriodBar('rptPeriodBar','room:report');
+    openModal('roomPrintReportModal');
+  }
   function doPrintRoomReport(){
     var sel=document.getElementById('rptRoomSelect');
     rptRoom = sel ? sel.value : '';
@@ -159,6 +166,7 @@
     });
 
     openRoomReportPrintWindow(list);
+    closeModal('roomPrintReportModal');
   }
 
   var RPT_STATUS_LABELS={pending:'รอพิจารณา',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'};
@@ -774,14 +782,9 @@
 
       initListeners();
       renderRptRoomSelect();
-      renderPeriodBar('rptPeriodBar', 'room:report');
       initSubtabs('roomSubtabBar', {
         onChange: function (tab) {
           if (tab === 'summary') renderSummary();
-          if (tab === 'report') {
-            renderRptRoomSelect();
-            renderPeriodBar('rptPeriodBar', 'room:report');
-          }
         }
       });
       lucide.createIcons();

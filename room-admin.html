@@ -108,10 +108,7 @@
             <i data-lucide="layout-list" style="width:14px;height:14px;"></i>คำขอทั้งหมด
           </button>
           <button class="sub-tab" data-tab="summary">
-            <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i>สรุปรายห้อง
-          </button>
-          <button class="sub-tab" data-tab="report">
-            <i data-lucide="printer" style="width:14px;height:14px;"></i>รายงาน
+            <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i>รายงาน
           </button>
           <button class="sub-tab" data-tab="rooms">
             <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
@@ -133,24 +130,6 @@
           <div id="paginationBar" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap;"></div>
         </div>
 
-        <!-- Sub-tab: รายงาน -->
-        <div id="tab-report" data-panel="report" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
-          <h3 style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:var(--gap-section);">🖨️ พิมพ์รายงานการขอใช้ห้อง/สถานที่</h3>
-          <div class="card" style="max-width:520px;">
-            <div style="margin-bottom:14px;">
-              <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">ห้อง/สถานที่</label>
-              <select id="rptRoomSelect" style="width:100%;"><option value="">ทุกห้อง / สถานที่</option></select>
-            </div>
-            <div style="margin-bottom:6px;">
-              <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">ช่วงเวลา</label>
-              <div id="rptPeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-            </div>
-            <button class="btn-primary purple" style="margin-top:18px;justify-content:center;width:100%;" onclick="doPrintRoomReport()">
-              <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน
-            </button>
-          </div>
-        </div>
-
         <!-- Sub-tab: Rooms -->
         <div id="tab-rooms" data-panel="rooms" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-section);">
@@ -160,12 +139,20 @@
           <div id="roomsList" style="display:flex;flex-direction:column;gap:var(--gap-item);"></div>
         </div>
 
-        <!-- Sub-tab: Summary -->
+        <!-- Sub-tab: Summary / รายงาน (รวม "สรุปรายห้อง" เดิมกับ "รายงาน" เดิมเป็นแท็บเดียว
+             ปุ่ม "พิมพ์รายงาน" เปิดโมดัลเลือกห้อง+ช่วงเวลา เหมือนรูปแบบ repair-admin) -->
         <div id="tab-summary" data-panel="summary" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
 
-          <!-- Header + period pills -->
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">
+          <!-- Header + ปุ่มพิมพ์รายงาน -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-card);">
             <h3 style="font-size:15px;font-weight:800;color:var(--text);">📊 สรุปการขอใช้งานแต่ละห้อง</h3>
+            <button class="btn-primary purple" onclick="openRoomPrintReportModal()">
+              <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน
+            </button>
+          </div>
+
+          <!-- Period pills (สำหรับกราฟสรุปในหน้านี้ — คนละส่วนกับช่วงเวลาที่เลือกตอนพิมพ์) -->
+          <div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button class="filter-pill active" id="sum-pill-day"   onclick="setSumPeriod('day',this)">วันนี้</button>
               <button class="filter-pill"        id="sum-pill-week"  onclick="setSumPeriod('week',this)">สัปดาห์นี้</button>
@@ -277,6 +264,41 @@
       </div>
     </div>
     <div style="display:flex;gap:var(--gap-item);"><button class="btn-secondary" style="flex:1;" onclick="closeModal('roomModal')">ยกเลิก</button><button class="btn-primary" style="flex:2;justify-content:center;padding:11px;" onclick="saveRoom()"><i data-lucide="save" style="width:14px;height:14px;"></i> บันทึก</button></div>
+  </div>
+</div>
+
+<!-- Modal: พิมพ์รายงาน (เลือกห้อง + ช่วงเวลา — รูปแบบเดียวกับ repair-admin) -->
+<div id="roomPrintReportModal" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--purple-light);">
+          <i data-lucide="printer" style="color:var(--purple);"></i>
+        </div>
+        <div>
+          <h3>พิมพ์รายงานการขอใช้ห้อง/สถานที่</h3>
+          <p>เลือกห้อง/สถานที่และช่วงเวลาที่ต้องการ</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('roomPrintReportModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ห้อง/สถานที่</label>
+      <select id="rptRoomSelect"><option value="">ทุกห้อง / สถานที่</option></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ช่วงเวลา</label>
+      <div id="rptPeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button class="btn-secondary" style="flex:1;justify-content:center;" onclick="closeModal('roomPrintReportModal')">ยกเลิก</button>
+      <button class="btn-primary purple" style="flex:1;justify-content:center;" onclick="doPrintRoomReport()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์
+      </button>
+    </div>
   </div>
 </div>
 
