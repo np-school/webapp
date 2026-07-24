@@ -293,7 +293,10 @@ function renderPage() {
     '</div>' +
 
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
-    '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
+    /* data-subtab-scope: repReportNav ถูกห่อในกล่อง flex ร่วมกับปุ่ม "พิมพ์รายงาน" ทำให้
+       root.parentElement ของ initSubtabs() ไม่ครอบคลุมถึง .tab-pane panels ด้านล่าง
+       ต้องระบุ scope ตรงๆ ที่นี่ (เหมือน portfolio-admin.html) ไม่งั้นกด subtab แล้ว panel ไม่สลับ */
+    '<div class="tab-pane" data-panel="report" id="repPanelReport" data-subtab-scope>' +
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">' +
         '<div class="sub-tab-bar purple compact scroll" id="repReportNav">' +
           '<button class="sub-tab active" data-tab="week"><i data-lucide="calendar-days" style="width:13px;height:13px;"></i> รายสัปดาห์</button>' +
