@@ -110,6 +110,9 @@
           <button class="sub-tab" data-tab="summary">
             <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i>สรุปรายห้อง
           </button>
+          <button class="sub-tab" data-tab="report">
+            <i data-lucide="printer" style="width:14px;height:14px;"></i>รายงาน
+          </button>
           <button class="sub-tab" data-tab="rooms">
             <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
           </button>
@@ -128,6 +131,29 @@
           </div>
           <div id="bookingsList" style="display:flex;flex-direction:column;gap:var(--gap-item);"></div>
           <div id="paginationBar" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap;"></div>
+        </div>
+
+        <!-- Sub-tab: รายงาน -->
+        <div id="tab-report" data-panel="report" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+          <h3 style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:var(--gap-section);">🖨️ พิมพ์รายงานการขอใช้ห้อง/สถานที่</h3>
+          <div class="card" style="max-width:520px;">
+            <div style="margin-bottom:14px;">
+              <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">ห้อง/สถานที่</label>
+              <select id="rptRoomSelect" style="width:100%;"><option value="">ทุกห้อง / สถานที่</option></select>
+            </div>
+            <div style="margin-bottom:6px;">
+              <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">ช่วงเวลา</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="filter-pill active" id="rpt-pill-week"  onclick="setRptPeriod('week',this)">รายสัปดาห์ (สัปดาห์นี้)</button>
+                <button class="filter-pill" id="rpt-pill-month" onclick="setRptPeriod('month',this)">รายเดือน (เดือนนี้)</button>
+                <button class="filter-pill" id="rpt-pill-year"  onclick="setRptPeriod('year',this)">รายปี (ปีนี้)</button>
+              </div>
+            </div>
+            <p id="rptPeriodLabel" style="font-size:12px;color:var(--text2);font-weight:600;margin:10px 0 0;"></p>
+            <button class="btn-primary" style="margin-top:18px;justify-content:center;width:100%;" onclick="doPrintRoomReport()">
+              <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน
+            </button>
+          </div>
         </div>
 
         <!-- Sub-tab: Rooms -->

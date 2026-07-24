@@ -108,6 +108,42 @@ function onPushPermissionNeeded(user) {
 window.onPushPermissionNeeded = onPushPermissionNeeded;
 
 /* ════════════════════════════════
+   Printed reports — รูปแบบหัวรายงานกลาง
+   ใช้ร่วมกันทุกหน้าที่มีปุ่ม "พิมพ์รายงาน" (repair-admin, room-admin, ฯลฯ)
+   เพื่อให้ทุกรายงานมีโลโก้โรงเรียน + ชื่อโรงเรียน + ชื่อระบบที่พิมพ์ ในรูปแบบเดียวกัน
+   ════════════════════════════════ */
+var SCHOOL_NAME = 'โรงเรียนหนองกี่พิทยาคม';
+var SCHOOL_LOGO_URL = 'https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f';
+
+/* CSS ของหัวรายงาน — ใช้ค่า hex ตรงๆ (ไม่ใช้ var(--...)) เพราะหน้าต่างพิมพ์เปิดด้วย window.open()
+   แยกต่างหาก ไม่ได้ <link> โยง stylesheet หลัก ดังนั้น CSS variable จะไม่มีค่าให้ resolve */
+function printReportHeaderCSS() {
+  return (
+    '.report-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #4338ca;padding-bottom:14px;margin-bottom:16px;}' +
+    '.report-header .report-logo{width:42px;height:42px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid #e5e7eb;}' +
+    '.report-header .report-header-text{min-width:0;}' +
+    '.report-header h1{font-size:19px;margin:0 0 3px;color:#111827;}' +
+    '.report-header .school{font-size:12px;color:#4b5563;}' +
+    '.report-header .system-name{font-size:11px;color:#6b7280;font-weight:700;margin-top:1px;}'
+  );
+}
+
+/* reportTitle: หัวข้อรายงาน เช่น "รายงานการแจ้งซ่อม"
+   systemName:  ชื่อระบบที่พิมพ์รายงาน เช่น "ระบบจัดการแจ้งซ่อม" */
+function printReportHeaderHTML(reportTitle, systemName) {
+  return (
+    '<div class="report-header">' +
+      '<img class="report-logo" src="' + SCHOOL_LOGO_URL + '" alt="โลโก้' + esc2(SCHOOL_NAME) + '">' +
+      '<div class="report-header-text">' +
+        '<h1>' + esc2(reportTitle) + '</h1>' +
+        '<div class="school">' + esc2(SCHOOL_NAME) + '</div>' +
+        (systemName ? ('<div class="system-name">พิมพ์จาก: ' + esc2(systemName) + '</div>') : '') +
+      '</div>' +
+    '</div>'
+  );
+}
+
+/* ════════════════════════════════
    Modal helpers
    ════════════════════════════════ */
 function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }

@@ -378,9 +378,6 @@ function renderPage() {
         '</div>' +
         '<p class="page-sub">ตรวจอนุมัติ มอบหมายช่าง และติดตามงานซ่อมทั้งหมด</p>' +
       '</div>' +
-      '<button class="btn-primary" onclick="openPrintReportModal()">' +
-        '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +
-      '</button>' +
     '</div>' +
 
     '<div class="sub-tab-bar" id="repSubTabBar">' +
@@ -464,6 +461,11 @@ function renderPage() {
 
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
     '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
+      '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">' +
+        '<button class="btn-primary" onclick="openPrintReportModal()">' +
+          '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +
+        '</button>' +
+      '</div>' +
       '<div class="sub-tab-bar" id="repReportNav" style="margin-bottom:16px;">' +
         '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
         '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
@@ -2126,9 +2128,7 @@ function openPrintWindow(list) {
       'body{font-family:Sarabun,Tahoma,sans-serif;color:var(--text);margin:0;padding:22px;background:var(--blue-light-3);}' +
       '.page-wrap{max-width:840px;margin:0 auto;background:var(--gray-light);padding:26px 30px;border-radius:12px;}' +
 
-      '.report-header{border-bottom:3px solid var(--indigo-5);padding-bottom:14px;margin-bottom:16px;}' +
-      '.report-header h1{font-size:19px;margin:0 0 3px;color:var(--text);}' +
-      '.report-header .school{font-size:12px;color:var(--text2);}' +
+      printReportHeaderCSS() +
 
       '.meta-box{background:var(--bg-alt);border-radius:10px;padding:12px 16px;margin-bottom:20px;' +
         'display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:var(--text-mid);}' +
@@ -2172,10 +2172,7 @@ function openPrintWindow(list) {
     '</style></head><body>' +
       '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
       '<div class="page-wrap">' +
-        '<div class="report-header">' +
-          '<h1>รายงานการแจ้งซ่อม</h1>' +
-          '<div class="school">โรงเรียนหนองกี่พิทยาคม</div>' +
-        '</div>' +
+        printReportHeaderHTML('รายงานการแจ้งซ่อม', 'ระบบจัดการแจ้งซ่อม') +
         '<div class="meta-box">' +
           '<div>ช่วงเวลา: <b>' + periodLabel + '</b></div>' +
           '<div>สถานะ: <b>' + esc2(statusLabel) + '</b></div>' +

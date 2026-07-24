@@ -11,6 +11,12 @@
   var sumPeriod='day';
   var _sumByRoom={};
 
+  /* ══════════════════════════════════════
+     รายงาน (sub-tab: report) — พิมพ์รายงานการขอใช้ห้อง/สถานที่
+     เลือกห้องเดียว หรือทุกห้อง + ช่วงเวลา (สัปดาห์นี้/เดือนนี้/ปีนี้)
+     ══════════════════════════════════════ */
+  var rptPeriod='week', rptRoom='';
+
 /* ══════════════════════ DATA LOADING ══════════════════════ */
   function initListeners(){
     db.collection('bookings').orderBy('createdAt','desc').limit(500).onSnapshot(function(snap){
@@ -125,7 +131,130 @@
       return'<div class="list-item"><div style="display:flex;align-items:center;gap:var(--gap-item);flex:1;min-width:0;">'+imgThumb+'<div style="min-width:0;"><p style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.name+'</p><p style="font-size:12px;color:var(--text2);">'+(r.capacity?'ความจุ '+r.capacity+' คน':'')+' '+(r.detail?'· '+r.detail:'')+'</p></div></div><div style="display:flex;gap:var(--gap-tight);flex-shrink:0;"><button class="btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openRoomEdit(\''+r.id+'\')"><i data-lucide="pencil" style="width:12px;height:12px;display:inline;margin-right:2px;vertical-align:-1px;"></i>แก้ไข</button><button class="btn-delete" onclick="deleteRoom(\''+r.id+'\',\''+esc(r.name)+'\')" aria-label="ลบ"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></div></div>';
     }).join('');
     lucide.createIcons();
+    renderRptRoomSelect();
   }
+  function renderRptRoomSelect(){
+    var sel=document.getElementById('rptRoomSelect');
+    if(!sel)return;
+    var current=sel.value;
+    sel.innerHTML='<option value="">ทุกห้อง / สถานที่</option>'+
+      allRooms.map(function(r){return '<option value="'+esc2(r.name)+'">'+esc2(r.name)+'</option>';}).join('');
+    if(current && allRooms.some(function(r){return r.name===current;})) sel.value=current;
+  }
+  function setRptPeriod(p,el){
+    rptPeriod=p;
+    document.querySelectorAll('[id^="rpt-pill-"]').forEach(function(b){b.classList.remove('active');});
+    el.classList.add('active');
+    var lbl=document.getElementById('rptPeriodLabel');
+    if(lbl) lbl.textContent='ช่วงเวลา: '+periodLabel(p);
+  }
+  function doPrintRoomReport(){
+    var sel=document.getElementById('rptRoomSelect');
+    rptRoom = sel ? sel.value : '';
+
+    var list=allBookings.filter(function(b){
+      var d=parseDateFromBooking(b);
+      if(!inPeriod(d,rptPeriod))return false;
+      if(rptRoom && b.room!==rptRoom)return false;
+      return true;
+    });
+    list=list.slice().sort(function(a,b){
+      var ad=parseDateFromBooking(a),bd=parseDateFromBooking(b);
+      return (ad?ad.getTime():0)-(bd?bd.getTime():0);
+    });
+
+    if(!list.length){
+      showToast('ไม่พบรายการขอใช้ห้องที่ตรงกับเงื่อนไขที่เลือก','warn');
+      return;
+    }
+    openRoomReportPrintWindow(list);
+  }
+
+  var RPT_STATUS_LABELS={pending:'รอพิจารณา',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'};
+  var RPT_STATUS_COLORS={
+    pending:{bg:'#fef3c7',text:'#92400e'},
+    approved:{bg:'#dcfce7',text:'#15803d'},
+    rejected:{bg:'#fee2e2',text:'#b91c1c'}
+  };
+  function renderRptItem(b,idx){
+    var status=b.status||'pending';
+    var badge=RPT_STATUS_COLORS[status]||RPT_STATUS_COLORS.pending;
+    var equip=(b.equipment&&b.equipment.length)?b.equipment.join(' · '):'-';
+    return (
+      '<div class="item">'+
+        '<div class="item-head">'+
+          '<h2>'+(idx+1)+'. '+esc2(b.room||'-')+'</h2>'+
+          '<span class="status-badge" style="background:'+badge.bg+';color:'+badge.text+';">'+esc2(RPT_STATUS_LABELS[status]||status)+'</span>'+
+        '</div>'+
+        '<div class="item-body">'+
+          '<div class="info-grid">'+
+            '<div><span class="label">วันที่ใช้ห้อง</span>'+esc2(b.date||'-')+'</div>'+
+            '<div><span class="label">เวลา</span>'+esc2((b.startTime||'-')+' – '+(b.endTime||'-'))+'</div>'+
+            '<div><span class="label">ผู้จอง</span>'+esc2(b.fullName||b.userName||'-')+'</div>'+
+            '<div><span class="label">ตำแหน่ง</span>'+esc2(b.position||'-')+'</div>'+
+            '<div><span class="label">เบอร์โทร</span>'+esc2(b.phone||'-')+'</div>'+
+            '<div><span class="label">ผู้เข้าร่วม</span>'+esc2((b.attendees||'-')+' คน')+'</div>'+
+          '</div>'+
+          '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">วัตถุประสงค์</span>'+esc2(b.purpose||'-')+'</div>'+
+          '<div class="desc-box"><span class="label" style="display:block;margin-bottom:3px;">อุปกรณ์ที่ขอเพิ่มเติม</span>'+esc2(equip)+'</div>'+
+          (b.rejectReason?('<div class="desc-box" style="background:#fee2e2;"><span class="label" style="display:block;margin-bottom:3px;">เหตุผลไม่อนุมัติ</span>'+esc2(b.rejectReason)+'</div>'):'')+
+        '</div>'+
+      '</div>'
+    );
+  }
+  function openRoomReportPrintWindow(list){
+    var win=window.open('','_blank');
+    if(!win){showToast('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตป๊อปอัปสำหรับเว็บนี้แล้วลองอีกครั้ง','warn');return;}
+
+    var roomLabel=rptRoom?esc2(rptRoom):'ทุกห้อง / สถานที่';
+    var now=new Date();
+    var printedAt=now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    var itemsHtml=list.map(function(b,idx){return renderRptItem(b,idx);}).join('');
+
+    var html=
+      '<!doctype html><html lang="th"><head><meta charset="UTF-8">'+
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">'+
+      '<title>รายงานการขอใช้ห้อง/สถานที่</title>'+
+      '<style>'+
+        '@page{ size: A4; margin: 14mm 12mm; }'+
+        '*{box-sizing:border-box;}'+
+        'body{font-family:Sarabun,Tahoma,sans-serif;color:#1f2937;margin:0;padding:22px;background:#eef2f9;}'+
+        '.page-wrap{max-width:840px;margin:0 auto;background:#fff;padding:26px 30px;border-radius:12px;}'+
+        printReportHeaderCSS()+
+        '.meta-box{background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:12px;color:#334155;}'+
+        '.meta-box .full{grid-column:1 / -1;border-top:1px solid #e5e7eb;margin-top:4px;padding-top:6px;font-weight:700;color:#334155;}'+
+        '.meta-box b{color:#111827;}'+
+        '.item{border:1px solid #d1d5db;border-radius:12px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid;}'+
+        '.item-head{background:#eef2ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e0e7ff;}'+
+        '.item-head h2{font-size:13.5px;margin:0;color:#3730a3;font-weight:800;}'+
+        '.status-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}'+
+        '.item-body{padding:14px 16px;}'+
+        '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 20px;font-size:12.5px;margin-bottom:12px;}'+
+        '.info-grid .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}'+
+        '.desc-box{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;}'+
+        '.desc-box .label{display:block;font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}'+
+        '.no-print{max-width:840px;margin:0 auto 16px;}'+
+        '.no-print button{padding:10px 22px;border-radius:9px;border:none;background:#4338ca;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;}'+
+        '@media print{ body{background:#fff;padding:0;} .page-wrap{max-width:none;padding:0;border-radius:0;} .no-print{display:none;} .item{border-color:#9ca3af;} }'+
+      '</style></head><body>'+
+        '<div class="no-print"><button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>'+
+        '<div class="page-wrap">'+
+          printReportHeaderHTML('รายงานการขอใช้ห้อง/สถานที่','ระบบจัดการขอใช้ห้อง/สถานที่')+
+          '<div class="meta-box">'+
+            '<div>ห้อง/สถานที่: <b>'+roomLabel+'</b></div>'+
+            '<div>ช่วงเวลา: <b>'+esc2(periodLabel(rptPeriod))+'</b></div>'+
+            '<div>พิมพ์เมื่อ: <b>'+printedAt+'</b></div>'+
+            '<div class="full">รวมทั้งหมด '+list.length+' รายการ</div>'+
+          '</div>'+
+          itemsHtml+
+        '</div>'+
+      '</body></html>';
+
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
   function clearRoomImageUI(){document.getElementById('roomImageFile').value='';document.getElementById('roomUploadDefault').style.display='block';document.getElementById('roomUploadPreview').style.display='none';document.getElementById('roomUploadArea').classList.remove('has-file');}
   function clearRoomImage(ev){if(ev)ev.stopPropagation();clearRoomImageUI();roomImageDataURL=null;roomImageBlob=null;}  // kept for mini-chart on expand
 
@@ -690,9 +819,17 @@
       if (tpl) contentEl.appendChild(tpl.content.cloneNode(true));
 
       initListeners();
+      renderRptRoomSelect();
+      var rptLbl = document.getElementById('rptPeriodLabel');
+      if (rptLbl) rptLbl.textContent = 'ช่วงเวลา: ' + periodLabel(rptPeriod);
       initSubtabs('roomSubtabBar', {
         onChange: function (tab) {
           if (tab === 'summary') renderSummary();
+          if (tab === 'report') {
+            renderRptRoomSelect();
+            var lbl = document.getElementById('rptPeriodLabel');
+            if (lbl) lbl.textContent = 'ช่วงเวลา: ' + periodLabel(rptPeriod);
+          }
         }
       });
       lucide.createIcons();
