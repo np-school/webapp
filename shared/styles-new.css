@@ -1332,9 +1332,9 @@ label {
      <div class="sub-panel active" id="...">...</div>
 
    Modifier (สีธีม อื่นนอกจากฟ้า default):
-     .sub-tab-bar.purple  → active tab พื้นหลังสีธีม purple (เช่น portfolio-admin, room-admin, foodcourt-admin, repair-admin)
-     .sub-tab-bar.green   → active tab พื้นหลังสีธีมเขียว (เผื่อใช้ในอนาคต)
-   ค่า default (ไม่ใส่ modifier) = พื้นหลังสีฟ้า/accent ของธีมเว็บ (หน้าทั่วไป เช่น profile, settings, ipad-lending)
+     .sub-tab-bar.purple  → active tab พื้นหลังสีธีม purple โทนอ่อน + ตัวหนังสือโทนเข้ม (เช่น portfolio-admin, room-admin, foodcourt-admin, repair-admin)
+     .sub-tab-bar.green   → active tab พื้นหลังสีธีมเขียวโทนอ่อน + ตัวหนังสือโทนเข้ม (เผื่อใช้ในอนาคต)
+   ค่า default (ไม่ใส่ modifier) = พื้นหลังสีฟ้า/accent โทนอ่อน + ตัวหนังสือโทนเข้ม (หน้าทั่วไป เช่น profile, settings, ipad-lending)
 
    Modifier (ขนาด สำหรับ subtab ชั้นลึก/ซ้อนภายในอีกที):
      .sub-tab-bar.compact → padding/font เล็กลง เผื่อใช้เป็น filter bar ย่อยๆ
@@ -1363,14 +1363,15 @@ label {
   gap: 6px;
   font-family: 'Sarabun', sans-serif;
 }
-/* active = พื้นหลังทึบสีธีม + ตัวหนังสือขาว (เดิมพื้นขาว+ตัวหนังสือสี)
-   ให้เข้าชุดกับปุ่มแท็บหลักที่ใช้อยู่แล้วใน guide.html (.g-tab.tab-active) */
-.sub-tab.active { background: var(--blue); color: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+/* active = พื้นหลังสีธีมโทนอ่อน + ตัวหนังสือสีธีมโทนเข้ม (อ่านง่าย)
+   ใช้ token คู่เดียวกับ badge/chip สถานะที่มีอยู่แล้วทั่วโปรเจกต์ (เช่น .status-badge.final_approved,
+   .chip-reviewed, .rp-status.c-purple → background: var(--X-light); color: var(--X-dark);) */
+.sub-tab.active { background: var(--blue-light); color: var(--blue-dark); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sub-tab:hover:not(.active) { background: rgba(255,255,255,.6); color: var(--text); }
 
-/* modifier: สีธีม (พื้นหลัง active) */
-.sub-tab-bar.purple .sub-tab.active { background: var(--purple); }
-.sub-tab-bar.green  .sub-tab.active { background: var(--green); }
+/* modifier: สีธีม (พื้นหลัง+ตัวหนังสือ active) */
+.sub-tab-bar.purple .sub-tab.active { background: var(--purple-light); color: var(--purple-dark); }
+.sub-tab-bar.green  .sub-tab.active { background: var(--green-light);  color: var(--green-dark); }
 
 /* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
