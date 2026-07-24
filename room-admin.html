@@ -98,25 +98,23 @@
         <div class="stat-card"><div style="width:42px;height:42px;background:var(--purple-light);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="calendar" style="width:20px;height:20px;color:var(--purple);"></i></div><div><p style="font-size:10px;color:var(--text2);font-weight:700;">ทั้งหมด</p><p style="font-size:24px;font-weight:800;line-height:1;" id="statTotal">0</p></div></div>
       </div>
 
-      <!-- Main card with sub-tabs -->
-      <div class="card" style="overflow:hidden;flex:1;display:flex;flex-direction:column;">
-
-        <!-- Sub-tab bar (ใช้ class กลาง .sub-tab-bar/.sub-tab จาก shared/styles-new.css
-             เรียง: คำขอทั้งหมด → สรุปรายห้อง → จัดการห้อง (จัดการ อยู่ท้ายสุดเสมอ) -->
-        <div class="sub-tab-bar purple" id="roomSubtabBar" style="margin:0 20px;">
-          <button class="sub-tab active" data-tab="bookings">
-            <i data-lucide="layout-list" style="width:14px;height:14px;"></i>คำขอทั้งหมด
-          </button>
-          <button class="sub-tab" data-tab="summary">
-            <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i>รายงาน
-          </button>
-          <button class="sub-tab" data-tab="rooms">
-            <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
-          </button>
-        </div>
+      <!-- Sub-tab bar (ใช้ class กลาง .sub-tab-bar/.sub-tab จาก shared/styles-new.css
+           เรียง: คำขอทั้งหมด → สรุปรายห้อง → จัดการห้อง (จัดการ อยู่ท้ายสุดเสมอ)
+           ย้ายออกมานอกกรอบการ์ด ให้ลอยอยู่บนพื้นหลังหน้า เหมือนหน้าอื่น (portfolio-admin, repair-admin) -->
+      <div class="sub-tab-bar purple" id="roomSubtabBar" style="margin-bottom:var(--gap-section);">
+        <button class="sub-tab active" data-tab="bookings">
+          <i data-lucide="layout-list" style="width:14px;height:14px;"></i>คำขอทั้งหมด
+        </button>
+        <button class="sub-tab" data-tab="summary">
+          <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i>รายงาน
+        </button>
+        <button class="sub-tab" data-tab="rooms">
+          <i data-lucide="door-open" style="width:14px;height:14px;"></i>จัดการห้อง
+        </button>
+      </div>
 
         <!-- Sub-tab: Bookings -->
-        <div id="tab-bookings" data-panel="bookings" class="tab-pane active" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-bookings" data-panel="bookings" class="tab-pane card active" style="flex:1;overflow:auto;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-section);">
             <div style="display:flex;gap:var(--gap-tight);flex-wrap:wrap;">
               <button class="filter-pill active" onclick="setFilter('all',this)">ทั้งหมด</button>
@@ -131,7 +129,7 @@
         </div>
 
         <!-- Sub-tab: Rooms -->
-        <div id="tab-rooms" data-panel="rooms" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-rooms" data-panel="rooms" class="tab-pane card" style="flex:1;overflow:auto;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-section);">
             <h3 style="font-size:15px;font-weight:800;color:var(--text);">รายการห้อง/สถานที่</h3>
             <button class="btn-primary" onclick="openRoomModal()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มห้องใหม่</button>
@@ -141,7 +139,7 @@
 
         <!-- Sub-tab: Summary / รายงาน (รวม "สรุปรายห้อง" เดิมกับ "รายงาน" เดิมเป็นแท็บเดียว
              ปุ่ม "พิมพ์รายงาน" เปิดโมดัลเลือกห้อง+ช่วงเวลา เหมือนรูปแบบ repair-admin) -->
-        <div id="tab-summary" data-panel="summary" class="tab-pane" style="padding:20px;flex:1;overflow:auto;">
+        <div id="tab-summary" data-panel="summary" class="tab-pane card" style="flex:1;overflow:auto;">
 
           <!-- Header + ปุ่มพิมพ์รายงาน -->
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-card);margin-bottom:var(--gap-card);">
@@ -200,7 +198,6 @@
           <div id="summaryList" style="display:flex;flex-direction:column;gap:var(--gap-card);"></div>
         </div>
 
-      </div>
 </template><!-- #roomAdminContent -->
 
 <!-- Modal: Approve -->
