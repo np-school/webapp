@@ -143,13 +143,8 @@
             </div>
             <div style="margin-bottom:6px;">
               <label style="font-size:13px;font-weight:700;color:var(--text-heading);display:block;margin-bottom:6px;">ช่วงเวลา</label>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="filter-pill active" id="rpt-pill-week"  onclick="setRptPeriod('week',this)">รายสัปดาห์ (สัปดาห์นี้)</button>
-                <button class="filter-pill" id="rpt-pill-month" onclick="setRptPeriod('month',this)">รายเดือน (เดือนนี้)</button>
-                <button class="filter-pill" id="rpt-pill-year"  onclick="setRptPeriod('year',this)">รายปี (ปีนี้)</button>
-              </div>
+              <div id="rptPeriodBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
             </div>
-            <p id="rptPeriodLabel" style="font-size:12px;color:var(--text2);font-weight:600;margin:10px 0 0;"></p>
             <button class="btn-primary purple" style="margin-top:18px;justify-content:center;width:100%;" onclick="doPrintRoomReport()">
               <i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน
             </button>

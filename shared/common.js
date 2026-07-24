@@ -296,6 +296,255 @@ function openPrintReportWindow(opts) {
   return win;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   ตัวเลือกช่วงเวลากลาง (all / week / month / year + ป๊อปอัปเลือกเดือน/ปี)
+   — สกัดมาจากระบบเดิมของ repair-admin ให้ทุกหน้าที่มี "รายงาน" ดึงไปใช้ได้
+     เนื้อหา/ข้อมูลที่กรองยังคงเป็นของแต่ละระบบเอง (ปรับผ่าน dateGetter)
+
+   วิธีใช้ (ตัวอย่าง):
+     registerPeriodScope('room:report', { dateGetter: parseDateFromBooking });
+     renderPeriodBar('rptPeriodBar', 'room:report');   // วาดแถบปุ่ม+ป๊อปอัป
+     filterByPeriod(allBookings, 'room:report');       // กรองรายการตามช่วงที่เลือกไว้
+     periodLabelText('room:report');                   // label อ่านง่าย ใช้โชว์ในหัวรายงาน
+
+   key = สตริง namespace ไม่ซ้ำกันต่อ "จุดที่เลือกช่วงเวลา" ในแต่ละระบบ
+   (เช่น 'repair:active', 'repair:history', 'repair:print', 'room:report')
+   เพื่อให้แต่ละจุดมีสถานะ (โหมด/เดือน/ปี) เป็นอิสระจากกัน แม้อยู่คนละหน้า
+   ════════════════════════════════════════════════════════════════ */
+var PERIOD_MODE_LABELS   = { all: 'ทั้งหมด', week: 'สัปดาห์นี้', month: 'รายเดือน', year: 'รายปี' };
+var THAI_MONTHS           = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var PERIOD_MAX_YEARS_BACK = 3;
+var _periodScopes = {};
+
+/* opts = { onChange, dateGetter, period ('all' เป็นค่าเริ่มต้น) } */
+function registerPeriodScope(key, opts) {
+  opts = opts || {};
+  _periodScopes[key] = {
+    period:     opts.period || 'all',
+    month:      new Date().getMonth(),
+    year:       new Date().getFullYear(),
+    onChange:   opts.onChange   || null,
+    dateGetter: opts.dateGetter || null,
+    containerId: null
+  };
+  return _periodScopes[key];
+}
+function getPeriodState(key) {
+  if (!_periodScopes[key]) registerPeriodScope(key);
+  return _periodScopes[key];
+}
+/* รีเซ็ตกลับเป็น "ทั้งหมด" + เดือน/ปีปัจจุบัน โดยไม่ลบ onChange/dateGetter ที่ผูกไว้
+   (ใช้ตอนเปิดโมดัล/แท็บรายงานใหม่ทุกครั้ง เหมือน openPrintReportModal เดิม) */
+function resetPeriodScope(key) {
+  var st = getPeriodState(key);
+  st.period = 'all';
+  st.month  = new Date().getMonth();
+  st.year   = new Date().getFullYear();
+}
+
+function getPeriodRange(key) {
+  var st = getPeriodState(key);
+  var now = new Date();
+  if (st.period === 'week') {
+    var day = now.getDay();
+    var diffToMonday = (day === 0 ? -6 : 1 - day);
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+    start.setHours(0, 0, 0, 0);
+    var end = new Date(start); end.setDate(start.getDate() + 7);
+    return [start, end];
+  }
+  if (st.period === 'month') {
+    var start = new Date(st.year, st.month, 1);
+    var end = new Date(st.year, st.month + 1, 1);
+    return [start, end];
+  }
+  if (st.period === 'year') {
+    var start = new Date(st.year, 0, 1);
+    var end = new Date(st.year + 1, 0, 1);
+    return [start, end];
+  }
+  return null; /* all */
+}
+function periodLabelText(key) {
+  var st = getPeriodState(key);
+  if (st.period === 'week')  return 'สัปดาห์นี้';
+  if (st.period === 'month') return 'เดือน ' + THAI_MONTHS[st.month] + ' พ.ศ. ' + (st.year + 543);
+  if (st.period === 'year')  return 'ปี พ.ศ. ' + (st.year + 543);
+  return 'ทั้งหมด (ทุกช่วงเวลา)';
+}
+/* dateGetterOverride > dateGetter ที่ผูกไว้ตอน registerPeriodScope > ค่าเริ่มต้น (createdAt แบบ Firestore Timestamp) */
+function filterByPeriod(list, key, dateGetterOverride) {
+  var range = getPeriodRange(key);
+  if (!range) return list;
+  var st = getPeriodState(key);
+  var getter = dateGetterOverride || st.dateGetter || function(item) {
+    if (!item || !item.createdAt) return null;
+    return item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt);
+  };
+  return list.filter(function(item) {
+    var d = getter(item);
+    if (!d) return false;
+    return d >= range[0] && d < range[1];
+  });
+}
+
+/* แถบเลือกช่วงเวลา: ปุ่มโหมด + (ถ้าเลือกรายเดือน/รายปี) ป๊อปอัปเลือกเดือน/ปีแบบสวย */
+function renderPeriodBar(containerId, key) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var st = getPeriodState(key);
+  st.containerId = containerId;
+
+  var html = ['all', 'week', 'month', 'year'].map(function(p) {
+    var active = st.period === p;
+    return '<button class="filter-pill' + (active ? ' active' : '') + '" onclick="setPeriodMode(\'' + key + '\',\'' + p + '\')">' + PERIOD_MODE_LABELS[p] + '</button>';
+  }).join('');
+
+  if (st.period === 'month' || st.period === 'year') {
+    var label = st.period === 'month' ? (THAI_MONTHS[st.month] + ' ' + (st.year + 543)) : ('ปี ' + (st.year + 543));
+    html +=
+      '<div class="period-picker" style="position:relative;display:inline-block;">' +
+        '<button type="button" onclick="togglePeriodPopover(\'' + key + '\')" ' +
+          'style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid var(--border);background:var(--white);font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer;">' +
+          '<i data-lucide="calendar" style="width:13px;height:13px;color:var(--purple);"></i>' + label +
+          '<i data-lucide="chevron-down" style="width:12px;height:12px;color:var(--text3);"></i>' +
+        '</button>' +
+        '<div id="periodPopover-' + key + '" class="period-popover" style="display:none;position:fixed;z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:12px;width:230px;max-width:calc(100vw - 24px);box-sizing:border-box;">' +
+          renderPeriodPopoverBody(key) +
+        '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
+}
+
+function renderPeriodPopoverBody(key) {
+  var st = getPeriodState(key);
+  var curYear = new Date().getFullYear();
+  var curMonth = new Date().getMonth();
+  var years = [];
+  for (var i = 0; i < PERIOD_MAX_YEARS_BACK; i++) years.push(curYear - i);
+
+  if (st.period === 'year') {
+    return (
+      '<div style="font-size:10.5px;font-weight:800;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">เลือกปี (ย้อนหลังสูงสุด ' + PERIOD_MAX_YEARS_BACK + ' ปี)</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;">' +
+      years.map(function(y) {
+        var active = y === st.year;
+        return '<button type="button" onclick="setPeriodYear(\'' + key + '\',' + y + ')" style="text-align:left;padding:9px 12px;border-radius:10px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (active ? 'var(--gray-light)' : 'var(--text)') + ';font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">พ.ศ. ' + (y + 543) + '</button>';
+      }).join('') +
+      '</div>'
+    );
+  }
+
+  /* month mode */
+  var yearIdx = years.indexOf(st.year);
+  var prevDisabled = yearIdx >= years.length - 1;
+  var nextDisabled = yearIdx <= 0;
+
+  var monthsGrid = THAI_MONTHS.map(function(m, idx) {
+    var future = (st.year === curYear && idx > curMonth);
+    var active = idx === st.month;
+    return '<button type="button" ' + (future ? 'disabled' : ('onclick="setPeriodMonth(\'' + key + '\',' + idx + ')"')) +
+      ' style="padding:8px 0;border-radius:9px;border:1px solid ' + (active ? 'var(--purple)' : 'var(--border)') + ';background:' + (active ? 'var(--purple)' : 'var(--white)') + ';color:' + (future ? 'var(--text3)' : (active ? 'var(--gray-light)' : 'var(--text)')) + ';font-size:12.5px;font-weight:700;cursor:' + (future ? 'not-allowed' : 'pointer') + ';opacity:' + (future ? '.4' : '1') + ';">' + m + '</button>';
+  }).join('');
+
+  return (
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+      '<button type="button" ' + (prevDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + key + '\',-1)"')) +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (prevDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (prevDisabled ? '.35' : '1') + ';" aria-label="ปีก่อนหน้า"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>' +
+      '<div style="font-size:13.5px;font-weight:800;color:var(--text);">พ.ศ. ' + (st.year + 543) + '</div>' +
+      '<button type="button" ' + (nextDisabled ? 'disabled' : ('onclick="stepPeriodYear(\'' + key + '\',1)"')) +
+        ' style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:' + (nextDisabled ? 'not-allowed' : 'pointer') + ';opacity:' + (nextDisabled ? '.35' : '1') + ';" aria-label="ปีถัดไป"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">' + monthsGrid + '</div>'
+  );
+}
+
+function positionPeriodPopover(key) {
+  var el = document.getElementById('periodPopover-' + key);
+  if (!el || el.style.display !== 'block') return;
+  var wrap = el.closest('.period-picker');
+  var btn = wrap ? wrap.querySelector('button') : null;
+  if (!btn) return;
+
+  var btnRect = btn.getBoundingClientRect();
+  var popRect = el.getBoundingClientRect();
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var margin = 8;
+
+  var left = btnRect.left;
+  if (left + popRect.width > vw - margin) left = btnRect.right - popRect.width;
+  if (left < margin) left = margin;
+
+  var top = btnRect.bottom + 6;
+  if (top + popRect.height > vh - margin) {
+    var above = btnRect.top - 6 - popRect.height;
+    top = above > margin ? above : margin;
+  }
+
+  el.style.left = left + 'px';
+  el.style.top  = top + 'px';
+  el.style.right = 'auto';
+}
+
+function rerenderPeriodScope(key) {
+  var st = getPeriodState(key);
+  if (st.containerId) renderPeriodBar(st.containerId, key);
+  if (st.onChange) st.onChange();
+}
+function reopenPeriodPopover(key) {
+  setTimeout(function() {
+    var el = document.getElementById('periodPopover-' + key);
+    if (el) { el.style.display = 'block'; positionPeriodPopover(key); }
+  }, 0);
+}
+function setPeriodMode(key, mode) {
+  var st = getPeriodState(key);
+  st.period = mode;
+  if ((mode === 'month' || mode === 'year') && !st.year) st.year = new Date().getFullYear();
+  rerenderPeriodScope(key);
+  if (mode === 'month' || mode === 'year') reopenPeriodPopover(key);
+}
+function setPeriodMonth(key, m) {
+  getPeriodState(key).month = parseInt(m, 10);
+  rerenderPeriodScope(key);
+}
+function setPeriodYear(key, y) {
+  getPeriodState(key).year = parseInt(y, 10);
+  rerenderPeriodScope(key);
+}
+function stepPeriodYear(key, delta) {
+  var st = getPeriodState(key);
+  var curYear = new Date().getFullYear();
+  var minYear = curYear - (PERIOD_MAX_YEARS_BACK - 1);
+  var y = st.year + delta;
+  if (y > curYear) y = curYear;
+  if (y < minYear) y = minYear;
+  st.year = y;
+  var curMonth = new Date().getMonth();
+  if (y === curYear && st.month > curMonth) st.month = curMonth;
+  rerenderPeriodScope(key);
+  reopenPeriodPopover(key);
+}
+function togglePeriodPopover(key) {
+  var el = document.getElementById('periodPopover-' + key);
+  if (!el) return;
+  var willOpen = el.style.display !== 'block';
+  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  el.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) positionPeriodPopover(key);
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('.period-picker')) {
+    document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+  }
+});
+document.addEventListener('scroll', function() {
+  document.querySelectorAll('.period-popover').forEach(function(p) { p.style.display = 'none'; });
+}, true);
+
 /* ════════════════════════════════
    Modal helpers
    ════════════════════════════════ */

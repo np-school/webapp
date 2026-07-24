@@ -13,9 +13,11 @@
 
   /* ══════════════════════════════════════
      รายงาน (sub-tab: report) — พิมพ์รายงานการขอใช้ห้อง/สถานที่
-     เลือกห้องเดียว หรือทุกห้อง + ช่วงเวลา (สัปดาห์นี้/เดือนนี้/ปีนี้)
+     เลือกห้องเดียว หรือทุกห้อง + ช่วงเวลา — ใช้ตัวเลือกช่วงเวลากลางแบบเดียวกับ
+     repair-admin (all/week/month/year + ป๊อปอัปเลือกเดือน/ปี) จาก shared/common.js
      ══════════════════════════════════════ */
-  var rptPeriod='week', rptRoom='';
+  var rptRoom='';
+  registerPeriodScope('room:report', { period: 'week', dateGetter: function(b) { return parseDateFromBooking(b); } });
 
 /* ══════════════════════ DATA LOADING ══════════════════════ */
   function initListeners(){
@@ -141,32 +143,21 @@
       allRooms.map(function(r){return '<option value="'+esc2(r.name)+'">'+esc2(r.name)+'</option>';}).join('');
     if(current && allRooms.some(function(r){return r.name===current;})) sel.value=current;
   }
-  function setRptPeriod(p,el){
-    rptPeriod=p;
-    document.querySelectorAll('[id^="rpt-pill-"]').forEach(function(b){b.classList.remove('active');});
-    el.classList.add('active');
-    var lbl=document.getElementById('rptPeriodLabel');
-    if(lbl) lbl.textContent='ช่วงเวลา: '+periodLabel(p);
-  }
   function doPrintRoomReport(){
     var sel=document.getElementById('rptRoomSelect');
     rptRoom = sel ? sel.value : '';
 
-    var list=allBookings.filter(function(b){
-      var d=parseDateFromBooking(b);
-      if(!inPeriod(d,rptPeriod))return false;
-      if(rptRoom && b.room!==rptRoom)return false;
-      return true;
-    });
+    var list=filterByPeriod(allBookings,'room:report');
+    if(rptRoom) list=list.filter(function(b){return b.room===rptRoom;});
+    if(!list.length){
+      showToast('ไม่พบรายการขอใช้ห้องที่ตรงกับเงื่อนไขที่เลือก','warn');
+      return;
+    }
     list=list.slice().sort(function(a,b){
       var ad=parseDateFromBooking(a),bd=parseDateFromBooking(b);
       return (ad?ad.getTime():0)-(bd?bd.getTime():0);
     });
 
-    if(!list.length){
-      showToast('ไม่พบรายการขอใช้ห้องที่ตรงกับเงื่อนไขที่เลือก','warn');
-      return;
-    }
     openRoomReportPrintWindow(list);
   }
 
@@ -210,7 +201,7 @@
       systemName:'ระบบจัดการขอใช้ห้อง/สถานที่',
       metaRows:[
         {label:'ห้อง/สถานที่',value:roomLabel},
-        {label:'ช่วงเวลา',value:periodLabel(rptPeriod)},
+        {label:'ช่วงเวลา',value:periodLabelText('room:report')},
         {label:'พิมพ์เมื่อ',value:printedAt}
       ],
       metaFull:'รวมทั้งหมด '+list.length+' รายการ',
@@ -783,15 +774,13 @@
 
       initListeners();
       renderRptRoomSelect();
-      var rptLbl = document.getElementById('rptPeriodLabel');
-      if (rptLbl) rptLbl.textContent = 'ช่วงเวลา: ' + periodLabel(rptPeriod);
+      renderPeriodBar('rptPeriodBar', 'room:report');
       initSubtabs('roomSubtabBar', {
         onChange: function (tab) {
           if (tab === 'summary') renderSummary();
           if (tab === 'report') {
             renderRptRoomSelect();
-            var lbl = document.getElementById('rptPeriodLabel');
-            if (lbl) lbl.textContent = 'ช่วงเวลา: ' + periodLabel(rptPeriod);
+            renderPeriodBar('rptPeriodBar', 'room:report');
           }
         }
       });
