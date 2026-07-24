@@ -228,7 +228,7 @@
             <p style="font-size:13px;color:var(--text2);padding-left:50px;">บันทึกและติดตามรายรับ–รายจ่าย Food Court โรงเรียนหนองกี่พิทยาคม</p>
           </div>
         </div>
-        <div class="sub-tab-bar" style="margin-bottom:0">
+        <div class="sub-tab-bar purple" style="margin-bottom:0">
           <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
           <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
           <button class="sub-tab" id="sb-report" onclick="switchTab('report',this)">รายงาน</button>
@@ -352,10 +352,10 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar">
-          <button class="sub-tab active" id="subDailyAll" onclick="switchDailySub('all',this)">ทุกรายการ</button>
-          <button class="sub-tab" id="subDailyIn" onclick="switchDailySub('income',this)">รายรับ</button>
-          <button class="sub-tab" id="subDailyOut" onclick="switchDailySub('expense',this)">รายจ่าย</button>
+        <div class="sub-tab-bar purple" id="fcDailySubtabBar">
+          <button class="sub-tab active" data-tab="all"><i data-lucide="list" style="width:14px;height:14px;"></i> ทุกรายการ</button>
+          <button class="sub-tab" data-tab="income"><i data-lucide="trending-up" style="width:14px;height:14px;"></i> รายรับ</button>
+          <button class="sub-tab" data-tab="expense"><i data-lucide="trending-down" style="width:14px;height:14px;"></i> รายจ่าย</button>
         </div>
 
         <!-- Summary bar -->
@@ -401,7 +401,7 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar" id="fcReportSubtabBar">
+        <div class="sub-tab-bar purple" id="fcReportSubtabBar">
           <button class="sub-tab active" id="subRptWeek" data-tab="week">รายสัปดาห์</button>
           <button class="sub-tab" id="subRptMonth" data-tab="month">รายเดือน</button>
           <button class="sub-tab" id="subRptCompare" data-tab="compare">เปรียบเทียบรายเดือน</button>
@@ -501,7 +501,7 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar" id="fcManageSubtabBar">
+        <div class="sub-tab-bar purple" id="fcManageSubtabBar">
           <button class="sub-tab active" id="subMgmtEntry" data-tab="entry">บันทึกรายวัน</button>
           <button class="sub-tab" id="subMgmtRec" data-tab="recurring">รายการประจำ</button>
           <button class="sub-tab" id="subMgmtAdd" data-tab="addnew">เพิ่มรายการประจำ</button>

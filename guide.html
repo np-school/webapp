@@ -48,24 +48,8 @@
     .g-pane { display: none; }
     .g-pane.active { display: block; }
 
-    /* Sub-tab bar */
-    .g-subbar {
-      display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto;
-      -webkit-overflow-scrolling: touch; padding-bottom: 2px;
-      position: sticky; top: 0; z-index: 10; background: var(--border-soft); padding-top: 8px;
-    }
-    .g-subbar::-webkit-scrollbar { height: 0; }
-    .g-sub {
-      padding: 8px 16px; border: none; background: none; font-family: 'Sarabun', sans-serif;
-      font-size: 12px; font-weight: 700; color: var(--text3); cursor: pointer;
-      border-bottom: 2.5px solid transparent; transition: all .18s; white-space: nowrap;
-    }
-    .g-sub:hover { color: var(--text-mid); }
-    .g-sub.sub-active { color: var(--accent); border-bottom-color: var(--accent); }
-    .g-sub.sub-active-purple { color: var(--violet); border-bottom-color: var(--violet); }
-
-    .g-subpane { display: none; }
-    .g-subpane.active { display: block; }
+    /* Sub-tab bar: ใช้ class กลาง .sub-tab-bar/.sub-tab/.tab-pane จาก shared/styles-new.css
+       (เดิมประกาศ .g-subbar/.g-sub/.g-subpane ซ้ำที่นี่ ย้ายไปใช้ระบบกลางเพื่อให้ตรงกับหน้าอื่นแล้ว) */
 
     /* Step list */
     .g-step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border-soft); }

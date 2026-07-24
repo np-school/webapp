@@ -213,7 +213,7 @@ function renderPage() {
       '</div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar" id="repSubTabBar">' +
+    '<div class="sub-tab-bar purple" id="repSubTabBar">' +
       '<button class="sub-tab active" data-tab="active"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
       '<button class="sub-tab" data-tab="assignee"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
       '<button class="sub-tab" data-tab="history"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
@@ -295,7 +295,7 @@ function renderPage() {
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
     '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">' +
-        '<div class="sub-tab-bar" id="repReportNav">' +
+        '<div class="sub-tab-bar purple compact" id="repReportNav">' +
           '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
           '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
           '<button class="sub-tab" data-tab="compare">เปรียบเทียบรายเดือน</button>' +

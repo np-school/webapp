@@ -44,26 +44,26 @@ function renderPage() {
     /* ════════ TAB 2: ขอใช้ห้อง ════════ */
     '<div class="g-pane" id="gp-room">' +
       /* sub-tab bar */
-      '<div class="g-subbar" id="gsub-room-bar">' +
-        '<button class="g-sub sub-active" onclick="switchGSub(\'room\',\'user\',this)">👩‍🏫 สำหรับผู้ใช้งาน</button>' +
-        '<button class="g-sub" onclick="switchGSub(\'room\',\'status\',this)">📋 ความหมายสถานะ</button>' +
-        '<button class="g-sub" onclick="switchGSub(\'room\',\'admin\',this)">🛡 สำหรับ Admin</button>' +
+      '<div class="sub-tab-bar" id="gsub-room-bar">' +
+        '<button class="sub-tab active" data-tab="user"><i data-lucide="user" style="width:14px;height:14px;"></i> สำหรับผู้ใช้งาน</button>' +
+        '<button class="sub-tab" data-tab="status"><i data-lucide="list-checks" style="width:14px;height:14px;"></i> ความหมายสถานะ</button>' +
+        '<button class="sub-tab" data-tab="admin"><i data-lucide="shield" style="width:14px;height:14px;"></i> สำหรับ Admin</button>' +
       '</div>' +
-      '<div class="g-subpane active" id="gsp-room-user">' + renderRoomUser() + '</div>' +
-      '<div class="g-subpane" id="gsp-room-status">' + renderRoomStatus() + '</div>' +
-      '<div class="g-subpane" id="gsp-room-admin">' + renderRoomAdmin() + '</div>' +
+      '<div class="tab-pane active" data-panel="user" id="gsp-room-user">' + renderRoomUser() + '</div>' +
+      '<div class="tab-pane" data-panel="status" id="gsp-room-status">' + renderRoomStatus() + '</div>' +
+      '<div class="tab-pane" data-panel="admin" id="gsp-room-admin">' + renderRoomAdmin() + '</div>' +
     '</div>' +
 
     /* ════════ TAB 3: ส่งงาน ════════ */
     '<div class="g-pane" id="gp-portfolio">' +
-      '<div class="g-subbar" id="gsub-portfolio-bar">' +
-        '<button class="g-sub sub-active-purple" onclick="switchGSub(\'portfolio\',\'teacher\',this)">👩‍🏫 สำหรับครู</button>' +
-        '<button class="g-sub" onclick="switchGSub(\'portfolio\',\'workflow\',this)">🔄 Workflow สถานะ</button>' +
-        '<button class="g-sub" onclick="switchGSub(\'portfolio\',\'admin\',this)">🛡 สำหรับ Admin</button>' +
+      '<div class="sub-tab-bar purple" id="gsub-portfolio-bar">' +
+        '<button class="sub-tab active" data-tab="teacher"><i data-lucide="user" style="width:14px;height:14px;"></i> สำหรับครู</button>' +
+        '<button class="sub-tab" data-tab="workflow"><i data-lucide="workflow" style="width:14px;height:14px;"></i> Workflow สถานะ</button>' +
+        '<button class="sub-tab" data-tab="admin"><i data-lucide="shield" style="width:14px;height:14px;"></i> สำหรับ Admin</button>' +
       '</div>' +
-      '<div class="g-subpane active" id="gsp-portfolio-teacher">' + renderPortfolioTeacher() + '</div>' +
-      '<div class="g-subpane" id="gsp-portfolio-workflow">' + renderPortfolioWorkflow() + '</div>' +
-      '<div class="g-subpane" id="gsp-portfolio-admin">' + renderPortfolioAdmin() + '</div>' +
+      '<div class="tab-pane active" data-panel="teacher" id="gsp-portfolio-teacher">' + renderPortfolioTeacher() + '</div>' +
+      '<div class="tab-pane" data-panel="workflow" id="gsp-portfolio-workflow">' + renderPortfolioWorkflow() + '</div>' +
+      '<div class="tab-pane" data-panel="admin" id="gsp-portfolio-admin">' + renderPortfolioAdmin() + '</div>' +
     '</div>' +
 
     /* ════════ TAB 4: FAQ ════════ */
@@ -433,7 +433,8 @@ function renderFaq() {
 
 /* ══ Tab functions (run after render) ══ */
 function initTabs() {
-  /* nothing needed — tabs start with correct active classes from render */
+  guideRoomSubtabs      = initSubtabs('gsub-room-bar');
+  guidePortfolioSubtabs = initSubtabs('gsub-portfolio-bar');
 }
 
 /* ══════════════════════ EVENT HANDLERS ══════════════════════ */
@@ -457,17 +458,7 @@ function switchGTab(name, btn) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function switchGSub(system, name, btn) {
-  var barId = 'gsub-' + system + '-bar';
-  var prefix = 'gsp-' + system + '-';
-  var colorClass = system === 'room' ? 'sub-active' : 'sub-active-purple';
-  document.querySelectorAll('[id^="' + prefix + '"]').forEach(function(p){ p.classList.remove('active'); });
-  var bar = document.getElementById(barId);
-  if (bar) bar.querySelectorAll('.g-sub').forEach(function(b){ b.classList.remove('sub-active','sub-active-purple'); });
-  var target = document.getElementById(prefix + name);
-  if (target) target.classList.add('active');
-  btn.classList.add(colorClass);
-}
+var guideRoomSubtabs, guidePortfolioSubtabs; // handle จาก initSubtabs() — ผูกใน initTabs() หลัง renderPage()
 
 function toggleFaq(btn) {
   var answer = btn.nextElementSibling;
@@ -521,13 +512,8 @@ buildPage({
       var btn = document.getElementById('gt-' + t[0]);
       if (btn) switchGTab(t[0], btn);
       if (t[1] && t[2]) {
-        var bar = document.getElementById('gsub-' + t[1] + '-bar');
-        if (bar) {
-          var subs = bar.querySelectorAll('.g-sub');
-          var subMap = { user: 0, status: 1, admin: 2, teacher: 0, workflow: 1 };
-          var idx = subMap[t[2]];
-          if (subs[idx]) switchGSub(t[1], t[2], subs[idx]);
-        }
+        var handle = t[1] === 'room' ? guideRoomSubtabs : guidePortfolioSubtabs;
+        if (handle) handle.activate(t[2]);
       }
     });
   }

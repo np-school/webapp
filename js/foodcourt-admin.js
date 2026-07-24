@@ -200,7 +200,7 @@ let modalExtraRows={income:[],expense:[]};
 
 // ── MONTHLY CHART ──
 var monthlyBarChart;
-var fcReportSubtabs, fcManageSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderShell()
+var fcDailySubtabs, fcReportSubtabs, fcManageSubtabs; // handle จาก initSubtabs() — ผูกใน onAuth หลัง renderShell()
 
 // ── AUTH + BOOT ──
 var currentUser = null;
@@ -850,10 +850,8 @@ function switchTab(id,el){
   if(id==='manage'){ renderManage(); renderDailyEntry(); }
 }
 
-function switchDailySub(type,el){
-  dailySubFilter=type;
-  document.querySelectorAll('#tab-daily .sub-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+function onFcDailySubtabChange(tab){
+  dailySubFilter=tab;
   renderDaily();
 }
 
@@ -1151,6 +1149,7 @@ buildPage({
     contentEl.innerHTML = renderShell();
     lucide.createIcons();
 
+    fcDailySubtabs = initSubtabs('fcDailySubtabBar', { onChange: onFcDailySubtabChange });
     fcReportSubtabs = initSubtabs('fcReportSubtabBar', { onChange: onFcReportSubtabChange });
     fcManageSubtabs = initSubtabs('fcManageSubtabBar', { onChange: onFcManageSubtabChange });
 
