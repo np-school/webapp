@@ -1335,7 +1335,10 @@ label {
      .sub-tab-bar.purple  → พื้นหลังธีม purple (เช่น portfolio-admin, room-admin, foodcourt-admin, repair-admin)
      .sub-tab-bar.green   → พื้นหลังธีมเขียว (เผื่อใช้ในอนาคต)
    ค่า default (ไม่ใส่ modifier) = ธีมสีฟ้า/accent (หน้าทั่วไป เช่น profile, settings, ipad-lending)
-   ทุกธีม: ปุ่มที่ยังไม่ active = พื้นสีธีมเข้ม+ตัวหนังสือขาว, ปุ่มที่ active = พื้นสีธีมอ่อน+ตัวหนังสือสีธีมเข้ม (อ่านง่ายกว่า เด่นกว่า)
+
+   แนวคิด: แถบทั้งแถบ (.sub-tab-bar) เป็นพื้นสีธีมทึบชิ้นเดียว (ไม่แยกสีทีละปุ่ม กันดูกระจัดกระจาย)
+   ปุ่มที่ยังไม่ active = โปร่งใส ตัวหนังสือขาว (มองเห็นพื้นสีธีมทะลุ)
+   ปุ่มที่ active = ลอยเป็นแคปซูลสีขาวมี shadow ตัดกับพื้นสีธีมชัดเจน + ตัวหนังสือสีธีมเข้ม (คอนทราสต์สูงสุด อ่านง่ายที่สุด)
 
    Modifier (ขนาด สำหรับ subtab ชั้นลึก/ซ้อนภายในอีกที):
      .sub-tab-bar.compact → padding/font เล็กลง เผื่อใช้เป็น filter bar ย่อยๆ
@@ -1344,20 +1347,19 @@ label {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--bg-alt);
+  background: var(--blue);
   border-radius: 14px;
   width: fit-content;
   margin-bottom: 20px;
 }
-/* ปุ่มที่ยังไม่ active = พื้นสีธีมเข้ม + ตัวหนังสือขาว (เข้มกว่าปุ่มที่ active ตามที่ต้องการ) */
 .sub-tab {
   padding: 8px 18px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
   border: none;
-  background: var(--blue);
-  color: var(--white);
+  background: transparent;
+  color: rgba(255,255,255,.8);
   cursor: pointer;
   transition: all .2s;
   display: flex;
@@ -1365,16 +1367,16 @@ label {
   gap: 6px;
   font-family: 'Sarabun', sans-serif;
 }
-.sub-tab:hover:not(.active) { opacity: .85; }
-/* ปุ่มที่ active = พื้นสีธีมอ่อน + ตัวหนังสือสีธีมเข้ม (ใช้ token คู่เดียวกับ badge/chip สถานะ
-   ที่มีอยู่แล้วทั่วโปรเจกต์ เช่น .status-badge.final_approved, .chip-reviewed, .rp-status.c-purple) */
-.sub-tab.active { background: var(--blue-light); color: var(--blue-dark); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.sub-tab:hover:not(.active) { background: rgba(255,255,255,.15); color: var(--white); }
+/* active = แคปซูลสีขาวลอยตัด + ตัวหนังสือสีธีมเข้ม (คู่ token เดียวกับ badge/chip สถานะ
+   ที่มีอยู่แล้วทั่วโปรเจกต์ เช่น .status-badge.final_approved, .chip-reviewed) */
+.sub-tab.active { background: var(--white); color: var(--blue-dark); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 
-/* modifier: สีธีม */
-.sub-tab-bar.purple .sub-tab        { background: var(--purple); }
-.sub-tab-bar.purple .sub-tab.active { background: var(--purple-light); color: var(--purple-dark); }
-.sub-tab-bar.green  .sub-tab        { background: var(--green); }
-.sub-tab-bar.green  .sub-tab.active { background: var(--green-light);  color: var(--green-dark); }
+/* modifier: สีธีม (เปลี่ยนแค่พื้นแถบ + สีตัวหนังสือ active ให้ตรงกัน) */
+.sub-tab-bar.purple { background: var(--purple); }
+.sub-tab-bar.purple .sub-tab.active { color: var(--purple-dark); }
+.sub-tab-bar.green  { background: var(--green); }
+.sub-tab-bar.green  .sub-tab.active { color: var(--green-dark); }
 
 /* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
