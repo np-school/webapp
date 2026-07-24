@@ -461,17 +461,17 @@ function renderPage() {
 
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
     '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
-      '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;">' +
-        '<button class="btn-primary" onclick="openPrintReportModal()">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">' +
+        '<div class="sub-tab-bar" id="repReportNav">' +
+          '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
+          '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
+          '<button class="sub-tab" data-tab="compare">เปรียบเทียบรายเดือน</button>' +
+          '<button class="sub-tab" data-tab="year">รายปี</button>' +
+          '<button class="sub-tab" data-tab="category">แยกตามหมวดหมู่</button>' +
+        '</div>' +
+        '<button class="btn-primary purple" onclick="openPrintReportModal()">' +
           '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +
         '</button>' +
-      '</div>' +
-      '<div class="sub-tab-bar" id="repReportNav" style="margin-bottom:16px;">' +
-        '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
-        '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
-        '<button class="sub-tab" data-tab="compare">เปรียบเทียบรายเดือน</button>' +
-        '<button class="sub-tab" data-tab="year">รายปี</button>' +
-        '<button class="sub-tab" data-tab="category">แยกตามหมวดหมู่</button>' +
       '</div>' +
 
       '<div class="tab-pane active" data-panel="week" id="repRptWeek">' +
