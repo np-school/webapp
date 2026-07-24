@@ -213,7 +213,7 @@ function renderPage() {
       '</div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar purple" id="repSubTabBar">' +
+    '<div class="sub-tab-bar purple scroll" id="repSubTabBar">' +
       '<button class="sub-tab active" data-tab="active"><i data-lucide="inbox" style="width:14px;height:14px;"></i> การแจ้งซ่อม</button>' +
       '<button class="sub-tab" data-tab="assignee"><i data-lucide="users" style="width:14px;height:14px;"></i> ผู้รับผิดชอบ</button>' +
       '<button class="sub-tab" data-tab="history"><i data-lucide="history" style="width:14px;height:14px;"></i> ประวัติทั้งหมด</button>' +
@@ -295,12 +295,12 @@ function renderPage() {
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
     '<div class="tab-pane" data-panel="report" id="repPanelReport">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">' +
-        '<div class="sub-tab-bar purple compact" id="repReportNav">' +
-          '<button class="sub-tab active" data-tab="week">รายสัปดาห์</button>' +
-          '<button class="sub-tab" data-tab="month">รายเดือน</button>' +
-          '<button class="sub-tab" data-tab="compare">เปรียบเทียบรายเดือน</button>' +
-          '<button class="sub-tab" data-tab="year">รายปี</button>' +
-          '<button class="sub-tab" data-tab="category">แยกตามหมวดหมู่</button>' +
+        '<div class="sub-tab-bar purple compact scroll" id="repReportNav">' +
+          '<button class="sub-tab active" data-tab="week"><i data-lucide="calendar-days" style="width:13px;height:13px;"></i> รายสัปดาห์</button>' +
+          '<button class="sub-tab" data-tab="month"><i data-lucide="calendar" style="width:13px;height:13px;"></i> รายเดือน</button>' +
+          '<button class="sub-tab" data-tab="compare"><i data-lucide="git-compare" style="width:13px;height:13px;"></i> เปรียบเทียบรายเดือน</button>' +
+          '<button class="sub-tab" data-tab="year"><i data-lucide="calendar-range" style="width:13px;height:13px;"></i> รายปี</button>' +
+          '<button class="sub-tab" data-tab="category"><i data-lucide="tags" style="width:13px;height:13px;"></i> แยกตามหมวดหมู่</button>' +
         '</div>' +
         '<button class="btn-primary purple" onclick="openPrintReportModal()">' +
           '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +

@@ -228,11 +228,11 @@
             <p style="font-size:13px;color:var(--text2);padding-left:50px;">บันทึกและติดตามรายรับ–รายจ่าย Food Court โรงเรียนหนองกี่พิทยาคม</p>
           </div>
         </div>
-        <div class="sub-tab-bar purple" style="margin-bottom:0">
-          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)">ภาพรวม</button>
-          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)">รายการทั้งหมด</button>
-          <button class="sub-tab" id="sb-report" onclick="switchTab('report',this)">รายงาน</button>
-          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)">จัดการ</button>
+        <div class="sub-tab-bar purple scroll" style="margin-bottom:0">
+          <button class="sub-tab active" id="sb-dashboard" onclick="switchTab('dashboard',this)"><i data-lucide="layout-dashboard" style="width:14px;height:14px;"></i> ภาพรวม</button>
+          <button class="sub-tab" id="sb-daily" onclick="switchTab('daily',this)"><i data-lucide="list" style="width:14px;height:14px;"></i> รายการทั้งหมด</button>
+          <button class="sub-tab" id="sb-report" onclick="switchTab('report',this)"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> รายงาน</button>
+          <button class="sub-tab" id="sb-manage" onclick="switchTab('manage',this)"><i data-lucide="settings" style="width:14px;height:14px;"></i> จัดการ</button>
         </div>
       </div>
 
@@ -352,7 +352,7 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar purple" id="fcDailySubtabBar">
+        <div class="sub-tab-bar purple scroll" id="fcDailySubtabBar">
           <button class="sub-tab active" data-tab="all"><i data-lucide="list" style="width:14px;height:14px;"></i> ทุกรายการ</button>
           <button class="sub-tab" data-tab="income"><i data-lucide="trending-up" style="width:14px;height:14px;"></i> รายรับ</button>
           <button class="sub-tab" data-tab="expense"><i data-lucide="trending-down" style="width:14px;height:14px;"></i> รายจ่าย</button>
@@ -401,11 +401,11 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar purple" id="fcReportSubtabBar">
-          <button class="sub-tab active" id="subRptWeek" data-tab="week">รายสัปดาห์</button>
-          <button class="sub-tab" id="subRptMonth" data-tab="month">รายเดือน</button>
-          <button class="sub-tab" id="subRptCompare" data-tab="compare">เปรียบเทียบรายเดือน</button>
-          <button class="sub-tab" id="subRptYear" data-tab="year">รายปี</button>
+        <div class="sub-tab-bar purple scroll" id="fcReportSubtabBar">
+          <button class="sub-tab active" id="subRptWeek" data-tab="week"><i data-lucide="calendar-days" style="width:14px;height:14px;"></i> รายสัปดาห์</button>
+          <button class="sub-tab" id="subRptMonth" data-tab="month"><i data-lucide="calendar" style="width:14px;height:14px;"></i> รายเดือน</button>
+          <button class="sub-tab" id="subRptCompare" data-tab="compare"><i data-lucide="git-compare" style="width:14px;height:14px;"></i> เปรียบเทียบรายเดือน</button>
+          <button class="sub-tab" id="subRptYear" data-tab="year"><i data-lucide="calendar-range" style="width:14px;height:14px;"></i> รายปี</button>
         </div>
 
         <!-- Panel: Weekly -->
@@ -501,10 +501,10 @@
         </div>
 
         <!-- Sub Tab Bar -->
-        <div class="sub-tab-bar purple" id="fcManageSubtabBar">
-          <button class="sub-tab active" id="subMgmtEntry" data-tab="entry">บันทึกรายวัน</button>
-          <button class="sub-tab" id="subMgmtRec" data-tab="recurring">รายการประจำ</button>
-          <button class="sub-tab" id="subMgmtAdd" data-tab="addnew">เพิ่มรายการประจำ</button>
+        <div class="sub-tab-bar purple scroll" id="fcManageSubtabBar">
+          <button class="sub-tab active" id="subMgmtEntry" data-tab="entry"><i data-lucide="calendar-plus" style="width:14px;height:14px;"></i> บันทึกรายวัน</button>
+          <button class="sub-tab" id="subMgmtRec" data-tab="recurring"><i data-lucide="repeat" style="width:14px;height:14px;"></i> รายการประจำ</button>
+          <button class="sub-tab" id="subMgmtAdd" data-tab="addnew"><i data-lucide="plus-circle" style="width:14px;height:14px;"></i> เพิ่มรายการประจำ</button>
         </div>
 
         <!-- Panel: Daily Entry -->

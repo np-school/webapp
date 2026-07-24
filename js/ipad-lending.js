@@ -256,7 +256,7 @@ function renderPage() {
       '<div style="position:relative;height:260px;"><canvas id="chartStudentStats"></canvas></div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar" id="ipadSubtabBar">' +
+    '<div class="sub-tab-bar scroll" id="ipadSubtabBar">' +
       '<button class="sub-tab active" data-tab="borrow"><i data-lucide="repeat" style="width:14px;height:14px;"></i> ยืม-คืนอุปกรณ์</button>' +
       '<button class="sub-tab" data-tab="students"><i data-lucide="users" style="width:14px;height:14px;"></i> ข้อมูลนักเรียน</button>' +
       '<button class="sub-tab" data-tab="staff"><i data-lucide="id-card" style="width:14px;height:14px;"></i> รายชื่อบุคลากร</button>' +

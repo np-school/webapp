@@ -117,7 +117,7 @@ function renderPage() {
       '</div>' +
     '</div>' +
 
-    '<div class="sub-tab-bar" id="settingsSubtabBar">' +
+    '<div class="sub-tab-bar scroll" id="settingsSubtabBar">' +
       '<button class="sub-tab active" data-tab="theme">' +
         '<i data-lucide="palette" style="width:14px;height:14px;"></i> ธีมสี' +
       '</button>' +

@@ -44,7 +44,7 @@ function renderPage() {
     /* ════════ TAB 2: ขอใช้ห้อง ════════ */
     '<div class="g-pane" id="gp-room">' +
       /* sub-tab bar */
-      '<div class="sub-tab-bar" id="gsub-room-bar">' +
+      '<div class="sub-tab-bar scroll" id="gsub-room-bar">' +
         '<button class="sub-tab active" data-tab="user"><i data-lucide="user" style="width:14px;height:14px;"></i> สำหรับผู้ใช้งาน</button>' +
         '<button class="sub-tab" data-tab="status"><i data-lucide="list-checks" style="width:14px;height:14px;"></i> ความหมายสถานะ</button>' +
         '<button class="sub-tab" data-tab="admin"><i data-lucide="shield" style="width:14px;height:14px;"></i> สำหรับ Admin</button>' +
@@ -56,7 +56,7 @@ function renderPage() {
 
     /* ════════ TAB 3: ส่งงาน ════════ */
     '<div class="g-pane" id="gp-portfolio">' +
-      '<div class="sub-tab-bar purple" id="gsub-portfolio-bar">' +
+      '<div class="sub-tab-bar purple scroll" id="gsub-portfolio-bar">' +
         '<button class="sub-tab active" data-tab="teacher"><i data-lucide="user" style="width:14px;height:14px;"></i> สำหรับครู</button>' +
         '<button class="sub-tab" data-tab="workflow"><i data-lucide="workflow" style="width:14px;height:14px;"></i> Workflow สถานะ</button>' +
         '<button class="sub-tab" data-tab="admin"><i data-lucide="shield" style="width:14px;height:14px;"></i> สำหรับ Admin</button>' +
