@@ -293,18 +293,20 @@ function renderPage() {
     '</div>' +
 
     /* ── Panel: รายงาน (สถิติรายสัปดาห์/รายเดือน/เปรียบเทียบ/รายปี/หมวดหมู่) ── */
-    /* data-subtab-scope: repReportNav ถูกห่อในกล่อง flex ร่วมกับปุ่ม "พิมพ์รายงาน" ทำให้
-       root.parentElement ของ initSubtabs() ไม่ครอบคลุมถึง .tab-pane panels ด้านล่าง
-       ต้องระบุ scope ตรงๆ ที่นี่ (เหมือน portfolio-admin.html) ไม่งั้นกด subtab แล้ว panel ไม่สลับ */
+    /* Layout: sub-tab-bar ลอยอยู่บนแถวของตัวเองเสมอ (เหมือน portfolio-admin, room-admin,
+       foodcourt-admin, ipad-lending ฯลฯ) ไม่แชร์แถวเดียวกับปุ่ม "พิมพ์รายงาน" อีกต่อไป
+       เพราะ .scroll บังคับ width:100% ปุ่มเลยตกไปอยู่บรรทัดใหม่เสมอ ดูเหมือนเป็นแท็บอีกชั้นซ้อนกัน
+       ทั้งที่ไม่ใช่ subtab จึงย้ายปุ่มมาไว้แถวของตัวเอง ชิดขวา แยกจากแถบ subtab ให้ชัดเจน
+       data-subtab-scope: ยังคงต้องระบุ scope ตรงๆ ที่นี่ (เหมือน portfolio-admin.html) ไม่งั้นกด subtab แล้ว panel ไม่สลับ */
     '<div class="tab-pane" data-panel="report" id="repPanelReport" data-subtab-scope>' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">' +
-        '<div class="sub-tab-bar purple compact scroll" id="repReportNav">' +
-          '<button class="sub-tab active" data-tab="week"><i data-lucide="calendar-days" style="width:13px;height:13px;"></i> รายสัปดาห์</button>' +
-          '<button class="sub-tab" data-tab="month"><i data-lucide="calendar" style="width:13px;height:13px;"></i> รายเดือน</button>' +
-          '<button class="sub-tab" data-tab="compare"><i data-lucide="git-compare" style="width:13px;height:13px;"></i> เปรียบเทียบรายเดือน</button>' +
-          '<button class="sub-tab" data-tab="year"><i data-lucide="calendar-range" style="width:13px;height:13px;"></i> รายปี</button>' +
-          '<button class="sub-tab" data-tab="category"><i data-lucide="tags" style="width:13px;height:13px;"></i> แยกตามหมวดหมู่</button>' +
-        '</div>' +
+      '<div class="sub-tab-bar purple compact scroll" id="repReportNav" style="margin-bottom:14px;">' +
+        '<button class="sub-tab active" data-tab="week"><i data-lucide="calendar-days" style="width:13px;height:13px;"></i> รายสัปดาห์</button>' +
+        '<button class="sub-tab" data-tab="month"><i data-lucide="calendar" style="width:13px;height:13px;"></i> รายเดือน</button>' +
+        '<button class="sub-tab" data-tab="compare"><i data-lucide="git-compare" style="width:13px;height:13px;"></i> เปรียบเทียบรายเดือน</button>' +
+        '<button class="sub-tab" data-tab="year"><i data-lucide="calendar-range" style="width:13px;height:13px;"></i> รายปี</button>' +
+        '<button class="sub-tab" data-tab="category"><i data-lucide="tags" style="width:13px;height:13px;"></i> แยกตามหมวดหมู่</button>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;">' +
         '<button class="btn-primary purple" onclick="openPrintReportModal()">' +
           '<i data-lucide="printer" style="width:15px;height:15px;"></i> พิมพ์รายงาน' +
         '</button>' +
