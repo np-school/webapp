@@ -299,7 +299,7 @@ function renderPage() {
        ทั้งที่ไม่ใช่ subtab จึงย้ายปุ่มมาไว้แถวของตัวเอง ชิดขวา แยกจากแถบ subtab ให้ชัดเจน
        data-subtab-scope: ยังคงต้องระบุ scope ตรงๆ ที่นี่ (เหมือน portfolio-admin.html) ไม่งั้นกด subtab แล้ว panel ไม่สลับ */
     '<div class="tab-pane" data-panel="report" id="repPanelReport" data-subtab-scope>' +
-      '<div class="sub-tab-bar purple compact scroll" id="repReportNav" style="margin-bottom:14px;">' +
+      '<div class="sub-tab-bar plain compact scroll" id="repReportNav" style="margin-bottom:14px;">' +
         '<button class="sub-tab active" data-tab="week"><i data-lucide="calendar-days" style="width:13px;height:13px;"></i> รายสัปดาห์</button>' +
         '<button class="sub-tab" data-tab="month"><i data-lucide="calendar" style="width:13px;height:13px;"></i> รายเดือน</button>' +
         '<button class="sub-tab" data-tab="compare"><i data-lucide="git-compare" style="width:13px;height:13px;"></i> เปรียบเทียบรายเดือน</button>' +

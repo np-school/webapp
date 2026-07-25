@@ -1382,6 +1382,22 @@ label {
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
 .sub-tab-bar.compact .sub-tab { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
 
+/* modifier: plain → ไม่มีพื้นหลังแท่งสีทึบ ปุ่มแต่ละอันลอยเป็นแคปซูลขาวมีเส้นขอบแยกกัน
+   (หน้าตาเดียวกับ .filter-pill) ใช้กับ subtab ชั้นในที่ซ้อนอยู่ใต้ subtab หลักอีกที
+   (เช่น repair-admin: repReportNav อยู่ใต้ repSubTabBar) ให้ดูเบากว่าแท่งสีทึบซ้อนกัน 2 ชั้น
+   เหมือนปุ่มช่วงเวลา วันนี้/สัปดาห์นี้/เดือนนี้/ปีนี้ ใน room-admin */
+.sub-tab-bar.plain { background: transparent; padding: 0; border-radius: 0; gap: 8px; }
+.sub-tab-bar.plain .sub-tab {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  box-shadow: none;
+  border-radius: 20px;
+}
+.sub-tab-bar.plain .sub-tab:hover:not(.active) { background: var(--bg-alt); color: var(--text); }
+.sub-tab-bar.plain .sub-tab.active { background: var(--purple); color: var(--white); border-color: var(--purple); box-shadow: none; }
+.sub-tab-bar.plain.compact .sub-tab { border-radius: 20px; }
+
 /* modifier: แถบที่มี tab เยอะ (5+) ต้อง scroll แนวนอนได้บนจอแคบ
    เดิมมาจาก profile.html ที่ประกาศ .subtab-bar ของตัวเองซ้ำเพื่อการนี้โดยเฉพาะ
    ย้ายมารวมไว้ที่นี่แทน ให้หน้าไหนมี tab เยอะก็ใช้ class="sub-tab-bar scroll" ได้เลย */
