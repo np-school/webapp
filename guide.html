@@ -44,6 +44,7 @@
     .g-tab:hover { background: var(--border-soft); color: var(--text); }
     .g-tab.tab-active { background: var(--accent); color: white; box-shadow: 0 4px 14px rgba(29,78,216,.3); }
     .g-tab.tab-active-purple { background: var(--purple); color: white; box-shadow: 0 4px 14px rgba(13,27,42,.3); }
+    .g-tab.tab-active-amber { background: var(--amber); color: white; box-shadow: 0 4px 14px rgba(217,119,6,.3); }
 
     .g-pane { display: none; }
     .g-pane.active { display: block; }
@@ -87,6 +88,12 @@
     .sb-deputy_reviewed { background: #ede9fe; color: var(--c-violet-deep); }
     .sb-final_approved  { background: var(--green-light); color: var(--c-green-deep); border: 1px solid var(--green-mid); }
     .sb-revision  { background: var(--amber-light); color: var(--amber-dark); border: 1px solid var(--amber-mid); }
+    /* Repair status badges */
+    .sb-rep-reported { background: var(--amber-light); color: var(--amber-dark); }
+    .sb-rep-approved { background: var(--sky-light); color: var(--c-sky-deep); }
+    .sb-rep-done     { background: var(--purple-light); color: var(--c-violet-deep); }
+    .sb-rep-reopened { background: var(--red-light); color: var(--red-dark); }
+    .sb-rep-closed   { background: var(--green-light); color: var(--c-green-deep); }
 
     /* Workflow bar */
     .wf-bar { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin: 16px 0; }
@@ -115,7 +122,7 @@
     .fb-gray   { background: var(--bg); color: var(--text2); border: 1.5px solid var(--border); }
 
     /* System overview grid */
-    .sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
     @media(max-width:540px){ .sys-grid { grid-template-columns: 1fr; } }
     .sys-card { border-radius: 12px; padding: 16px; border: 1px solid; font-size: 13px; }
     .sys-card-blue   { background: var(--accent-tint); border-color: var(--accent-light); }
@@ -150,6 +157,7 @@
     .cta-btn:hover { opacity: .9; }
     .cta-blue   { background: var(--accent); box-shadow: 0 6px 18px rgba(29,78,216,.3); }
     .cta-purple { background: var(--purple); box-shadow: 0 6px 18px rgba(13,27,42,.3); }
+    .cta-amber  { background: var(--amber); box-shadow: 0 6px 18px rgba(217,119,6,.3); }
 
     /* Section divider */
     .sdiv {

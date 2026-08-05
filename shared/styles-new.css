@@ -1377,6 +1377,8 @@ label {
 .sub-tab-bar.purple .sub-tab.active { color: var(--purple-dark); }
 .sub-tab-bar.green  { background: var(--green); }
 .sub-tab-bar.green  .sub-tab.active { color: var(--green-dark); }
+.sub-tab-bar.amber  { background: var(--amber); }
+.sub-tab-bar.amber  .sub-tab.active { color: var(--amber-dark); }
 
 /* modifier: ขนาดกะทัดรัด เผื่อ subtab ชั้นที่ 2/3 ในอนาคต */
 .sub-tab-bar.compact { padding: 3px; border-radius: 11px; margin-bottom: 12px; }
