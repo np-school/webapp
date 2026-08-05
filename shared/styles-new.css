@@ -1885,25 +1885,44 @@ tr:hover td { background: var(--bg); }
 
 
 /* ── 22. Workflow (Portfolio) ─────────────────────────────────── */
-.workflow-bar {
+.workflow-bar { margin-top: 10px; }
+.wf-track {
   display: flex;
   align-items: stretch;
-  margin-top: 8px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--border);
+  height: 8px;
 }
-.wf-step {
+.wf-seg { flex: 1; min-width: 0; }
+.wf-seg.done     { background: var(--c-green); }
+.wf-seg.active   { background: var(--yellow); }
+.wf-seg.revision { background: var(--red); }
+.wf-seg.pending  { background: var(--bg-alt); }
+.wf-seg.final    { background: var(--purple); }
+.wf-divider      { width: 1px; background: rgba(0,0,0,.08); align-self: stretch; flex-shrink: 0; }
+
+.wf-labels { display: flex; margin-top: 6px; }
+.wf-label {
   flex: 1;
   min-width: 0;
-  height: 16px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 0 2px;
+  color: var(--text3);
+  word-break: keep-all;
 }
-.wf-step.done     { background: var(--c-green); color: white; }
-.wf-step.active   { background: var(--yellow); color: #713f12; }
-.wf-step.revision { background: var(--red); color: white; }
-.wf-step.pending  { background: var(--bg-alt); color: var(--text3); }
-.wf-step.final    { background: var(--purple); color: white; }
-.wf-divider       { width: 1px; background: rgba(0,0,0,.08); align-self: stretch; flex-shrink: 0; }
+.wf-label.done     { color: var(--c-green); }
+.wf-label.active   { color: #92600a; font-weight: 700; }
+.wf-label.revision { color: var(--red); font-weight: 700; }
+.wf-label.pending  { color: var(--text3); }
+.wf-label.final    { color: var(--purple); font-weight: 700; }
+
+@media (max-width: 380px) {
+  .wf-label { font-size: 9.5px; }
+}
 
 
 /* ── 23. Page — Portfolio ─────────────────────────────────────── */

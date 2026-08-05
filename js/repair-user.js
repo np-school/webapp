@@ -133,13 +133,16 @@ function getStatusMeta(r) {
 }
 
 function buildWorkflowBar(steps) {
-  var html = '<div class="workflow-bar">';
+  var track = '<div class="wf-track">';
+  var labels = '<div class="wf-labels">';
   for (var i = 0; i < WF_LABELS.length; i++) {
-    html += '<div class="wf-step ' + steps[i] + '">' + WF_LABELS[i] + '</div>';
-    if (i < WF_LABELS.length - 1) html += '<div class="wf-divider"></div>';
+    track += '<div class="wf-seg ' + steps[i] + '"></div>';
+    if (i < WF_LABELS.length - 1) track += '<div class="wf-divider"></div>';
+    labels += '<div class="wf-label ' + steps[i] + '">' + WF_LABELS[i] + '</div>';
   }
-  html += '</div>';
-  return html;
+  track += '</div>';
+  labels += '</div>';
+  return '<div class="workflow-bar">' + track + labels + '</div>';
 }
 
 
