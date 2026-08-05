@@ -783,13 +783,13 @@ function renderListView() {
                         '<span style="font-size:9px;font-weight:800;color:var(--accent);background:var(--accent-tint);padding:1px 5px;border-radius:4px;">' + esc2(cCode) + '</span>' +
                         (cName ? '<span style="font-size:9px;color:var(--text-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">' + esc2(cName) + '</span>' : '') +
                       '</div>' +
-                      buildWorkflowBar(cStatus) +
+                      buildWorkflowBar(cStatus, false) +
                     '</div>';
                   }).join('') +
                 '</div>';
               } else if (sub) {
                 /* single course → workflow bar เดียว */
-                wfHtml = buildWorkflowBar(status);
+                wfHtml = buildWorkflowBar(status, false);
               }
 
               var courseCountBadge = isMulti ? '<span style="background:var(--purple-light);color:var(--indigo);border-radius:6px;padding:1px 5px;font-size:9px;font-weight:800;margin-left:2px;">' + courseKeys.length + ' วิชา</span>' : '';
@@ -835,7 +835,8 @@ function renderListView() {
 }
 
 /* ─── WORKFLOW BAR HELPER ─── */
-function buildWorkflowBar(status) {
+function buildWorkflowBar(status, showLabels) {
+  if (showLabels === undefined) showLabels = true;
   var steps = [
     { key: 'submitted',          label: 'ครูส่งงาน',            icon: '📤' },
     { key: 'head_reviewed',      label: 'หัวหน้ากลุ่มสาระตรวจ', icon: '👤' },
@@ -878,7 +879,9 @@ function buildWorkflowBar(status) {
     html += '<div class="wf-seg ' + cls + '" title="' + step.label + '"></div>';
     labelsHtml += '<div class="wf-label ' + cls + '">' + step.label + '</div>';
   });
-  html += '</div>' + labelsHtml + '</div></div>';
+  html += '</div>';
+  if (showLabels) html += labelsHtml + '</div>';
+  html += '</div>';
   return html;
 }
 
