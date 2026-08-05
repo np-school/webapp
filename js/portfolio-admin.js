@@ -856,7 +856,8 @@ function buildWorkflowBar(status) {
   var cur = ORDER[status] !== undefined ? ORDER[status] : -1;
   var isRevision = status === 'revision';
 
-  var html = '<div class="workflow-bar">';
+  var html = '<div class="workflow-bar"><div class="wf-track">';
+  var labelsHtml = '<div class="wf-labels">';
   steps.forEach(function(step, i) {
     if (i > 0) html += '<div class="wf-divider"></div>';
     var cls;
@@ -874,9 +875,10 @@ function buildWorkflowBar(status) {
     } else {
       cls = 'pending';
     }
-    html += '<div class="wf-step ' + cls + '" title="' + step.label + '"></div>';
+    html += '<div class="wf-seg ' + cls + '" title="' + step.label + '"></div>';
+    labelsHtml += '<div class="wf-label ' + cls + '">' + step.label + '</div>';
   });
-  html += '</div>';
+  html += '</div>' + labelsHtml + '</div></div>';
   return html;
 }
 

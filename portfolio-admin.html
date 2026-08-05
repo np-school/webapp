@@ -61,16 +61,26 @@
     .chip-revision{background:var(--amber-light);border-color:var(--amber-mid);color:var(--amber-dark);}
 
     /* ── Workflow status bar ── */
-    .workflow-bar{display:flex;align-items:stretch;margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
-    .wf-step{flex:1;min-width:0;height:16px;transition:background .2s ease,transform .12s ease;cursor:default;}
-    .wf-step:hover{transform:scaleY(1.35);}
-    .wf-step.done{background:var(--green);color:white;}
-    .wf-step.active{background:var(--yellow);color:var(--yellow-dark);animation:wf-pulse 1.8s ease-in-out infinite;}
-    .wf-step.revision{background:var(--red);color:white;}
-    .wf-step.pending{background:var(--bg-alt);color:var(--text3);}
-    .wf-step.final{background:var(--purple);color:white;}
+    .workflow-bar{margin-top:10px;}
+    .wf-track{display:flex;align-items:stretch;border-radius:10px;overflow:hidden;border:1px solid var(--border);height:8px;}
+    .wf-seg{flex:1;min-width:0;transition:background .2s ease,transform .12s ease;cursor:default;}
+    .wf-seg:hover{transform:scaleY(1.35);}
+    .wf-seg.done{background:var(--green);}
+    .wf-seg.active{background:var(--yellow);animation:wf-pulse 1.8s ease-in-out infinite;}
+    .wf-seg.revision{background:var(--red);}
+    .wf-seg.pending{background:var(--bg-alt);}
+    .wf-seg.final{background:var(--purple);}
     .wf-divider{width:1px;background:rgba(0,0,0,.08);align-self:stretch;flex-shrink:0;}
     @keyframes wf-pulse{0%,100%{box-shadow:inset 0 0 0 0 rgba(217,119,6,.35);}50%{box-shadow:inset 0 0 0 3px rgba(217,119,6,.35);}}
+
+    .wf-labels{display:flex;margin-top:6px;}
+    .wf-label{flex:1;min-width:0;text-align:center;font-size:10px;font-weight:600;line-height:1.25;padding:0 2px;color:var(--text3);}
+    .wf-label.done{color:var(--green);}
+    .wf-label.active{color:var(--yellow-dark);font-weight:700;}
+    .wf-label.revision{color:var(--red);font-weight:700;}
+    .wf-label.pending{color:var(--text3);}
+    .wf-label.final{color:var(--purple);font-weight:700;}
+    @media (max-width:380px){.wf-label{font-size:9px;}}
 
     /* ── Doc type matrix view ── */
     .matrix-table{width:100%;border-collapse:collapse;}
