@@ -114,6 +114,15 @@ function fetchHistoryPage(page) {
 
   query.get().then(function(snap) {
     BORROWS_HISTORY = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    /* เรียงตาม "กิจกรรมล่าสุด" ของแต่ละรายการ (updatedAt ถ้ามี ไม่งั้น fallback เป็น createdAt)
+       เพื่อให้รายการที่เพิ่งมีการคืนเครื่อง ขึ้นไปอยู่บนสุดด้วย ไม่ใช่แค่รายการที่เพิ่งยืมใหม่ */
+    BORROWS_HISTORY.sort(function(a, b) {
+      var ta = (a.updatedAt || a.createdAt);
+      var tb = (b.updatedAt || b.createdAt);
+      ta = ta && ta.toMillis ? ta.toMillis() : 0;
+      tb = tb && tb.toMillis ? tb.toMillis() : 0;
+      return tb - ta;
+    });
     historyHasNext = snap.docs.length === HISTORY_PAGE_SIZE;
     if (snap.docs.length) historyPageCursors[page - 1] = snap.docs[snap.docs.length - 1];
     historyPage = page;
@@ -1390,7 +1399,8 @@ function saveBorrow() {
       deviceId: device.id, friendlyName: device.friendlyName, serialNumber: device.serialNumber,
       accessories: accessories,
       borrowDate: borrowDate,
-      recordedBy: currentUserLabel()
+      recordedBy: currentUserLabel(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     db.collection('ipad_borrows').doc(editingBorrowId).update(updatePayload).then(function() {
       showToast('แก้ไขข้อมูลการยืมสำเร็จ ✅');
@@ -1408,6 +1418,7 @@ function saveBorrow() {
     status: 'out',
     createdBy: currentUser ? currentUser.email : '',
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     recordedBy: currentUserLabel()
   };
 
@@ -1491,7 +1502,7 @@ function confirmReturn() {
     showToast('กรุณาเลือกอย่างน้อย 1 รายการที่จะคืน', 'warn'); return;
   }
 
-  var updates = { accessories: remainingAccs };
+  var updates = { accessories: remainingAccs, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
   if (deviceReturned) {
     updates.status = 'in';
     updates.returnDate = todayStr();
@@ -1760,7 +1771,8 @@ function saveClaimDevice() {
         deviceId: newDevice.id,
         friendlyName: newDevice.friendlyName,
         serialNumber: newDevice.serialNumber,
-        recordedBy: currentUserLabel()
+        recordedBy: currentUserLabel(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     });
   }
