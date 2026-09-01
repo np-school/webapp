@@ -665,10 +665,8 @@ function doReplaceFile(subKey, fileIndex, newFile) {
 }
 
 /* ── PATCH: เขียนทับเนื้อหาไฟล์เดิมใน Drive โดยไม่เปลี่ยน fileId ── */
-function overwriteFileToDrive(fileId, file) {
+function _overwriteFileToDriveOnce(fileId, file) {
   return new Promise(function(resolve, reject) {
-    var form = new FormData();
-    form.append('file', file);
     var xhr = new XMLHttpRequest();
     xhr.open('PATCH',
       'https://www.googleapis.com/upload/drive/v3/files/' + fileId +
@@ -683,6 +681,18 @@ function overwriteFileToDrive(fileId, file) {
     xhr.onerror = function() { reject(new Error('Network error')); };
     xhr.send(file); /* ส่ง raw file (ไม่ต้อง FormData สำหรับ media upload) */
   });
+}
+
+function overwriteFileToDrive(fileId, file) {
+  return withNetworkRetry(
+    function() { return _overwriteFileToDriveOnce(fileId, file); },
+    {
+      maxRetries: 2,
+      onRetry: function(attempt, max) {
+        showToast('เน็ตสะดุด กำลังลองบันทึกทับไฟล์ใหม่ (' + attempt + '/' + max + ')...', 'warn');
+      }
+    }
+  );
 }
 
 /* ─── GOOGLE DRIVE FOLDER STRUCTURE ─── */
@@ -989,7 +999,30 @@ function uploadSignatureToStorage(uid, courseCode, docTypeId) {
   });
 }
 
-function uploadFileToDrive(file, fileName, folderId, onProgress) {
+/* ── Retry wrapper: ลองใหม่อัตโนมัติเฉพาะตอนเจอ "Network error" จริงๆ
+   (เน็ตสะดุด/หลุดกลางทาง) ไม่ retry ถ้าเป็น HTTP error จาก Google
+   (เช่น 401/403/404) เพราะลองใหม่ไปก็ไม่หาย ── */
+function withNetworkRetry(taskFn, opts) {
+  opts = opts || {};
+  var maxRetries = opts.maxRetries != null ? opts.maxRetries : 2;
+  var onRetry = opts.onRetry; // function(attempt, maxRetries)
+
+  function attempt(retriesLeft, attemptNum) {
+    return taskFn().catch(function(err) {
+      var isNetworkError = err && err.message === 'Network error';
+      if (isNetworkError && retriesLeft > 0) {
+        if (onRetry) onRetry(attemptNum, maxRetries);
+        var delayMs = attemptNum * 1200; /* 1.2s, 2.4s, ... */
+        return new Promise(function(resolve) { setTimeout(resolve, delayMs); })
+          .then(function() { return attempt(retriesLeft - 1, attemptNum + 1); });
+      }
+      throw err;
+    });
+  }
+  return attempt(maxRetries, 1);
+}
+
+function _uploadFileToDriveOnce(file, fileName, folderId, onProgress) {
   return new Promise(function(resolve, reject) {
     var metadata = { name: fileName, parents: [folderId] };
     var form = new FormData();
@@ -1016,6 +1049,18 @@ function uploadFileToDrive(file, fileName, folderId, onProgress) {
     xhr.onerror = function() { reject(new Error('Network error')); };
     xhr.send(form);
   });
+}
+
+function uploadFileToDrive(file, fileName, folderId, onProgress) {
+  return withNetworkRetry(
+    function() { return _uploadFileToDriveOnce(file, fileName, folderId, onProgress); },
+    {
+      maxRetries: 2,
+      onRetry: function(attempt, max) {
+        showToast('เน็ตสะดุด กำลังลองอัปโหลดใหม่ (' + attempt + '/' + max + ')...', 'warn');
+      }
+    }
+  );
 }
 
 /* ════════════════════════════════════════════
