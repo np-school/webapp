@@ -91,6 +91,7 @@ var courseRows       = [];
 /* which course panel's file-input is active (for file picker) */
 var activeUploadRowIdx = null;
 var driveAccessToken = null;
+var driveTokenExpiresAt = null; /* timestamp (ms) ที่ access token จะหมดอายุ */
 var pendingDeleteInfo = null; /* { subKey, fileIndex } */
 var tokenClient      = null;
 var pendingReplaceInfo = null;
@@ -330,11 +331,19 @@ function initGoogleAuth() {
         return;
       }
       driveAccessToken = response.access_token;
+      /* GIS จะคืน expires_in เป็นวินาที (ปกติ 3600) — เผื่อไว้ 60 วิ กันหมดอายุพอดีตอนกำลังใช้ */
+      driveTokenExpiresAt = Date.now() + ((response.expires_in || 3600) * 1000);
       document.getElementById('driveAuthNotice').style.display = 'none';
       /* ถ้ามีไฟล์รอ ส่งต่อ */
       if (pendingUploadCallback) { pendingUploadCallback(); pendingUploadCallback = null; }
     }
   });
+}
+/* token ที่ "มี" ไม่ได้แปลว่า "ใช้ได้" — access token ของ Google หมดอายุใน ~1 ชม.
+   ถ้าครูเปิดฟอร์มค้างไว้นานแล้วค่อยกดส่ง ต้องขอ token ใหม่ ไม่ใช่ใช้ตัวเก่าที่หมดอายุแล้ว
+   (ไม่งั้นจะเจอ HTTP 401 "Invalid Credentials" ตอนสร้างโฟลเดอร์/อัปโหลด) */
+function isDriveTokenValid() {
+  return !!driveAccessToken && !!driveTokenExpiresAt && Date.now() < driveTokenExpiresAt - 60000;
 }
 function authorizeDrive(callback) {
   pendingUploadCallback = callback || null;
@@ -721,7 +730,7 @@ function doReplaceFile(subKey, fileIndex, newFile) {
     }
   }
 
-  if (!driveAccessToken) authorizeDrive(proceed); else proceed();
+  if (!isDriveTokenValid()) authorizeDrive(proceed); else proceed();
 }
 
 /* ════════════════════════════════════════════
@@ -1700,7 +1709,7 @@ function confirmDelete() {
   }
 
   /* ต้อง auth Drive ก่อนเสมอเพื่อให้ลบได้จริง */
-  if (fileToDelete && fileToDelete.fileId && !driveAccessToken) {
+  if (fileToDelete && fileToDelete.fileId && !isDriveTokenValid()) {
     btn.disabled = true; btn.textContent = 'รอการอนุญาต Drive...';
     authorizeDrive(function() {
       btn.disabled = false; btn.textContent = 'ลบไฟล์';
@@ -1760,7 +1769,7 @@ function confirmDeleteSubmission() {
 
   /* ลบไฟล์ทุกไฟล์จาก Drive */
   function deleteAllDriveFiles() {
-    if (!driveAccessToken) return Promise.resolve();
+    if (!isDriveTokenValid()) return Promise.resolve();
     var promises = files.filter(function(f){ return f && f.fileId; }).map(function(f) {
       return fetch(
         'https://www.googleapis.com/drive/v3/files/' + f.fileId + '?supportsAllDrives=true',
@@ -1796,7 +1805,7 @@ function confirmDeleteSubmission() {
 
   /* ถ้ามีไฟล์ใน Drive ต้อง auth ก่อน */
   var hasDriveFiles = files.some(function(f){ return f && f.fileId; });
-  if (hasDriveFiles && !driveAccessToken) {
+  if (hasDriveFiles && !isDriveTokenValid()) {
     btn.textContent = 'รอการอนุญาต Drive...';
     authorizeDrive(function() {
       btn.disabled = true;
@@ -1854,7 +1863,7 @@ function submitDoc() {
       btn.disabled = true;
       btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
       lucide.createIcons();
-      if (!driveAccessToken) {
+      if (!isDriveTokenValid()) {
         document.getElementById('driveAuthNotice').style.display = 'block';
         authorizeDrive(function(){ uploadManageFiles(subKey, newFiles, subjectGroup, note, btn); });
         btn.disabled = false;
@@ -1926,7 +1935,7 @@ function submitDoc() {
   btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin .8s linear infinite;"></i> กำลังบันทึก...';
   lucide.createIcons();
 
-  if (!driveAccessToken) {
+  if (!isDriveTokenValid()) {
     document.getElementById('driveAuthNotice').style.display = 'block';
     authorizeDrive(function(){ _isUploading = true; uploadAllCourseRows(rowsToSubmit, subjectGroup, note, btn); });
     btn.disabled = false;
