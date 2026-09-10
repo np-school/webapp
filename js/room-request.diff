@@ -1,0 +1,133 @@
+479a480,508
+> /* บางเบราว์เซอร์/มือถือ (โดยเฉพาะบางรุ่น Android หรือแอปจัดการไฟล์บางตัว) ไม่ใส่ MIME
+>    type มาให้ (file.type === '' หรือ 'application/octet-stream') ทั้งที่เป็นไฟล์รูปจริงๆ
+>    เช็คจากนามสกุลไฟล์เป็น fallback กันคนเหล่านี้โดนบล็อกทั้งที่แนบรูปถูกต้อง */
+> function isLikelyImageFile(file) {
+>   if (file.type && file.type.indexOf('image/') === 0) return true;
+>   return /\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(file.name || '');
+> }
+> /* รูปจาก iPhone (ตั้งกล้องเป็น "High Efficiency") จะเป็นไฟล์ HEIC/HEIF ซึ่งเบราว์เซอร์
+>    ส่วนใหญ่ (รวม Chrome/Firefox บน Windows, Android แทบทุกตัว) แสดงผ่าน <img>/canvas ไม่ได้เลย
+>    ทำให้ก่อนหน้านี้ค้างเงียบๆ ไม่มี error ใดๆ ขึ้นมาบอกผู้ใช้ */
+> function isHeicFile(file) {
+>   var t = (file.type || '').toLowerCase();
+>   var n = (file.name || '').toLowerCase();
+>   return t === 'image/heic' || t === 'image/heif' || /\.hei[cf]$/.test(n);
+> }
+> var _heic2anyLoadPromise = null;
+> function loadHeic2Any() {
+>   if (window.heic2any) return Promise.resolve();
+>   if (_heic2anyLoadPromise) return _heic2anyLoadPromise;
+>   _heic2anyLoadPromise = new Promise(function(resolve, reject) {
+>     var s = document.createElement('script');
+>     s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+>     s.onload = function() { resolve(); };
+>     s.onerror = function() { reject(new Error('โหลดตัวแปลงไฟล์ HEIC ไม่สำเร็จ (เช็คอินเทอร์เน็ต)')); };
+>     document.head.appendChild(s);
+>   });
+>   return _heic2anyLoadPromise;
+> }
+> 
+483c512
+<   if (!file.type.startsWith('image/')) { errEl.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น'; errEl.style.display = 'block'; input.value = ''; return; }
+---
+>   if (!isLikelyImageFile(file)) { errEl.textContent = 'กรุณาเลือกไฟล์รูปภาพเท่านั้น'; errEl.style.display = 'block'; input.value = ''; return; }
+485,498c514,539
+<   var reader = new FileReader();
+<   reader.onload = function(ev) {
+<     var img = new Image();
+<     img.onload = function() {
+<       var TARGET = 680000, scales = [1200, 900, 700, 500], dataUrl = '', finalW = img.width, finalH = img.height;
+<       if (file.size < 200 * 1024) { dataUrl = ev.target.result; } else {
+<         for (var si = 0; si < scales.length; si++) {
+<           var MAX = scales[si], w = img.width, h = img.height;
+<           if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+<           var canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+<           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+<           var q = 0.82, found = false;
+<           while (q >= 0.3) { dataUrl = canvas.toDataURL('image/jpeg', q); if (dataUrl.length <= TARGET) { finalW = w; finalH = h; found = true; break; } q = Math.round((q - 0.05) * 100) / 100; }
+<           if (found) break;
+---
+> 
+>   /* ประมวลผลไฟล์รูป (jpg/png/... ปกติ หรือไฟล์ที่แปลงจาก HEIC แล้ว) */
+>   function processImageFile(imgFile) {
+>     var reader = new FileReader();
+>     reader.onerror = function() {
+>       errEl.textContent = 'อ่านไฟล์รูปไม่สำเร็จ กรุณาลองเลือกไฟล์ใหม่อีกครั้ง';
+>       errEl.style.display = 'block'; input.value = '';
+>     };
+>     reader.onload = function(ev) {
+>       var img = new Image();
+>       img.onerror = function() {
+>         errEl.textContent = 'ไม่สามารถแสดงตัวอย่างไฟล์นี้ได้ (รูปแบบไฟล์อาจไม่รองรับ) กรุณาลองเลือกไฟล์ .jpg หรือ .png แทน';
+>         errEl.style.display = 'block'; input.value = '';
+>       };
+>       img.onload = function() {
+>         var TARGET = 680000, scales = [1200, 900, 700, 500], dataUrl = '', finalW = img.width, finalH = img.height;
+>         if (imgFile.size < 200 * 1024) { dataUrl = ev.target.result; } else {
+>           for (var si = 0; si < scales.length; si++) {
+>             var MAX = scales[si], w = img.width, h = img.height;
+>             if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+>             var canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+>             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+>             var q = 0.82, found = false;
+>             while (q >= 0.3) { dataUrl = canvas.toDataURL('image/jpeg', q); if (dataUrl.length <= TARGET) { finalW = w; finalH = h; found = true; break; } q = Math.round((q - 0.05) * 100) / 100; }
+>             if (found) break;
+>           }
+500,511c541,553
+<       }
+<       selectedFileDataURL = dataUrl; selectedFile = { name: file.name, size: file.size };
+<       var byteStr = atob(dataUrl.split(',')[1]), bytes = new Uint8Array(byteStr.length);
+<       for (var bi = 0; bi < byteStr.length; bi++) bytes[bi] = byteStr.charCodeAt(bi);
+<       selectedFileBlob = new Blob([bytes], { type: 'image/jpeg' });
+<       var kb = (dataUrl.length * 0.75 / 1024).toFixed(0);
+<       document.getElementById('previewImg').src = dataUrl;
+<       document.getElementById('fileName').textContent = file.name;
+<       document.getElementById('fileSize').textContent = '✓ บีบอัดแล้ว ' + kb + ' KB · ' + finalW + '×' + finalH + 'px';
+<       document.getElementById('uploadDefault').style.display = 'none';
+<       document.getElementById('uploadPreview').style.display = 'block';
+<       document.getElementById('uploadArea').classList.add('has-file');
+---
+>         selectedFileDataURL = dataUrl; selectedFile = { name: imgFile.name, size: imgFile.size };
+>         var byteStr = atob(dataUrl.split(',')[1]), bytes = new Uint8Array(byteStr.length);
+>         for (var bi = 0; bi < byteStr.length; bi++) bytes[bi] = byteStr.charCodeAt(bi);
+>         selectedFileBlob = new Blob([bytes], { type: 'image/jpeg' });
+>         var kb = (dataUrl.length * 0.75 / 1024).toFixed(0);
+>         document.getElementById('previewImg').src = dataUrl;
+>         document.getElementById('fileName').textContent = imgFile.name;
+>         document.getElementById('fileSize').textContent = '✓ บีบอัดแล้ว ' + kb + ' KB · ' + finalW + '×' + finalH + 'px';
+>         document.getElementById('uploadDefault').style.display = 'none';
+>         document.getElementById('uploadPreview').style.display = 'block';
+>         document.getElementById('uploadArea').classList.add('has-file');
+>       };
+>       img.src = ev.target.result;
+513,515c555,579
+<     img.src = ev.target.result;
+<   };
+<   reader.readAsDataURL(file);
+---
+>     reader.readAsDataURL(imgFile);
+>   }
+> 
+>   if (isHeicFile(file)) {
+>     showToast('กำลังแปลงไฟล์ HEIC เป็น JPG...', 'warn');
+>     loadHeic2Any()
+>       .then(function() { return window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 }); })
+>       .then(function(converted) {
+>         if (Array.isArray(converted)) converted = converted[0];
+>         var convertedFile = new File(
+>           [converted],
+>           file.name.replace(/\.hei[cf]$/i, '.jpg'),
+>           { type: 'image/jpeg' }
+>         );
+>         processImageFile(convertedFile);
+>       })
+>       .catch(function(e) {
+>         console.error('HEIC convert error:', e);
+>         errEl.textContent = 'ไม่สามารถแปลงไฟล์ HEIC นี้ได้ ลองตั้งกล้อง iPhone เป็น "Most Compatible" (Settings > Camera > Formats) แล้วถ่ายใหม่ หรือเลือกไฟล์ .jpg แทน';
+>         errEl.style.display = 'block'; input.value = '';
+>       });
+>     return;
+>   }
+> 
+>   processImageFile(file);
