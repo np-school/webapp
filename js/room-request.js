@@ -1,5 +1,9 @@
 /* ══════════════════════ STATE ══════════════════════ */
 /* ══ Page State ══ */
+/* ✏️ ต้องแก้: นำ URL ของ Cloud Function "uploadBookingAttachment" มาใส่ที่นี่
+   (ดูขั้นตอน deploy ใน functions/drive-upload-booking.js) — ก่อน deploy ระบบ
+   จะแจ้ง toast เตือนแล้วข้ามการอัปโหลดไฟล์แนบ (ยังบันทึกการจองได้ปกติ) */
+var BOOKING_UPLOAD_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/uploadBookingAttachment'; /* ✏️ */
 var currentUser = null;
 var allBookings = [], allRooms = [];
 var viewYear = new Date().getFullYear(), viewMonth = new Date().getMonth();
@@ -664,7 +668,12 @@ function goBookingPage(p) { var t = Math.ceil(allBookings.length / PAGE_SIZE) ||
 
 function cancelBooking(id) {
   if (!confirm('ยืนยันการยกเลิกคำขอนี้?')) return;
-  db.collection('bookings').doc(id).delete()
+  var booking = allBookings.find(function(b) { return b.id === id; });
+  /* ลบไฟล์แนบใน Storage ก่อน (ถ้ามี) แล้วค่อยลบ document — ไม่รอผลไฟล์แนบ
+     ล้มเหลว เพราะไม่ควรบล็อกการยกเลิกคำขอหลัก (ดู deleteBookingAttachmentIfAny ใน common.js) */
+  deleteBookingAttachmentIfAny(booking).then(function() {
+    return db.collection('bookings').doc(id).delete();
+  })
     .then(function() { showToast('ยกเลิกคำขอเรียบร้อยแล้ว'); })
     .catch(function(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); });
 }
@@ -704,13 +713,43 @@ function submitBooking(e) {
      .finally(function() { btn.disabled = false; btn.textContent = editId ? 'บันทึกการแก้ไข' : 'ยืนยันข้อมูลการจอง'; });
   }
   if (selectedFileBlob) {
-    if (!storage) { showToast('Storage ยังไม่พร้อมใช้งาน', 'error'); btn.disabled = false; btn.textContent = editId ? 'บันทึกการแก้ไข' : 'ยืนยันข้อมูลการจอง'; return; }
-    var path = 'booking-attachments/' + currentUser.uid + '/' + Date.now() + '_' + selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    var ref = storage.ref().child(path);
+    if (!BOOKING_UPLOAD_URL || BOOKING_UPLOAD_URL.indexOf('XXXXXX') !== -1) {
+      showToast('ยังไม่ได้ตั้งค่าอัปโหลดไฟล์แนบไป Google Drive (ข้ามไฟล์แนบ บันทึกการจองต่อโดยไม่มีไฟล์)', 'warn');
+      baseData.hasLayout = false; baseData.layoutName = null; doSave();
+      return;
+    }
     showToast('กำลังอัปโหลดไฟล์แนบ...');
-    ref.put(selectedFileBlob, { contentType: 'image/jpeg' }).then(function(snap) { return snap.ref.getDownloadURL(); }).then(function(url) {
-      baseData.hasLayout = true; baseData.layoutName = selectedFile.name; baseData.layoutUrl = url; doSave();
-    }).catch(function(err) { showToast('อัปโหลดไฟล์ไม่สำเร็จ: ' + err.message, 'error'); btn.disabled = false; btn.textContent = editId ? 'บันทึกการแก้ไข' : 'ยืนยันข้อมูลการจอง'; });
+    /* selectedFileDataURL คือ 'data:image/jpeg;base64,XXXX' — ตัด prefix เหลือแค่ base64 ล้วน
+       ก่อนส่งให้ Cloud Function (เหมือน pattern ที่ repair-user.js ใช้กับ uploadRepairPhoto) */
+    var base64Data = selectedFileDataURL.split(',')[1];
+    fetch(BOOKING_UPLOAD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: selectedFile.name,
+        mimeType: 'image/jpeg',
+        data: base64Data,
+        room: document.getElementById('roomSelect').value,
+        requesterName: document.getElementById('fullName').value,
+        bookingDate: selectedDates[0]
+      })
+    })
+      .then(function(res) {
+        return res.json().then(function(data) {
+          if (!res.ok || !data || !data.url) {
+            throw new Error((data && data.error) || ('อัปโหลดไม่สำเร็จ (HTTP ' + res.status + ')'));
+          }
+          return data;
+        });
+      })
+      .then(function(data) {
+        baseData.hasLayout = true; baseData.layoutName = data.name; baseData.layoutUrl = data.url; baseData.layoutFileId = data.fileId;
+        doSave();
+      })
+      .catch(function(err) {
+        showToast('อัปโหลดไฟล์ไม่สำเร็จ: ' + err.message, 'error');
+        btn.disabled = false; btn.textContent = editId ? 'บันทึกการแก้ไข' : 'ยืนยันข้อมูลการจอง';
+      });
   } else { baseData.hasLayout = false; baseData.layoutName = null; doSave(); }
 }
 

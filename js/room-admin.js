@@ -633,7 +633,7 @@
   function confirmReject(){var r=document.getElementById('rejectReason').value.trim();if(!r){showToast('กรุณาระบุเหตุผล','warn');return;}db.collection('bookings').doc(pendingId).update({status:'rejected',rejectReason:r,rejectedBy:currentAdmin.displayName||currentAdmin.email,rejectedByEmail:currentAdmin.email,rejectedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){closeModal('rejectModal');showToast('บันทึกการไม่อนุมัติแล้ว');db.collection('bookings').doc(pendingId).get().then(function(doc){if(!doc.exists)return;var b=doc.data();});}).catch(function(e){showToast(e.message,'error');});}
 
   function openDelete(id,room){pendingId=id;document.getElementById('deleteModalText').textContent='ต้องการลบคำขอห้อง "'+room+'" ใช่หรือไม่?';openModal('deleteModal');}
-  function confirmDelete(){db.collection('bookings').doc(pendingId).delete().then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
+  function confirmDelete(){var booking=allBookings.find(function(b){return b.id===pendingId;});deleteBookingAttachmentIfAny(booking).then(function(){return db.collection('bookings').doc(pendingId).delete();}).then(function(){closeModal('deleteModal');showToast('ลบแล้ว');}).catch(function(e){showToast(e.message,'error');});}
   function openRoomModal(){
     editRoomId=null;roomImageDataURL=null;roomImageBlob=null;
     document.getElementById('roomModalTitle').textContent='เพิ่มห้องใหม่';

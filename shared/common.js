@@ -670,6 +670,56 @@ function readSignatureImageFile(file, onSuccess, onError) {
 }
 
 /* ════════════════════════════════
+   ลบไฟล์แนบการจองห้อง (ใช้ตอนยกเลิก/ลบคำขอจอง —
+   room-request.js: cancelBooking(), room-admin.js: confirmDelete())
+   เดิมทั้งสองจุดลบแค่ document ใน Firestore ไม่ได้ลบไฟล์แนบตามไปด้วย
+   ทำให้ไฟล์ค้างอยู่ตลอดไป (เสียพื้นที่/ค่าใช้จ่ายสะสมเรื่อยๆ)
+
+   รองรับ 2 กรณี (เผื่อช่วงเปลี่ยนผ่านจาก Firebase Storage → Google Drive):
+   - booking.layoutFileId มีค่า → ไฟล์ใหม่ที่อัปโหลดผ่าน Drive (uploadBookingAttachment)
+     เรียก Cloud Function deleteBookingAttachment ให้ลบให้
+   - booking.layoutUrl เป็น Firebase Storage download URL (ไม่มี layoutFileId) →
+     ไฟล์เก่าก่อนย้ายระบบ ลบผ่าน firebase.storage().refFromURL() แบบเดิม
+
+   รับ booking object → คืน Promise ที่ resolve เสมอ (ไม่ throw) เพราะการลบไฟล์แนบ
+   พลาดไม่ควรบล็อกการลบ booking หลัก
+   ════════════════════════════════ */
+/* ✏️ ต้องแก้: นำ URL ของ Cloud Function "deleteBookingAttachment" มาใส่ที่นี่
+   (ดู functions/drive-upload-booking.js) */
+var BOOKING_ATTACHMENT_DELETE_URL = 'https://us-central1-np-webapp-74616.cloudfunctions.net/deleteBookingAttachment'; /* ✏️ */
+
+function deleteBookingAttachmentIfAny(booking) {
+  if (!booking || !booking.hasLayout) return Promise.resolve();
+
+  if (booking.layoutFileId) {
+    if (!BOOKING_ATTACHMENT_DELETE_URL || BOOKING_ATTACHMENT_DELETE_URL.indexOf('XXXXXX') !== -1) {
+      console.warn('[BookingAttachment] ยังไม่ได้ตั้งค่า BOOKING_ATTACHMENT_DELETE_URL — ข้ามการลบไฟล์ใน Drive');
+      return Promise.resolve();
+    }
+    return fetch(BOOKING_ATTACHMENT_DELETE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileId: booking.layoutFileId })
+    }).catch(function(e) { console.warn('[BookingAttachment] ลบไฟล์ใน Drive ไม่สำเร็จ:', e && e.message); });
+  }
+
+  if (booking.layoutUrl) {
+    /* ไฟล์เก่าก่อนย้ายไป Drive — ยังอยู่ใน Firebase Storage */
+    try {
+      return firebase.storage().refFromURL(booking.layoutUrl).delete()
+        .catch(function(e) {
+          console.warn('[BookingAttachment] ลบไฟล์ Storage เก่าไม่สำเร็จ:', e && e.code, e && e.message);
+        });
+    } catch (e) {
+      console.warn('[BookingAttachment] refFromURL error:', e);
+      return Promise.resolve();
+    }
+  }
+
+  return Promise.resolve();
+}
+
+/* ════════════════════════════════
    Portfolio status order (ใช้เทียบ/sort ลำดับสถานะเอกสาร)
    ✏️ เดิมประกาศซ้ำ 3 จุดใน portfolio-admin.js (ค่าตรงกันทุกจุด) — รวมมาไว้ที่นี่
    หมายเหตุ: ไม่รวมกับ ORDER ใน buildWorkflowBar() ของ portfolio-admin.js
