@@ -37,7 +37,7 @@ const { Readable } = require("stream");
 const DRIVE_SA_KEY = defineSecret("DRIVE_SA_KEY"); // secret ตัวเดียวกับ drive-upload.js
 
 /* ✏️ แก้เป็น Folder ID ของโฟลเดอร์ปลายทางสำหรับไฟล์แนบการจองห้องใน Shared Drive */
-const ROOT_FOLDER_ID = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+const ROOT_FOLDER_ID = "18Pu_Mc1ISWEBA2FtwEQJiHBVFpgEkcZ8";
 
 /* ✏️ อีเมลจริงในโดเมนโรงเรียนที่ service account จะสวมสิทธิ์ — ใช้ตัวเดียวกับ
    drive-upload.js ได้เลยถ้า Domain-Wide Delegation ตั้งไว้แล้ว */
