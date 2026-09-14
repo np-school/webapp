@@ -1828,13 +1828,13 @@ function renderDocTypeBars() {
     var pctFinal = Math.round((finalApproved / teacherCount) * 100);
 
     return '<div class="docbar-row">' +
-      '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
+      '<div class="docbar-icon" style="background:color-mix(in srgb, ' + dt.color + ' 9%, transparent);">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<span class="docbar-label" title="' + esc2(dt.label) + '">' + esc2(dt.short || dt.label) + '</span>' +
       '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;width:90px;">' +
         '<div class="docbar-track" style="width:90px;">' +
-          '<div class="docbar-fill" style="width:' + pct + '%;background:' + dt.color + '55;"></div>' +
+          '<div class="docbar-fill" style="width:' + pct + '%;background:color-mix(in srgb, ' + dt.color + ' 33%, transparent);"></div>' +
         '</div>' +
         '<div class="docbar-track" style="width:90px;">' +
           '<div class="docbar-fill" style="width:' + pctFinal + '%;background:' + dt.color + ';"></div>' +
@@ -2043,7 +2043,7 @@ function renderGroupDetail() {
       : '';
 
     return '<div style="display:flex;align-items:center;gap:var(--gap-item);margin-bottom:var(--gap-tight);">' +
-      '<div style="width:28px;height:28px;border-radius:8px;background:' + (dt.color+'22') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+      '<div style="width:28px;height:28px;border-radius:8px;background:color-mix(in srgb, ' + dt.color + ' 13%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<div style="width:140px;flex-shrink:0;">' +
@@ -2271,7 +2271,7 @@ function renderTeacherDocBars(t) {
       coursesHtml = '<span style="font-size:9px;font-weight:800;background:var(--purple-light);color:var(--purple);padding:1px 6px;border-radius:6px;margin-left:4px;">' + sub._courses.length + ' วิชา</span>';
     }
     return '<div class="docbar-row" style="margin-bottom:12px;">' +
-      '<div class="docbar-icon" style="background:' + dt.color + '18;">' +
+      '<div class="docbar-icon" style="background:color-mix(in srgb, ' + dt.color + ' 9%, transparent);">' +
         '<i data-lucide="' + dt.icon + '" style="width:13px;height:13px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<span class="docbar-label" title="' + esc2(dt.label) + '">' + esc2(dt.short || dt.label) + coursesHtml + '</span>' +
@@ -2307,7 +2307,7 @@ function renderTeacherSubTable(t) {
 
     html += '<div class="sub-doc-row">';
     html += '<div class="sub-doc-header" onclick="toggleSubDocRow(\'' + rowId + '\')">' +
-      '<div style="width:32px;height:32px;border-radius:10px;background:' + dt.color + '18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+      '<div style="width:32px;height:32px;border-radius:10px;background:color-mix(in srgb, ' + dt.color + ' 9%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
         '<i data-lucide="' + dt.icon + '" style="width:15px;height:15px;color:' + dt.color + ';"></i>' +
       '</div>' +
       '<div style="flex:1;min-width:0;">' +
@@ -2848,6 +2848,10 @@ function onPortfolioSubtabChange(tab) {
   currentSubTab = tab;
   if (tab === 'doctypes') loadDocTypeList();
   if (tab === 'group')    renderGroupPanel();
+  /* เผื่อกรณีเพิ่ง "เพิ่ม/แก้ไข/ลบหัวข้องาน" มาจากแท็บจัดการหัวข้องาน แล้วสลับกลับมาที่ภาพรวม
+     ต้อง render กราฟใหม่ ไม่งั้นกราฟภาพรวม (โดนัท/ความคืบหน้า/ความครบถ้วน) จะยังใช้ข้อมูลเก่าค้างอยู่
+     จนกว่าจะรีเฟรชหน้าทั้งหมด */
+  if (tab === 'overview' && _initialDataLoaded) renderCharts();
 }
 
 /* ════════════════════════════════════════════
