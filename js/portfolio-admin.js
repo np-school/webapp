@@ -1757,7 +1757,9 @@ function renderGroupBars() {
   var container = document.getElementById('groupBars');
   if (!container) return;
 
-  /* คำนวณ % ผ่านวิชาการต่อกลุ่มสาระ */
+  /* คำนวณ % ผ่านการตรวจโดยรองผู้อำนวยการฝ่ายวิชาการต่อกลุ่มสาระ
+     นับตั้งแต่สถานะ "รอง ผอ.ตรวจแล้ว (deputy_reviewed)" ขึ้นไป
+     ซึ่งรวมถึง "final_approved" ด้วย เพราะผ่านขั้นตอนรอง ผอ. มาแล้วก่อนที่ ผอ.จะอนุมัติ */
   var groupData = {};
   availableGroups.forEach(function(g) { groupData[g] = { total:0, approved:0 }; });
 
@@ -1768,7 +1770,8 @@ function renderGroupBars() {
     DOCUMENT_TYPES.forEach(function(dt) {
       groupData[g].total++;
       var sub = t.subs[dt.id];
-      if (fakeStatus(sub ? sub.status : 'none') === 'final_approved') groupData[g].approved++;
+      var st = fakeStatus(sub ? sub.status : 'none');
+      if (st === 'deputy_reviewed' || st === 'final_approved') groupData[g].approved++;
     });
   });
 
