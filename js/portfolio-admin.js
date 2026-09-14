@@ -1528,15 +1528,21 @@ function setReviewStatus(status) {
   /* ── หา Firestore doc ID ของรายวิชาที่เลือกอยู่ ──
      แต่ละ courseCode = Firestore doc แยก (_docId เก็บใน buildCourseMapFromSub)
      selectedCourseKey = courseCode ที่ user คลิกเลือก
-     reviewingSubId    = doc.id ที่ sync ไว้ใน renderCourseFileList / openReview */
-  var targetDocId = reviewingSubId;
+     reviewingSubId    = doc.id ที่ sync ไว้ใน renderCourseFileList / openReview
+     ⚠️ 1 รายวิชาอาจมีมากกว่า 1 ไฟล์ = มากกว่า 1 Firestore doc (ครูส่งหลายไฟล์ในรหัสงานเดียวกัน)
+        ต้องอัปเดตสถานะ "ทุกไฟล์" ในรายวิชานั้นพร้อมกัน ไม่ใช่แค่ไฟล์แรก
+        ไม่งั้นไฟล์ที่เหลือจะค้างสถานะ "รอตรวจ" ตลอดไป */
+  var targetDocId  = reviewingSubId;
+  var targetDocIds = [targetDocId];
 
   /* ยืนยันจาก courseMap อีกครั้ง (กันกรณี reviewingSubId ยังเก่า) */
   if (selectedCourseKey) {
     var cm = buildCourseMapFromSub(sub);
     var cf = cm[selectedCourseKey] || [];
     if (cf.length > 0 && cf[0]._docId) {
-      targetDocId = cf[0]._docId;
+      targetDocId  = cf[0]._docId;
+      targetDocIds = cf.map(function(f){ return f._docId; }).filter(Boolean);
+      if (!targetDocIds.length) targetDocIds = [targetDocId];
     }
   }
 
@@ -1545,9 +1551,10 @@ function setReviewStatus(status) {
     return;
   }
 
-  /* หา Firestore doc จริงใน _courses */
-  var courses = sub._courses || [];
-  var targetDoc = courses.find(function(d){ return d.id === targetDocId; });
+  /* หา Firestore doc จริงใน _courses (ของทุกไฟล์ในรายวิชานี้) */
+  var courses    = sub._courses || [];
+  var targetDoc  = courses.find(function(d){ return d.id === targetDocId; });
+  var targetDocs = courses.filter(function(d){ return targetDocIds.indexOf(d.id) !== -1; });
 
   /* ── map status → field name สำหรับเก็บ note แยกต่อขั้น ── */
   var noteFieldMap = {
@@ -1620,23 +1627,23 @@ function setReviewStatus(status) {
         ).catch(function(e) { console.warn('บันทึก lastSignatureURL ไม่สำเร็จ:', e); });
       }
     }
-    return db.collection('portfolio_submissions').doc(targetDocId).update(updatePayload);
+    return batchUpdateSubmissions(targetDocIds, updatePayload);
   }).then(function() {
     showToast(toastMsgs[status] || status, toastType);
 
-    /* อัปเดต in-memory เฉพาะ Firestore doc ที่เลือก */
-    if (targetDoc) {
-      targetDoc.status    = status;
-      targetDoc.adminNote = updatePayload.adminNote;
-      targetDoc[noteField]     = note;
-      targetDoc[reviewerField] = currentUserEmail;
+    /* อัปเดต in-memory ทุก Firestore doc ที่เลือก (ทุกไฟล์ในรายวิชาเดียวกัน) */
+    targetDocs.forEach(function(td) {
+      td.status    = status;
+      td.adminNote = updatePayload.adminNote;
+      td[noteField]     = note;
+      td[reviewerField] = currentUserEmail;
       if (nameFieldMap[status] && currentUserName) {
-        targetDoc[nameFieldMap[status]] = currentUserName;
+        td[nameFieldMap[status]] = currentUserName;
       }
       if (updatePayload[sigUrlFieldMap[status]]) {
-        targetDoc[sigUrlFieldMap[status]] = updatePayload[sigUrlFieldMap[status]];
+        td[sigUrlFieldMap[status]] = updatePayload[sigUrlFieldMap[status]];
       }
-    }
+    });
 
     /* คำนวณ merged status ของ container ใหม่ (ต่ำสุดของทุก doc) */
     var ORDER = PORTFOLIO_STATUS_ORDER; /* ✏️ ย้ายมา common.js แล้ว */
@@ -1654,6 +1661,21 @@ function setReviewStatus(status) {
 }
 
 /* ─── HELPERS ─── */
+
+/* อัปเดตหลาย Firestore doc พร้อมกันด้วย payload เดียวกัน (ใช้ตอนอนุมัติ/ตีกลับรายวิชา
+   ที่มีมากกว่า 1 ไฟล์ ให้ทุกไฟล์ในรายวิชาเดียวกันได้สถานะเดียวกันในคราวเดียว) */
+function batchUpdateSubmissions(docIds, payload) {
+  var ids = (docIds || []).filter(Boolean);
+  if (!ids.length) return Promise.resolve();
+  if (ids.length === 1) {
+    return db.collection('portfolio_submissions').doc(ids[0]).update(payload);
+  }
+  var batch = db.batch();
+  ids.forEach(function(id) {
+    batch.update(db.collection('portfolio_submissions').doc(id), payload);
+  });
+  return batch.commit();
+}
 
 /* ══════════════════════════════════════
    CHARTS
