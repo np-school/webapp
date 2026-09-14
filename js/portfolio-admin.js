@@ -95,7 +95,7 @@ var currentSubTab = 'overview';
 
 var _groupData = {}; /* cache ข้อมูลกลุ่ม */
 
-var SEG_COLORS = { final:'var(--c-green)', deputy:'var(--c-violet)', assist:'var(--c-amber)', head:'var(--c-sky)', submitted:'var(--c-green)', revision:'var(--c-red-mid)' };
+var SEG_COLORS = { final:'var(--c-green)', deputy:'var(--c-violet)', assist:'var(--c-amber)', head:'var(--c-sky)', submitted:'var(--c-ink-tint)', revision:'var(--c-red-mid)' };
 var SEG_LABELS = { final:'ผอ.อนุมัติ', deputy:'รอง ผอ.ตรวจแล้ว', assist:'ผช.ผอ.ตรวจแล้ว', head:'หัวหน้าฯ ตรวจแล้ว', submitted:'รอตรวจ', revision:'ให้แก้ไข' };
 var SEG_KEYS   = ['final','deputy','assist','head','submitted','revision'];
 
@@ -1671,7 +1671,7 @@ function renderDonutChart() {
   var statusConfig = [
     { key:'none',               label:'ยังไม่ส่ง',                color:cssVar('--border') },
     { key:'revision',           label:'ให้แก้ไข',                 color:cssVar('--c-red-mid') },
-    { key:'submitted',          label:'รอตรวจ',                   color:cssVar('--c-green') },
+    { key:'submitted',          label:'รอตรวจ',                   color:cssVar('--c-ink-tint') },
     { key:'head_reviewed',      label:'หัวหน้าฯ ตรวจแล้ว',        color:cssVar('--c-sky') },
     { key:'assistant_reviewed', label:'ผช.ผอ.ตรวจแล้ว',           color:cssVar('--c-amber') },
     { key:'deputy_reviewed',    label:'รอง ผอ.ตรวจแล้ว',          color:cssVar('--c-violet') },
@@ -1734,7 +1734,7 @@ function renderDonutChart() {
   document.getElementById('donutTotal').textContent = total;
 
   /* Legend — แสดงเรียงจาก approved → none */
-  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"var(--c-green)"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"var(--c-violet)"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"var(--c-amber)"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"var(--c-sky)"},{key:"submitted",label:"รอตรวจ",color:"var(--c-green)"},{key:"revision",label:"ให้แก้ไข",color:"var(--c-red-mid)"},{key:"none",label:"ยังไม่ส่ง",color:"var(--border)"}];
+  var legendConfig = [{key:"final_approved",label:"ผอ.อนุมัติแล้ว",color:"var(--c-green)"},{key:"deputy_reviewed",label:"รอง ผอ.ตรวจแล้ว",color:"var(--c-violet)"},{key:"assistant_reviewed",label:"ผช.ผอ.ตรวจแล้ว",color:"var(--c-amber)"},{key:"head_reviewed",label:"หัวหน้าฯ ตรวจแล้ว",color:"var(--c-sky)"},{key:"submitted",label:"รอตรวจ",color:"var(--c-ink-tint)"},{key:"revision",label:"ให้แก้ไข",color:"var(--c-red-mid)"},{key:"none",label:"ยังไม่ส่ง",color:"var(--border)"}];
   var leg = document.getElementById("donutLegend");
   leg.innerHTML = legendConfig.map(function(s) {
 
