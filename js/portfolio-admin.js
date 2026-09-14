@@ -1797,7 +1797,7 @@ function renderGroupBars() {
         '<span class="hbar-pct" style="color:' + color + ';">' + pct + '%</span>' +
       '</div>' +
       '<div class="hbar-track">' +
-        '<div class="hbar-fill" style="width:' + pct + '%;background:' + (pct >= 80 ? 'linear-gradient(90deg,var(--emerald),var(--green-mid))' : pct >= 50 ? 'linear-gradient(90deg,var(--accent-warn),var(--role-hog-border))' : 'linear-gradient(90deg,var(--red-bright),var(--rose-pale))') + ';"></div>' +
+        '<div class="hbar-fill" style="width:' + pct + '%;background:' + (pct >= 80 ? 'linear-gradient(90deg,var(--emerald),var(--green-mid))' : pct >= 50 ? 'linear-gradient(90deg,var(--accent-warn),var(--role-hog-border))' : 'linear-gradient(90deg,var(--red-bright),var(--red-pale))') + ';"></div>' +
       '</div>' +
       '<div style="font-size:9px;color:var(--text3);font-weight:600;margin-top:1px;">' + d.approved + '/' + d.total + ' รายการ</div>' +
     '</div>';
