@@ -1907,10 +1907,6 @@ function renderGroupBarChart(groups) {
     return;
   }
 
-  /* หา max สำหรับ scale */
-  var maxTotal = 0;
-  groups.forEach(function(g){ if (_groupData[g].total > maxTotal) maxTotal = _groupData[g].total; });
-
   var barH = 36; /* ความสูงแต่ละแถว px */
   var labelW = 160; /* ความกว้าง label */
   var numW   = 52;
@@ -1932,11 +1928,12 @@ function renderGroupBarChart(groups) {
     var sentCount = d.head + d.assist + d.deputy + d.final;
     var pct = d.total > 0 ? Math.round((sentCount / d.total) * 100) : 0;
 
-    /* stacked bar segments */
+    /* stacked bar segments — ใช้ d.total ของแถวตัวเอง (ไม่ใช่ maxTotal) เพื่อให้ความยาวรวม
+       ของแท่งสัมพันธ์กับ % ความคืบหน้าจริงของกลุ่มนั้น */
     var bars = SEG_KEYS.map(function(k) {
       var v = d[k] || 0;
-      if (!v || !maxTotal) return '';
-      var w = Math.max(2, Math.round((v / maxTotal) * 100));
+      if (!v || !d.total) return '';
+      var w = Math.max(2, Math.round((v / d.total) * 100));
       return '<div style="height:' + barH + 'px;width:' + w + '%;background:' + SEG_COLORS[k] + ';display:flex;align-items:center;justify-content:center;transition:width .5s;" title="' + SEG_LABELS[k] + ': ' + v + ' รายการ">' +
         (v >= 2 ? '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.9);">' + v + '</span>' : '') +
       '</div>';
