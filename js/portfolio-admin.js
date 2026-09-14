@@ -1806,12 +1806,21 @@ function renderDocTypeBars() {
   var container = document.getElementById('docTypeBars');
   if (!container) return;
 
-  var teacherCount = Object.values(teacherMap).filter(function(t){ return t.isTeacher; }).length;
+  var teachers = Object.values(teacherMap).filter(function(t){ return t.isTeacher; });
+  var teacherCount = teachers.length;
   if (!teacherCount) { container.innerHTML = ''; return; }
 
   container.innerHTML = DOCUMENT_TYPES.map(function(dt) {
-    var submitted     = allSubs.filter(function(s){ return s.docTypeId === dt.id && fakeStatus(s.status) !== 'none'; }).length;
-    var finalApproved = allSubs.filter(function(s){ return s.docTypeId === dt.id && s.status === 'final_approved'; }).length;
+    /* นับ 1 ครั้งต่อ 1 ครู (ใช้ merged status ของ container) ไม่นับซ้ำทีละรายวิชาใน allSubs
+       ไม่งั้นครูที่ส่งหลายรายวิชาในหัวข้อเดียวกันจะทำให้ % เกิน 100 */
+    var submitted = 0, finalApproved = 0;
+    teachers.forEach(function(t) {
+      var sub = t.subs[dt.id];
+      if (!sub) return;
+      var st = sub.status || 'submitted';
+      if (fakeStatus(st) !== 'none') submitted++;
+      if (st === 'final_approved') finalApproved++;
+    });
     var pct = Math.round((submitted / teacherCount) * 100);
     var pctFinal = Math.round((finalApproved / teacherCount) * 100);
 
@@ -1842,17 +1851,18 @@ function buildGroupData() {
     if (!_groupData[grp]) _groupData[grp] = { teachers:[], submitted:0, head:0, assist:0, deputy:0, final:0, revision:0, total:0 };
     _groupData[grp].teachers.push(t);
     _groupData[grp].total += DOCUMENT_TYPES.length;
-    Object.values(t.subs).forEach(function(sub) {
-      (sub._courses || [sub]).forEach(function(doc) {
-        if (doc._isContainer) return;
-        var st = doc.status || 'submitted';
-        if      (st === 'final_approved')                      _groupData[grp].final++;
-        else if (st === 'deputy_reviewed')                     _groupData[grp].deputy++;
-        else if (st === 'assistant_reviewed')                  _groupData[grp].assist++;
-        else if (st === 'head_reviewed' || st === 'reviewed')  _groupData[grp].head++;
-        else if (st === 'revision')                            _groupData[grp].revision++;
-        else                                                   _groupData[grp].submitted++;
-      });
+    /* นับ 1 ครั้งต่อ 1 หัวข้องาน (docType) โดยใช้ "สถานะรวม" (merged status ของ container)
+       ไม่ใช่นับแยกทีละรายวิชาใน _courses — ไม่งั้นครูที่ส่งหลายรายวิชาในหัวข้อเดียวกัน
+       จะถูกนับซ้ำจนยอดรวมเกินจำนวนหัวข้องานจริง (%เกิน 100) */
+    DOCUMENT_TYPES.forEach(function(dt) {
+      var sub = t.subs[dt.id];
+      var st = sub ? (sub.status || 'submitted') : 'none';
+      if      (st === 'final_approved')                      _groupData[grp].final++;
+      else if (st === 'deputy_reviewed')                     _groupData[grp].deputy++;
+      else if (st === 'assistant_reviewed')                  _groupData[grp].assist++;
+      else if (st === 'head_reviewed' || st === 'reviewed')  _groupData[grp].head++;
+      else if (st === 'revision')                            _groupData[grp].revision++;
+      else if (st !== 'none')                                _groupData[grp].submitted++;
     });
   });
 }
@@ -1909,12 +1919,14 @@ function renderGroupBarChart(groups) {
   html += '<div style="display:flex;align-items:center;gap:0;padding-bottom:6px;border-bottom:1px solid var(--bg-alt);">' +
     '<div style="width:' + labelW + 'px;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;">กลุ่มสาระ</div>' +
     '<div style="flex:1;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">จำนวนงาน (สถานะ)</div>' +
-    '<div style="width:' + numW + 'px;font-size:10px;font-weight:800;color:var(--text3);text-align:right;flex-shrink:0;">ส่งแล้ว%</div>' +
+    '<div style="width:' + numW + 'px;font-size:10px;font-weight:800;color:var(--text3);text-align:right;flex-shrink:0;">ผ่านหัวหน้า%</div>' +
   '</div>';
 
   groups.forEach(function(g) {
     var d = groupData = _groupData[g];
-    var sentCount = d.submitted + d.head + d.assist + d.deputy + d.final + d.revision;
+    /* นับ % จากงานที่ "หัวหน้ากลุ่มสาระอนุมัติ (ตรวจผ่าน) ขึ้นไป" เท่านั้น
+       ไม่รวม submitted (รอตรวจ) และ revision (ตีกลับให้แก้) เพื่อไม่ให้ % เกิน 100 */
+    var sentCount = d.head + d.assist + d.deputy + d.final;
     var pct = d.total > 0 ? Math.round((sentCount / d.total) * 100) : 0;
 
     /* stacked bar segments */
@@ -1975,17 +1987,19 @@ function renderGroupDetail() {
   }
 
   var d = _groupData[grp];
-  var sentCount = d.submitted + d.head + d.assist + d.deputy + d.final + d.revision;
+  /* นับ % จากงานที่ "หัวหน้ากลุ่มสาระอนุมัติขึ้นไป" เท่านั้น (ไม่รวม submitted/revision) */
+  var sentCount = d.head + d.assist + d.deputy + d.final;
   var pct  = d.total > 0 ? Math.round((sentCount / d.total) * 100) : 0;
   var fPct = d.total > 0 ? Math.round((d.final   / d.total) * 100) : 0;
+  var notYetHead = Math.max(0, d.total - sentCount); /* ยังไม่ถึง/ไม่ผ่านหัวหน้ากลุ่มสาระ */
 
   /* stat row */
   var statCards = [
-    { label:'ครูทั้งหมด',   val:d.teachers.length, color:'var(--purple)', bg:'var(--purple-light)', icon:'users' },
-    { label:'ส่งงานแล้ว%', val:pct + '%',           color:'var(--c-green)', bg:'var(--green-pale)', icon:'send' },
-    { label:'ผ่าน ผอ.%',   val:fPct + '%',          color:'var(--c-green)', bg:'var(--c-green-tint)', icon:'shield-check' },
-    { label:'รอตรวจ',      val:d.submitted,          color:'var(--c-sky)', bg:'var(--sky-light)', icon:'clock' },
-    { label:'ยังไม่ส่ง',   val:Math.max(0, d.total - sentCount), color:'var(--c-red-mid)', bg:'var(--red-pale)', icon:'alert-circle' },
+    { label:'ครูทั้งหมด',      val:d.teachers.length, color:'var(--purple)', bg:'var(--purple-light)', icon:'users' },
+    { label:'ผ่านหัวหน้า%',   val:pct + '%',           color:'var(--c-green)', bg:'var(--green-pale)', icon:'send' },
+    { label:'ผ่าน ผอ.%',      val:fPct + '%',          color:'var(--c-green)', bg:'var(--c-green-tint)', icon:'shield-check' },
+    { label:'รอตรวจ/รอแก้ไข', val:d.submitted + d.revision, color:'var(--c-sky)', bg:'var(--sky-light)', icon:'clock' },
+    { label:'ยังไม่ผ่านหัวหน้า', val:notYetHead, color:'var(--c-red-mid)', bg:'var(--red-pale)', icon:'alert-circle' },
   ].map(function(s) {
     return '<div class="stat-card" style="flex-direction:column;gap:4px;padding:12px 14px;">' +
       '<div style="width:32px;height:32px;border-radius:10px;background:' + s.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
