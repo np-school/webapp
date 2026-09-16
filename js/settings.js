@@ -527,7 +527,9 @@ function saveSiteTheme() {
     siteThemeConfig = { member: member, staff: staff };
     /* preview สีทันทีในหน้านี้ (settings.html ใช้ navTheme:'blue' เสมอ) */
     if (typeof applySiteThemeColors === 'function') applySiteThemeColors('blue');
-    try { localStorage.setItem('np_site_theme_cache', JSON.stringify(siteThemeConfig)); } catch (e) {}
+    /* format ต้องตรงกับตัวอ่านใน shared/common.js (applySiteThemeColors) —
+       ห่อด้วย { d: data, t: timestamp } เพื่อรองรับ TTL */
+    try { localStorage.setItem('np_site_theme_cache', JSON.stringify({ d: siteThemeConfig, t: Date.now() })); } catch (e) {}
     showToast('บันทึกสีทั้งเว็บเรียบร้อย');
   }).catch(function(err) {
     showToast('บันทึกไม่สำเร็จ: ' + (err && err.message ? err.message : err));

@@ -851,8 +851,17 @@ function handleLogout() {
       เงียบทิ้งไปเฉยๆ
    4. isSA ไม่ต้องรอ doc.exists อีกต่อไป (เดิมถ้า SuperAdmin ไม่มี doc ใน
       admins/ จะโดน return ก่อนถึงเงื่อนไข isSA ทำให้เมนู SuperAdmin ไม่ขึ้นเลย)
-   ════════════════════════════════ */
-var ADMIN_ACCESS_CACHE_PREFIX = 'np_admin_access_cache_';
+
+   ── TTL (2 ก.ย. update) ──
+   เดิม cache ไม่มีวันหมดอายุ ถ้าแอดมิน revoke สิทธิ์ใครไป แล้วเน็ตของคน
+   นั้นดันช้า/หลุดตอนโหลดหน้าถัดไป เมนูที่ควรถูกซ่อนจะยังโผล่ค้างจาก cache
+   เก่าไปเรื่อยๆ (retry fail ก็ยังใช้ cache เดิมต่อ) → เพิ่ม timestamp กำกับ
+   cache ไว้ด้วย ถ้า cache เก่าเกิน ADMIN_ACCESS_CACHE_TTL_MS จะไม่ใช้โชว์ทันที
+   ในขั้นตอนที่ 1 อีกต่อไป (รอผลจริงจาก Firestore เท่านั้น) — ป้องกันสิทธิ์
+   ที่ถูก revoke ไปแล้วโชว์ค้างนานเกินไป ในขณะที่ cache ที่ยังไม่หมดอายุ
+   ยังคงโชว์ทันทีเหมือนเดิมเพื่อ UX ที่ลื่นไหล */
+var ADMIN_ACCESS_CACHE_PREFIX  = 'np_admin_access_cache_';
+var ADMIN_ACCESS_CACHE_TTL_MS  = 15 * 60 * 1000; /* 15 นาที */
 
 function checkAdminAccess(email) {
   if (!email) return;
@@ -860,9 +869,11 @@ function checkAdminAccess(email) {
   var isSA     = lEmail === SUPERADMIN_EMAIL;
   var cacheKey = ADMIN_ACCESS_CACHE_PREFIX + lEmail;
 
-  /* 1) โชว์จาก cache ก่อนทันที (ถ้ามี) กันเมนูไม่ขึ้นระหว่างรอเน็ต */
+  /* 1) โชว์จาก cache ก่อนทันที (ถ้ามีและยังไม่หมดอายุ) กันเมนูไม่ขึ้นระหว่างรอเน็ต */
   try {
-    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    var entry  = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    var fresh  = entry && (Date.now() - entry.t) < ADMIN_ACCESS_CACHE_TTL_MS;
+    var cached = fresh ? entry.p : null;
     if (cached || isSA) _applyAdminPermissions(cached, isSA);
   } catch (e) { /* localStorage/JSON พัง ก็ข้ามไปรอผลจาก Firestore ตรงๆ */ }
 
@@ -881,7 +892,9 @@ function _fetchAdminDoc(lEmail, isSA, cacheKey, attempt) {
         return;
       }
       var p = doc.data().permissions || {};
-      try { localStorage.setItem(cacheKey, JSON.stringify(p)); } catch (e) {}
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ p: p, t: Date.now() }));
+      } catch (e) {}
       _applyAdminPermissions(p, isSA);
     })
     .catch(function(err) {
@@ -934,8 +947,12 @@ function _toggleAdminItem(id, show) {
    แอดมิน (SuperAdmin) ตั้งสีหลัก 1 สี ต่อ role ("สมาชิก"/"เจ้าหน้าที่")
    ที่ site_config/theme ใน Firestore แล้วระบบจะคำนวณเฉด เข้ม/กลาง/อ่อน/พื้นหลัง
    ให้อัตโนมัติ แล้วเขียนทับ CSS var บน :root ทุกหน้าที่โหลดผ่าน buildPageShell()
+   TTL: ธีมเปลี่ยนไม่บ่อย จึงตั้ง TTL ยาวกว่า admin access cache (24 ชม.)
+   แค่กันไม่ให้ธีมเก่าค้างอยู่ถาวรถ้าแอดมินเปลี่ยนสีแล้วผู้ใช้ไม่ได้เข้าเว็บ
+   มานาน — ถ้า cache หมดอายุ จะรอสีจาก Firestore แทนที่จะโชว์สีเก่าทันที
    ════════════════════════════════ */
-var SITE_THEME_CACHE_KEY = 'np_site_theme_cache';
+var SITE_THEME_CACHE_KEY     = 'np_site_theme_cache';
+var SITE_THEME_CACHE_TTL_MS  = 24 * 60 * 60 * 1000; /* 24 ชั่วโมง */
 
 function _hexToRgb(hex) {
   hex = (hex || '').replace('#', '');
@@ -1009,8 +1026,10 @@ function _setAccentVars(data, navTheme) {
    แล้วดึงค่าล่าสุดจาก Firestore มาอัปเดตซ้ำ + cache ไว้ใช้รอบถัดไป */
 function applySiteThemeColors(navTheme) {
   try {
-    var cached = JSON.parse(localStorage.getItem(SITE_THEME_CACHE_KEY) || 'null');
-    if (cached) _setAccentVars(cached, navTheme);
+    var entry = JSON.parse(localStorage.getItem(SITE_THEME_CACHE_KEY) || 'null');
+    if (entry && (Date.now() - entry.t) < SITE_THEME_CACHE_TTL_MS) {
+      _setAccentVars(entry.d, navTheme);
+    }
   } catch (e) { /* localStorage/JSON พัง ก็ข้ามไปใช้สี default ของ styles-new.css */ }
 
   if (typeof db === 'undefined') return;
@@ -1018,8 +1037,10 @@ function applySiteThemeColors(navTheme) {
     if (!doc.exists) return;
     var data = doc.data();
     _setAccentVars(data, navTheme);
-    try { localStorage.setItem(SITE_THEME_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
-  }).catch(function() { /* ออฟไลน์/error → ใช้สี default หรือ cache เดิมต่อไป */ });
+    try {
+      localStorage.setItem(SITE_THEME_CACHE_KEY, JSON.stringify({ d: data, t: Date.now() }));
+    } catch (e) {}
+  }).catch(function() { /* ออฟไลน์/error → ใช้สี default หรือ cache เดิมต่อไป (ถ้ายังไม่หมดอายุ) */ });
 }
 
 function buildPageShell(config) {

@@ -49,14 +49,31 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-var CACHE_NAME = 'np-origins-v9';
+var CACHE_NAME = 'np-origins-v10';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
-   cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้ */
+   cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้
+
+   v10: แก้ 2 บั๊ก —
+   1. 'shared/styles.css' ไม่มีไฟล์นี้จริง (ของจริงคือ styles-new.css) ทำให้
+      fetch 404 ทุกครั้งตอน install แล้วโดน catch ทิ้งเงียบๆ → CSS ไม่เคยถูก
+      precache เลย ต้องรอ cache-first ตอน runtime แทน (เห็น FOUC ตอนโหลดครั้งแรก)
+   2. เติมหน้า .html ที่ขาดไปให้ครบ กันเปิดหน้าที่ไม่เคย visit มาก่อนตอนออฟไลน์
+      ไม่ได้เพราะไม่เคยอยู่ใน cache เลย */
 var ALL_FILES = [
   '/webapp/index.html',
   '/webapp/guide.html',
+  '/webapp/page-template.html',
+  '/webapp/admin-role.html',
+  '/webapp/foodcourt-admin.html',
+  '/webapp/ipad-lending.html',
+  '/webapp/profile.html',
+  '/webapp/repair-admin.html',
+  '/webapp/repair-user.html',
+  '/webapp/settings.html',
+  '/webapp/staff.html',
   '/webapp/shared/common.js',
-  '/webapp/shared/styles.css',
+  '/webapp/shared/styles-new.css',
+  '/webapp/shared/tailwind-built.css',
   '/webapp/shared/firebase.js',
   '/webapp/manifest.json',
   '/webapp/room-request.html',
