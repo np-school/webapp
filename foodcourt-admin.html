@@ -52,21 +52,32 @@
     /* ── รายการประจำ: หัวคอลัมน์ + แถวกรอกยอด (รับ/จ่าย/หักเข้าบัญชีร้านน้ำโรงเรียน) ──
        แถวและหัวคอลัมน์ใช้ความกว้างชุดเดียวกัน (.rec-entry-col) เพื่อให้ชิดตรงกันเป๊ะ
        ไม่ตัดบรรทัดลงเป็นหลายแถว (nowrap) แต่ห่อด้วย .rec-entry-scroll ให้เลื่อนแนวนอนได้บนจอแคบ */
-    .rec-entry-scroll { overflow-x:auto; padding-bottom:4px; }
-    .rec-entry-headrow { display:flex; align-items:flex-end; gap:var(--gap-card); padding:0 16px; margin-bottom:6px; min-width:max-content; }
-    .rec-entry-headname { flex:1; min-width:140px; }
-    .rec-entry-headcol { width:96px; flex-shrink:0; text-align:center; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; line-height:1.2; white-space:normal; }
-    .rec-entry-row { display:flex; align-items:center; gap:var(--gap-card); padding:10px 16px; background:var(--slate-lt); border:1px solid var(--border); border-radius:12px; flex-wrap:nowrap; min-width:max-content; }
-    .rec-entry-name { flex:1; min-width:140px; font-weight:700; font-size:13px; }
-    .rec-entry-input { width:96px; flex-shrink:0; text-align:right; }
-    .rec-entry-input.in { border-color:var(--green); }
+    .rec-entry-scroll { padding-bottom:4px; }
+/* หัวตารางกับแถวใช้ grid เดียวกัน: ชื่อยืดได้ + 3 คอลัมน์ตัวเลขกว้างคงที่ → ตรงกันเสมอ ไม่ล้น ไม่ต้องเลื่อนข้าง */
+.rec-entry-headrow, .rec-entry-row { display:grid; grid-template-columns:minmax(0,1fr) repeat(3,84px); gap:8px; align-items:center; }
+.rec-entry-headrow { align-items:end; padding:0 13px; margin-bottom:6px; }
+.rec-entry-headname { min-width:0; }
+.rec-entry-headcol { text-align:center; font-size:10px; font-weight:800; letter-spacing:.3px; line-height:1.2; }
+.rec-entry-row { padding:8px 12px; background:var(--slate-lt); border:1px solid var(--border); border-radius:12px; }
+.rec-entry-name { min-width:0; font-weight:700; font-size:13px; line-height:1.35; overflow-wrap:anywhere; }
+/* ต้องระบุ input.… เพื่อชนะกฎกลาง input[type=number]{width:100%} ใน styles-new.css (เดิมช่องเลยยืดล้นกรอบ) */
+.rec-entry-row input.rec-entry-input, .rec-def-grid input.rec-entry-input { width:100%; min-width:0; padding:8px 10px; text-align:right; }
+.rec-entry-row .shop-count-wrap { grid-column:2 / -1; justify-content:flex-end; margin-left:0; white-space:nowrap; }
+.rec-entry-row input.shop-count-input { width:72px; padding:8px 6px; text-align:center; }
+@media (max-width:520px){
+  .rec-entry-headrow, .rec-entry-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .rec-entry-headname { display:none; }
+  .rec-entry-name, .rec-entry-row .shop-count-wrap { grid-column:1 / -1; }
+  .rec-entry-row .shop-count-wrap { justify-content:flex-start; }
+}
+.rec-entry-input.in { border-color:var(--green); }
     .rec-entry-input.out { border-color:var(--red); }
     .rec-entry-input.school { border-color:var(--amber); }
     .badge-in  { background: var(--green-light); color: var(--green); }
     .badge-out { background: var(--red-light); color: var(--red); }
 .badge-school { background: var(--amber-light); color: var(--amber); }
 .tag-row { display:flex; gap:4px; flex-wrap:wrap; }
-.rec-def-grid { display:grid; grid-template-columns:repeat(3,96px); gap:var(--gap-card); }
+.rec-def-grid { display:grid; grid-template-columns:repeat(3,84px); gap:var(--gap-card); }
 .modal-type-card.active.school { border-color: var(--amber); background: var(--amber-light); }
 .modal-type-card.active.school .type-lbl { color: var(--amber); }
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }

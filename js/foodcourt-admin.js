@@ -506,7 +506,7 @@ function renderModalEntryRows(){
 
 function modalEntryRow(r){
   if(r.shopCount){
-    return `<div class="rec-entry-row" style="padding:10px 14px;border-radius:10px">
+    return `<div class="rec-entry-row">
       <div class="rec-entry-name">${r.name}</div>
       <div class="shop-count-wrap" style="margin-left:0">
         <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
@@ -514,7 +514,7 @@ function modalEntryRow(r){
       </div>
     </div>`;
   }
-  return `<div class="rec-entry-row" style="padding:10px 14px;border-radius:10px">
+  return `<div class="rec-entry-row">
     <div class="rec-entry-name">${r.name}</div>
     <input type="number" class="rec-entry-input in" id="mEntryAmtIn-${r.id}" min="0" placeholder="${dflt(r,'in')}" oninput="updateModalSumBar()">
     <input type="number" class="rec-entry-input out" id="mEntryAmtOut-${r.id}" min="0" placeholder="${dflt(r,'out')}" oninput="updateModalSumBar()">
