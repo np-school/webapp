@@ -424,15 +424,8 @@ function manageRecCard(r){
 function renderDailyEntry(){
   if(!document.getElementById('entryDate').value) document.getElementById('entryDate').value=today();
 
-  const recIncome=recurringItems.filter(r=>r.type==='income');
-  const recExpense=recurringItems.filter(r=>r.type==='expense');
-
-  document.getElementById('entryRecIncome').innerHTML=recIncome.length
-    ? recIncome.map(r=>entryRow(r)).join('')
-    : '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
-
-  document.getElementById('entryRecExpense').innerHTML=recExpense.length
-    ? recExpense.map(r=>entryRow(r)).join('')
+  document.getElementById('entryRecAll').innerHTML=recurringItems.length
+    ? recurringItems.map(r=>entryRow(r)).join('')
     : '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
 
   renderExtraEntryRows('income');
@@ -442,28 +435,19 @@ function renderDailyEntry(){
 
 function entryRow(r){
   if(r.shopCount){
-    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
-      <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+    return `<div class="rec-entry-row">
+      <div class="rec-entry-name">${r.name}</div>
       <div class="shop-count-wrap" style="margin-left:0">
         <input class="shop-count-input" type="number" id="entryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateEntrySumBar()">
         <span style="font-size:11px;color:var(--text2)">ร้าน × 50</span>
       </div>
     </div>`;
   }
-  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap">
-    <div style="flex:1;min-width:100px;font-weight:700;font-size:13px">${r.name}</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="entryAmtIn-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--green)" oninput="updateEntrySumBar()">
-      <span style="font-size:11px;font-weight:800;color:var(--green)">รับ ฿</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="entryAmtOut-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--red)" oninput="updateEntrySumBar()">
-      <span style="font-size:11px;font-weight:800;color:var(--red)">จ่าย ฿</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="entryAmtSchool-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--amber)" oninput="updateEntrySumBar()">
-      <span style="font-size:11px;font-weight:800;color:var(--amber)">หักร้านน้ำ ฿</span>
-    </div>
+  return `<div class="rec-entry-row">
+    <div class="rec-entry-name">${r.name}</div>
+    <input type="number" class="rec-entry-input in" id="entryAmtIn-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
+    <input type="number" class="rec-entry-input out" id="entryAmtOut-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
+    <input type="number" class="rec-entry-input school" id="entryAmtSchool-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
   </div>`;
 }
 function renderExtraEntryRows(type){
@@ -478,10 +462,9 @@ function renderExtraEntryRows(type){
 }
 
 function renderModalEntryRows(){
-  const recIncome=recurringItems.filter(r=>r.type==='income');
-  const recExpense=recurringItems.filter(r=>r.type==='expense');
-  document.getElementById('modalEntryRecIncome').innerHTML=recIncome.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
-  document.getElementById('modalEntryRecExpense').innerHTML=recExpense.map(r=>modalEntryRow(r)).join('') || '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
+  document.getElementById('modalEntryRecAll').innerHTML=recurringItems.length
+    ? recurringItems.map(r=>modalEntryRow(r)).join('')
+    : '<div style="color:var(--text2);font-size:12px">ไม่มีรายการ</div>';
   renderModalExtraRows('income');
   renderModalExtraRows('expense');
   updateModalSumBar();
@@ -489,20 +472,19 @@ function renderModalEntryRows(){
 
 function modalEntryRow(r){
   if(r.shopCount){
-    return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
-      <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+    return `<div class="rec-entry-row" style="padding:10px 14px;border-radius:10px">
+      <div class="rec-entry-name">${r.name}</div>
       <div class="shop-count-wrap" style="margin-left:0">
         <input class="shop-count-input" type="number" id="mEntryShopCount-${r.id}" min="0" placeholder="ร้าน" oninput="updateModalSumBar()">
         <span style="font-size:11px;color:var(--text2)">ร้าน × 50</span>
       </div>
     </div>`;
   }
-  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:10px 14px;background:var(--slate-lt);border:1px solid var(--border);border-radius:10px">
-    <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="mEntryAmt-${r.id}" min="0" placeholder="0" style="width:120px;text-align:right" oninput="updateModalSumBar()">
-      <span style="font-size:13px;font-weight:800;color:var(--text2)">฿</span>
-    </div>
+  return `<div class="rec-entry-row" style="padding:10px 14px;border-radius:10px">
+    <div class="rec-entry-name">${r.name}</div>
+    <input type="number" class="rec-entry-input in" id="mEntryAmtIn-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
+    <input type="number" class="rec-entry-input out" id="mEntryAmtOut-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
+    <input type="number" class="rec-entry-input school" id="mEntryAmtSchool-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
   </div>`;
 }
 function renderModalExtraRows(type){
@@ -578,11 +560,15 @@ function renderDaily(){
   if(filterSearch) rows=rows.filter(r=>r.name.toLowerCase().includes(filterSearch)||r.note.toLowerCase().includes(filterSearch));
 
   const totalIn=rows.reduce((s,r)=>s+r.income,0);
-  const totalOut=rows.reduce((s,r)=>s+r.expense,0);const net=totalIn-totalOut;
+  const totalOut=rows.reduce((s,r)=>s+r.expense,0);
+  const totalSchool=rows.reduce((s,r)=>s+(r.schoolDeduct||0),0);
+  const net=totalIn-totalOut-totalSchool;
   document.getElementById('sumBar').innerHTML=`
     <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
     <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
@@ -596,18 +582,20 @@ function renderDaily(){
   document.getElementById('dailyList').innerHTML=dates.map(date=>{
     const items=byDate[date];
     const dayIn=items.reduce((s,i)=>s+i.income,0);const dayOut=items.reduce((s,i)=>s+i.expense,0);
+    const daySchool=items.reduce((s,i)=>s+(i.schoolDeduct||0),0);
     return `<div class="day-section">
       <div class="day-header">
         <div class="day-title">${fmtDateShort(date)}</div>
         <div class="day-stats">
           <span class="day-in">+฿${fmt(dayIn)}</span>
           <span class="day-out">-฿${fmt(dayOut)}</span>
+          <span style="color:var(--amber);font-weight:700">หัก ฿${fmt(daySchool)}</span>
         </div>
       </div>
       <div class="tbl-wrap">
         <table><thead><tr>
           <th>รายการ</th><th>ประเภท</th>
-          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th>
+          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th><th style="text-align:right">หัก</th>
           <th>หมายเหตุ</th><th></th>
         </tr></thead><tbody>
           ${items.map(r=>`<tr>
@@ -615,6 +603,7 @@ function renderDaily(){
             <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
             <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
             <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
+            <td class="td-school" style="text-align:right">${r.schoolDeduct>0?'฿'+fmt(r.schoolDeduct):''}</td>
             <td style="color:var(--text2);font-size:12px">${r.note&&r.name!==SHOP_TRANSFER_NAME?r.note:r.name===SHOP_TRANSFER_NAME?'':'-'}</td>
             <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRow(${r.id})">ลบ</button></td>
           </tr>`).join('')}
@@ -929,7 +918,7 @@ function updateEntrySumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หักร้านน้ำ</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
+    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
@@ -1050,23 +1039,26 @@ function removeModalExtraRow(type,id){
 }
 
 function updateModalSumBar(){
-  let totalIn=0,totalOut=0;
+  let totalIn=0,totalOut=0,totalSchool=0;
   recurringItems.forEach(r=>{
     if(r.shopCount){
       const c=parseInt(document.getElementById('mEntryShopCount-'+r.id)?.value)||0;
       totalOut+=c*50;
     } else {
-      const v=parseFloat(document.getElementById('mEntryAmt-'+r.id)?.value)||0;
-      if(r.type==='income') totalIn+=v; else totalOut+=v;
+      totalIn+=parseFloat(document.getElementById('mEntryAmtIn-'+r.id)?.value)||0;
+      totalOut+=parseFloat(document.getElementById('mEntryAmtOut-'+r.id)?.value)||0;
+      totalSchool+=parseFloat(document.getElementById('mEntryAmtSchool-'+r.id)?.value)||0;
     }
   });
   modalExtraRows.income.forEach(r=>{totalIn+=parseFloat(document.getElementById('mExtraAmt-'+r.id)?.value)||0;});
   modalExtraRows.expense.forEach(r=>{totalOut+=parseFloat(document.getElementById('mExtraAmt-'+r.id)?.value)||0;});
-  const net=totalIn-totalOut;
+  const net=totalIn-totalOut-totalSchool;
   document.getElementById('modalSumBar').innerHTML=`
     <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
@@ -1081,8 +1073,10 @@ function saveModalEntry(){
       const c=parseInt(document.getElementById('mEntryShopCount-'+r.id)?.value)||0;
       if(c>0){ const t={id:Date.now()+Math.random(),date,name:r.name,income:0,expense:c*50,balance:0,note:c+' ร้าน',recurring:true}; transactions.push(t);newTx.push(t);count++; }
     } else {
-      const v=parseFloat(document.getElementById('mEntryAmt-'+r.id)?.value)||0;
-      if(v>0){ const t={id:Date.now()+Math.random(),date,name:r.name,income:r.type==='income'?v:0,expense:r.type==='expense'?v:0,balance:0,note:'',recurring:true}; transactions.push(t);newTx.push(t);count++; }
+      const vin=parseFloat(document.getElementById('mEntryAmtIn-'+r.id)?.value)||0;
+      const vout=parseFloat(document.getElementById('mEntryAmtOut-'+r.id)?.value)||0;
+      const vschool=parseFloat(document.getElementById('mEntryAmtSchool-'+r.id)?.value)||0;
+      if(vin>0||vout>0||vschool>0){ const t={id:Date.now()+Math.random(),date,name:r.name,income:vin,expense:vout,schoolDeduct:vschool,balance:0,note:'',recurring:true}; transactions.push(t);newTx.push(t);count++; }
     }
   });
   ['income','expense'].forEach(type=>{

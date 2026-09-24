@@ -48,6 +48,17 @@
     .chart-wrap { position: relative; height: 250px; }
     .td-in  { color: var(--green); font-weight: 700; }
     .td-out { color: var(--red); font-weight: 700; }
+    .td-school { color: var(--amber); font-weight: 700; }
+    /* ── รายการประจำ: หัวคอลัมน์ + แถวกรอกยอด (รับ/จ่าย/หัก) ── */
+    .rec-entry-headrow { display:flex; align-items:center; gap:var(--gap-card); padding:0 16px; margin-bottom:6px; }
+    .rec-entry-headname { flex:1; min-width:100px; }
+    .rec-entry-headcol { width:88px; text-align:center; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+    .rec-entry-row { display:flex; align-items:center; gap:var(--gap-card); padding:10px 16px; background:var(--slate-lt); border:1px solid var(--border); border-radius:12px; flex-wrap:wrap; }
+    .rec-entry-name { flex:1; min-width:100px; font-weight:700; font-size:13px; }
+    .rec-entry-input { width:88px; text-align:right; }
+    .rec-entry-input.in { border-color:var(--green); }
+    .rec-entry-input.out { border-color:var(--red); }
+    .rec-entry-input.school { border-color:var(--amber); }
     .badge-in  { background: var(--green-light); color: var(--green); }
     .badge-out { background: var(--red-light); color: var(--red); }
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
@@ -103,10 +114,16 @@
     </div>
 
     <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
-      <span class="badge badge-in">ประจำ</span>
-      <span style="font-size:13px;font-weight:800;color:var(--text)">รายรับประจำ</span>
+      <span class="badge" style="background:var(--slate-lt);color:var(--text2)">ประจำ</span>
+      <span style="font-size:13px;font-weight:800;color:var(--text)">รายการประจำ</span>
     </div>
-    <div id="modalEntryRecIncome" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
+    <div class="rec-entry-headrow">
+      <div class="rec-entry-headname"></div>
+      <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
+      <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
+      <div class="rec-entry-headcol" style="color:var(--amber)">หัก</div>
+    </div>
+    <div id="modalEntryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
 
     <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
@@ -114,12 +131,6 @@
     </div>
     <div id="modalExtraIncome" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-tight)"></div>
     <button class="upload-area" style="margin-bottom:var(--gap-section);padding:10px;font-size:12px;font-weight:700;color:var(--text2)" onclick="addModalExtraRow('income')">+ เพิ่มรายรับอื่นๆ</button>
-
-    <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
-      <span class="badge badge-out">ประจำ</span>
-      <span style="font-size:13px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
-    </div>
-    <div id="modalEntryRecExpense" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
 
     <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
@@ -519,10 +530,16 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
-              <span class="badge badge-in">ประจำ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายรับประจำ</span>
+              <span class="badge" style="background:var(--slate-lt);color:var(--text2)">ประจำ</span>
+              <span style="font-size:14px;font-weight:800;color:var(--text)">รายการประจำ</span>
             </div>
-            <div id="entryRecIncome" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
+            <div class="rec-entry-headrow">
+              <div class="rec-entry-headname"></div>
+              <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
+              <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
+              <div class="rec-entry-headcol" style="color:var(--amber)">หัก</div>
+            </div>
+            <div id="entryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
 
             <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
@@ -530,12 +547,6 @@
             </div>
             <div id="entryExtraIncome" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:10px"></div>
             <button class="upload-area" style="margin-bottom:22px;padding:12px;font-size:13px;font-weight:700;color:var(--text2)" onclick="addExtraEntryRow('income')">+ เพิ่มรายรับอื่นๆ</button>
-
-            <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
-              <span class="badge badge-out">ประจำ</span>
-              <span style="font-size:14px;font-weight:800;color:var(--text)">รายจ่ายประจำ</span>
-            </div>
-            <div id="entryRecExpense" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
 
             <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge" style="background:var(--red-lt);color:var(--red)">อื่นๆ</span>
