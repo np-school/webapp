@@ -146,6 +146,8 @@ let transactions=parseCSV(CSV_RAW);
 let period='week';
 let addType='income';
 let recKinds=['in'];
+let editingRecId=null;   // null = โหมดเพิ่มใหม่, ไม่ null = กำลังแก้ไขรายการประจำ id นี้อยู่
+let _recEditPending=false; // กันไม่ให้ onFcManageSubtabChange รีเซ็ตฟอร์มทับ ระหว่าง editRec() กำลังเปิดแท็บ
 let dailySubFilter='all';
 let barChart,lineChart,donutChart;
 
@@ -195,14 +197,15 @@ var FC_KINDS = {
   'school':{label:'หักบัญชีร้านน้ำ', cls:'badge-school', legacy:'expense'},
   'fc':    {label:'หักบัญชี Food Court', cls:'badge-fc', legacy:'expense'}
 };
-function withLegacy(r){ var k=r.kinds[0]; r.type=FC_KINDS[k].legacy; r.amount=r.defaults[k]||0; return r; }
+function withLegacy(r){ var k=r.kinds[0]; r.type=FC_KINDS[k].legacy; r.amount=r.defaults[k]||0; if(!r.required) r.required={}; return r; }
 function normalizeRecurring(r){
-  if(r && r.v===2 && r.defaults && Array.isArray(r.kinds) && r.kinds.length) return r; // migrate แล้ว → คืนอ็อบเจ็กต์เดิม
+  if(r && r.v===2 && r.defaults && Array.isArray(r.kinds) && r.kinds.length){ if(!r.required) r.required={}; return r; } // migrate แล้ว → คืนอ็อบเจ็กต์เดิม
   var k = r.type==='expense' ? 'out' : 'in';
   var d = {'in':0,'out':0,'school':0,'fc':0}; d[k] = parseFloat(r.amount)||0;
   return withLegacy(Object.assign({}, r, {v:2, kinds:[k], defaults:d}));
 }
 function dflt(r,k){ return (r.defaults && r.defaults[k]) || 0; }
+function reqd(r,k){ return !!(r.required && r.required[k]); } // ช่องนี้ถูกติ๊ก "บังคับกรอก" ไว้หรือไม่
 /* แท็กของแถวธุรกรรม: อ่านจากยอดจริงในแถว → 1 แถวมีได้หลายแท็ก */
 function txTags(r){ var t=[]; if(r.income>0)t.push('in'); if(r.expense>0)t.push('out'); if(r.schoolDeduct>0)t.push('school'); if(r.fcDeduct>0)t.push('fc'); return t; }
 function tagBadges(ks){
@@ -474,15 +477,19 @@ function renderManage(){
 }
 
 function manageRecCard(r){
-  const ks=r.kinds, d=r.defaults||{};
-  const amtLabel=r.shopCount?'คำนวณจากจำนวนร้าน':ks.map(k=>FC_KINDS[k].label+' '+(d[k]>0?'฿'+fmt(d[k])+'/ครั้ง':'ไม่แน่นอน')).join(' · ');
+  const ks=r.kinds, d=r.defaults||{}, req=r.required||{};
+  const kindIco={in:'💰',out:'💸',school:'🏦',fc:'🍽️'};
+  const amtLabel=r.shopCount?'คำนวณจากจำนวนร้าน':ks.map(k=>FC_KINDS[k].label+' '+(d[k]>0?'฿'+fmt(d[k])+'/ครั้ง':'ไม่แน่นอน')+(req[k]?' <span class="req-star" title="บังคับกรอกตอนบันทึกรายวัน">*บังคับ</span>':'')).join(' · ');
   return `<div class="manage-rec-card ${r.type}-type">
-    <div style="font-size:22px;flex-shrink:0">${ks[0]==='in'?'💰':ks[0]==='out'?'💸':'🏦'}</div>
+    <div style="font-size:22px;flex-shrink:0">${kindIco[ks[0]]||'💰'}</div>
     <div style="flex:1;min-width:0">
       <div style="font-weight:800;font-size:13px;margin-bottom:3px">${r.name}</div>
       <div style="margin-bottom:4px">${tagBadges(ks)}</div>
       <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${amtLabel}${r.desc?' · '+r.desc:''}</div>
-      <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRec(${r.id})">🗑 ลบ</button>
+      <div class="rec-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editRec(${r.id})">✏️ แก้ไข</button>
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRec(${r.id})">🗑 ลบ</button>
+      </div>
     </div>
   </div>`;
 }
@@ -499,6 +506,15 @@ function renderDailyEntry(){
   updateEntrySumBar();
 }
 
+/* ช่องกรอกยอด 1 ช่อง (รับ/จ่าย/หักร้านน้ำ/หัก FC) ของ 1 แถวรายการประจำ:
+   - ถ้ารายการนี้ไม่ได้ติดแท็กประเภทนั้นไว้ (r.kinds ไม่มี k) → ปิดกรอก + ทำสีเทา (disabled)
+   - ถ้าติ๊ก "บังคับกรอก" ไว้กับประเภทนั้น → ใส่กรอบแดงเตือนกันลืม (is-required) */
+function recAmtInputHtml(r,k,cls,idPrefix,onInputFn){
+  const enabled=(r.kinds||[]).includes(k);
+  if(!enabled) return `<input type="number" class="rec-entry-input ${cls}" id="${idPrefix}-${r.id}" min="0" placeholder="-" disabled>`;
+  const req=reqd(r,k);
+  return `<input type="number" class="rec-entry-input ${cls}${req?' is-required':''}" id="${idPrefix}-${r.id}" min="0" placeholder="${dflt(r,k)}"${req?' title="บังคับกรอก"':''} oninput="${onInputFn}()">`;
+}
 function entryRow(r){
   if(r.shopCount){
     return `<div class="rec-entry-row">
@@ -509,12 +525,13 @@ function entryRow(r){
       </div>
     </div>`;
   }
+  const hasReq=['in','out','school','fc'].some(k=>reqd(r,k));
   return `<div class="rec-entry-row">
-    <div class="rec-entry-name">${r.name}</div>
-    <input type="number" class="rec-entry-input in" id="entryAmtIn-${r.id}" min="0" placeholder="${dflt(r,'in')}" oninput="updateEntrySumBar()">
-    <input type="number" class="rec-entry-input out" id="entryAmtOut-${r.id}" min="0" placeholder="${dflt(r,'out')}" oninput="updateEntrySumBar()">
-    <input type="number" class="rec-entry-input school" id="entryAmtSchool-${r.id}" min="0" placeholder="${dflt(r,'school')}" oninput="updateEntrySumBar()">
-    <input type="number" class="rec-entry-input fc" id="entryAmtFc-${r.id}" min="0" placeholder="${dflt(r,'fc')}" oninput="updateEntrySumBar()">
+    <div class="rec-entry-name">${r.name}${hasReq?' <span class="req-star" title="มีช่องบังคับกรอก">*</span>':''}</div>
+    ${recAmtInputHtml(r,'in','in','entryAmtIn','updateEntrySumBar')}
+    ${recAmtInputHtml(r,'out','out','entryAmtOut','updateEntrySumBar')}
+    ${recAmtInputHtml(r,'school','school','entryAmtSchool','updateEntrySumBar')}
+    ${recAmtInputHtml(r,'fc','fc','entryAmtFc','updateEntrySumBar')}
   </div>`;
 }
 function renderExtraEntryRows(type){
@@ -547,12 +564,13 @@ function modalEntryRow(r){
       </div>
     </div>`;
   }
+  const hasReq=['in','out','school','fc'].some(k=>reqd(r,k));
   return `<div class="rec-entry-row">
-    <div class="rec-entry-name">${r.name}</div>
-    <input type="number" class="rec-entry-input in" id="mEntryAmtIn-${r.id}" min="0" placeholder="${dflt(r,'in')}" oninput="updateModalSumBar()">
-    <input type="number" class="rec-entry-input out" id="mEntryAmtOut-${r.id}" min="0" placeholder="${dflt(r,'out')}" oninput="updateModalSumBar()">
-    <input type="number" class="rec-entry-input school" id="mEntryAmtSchool-${r.id}" min="0" placeholder="${dflt(r,'school')}" oninput="updateModalSumBar()">
-    <input type="number" class="rec-entry-input fc" id="mEntryAmtFc-${r.id}" min="0" placeholder="${dflt(r,'fc')}" oninput="updateModalSumBar()">
+    <div class="rec-entry-name">${r.name}${hasReq?' <span class="req-star" title="มีช่องบังคับกรอก">*</span>':''}</div>
+    ${recAmtInputHtml(r,'in','in','mEntryAmtIn','updateModalSumBar')}
+    ${recAmtInputHtml(r,'out','out','mEntryAmtOut','updateModalSumBar')}
+    ${recAmtInputHtml(r,'school','school','mEntryAmtSchool','updateModalSumBar')}
+    ${recAmtInputHtml(r,'fc','fc','mEntryAmtFc','updateModalSumBar')}
   </div>`;
 }
 function renderModalExtraRows(type){
@@ -566,15 +584,87 @@ function renderModalExtraRows(type){
     </div>`).join('');
 }
 
-// ── RECURRING MANAGE (add/delete) ──
+// ── RECURRING MANAGE (add/แก้ไข/ลบ) ──
 function toggleRecKind(k){
   recKinds = recKinds.includes(k) ? recKinds.filter(x=>x!==k) : recKinds.concat(k);
   syncRecKindCards();
 }
+/* เลือกประเภทไหน = เปิดช่องกรอกยอด+checkbox บังคับกรอกของประเภทนั้น
+   ประเภทที่ไม่ได้เลือก → ปิดกรอก (disabled) ทำสีเทา และล้างค่าทิ้งกันสับสน */
 function syncRecKindCards(){
-  [['in','recCardIn','income'],['out','recCardOut','expense'],['school','recCardSchool','school'],['fc','recCardFc','fc']].forEach(([k,id,cls])=>{
-    document.getElementById(id).className='modal-type-card '+cls+(recKinds.includes(k)?' active':'');
+  [['in','recCardIn','income','recAmtIn','recReqIn','recReqLblIn'],
+   ['out','recCardOut','expense','recAmtOut','recReqOut','recReqLblOut'],
+   ['school','recCardSchool','school','recAmtSchool','recReqSchool','recReqLblSchool'],
+   ['fc','recCardFc','fc','recAmtFc','recReqFc','recReqLblFc']
+  ].forEach(([k,cardId,cls,amtId,reqId,reqLblId])=>{
+    const active=recKinds.includes(k);
+    document.getElementById(cardId).className='modal-type-card '+cls+(active?' active':'');
+    const amtEl=document.getElementById(amtId);
+    amtEl.disabled=!active;
+    if(!active) amtEl.value='';
+    const reqEl=document.getElementById(reqId);
+    reqEl.disabled=!active;
+    if(!active) reqEl.checked=false;
+    document.getElementById(reqLblId).classList.toggle('is-disabled',!active);
   });
+}
+/* หาว่ายังมีช่องบังคับกรอกไหนที่คนลืมกรอกก่อนบันทึกรายวันบ้าง (คืนรายชื่อ "รายการ (ประเภท)")
+   idPrefix: 'entryAmt' (ฟอร์มบันทึกรายวันในหน้า) หรือ 'mEntryAmt' (โมดัล + เพิ่มรายการ) */
+function findMissingRequired(idPrefix){
+  const suffix={in:'In',out:'Out',school:'School',fc:'Fc'};
+  const missing=[];
+  recurringItems.forEach(r=>{
+    if(r.shopCount || !r.required) return;
+    ['in','out','school','fc'].forEach(k=>{
+      if(!r.required[k]) return;
+      const el=document.getElementById(idPrefix+suffix[k]+'-'+r.id);
+      if(el && el.value.trim()==='') missing.push(r.name+' ('+FC_KINDS[k].label+')');
+    });
+  });
+  return missing;
+}
+/* รีเซ็ตฟอร์ม "เพิ่ม/แก้ไขรายการประจำ" กลับสู่โหมดเพิ่มใหม่ (ว่างเปล่า) */
+function resetRecForm(){
+  editingRecId=null;
+  document.getElementById('recFormTitle').textContent='เพิ่มรายการประจำใหม่';
+  document.getElementById('recSaveBtn').textContent='บันทึก';
+  document.getElementById('recCancelBtn').style.display='none';
+  document.getElementById('recName').value='';
+  document.getElementById('recDesc').value='';
+  recKinds=['in'];
+  syncRecKindCards();
+}
+/* เปิดฟอร์มแก้ไขรายการประจำที่มีอยู่แล้ว พร้อมดึงค่าเดิมมาแสดง */
+function editRec(id){
+  const r=recurringItems.find(x=>x.id===id);
+  if(!r){ showToast('ไม่พบรายการนี้','error'); return; }
+  _recEditPending=true;
+  fcManageSubtabs.activate('addnew');   // สลับแท็บ (จะไปรีเซ็ตฟอร์มให้ว่างก่อน เพราะ flag กันไว้ไม่ให้ชนกับสิ่งที่กำลังจะเซ็ตต่อ)
+  _recEditPending=false;
+
+  editingRecId=id;
+  document.getElementById('recFormTitle').textContent='✏️ แก้ไขรายการประจำ';
+  document.getElementById('recSaveBtn').textContent='💾 บันทึกการแก้ไข';
+  document.getElementById('recCancelBtn').style.display='inline-flex';
+
+  document.getElementById('recName').value=r.name||'';
+  document.getElementById('recDesc').value=r.desc||'';
+  recKinds=(r.kinds||['in']).slice();
+  syncRecKindCards();
+
+  const d=r.defaults||{}, req=r.required||{};
+  document.getElementById('recAmtIn').value=d.in||'';
+  document.getElementById('recAmtOut').value=d.out||'';
+  document.getElementById('recAmtSchool').value=d.school||'';
+  document.getElementById('recAmtFc').value=d.fc||'';
+  document.getElementById('recReqIn').checked=!!req.in;
+  document.getElementById('recReqOut').checked=!!req.out;
+  document.getElementById('recReqSchool').checked=!!req.school;
+  document.getElementById('recReqFc').checked=!!req.fc;
+}
+function cancelRecEdit(){
+  resetRecForm();
+  fcManageSubtabs.activate('recurring');
 }
 function renderMonthlyChart(month){
   const wrap = document.getElementById('monthlyChartWrap');
@@ -870,6 +960,7 @@ function onFcDailySubtabChange(tab){
 function onFcManageSubtabChange(panel){
   if(panel==='recurring') renderManage();
   if(panel==='entry') renderDailyEntry();
+  if(panel==='addnew' && !_recEditPending) resetRecForm(); // เปิดแท็บนี้เองตรงๆ (ไม่ใช่ผ่านปุ่มแก้ไข) → เริ่มฟอร์มใหม่เสมอ
 }
 
 /* ปุ่ม "เพิ่มรายการ" → ไปที่จัดการรายการ → บันทึกรายวัน */
@@ -921,6 +1012,8 @@ function updateEntrySumBar(){
 function saveDailyEntry(){
   const date=document.getElementById('entryDate').value;
   if(!date){showToast('กรุณาเลือกวันที่','error');return;}
+  const missing=findMissingRequired('entryAmt');
+  if(missing.length){showToast('ยังไม่ได้กรอก (บังคับ): '+missing.join(', '),'error');return;}
   let count=0;
   let newTx=[];
 
@@ -1065,6 +1158,8 @@ function updateModalSumBar(){
 function saveModalEntry(){
   const date=document.getElementById('addDate').value;
   if(!date){showToast('กรุณาเลือกวันที่','error');return;}
+  const missing=findMissingRequired('mEntryAmt');
+  if(missing.length){showToast('ยังไม่ได้กรอก (บังคับ): '+missing.join(', '),'error');return;}
   let count=0; let newTx=[];
   recurringItems.forEach(r=>{
     if(r.shopCount){
@@ -1100,12 +1195,28 @@ function saveRecurring(){
   if(!name){showToast('กรุณาใส่ชื่อรายการ','error');return;}
   const kinds=['in','out','school','fc'].filter(k=>recKinds.includes(k)||d[k]>0);  // ช่องที่กรอกยอด = ติดแท็กให้อัตโนมัติ
   if(!kinds.length){showToast('เลือกประเภทอย่างน้อย 1 อย่าง','error');return;}
-  recurringItems.push(withLegacy({v:2,id:Date.now(),name,desc,kinds,defaults:d}));
-  document.getElementById('recName').value='';
-  ['recAmtIn','recAmtOut','recAmtSchool','recAmtFc'].forEach(id=>{document.getElementById(id).value='';});
-  recKinds=['in'];syncRecKindCards();
-  document.getElementById('recDesc').value='';
+  const required={
+    in:kinds.includes('in')&&document.getElementById('recReqIn').checked,
+    out:kinds.includes('out')&&document.getElementById('recReqOut').checked,
+    school:kinds.includes('school')&&document.getElementById('recReqSchool').checked,
+    fc:kinds.includes('fc')&&document.getElementById('recReqFc').checked
+  };
+
+  if(editingRecId!==null){
+    const idx=recurringItems.findIndex(r=>r.id===editingRecId);
+    if(idx===-1){ showToast('ไม่พบรายการที่จะแก้ไข','error'); resetRecForm(); return; }
+    recurringItems[idx]=withLegacy(Object.assign({},recurringItems[idx],{name,desc,kinds,defaults:d,required}));
+    fcSaveRecurring();
+    resetRecForm();
+    renderManage();renderDashboardRecurring();renderDailyEntry();
+    fcManageSubtabs.activate('recurring');
+    showToast('แก้ไขรายการประจำแล้ว');
+    return;
+  }
+
+  recurringItems.push(withLegacy({v:2,id:Date.now(),name,desc,kinds,defaults:d,required}));
   fcSaveRecurring();
+  resetRecForm();
   renderManage();renderDashboardRecurring();
   showToast('เพิ่มรายการประจำแล้ว');
 }

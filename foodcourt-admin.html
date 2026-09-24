@@ -95,6 +95,19 @@
 .rec-def-grid { display:grid; grid-template-columns:repeat(4,76px); gap:var(--gap-card); }
 .modal-type-card.active.school { border-color: var(--amber); background: var(--amber-light); }
 .modal-type-card.active.school .type-lbl { color: var(--amber); }
+/* ── ช่องที่ยังไม่เปิดใช้ (ยังไม่เลือกประเภทนั้น) → ทำสีเทา กดกรอกไม่ได้ ── */
+.rec-entry-row input.rec-entry-input:disabled, .rec-def-grid input.rec-entry-input:disabled {
+  background:var(--slate-lt); color:var(--text2); border-color:var(--border) !important;
+  opacity:.55; cursor:not-allowed;
+}
+/* ── ช่องที่ติ๊ก "บังคับกรอก" → ขอบแดงเตือน กันลืม ── */
+.rec-entry-input.is-required { box-shadow:0 0 0 1px var(--red) inset; }
+.req-star { color:var(--red); font-weight:800; }
+.rec-req-lbl { display:flex; align-items:center; justify-content:center; gap:4px; font-size:10px; color:var(--text2); margin-top:6px; cursor:pointer; user-select:none; }
+.rec-req-lbl input[type=checkbox] { width:14px; height:14px; cursor:pointer; accent-color:var(--red); }
+.rec-req-lbl.is-disabled { opacity:.4; cursor:not-allowed; }
+.rec-req-lbl.is-disabled input { cursor:not-allowed; }
+.manage-rec-card .rec-actions { display:flex; gap:6px; margin-top:4px; }
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -625,10 +638,10 @@
         <!-- Panel: Add New Recurring -->
         <div class="tab-pane" data-panel="addnew" id="panelMgmtAddnew">
           <div class="card" style="max-width:560px">
-            <div class="modal-title" style="margin-bottom:var(--gap-section)">เพิ่มรายการประจำใหม่</div>
+            <div class="modal-title" id="recFormTitle" style="margin-bottom:var(--gap-section)">เพิ่มรายการประจำใหม่</div>
 
             <div style="margin-bottom:var(--gap-card)">
-              <label style="margin-bottom:var(--gap-tight);display:block">ประเภท (เลือกได้หลายอย่าง)</label>
+              <label style="margin-bottom:var(--gap-tight);display:block">ประเภท (เลือกได้หลายอย่าง — เลือกแล้วช่องกรอกด้านล่างจะเปิดให้ใช้)</label>
               <div style="display:flex;gap:var(--gap-item)">
                 <div class="modal-type-card active income" id="recCardIn" onclick="toggleRecKind('in')">
                   <div class="type-ico">💰</div>
@@ -654,20 +667,37 @@
               <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
             </div>
             <div class="form-group" style="margin-bottom:var(--gap-card)">
-              <label>จำนวนเงินปกติ (0 = ไม่แน่นอน)</label>
+              <label>จำนวนเงินปกติ (0 = ไม่แน่นอน) — ติ๊ก "บังคับกรอก" ถ้าไม่อยากให้ลืมกรอกช่องนั้นตอนบันทึกรายวัน</label>
               <div class="rec-entry-scroll"><div class="rec-def-grid">
-                <div><div class="rec-entry-headcol" style="color:var(--green)">รับ</div><input type="number" id="recAmtIn" class="rec-entry-input in" placeholder="0" min="0"></div>
-                <div><div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div><input type="number" id="recAmtOut" class="rec-entry-input out" placeholder="0" min="0"></div>
-                <div><div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div><input type="number" id="recAmtSchool" class="rec-entry-input school" placeholder="0" min="0"></div>
-                <div><div class="rec-entry-headcol" style="color:var(--fc-orange)" title="หักเข้าบัญชี Food Court">หักเข้าบัญชี<br>Food Court</div><input type="number" id="recAmtFc" class="rec-entry-input fc" placeholder="0" min="0"></div>
+                <div>
+                  <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
+                  <input type="number" id="recAmtIn" class="rec-entry-input in" placeholder="0" min="0">
+                  <label class="rec-req-lbl" id="recReqLblIn"><input type="checkbox" id="recReqIn"> บังคับกรอก</label>
+                </div>
+                <div>
+                  <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
+                  <input type="number" id="recAmtOut" class="rec-entry-input out" placeholder="0" min="0" disabled>
+                  <label class="rec-req-lbl is-disabled" id="recReqLblOut"><input type="checkbox" id="recReqOut" disabled> บังคับกรอก</label>
+                </div>
+                <div>
+                  <div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div>
+                  <input type="number" id="recAmtSchool" class="rec-entry-input school" placeholder="0" min="0" disabled>
+                  <label class="rec-req-lbl is-disabled" id="recReqLblSchool"><input type="checkbox" id="recReqSchool" disabled> บังคับกรอก</label>
+                </div>
+                <div>
+                  <div class="rec-entry-headcol" style="color:var(--fc-orange)" title="หักเข้าบัญชี Food Court">หักเข้าบัญชี<br>Food Court</div>
+                  <input type="number" id="recAmtFc" class="rec-entry-input fc" placeholder="0" min="0" disabled>
+                  <label class="rec-req-lbl is-disabled" id="recReqLblFc"><input type="checkbox" id="recReqFc" disabled> บังคับกรอก</label>
+                </div>
               </div></div>
             </div>
             <div class="form-group" style="margin-bottom:var(--gap-section)">
               <label>คำอธิบาย</label>
               <input type="text" id="recDesc" placeholder="รายละเอียดเพิ่มเติม...">
             </div>
-            <div style="display:flex;justify-content:flex-end">
-              <button class="btn btn-primary" onclick="saveRecurring()">บันทึก</button>
+            <div style="display:flex;justify-content:flex-end;gap:var(--gap-item)">
+              <button class="btn btn-ghost" id="recCancelBtn" style="display:none" onclick="cancelRecEdit()">ยกเลิก</button>
+              <button class="btn btn-primary" id="recSaveBtn" onclick="saveRecurring()">บันทึก</button>
             </div>
           </div>
         </div>
