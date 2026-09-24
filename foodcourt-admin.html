@@ -54,7 +54,7 @@
        ไม่ตัดบรรทัดลงเป็นหลายแถว (nowrap) แต่ห่อด้วย .rec-entry-scroll ให้เลื่อนแนวนอนได้บนจอแคบ */
     .rec-entry-scroll { padding-bottom:4px; }
 /* หัวตารางกับแถวใช้ grid เดียวกัน: ชื่อยืดได้ + 3 คอลัมน์ตัวเลขกว้างคงที่ → ตรงกันเสมอ ไม่ล้น ไม่ต้องเลื่อนข้าง */
-.rec-entry-headrow, .rec-entry-row { display:grid; grid-template-columns:minmax(0,1fr) repeat(3,84px); gap:8px; align-items:center; }
+.rec-entry-headrow, .rec-entry-row { display:grid; grid-template-columns:minmax(0,1fr) repeat(4,76px); gap:8px; align-items:center; }
 .rec-entry-headrow { align-items:end; padding:0 13px; margin-bottom:6px; }
 .rec-entry-headname { min-width:0; }
 .rec-entry-headcol { text-align:center; font-size:10px; font-weight:800; letter-spacing:.3px; line-height:1.2; }
@@ -65,7 +65,7 @@
 .rec-entry-row .shop-count-wrap { grid-column:2 / -1; justify-content:flex-end; margin-left:0; white-space:nowrap; }
 .rec-entry-row input.shop-count-input { width:72px; padding:8px 6px; text-align:center; }
 @media (max-width:520px){
-  .rec-entry-headrow, .rec-entry-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .rec-entry-headrow, .rec-entry-row { grid-template-columns:repeat(4,minmax(0,1fr)); }
   .rec-entry-headname { display:none; }
   .rec-entry-name, .rec-entry-row .shop-count-wrap { grid-column:1 / -1; }
   .rec-entry-row .shop-count-wrap { justify-content:flex-start; }
@@ -76,8 +76,15 @@
     .badge-in  { background: var(--green-light); color: var(--green); }
     .badge-out { background: var(--red-light); color: var(--red); }
 .badge-school { background: var(--amber-light); color: var(--amber); }
+/* ส้มเข้มของ "หักเข้าบัญชี Food Court" — styles-new.css ไม่มี token ส้มที่แยกจาก --amber (--orange ชี้ไป --c-amber ตัวเดียวกัน) */
+:root { --fc-orange:#ea580c; --fc-orange-light:#fff7ed; }
+.badge-fc { background: var(--fc-orange-light); color: var(--fc-orange); }
+.td-fc { color: var(--fc-orange); font-weight: 700; }
+.rec-entry-input.fc { border-color: var(--fc-orange); }
+.modal-type-card.active.fc { border-color: var(--fc-orange); background: var(--fc-orange-light); }
+.modal-type-card.active.fc .type-lbl { color: var(--fc-orange); }
 .tag-row { display:flex; gap:4px; flex-wrap:wrap; }
-.rec-def-grid { display:grid; grid-template-columns:repeat(3,84px); gap:var(--gap-card); }
+.rec-def-grid { display:grid; grid-template-columns:repeat(4,76px); gap:var(--gap-card); }
 .modal-type-card.active.school { border-color: var(--amber); background: var(--amber-light); }
 .modal-type-card.active.school .type-lbl { color: var(--amber); }
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
@@ -142,6 +149,7 @@
         <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
         <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
         <div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div>
+                <div class="rec-entry-headcol" style="color:var(--fc-orange)" title="หักเข้าบัญชี Food Court">หักเข้าบัญชี<br>Food Court</div>
       </div>
       <div id="modalEntryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
     </div>
@@ -560,6 +568,7 @@
                 <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
                 <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
                 <div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div>
+                <div class="rec-entry-headcol" style="color:var(--fc-orange)" title="หักเข้าบัญชี Food Court">หักเข้าบัญชี<br>Food Court</div>
               </div>
               <div id="entryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
             </div>
@@ -623,7 +632,11 @@
                 </div>
                 <div class="modal-type-card school" id="recCardSchool" onclick="toggleRecKind('school')">
                   <div class="type-ico">🏦</div>
-                  <div class="type-lbl">หักเข้าบัญชี</div>
+                  <div class="type-lbl">หักบัญชีร้านน้ำ</div>
+                </div>
+                <div class="modal-type-card fc" id="recCardFc" onclick="toggleRecKind('fc')">
+                  <div class="type-ico">🍽️</div>
+                  <div class="type-lbl">หักบัญชี Food Court</div>
                 </div>
               </div>
             </div>
@@ -638,6 +651,7 @@
                 <div><div class="rec-entry-headcol" style="color:var(--green)">รับ</div><input type="number" id="recAmtIn" class="rec-entry-input in" placeholder="0" min="0"></div>
                 <div><div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div><input type="number" id="recAmtOut" class="rec-entry-input out" placeholder="0" min="0"></div>
                 <div><div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div><input type="number" id="recAmtSchool" class="rec-entry-input school" placeholder="0" min="0"></div>
+                <div><div class="rec-entry-headcol" style="color:var(--fc-orange)" title="หักเข้าบัญชี Food Court">หักเข้าบัญชี<br>Food Court</div><input type="number" id="recAmtFc" class="rec-entry-input fc" placeholder="0" min="0"></div>
               </div></div>
             </div>
             <div class="form-group" style="margin-bottom:var(--gap-section)">
