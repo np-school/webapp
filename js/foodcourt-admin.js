@@ -145,7 +145,7 @@ const SHOP_TRANSFER_NAME = 'นำเข้ารายได้โรงเร�
 let transactions=parseCSV(CSV_RAW);
 let period='week';
 let addType='income';
-let recType='income';
+let recKinds=['in'];
 let dailySubFilter='all';
 let barChart,lineChart,donutChart;
 
@@ -182,6 +182,33 @@ function hexToRgba(hex, alpha){
   return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
 }
 const colors=['--chart-1','--chart-2','--chart-3','--chart-4','--chart-5','--chart-6','--chart-7','--chart-8','--chart-9'].map(cssVar);
+
+/* FC_MIGRATE_START */
+/* ── โมเดลรายการประจำ v2 ──
+   kinds    = แท็กได้หลายอัน ['in','out','school'] (รับ/จ่าย/หักเข้าบัญชีร้านน้ำโรงเรียน)
+   defaults = จำนวนเงินปกติ 3 ช่อง {in,out,school} (0 = ไม่แน่นอน) ตรงกับ 3 คอลัมน์ของฟอร์มบันทึกรายวัน
+   v1 เดิมมี type:'income'|'expense' + amount ช่องเดียว → migrate เป็น kinds 1 แท็ก + defaults ช่องนั้น
+   คงฟิลด์ type/amount ไว้ (sync จากแท็กแรก) เพื่อให้ client เก่าที่ยังแคชอยู่ (sw.js) อ่านต่อได้ */
+var FC_KINDS = {
+  'in':    {label:'รายรับ',       cls:'badge-in',     legacy:'income'},
+  'out':   {label:'รายจ่าย',      cls:'badge-out',    legacy:'expense'},
+  'school':{label:'หักเข้าบัญชี', cls:'badge-school', legacy:'expense'}
+};
+function withLegacy(r){ var k=r.kinds[0]; r.type=FC_KINDS[k].legacy; r.amount=r.defaults[k]||0; return r; }
+function normalizeRecurring(r){
+  if(r && r.v===2 && r.defaults && Array.isArray(r.kinds) && r.kinds.length) return r; // migrate แล้ว → คืนอ็อบเจ็กต์เดิม
+  var k = r.type==='expense' ? 'out' : 'in';
+  var d = {'in':0,'out':0,'school':0}; d[k] = parseFloat(r.amount)||0;
+  return withLegacy(Object.assign({}, r, {v:2, kinds:[k], defaults:d}));
+}
+function dflt(r,k){ return (r.defaults && r.defaults[k]) || 0; }
+/* แท็กของแถวธุรกรรม: อ่านจากยอดจริงในแถว → 1 แถวมีได้หลายแท็ก */
+function txTags(r){ var t=[]; if(r.income>0)t.push('in'); if(r.expense>0)t.push('out'); if(r.schoolDeduct>0)t.push('school'); return t; }
+function tagBadges(ks){
+  if(!ks.length) return '<span style="color:var(--text2)">-</span>';
+  return '<div class="tag-row">'+ks.map(function(k){return '<span class="badge '+FC_KINDS[k].cls+'">'+FC_KINDS[k].label+'</span>';}).join('')+'</div>';
+}
+/* FC_MIGRATE_END */
 
 // ── FIRESTORE PERSISTENCE ──
 const FC_TX_COLL = 'foodcourt_transactions';
@@ -222,10 +249,15 @@ function loadFoodcourtData(){
       transactions.forEach(function(t){ fcSaveTransaction(t); });
     }
 
-    if(metaSnap.exists && metaSnap.data().recurringItems && metaSnap.data().recurringItems.length){
-      recurringItems=metaSnap.data().recurringItems;
-    } else {
-      fcSaveRecurring();
+    var fromDb = metaSnap.exists && metaSnap.data().recurringItems && metaSnap.data().recurringItems.length;
+    var rawRec = fromDb ? metaSnap.data().recurringItems : recurringItems;
+    var recChanged = !fromDb;
+    recurringItems = rawRec.map(function(r){ var n=normalizeRecurring(r); if(n!==r) recChanged=true; return n; });
+    if(recChanged){
+      /* migrate v1→v2: เก็บสำเนาข้อมูลเดิมไว้ที่ recurringItemsBackupV1 (เขียนครั้งเดียว) แล้วบันทึกรูปแบบใหม่ */
+      var upd={recurringItems:recurringItems};
+      if(fromDb && !metaSnap.data().recurringItemsBackupV1){ upd.recurringItemsBackupV1=rawRec; upd.recurringMigratedAt=new Date().toISOString(); }
+      FC_META_DOC.set(upd,{merge:true}).catch(function(e){console.error('migrate recurring',e);});
     }
 
     recomputeBalance();
@@ -399,8 +431,8 @@ function renderDashboardRecurring() {
 
 // ── MANAGE ──
 function renderManage(){
-  const inc=recurringItems.filter(r=>r.type==='income');
-  const exp=recurringItems.filter(r=>r.type==='expense');
+  const inc=recurringItems.filter(r=>r.kinds[0]==='in');   // จัดกลุ่มตามแท็กแรก; แท็กทั้งหมดโชว์ในการ์ด
+  const exp=recurringItems.filter(r=>r.kinds[0]!=='in');
   document.getElementById('manageRecIncome').innerHTML=inc.length
     ? inc.map(r=>manageRecCard(r)).join('')
     : '<div style="color:var(--text2);font-size:12px;padding:10px 0">ไม่มีรายการ</div>';
@@ -410,11 +442,13 @@ function renderManage(){
 }
 
 function manageRecCard(r){
-  const amtLabel=r.amount>0?'฿'+fmt(r.amount)+'/ครั้ง':(r.shopCount?'คำนวณจากจำนวนร้าน':'ยอดไม่แน่นอน');
+  const ks=r.kinds, d=r.defaults||{};
+  const amtLabel=r.shopCount?'คำนวณจากจำนวนร้าน':ks.map(k=>FC_KINDS[k].label+' '+(d[k]>0?'฿'+fmt(d[k])+'/ครั้ง':'ไม่แน่นอน')).join(' · ');
   return `<div class="manage-rec-card ${r.type}-type">
-    <div style="font-size:22px;flex-shrink:0">${r.type==='income'?'💰':'💸'}</div>
+    <div style="font-size:22px;flex-shrink:0">${ks[0]==='in'?'💰':ks[0]==='out'?'💸':'🏦'}</div>
     <div style="flex:1;min-width:0">
       <div style="font-weight:800;font-size:13px;margin-bottom:3px">${r.name}</div>
+      <div style="margin-bottom:4px">${tagBadges(ks)}</div>
       <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${amtLabel}${r.desc?' · '+r.desc:''}</div>
       <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteRec(${r.id})">🗑 ลบ</button>
     </div>
@@ -445,9 +479,9 @@ function entryRow(r){
   }
   return `<div class="rec-entry-row">
     <div class="rec-entry-name">${r.name}</div>
-    <input type="number" class="rec-entry-input in" id="entryAmtIn-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
-    <input type="number" class="rec-entry-input out" id="entryAmtOut-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
-    <input type="number" class="rec-entry-input school" id="entryAmtSchool-${r.id}" min="0" placeholder="0" oninput="updateEntrySumBar()">
+    <input type="number" class="rec-entry-input in" id="entryAmtIn-${r.id}" min="0" placeholder="${dflt(r,'in')}" oninput="updateEntrySumBar()">
+    <input type="number" class="rec-entry-input out" id="entryAmtOut-${r.id}" min="0" placeholder="${dflt(r,'out')}" oninput="updateEntrySumBar()">
+    <input type="number" class="rec-entry-input school" id="entryAmtSchool-${r.id}" min="0" placeholder="${dflt(r,'school')}" oninput="updateEntrySumBar()">
   </div>`;
 }
 function renderExtraEntryRows(type){
@@ -482,9 +516,9 @@ function modalEntryRow(r){
   }
   return `<div class="rec-entry-row" style="padding:10px 14px;border-radius:10px">
     <div class="rec-entry-name">${r.name}</div>
-    <input type="number" class="rec-entry-input in" id="mEntryAmtIn-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
-    <input type="number" class="rec-entry-input out" id="mEntryAmtOut-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
-    <input type="number" class="rec-entry-input school" id="mEntryAmtSchool-${r.id}" min="0" placeholder="0" oninput="updateModalSumBar()">
+    <input type="number" class="rec-entry-input in" id="mEntryAmtIn-${r.id}" min="0" placeholder="${dflt(r,'in')}" oninput="updateModalSumBar()">
+    <input type="number" class="rec-entry-input out" id="mEntryAmtOut-${r.id}" min="0" placeholder="${dflt(r,'out')}" oninput="updateModalSumBar()">
+    <input type="number" class="rec-entry-input school" id="mEntryAmtSchool-${r.id}" min="0" placeholder="${dflt(r,'school')}" oninput="updateModalSumBar()">
   </div>`;
 }
 function renderModalExtraRows(type){
@@ -499,11 +533,13 @@ function renderModalExtraRows(type){
 }
 
 // ── RECURRING MANAGE (add/delete) ──
-function setRecType(t){
-  recType=t;
-  ['recCardIn','recCardOut'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.className='modal-type-card '+(id==='recCardIn'?'income':'expense')+(t===(id==='recCardIn'?'income':'expense')?' active':'');
+function toggleRecKind(k){
+  recKinds = recKinds.includes(k) ? recKinds.filter(x=>x!==k) : recKinds.concat(k);
+  syncRecKindCards();
+}
+function syncRecKindCards(){
+  [['in','recCardIn','income'],['out','recCardOut','expense'],['school','recCardSchool','school']].forEach(([k,id,cls])=>{
+    document.getElementById(id).className='modal-type-card '+cls+(recKinds.includes(k)?' active':'');
   });
 }
 function renderMonthlyChart(month){
@@ -600,7 +636,7 @@ function renderDaily(){
         </tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td style="font-weight:600">${r.name}${r.name===SHOP_TRANSFER_NAME&&r.note?` <span class="amount-highlight">${r.note}</span>`:''}</td>
-            <td><span class="badge ${r.income>0?'badge-in':'badge-out'}">${r.income>0?'รายรับ':'รายจ่าย'}</span></td>
+            <td>${tagBadges(txTags(r))}</td>
             <td class="td-in" style="text-align:right">${r.income>0?'฿'+fmt(r.income):''}</td>
             <td class="td-out" style="text-align:right">${r.expense>0?'฿'+fmt(r.expense):''}</td>
             <td class="td-school" style="text-align:right">${r.schoolDeduct>0?'฿'+fmt(r.schoolDeduct):''}</td>
@@ -1096,12 +1132,15 @@ function saveModalEntry(){
 }
 function saveRecurring(){
   const name=document.getElementById('recName').value.trim();
-  const amount=parseFloat(document.getElementById('recAmount').value)||0;
+  const d={'in':parseFloat(document.getElementById('recAmtIn').value)||0,'out':parseFloat(document.getElementById('recAmtOut').value)||0,'school':parseFloat(document.getElementById('recAmtSchool').value)||0};
   const desc=document.getElementById('recDesc').value.trim();
   if(!name){showToast('กรุณาใส่ชื่อรายการ','error');return;}
-  recurringItems.push({id:Date.now(),type:recType,name,amount,desc});
+  const kinds=['in','out','school'].filter(k=>recKinds.includes(k)||d[k]>0);  // ช่องที่กรอกยอด = ติดแท็กให้อัตโนมัติ
+  if(!kinds.length){showToast('เลือกประเภทอย่างน้อย 1 อย่าง','error');return;}
+  recurringItems.push(withLegacy({v:2,id:Date.now(),name,desc,kinds,defaults:d}));
   document.getElementById('recName').value='';
-  document.getElementById('recAmount').value='';
+  ['recAmtIn','recAmtOut','recAmtSchool'].forEach(id=>{document.getElementById(id).value='';});
+  recKinds=['in'];syncRecKindCards();
   document.getElementById('recDesc').value='';
   fcSaveRecurring();
   renderManage();renderDashboardRecurring();

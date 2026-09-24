@@ -64,6 +64,11 @@
     .rec-entry-input.school { border-color:var(--amber); }
     .badge-in  { background: var(--green-light); color: var(--green); }
     .badge-out { background: var(--red-light); color: var(--red); }
+.badge-school { background: var(--amber-light); color: var(--amber); }
+.tag-row { display:flex; gap:4px; flex-wrap:wrap; }
+.rec-def-grid { display:grid; grid-template-columns:repeat(3,96px); gap:var(--gap-card); }
+.modal-type-card.active.school { border-color: var(--amber); background: var(--amber-light); }
+.modal-type-card.active.school .type-lbl { color: var(--amber); }
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -595,28 +600,34 @@
             <div class="modal-title" style="margin-bottom:var(--gap-section)">เพิ่มรายการประจำใหม่</div>
 
             <div style="margin-bottom:var(--gap-card)">
-              <label style="margin-bottom:var(--gap-tight);display:block">ประเภท</label>
+              <label style="margin-bottom:var(--gap-tight);display:block">ประเภท (เลือกได้หลายอย่าง)</label>
               <div style="display:flex;gap:var(--gap-item)">
-                <div class="modal-type-card active income" id="recCardIn" onclick="setRecType('income')">
+                <div class="modal-type-card active income" id="recCardIn" onclick="toggleRecKind('in')">
                   <div class="type-ico">💰</div>
                   <div class="type-lbl">รายรับ</div>
                 </div>
-                <div class="modal-type-card expense" id="recCardOut" onclick="setRecType('expense')">
+                <div class="modal-type-card expense" id="recCardOut" onclick="toggleRecKind('out')">
                   <div class="type-ico">💸</div>
                   <div class="type-lbl">รายจ่าย</div>
+                </div>
+                <div class="modal-type-card school" id="recCardSchool" onclick="toggleRecKind('school')">
+                  <div class="type-ico">🏦</div>
+                  <div class="type-lbl">หักเข้าบัญชี</div>
                 </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>ชื่อรายการ</label>
-                <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
-              </div>
-              <div class="form-group">
-                <label>จำนวนเงินปกติ (0=ไม่แน่นอน)</label>
-                <input type="number" id="recAmount" placeholder="0" min="0">
-              </div>
+            <div class="form-group" style="margin-bottom:var(--gap-card)">
+              <label>ชื่อรายการ</label>
+              <input type="text" id="recName" placeholder="ชื่อรายการประจำ...">
+            </div>
+            <div class="form-group" style="margin-bottom:var(--gap-card)">
+              <label>จำนวนเงินปกติ (0 = ไม่แน่นอน)</label>
+              <div class="rec-entry-scroll"><div class="rec-def-grid">
+                <div><div class="rec-entry-headcol" style="color:var(--green)">รับ</div><input type="number" id="recAmtIn" class="rec-entry-input in" placeholder="0" min="0"></div>
+                <div><div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div><input type="number" id="recAmtOut" class="rec-entry-input out" placeholder="0" min="0"></div>
+                <div><div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div><input type="number" id="recAmtSchool" class="rec-entry-input school" placeholder="0" min="0"></div>
+              </div></div>
             </div>
             <div class="form-group" style="margin-bottom:var(--gap-section)">
               <label>คำอธิบาย</label>
