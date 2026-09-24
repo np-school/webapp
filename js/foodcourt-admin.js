@@ -242,12 +242,19 @@ function loadFoodcourtData(){
   ]).then(function(results){
     var txSnap=results[0], metaSnap=results[1];
 
+    /* txSeeded = เคย seed/รีเซ็ตแล้ว → คอลเลกชันว่างเปล่าต้องหมายถึง "ว่างจริง" ไม่ใช่ "ยังไม่เคยเริ่ม"
+       (เดิมเช็คแค่ txSnap.empty ทำให้กดรีเซ็ตแล้วรีโหลด ข้อมูลตัวอย่างถูก seed กลับมาทุกครั้ง) */
+    var txSeeded = metaSnap.exists && metaSnap.data().txSeeded;
     if(!txSnap.empty){
       transactions=[];
       txSnap.forEach(function(doc){ transactions.push(doc.data()); });
+      if(!txSeeded) FC_META_DOC.set({txSeeded:true},{merge:true}).catch(function(e){console.error('mark seeded',e);});
+    } else if(txSeeded){
+      transactions=[];
     } else {
-      /* ครั้งแรก – seed ข้อมูลตัวอย่างขึ้น Firestore */
+      /* ครั้งแรกจริงๆ – seed ข้อมูลตัวอย่างขึ้น Firestore แล้วทำเครื่องหมายไว้ */
       transactions.forEach(function(t){ fcSaveTransaction(t); });
+      FC_META_DOC.set({txSeeded:true},{merge:true}).catch(function(e){console.error('mark seeded',e);});
     }
 
     var fromDb = metaSnap.exists && metaSnap.data().recurringItems && metaSnap.data().recurringItems.length;
@@ -882,9 +889,14 @@ function resetAllTransactions(){
   if(!confirm('ยืนยันอีกครั้ง: ต้องการลบรายการที่บันทึกไว้ทั้งหมดจริงหรือไม่?')) return;
 
   db.collection(FC_TX_COLL).get().then(function(snap){
-    const batch=db.batch();
-    snap.forEach(function(docSnap){ batch.delete(docSnap.ref); });
-    return batch.commit();
+    /* batch ลบได้ไม่เกิน 500 รายการ/ครั้ง → แบ่งชุดละ 400 */
+    const refs=[]; snap.forEach(function(d){ refs.push(d.ref); });
+    let chain=Promise.resolve();
+    for(let i=0;i<refs.length;i+=400){
+      (function(chunk){ chain=chain.then(function(){ const b=db.batch(); chunk.forEach(function(r){ b.delete(r); }); return b.commit(); }); })(refs.slice(i,i+400));
+    }
+    /* ทำเครื่องหมายว่ารีเซ็ตแล้ว เพื่อกันการ seed ข้อมูลตัวอย่างกลับมาตอนโหลดหน้าใหม่ */
+    return chain.then(function(){ return FC_META_DOC.set({txSeeded:true},{merge:true}); });
   }).then(function(){
     transactions=[];
     recomputeBalance();
