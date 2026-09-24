@@ -251,7 +251,7 @@ function parseCSV(raw){
 function recomputeBalance(){
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
   let bal=0;const map={};
-  sorted.forEach(t=>{bal+=t.income-t.expense;map[t.id]=bal;});
+  sorted.forEach(t=>{bal+=t.income-t.expense-(t.schoolDeduct||0);map[t.id]=bal;});
   transactions.forEach(t=>t.balance=map[t.id]||0);
 }
 
@@ -450,11 +450,19 @@ function entryRow(r){
       </div>
     </div>`;
   }
-  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px">
-    <div style="flex:1;min-width:0;font-weight:700;font-size:13px">${r.name}</div>
+  return `<div style="display:flex;align-items:center;gap:var(--gap-card);padding:12px 16px;background:var(--slate-lt);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:100px;font-weight:700;font-size:13px">${r.name}</div>
     <div style="display:flex;align-items:center;gap:6px">
-      <input type="number" id="entryAmt-${r.id}" min="0" placeholder="0" style="width:130px;text-align:right" value="${r.amount>0?'':''}" oninput="updateEntrySumBar()">
-      <span style="font-size:14px;font-weight:800;color:var(--text2)">฿</span>
+      <input type="number" id="entryAmtIn-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--green)" oninput="updateEntrySumBar()">
+      <span style="font-size:11px;font-weight:800;color:var(--green)">รับ ฿</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input type="number" id="entryAmtOut-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--red)" oninput="updateEntrySumBar()">
+      <span style="font-size:11px;font-weight:800;color:var(--red)">จ่าย ฿</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input type="number" id="entryAmtSchool-${r.id}" min="0" placeholder="0" style="width:90px;text-align:right;border-color:var(--amber)" oninput="updateEntrySumBar()">
+      <span style="font-size:11px;font-weight:800;color:var(--amber)">หักร้านน้ำ ฿</span>
     </div>
   </div>`;
 }
@@ -833,6 +841,30 @@ function fcSaveTransaction(t){
 function fcDeleteTransaction(id){
   db.collection(FC_TX_COLL).doc(String(id)).delete().catch(function(e){console.error('delete tx',e);});
 }
+/* รีเซ็ตระบบ: ลบ "รายการที่บันทึกแล้วทั้งหมด" (ธุรกรรมรายวัน + รายการประจำที่ล็อกไว้)
+   แต่ไม่แตะ "รายการประจำ" (recurringItems / ชื่อร้าน / รายจ่ายประจำที่ตั้งค่าไว้ใน FC_META_DOC) */
+function resetAllTransactions(){
+  if(!confirm('⚠️ ลบรายการที่บันทึกไว้ทั้งหมด ระบบจะเหมือนเริ่มต้นใหม่\n\n(รายการประจำ เช่น ชื่อร้าน/รายรับ-รายจ่ายประจำที่ตั้งค่าไว้ จะยังอยู่ ไม่ถูกลบ)\n\nการกระทำนี้กู้คืนไม่ได้ ยืนยันหรือไม่?')) return;
+  if(!confirm('ยืนยันอีกครั้ง: ต้องการลบรายการที่บันทึกไว้ทั้งหมดจริงหรือไม่?')) return;
+
+  db.collection(FC_TX_COLL).get().then(function(snap){
+    const batch=db.batch();
+    snap.forEach(function(docSnap){ batch.delete(docSnap.ref); });
+    return batch.commit();
+  }).then(function(){
+    transactions=[];
+    recomputeBalance();
+    populateMonthFilter();
+    renderDashboard();
+    if(typeof renderDaily==='function') renderDaily();
+    if(typeof renderDailyEntry==='function') renderDailyEntry();
+    showToast('รีเซ็ตระบบแล้ว รายการทั้งหมดถูกลบ');
+  }).catch(function(e){
+    console.error('reset ไม่สำเร็จ',e);
+    showToast('รีเซ็ตไม่สำเร็จ กรุณาลองใหม่','error');
+  });
+}
+
 function fcSaveRecurring(){
   FC_META_DOC.set({recurringItems:recurringItems},{merge:true}).catch(function(e){console.error('save recurring',e);});
 }
@@ -878,23 +910,26 @@ function removeExtraEntryRow(type,id){
 }
 
 function updateEntrySumBar(){
-  let totalIn=0,totalOut=0;
+  let totalIn=0,totalOut=0,totalSchool=0;
   recurringItems.forEach(r=>{
     if(r.shopCount){
       const c=parseInt(document.getElementById('entryShopCount-'+r.id)?.value)||0;
       totalOut+=c*50;
     } else {
-      const v=parseFloat(document.getElementById('entryAmt-'+r.id)?.value)||0;
-      if(r.type==='income') totalIn+=v; else totalOut+=v;
+      totalIn+=parseFloat(document.getElementById('entryAmtIn-'+r.id)?.value)||0;
+      totalOut+=parseFloat(document.getElementById('entryAmtOut-'+r.id)?.value)||0;
+      totalSchool+=parseFloat(document.getElementById('entryAmtSchool-'+r.id)?.value)||0;
     }
   });
   extraEntryRows.income.forEach(r=>{totalIn+=parseFloat(document.getElementById('entryExtraAmt-'+r.id)?.value)||0;});
   extraEntryRows.expense.forEach(r=>{totalOut+=parseFloat(document.getElementById('entryExtraAmt-'+r.id)?.value)||0;});
-  const net=totalIn-totalOut;
+  const net=totalIn-totalOut-totalSchool;
   document.getElementById('entrySumBar').innerHTML=`
     <div class="sum-item"><div class="sum-label">รายรับ</div><div class="sum-val" style="color:var(--green)">฿${fmt(totalIn)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
+    <div class="divider"></div>
+    <div class="sum-item"><div class="sum-label">หักร้านน้ำ</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
@@ -914,9 +949,11 @@ function saveDailyEntry(){
         transactions.push(t);newTx.push(t);count++;
       }
     } else {
-      const v=parseFloat(document.getElementById('entryAmt-'+r.id)?.value)||0;
-      if(v>0){
-        const t={id:Date.now()+Math.random(),date,name:r.name,income:r.type==='income'?v:0,expense:r.type==='expense'?v:0,balance:0,note:'',recurring:true};
+      const vin=parseFloat(document.getElementById('entryAmtIn-'+r.id)?.value)||0;
+      const vout=parseFloat(document.getElementById('entryAmtOut-'+r.id)?.value)||0;
+      const vschool=parseFloat(document.getElementById('entryAmtSchool-'+r.id)?.value)||0;
+      if(vin>0||vout>0||vschool>0){
+        const t={id:Date.now()+Math.random(),date,name:r.name,income:vin,expense:vout,schoolDeduct:vschool,balance:0,note:'',recurring:true};
         transactions.push(t);newTx.push(t);count++;
       }
     }

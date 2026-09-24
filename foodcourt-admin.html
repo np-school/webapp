@@ -497,7 +497,10 @@
             </div>
             <p style="font-size:13px;color:var(--text2);padding-left:50px;">บันทึกรายวันและรายการประจำ</p>
           </div>
-          <button class="btn btn-primary" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
+          <div style="display:flex;gap:var(--gap-item)">
+            <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="resetAllTransactions()">🗑 รีเซ็ตระบบ</button>
+            <button class="btn btn-primary" onclick="goToDailyEntry()">+ เพิ่มรายการ</button>
+          </div>
         </div>
 
         <!-- Sub Tab Bar -->
