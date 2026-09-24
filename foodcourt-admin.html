@@ -49,13 +49,16 @@
     .td-in  { color: var(--green); font-weight: 700; }
     .td-out { color: var(--red); font-weight: 700; }
     .td-school { color: var(--amber); font-weight: 700; }
-    /* ── รายการประจำ: หัวคอลัมน์ + แถวกรอกยอด (รับ/จ่าย/หัก) ── */
-    .rec-entry-headrow { display:flex; align-items:center; gap:var(--gap-card); padding:0 16px; margin-bottom:6px; }
-    .rec-entry-headname { flex:1; min-width:100px; }
-    .rec-entry-headcol { width:88px; text-align:center; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
-    .rec-entry-row { display:flex; align-items:center; gap:var(--gap-card); padding:10px 16px; background:var(--slate-lt); border:1px solid var(--border); border-radius:12px; flex-wrap:wrap; }
-    .rec-entry-name { flex:1; min-width:100px; font-weight:700; font-size:13px; }
-    .rec-entry-input { width:88px; text-align:right; }
+    /* ── รายการประจำ: หัวคอลัมน์ + แถวกรอกยอด (รับ/จ่าย/หักเข้าบัญชีร้านน้ำโรงเรียน) ──
+       แถวและหัวคอลัมน์ใช้ความกว้างชุดเดียวกัน (.rec-entry-col) เพื่อให้ชิดตรงกันเป๊ะ
+       ไม่ตัดบรรทัดลงเป็นหลายแถว (nowrap) แต่ห่อด้วย .rec-entry-scroll ให้เลื่อนแนวนอนได้บนจอแคบ */
+    .rec-entry-scroll { overflow-x:auto; padding-bottom:4px; }
+    .rec-entry-headrow { display:flex; align-items:flex-end; gap:var(--gap-card); padding:0 16px; margin-bottom:6px; min-width:max-content; }
+    .rec-entry-headname { flex:1; min-width:140px; }
+    .rec-entry-headcol { width:96px; flex-shrink:0; text-align:center; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; line-height:1.2; white-space:normal; }
+    .rec-entry-row { display:flex; align-items:center; gap:var(--gap-card); padding:10px 16px; background:var(--slate-lt); border:1px solid var(--border); border-radius:12px; flex-wrap:nowrap; min-width:max-content; }
+    .rec-entry-name { flex:1; min-width:140px; font-weight:700; font-size:13px; }
+    .rec-entry-input { width:96px; flex-shrink:0; text-align:right; }
     .rec-entry-input.in { border-color:var(--green); }
     .rec-entry-input.out { border-color:var(--red); }
     .rec-entry-input.school { border-color:var(--amber); }
@@ -117,13 +120,15 @@
       <span class="badge" style="background:var(--slate-lt);color:var(--text2)">ประจำ</span>
       <span style="font-size:13px;font-weight:800;color:var(--text)">รายการประจำ</span>
     </div>
-    <div class="rec-entry-headrow">
-      <div class="rec-entry-headname"></div>
-      <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
-      <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
-      <div class="rec-entry-headcol" style="color:var(--amber)">หัก</div>
+    <div class="rec-entry-scroll">
+      <div class="rec-entry-headrow">
+        <div class="rec-entry-headname"></div>
+        <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
+        <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
+        <div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div>
+      </div>
+      <div id="modalEntryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
     </div>
-    <div id="modalEntryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-tight);margin-bottom:var(--gap-section)"></div>
 
     <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:10px">
       <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>
@@ -533,13 +538,15 @@
               <span class="badge" style="background:var(--slate-lt);color:var(--text2)">ประจำ</span>
               <span style="font-size:14px;font-weight:800;color:var(--text)">รายการประจำ</span>
             </div>
-            <div class="rec-entry-headrow">
-              <div class="rec-entry-headname"></div>
-              <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
-              <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
-              <div class="rec-entry-headcol" style="color:var(--amber)">หัก</div>
+            <div class="rec-entry-scroll">
+              <div class="rec-entry-headrow">
+                <div class="rec-entry-headname"></div>
+                <div class="rec-entry-headcol" style="color:var(--green)">รับ</div>
+                <div class="rec-entry-headcol" style="color:var(--red)">จ่าย</div>
+                <div class="rec-entry-headcol" style="color:var(--amber)" title="หักเข้าบัญชีร้านน้ำโรงเรียน">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</div>
+              </div>
+              <div id="entryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
             </div>
-            <div id="entryRecAll" style="display:flex;flex-direction:column;gap:var(--gap-item);margin-bottom:22px"></div>
 
             <div style="display:flex;align-items:center;gap:var(--gap-tight);margin-bottom:12px">
               <span class="badge" style="background:var(--green-lt);color:var(--green)">อื่นๆ</span>

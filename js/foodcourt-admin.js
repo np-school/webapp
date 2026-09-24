@@ -568,7 +568,7 @@ function renderDaily(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
+    <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
     <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
@@ -589,13 +589,13 @@ function renderDaily(){
         <div class="day-stats">
           <span class="day-in">+฿${fmt(dayIn)}</span>
           <span class="day-out">-฿${fmt(dayOut)}</span>
-          <span style="color:var(--amber);font-weight:700">หัก ฿${fmt(daySchool)}</span>
+          <span style="color:var(--amber);font-weight:700">หักเข้าบัญชีร้านน้ำโรงเรียน ฿${fmt(daySchool)}</span>
         </div>
       </div>
       <div class="tbl-wrap">
         <table><thead><tr>
           <th>รายการ</th><th>ประเภท</th>
-          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th><th style="text-align:right">หัก</th>
+          <th style="text-align:right">รายรับ</th><th style="text-align:right">รายจ่าย</th><th style="text-align:right">หักเข้าบัญชี<br>ร้านน้ำโรงเรียน</th>
           <th>หมายเหตุ</th><th></th>
         </tr></thead><tbody>
           ${items.map(r=>`<tr>
@@ -918,7 +918,7 @@ function updateEntrySumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
+    <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
@@ -1058,7 +1058,7 @@ function updateModalSumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">รายจ่าย</div><div class="sum-val" style="color:var(--red)">฿${fmt(totalOut)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หัก</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
+    <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
   `;
