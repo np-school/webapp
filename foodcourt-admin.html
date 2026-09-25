@@ -130,6 +130,7 @@
   .print-tbl thead th { background:#eee; text-align:left; }
   .print-tbl td.num, .print-tbl th.num { text-align:right; white-space:nowrap; }
   .print-tbl tfoot td { font-weight:800; border-top:2px solid #333; background:#f5f5f5; }
+  .print-tbl tr.print-daysep td { background:#e2e8f0; font-weight:800; border-top:1.5px solid #999; page-break-after:avoid; }
 }
   </style>
 </head>
@@ -517,6 +518,7 @@
             <div style="display:flex;align-items:center;gap:var(--gap-item);flex-wrap:wrap">
               <select id="rptMonthSelect" style="width:180px" onchange="renderReportMonth()"></select>
               <button class="btn btn-ghost btn-sm" onclick="printReportMonth()">🖨️ พิมพ์รายงานเดือนนี้</button>
+              <button class="btn btn-ghost btn-sm" onclick="printShopTransferReport()">🖨️ รายงาน "นำเข้ารายได้โรงเรียน ร้าน*50"</button>
             </div>
           </div>
           <div class="kpi-grid" id="rptMonthKpi"></div>

@@ -853,18 +853,21 @@ function _groupTxByName(rows){
   });
   return Object.values(map).sort((a,b)=>(b.inc+b.exp+b.school+b.fc)-(a.inc+a.exp+a.school+a.fc));
 }
-/* รวมยอดของเดือนที่เลือก แยกเป็นรายวัน (เรียงจากวันที่ 1 → สิ้นเดือน) ใช้ทำตาราง "แยกแต่ละวัน" สำหรับพิมพ์ */
-function _groupTxByDate(rows){
+/* จัดกลุ่มธุรกรรมของเดือนที่เลือกเป็น "ตามวัน → รายการในวันนั้น" (ไม่รวมยอด แยกให้เห็นทุกรายการจริงในแต่ละวัน)
+   คืนค่าเป็น array ของ {date, txs:[...เรียงตามชื่อ], inc,exp,school,fc} เรียงวันที่ 1 → สิ้นเดือน */
+function _groupTxByDateDetailed(rows){
   const map={};
   rows.forEach(t=>{
-    const g=map[t.date]||(map[t.date]={date:t.date,inc:0,exp:0,school:0,fc:0,count:0});
-    g.inc+=t.income||0; g.exp+=t.expense||0; g.school+=t.schoolDeduct||0; g.fc+=t.fcDeduct||0; g.count++;
+    const g=map[t.date]||(map[t.date]={date:t.date,txs:[],inc:0,exp:0,school:0,fc:0});
+    g.txs.push(t);
+    g.inc+=t.income||0; g.exp+=t.expense||0; g.school+=t.schoolDeduct||0; g.fc+=t.fcDeduct||0;
   });
-  return Object.values(map).sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
+  const days=Object.values(map).sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
+  days.forEach(d=>d.txs.sort((a,b)=>a.name<b.name?-1:(a.name>b.name?1:0)));
+  return days;
 }
 
-/* พิมพ์รายงานของเดือนที่เลือกอยู่ในแท็บ "รายเดือน":
-   1) สรุปตามรายการ  2) แยกแต่ละวัน  3) รายงานเฉพาะ "นำเข้ารายได้โรงเรียน ร้าน*50 บาท" */
+/* พิมพ์รายงานของเดือนที่เลือกอยู่ในแท็บ "รายเดือน": 1) สรุปตามรายการ  2) แยกแต่ละวัน (รายการไหนเท่าไหร่ ไม่ใช่นับรวม) */
 function printReportMonth(){
   const month=document.getElementById('rptMonthSelect').value;
   if(!month){ showToast('กรุณาเลือกเดือนก่อน','error'); return; }
@@ -889,35 +892,21 @@ function printReportMonth(){
       <td class="num">${fmt(g.inc-g.exp-g.school-g.fc)}</td>
     </tr>`).join('');
 
-  // 2) แยกแต่ละวัน
-  const byDate=_groupTxByDate(rows);
-  const byDateRows=byDate.map(g=>`<tr>
-      <td>${fmtDateShort(g.date)}</td>
-      <td class="num">${g.count}</td>
-      <td class="num">${numOrDash(g.inc)}</td>
-      <td class="num">${numOrDash(g.exp)}</td>
-      <td class="num">${numOrDash(g.school)}</td>
-      <td class="num">${numOrDash(g.fc)}</td>
-      <td class="num">${fmt(g.inc-g.exp-g.school-g.fc)}</td>
-    </tr>`).join('');
-
-  // 3) รายงานเฉพาะ "นำเข้ารายได้โรงเรียน ร้าน*50 บาท" — แยกเป็นรายวัน + จำนวนร้าน (คำนวณจากยอด/50)
-  const shopRows=rows.filter(t=>t.name===SHOP_TRANSFER_NAME).sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
-  const shopTotal=shopRows.reduce((s,t)=>s+(t.expense||0),0);
-  const shopCountTotal=shopRows.reduce((s,t)=>s+Math.round((t.expense||0)/50),0);
-  const shopRowsHtml=shopRows.map(t=>`<tr>
-      <td>${fmtDateShort(t.date)}</td>
-      <td class="num">${Math.round((t.expense||0)/50)}</td>
-      <td class="num">${fmt(t.expense||0)}</td>
-      <td>${t.note||'-'}</td>
-    </tr>`).join('');
-  const shopSectionHtml = shopRows.length
-    ? `<table class="print-tbl">
-        <thead><tr><th>วันที่</th><th class="num">จำนวนร้าน</th><th class="num">ยอดเงิน</th><th>หมายเหตุ</th></tr></thead>
-        <tbody>${shopRowsHtml}</tbody>
-        <tfoot><tr><td>รวม (${shopRows.length} วันที่บันทึก)</td><td class="num">${shopCountTotal}</td><td class="num">${fmt(shopTotal)}</td><td></td></tr></tfoot>
-      </table>`
-    : `<div class="print-empty">ไม่มีรายการ "${SHOP_TRANSFER_NAME}" ในเดือนนี้</div>`;
+  // 2) แยกแต่ละวัน — โชว์ทุกรายการที่เกิดในวันนั้นๆ (ไม่ใช่ยอดรวม) คั่นแต่ละวันด้วยแถวหัวข้อวันที่
+  const byDate=_groupTxByDateDetailed(rows);
+  const byDateRows=byDate.map(d=>{
+    const dayNet=d.inc-d.exp-d.school-d.fc;
+    const head=`<tr class="print-daysep"><td colspan="6">${fmtDateShort(d.date)} — ${d.txs.length} รายการ · สุทธิ ฿${fmt(dayNet)}</td></tr>`;
+    const items=d.txs.map(t=>`<tr>
+        <td>${t.name}${t.note?` <span style="color:#888">(${t.note})</span>`:''}</td>
+        <td class="num">${numOrDash(t.income)}</td>
+        <td class="num">${numOrDash(t.expense)}</td>
+        <td class="num">${numOrDash(t.schoolDeduct)}</td>
+        <td class="num">${numOrDash(t.fcDeduct)}</td>
+        <td class="num">${fmt((t.income||0)-(t.expense||0)-(t.schoolDeduct||0)-(t.fcDeduct||0))}</td>
+      </tr>`).join('');
+    return head+items;
+  }).join('');
 
   document.getElementById('printReportArea').innerHTML=`
     <div class="print-title">รายงานสรุป Food Court – ${monthLabel}</div>
@@ -948,16 +937,15 @@ function printReportMonth(){
       </tr></tfoot>
     </table>
 
-    <div class="print-section-title">แยกแต่ละวัน</div>
+    <div class="print-section-title">แยกแต่ละวัน (รายละเอียดทุกรายการ)</div>
     <table class="print-tbl">
       <thead><tr>
-        <th>วันที่</th><th class="num">จำนวนรายการ</th><th class="num">รับ</th><th class="num">จ่าย</th>
+        <th>รายการ</th><th class="num">รับ</th><th class="num">จ่าย</th>
         <th class="num">หักร้านน้ำ</th><th class="num">หัก FC</th><th class="num">สุทธิ</th>
       </tr></thead>
       <tbody>${byDateRows}</tbody>
       <tfoot><tr>
-        <td>รวมทั้งหมด</td>
-        <td class="num">${rows.length}</td>
+        <td>รวมทั้งเดือน (${rows.length} รายการ)</td>
         <td class="num">${fmt(o.inc)}</td>
         <td class="num">${fmt(o.exp)}</td>
         <td class="num">${fmt(o.school)}</td>
@@ -965,9 +953,37 @@ function printReportMonth(){
         <td class="num">${fmt(o.net)}</td>
       </tr></tfoot>
     </table>
+  `;
+  window.print();
+}
 
-    <div class="print-section-title">รายงานเฉพาะรายการ "${SHOP_TRANSFER_NAME}"</div>
-    ${shopSectionHtml}
+/* พิมพ์รายงานแยกเฉพาะรายการ "นำเข้ารายได้โรงเรียน ร้าน*50 บาท" ของเดือนที่เลือก (ปุ่มแยกต่างหาก) */
+function printShopTransferReport(){
+  const month=document.getElementById('rptMonthSelect').value;
+  if(!month){ showToast('กรุณาเลือกเดือนก่อน','error'); return; }
+  const rows=transactions.filter(t=>t.date.startsWith(month) && t.name===SHOP_TRANSFER_NAME)
+    .sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
+  const monthLabel=new Date(month+'-01T00:00:00').toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  const printedAt=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+
+  const total=rows.reduce((s,t)=>s+(t.expense||0),0);
+  const countTotal=rows.reduce((s,t)=>s+Math.round((t.expense||0)/50),0);
+  const bodyHtml=rows.map(t=>`<tr>
+      <td>${fmtDateShort(t.date)}</td>
+      <td class="num">${Math.round((t.expense||0)/50)}</td>
+      <td class="num">${fmt(t.expense||0)}</td>
+      <td>${t.note||'-'}</td>
+    </tr>`).join('');
+
+  document.getElementById('printReportArea').innerHTML=`
+    <div class="print-title">รายงาน "${SHOP_TRANSFER_NAME}" – ${monthLabel}</div>
+    <div class="print-sub">โรงเรียนหนองกี่พิทยาคม · พิมพ์เมื่อ ${printedAt}</div>
+    ${rows.length ? `
+    <table class="print-tbl">
+      <thead><tr><th>วันที่</th><th class="num">จำนวนร้าน</th><th class="num">ยอดเงิน</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>${bodyHtml}</tbody>
+      <tfoot><tr><td>รวม (${rows.length} วันที่บันทึก)</td><td class="num">${countTotal}</td><td class="num">${fmt(total)}</td><td></td></tr></tfoot>
+    </table>` : `<div class="print-empty">ไม่มีรายการ "${SHOP_TRANSFER_NAME}" ในเดือนนี้</div>`}
   `;
   window.print();
 }
