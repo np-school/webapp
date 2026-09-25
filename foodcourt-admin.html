@@ -121,7 +121,11 @@
   .print-sub { font-size:11px; color:#555; margin-bottom:4px; }
   .print-kpis { display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 10px; font-size:11px; }
   .print-kpis b { font-size:12px; }
-  .print-tbl { width:100%; border-collapse:collapse; font-size:10.5px; }
+  .print-section-title { font-size:12.5px; font-weight:800; margin:14px 0 5px; color:#111; page-break-after:avoid; }
+  .print-section-title:first-of-type { margin-top:8px; }
+  .print-empty { font-size:11px; color:#777; margin-bottom:8px; }
+  .print-tbl { width:100%; border-collapse:collapse; font-size:10.5px; page-break-inside:auto; }
+  .print-tbl tr { page-break-inside:avoid; }
   .print-tbl th, .print-tbl td { border:1px solid #bbb; padding:3px 6px; }
   .print-tbl thead th { background:#eee; text-align:left; }
   .print-tbl td.num, .print-tbl th.num { text-align:right; white-space:nowrap; }
