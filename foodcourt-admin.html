@@ -111,12 +111,14 @@
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-/* ── พิมพ์รายงานรายเดือน: พื้นที่นี้ซ่อนอยู่บนหน้าจอ โผล่มาแทนที่ทุกอย่างตอนสั่งพิมพ์เท่านั้น ── */
+/* ── พิมพ์รายงาน: พื้นที่นี้ซ่อนอยู่บนหน้าจอ โผล่มาแทนที่ทุกอย่างเฉพาะตอนกดปุ่ม "พิมพ์รายงาน" เท่านั้น
+   (ต้องผูกกับ body.printing-report — ถ้าไม่งั้นกด Ctrl+P/พิมพ์ปกติจากแท็บอื่นจะกลายเป็นหน้าขาวเปล่า
+   เพราะ #printReportArea ไม่มีเนื้อหาอยู่ก่อน แต่ CSS เดิมไปซ่อนทุกอย่างที่เหลือทิ้งหมด) */
 #printReportArea { display:none; }
 @media print {
-  body * { visibility:hidden; }
-  #printReportArea, #printReportArea * { visibility:visible; }
-  #printReportArea { display:block; position:absolute; left:0; top:0; width:100%; padding:10px 14px; }
+  body.printing-report * { visibility:hidden; }
+  body.printing-report #printReportArea, body.printing-report #printReportArea * { visibility:visible; }
+  body.printing-report #printReportArea { display:block; position:absolute; left:0; top:0; width:100%; padding:10px 14px; }
   .print-title { font-size:16px; font-weight:800; margin-bottom:2px; color:#111; }
   .print-sub { font-size:11px; color:#555; margin-bottom:4px; }
   .print-kpis { display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 10px; font-size:11px; }
@@ -557,7 +559,10 @@
         <div class="tab-pane" data-panel="year" id="panelRptYear">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">สรุปยอดรวมรายปี แยกตาม 12 เดือน</div>
-            <select id="rptYearSelect" style="width:140px" onchange="renderReportYear()"></select>
+            <div style="display:flex;align-items:center;gap:var(--gap-item);flex-wrap:wrap">
+              <select id="rptYearSelect" style="width:140px" onchange="renderReportYear()"></select>
+              <button class="btn btn-ghost btn-sm" onclick="printReportYear()">🖨️ พิมพ์รายงานปีนี้</button>
+            </div>
           </div>
           <div class="kpi-grid" id="rptYearKpi"></div>
           <div class="card">

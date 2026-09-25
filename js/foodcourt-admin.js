@@ -867,6 +867,18 @@ function _groupTxByDateDetailed(rows){
   return days;
 }
 
+/* ── ตัวช่วยกลางสำหรับพิมพ์รายงาน: ใส่เนื้อหาลง #printReportArea, ติดคลาส printing-report ให้ body
+   (คลาสนี้เท่านั้นที่ทำให้ CSS @media print ซ่อนหน้าเว็บที่เหลือ) แล้วค่อยสั่งพิมพ์ + ถอดคลาสออกหลังพิมพ์เสร็จ/ยกเลิก
+   ป้องกันปัญหาเดิม: ถ้าใครกด Ctrl+P ตรงๆ ตอนไม่มีคลาสนี้ (เช่น อยู่แท็บรายปีแล้วสั่งพิมพ์เอง) หน้าเว็บจะพิมพ์ออกมาปกติ ไม่ใช่หน้าขาว ── */
+function _doPrintReport(html){
+  document.getElementById('printReportArea').innerHTML=html;
+  document.body.classList.add('printing-report');
+  window.print();
+}
+window.addEventListener('afterprint', function(){
+  document.body.classList.remove('printing-report');
+});
+
 /* พิมพ์รายงานของเดือนที่เลือกอยู่ในแท็บ "รายเดือน": 1) สรุปตามรายการ  2) แยกแต่ละวัน (รายการไหนเท่าไหร่ ไม่ใช่นับรวม) */
 function printReportMonth(){
   const month=document.getElementById('rptMonthSelect').value;
@@ -908,7 +920,7 @@ function printReportMonth(){
     return head+items;
   }).join('');
 
-  document.getElementById('printReportArea').innerHTML=`
+  _doPrintReport(`
     <div class="print-title">รายงานสรุป Food Court – ${monthLabel}</div>
     <div class="print-sub">โรงเรียนหนองกี่พิทยาคม · พิมพ์เมื่อ ${printedAt} · มีรายการทั้งหมด ${rows.length} รายการ ใน ${days} วัน</div>
     <div class="print-kpis">
@@ -953,10 +965,8 @@ function printReportMonth(){
         <td class="num">${fmt(o.net)}</td>
       </tr></tfoot>
     </table>
-  `;
-  window.print();
+  `);
 }
-
 /* พิมพ์รายงานแยกเฉพาะรายการ "นำเข้ารายได้โรงเรียน ร้าน*50 บาท" ของเดือนที่เลือก (ปุ่มแยกต่างหาก) */
 function printShopTransferReport(){
   const month=document.getElementById('rptMonthSelect').value;
@@ -975,7 +985,7 @@ function printShopTransferReport(){
       <td>${t.note||'-'}</td>
     </tr>`).join('');
 
-  document.getElementById('printReportArea').innerHTML=`
+  _doPrintReport(`
     <div class="print-title">รายงาน "${SHOP_TRANSFER_NAME}" – ${monthLabel}</div>
     <div class="print-sub">โรงเรียนหนองกี่พิทยาคม · พิมพ์เมื่อ ${printedAt}</div>
     ${rows.length ? `
@@ -984,8 +994,96 @@ function printShopTransferReport(){
       <tbody>${bodyHtml}</tbody>
       <tfoot><tr><td>รวม (${rows.length} วันที่บันทึก)</td><td class="num">${countTotal}</td><td class="num">${fmt(total)}</td><td></td></tr></tfoot>
     </table>` : `<div class="print-empty">ไม่มีรายการ "${SHOP_TRANSFER_NAME}" ในเดือนนี้</div>`}
-  `;
-  window.print();
+  `);
+}
+
+/* พิมพ์รายงานสรุปทั้งปีของปีที่เลือกอยู่ในแท็บ "รายปี": ยอดรวมแต่ละเดือน (ม.ค.–ธ.ค.) + สรุปตามรายการทั้งปี */
+function printReportYear(){
+  const year=document.getElementById('rptYearSelect').value;
+  if(!year){ showToast('กรุณาเลือกปีก่อน','error'); return; }
+  const rows=transactions.filter(t=>t.date.startsWith(year));
+  if(!rows.length){ showToast('ไม่มีข้อมูลในปีนี้','error'); return; }
+
+  const monthNames=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const o=fcSum(rows);
+  const printedAt=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+  const numOrDash=v=>v>0?fmt(v):'-';
+
+  // 1) สรุปตามเดือน (ม.ค.–ธ.ค.)
+  const byMonthRows=monthNames.map((mName,i)=>{
+    const mRows=rows.filter(t=>parseInt(t.date.slice(5,7),10)-1===i);
+    if(!mRows.length) return `<tr><td>${mName}</td><td class="num">0</td><td class="num">-</td><td class="num">-</td><td class="num">-</td><td class="num">-</td><td class="num">-</td></tr>`;
+    const mo=fcSum(mRows);
+    return `<tr>
+        <td>${mName}</td>
+        <td class="num">${mRows.length}</td>
+        <td class="num">${numOrDash(mo.inc)}</td>
+        <td class="num">${numOrDash(mo.exp)}</td>
+        <td class="num">${numOrDash(mo.school)}</td>
+        <td class="num">${numOrDash(mo.fc)}</td>
+        <td class="num">${fmt(mo.net)}</td>
+      </tr>`;
+  }).join('');
+
+  // 2) สรุปตามรายการทั้งปี
+  const byName=_groupTxByName(rows);
+  const byNameRows=byName.map(g=>`<tr>
+      <td>${g.name}</td>
+      <td class="num">${g.count}</td>
+      <td class="num">${numOrDash(g.inc)}</td>
+      <td class="num">${numOrDash(g.exp)}</td>
+      <td class="num">${numOrDash(g.school)}</td>
+      <td class="num">${numOrDash(g.fc)}</td>
+      <td class="num">${fmt(g.inc-g.exp-g.school-g.fc)}</td>
+    </tr>`).join('');
+
+  _doPrintReport(`
+    <div class="print-title">รายงานสรุป Food Court – ปี ${year}</div>
+    <div class="print-sub">โรงเรียนหนองกี่พิทยาคม · พิมพ์เมื่อ ${printedAt} · มีรายการทั้งหมด ${rows.length} รายการ</div>
+    <div class="print-kpis">
+      <div>รับ <b>฿${fmt(o.inc)}</b></div>
+      <div>จ่าย <b>฿${fmt(o.exp)}</b></div>
+      <div>หักร้านน้ำ <b>฿${fmt(o.school)}</b></div>
+      <div>หัก Food Court <b>฿${fmt(o.fc)}</b></div>
+      <div>สุทธิ <b>฿${fmt(o.net)}</b></div>
+    </div>
+
+    <div class="print-section-title">สรุปตามเดือน</div>
+    <table class="print-tbl">
+      <thead><tr>
+        <th>เดือน</th><th class="num">จำนวนรายการ</th><th class="num">รับ</th><th class="num">จ่าย</th>
+        <th class="num">หักร้านน้ำ</th><th class="num">หัก FC</th><th class="num">สุทธิ</th>
+      </tr></thead>
+      <tbody>${byMonthRows}</tbody>
+      <tfoot><tr>
+        <td>รวมทั้งปี</td>
+        <td class="num">${rows.length}</td>
+        <td class="num">${fmt(o.inc)}</td>
+        <td class="num">${fmt(o.exp)}</td>
+        <td class="num">${fmt(o.school)}</td>
+        <td class="num">${fmt(o.fc)}</td>
+        <td class="num">${fmt(o.net)}</td>
+      </tr></tfoot>
+    </table>
+
+    <div class="print-section-title">สรุปตามรายการทั้งปี</div>
+    <table class="print-tbl">
+      <thead><tr>
+        <th>รายการ</th><th class="num">จำนวนครั้ง</th><th class="num">รับ</th><th class="num">จ่าย</th>
+        <th class="num">หักร้านน้ำ</th><th class="num">หัก FC</th><th class="num">สุทธิ</th>
+      </tr></thead>
+      <tbody>${byNameRows}</tbody>
+      <tfoot><tr>
+        <td>รวมทั้งหมด</td>
+        <td class="num">${rows.length}</td>
+        <td class="num">${fmt(o.inc)}</td>
+        <td class="num">${fmt(o.exp)}</td>
+        <td class="num">${fmt(o.school)}</td>
+        <td class="num">${fmt(o.fc)}</td>
+        <td class="num">${fmt(o.net)}</td>
+      </tr></tfoot>
+    </table>
+  `);
 }
 
 /* ── เปรียบเทียบรายเดือน ── */
