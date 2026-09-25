@@ -111,6 +111,22 @@
     .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+/* ── พิมพ์รายงานรายเดือน: พื้นที่นี้ซ่อนอยู่บนหน้าจอ โผล่มาแทนที่ทุกอย่างตอนสั่งพิมพ์เท่านั้น ── */
+#printReportArea { display:none; }
+@media print {
+  body * { visibility:hidden; }
+  #printReportArea, #printReportArea * { visibility:visible; }
+  #printReportArea { display:block; position:absolute; left:0; top:0; width:100%; padding:10px 14px; }
+  .print-title { font-size:16px; font-weight:800; margin-bottom:2px; color:#111; }
+  .print-sub { font-size:11px; color:#555; margin-bottom:4px; }
+  .print-kpis { display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 10px; font-size:11px; }
+  .print-kpis b { font-size:12px; }
+  .print-tbl { width:100%; border-collapse:collapse; font-size:10.5px; }
+  .print-tbl th, .print-tbl td { border:1px solid #bbb; padding:3px 6px; }
+  .print-tbl thead th { background:#eee; text-align:left; }
+  .print-tbl td.num, .print-tbl th.num { text-align:right; white-space:nowrap; }
+  .print-tbl tfoot td { font-weight:800; border-top:2px solid #333; background:#f5f5f5; }
+}
   </style>
 </head>
 <body>
@@ -494,7 +510,10 @@
         <div class="tab-pane" data-panel="month" id="panelRptMonth">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-item);margin-bottom:var(--gap-card)">
             <div style="font-size:12px;color:var(--text2)">สถิติรายวันภายในเดือนที่เลือก</div>
-            <select id="rptMonthSelect" style="width:180px" onchange="renderReportMonth()"></select>
+            <div style="display:flex;align-items:center;gap:var(--gap-item);flex-wrap:wrap">
+              <select id="rptMonthSelect" style="width:180px" onchange="renderReportMonth()"></select>
+              <button class="btn btn-ghost btn-sm" onclick="printReportMonth()">🖨️ พิมพ์รายงานเดือนนี้</button>
+            </div>
           </div>
           <div class="kpi-grid" id="rptMonthKpi"></div>
           <div class="chart-grid" style="margin-bottom:var(--gap-section)">
@@ -706,6 +725,8 @@
     </div>
 </template>
 
+<!-- พื้นที่สำหรับพิมพ์รายงานรายเดือน (ซ่อนอยู่ปกติ แสดงเฉพาะตอนสั่งพิมพ์ — ดู #printReportArea ใน <style>) -->
+<div id="printReportArea"></div>
 
 <script src="js/foodcourt-admin.js"></script>
 </body>

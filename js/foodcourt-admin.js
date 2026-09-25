@@ -843,6 +843,70 @@ function renderReportMonth(){
   document.getElementById('rptMonthLegend').innerHTML=slabels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${bg[i]}"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l}</div><div style="font-size:10px;color:var(--text2)">฿${fmt(sdata[i])}</div></div></div>`).join('');
 }
 
+/* รวมยอดของเดือนที่เลือก แยกตามชื่อรายการ (ทุกรายการที่เกิดขึ้นจริงในเดือนนั้น ไม่ว่าจะเป็นรายการประจำหรือรายการอื่นๆ)
+   ใช้ทำตารางสรุป "มีรายการอะไรบ้าง เท่าไหร่" สำหรับพิมพ์ */
+function _groupTxByName(rows){
+  const map={};
+  rows.forEach(t=>{
+    const g=map[t.name]||(map[t.name]={name:t.name,inc:0,exp:0,school:0,fc:0,count:0});
+    g.inc+=t.income||0; g.exp+=t.expense||0; g.school+=t.schoolDeduct||0; g.fc+=t.fcDeduct||0; g.count++;
+  });
+  return Object.values(map).sort((a,b)=>(b.inc+b.exp+b.school+b.fc)-(a.inc+a.exp+a.school+a.fc));
+}
+
+/* พิมพ์รายงานของเดือนที่เลือกอยู่ในแท็บ "รายเดือน": ตารางย่อ รายการ+ยอด ทุกรายการที่เกิดในเดือนนั้น */
+function printReportMonth(){
+  const month=document.getElementById('rptMonthSelect').value;
+  if(!month){ showToast('กรุณาเลือกเดือนก่อน','error'); return; }
+  const rows=transactions.filter(t=>t.date.startsWith(month));
+  if(!rows.length){ showToast('ไม่มีข้อมูลในเดือนนี้','error'); return; }
+
+  const grouped=_groupTxByName(rows);
+  const o=fcSum(rows);
+  const days=new Set(rows.map(t=>t.date)).size;
+  const monthLabel=new Date(month+'-01T00:00:00').toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  const printedAt=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+
+  const numOrDash=v=>v>0?fmt(v):'-';
+  const rowsHtml=grouped.map(g=>`<tr>
+      <td>${g.name}</td>
+      <td class="num">${g.count}</td>
+      <td class="num">${numOrDash(g.inc)}</td>
+      <td class="num">${numOrDash(g.exp)}</td>
+      <td class="num">${numOrDash(g.school)}</td>
+      <td class="num">${numOrDash(g.fc)}</td>
+      <td class="num">${fmt(g.inc-g.exp-g.school-g.fc)}</td>
+    </tr>`).join('');
+
+  document.getElementById('printReportArea').innerHTML=`
+    <div class="print-title">รายงานสรุป Food Court – ${monthLabel}</div>
+    <div class="print-sub">โรงเรียนหนองกี่พิทยาคม · พิมพ์เมื่อ ${printedAt} · มีรายการทั้งหมด ${rows.length} รายการ ใน ${days} วัน</div>
+    <div class="print-kpis">
+      <div>รับ <b>฿${fmt(o.inc)}</b></div>
+      <div>จ่าย <b>฿${fmt(o.exp)}</b></div>
+      <div>หักร้านน้ำ <b>฿${fmt(o.school)}</b></div>
+      <div>หัก Food Court <b>฿${fmt(o.fc)}</b></div>
+      <div>สุทธิ <b>฿${fmt(o.net)}</b></div>
+    </div>
+    <table class="print-tbl">
+      <thead><tr>
+        <th>รายการ</th><th class="num">จำนวนครั้ง</th><th class="num">รับ</th><th class="num">จ่าย</th>
+        <th class="num">หักร้านน้ำ</th><th class="num">หัก FC</th><th class="num">สุทธิ</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+      <tfoot><tr>
+        <td>รวมทั้งหมด</td>
+        <td class="num">${rows.length}</td>
+        <td class="num">${fmt(o.inc)}</td>
+        <td class="num">${fmt(o.exp)}</td>
+        <td class="num">${fmt(o.school)}</td>
+        <td class="num">${fmt(o.fc)}</td>
+        <td class="num">${fmt(o.net)}</td>
+      </tr></tfoot>
+    </table>`;
+  window.print();
+}
+
 /* ── เปรียบเทียบรายเดือน ── */
 function renderReportCompare(){
   const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort();
