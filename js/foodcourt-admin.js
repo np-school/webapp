@@ -245,19 +245,19 @@ function fcChartOpts(xSize){
 }
 function fcKpiHtml(o,sub){
   sub=sub||{};
-  var netCol=o.net>=0?'var(--green)':'var(--red)';
+  var balance=(o.fc||0)+(o.net||0);
+  var balCol=balance>=0?'var(--green)':'var(--red)';
   var cards=[
     ['income','💰','รายรับ',o.inc,'var(--green)',sub.inc],
     ['expense','💸','รายจ่าย',o.exp,'var(--red)',sub.exp],
     ['school','🏫','หักเข้าบัญชีร้านน้ำโรงเรียน',o.school,'var(--amber)',sub.school],
-    ['fc','🍽️','หักเข้าบัญชี Food Court',o.fc,'var(--fc-orange)',sub.fc],
-    ['balance','🏦','สุทธิ',o.net,netCol,sub.net||(o.net>=0?'✅ กำไร':'⚠️ ขาดทุน')]
+    ['balance','🏦','ยอดคงเหลือสุทธิ',balance,balCol,sub.net||(balance>=0?'✅ กำไร':'⚠️ ขาดทุน')]
   ];
   return cards.map(function(c){
     return '<div class="kpi '+c[0]+'"><div class="kpi-icon">'+c[1]+'</div><div class="kpi-label">'+c[2]+'</div><div class="kpi-value" style="color:'+c[4]+'">฿'+fmt(c[3])+'</div><div class="kpi-sub">'+(c[5]||'&nbsp;')+'</div></div>';
   }).join('');
 }
-function setFcKpi(id,o,sub){ var el=document.getElementById(id); if(!el) return; el.classList.add('kpi5'); el.innerHTML=fcKpiHtml(o,sub); }
+function setFcKpi(id,o,sub){ var el=document.getElementById(id); if(!el) return; el.classList.add('kpi4'); el.innerHTML=fcKpiHtml(o,sub); }
 /* ส่วนหัว + แถวของตารางสรุป (สัปดาห์/เดือน) ให้ครบ 5 คอลัมน์ */
 function fcTh(first){
   var r='style="text-align:right"';
@@ -715,9 +715,7 @@ function renderDaily(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หักเข้าบัญชี Food Court</div><div class="sum-val" style="color:var(--fc-orange)">฿${fmt(totalFc)}</div></div>
-    <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">ยอดคงเหลือสุทธิ</div><div class="sum-val" style="color:${(totalFc+net)>=0?'var(--green)':'var(--red)'}">฿${fmt(totalFc+net)}</div></div>
     <div style="margin-left:auto;font-size:11px;color:var(--text2)">${rows.length} รายการ</div>
   `;
 
@@ -1246,9 +1244,7 @@ function updateEntrySumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หักเข้าบัญชี Food Court</div><div class="sum-val" style="color:var(--fc-orange)">฿${fmt(totalFc)}</div></div>
-    <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">ยอดคงเหลือสุทธิ</div><div class="sum-val" style="color:${(totalFc+net)>=0?'var(--green)':'var(--red)'}">฿${fmt(totalFc+net)}</div></div>
   `;
 }
 
@@ -1392,9 +1388,7 @@ function updateModalSumBar(){
     <div class="divider"></div>
     <div class="sum-item"><div class="sum-label">หักเข้าบัญชีร้านน้ำโรงเรียน</div><div class="sum-val" style="color:var(--amber)">฿${fmt(totalSchool)}</div></div>
     <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">หักเข้าบัญชี Food Court</div><div class="sum-val" style="color:var(--fc-orange)">฿${fmt(totalFc)}</div></div>
-    <div class="divider"></div>
-    <div class="sum-item"><div class="sum-label">สุทธิ</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">฿${fmt(net)}</div></div>
+    <div class="sum-item"><div class="sum-label">ยอดคงเหลือสุทธิ</div><div class="sum-val" style="color:${(totalFc+net)>=0?'var(--green)':'var(--red)'}">฿${fmt(totalFc+net)}</div></div>
   `;
 }
 

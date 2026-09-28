@@ -44,6 +44,12 @@
     .kpi5 .kpi-label { text-transform: none; letter-spacing: 0; }
     @media (max-width:1100px){ .kpi-grid.kpi5 { grid-template-columns: repeat(3,minmax(0,1fr)); } }
     @media (max-width:600px){ .kpi-grid.kpi5 { grid-template-columns: repeat(2,minmax(0,1fr)); } .kpi-grid.kpi5 .kpi:last-child { grid-column: 1 / -1; } }
+    /* แถวสถิติ 4 ตัว (รับ/จ่าย/หักร้านน้ำ/ยอดคงเหลือสุทธิ ที่รวม หัก FC + สุทธิ) ให้อยู่บรรทัดเดียวบนจอกว้าง */
+    .kpi-grid.kpi4 { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .kpi4 .kpi-value { font-size: 20px; }
+    .kpi4 .kpi-label { text-transform: none; letter-spacing: 0; }
+    @media (max-width:1100px){ .kpi-grid.kpi4 { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width:600px){ .kpi-grid.kpi4 { grid-template-columns: repeat(2,minmax(0,1fr)); } }
     .kpi-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
     .kpi-value { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1.1; }
     .kpi-sub { font-size: 11px; color: var(--text2); }
