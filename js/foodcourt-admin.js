@@ -435,7 +435,8 @@ function getRecPeriodTx() {
 function renderDashboardRecurring() {
   const periodTx = getRecPeriodTx();
   const o = fcSum(periodTx);
-  const tiles=[['รายรับ',o.inc,'green'],['รายจ่าย',o.exp,'red'],['หักร้านน้ำโรงเรียน',o.school,'amber'],['หัก Food Court',o.fc,'fc-orange'],['สุทธิ',o.net,o.net>=0?'blue':'red']];
+  const balance=(o.fc||0)+(o.net||0);
+  const tiles=[['รายรับ',o.inc,'green'],['รายจ่าย',o.exp,'red'],['หักร้านน้ำโรงเรียน',o.school,'amber'],['ยอดคงเหลือสุทธิ',balance,balance>=0?'blue':'red']];
   const tok=c=>c==='fc-orange'?['var(--fc-orange-light)','var(--fc-orange)','var(--fc-orange)']:['var(--'+c+'-light)','var(--'+c+'-mid)','var(--'+c+')'];
   const kpiEl=document.getElementById('recSummaryKpi');
   kpiEl.style.gridTemplateColumns='repeat(auto-fit,minmax(120px,1fr))';
