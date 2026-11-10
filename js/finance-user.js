@@ -42,8 +42,8 @@ function renderList() {
     if (statusFilter === 'all') return true;
     var tone = overallInfo(d).tone;
     if (statusFilter === 'done') return tone === 'done';
-    if (statusFilter === 'revision') return d.s1 === 'revision';
-    return tone !== 'done' && d.s1 !== 'revision';
+    if (statusFilter === 'revision') return !!revStepOf(d);
+    return tone !== 'done' && !revStepOf(d);
   });
   if (!rows.length) {
     el.innerHTML = emptyHtml(allDocs.length ? 'ไม่พบรายการในสถานะนี้' : 'ยังไม่มีเอกสารที่คุณส่ง กดปุ่ม "ส่งเอกสารใหม่" เพื่อเริ่มต้น');
@@ -52,29 +52,29 @@ function renderList() {
   el.innerHTML = rows.map(rowHtml).join('');
 }
 function renderDetail(d) {
-  var own = '', banner = '';
-  if (isMine(d) && d.s1 === 'revision') {
-    /* ถูกส่งกลับ: ปุ่มหลักอยู่ในแบนเนอร์ — แก้ข้อมูลก่อน แล้วกดส่งใหม่ */
+  var own = '', banner = '', rev = revStepOf(d);
+  if (isMine(d) && rev) {
+    /* ถูกส่งกลับ (ขั้นใดก็ได้): ปุ่มหลักอยู่ในแบนเนอร์ — แก้ข้อมูลก่อน แล้วกดส่งใหม่ เอกสารจะกลับไปรอตรวจที่ขั้นเดิม */
     banner = '<button class="btn-primary btn-sm" onclick="resubmitDoc(\'' + d.id + '\')">ส่งใหม่อีกครั้ง</button>' +
       '<button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>';
   } else if (isMine(d) && d.s1 === 'processing') {
     own = '<div class="fd-actions" style="margin-top:16px;"><button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
       '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button></div>';
   } else if (d.s1 === 'approved') {
-    own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ หากต้องการแก้ไขกรุณาติดต่อฝ่ายการเงิน</div>';
+    own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ เว้นแต่เจ้าหน้าที่ส่งกลับให้แก้ไข หากต้องการแก้ไขกรุณาติดต่อฝ่ายการเงิน</div>';
   }
   buildDetailHtml(d, [], own, banner, false);
 }
-/* ผู้ส่งกดส่งใหม่หลังแก้ไข: revision → processing (ต้องมี firestore.rules ที่อนุญาต — ดูไฟล์ rules) */
+/* ผู้ส่งกดส่งใหม่หลังแก้ไข: ขั้นที่ถูกส่งกลับ revision → สถานะรอตรวจของขั้นนั้น (REV_BACK) — ต้องมี firestore.rules ที่อนุญาต */
 function resubmitDoc(id) {
-  var d = findDoc(id); if (!d || !isMine(d) || d.s1 !== 'revision') return;
+  var d = findDoc(id), rs = d ? revStepOf(d) : '';
+  if (!d || !isMine(d) || !rs) return;
   if (!confirm('ส่งเอกสารนี้ให้เจ้าหน้าที่ตรวจอีกครั้งใช่หรือไม่?')) return;
   var FV = firebase.firestore.FieldValue, TS = firebase.firestore.Timestamp;
-  db.collection('financeDocs').doc(id).update({
-    s1: 'processing',
-    updatedAt: FV.serverTimestamp(),
-    history: FV.arrayUnion({ step: 's1', text: 'ผู้ส่งแก้ไขแล้ว ส่งใหม่อีกครั้ง', note: '', by: d.name || currentUser.displayName || currentUser.email, email: currentUser.email, at: TS.now() })
-  }).then(function() {
+  var upd = { updatedAt: FV.serverTimestamp(),
+    history: FV.arrayUnion({ step: rs, text: 'ผู้ส่งแก้ไขแล้ว ส่งใหม่อีกครั้ง', note: '', by: d.name || currentUser.displayName || currentUser.email, email: currentUser.email, at: TS.now() }) };
+  upd[rs] = REV_BACK[rs];
+  db.collection('financeDocs').doc(id).update(upd).then(function() {
     showToast('ส่งให้เจ้าหน้าที่ตรวจอีกครั้งแล้ว');
   }).catch(function(err) {
     console.error(err); showToast('ส่งไม่สำเร็จ: ' + (err.code || err.message), 'error');

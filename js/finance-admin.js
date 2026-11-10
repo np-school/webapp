@@ -12,30 +12,36 @@ var catFilter = '';     /* '' | loan | claim | clear | purchase | payroll       
 /* การ์ดสรุปด้านบน: แยกสีตามสถานะ — ข้อมูลสี/ชื่อมาจาก STAGE_META ใน finance-common.js (fdStage ก็อยู่ที่นั่น) */
 var FD_STATS = STAGE_ORDER.map(function(k) { var m = STAGE_META[k]; return { k: k, label: m.label, color: m.color, icon: m.icon }; });
 
-/* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ */
+/* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ — ทุกขั้น (1-3) กด "ส่งกลับแก้ไข" ได้ตอนที่เอกสารอยู่ในขั้นนั้น */
 function actionsFor(d) {
-  var out = [];
+  var out = [], st = stepsOf(d);
   if (canStep('s1')) {
     if (d.s1 === 'processing') {
       out.push({ sk: 's1', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
       out.push({ sk: 's1', act: 'approve',  label: 'อนุมัติเอกสาร', cls: 'ok' });
     } else if (d.s1 === 'revision') {
       out.push({ sk: 's1', act: 'resume', label: 'แก้ไขแล้ว → กำลังดำเนินการ', cls: 'ok' });
-    } else if (d.s1 === 'approved' && d.s2 !== 'approved') {
+    } else if (d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision') {
       out.push({ sk: 's1', act: 'revert', label: 'ยกเลิกการอนุมัติ', cls: 'plain', revert: true });
     }
   }
-  if (stepsOf(d).indexOf('s2') > -1 && canStep('s2')) {
-    if (d.s1 === 'approved' && d.s2 !== 'approved') {
-      out.push({ sk: 's2', act: 'approve', label: 'อนุมัติ (ออกเช็คแล้ว)', cls: 'ok' });
-    } else if (d.s2 === 'approved' && d.s3 !== 'paid') {
+  if (st.indexOf('s2') > -1 && canStep('s2') && d.s1 === 'approved') {
+    if (d.s2 === 'revision') {
+      out.push({ sk: 's2', act: 'resume', label: 'แก้ไขแล้ว → รอเบิก/ออกเช็ค', cls: 'ok' });
+    } else if (d.s2 !== 'approved') {
+      out.push({ sk: 's2', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
+      out.push({ sk: 's2', act: 'approve',  label: 'อนุมัติ (ออกเช็คแล้ว)', cls: 'ok' });
+    } else if (d.s3 !== 'paid' && d.s3 !== 'revision') {
       out.push({ sk: 's2', act: 'revert', label: 'ยกเลิกการอนุมัติ', cls: 'plain', revert: true });
     }
   }
-  if (stepsOf(d).indexOf('s3') > -1 && canStep('s3')) {
-    if (d.s2 === 'approved' && d.s3 !== 'paid') {
-      out.push({ sk: 's3', act: 'approve', label: 'ยืนยันชำระแล้ว', cls: 'ok' });
-    } else if (d.s3 === 'paid') {
+  if (st.indexOf('s3') > -1 && canStep('s3') && d.s2 === 'approved') {
+    if (d.s3 === 'revision') {
+      out.push({ sk: 's3', act: 'resume', label: 'แก้ไขแล้ว → ค้างส่งใช้เงินยืม', cls: 'ok' });
+    } else if (d.s3 !== 'paid') {
+      out.push({ sk: 's3', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
+      out.push({ sk: 's3', act: 'approve',  label: 'ยืนยันชำระแล้ว', cls: 'ok' });
+    } else {
       out.push({ sk: 's3', act: 'revert', label: 'ยกเลิกสถานะชำระแล้ว', cls: 'plain', revert: true });
     }
   }
@@ -317,13 +323,19 @@ function computeUpdate(d, sk, act, extra) {
     if (act === 'approve'  && d.s1 === 'processing') u.s1 = 'approved';
     if (act === 'revision' && d.s1 === 'processing') u.s1 = 'revision';
     if (act === 'resume'   && d.s1 === 'revision')   u.s1 = 'processing';
-    if (act === 'revert'   && d.s1 === 'approved' && d.s2 !== 'approved') u.s1 = 'processing';
+    if (act === 'revert'   && d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision') u.s1 = 'processing';
   } else if (sk === 's2') {
-    if (act === 'approve' && d.s1 === 'approved' && d.s2 !== 'approved') u.s2 = 'approved';
-    if (act === 'revert'  && d.s2 === 'approved' && d.s3 !== 'paid')     u.s2 = 'waiting';
+    var s2Open = d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision';
+    if (act === 'approve'  && s2Open) u.s2 = 'approved';
+    if (act === 'revision' && s2Open) u.s2 = 'revision';
+    if (act === 'resume'   && d.s1 === 'approved' && d.s2 === 'revision') u.s2 = 'waiting';
+    if (act === 'revert'   && d.s2 === 'approved' && d.s3 !== 'paid' && d.s3 !== 'revision') u.s2 = 'waiting';
   } else if (sk === 's3') {
-    if (act === 'approve' && d.s2 === 'approved' && d.s3 !== 'paid') { u.s3 = 'paid'; u.settle = extra || {}; }
-    if (act === 'revert'  && d.s3 === 'paid') { u.s3 = 'unpaid'; u.settle = FV.delete(); }
+    var s3Open = d.s2 === 'approved' && d.s3 !== 'paid' && d.s3 !== 'revision';
+    if (act === 'approve'  && s3Open) { u.s3 = 'paid'; u.settle = extra || {}; }
+    if (act === 'revision' && s3Open) u.s3 = 'revision';
+    if (act === 'resume'   && d.s2 === 'approved' && d.s3 === 'revision') u.s3 = 'unpaid';
+    if (act === 'revert'   && d.s3 === 'paid') { u.s3 = 'unpaid'; u.settle = FV.delete(); }
   }
   return Object.keys(u).length ? u : null;
 }

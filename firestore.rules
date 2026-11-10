@@ -507,15 +507,19 @@ service cloud.firestore {
                                              'fiscalYear', 'history', 'createdAt']);
 
       allow update: if isAuthed() && (
-        /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ (ห้ามแตะเลขสัญญา/ขั้น 2-3)
-           และแตะ s1 ได้อย่างเดียว: revision → processing (ส่งใหม่อีกครั้งหลังถูกส่งกลับให้แก้ไข) */
+        /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ "หรือ" ตอนที่ขั้นใดขั้นหนึ่งถูกส่งกลับให้แก้ไข (ห้ามแตะเลขสัญญา)
+           และแตะสถานะได้อย่างเดียว: ขั้นที่ถูกส่งกลับ revision → สถานะรอตรวจของขั้นเดิม (s1→processing, s2→waiting, s3→unpaid) */
         (resource.data.uid == request.auth.uid &&
-         resource.data.s1 != 'approved' &&
+         (resource.data.s1 != 'approved' || resource.data.s2 == 'revision' || resource.data.s3 == 'revision') &&
          request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['name', 'title', 'amount', 'fundType', 'note', 'refContractNo',
-                     'loanDate', 'dueDate', 'updatedAt', 'history', 's1']) &&
+                     'loanDate', 'dueDate', 'updatedAt', 'history', 's1', 's2', 's3']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1']) ||
-          (resource.data.s1 == 'revision' && request.resource.data.s1 == 'processing'))) ||
+          (resource.data.s1 == 'revision' && request.resource.data.s1 == 'processing')) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) ||
+          (resource.data.s2 == 'revision' && request.resource.data.s2 == 'waiting')) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3']) ||
+          (resource.data.s3 == 'revision' && request.resource.data.s3 == 'unpaid'))) ||
         /* เจ้าหน้าที่ — แก้ฟิลด์สถานะของ "ขั้นที่ตัวเองรับผิดชอบ" เท่านั้น */
         (finAny() &&
          request.resource.data.diff(resource.data).affectedKeys()

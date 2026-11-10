@@ -39,12 +39,18 @@ var ACTIONS = {
   's1:revision': { title: 'ส่งกลับแก้ไข',                     btn: 'ส่งกลับแก้ไข', noteRequired: true },
   's1:resume':   { title: 'แก้ไขเรียบร้อย กลับไปกำลังดำเนินการ', btn: 'ยืนยัน' },
   's1:revert':   { title: 'ยกเลิกการอนุมัติ (ตรวจเอกสาร)',     btn: 'ยกเลิกการอนุมัติ' },
+  's2:revision': { title: 'ส่งกลับแก้ไข (ขอเบิกเงิน)',         btn: 'ส่งกลับแก้ไข', noteRequired: true },
+  's2:resume':   { title: 'แก้ไขเรียบร้อย กลับไปรอเบิก/ออกเช็ค', btn: 'ยืนยัน' },
   's2:approve':  { title: 'อนุมัติเอกสารขอเบิกเงิน (ออกเช็คแล้ว)', btn: 'ยืนยันอนุมัติ' },
   's2:revert':   { title: 'ยกเลิกการอนุมัติ (ขอเบิกเงิน)',     btn: 'ยกเลิกการอนุมัติ' },
+  's3:revision': { title: 'ส่งกลับแก้ไข (สัญญายืมเงิน)',       btn: 'ส่งกลับแก้ไข', noteRequired: true },
+  's3:resume':   { title: 'แก้ไขเรียบร้อย กลับไปค้างส่งใช้เงินยืม', btn: 'ยืนยัน' },
   's3:approve':  { title: 'ยืนยันชำระแล้ว (ปิดสัญญายืมเงิน)',   btn: 'ยืนยันชำระแล้ว', settle: true },
   's3:revert':   { title: 'ยกเลิกสถานะชำระแล้ว',               btn: 'ยกเลิกสถานะ' }
 };
 var DEFAULT_DUE_DAYS = 15;
+/* ถูกส่งกลับที่ขั้นไหน → ผู้ส่งกด "ส่งใหม่อีกครั้ง" แล้วกลับไปสถานะรอตรวจของ "ขั้นเดิม" (ไม่ต้องเริ่มขั้น 1 ใหม่) */
+var REV_BACK = { s1: 'processing', s2: 'waiting', s3: 'unpaid' };
 
 /* ══════════════════════ STATE (ร่วม) ══════════════════════ */
 var currentUser = null;
@@ -69,6 +75,12 @@ function stepsOf(d) {
   if (t.loan) a.push('s3');
   return a;
 }
+/* ขั้นที่กำลังถูกส่งกลับให้แก้ไข ('s1' | 's2' | 's3' | '' = ไม่มี) — เอกสารหนึ่งใบมีได้ขั้นเดียวเสมอ */
+function revStepOf(d) {
+  var st = stepsOf(d);
+  for (var i = 0; i < st.length; i++) if (d[st[i]] === 'revision') return st[i];
+  return '';
+}
 function toDate(ts) { return !ts ? null : (ts.toDate ? ts.toDate() : new Date(ts)); }
 function fmtD(ts) {
   var d = toDate(ts);
@@ -89,7 +101,7 @@ var STAGE_META = {
               staff: 'ตรวจเอกสารแล้วกด "อนุมัติเอกสาร" หรือ "ส่งกลับแก้ไข" ที่ขั้นที่ 1' },
   revision: { label: 'ส่งกลับแก้ไข',      color: 'violet', icon: 'undo-2',         title: 'ถูกส่งกลับให้แก้ไข',
               user: 'แก้ไขข้อมูลตามเหตุผลที่แจ้ง แล้วกด "ส่งใหม่อีกครั้ง" เพื่อให้เจ้าหน้าที่ตรวจต่อ',
-              staff: 'รอผู้ส่งแก้ไขและส่งกลับมาใหม่ (หรือกด "แก้ไขแล้ว" แทนผู้ส่งที่ขั้นที่ 1)' },
+              staff: 'รอผู้ส่งแก้ไขและส่งกลับมาใหม่ (หรือกด "แก้ไขแล้ว" แทนผู้ส่งในขั้นที่ถูกส่งกลับ)' },
   cheque:   { label: 'รอเบิก/ออกเช็ค',    color: 'sky',    icon: 'banknote',       title: 'ผ่านการตรวจเอกสารแล้ว รอออกเช็ค',
               user: 'ไม่ต้องทำอะไรเพิ่ม รอฝ่ายการเงินตรวจสอบเอกสารขอเบิกเงินและออกเช็ค',
               staff: 'ออกเช็คแล้วกด "อนุมัติ (ออกเช็คแล้ว)" ที่ขั้นที่ 2' },
@@ -104,10 +116,13 @@ var STAGE_META = {
 };
 var STAGE_ORDER = ['review', 'revision', 'cheque', 'loan', 'late', 'done'];
 function fdStage(d) {
+  var hasS2 = stepsOf(d).indexOf('s2') > -1, loan = !!typeOf(d.type).loan;
   if (d.s1 === 'revision') return 'revision';
   if (d.s1 !== 'approved') return 'review';
-  if (stepsOf(d).indexOf('s2') > -1 && d.s2 !== 'approved') return 'cheque';
-  if (typeOf(d.type).loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
+  if (hasS2 && d.s2 === 'revision') return 'revision';
+  if (hasS2 && d.s2 !== 'approved') return 'cheque';
+  if (loan && d.s3 === 'revision') return 'revision';
+  if (loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
   return 'done';
 }
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -137,11 +152,13 @@ function stepInfo(d, sk) {
   }
   if (sk === 's2') {
     if (d.s2 === 'approved') return { tone: 'done',   label: 'อนุมัติ' };
-    if (d.s1 === 'approved') return { tone: 'active', label: 'กำลังดำเนินการ' };
-    return { tone: 'wait', label: 'รอขั้นก่อนหน้า' };
+    if (d.s1 !== 'approved') return { tone: 'wait',   label: 'รอขั้นก่อนหน้า' };
+    if (d.s2 === 'revision') return { tone: 'warn',   label: 'รอผู้ส่งแก้ไข' };
+    return { tone: 'active', label: 'กำลังดำเนินการ' };
   }
   if (d.s3 === 'paid')       return { tone: 'done', label: 'ชำระแล้ว' };
   if (d.s2 !== 'approved')   return { tone: 'wait', label: 'รอขั้นก่อนหน้า' };
+  if (d.s3 === 'revision')   return { tone: 'warn', label: 'รอผู้ส่งแก้ไข' };
   return isOverdue(d) ? { tone: 'late', label: 'ค้างชำระ (เกินกำหนด)' } : { tone: 'active', label: 'ค้างชำระ' };
 }
 function overallInfo(d) {
@@ -248,14 +265,16 @@ function buildDetailHtml(d, acts, extraHtml, bannerActs, staffView) {
   }
 
   /* แบนเนอร์สถานะ */
-  var reason = '';
+  var reason = '', bannerTitle = sm.title;
   if (stage === 'revision') {
-    var h1 = (d.history || []).slice().reverse().filter(function(h) { return h.step === 's1' && h.text === ACTIONS['s1:revision'].title; })[0];
+    var rs = revStepOf(d), rmeta = ACTIONS[rs + ':revision'];
+    if (rs) bannerTitle += ' (ขั้นที่ ' + (stepsOf(d).indexOf(rs) + 1) + ' ' + STEP_META[rs].name + ')';
+    var h1 = rmeta ? (d.history || []).slice().reverse().filter(function(h) { return h.step === rs && h.text === rmeta.title; })[0] : null;
     if (h1 && h1.note) reason = '<div class="fd-banner-reason"><span>เหตุผลที่ส่งกลับ</span>' + esc2(h1.note) + '</div>';
   }
   var banner = '<div class="fd-banner fd-cat-' + sm.color + '">' +
     '<div class="fd-banner-ico"><i data-lucide="' + sm.icon + '"></i></div>' +
-    '<div class="fd-banner-body"><div class="fd-banner-t">' + sm.title + '</div>' +
+    '<div class="fd-banner-body"><div class="fd-banner-t">' + esc2(bannerTitle) + '</div>' +
     '<div class="fd-banner-d">' + (staffView ? sm.staff : sm.user) + '</div>' + reason +
     (bannerActs ? '<div class="fd-banner-act">' + bannerActs + '</div>' : '') + '</div></div>';
 
