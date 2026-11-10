@@ -6,6 +6,25 @@ var activeTab = 'todo';
 var searchQ = '';
 var ledgerFY = '';
 var confirmCtx = null;
+var stageFilter = '';   /* '' | review | revision | cheque | loan | late | done  (คลิกจากการ์ดสรุป) */
+var catFilter = '';     /* '' | loan | claim | clear | purchase | payroll         (คลิกจากแถบหมวดหมู่) */
+
+/* การ์ดสรุปด้านบน: แยกสีตามสถานะ — เอกสารหนึ่งใบอยู่ได้แค่ขั้นเดียว (ดู fdStage) */
+var FD_STATS = [
+  { k: 'review',   label: 'รอตรวจเอกสาร',   color: 'amber',  icon: 'inbox' },
+  { k: 'revision', label: 'ส่งกลับแก้ไข',    color: 'violet', icon: 'undo-2' },
+  { k: 'cheque',   label: 'รอเบิก/ออกเช็ค',  color: 'sky',    icon: 'banknote' },
+  { k: 'loan',     label: 'ค้างส่งใช้เงินยืม', color: 'ink',    icon: 'wallet' },
+  { k: 'late',     label: 'เกินกำหนดส่งใช้',  color: 'red',    icon: 'triangle-alert' },
+  { k: 'done',     label: 'เสร็จสิ้น',        color: 'green',  icon: 'check-check' }
+];
+function fdStage(d) {
+  if (d.s1 === 'revision') return 'revision';
+  if (d.s1 !== 'approved') return 'review';
+  if (stepsOf(d).indexOf('s2') > -1 && d.s2 !== 'approved') return 'cheque';
+  if (typeOf(d.type).loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
+  return 'done';
+}
 
 /* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ */
 function actionsFor(d) {
@@ -55,7 +74,14 @@ function renderPage() {
       '</div>' +
     '</div>' +
     '<div class="sub-tab-bar purple scroll" id="fdTabs" style="margin-bottom:var(--gap-section);"></div>' +
-    '<div class="fd-toolbar" id="fdToolbar"></div>' +
+    '<div class="fd-stats" id="fdStats"></div>' +
+    '<div class="card fd-filter-card">' +
+      '<div class="fd-toolbar">' +
+        '<input type="text" class="search-box" id="fdSearch" placeholder="ค้นหาชื่อ / โครงการ / เลขที่สัญญา" oninput="onSearch(this.value)">' +
+        '<span class="fd-ledger-ctl" id="fdLedgerCtl"></span>' +
+      '</div>' +
+      '<div class="fd-catbar" id="fdCats"></div>' +
+    '</div>' +
     '<div class="fd-list" id="fdList">' + emptyHtml('กำลังโหลด...') + '</div>'
   );
 }
@@ -65,66 +91,149 @@ function renderDenied() {
     '<p style="color:var(--text2);font-size:14px;margin-bottom:18px;">หน้านี้สำหรับเจ้าหน้าที่ที่ได้รับสิทธิ์ระบบเอกสารการเงินและพัสดุเท่านั้น</p>' +
     '<a href="index.html" class="btn-primary" style="text-decoration:none;display:inline-block;">กลับหน้าแรก</a></div>';
 }
+
+/* วาดใหม่ทุกส่วน (เรียกตอนข้อมูลเปลี่ยน / เปลี่ยนแท็บ) */
+function refreshAll() {
+  renderTabs(); renderStats(); renderCats(); renderToolbar(); renderList();
+}
 function renderTabs() {
   var el = document.getElementById('fdTabs'); if (!el) return;
   var todo = allDocs.filter(pendingForMe).length;
-  var tabs = [{ k: 'todo', l: 'รอฉันดำเนินการ', n: todo }, { k: 'all', l: 'ทุกรายการ' }, { k: 'ledger', l: 'ทะเบียนลูกหนี้' }];
+  var tabs = [
+    { k: 'todo',   l: 'รอฉันดำเนินการ', i: 'inbox',     n: todo },
+    { k: 'all',    l: 'ทุกรายการ',      i: 'layers' },
+    { k: 'ledger', l: 'ทะเบียนลูกหนี้',  i: 'book-open' }
+  ];
   el.innerHTML = tabs.map(function(t) {
-    return '<button class="sub-tab' + (activeTab === t.k ? ' active' : '') + '" onclick="setTab(\'' + t.k + '\')">' + t.l +
+    return '<button class="sub-tab' + (activeTab === t.k ? ' active' : '') + '" onclick="setTab(\'' + t.k + '\')">' +
+      '<i data-lucide="' + t.i + '" style="width:14px;height:14px;"></i> ' + t.l +
       (t.n ? '<span class="fd-count">' + t.n + '</span>' : '') + '</button>';
   }).join('');
-  renderToolbar();
+  lucide.createIcons();
 }
-function renderToolbar() {
-  var el = document.getElementById('fdToolbar'); if (!el) return;
-  var html = '<input type="text" class="search-box" id="fdSearch" placeholder="ค้นหาชื่อ / โครงการ / เลขที่สัญญา" value="' + esc2(searchQ) + '" oninput="onSearch(this.value)">';
-  if (activeTab === 'ledger') {
-    var years = {};
-    allDocs.forEach(function(d) { if (typeOf(d.type).loan && d.contractNo) years[d.fiscalYear] = 1; });
-    var ys = Object.keys(years).sort().reverse();
-    if (!ledgerFY && ys.length) ledgerFY = ys[0];
-    html += '<select onchange="ledgerFY=this.value;renderList()">' +
-      ys.map(function(y) { return '<option value="' + y + '"' + (y === String(ledgerFY) ? ' selected' : '') + '>ปีงบประมาณ ' + y + '</option>'; }).join('') +
-      '</select><button class="btn-secondary" onclick="exportLedger()">ส่งออก CSV</button>';
+/* การ์ดสรุปตามสถานะ — กดเพื่อกรอง (กดซ้ำเพื่อยกเลิก) */
+function renderStats() {
+  var el = document.getElementById('fdStats'); if (!el) return;
+  el.style.display = activeTab === 'ledger' ? 'none' : '';
+  var n = {};
+  allDocs.forEach(function(d) { var s = fdStage(d); n[s] = (n[s] || 0) + 1; });
+  el.innerHTML = FD_STATS.map(function(s) {
+    var on = activeTab !== 'todo' && stageFilter === s.k;
+    return '<button type="button" class="stat-card fd-stat fd-cat-' + s.color + (on ? ' active' : '') + '" aria-pressed="' + on + '" onclick="setStageFilter(\'' + s.k + '\')">' +
+      '<span class="fd-stat-ico"><i data-lucide="' + s.icon + '"></i></span>' +
+      '<span><span class="fd-stat-n">' + (n[s.k] || 0) + '</span><span class="fd-stat-l">' + s.label + '</span></span>' +
+    '</button>';
+  }).join('');
+  lucide.createIcons();
+}
+/* แถบเลือกหมวดหมู่ (แต่ละหมวดมีสีของตัวเอง) พร้อมจำนวนรายการ */
+function renderCats() {
+  var el = document.getElementById('fdCats'); if (!el) return;
+  if (activeTab === 'ledger') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  var rows = tabRows(), n = {};
+  rows.forEach(function(d) { var k = catKeyOf(d); n[k] = (n[k] || 0) + 1; });
+  function pill(key, color, icon, label, count) {
+    return '<button type="button" class="fd-pill fd-cat-' + color + (catFilter === key ? ' active' : '') + '" aria-pressed="' + (catFilter === key) + '" onclick="setCat(\'' + key + '\')">' +
+      '<i data-lucide="' + icon + '"></i>' + label + '<span class="n">' + count + '</span></button>';
   }
-  el.innerHTML = html;
+  el.innerHTML = pill('', 'all', 'layout-grid', 'ทุกหมวดหมู่', rows.length) +
+    DOC_CAT_ORDER.map(function(k) { var c = DOC_CATS[k]; return pill(k, c.color, c.icon, c.label, n[k] || 0); }).join('') +
+    ((stageFilter || catFilter) ? '<button type="button" class="fd-clear" onclick="clearFilters()"><i data-lucide="x"></i>ล้างตัวกรอง</button>' : '');
+  lucide.createIcons();
 }
-function onSearch(v) { searchQ = v.trim().toLowerCase(); renderList(); }
-function setTab(k) { activeTab = k; searchQ = ''; renderTabs(); renderList(); }
+/* ส่วนควบคุมของแท็บทะเบียนลูกหนี้ (เลือกปีงบประมาณ + ส่งออก) */
+function renderToolbar() {
+  var el = document.getElementById('fdLedgerCtl'); if (!el) return;
+  if (activeTab !== 'ledger') { el.innerHTML = ''; return; }
+  var years = {};
+  allDocs.forEach(function(d) { if (typeOf(d.type).loan && d.contractNo) years[d.fiscalYear] = 1; });
+  var ys = Object.keys(years).sort().reverse();
+  if (!ledgerFY && ys.length) ledgerFY = ys[0];
+  el.innerHTML = '<select onchange="ledgerFY=this.value;renderList()" aria-label="ปีงบประมาณ">' +
+    ys.map(function(y) { return '<option value="' + y + '"' + (y === String(ledgerFY) ? ' selected' : '') + '>ปีงบประมาณ ' + y + '</option>'; }).join('') +
+    '</select><button class="btn-secondary" onclick="exportLedger()">ส่งออก CSV</button>';
+}
+function onSearch(v) { searchQ = v.trim().toLowerCase(); renderCats(); renderList(); }
+function setTab(k) {
+  activeTab = k; searchQ = ''; stageFilter = '';
+  var s = document.getElementById('fdSearch'); if (s) s.value = '';
+  refreshAll();
+}
+function setStageFilter(k) {
+  stageFilter = stageFilter === k && activeTab !== 'todo' ? '' : k;
+  if (activeTab !== 'all') { activeTab = 'all'; searchQ = ''; var s = document.getElementById('fdSearch'); if (s) s.value = ''; }
+  refreshAll();
+}
+function setCat(k) { catFilter = catFilter === k ? '' : k; renderCats(); renderList(); }
+function clearFilters() { stageFilter = ''; catFilter = ''; refreshAll(); }
 function matchQ(d) {
   if (!searchQ) return true;
-  return [d.name, d.title, d.contractNo, typeOf(d.type).label].join(' ').toLowerCase().indexOf(searchQ) > -1;
+  return [d.name, d.title, d.contractNo, typeOf(d.type).label, catOf(d).label].join(' ').toLowerCase().indexOf(searchQ) > -1;
+}
+/* รายการตามแท็บ + การ์ดสถานะ + คำค้น (ยังไม่กรองหมวดหมู่ — ใช้นับจำนวนบนแถบหมวดหมู่) */
+function tabRows() {
+  return allDocs.filter(function(d) {
+    return (activeTab === 'all' || pendingForMe(d)) && (!stageFilter || fdStage(d) === stageFilter) && matchQ(d);
+  });
 }
 function renderList() {
   var el = document.getElementById('fdList'); if (!el) return;
   if (activeTab === 'ledger') return renderLedger(el);
-  var rows = allDocs.filter(function(d) { return activeTab === 'all' || pendingForMe(d); }).filter(matchQ);
+  var rows = tabRows().filter(function(d) { return !catFilter || catKeyOf(d) === catFilter; });
   if (!rows.length) {
-    el.innerHTML = emptyHtml(activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ไม่พบรายการ');
+    var filtered = stageFilter || catFilter || searchQ;
+    el.innerHTML = emptyHtml(filtered ? 'ไม่พบรายการตามตัวกรองนี้' : (activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ยังไม่มีรายการ'));
     return;
   }
-  el.innerHTML = groupByType(rows).map(function(g) {
-    return '<section class="fd-group">' +
-      '<div class="fd-group-h"><span class="fd-group-t">' + esc2(g.label) + '</span>' +
-      '<span class="status-badge t-wait">' + g.rows.length + ' รายการ</span></div>' +
-      g.rows.map(rowHtml).join('') +
+  el.innerHTML = groupByCat(rows).map(function(g) {
+    var c = DOC_CATS[g.key] || DOC_CAT_OTHER;
+    return '<section class="fd-group fd-cat-' + c.color + '">' +
+      '<div class="fd-group-h"><span class="fd-group-ico"><i data-lucide="' + c.icon + '"></i></span>' +
+      '<span class="fd-group-t">' + esc2(c.label) + '</span>' +
+      '<span class="fd-group-n">' + g.rows.length + ' รายการ</span></div>' +
+      g.rows.map(adminRowHtml).join('') +
     '</section>';
   }).join('');
+  lucide.createIcons();
 }
-/* จัดกลุ่มตามประเภทเอกสาร: กลุ่มเรียงตาม DOC_TYPES, ในกลุ่มเรียงใหม่สุดไว้บน (ประเภทที่ไม่รู้จักต่อท้าย) */
-function groupByType(rows) {
+/* จัดกลุ่มตามหมวดหมู่ (เรียงตาม DOC_CAT_ORDER) ในกลุ่มเรียงใหม่สุดไว้บน — หมวดที่ไม่รู้จักต่อท้าย */
+function groupByCat(rows) {
   var map = {}, out = [];
-  rows.forEach(function(d) { (map[d.type] = map[d.type] || []).push(d); });
+  rows.forEach(function(d) { var k = catKeyOf(d); (map[k] = map[k] || []).push(d); });
   function newestFirst(a, b) {
     var ta = a.createdAt ? toDate(a.createdAt).getTime() : Date.now();
     var tb = b.createdAt ? toDate(b.createdAt).getTime() : Date.now();
     return tb - ta;
   }
-  DOC_TYPES.forEach(function(t) {
-    if (map[t.key]) { out.push({ label: t.label, rows: map[t.key].sort(newestFirst) }); delete map[t.key]; }
+  DOC_CAT_ORDER.forEach(function(k) {
+    if (map[k]) { out.push({ key: k, rows: map[k].sort(newestFirst) }); delete map[k]; }
   });
-  Object.keys(map).forEach(function(k) { out.push({ label: typeOf(k).label, rows: map[k].sort(newestFirst) }); });
+  Object.keys(map).forEach(function(k) { out.push({ key: k, rows: map[k].sort(newestFirst) }); });
   return out;
+}
+/* การ์ดรายการของหน้าเจ้าหน้าที่: พื้น/แถบซ้ายสีตามหมวดหมู่ · ป้ายสถานะรวมอยู่มุมขวา · ชิปบอกความคืบหน้าแต่ละขั้น */
+function adminRowHtml(d) {
+  var c = catOf(d), ov = overallInfo(d);
+  var chips = stepsOf(d).map(function(sk) {
+    var i = stepInfo(d, sk);
+    return '<span class="status-badge t-' + i.tone + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
+  }).join('');
+  return '<div class="fd-card fd-cat-' + c.color + (fdStage(d) === 'late' ? ' is-late' : '') + '" onclick="openDetail(\'' + d.id + '\')">' +
+    '<div class="fd-card-main">' +
+      '<div class="fd-card-top">' +
+        '<span class="fd-cat-chip"><i data-lucide="' + c.icon + '"></i>' + esc2(typeOf(d.type).label) + '</span>' +
+        (d.contractNo ? '<span class="fd-contract">สัญญาเลขที่ ' + esc2(d.contractNo) + '</span>' : '') +
+        (activeTab === 'all' && pendingForMe(d) ? '<span class="fd-mine">รอคุณดำเนินการ</span>' : '') +
+      '</div>' +
+      '<div class="fd-title">' + esc2(d.title) + '</div>' +
+      '<div class="fd-meta"><span><i data-lucide="user"></i>' + esc2(d.name) + '</span>' +
+        '<span><i data-lucide="calendar"></i>ส่งเมื่อ ' + fmtD(d.createdAt || new Date()) + '</span></div>' +
+    '</div>' +
+    '<div class="fd-card-side"><div class="fd-amt">฿' + fmtMoney(d.amount) + '</div>' +
+      '<span class="status-badge fd-status t-' + ov.tone + '">' + esc2(ov.label) + '</span></div>' +
+    '<div class="fd-chips">' + chips + '</div>' +
+  '</div>';
 }
 
 /* ── ทะเบียนลูกหนี้ (คอลัมน์ตรงกับสมุดเดิม) ── */
@@ -281,8 +390,8 @@ buildPage({
       contentEl.innerHTML = renderPage();
       lucide.createIcons();
       setupScrollTopButton();
-      renderTabs();
-      listenDocs(db.collection('financeDocs').orderBy('createdAt', 'desc').limit(500), function() { renderTabs(); renderList(); });
+      refreshAll();
+      listenDocs(db.collection('financeDocs').orderBy('createdAt', 'desc').limit(500), refreshAll);
     });
   }
 });

@@ -9,15 +9,25 @@
 
 /* ══════════════════════ CONSTANTS ══════════════════════ */
 var DOC_TYPES = [
-  { key: 'loan_trip',     label: 'ขอยืมเงินไปราชการ',              loan: true  },
-  { key: 'loan_project',  label: 'ขอยืมเงินจัดทำโครงการ',          loan: true  },
-  { key: 'claim_trip',    label: 'เบิกเงินไปราชการ'                              },
-  { key: 'claim_project', label: 'เบิกเงินจัดทำโครงการ'                          },
-  { key: 'clear_trip',    label: 'ล้างหนี้สัญญายืมเงินไปราชการ',    clear: true },
-  { key: 'clear_project', label: 'ล้างหนี้สัญญายืมเงินจัดทำโครงการ', clear: true },
-  { key: 'purchase',      label: 'ชุดเบิกจัดซื้อ/จัดจ้าง'                        },
-  { key: 'payroll',       label: 'ชุดเบิกเงินเดือนลูกจ้าง'                       }
+  { key: 'loan_trip',     label: 'ขอยืมเงินไปราชการ',              loan: true,  cat: 'loan'     },
+  { key: 'loan_project',  label: 'ขอยืมเงินจัดทำโครงการ',          loan: true,  cat: 'loan'     },
+  { key: 'claim_trip',    label: 'เบิกเงินไปราชการ',                              cat: 'claim'    },
+  { key: 'claim_project', label: 'เบิกเงินจัดทำโครงการ',                          cat: 'claim'    },
+  { key: 'clear_trip',    label: 'ล้างหนี้สัญญายืมเงินไปราชการ',    clear: true, cat: 'clear'    },
+  { key: 'clear_project', label: 'ล้างหนี้สัญญายืมเงินจัดทำโครงการ', clear: true, cat: 'clear'    },
+  { key: 'purchase',      label: 'ชุดเบิกจัดซื้อ/จัดจ้าง',                        cat: 'purchase' },
+  { key: 'payroll',       label: 'ชุดเบิกเงินเดือนลูกจ้าง',                       cat: 'payroll'  }
 ];
+/* หมวดหมู่เอกสาร (ใช้แยกสี/กลุ่มในหน้าเจ้าหน้าที่) — color = ชื่อชุดสีใน finance.css (.fd-cat-<color>) */
+var DOC_CATS = {
+  loan:     { label: 'ยืมเงิน',          color: 'sky',    icon: 'hand-coins'    },
+  claim:    { label: 'เบิกเงิน',         color: 'green',  icon: 'receipt'       },
+  clear:    { label: 'ล้างหนี้สัญญายืม',  color: 'violet', icon: 'badge-check'   },
+  purchase: { label: 'จัดซื้อ/จัดจ้าง',   color: 'amber',  icon: 'shopping-cart' },
+  payroll:  { label: 'เงินเดือนลูกจ้าง',  color: 'ink',    icon: 'users'         }
+};
+var DOC_CAT_ORDER = ['loan', 'claim', 'clear', 'purchase', 'payroll'];
+var DOC_CAT_OTHER = { label: 'อื่นๆ', color: 'ink', icon: 'file-text' };
 var FUNDS = ['เงินอุดหนุนค่าจัดการเรียนการสอน', 'เงินบำรุงการศึกษา', 'เงินกิจกรรมพัฒนาผู้เรียน'];
 var STEP_META = {
   s1: { name: 'ตรวจเอกสาร',                 short: 'ตรวจเอกสาร' },
@@ -50,6 +60,9 @@ function typeOf(key) {
   for (var i = 0; i < DOC_TYPES.length; i++) if (DOC_TYPES[i].key === key) return DOC_TYPES[i];
   return { key: key, label: key || '-' };
 }
+/* หมวดหมู่ของเอกสาร: คืน key ('loan' | 'claim' | ...) และข้อมูลสี/ไอคอน */
+function catKeyOf(d) { return typeOf(d.type).cat || ''; }
+function catOf(d) { return DOC_CATS[catKeyOf(d)] || DOC_CAT_OTHER; }
 function stepsOf(d) {
   var t = typeOf(d.type), a = ['s1'];
   if (!t.clear) a.push('s2');
