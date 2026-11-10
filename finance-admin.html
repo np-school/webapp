@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="var(--accent)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+
+  <title>จัดการเอกสารการเงินและพัสดุ – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="shared/tailwind-built.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <link href="shared/finance.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.24.0"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Access Denied -->
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<div id="myApp" style="display:none;"></div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
+  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+</button>
+
+<!-- ══════════════════ Modals ══════════════════ -->
+
+<!-- รายละเอียด + ปุ่มยืนยันแต่ละขั้น -->
+<div id="detailModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--c-sky-pale);"><i data-lucide="file-text" style="color:var(--c-sky);"></i></div>
+        <div><h3 id="detailTitle">รายละเอียด</h3><p id="detailSub"></p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('detailModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ยืนยันการเปลี่ยนสถานะ -->
+<div id="confirmModal" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group"><div><h3 id="confirmTitle">ยืนยัน</h3><p id="confirmSub"></p></div></div>
+      <button class="modal-close" onclick="closeModal('confirmModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+
+    <div id="settleBox" style="display:none;">
+      <div class="fd-field-row">
+        <div class="form-group"><label class="form-label" for="sDate">วันที่ส่งใช้</label><input type="date" id="sDate"></div>
+        <div class="form-group"><label class="form-label" for="sVoucherNo">เลขที่ใบสำคัญจ่าย</label><input type="text" id="sVoucherNo" placeholder="เช่น อ.31"></div>
+      </div>
+      <div class="fd-field-row">
+        <div class="form-group"><label class="form-label" for="sVoucherAmt">จำนวนเงินใบสำคัญ</label><input type="number" id="sVoucherAmt" step="0.01" inputmode="decimal"></div>
+        <div class="form-group"><label class="form-label" for="sCash">เงินสดที่คืน</label><input type="number" id="sCash" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="fd-hint" style="margin:-6px 0 14px;">ช่องเลขที่/จำนวนเงินเว้นว่างได้ ใช้สำหรับให้ทะเบียนลูกหนี้ครบเหมือนสมุดเดิม</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="confirmNote" id="confirmNoteLabel">หมายเหตุ (ถ้ามี)</label>
+      <input type="text" id="confirmNote">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('confirmModal')">ยกเลิก</button>
+      <button class="btn-primary" id="confirmBtn" onclick="submitConfirm()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ตั้งค่าผู้รับผิดชอบ (SuperAdmin) -->
+<div id="settingsModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--c-violet-pale);"><i data-lucide="users" style="color:var(--c-violet);"></i></div>
+        <div><h3>ผู้รับผิดชอบแต่ละขั้น</h3><p>อีเมลบุคลากร 1 บรรทัดต่อ 1 คน</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('settingsModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+    <div class="form-group"><label class="form-label" for="cfgS1">ขั้นที่ 1 — ผู้ตรวจเอกสาร</label><textarea id="cfgS1" rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label" for="cfgS2">ขั้นที่ 2 — ผู้ออกเช็ค (ตรวจสอบเอกสารขอเบิกเงิน)</label><textarea id="cfgS2" rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label" for="cfgS3">ขั้นที่ 3 — ผู้ตรวจสอบสัญญายืมเงิน</label><textarea id="cfgS3" rows="3"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('settingsModal')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveSettings()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/finance-common.js"></script>
+<script src="js/finance-admin.js"></script>
+</body>
+</html>

@@ -463,5 +463,70 @@ service cloud.firestore {
         request.resource.data.name is string && request.resource.data.name.size() >= 1;
       allow delete: if hasPerm('ipad');
     }
+
+    /* ── ระบบส่งเอกสารการเงินและพัสดุ (finance-docs.html) ── */
+    function finCfg() {
+      return get(/databases/$(database)/documents/financeSettings/config).data;
+    }
+    function finCfgExists() {
+      return exists(/databases/$(database)/documents/financeSettings/config);
+    }
+    function finStep(step) {
+      return isSuperAdmin() || (finCfgExists() && myEmail() in finCfg().get(step, []));
+    }
+    function finAny() {
+      return finStep('s1') || finStep('s2') || finStep('s3');
+    }
+
+    /* ผู้รับผิดชอบแต่ละขั้น: SuperAdmin เขียนได้เท่านั้น / ทุกคนที่ล็อกอินอ่านได้ */
+    match /financeSettings/{id} {
+      allow read: if isAuthed();
+      allow write: if isSuperAdmin();
+    }
+
+    /* ตัวรันเลขที่สัญญา (ใช้ตอนผู้ตรวจเอกสารกดอนุมัติเอกสารยืมเงิน) */
+    match /counters/{id} {
+      allow read, write: if id.matches('finloan-.*') && finStep('s1');
+    }
+
+    match /financeDocs/{id} {
+      allow read: if isAuthed() && (resource.data.uid == request.auth.uid || finAny());
+
+      /* ครูสร้างรายการของตัวเอง — สถานะเริ่มต้นบังคับตายตัว */
+      allow create: if isAuthed() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.s1 == 'processing' &&
+        request.resource.data.s2 == 'waiting' &&
+        request.resource.data.s3 == 'unpaid' &&
+        request.resource.data.type in ['loan_trip', 'loan_project', 'claim_trip', 'claim_project',
+                                       'clear_trip', 'clear_project', 'purchase', 'payroll'] &&
+        request.resource.data.amount is number && request.resource.data.amount > 0 &&
+        request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
+        request.resource.data.title.size() <= 500 &&
+        request.resource.data.keys().hasAll(['uid', 'name', 'type', 'title', 'amount', 'fundType',
+                                             'fiscalYear', 'history', 'createdAt']);
+
+      allow update: if isAuthed() && (
+        /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ (ห้ามแตะสถานะ/เลขสัญญา) */
+        (resource.data.uid == request.auth.uid &&
+         resource.data.s1 != 'approved' &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['name', 'title', 'amount', 'fundType', 'note', 'refContractNo',
+                     'loanDate', 'dueDate', 'updatedAt', 'history'])) ||
+        /* เจ้าหน้าที่ — แก้ฟิลด์สถานะของ "ขั้นที่ตัวเองรับผิดชอบ" เท่านั้น */
+        (finAny() &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['s1', 's2', 's3', 'settle', 'contractNo', 'history', 'updatedAt']) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1', 'contractNo']) || finStep('s1')) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) || finStep('s2')) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 'settle']) || finStep('s3')))
+      );
+
+      /* ลบได้เฉพาะเจ้าของตอนยังไม่ถูกตรวจ หรือ SuperAdmin */
+      allow delete: if isAuthed() && (
+        isSuperAdmin() ||
+        (resource.data.uid == request.auth.uid && resource.data.s1 == 'processing')
+      );
+    }
   }
 }

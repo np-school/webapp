@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="var(--accent)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Origins">
+  <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/np-webapp-74616.firebasestorage.app/o/img%2FNP_Origins-192.jpg?alt=media&token=6b6fa3d3-61e9-48ce-886a-d01bb376ff2f">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
+
+  <title>ส่งเอกสารการเงินและพัสดุ – โรงเรียนหนองกี่พิทยาคม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="shared/tailwind-built.css" rel="stylesheet">
+  <link href="shared/styles-new.css" rel="stylesheet">
+  <link href="shared/finance.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.24.0"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared/firebase.js"></script>
+  <script src="shared/common.js"></script>
+
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Access Denied -->
+<div id="accessDenied" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="width:72px;height:72px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+    <i data-lucide="shield-off" style="width:36px;height:36px;color:var(--red);"></i>
+  </div>
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+    <p style="color:var(--text2);font-size:14px;">คุณไม่มีสิทธิ์เข้าหน้านี้</p>
+  </div>
+  <a href="index.html" style="padding:10px 24px;background:var(--accent);color:white;border-radius:12px;font-weight:700;text-decoration:none;">← กลับหน้าแรก</a>
+</div>
+
+<div id="myApp" style="display:none;"></div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
+  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+</button>
+
+<!-- ══════════════════ Modals ══════════════════ -->
+
+<!-- ฟอร์มส่งเอกสาร (สร้าง/แก้ไข) -->
+<div id="formModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--c-sky-pale);"><i data-lucide="file-plus" style="color:var(--c-sky);"></i></div>
+        <div><h3 id="formTitle">ส่งเอกสารใหม่</h3><p>กรอกครั้งเดียว แล้วนำเอกสารตัวจริงส่งที่ฝ่ายการเงิน</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('formModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fType">ประเภทเอกสาร</label>
+      <select id="fType" onchange="onTypeChange()"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fName">ชื่อ-สกุล</label>
+      <input type="text" id="fName" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fTitle">กิจกรรม/โครงการ</label>
+      <textarea id="fTitle" rows="3" placeholder="เช่น เดินทางไปราชการเข้าร่วมอบรม... ระหว่างวันที่ ..."></textarea>
+    </div>
+    <div class="fd-field-row">
+      <div class="form-group">
+        <label class="form-label" for="fAmount">จำนวนเงิน (บาท)</label>
+        <input type="number" id="fAmount" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fFund">ประเภทเงิน</label>
+        <select id="fFund"></select>
+      </div>
+    </div>
+
+    <div id="fLoanBox" class="fd-field-row" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="fLoanDate">วันที่ยืม</label>
+        <input type="date" id="fLoanDate" onchange="onLoanDateChange()">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fDueDate">วันที่ครบกำหนดส่งใช้</label>
+        <input type="date" id="fDueDate" oninput="fDueTouched=true">
+        <div class="fd-hint">ระบบเสนอให้ 15 วันหลังวันที่ยืม แก้ไขได้</div>
+      </div>
+    </div>
+
+    <div id="fClearBox" class="form-group" style="display:none;">
+      <label class="form-label" for="fRef">สัญญายืมเงินที่ต้องการล้างหนี้</label>
+      <select id="fRef"></select>
+      <div class="fd-hint">แสดงเฉพาะสัญญาของคุณที่อนุมัติแล้วและยังค้างชำระ</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fNote">หมายเหตุ (ถ้ามี)</label>
+      <input type="text" id="fNote">
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('formModal')">ยกเลิก</button>
+      <button class="btn-primary" id="formSaveBtn" onclick="saveForm()">บันทึกและส่ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- รายละเอียด + ปุ่มยืนยันแต่ละขั้น -->
+<div id="detailModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--c-sky-pale);"><i data-lucide="file-text" style="color:var(--c-sky);"></i></div>
+        <div><h3 id="detailTitle">รายละเอียด</h3><p id="detailSub"></p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('detailModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<script src="js/finance-common.js"></script>
+<script src="js/finance-user.js"></script>
+</body>
+</html>
