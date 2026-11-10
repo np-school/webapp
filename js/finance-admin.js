@@ -54,9 +54,9 @@ function renderPage() {
         '<a class="btn-secondary" href="finance-user.html" style="text-decoration:none;display:inline-block;">ส่งเอกสารของฉัน</a>' +
       '</div>' +
     '</div>' +
-    '<div class="fd-tabs" id="fdTabs"></div>' +
+    '<div class="sub-tab-bar purple scroll" id="fdTabs" style="margin-bottom:var(--gap-section);"></div>' +
     '<div class="fd-toolbar" id="fdToolbar"></div>' +
-    '<div class="card" id="fdList" style="padding:0;overflow:hidden;"><div class="fd-empty">กำลังโหลด...</div></div>'
+    '<div class="fd-list" id="fdList">' + emptyHtml('กำลังโหลด...') + '</div>'
   );
 }
 function renderDenied() {
@@ -70,14 +70,14 @@ function renderTabs() {
   var todo = allDocs.filter(pendingForMe).length;
   var tabs = [{ k: 'todo', l: 'รอฉันดำเนินการ', n: todo }, { k: 'all', l: 'ทุกรายการ' }, { k: 'ledger', l: 'ทะเบียนลูกหนี้' }];
   el.innerHTML = tabs.map(function(t) {
-    return '<button class="tab-btn' + (activeTab === t.k ? ' active' : '') + '" onclick="setTab(\'' + t.k + '\')">' + t.l +
+    return '<button class="sub-tab' + (activeTab === t.k ? ' active' : '') + '" onclick="setTab(\'' + t.k + '\')">' + t.l +
       (t.n ? '<span class="fd-count">' + t.n + '</span>' : '') + '</button>';
   }).join('');
   renderToolbar();
 }
 function renderToolbar() {
   var el = document.getElementById('fdToolbar'); if (!el) return;
-  var html = '<input type="search" id="fdSearch" placeholder="ค้นหาชื่อ / โครงการ / เลขที่สัญญา" value="' + esc2(searchQ) + '" oninput="onSearch(this.value)">';
+  var html = '<input type="text" class="search-box" id="fdSearch" placeholder="ค้นหาชื่อ / โครงการ / เลขที่สัญญา" value="' + esc2(searchQ) + '" oninput="onSearch(this.value)">';
   if (activeTab === 'ledger') {
     var years = {};
     allDocs.forEach(function(d) { if (typeOf(d.type).loan && d.contractNo) years[d.fiscalYear] = 1; });
@@ -100,7 +100,7 @@ function renderList() {
   if (activeTab === 'ledger') return renderLedger(el);
   var rows = allDocs.filter(function(d) { return activeTab === 'all' || pendingForMe(d); }).filter(matchQ);
   if (!rows.length) {
-    el.innerHTML = '<div class="fd-empty">' + (activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ไม่พบรายการ') + '</div>';
+    el.innerHTML = emptyHtml(activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ไม่พบรายการ');
     return;
   }
   el.innerHTML = rows.map(rowHtml).join('');
@@ -114,7 +114,7 @@ function ledgerRows() {
 }
 function renderLedger(el) {
   var rows = ledgerRows();
-  if (!rows.length) { el.innerHTML = '<div class="fd-empty">ยังไม่มีสัญญายืมเงินที่อนุมัติในปีงบประมาณนี้</div>'; return; }
+  if (!rows.length) { el.innerHTML = emptyHtml('ยังไม่มีสัญญายืมเงินที่อนุมัติในปีงบประมาณนี้'); return; }
   var body = rows.map(function(d, i) {
     var s = d.settle || {};
     return '<tr class="' + (isOverdue(d) ? 'late' : '') + '" onclick="openDetail(\'' + d.id + '\')">' +
@@ -127,7 +127,7 @@ function renderLedger(el) {
       '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
       '<td>' + esc2(d.fundType) + '</td></tr>';
   }).join('');
-  el.innerHTML = '<div class="fd-ledger-wrap"><table class="fd-ledger"><thead><tr>' +
+  el.innerHTML = '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger"><thead><tr>' +
     '<th>ที่</th><th>วันที่ยืม</th><th>เลขที่สัญญา</th><th>ชื่อ-สกุล</th><th>กิจกรรม/โครงการ</th><th>จำนวนเงิน</th>' +
     '<th>วันครบกำหนด</th><th>วันที่ส่งใช้</th><th>เลขที่ใบสำคัญ</th><th>จำนวนเงินใบสำคัญ</th><th>เงินสด</th><th>ประเภทเงิน</th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div>';

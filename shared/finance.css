@@ -1,61 +1,69 @@
-/* ── ส่วนที่ใช้เฉพาะหน้านี้ (ใช้ตัวแปรสีจาก styles-new.css ทั้งหมด) ── */
-    .fd-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-    .fd-tabs .tab-btn .fd-count { margin-left:6px; background:var(--c-red); color:#fff; border-radius:10px; padding:0 7px; font-size:11px; font-weight:800; }
-    .fd-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
-    .fd-toolbar input, .fd-toolbar select { max-width:280px; }
+/* ── ส่วนที่ใช้เฉพาะระบบเอกสารการเงิน ──
+   component พื้นฐานใช้ของกลางจาก styles-new.css ทั้งหมด:
+   .sub-tab-bar/.sub-tab (แท็บ), .filter-pill (ตัวกรอง), .booking-card (การ์ดรายการ),
+   .status-badge (สถานะ), .btn-* (ปุ่ม), .data-table/.tbl-wrap (ตาราง), .empty-state, .search-box
+   ไฟล์นี้เก็บเฉพาะส่วนที่ไม่มีของกลางให้ใช้ (layout แถวรายการ, ไทม์ไลน์ขั้นตอน, รายละเอียดใน modal) */
 
-    .fd-row { display:grid; grid-template-columns:1fr auto; gap:6px 16px; padding:14px 18px; border-bottom:1px solid var(--border); cursor:pointer; }
-    .fd-row:last-child { border-bottom:0; }
-    .fd-row:hover { background:var(--c-sky-pale); }
-    .fd-type  { font-size:12px; font-weight:700; color:var(--text2); }
-    .fd-title { font-size:15px; font-weight:700; color:var(--text); margin:1px 0 2px; }
-    .fd-meta  { font-size:12px; color:var(--text3); }
-    .fd-amt   { font-size:16px; font-weight:800; color:var(--text); text-align:right; white-space:nowrap; }
-    .fd-chips { grid-column:1 / -1; display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-    .fd-chip  { font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--border); color:var(--text2); }
-    .fd-chip b { font-weight:800; margin-right:4px; }
-    .fd-chip.done   { background:var(--c-green-pale); color:var(--c-green-deep); }
-    .fd-chip.active { background:var(--c-sky-pale);   color:var(--c-sky-deep); }
-    .fd-chip.warn   { background:var(--c-amber-pale); color:var(--c-amber-deep); }
-    .fd-chip.late   { background:var(--c-red-pale);   color:var(--c-red-deep); }
-    .fd-empty { padding:48px 20px; text-align:center; color:var(--text3); font-size:14px; }
+/* จำนวนรายการรอดำเนินการ บนแท็บ */
+.sub-tab .fd-count { margin-left:6px; background:var(--c-red); color:#fff; border-radius:10px; padding:0 7px; font-size:11px; font-weight:800; }
 
-    /* ขั้นตอนใน modal รายละเอียด */
-    .fd-steps { margin:6px 0 0; padding:0; list-style:none; }
-    .fd-step  { display:grid; grid-template-columns:28px 1fr; gap:12px; padding-bottom:16px; position:relative; }
-    .fd-step:not(:last-child)::before { content:''; position:absolute; left:13px; top:28px; bottom:0; width:2px; background:var(--border); }
-    .fd-dot   { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--border); color:var(--text2); font-size:12px; font-weight:800; }
-    .fd-step.done   .fd-dot { background:var(--c-green); color:#fff; }
-    .fd-step.active .fd-dot { background:var(--c-sky);   color:#fff; }
-    .fd-step.warn   .fd-dot { background:var(--c-amber); color:#fff; }
-    .fd-step.late   .fd-dot { background:var(--c-red);   color:#fff; }
-    .fd-step-name  { font-size:14px; font-weight:700; color:var(--text); }
-    .fd-step-state { font-size:12px; color:var(--text2); margin-top:1px; }
-    .fd-step-by    { font-size:11px; color:var(--text3); }
-    .fd-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .fd-btn { border:0; border-radius:10px; padding:8px 14px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
-    .fd-btn.ok   { background:var(--c-green); color:#fff; }
-    .fd-btn.warn { background:var(--c-amber-pale); color:var(--c-amber-deep); }
-    .fd-btn.plain{ background:transparent; color:var(--text2); text-decoration:underline; padding:8px 4px; font-weight:600; }
-    .fd-btn.danger{ background:var(--c-red-pale); color:var(--c-red-deep); }
+.fd-toolbar { display:flex; gap:var(--gap-card); flex-wrap:wrap; align-items:center; margin-bottom:var(--gap-section); }
+.fd-toolbar .search-box { max-width:280px; }
+.fd-toolbar select { max-width:280px; }
 
-    .fd-facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px 18px; margin-bottom:18px; }
-    .fd-facts dt { font-size:11px; color:var(--text3); font-weight:600; }
-    .fd-facts dd { margin:1px 0 0; font-size:14px; font-weight:700; color:var(--text); }
-    .fd-h { font-size:12px; font-weight:800; color:var(--text2); margin:18px 0 8px; }
-    .fd-hist { font-size:12px; color:var(--text2); list-style:none; padding:0; margin:0; }
-    .fd-hist li { padding:6px 0; border-bottom:1px dashed var(--border); }
-    .fd-hist time { color:var(--text3); margin-right:8px; }
+.fd-list { display:flex; flex-direction:column; gap:var(--gap-item); }
 
-    /* ทะเบียนลูกหนี้ */
-    .fd-ledger-wrap { overflow-x:auto; }
-    .fd-ledger { width:100%; border-collapse:collapse; font-size:12.5px; min-width:1020px; }
-    .fd-ledger th { background:var(--bg); color:var(--text2); font-weight:800; text-align:left; padding:10px 10px; border-bottom:2px solid var(--border); white-space:nowrap; }
-    .fd-ledger td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
-    .fd-ledger td.num { text-align:right; white-space:nowrap; }
-    .fd-ledger tr.late td { background:var(--c-red-pale); }
-    .fd-ledger tr:not(.late):hover td { background:var(--c-sky-pale); cursor:pointer; }
+/* แถวรายการ = .booking-card (ของกลาง) + layout grid + แถบสีซ้ายตามสถานะ */
+.fd-row { display:grid; grid-template-columns:1fr auto; gap:6px 16px; cursor:pointer; }
+.fd-row.fd-tone-done   { border-left:4px solid var(--green); }
+.fd-row.fd-tone-active { border-left:4px solid var(--c-sky); }
+.fd-row.fd-tone-warn   { border-left:4px solid var(--accent-warn); }
+.fd-row.fd-tone-late   { border-left:4px solid var(--red); }
+.fd-row.fd-tone-wait   { border-left:4px solid var(--border); }
+.fd-type  { font-size:12px; font-weight:700; color:var(--text2); }
+.fd-title { font-size:15px; font-weight:800; color:var(--text); margin:1px 0 2px; }
+.fd-meta  { font-size:12px; color:var(--text3); }
+.fd-amt   { font-size:16px; font-weight:800; color:var(--text); text-align:right; white-space:nowrap; }
+.fd-chips { grid-column:1 / -1; display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.fd-chips .status-badge b { font-weight:800; margin-right:4px; }
 
-    .fd-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .fd-hint { font-size:11px; color:var(--text3); margin-top:4px; }
-    @media (max-width:560px) { .fd-field-row { grid-template-columns:1fr; } }
+/* tone ของ .status-badge (ใช้ token สีชุดเดียวกับ status-badge เดิมของระบบ) */
+.status-badge.t-done   { background:var(--role-academic-bg); color:var(--c-green-deep); }
+.status-badge.t-active { background:var(--sky-light);        color:var(--c-sky-deep); }
+.status-badge.t-warn   { background:var(--yellow-light);     color:var(--amber-dark); }
+.status-badge.t-late   { background:var(--red-light);        color:var(--red-dark); }
+.status-badge.t-wait   { background:var(--bg-alt);           color:var(--text3); }
+
+/* ขั้นตอนใน modal รายละเอียด */
+.fd-steps { margin:6px 0 0; padding:0; list-style:none; }
+.fd-step  { display:grid; grid-template-columns:28px 1fr; gap:12px; padding-bottom:16px; position:relative; }
+.fd-step:not(:last-child)::before { content:''; position:absolute; left:13px; top:28px; bottom:0; width:2px; background:var(--border); }
+.fd-dot   { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--border); color:var(--text2); font-size:12px; font-weight:800; }
+.fd-step.done   .fd-dot { background:var(--c-green); color:#fff; }
+.fd-step.active .fd-dot { background:var(--c-sky);   color:#fff; }
+.fd-step.warn   .fd-dot { background:var(--c-amber); color:#fff; }
+.fd-step.late   .fd-dot { background:var(--c-red);   color:#fff; }
+.fd-step-name  { font-size:14px; font-weight:700; color:var(--text); }
+.fd-step-state { font-size:12px; color:var(--text2); margin-top:1px; }
+.fd-step-by    { font-size:11px; color:var(--text3); }
+.fd-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+
+.fd-facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px 18px; margin-bottom:18px; }
+.fd-facts dt { font-size:11px; color:var(--text3); font-weight:600; }
+.fd-facts dd { margin:1px 0 0; font-size:14px; font-weight:700; color:var(--text); }
+.fd-h { font-size:12px; font-weight:800; color:var(--text2); margin:18px 0 8px; }
+.fd-hist { font-size:12px; color:var(--text2); list-style:none; padding:0; margin:0; }
+.fd-hist li { padding:6px 0; border-bottom:1px dashed var(--border); }
+.fd-hist time { color:var(--text3); margin-right:8px; }
+
+/* ทะเบียนลูกหนี้ = .tbl-wrap + .data-table (ของกลาง) */
+.fd-ledger-wrap { background:var(--white); }
+.fd-ledger { min-width:1020px; }
+.fd-ledger td { vertical-align:top; }
+.fd-ledger td.num { text-align:right; white-space:nowrap; }
+.fd-ledger tbody tr { cursor:pointer; }
+.fd-ledger tbody tr.late td { background:var(--c-red-pale); }
+
+.fd-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.fd-hint { font-size:11px; color:var(--text3); margin-top:4px; }
+@media (max-width:560px) { .fd-field-row { grid-template-columns:1fr; } }

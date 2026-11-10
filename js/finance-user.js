@@ -17,17 +17,24 @@ function renderPage() {
         '<p class="page-sub">กรอกรายการแล้วนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน ติดตามสถานะแต่ละขั้นได้ที่นี่</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<button class="btn-primary" onclick="openForm()">+ ส่งเอกสารใหม่</button>' +
+        '<button class="btn-primary" onclick="openForm()"><i data-lucide="plus" style="width:14px;height:14px;"></i> ส่งเอกสารใหม่</button>' +
       '</div>' +
     '</div>' +
-    '<div class="fd-toolbar">' +
-      '<select id="fdFilter" onchange="statusFilter=this.value;renderList()">' +
-        '<option value="all">ทุกสถานะ</option><option value="progress">กำลังดำเนินการ</option>' +
-        '<option value="revision">ต้องแก้ไข</option><option value="done">เสร็จสิ้น</option>' +
-      '</select>' +
+    '<div class="fd-toolbar" id="fdFilter">' +
+      '<button class="filter-pill active" onclick="setStatusFilter(\'all\',this)">ทั้งหมด</button>' +
+      '<button class="filter-pill" onclick="setStatusFilter(\'progress\',this)">กำลังดำเนินการ</button>' +
+      '<button class="filter-pill" onclick="setStatusFilter(\'revision\',this)">ต้องแก้ไข</button>' +
+      '<button class="filter-pill" onclick="setStatusFilter(\'done\',this)">เสร็จสิ้น</button>' +
     '</div>' +
-    '<div class="card" id="fdList" style="padding:0;overflow:hidden;"><div class="fd-empty">กำลังโหลด...</div></div>'
+    '<div class="fd-list" id="fdList">' + emptyHtml('กำลังโหลด...') + '</div>'
   );
+}
+function setStatusFilter(v, el) {
+  statusFilter = v;
+  var pills = document.querySelectorAll('#fdFilter .filter-pill');
+  for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  renderList();
 }
 function renderList() {
   var el = document.getElementById('fdList'); if (!el) return;
@@ -39,7 +46,7 @@ function renderList() {
     return tone !== 'done' && d.s1 !== 'revision';
   });
   if (!rows.length) {
-    el.innerHTML = '<div class="fd-empty">' + (allDocs.length ? 'ไม่พบรายการในสถานะนี้' : 'ยังไม่มีเอกสารที่คุณส่ง กดปุ่ม "ส่งเอกสารใหม่" เพื่อเริ่มต้น') + '</div>';
+    el.innerHTML = emptyHtml(allDocs.length ? 'ไม่พบรายการในสถานะนี้' : 'ยังไม่มีเอกสารที่คุณส่ง กดปุ่ม "ส่งเอกสารใหม่" เพื่อเริ่มต้น');
     return;
   }
   el.innerHTML = rows.map(rowHtml).join('');
@@ -47,8 +54,8 @@ function renderList() {
 function renderDetail(d) {
   var own = '';
   if (isMine(d) && d.s1 !== 'approved') {
-    own = '<div class="fd-actions" style="margin-top:16px;"><button class="fd-btn warn" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
-      (d.s1 === 'processing' ? '<button class="fd-btn danger" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button>' : '') + '</div>';
+    own = '<div class="fd-actions" style="margin-top:16px;"><button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
+      (d.s1 === 'processing' ? '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button>' : '') + '</div>';
   } else if (d.s1 === 'approved') {
     own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ หากต้องการแก้ไขกรุณาติดต่อฝ่ายการเงิน</div>';
   }

@@ -112,6 +112,16 @@ function lastHist(d, sk) {
   for (var i = h.length - 1; i >= 0; i--) if (h[i].step === sk) return h[i];
   return null;
 }
+/* ปุ่มในรายละเอียด/ขั้นตอน → class กลางของระบบ (styles-new.css) */
+var FD_BTN = {
+  ok:     'btn-approve',
+  warn:   'btn-primary amber btn-sm',
+  plain:  'btn btn-ghost btn-sm',
+  danger: 'btn-danger',
+  edit:   'btn-secondary btn-sm'
+};
+/* กล่องข้อความว่าง/กำลังโหลด/ผิดพลาด ใช้ .empty-state กลาง */
+function emptyHtml(msg) { return '<div class="card"><div class="empty-state">' + msg + '</div></div>'; }
 function findDoc(id) { for (var i = 0; i < allDocs.length; i++) if (allDocs[i].id === id) return allDocs[i]; return null; }
 
 /* โหลดสิทธิ์ของผู้ใช้คนนี้จาก admins/{email}.permissions (ครูทั่วไปไม่มี doc → ไม่มีสิทธิ์เจ้าหน้าที่) */
@@ -143,7 +153,7 @@ function listenDocs(query, onChange) {
   }, function(err) {
     console.error(err);
     var el = document.getElementById('fdList');
-    if (el) el.innerHTML = '<div class="fd-empty">โหลดข้อมูลไม่สำเร็จ (' + esc2(err.code || err.message) + ')</div>';
+    if (el) el.innerHTML = emptyHtml('โหลดข้อมูลไม่สำเร็จ (' + esc2(err.code || err.message) + ')');
   });
 }
 
@@ -155,9 +165,9 @@ function scrollToTopContent() {
 function rowHtml(d) {
   var chips = stepsOf(d).map(function(sk) {
     var i = stepInfo(d, sk);
-    return '<span class="fd-chip ' + i.tone + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
+    return '<span class="status-badge t-' + i.tone + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
   }).join('');
-  return '<div class="fd-row" onclick="openDetail(\'' + d.id + '\')">' +
+  return '<div class="booking-card fd-row fd-tone-' + overallInfo(d).tone + '" onclick="openDetail(\'' + d.id + '\')">' +
     '<div>' +
       '<div class="fd-type">' + esc2(typeOf(d.type).label) + (d.contractNo ? ' · สัญญาเลขที่ ' + esc2(d.contractNo) : '') + '</div>' +
       '<div class="fd-title">' + esc2(d.title) + '</div>' +
@@ -200,7 +210,7 @@ function buildDetailHtml(d, acts, extraHtml) {
       '<div class="fd-step-state">' + inf.label + '</div>' +
       (h ? '<div class="fd-step-by">' + esc2(h.by) + ' · ' + fmtD(h.at) + (h.note ? ' · ' + esc2(h.note) : '') + '</div>' : '') +
       (sa.length ? '<div class="fd-actions">' + sa.map(function(a) {
-        return '<button class="fd-btn ' + a.cls + '" onclick="openConfirm(\'' + d.id + '\',\'' + a.sk + '\',\'' + a.act + '\')">' + a.label + '</button>';
+        return '<button class="' + (FD_BTN[a.cls] || FD_BTN.ok) + '" onclick="openConfirm(\'' + d.id + '\',\'' + a.sk + '\',\'' + a.act + '\')">' + a.label + '</button>';
       }).join('') + '</div>' : '') +
     '</div></li>';
   }).join('');
