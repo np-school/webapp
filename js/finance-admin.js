@@ -264,8 +264,6 @@ function renderLedger(el) {
   var rows = ledgerRows();
   if (!rows.length) { el.innerHTML = emptyHtml('ยังไม่มีสัญญายืมเงินที่อนุมัติในปีงบประมาณนี้'); return; }
   var groups = groupLedgerRows(rows);
-  /* ถ้ามีแค่กลุ่มเดียว ไม่ต้องแสดง header กลุ่ม */
-  if (groups.length <= 1) { el.innerHTML = ledgerTableHtml(rows); return; }
   el.innerHTML = groups.map(function(g) {
     var cat = DOC_CATS[g.type.cat] || DOC_CAT_OTHER;
     return '<section class="fd-group fd-cat-' + cat.color + '">' +
