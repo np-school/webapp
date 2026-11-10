@@ -228,15 +228,24 @@ function adminRowHtml(d) {
   '</div>';
 }
 
-/* ── ทะเบียนลูกหนี้ (คอลัมน์ตรงกับสมุดเดิม) ── */
+/* ── ทะเบียนลูกหนี้ (คอลัมน์ตรงกับสมุดเดิม) แยกกลุ่มตามประเภทสัญญา ── */
 function ledgerRows() {
   return allDocs.filter(function(d) {
     return typeOf(d.type).loan && d.contractNo && String(d.fiscalYear) === String(ledgerFY) && matchQ(d);
   }).sort(function(a, b) { return parseInt(a.contractNo, 10) - parseInt(b.contractNo, 10); });
 }
-function renderLedger(el) {
-  var rows = ledgerRows();
-  if (!rows.length) { el.innerHTML = emptyHtml('ยังไม่มีสัญญายืมเงินที่อนุมัติในปีงบประมาณนี้'); return; }
+/* จัดกลุ่มรายการทะเบียนลูกหนี้ตาม type (loan_trip / loan_project) — เรียงตาม DOC_TYPES */
+function groupLedgerRows(rows) {
+  var map = {}, out = [];
+  rows.forEach(function(d) { (map[d.type] = map[d.type] || []).push(d); });
+  DOC_TYPES.forEach(function(t) { if (t.loan && map[t.key]) out.push({ type: t, rows: map[t.key] }); });
+  return out;
+}
+function ledgerTableHtml(rows) {
+  var THEAD = '<thead><tr>' +
+    '<th>ที่</th><th>วันที่ยืม</th><th>เลขที่สัญญา</th><th>ชื่อ-สกุล</th><th>กิจกรรม/โครงการ</th><th>จำนวนเงิน</th>' +
+    '<th>วันครบกำหนด</th><th>วันที่ส่งใช้</th><th>เลขที่ใบสำคัญ</th><th>จำนวนเงินใบสำคัญ</th><th>เงินสด</th><th>ประเภทเงิน</th>' +
+    '</tr></thead>';
   var body = rows.map(function(d, i) {
     var s = d.settle || {};
     return '<tr class="' + (isOverdue(d) ? 'late' : '') + '" onclick="openDetail(\'' + d.id + '\')">' +
@@ -249,19 +258,35 @@ function renderLedger(el) {
       '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
       '<td>' + esc2(d.fundType) + '</td></tr>';
   }).join('');
-  el.innerHTML = '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger"><thead><tr>' +
-    '<th>ที่</th><th>วันที่ยืม</th><th>เลขที่สัญญา</th><th>ชื่อ-สกุล</th><th>กิจกรรม/โครงการ</th><th>จำนวนเงิน</th>' +
-    '<th>วันครบกำหนด</th><th>วันที่ส่งใช้</th><th>เลขที่ใบสำคัญ</th><th>จำนวนเงินใบสำคัญ</th><th>เงินสด</th><th>ประเภทเงิน</th>' +
-    '</tr></thead><tbody>' + body + '</tbody></table></div>';
+  return '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger">' + THEAD + '<tbody>' + body + '</tbody></table></div>';
+}
+function renderLedger(el) {
+  var rows = ledgerRows();
+  if (!rows.length) { el.innerHTML = emptyHtml('ยังไม่มีสัญญายืมเงินที่อนุมัติในปีงบประมาณนี้'); return; }
+  var groups = groupLedgerRows(rows);
+  /* ถ้ามีแค่กลุ่มเดียว ไม่ต้องแสดง header กลุ่ม */
+  if (groups.length <= 1) { el.innerHTML = ledgerTableHtml(rows); return; }
+  el.innerHTML = groups.map(function(g) {
+    var cat = DOC_CATS[g.type.cat] || DOC_CAT_OTHER;
+    return '<section class="fd-group fd-cat-' + cat.color + '">' +
+      '<div class="fd-group-h">' +
+        '<span class="fd-group-ico"><i data-lucide="' + cat.icon + '"></i></span>' +
+        '<span class="fd-group-t">' + esc2(g.type.label) + '</span>' +
+        '<span class="fd-group-n">' + g.rows.length + ' รายการ</span>' +
+      '</div>' +
+      ledgerTableHtml(g.rows) +
+    '</section>';
+  }).join('');
+  lucide.createIcons();
 }
 function exportLedger() {
   var rows = ledgerRows();
   if (!rows.length) { showToast('ไม่มีข้อมูลให้ส่งออก', 'warn'); return; }
   function q(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
-  var lines = [['ที่', 'วันที่ยืม', 'เลขที่สัญญา', 'ชื่อ-สกุล', 'กิจกรรม/โครงการ', 'จำนวนเงิน', 'วันครบกำหนด', 'วันที่ส่งใช้', 'เลขที่ใบสำคัญ', 'จำนวนเงินใบสำคัญ', 'เงินสด', 'ประเภทเงิน'].map(q).join(',')];
+  var lines = [['ที่', 'ประเภท', 'วันที่ยืม', 'เลขที่สัญญา', 'ชื่อ-สกุล', 'กิจกรรม/โครงการ', 'จำนวนเงิน', 'วันครบกำหนด', 'วันที่ส่งใช้', 'เลขที่ใบสำคัญ', 'จำนวนเงินใบสำคัญ', 'เงินสด', 'ประเภทเงิน'].map(q).join(',')];
   rows.forEach(function(d, i) {
     var s = d.settle || {};
-    lines.push([i + 1, fmtD(d.loanDate), d.contractNo, d.name, d.title, d.amount, fmtD(d.dueDate),
+    lines.push([i + 1, typeOf(d.type).label, fmtD(d.loanDate), d.contractNo, d.name, d.title, d.amount, fmtD(d.dueDate),
       d.s3 === 'paid' ? fmtD(s.date) : 'ค้างชำระ', s.voucherNo || '', s.voucherAmount || '', s.cash || '', d.fundType].map(q).join(','));
   });
   var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
