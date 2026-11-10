@@ -31,6 +31,36 @@ var PERM_DEFS = [
     get border() { return cssVar('--role-budget-border'); }
   },
   {
+    key: 'financeCheck',
+    label: 'เอกสารการเงิน: ผู้ตรวจเอกสาร',
+    desc: 'ตรวจและอนุมัติ/ส่งกลับแก้ไขเอกสารการเงินและพัสดุ (ขั้นที่ 1)',
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'file-check',
+    get color()  { return cssVar('--role-budget-color');  },
+    get bg()     { return cssVar('--role-budget-bg');     },
+    get border() { return cssVar('--role-budget-border'); }
+  },
+  {
+    key: 'financeCheque',
+    label: 'เอกสารการเงิน: ผู้ออกเช็ค',
+    desc: 'ยืนยันตรวจสอบเอกสารขอเบิกเงิน/ออกเช็ค (ขั้นที่ 2)',
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'banknote',
+    get color()  { return cssVar('--role-budget-color');  },
+    get bg()     { return cssVar('--role-budget-bg');     },
+    get border() { return cssVar('--role-budget-border'); }
+  },
+  {
+    key: 'financeLoan',
+    label: 'เอกสารการเงิน: ตรวจสัญญายืมเงิน',
+    desc: 'ยืนยันสถานะชำระแล้วของสัญญายืมเงิน (ขั้นที่ 3)',
+    group: 'กลุ่มบริหารงบประมาณ',
+    icon: 'receipt',
+    get color()  { return cssVar('--role-budget-color');  },
+    get bg()     { return cssVar('--role-budget-bg');     },
+    get border() { return cssVar('--role-budget-border'); }
+  },
+  {
     key: 'bookings',
     label: 'ระบบจองห้อง',
     desc: 'อนุมัติ/ปฏิเสธคำขอ และจัดการห้อง',
@@ -217,7 +247,7 @@ var GROUP_DEFS = [
   {
     key: 'budget',
     label: 'กลุ่มบริหารงบประมาณ',
-    subtitle: 'ดูแลระบบยืม-คืนไอแพด',
+    subtitle: 'ไอแพด · เอกสารการเงินและพัสดุ',
     icon: 'banknote',
     get color()  { return cssVar('--role-budget-color');  },
     get bg()     { return cssVar('--role-budget-bg');     },
@@ -225,7 +255,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !!p.ipad;
+      return !!(p.ipad||p.financeCheck||p.financeCheque||p.financeLoan);
     }
   },
   {
@@ -435,7 +465,7 @@ var GROUP_DEFS = [
     filter: function(a){
       if(a.email.toLowerCase()===SUPER_ADMIN) return false;
       var p=a.data.permissions||{};
-      return !p.ipad&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+      return !p.ipad&&!p.financeCheck&&!p.financeCheque&&!p.financeLoan&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
     }
   }
 ];
@@ -599,7 +629,7 @@ function renderStats(){
   var noPerms=allAdmins.filter(function(a){
     if(a.email.toLowerCase()===SUPER_ADMIN) return false;
     var p=a.data.permissions||{};
-    return !p.ipad&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
+    return !p.ipad&&!p.financeCheck&&!p.financeCheque&&!p.financeLoan&&!p.bookings&&!p.foodcourt&&!p.portfolio&&!p.staff&&!p.headOfGroup&&!p.assistantDirectorAcademic&&!p.assistantDirectorBudget&&!p.assistantDirectorGeneral&&!p.assistantDirectorPersonnel&&!p.assistantDirectorStudent&&!p.deputyDirectorAcademic&&!p.deputyDirectorBudget&&!p.deputyDirectorGeneral&&!p.deputyDirectorPersonnel&&!p.director;
   }).length;
   var withPerms=total-1-noPerms; // exclude super
   var statData=[
@@ -663,7 +693,7 @@ function renderAdminMiniCard(a, isSuperCard){
   var isSA=a.email.toLowerCase()===SUPER_ADMIN;
   var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
   var perms=a.data.permissions||{};
-  if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true};
+  if(isSA) perms={ipad:true,financeCheck:true,financeCheque:true,financeLoan:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true};
 
   var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
     return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
@@ -704,7 +734,7 @@ function renderListView(){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var ph=a.data.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(a.data.name||a.email)+'&background=7c3aed&color=fff&size=64';
     var perms=a.data.permissions||{};
-    if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true};
+    if(isSA) perms={ipad:true,financeCheck:true,financeCheque:true,financeLoan:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true};
 
     var permBadges=PERM_DEFS.filter(function(p){return perms[p.key];}).map(function(p){
       return '<span class="perm-badge" style="background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';">' +
@@ -738,14 +768,14 @@ function renderListView(){
 function renderMatrix(){
   var tbody=document.getElementById('matrixBody');
   var list=filterAdmins(allAdmins);
-  if(!list.length){tbody.innerHTML='<tr><td colspan="19" style="text-align:center;padding:52px;color:var(--text3);font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="22" style="text-align:center;padding:52px;color:var(--text3);font-style:italic;">ไม่พบผลลัพธ์</td></tr>';return;}
 
   tbody.innerHTML=list.map(function(a){
     var isSA=a.email.toLowerCase()===SUPER_ADMIN;
     var perms=a.data.permissions||{};
-    if(isSA) perms={ipad:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirectorAcademic:true,deputyDirectorBudget:true,deputyDirectorGeneral:true,deputyDirectorPersonnel:true,director:true};
+    if(isSA) perms={ipad:true,financeCheck:true,financeCheque:true,financeLoan:true,bookings:true,rooms:true,foodcourt:true,repair:true,portfolio:true,staff:true,admins:true,assistantDirectorAcademic:true,assistantDirectorBudget:true,assistantDirectorGeneral:true,assistantDirectorPersonnel:true,assistantDirectorStudent:true,deputyDirectorAcademic:true,deputyDirectorBudget:true,deputyDirectorGeneral:true,deputyDirectorPersonnel:true,director:true};
 
-    var permKeys=['ipad','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director','admins'];
+    var permKeys=['ipad','financeCheck','financeCheque','financeLoan','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director','admins'];
     var cells=permKeys.map(function(pk){
       var has=!!perms[pk];
       var pd=PERM_DEFS.find(function(x){return x.key===pk;});
@@ -964,7 +994,7 @@ function openAddModal(){
   resetStaffPicker();
   document.getElementById('headOfGroupPanel').classList.remove('show');
   resetHogPicker();
-  ['ipad','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
+  ['ipad','financeCheck','financeCheque','financeLoan','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=false; onPermChange(k);}
   });
@@ -985,7 +1015,7 @@ function openEditModal(email){
   document.getElementById('staffPickerDisplay').value = admin.data.name || '';
   document.getElementById('staffDropdown').classList.remove('open');
   var p=admin.data.permissions||{};
-  ['ipad','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
+  ['ipad','financeCheck','financeCheque','financeLoan','bookings','foodcourt','repair','portfolio','staff','headOfGroup','assistantDirectorAcademic','assistantDirectorBudget','assistantDirectorGeneral','assistantDirectorPersonnel','assistantDirectorStudent','deputyDirectorAcademic','deputyDirectorBudget','deputyDirectorGeneral','deputyDirectorPersonnel','director'].forEach(function(k){
     var el=document.getElementById('perm-'+k);
     if(el){el.checked=!!p[k]; onPermChange(k);}
   });
@@ -1006,6 +1036,9 @@ function saveAdmin(){
   var isHeadOfGroup = document.getElementById('perm-headOfGroup').checked;
   var perms={
     ipad:               document.getElementById('perm-ipad').checked,
+    financeCheck:       document.getElementById('perm-financeCheck').checked,
+    financeCheque:      document.getElementById('perm-financeCheque').checked,
+    financeLoan:        document.getElementById('perm-financeLoan').checked,
     bookings:           bookings,
     rooms:              bookings,
     foodcourt:          document.getElementById('perm-foodcourt').checked,

@@ -923,6 +923,7 @@ function _applyAdminPermissions(p, isSA) {
   _toggleAdminItem('adminMenuItem-staff',      isSA || !!p.staff);
   _toggleAdminItem('adminMenuItem-foodcourt',  isSA || !!p.foodcourt);
   _toggleAdminItem('adminMenuItem-ipad',       isSA || !!p.ipad);
+  _toggleAdminItem('adminMenuItem-finance',    isSA || !!p.financeCheck || !!p.financeCheque || !!p.financeLoan);
 
   /* SuperAdmin-only */
   if (isSA) {
@@ -1303,7 +1304,9 @@ var GROUP_MENU = [
   {
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'banknote',
-    items: [],
+    items: [
+      { label: 'ส่งเอกสารการเงินและพัสดุ', icon: 'file-text', href: 'finance-user.html' },
+    ],
   },
   {
     group: 'กลุ่มบริหารงานบุคคล',
@@ -1341,6 +1344,7 @@ var ADMIN_GROUP_MENU = [
     icon: 'banknote',
     items: [
       { id: 'adminMenuItem-ipad', label: 'ระบบยืม-คืน iPad', icon: 'tablet-smartphone', href: 'ipad-lending.html' },
+      { id: 'adminMenuItem-finance', label: 'จัดการเอกสารการเงินและพัสดุ', icon: 'file-check', href: 'finance-admin.html' },
     ],
   },
   {

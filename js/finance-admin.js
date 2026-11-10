@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
    finance-admin.js — หน้าเจ้าหน้าที่: กดยืนยันแต่ละขั้น + ทะเบียนลูกหนี้
-   (ต้องโหลด finance-common.js ก่อน) สิทธิ์ตามรายชื่อใน financeSettings/config
+   (ต้องโหลด finance-common.js ก่อน) สิทธิ์ตาม admins/{email}.permissions (financeCheck / financeCheque / financeLoan)
    ══════════════════════════════════════════════════════════════ */
 var activeTab = 'todo';
 var searchQ = '';
@@ -51,7 +51,6 @@ function renderPage() {
         '<p class="page-sub">ตรวจและกดยืนยันสถานะเอกสารของครูทีละขั้น พร้อมทะเบียนคุมลูกหนี้เงินยืม</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-        (myRoles.sa ? '<button class="btn-secondary" onclick="openSettings()">ตั้งค่าผู้รับผิดชอบ</button>' : '') +
         '<a class="btn-secondary" href="finance-user.html" style="text-decoration:none;display:inline-block;">ส่งเอกสารของฉัน</a>' +
       '</div>' +
     '</div>' +
@@ -63,8 +62,8 @@ function renderPage() {
 function renderDenied() {
   return '<div class="card" style="padding:48px 20px;text-align:center;">' +
     '<h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">ไม่มีสิทธิ์เข้าหน้านี้</h2>' +
-    '<p style="color:var(--text2);font-size:14px;margin-bottom:18px;">หน้านี้สำหรับเจ้าหน้าที่ที่ได้รับมอบหมายในระบบเอกสารการเงินและพัสดุเท่านั้น</p>' +
-    '<a href="finance-user.html" class="btn-primary" style="text-decoration:none;display:inline-block;">ไปหน้าส่งเอกสาร</a></div>';
+    '<p style="color:var(--text2);font-size:14px;margin-bottom:18px;">หน้านี้สำหรับเจ้าหน้าที่ที่ได้รับสิทธิ์ระบบเอกสารการเงินและพัสดุเท่านั้น</p>' +
+    '<a href="index.html" class="btn-primary" style="text-decoration:none;display:inline-block;">กลับหน้าแรก</a></div>';
 }
 function renderTabs() {
   var el = document.getElementById('fdTabs'); if (!el) return;
@@ -242,44 +241,20 @@ function applyStep(docId, sk, act, note, extra) {
   }).then(function() { return result; });
 }
 
-/* ══════════════════════ ตั้งค่าผู้รับผิดชอบ (SuperAdmin) ══════════════════════ */
-function openSettings() {
-  ['s1', 's2', 's3'].forEach(function(k) {
-    document.getElementById('cfg' + k.toUpperCase()).value = finCfg[k].join('\n');
-  });
-  openModal('settingsModal');
-}
-function saveSettings() {
-  var out = {};
-  ['s1', 's2', 's3'].forEach(function(k) {
-    var seen = {};
-    out[k] = document.getElementById('cfg' + k.toUpperCase()).value.split(/[\s,;]+/)
-      .map(function(e) { return e.trim().toLowerCase(); })
-      .filter(function(e) { if (e.indexOf('@') < 1 || seen[e]) return false; seen[e] = 1; return true; });
-  });
-  db.collection('financeSettings').doc('config').set(out).then(function() {
-    finCfg = out;
-    var em = (currentUser.email || '').toLowerCase();
-    ['s1', 's2', 's3'].forEach(function(k) { myRoles[k] = out[k].indexOf(em) > -1; });
-    closeModal('settingsModal'); showToast('บันทึกผู้รับผิดชอบแล้ว');
-    startListener(); renderTabs();
-  }).catch(function(err) { showToast('บันทึกไม่สำเร็จ: ' + (err.code || err.message), 'error'); });
-}
-
 /* ══════════════════════ INIT ══════════════════════ */
 buildPage({
   appId:        'myApp',
   navSubtitle:  'จัดการเอกสารการเงินและพัสดุ',
   navTheme:     'dark',
   activePage:   'finance-admin',
-  requireAdmin: false,
+  requireAdmin: 'admin',
 
   onAuth: function(user, contentEl) {
     updateNavUser(user);
     updateSidebarProfile(user);
     checkAdminAccess(user.email);
 
-    loadFinCfg(user).then(function() {
+    loadFinRoles(user).then(function() {
       if (!isStaff()) { contentEl.innerHTML = renderDenied(); return; }
       activeTab = 'todo';
       contentEl.innerHTML = renderPage();

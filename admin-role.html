@@ -115,6 +115,9 @@
               <tr style="border-bottom:2px solid var(--border);background:var(--bg);">
                 <th style="text-align:left;padding:12px 16px;font-weight:800;color:var(--text-heading);">Admin</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-budget-color);">💰 ยืม-คืนไอแพด</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-budget-color);">🧾 ตรวจเอกสาร</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-budget-color);">🧾 ออกเช็ค</th>
+                <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-budget-color);">🧾 สัญญายืม</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-general-color);">🏫 บริหารทั่วไป</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-foodcourt-color);">🍽️ Food Court</th>
                 <th style="text-align:center;padding:12px 14px;font-size:11px;font-weight:800;color:var(--matrix-general-color);">🔧 แจ้งซ่อม</th>
@@ -208,6 +211,30 @@
                 <div style="font-size:10px;color:var(--text2);">อนุมัติ/บันทึกการยืม-คืนไอแพดของโรงเรียน</div>
               </div>
               <i data-lucide="tablet-smartphone" style="width:13px;height:13px;color:var(--role-budget-border);flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-financeCheck" style="border-radius:8px;">
+              <input type="checkbox" id="perm-financeCheck" style="width:15px;height:15px;accent-color:var(--role-budget-color);flex-shrink:0;" onchange="onPermChange('financeCheck')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text);">เอกสารการเงิน: ผู้ตรวจเอกสาร</div>
+                <div style="font-size:10px;color:var(--text2);">ตรวจและอนุมัติ/ส่งกลับแก้ไข (ขั้นที่ 1)</div>
+              </div>
+              <i data-lucide="file-check" style="width:13px;height:13px;color:var(--role-budget-border);flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-financeCheque" style="border-radius:8px;">
+              <input type="checkbox" id="perm-financeCheque" style="width:15px;height:15px;accent-color:var(--role-budget-color);flex-shrink:0;" onchange="onPermChange('financeCheque')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text);">เอกสารการเงิน: ผู้ออกเช็ค</div>
+                <div style="font-size:10px;color:var(--text2);">ยืนยันตรวจสอบเอกสารขอเบิกเงิน/ออกเช็ค (ขั้นที่ 2)</div>
+              </div>
+              <i data-lucide="banknote" style="width:13px;height:13px;color:var(--role-budget-border);flex-shrink:0;"></i>
+            </label>
+            <label class="perm-row" id="wrap-financeLoan" style="border-radius:8px;">
+              <input type="checkbox" id="perm-financeLoan" style="width:15px;height:15px;accent-color:var(--role-budget-color);flex-shrink:0;" onchange="onPermChange('financeLoan')">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text);">เอกสารการเงิน: ตรวจสัญญายืมเงิน</div>
+                <div style="font-size:10px;color:var(--text2);">ยืนยันสถานะชำระแล้ว (ขั้นที่ 3)</div>
+              </div>
+              <i data-lucide="receipt" style="width:13px;height:13px;color:var(--role-budget-border);flex-shrink:0;"></i>
             </label>
           </div>
         </div>

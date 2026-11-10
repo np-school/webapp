@@ -101,26 +101,6 @@
   </div>
 </div>
 
-<!-- ตั้งค่าผู้รับผิดชอบ (SuperAdmin) -->
-<div id="settingsModal" class="modal-bg">
-  <div class="modal-box wide">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <div class="modal-title-icon" style="background:var(--c-violet-pale);"><i data-lucide="users" style="color:var(--c-violet);"></i></div>
-        <div><h3>ผู้รับผิดชอบแต่ละขั้น</h3><p>อีเมลบุคลากร 1 บรรทัดต่อ 1 คน</p></div>
-      </div>
-      <button class="modal-close" onclick="closeModal('settingsModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
-    </div>
-    <div class="form-group"><label class="form-label" for="cfgS1">ขั้นที่ 1 — ผู้ตรวจเอกสาร</label><textarea id="cfgS1" rows="3"></textarea></div>
-    <div class="form-group"><label class="form-label" for="cfgS2">ขั้นที่ 2 — ผู้ออกเช็ค (ตรวจสอบเอกสารขอเบิกเงิน)</label><textarea id="cfgS2" rows="3"></textarea></div>
-    <div class="form-group"><label class="form-label" for="cfgS3">ขั้นที่ 3 — ผู้ตรวจสอบสัญญายืมเงิน</label><textarea id="cfgS3" rows="3"></textarea></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-secondary" onclick="closeModal('settingsModal')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveSettings()">บันทึก</button>
-    </div>
-  </div>
-</div>
-
 <script src="js/finance-common.js"></script>
 <script src="js/finance-admin.js"></script>
 </body>

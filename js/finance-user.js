@@ -17,7 +17,6 @@ function renderPage() {
         '<p class="page-sub">กรอกรายการแล้วนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน ติดตามสถานะแต่ละขั้นได้ที่นี่</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<span id="staffLink"></span>' +
         '<button class="btn-primary" onclick="openForm()">+ ส่งเอกสารใหม่</button>' +
       '</div>' +
     '</div>' +
@@ -166,11 +165,7 @@ buildPage({
     lucide.createIcons();
     setupScrollTopButton();
 
+    currentUser = user;
     listenDocs(db.collection('financeDocs').where('uid', '==', user.uid), renderList);
-    /* เจ้าหน้าที่ (ตามรายชื่อที่ตั้งไว้) จะเห็นปุ่มไปหน้าเจ้าหน้าที่ */
-    loadFinCfg(user).then(function() {
-      var slot = document.getElementById('staffLink');
-      if (slot && isStaff()) slot.innerHTML = '<a class="btn-secondary" href="finance-admin.html" style="text-decoration:none;display:inline-block;">หน้าเจ้าหน้าที่</a>';
-    });
   }
 });

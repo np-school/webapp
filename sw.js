@@ -49,7 +49,7 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-var CACHE_NAME = 'np-origins-v10';
+var CACHE_NAME = 'np-origins-v11';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้
 
@@ -79,7 +79,9 @@ var ALL_FILES = [
   '/webapp/room-request.html',
   '/webapp/room-admin.html',
   '/webapp/portfolio-teacher.html',
-  '/webapp/portfolio-admin.html'
+  '/webapp/portfolio-admin.html',
+  '/webapp/finance-user.html',
+  '/webapp/finance-admin.html'
 ];
 
 /* ไฟล์ที่ต้องใช้ network-first (HTML, JS) เพื่อให้ได้ version ล่าสุดเสมอ */

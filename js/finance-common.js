@@ -2,8 +2,9 @@
    finance-common.js — ส่วนที่ใช้ร่วมกันของระบบ "ส่งเอกสารการเงินและพัสดุ"
    ใช้โดย finance-user.html (ครู) และ finance-admin.html (เจ้าหน้าที่)
    ต้อง <script> ไฟล์นี้ก่อน finance-user.js / finance-admin.js
-   Collections: financeDocs, financeSettings/config { s1:[email], s2:[email], s3:[email] },
-                counters (finloan-<ปีงบ>)
+   Collections: financeDocs, counters (finloan-<ปีงบ>)
+   สิทธิ์เจ้าหน้าที่: admins/{email}.permissions → financeCheck (ขั้น 1), financeCheque (ขั้น 2), financeLoan (ขั้น 3)
+   ตั้งค่าได้ที่หน้า admin-role (กลุ่มบริหารงบประมาณ)
    ══════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════ CONSTANTS ══════════════════════ */
@@ -37,7 +38,6 @@ var DEFAULT_DUE_DAYS = 15;
 
 /* ══════════════════════ STATE (ร่วม) ══════════════════════ */
 var currentUser = null;
-var finCfg = { s1: [], s2: [], s3: [] };
 var myRoles = { sa: false, s1: false, s2: false, s3: false };
 var allDocs = [];
 var detailId = null;
@@ -114,22 +114,19 @@ function lastHist(d, sk) {
 }
 function findDoc(id) { for (var i = 0; i < allDocs.length; i++) if (allDocs[i].id === id) return allDocs[i]; return null; }
 
-/* โหลดรายชื่อผู้รับผิดชอบแต่ละขั้น แล้วคำนวณบทบาทของผู้ใช้คนนี้ */
-function loadFinCfg(user) {
+/* โหลดสิทธิ์ของผู้ใช้คนนี้จาก admins/{email}.permissions (ครูทั่วไปไม่มี doc → ไม่มีสิทธิ์เจ้าหน้าที่) */
+function loadFinRoles(user) {
   currentUser = user;
   var em = (user.email || '').toLowerCase();
   myRoles.sa = em === SUPERADMIN_EMAIL;
-  return db.collection('financeSettings').doc('config').get()
+  return db.collection('admins').doc(em).get()
     .then(function(doc) {
-      if (doc.exists) {
-        var c = doc.data();
-        ['s1', 's2', 's3'].forEach(function(k) { finCfg[k] = (c[k] || []).map(function(e) { return String(e).toLowerCase(); }); });
-      }
+      var p = doc.exists ? (doc.data().permissions || {}) : {};
+      myRoles.s1 = !!p.financeCheck;
+      myRoles.s2 = !!p.financeCheque;
+      myRoles.s3 = !!p.financeLoan;
     })
-    .catch(function(err) { console.warn('โหลดตั้งค่าผู้รับผิดชอบไม่สำเร็จ', err); })
-    .then(function() {
-      ['s1', 's2', 's3'].forEach(function(k) { myRoles[k] = finCfg[k].indexOf(em) > -1; });
-    });
+    .catch(function(err) { console.warn('โหลดสิทธิ์เจ้าหน้าที่ไม่สำเร็จ', err); });
 }
 /* ฟัง financeDocs ตาม query ที่ส่งมา (หน้าครู = เฉพาะของตัวเอง, หน้าเจ้าหน้าที่ = ทั้งหมด) */
 function listenDocs(query, onChange) {
