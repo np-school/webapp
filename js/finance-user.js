@@ -52,14 +52,33 @@ function renderList() {
   el.innerHTML = rows.map(rowHtml).join('');
 }
 function renderDetail(d) {
-  var own = '';
-  if (isMine(d) && d.s1 !== 'approved') {
+  var own = '', banner = '';
+  if (isMine(d) && d.s1 === 'revision') {
+    /* ถูกส่งกลับ: ปุ่มหลักอยู่ในแบนเนอร์ — แก้ข้อมูลก่อน แล้วกดส่งใหม่ */
+    banner = '<button class="btn-primary btn-sm" onclick="resubmitDoc(\'' + d.id + '\')">ส่งใหม่อีกครั้ง</button>' +
+      '<button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>';
+  } else if (isMine(d) && d.s1 === 'processing') {
     own = '<div class="fd-actions" style="margin-top:16px;"><button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
-      (d.s1 === 'processing' ? '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button>' : '') + '</div>';
+      '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button></div>';
   } else if (d.s1 === 'approved') {
     own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ หากต้องการแก้ไขกรุณาติดต่อฝ่ายการเงิน</div>';
   }
-  buildDetailHtml(d, [], own);
+  buildDetailHtml(d, [], own, banner, false);
+}
+/* ผู้ส่งกดส่งใหม่หลังแก้ไข: revision → processing (ต้องมี firestore.rules ที่อนุญาต — ดูไฟล์ rules) */
+function resubmitDoc(id) {
+  var d = findDoc(id); if (!d || !isMine(d) || d.s1 !== 'revision') return;
+  if (!confirm('ส่งเอกสารนี้ให้เจ้าหน้าที่ตรวจอีกครั้งใช่หรือไม่?')) return;
+  var FV = firebase.firestore.FieldValue, TS = firebase.firestore.Timestamp;
+  db.collection('financeDocs').doc(id).update({
+    s1: 'processing',
+    updatedAt: FV.serverTimestamp(),
+    history: FV.arrayUnion({ step: 's1', text: 'ผู้ส่งแก้ไขแล้ว ส่งใหม่อีกครั้ง', note: '', by: d.name || currentUser.displayName || currentUser.email, email: currentUser.email, at: TS.now() })
+  }).then(function() {
+    showToast('ส่งให้เจ้าหน้าที่ตรวจอีกครั้งแล้ว');
+  }).catch(function(err) {
+    console.error(err); showToast('ส่งไม่สำเร็จ: ' + (err.code || err.message), 'error');
+  });
 }
 
 /* ══════════════════════ FORM (สร้าง/แก้ไข) ══════════════════════ */

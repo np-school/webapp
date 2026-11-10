@@ -507,12 +507,15 @@ service cloud.firestore {
                                              'fiscalYear', 'history', 'createdAt']);
 
       allow update: if isAuthed() && (
-        /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ (ห้ามแตะสถานะ/เลขสัญญา) */
+        /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ (ห้ามแตะเลขสัญญา/ขั้น 2-3)
+           และแตะ s1 ได้อย่างเดียว: revision → processing (ส่งใหม่อีกครั้งหลังถูกส่งกลับให้แก้ไข) */
         (resource.data.uid == request.auth.uid &&
          resource.data.s1 != 'approved' &&
          request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['name', 'title', 'amount', 'fundType', 'note', 'refContractNo',
-                     'loanDate', 'dueDate', 'updatedAt', 'history'])) ||
+                     'loanDate', 'dueDate', 'updatedAt', 'history', 's1']) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1']) ||
+          (resource.data.s1 == 'revision' && request.resource.data.s1 == 'processing'))) ||
         /* เจ้าหน้าที่ — แก้ฟิลด์สถานะของ "ขั้นที่ตัวเองรับผิดชอบ" เท่านั้น */
         (finAny() &&
          request.resource.data.diff(resource.data).affectedKeys()

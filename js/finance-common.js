@@ -77,6 +77,39 @@ function fmtD(ts) {
 function fmtMoney(n) {
   return (Number(n) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function fmtDT(ts) {
+  var d = toDate(ts); if (!d) return '-';
+  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' +
+    d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+}
+/* ขั้นปัจจุบันของเอกสาร (หนึ่งใบอยู่ได้ขั้นเดียว) + สี/ข้อความอธิบายที่ใช้ทั้งการ์ดสรุปและแบนเนอร์ใน modal */
+var STAGE_META = {
+  review:   { label: 'รอตรวจเอกสาร',     color: 'amber',  icon: 'search',         title: 'เจ้าหน้าที่กำลังตรวจเอกสาร',
+              user: 'อย่าลืมนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน เจ้าหน้าที่จะตรวจและอนุมัติหรือส่งกลับให้แก้ไข',
+              staff: 'ตรวจเอกสารแล้วกด "อนุมัติเอกสาร" หรือ "ส่งกลับแก้ไข" ที่ขั้นที่ 1' },
+  revision: { label: 'ส่งกลับแก้ไข',      color: 'violet', icon: 'undo-2',         title: 'ถูกส่งกลับให้แก้ไข',
+              user: 'แก้ไขข้อมูลตามเหตุผลที่แจ้ง แล้วกด "ส่งใหม่อีกครั้ง" เพื่อให้เจ้าหน้าที่ตรวจต่อ',
+              staff: 'รอผู้ส่งแก้ไขและส่งกลับมาใหม่ (หรือกด "แก้ไขแล้ว" แทนผู้ส่งที่ขั้นที่ 1)' },
+  cheque:   { label: 'รอเบิก/ออกเช็ค',    color: 'sky',    icon: 'banknote',       title: 'ผ่านการตรวจเอกสารแล้ว รอออกเช็ค',
+              user: 'ไม่ต้องทำอะไรเพิ่ม รอฝ่ายการเงินตรวจสอบเอกสารขอเบิกเงินและออกเช็ค',
+              staff: 'ออกเช็คแล้วกด "อนุมัติ (ออกเช็คแล้ว)" ที่ขั้นที่ 2' },
+  loan:     { label: 'ค้างส่งใช้เงินยืม',  color: 'ink',    icon: 'wallet',         title: 'ค้างส่งใช้เงินยืม',
+              user: 'นำหลักฐานมาส่งใช้เงินยืมภายในวันครบกำหนด',
+              staff: 'เมื่อผู้ยืมส่งใช้แล้วกด "ยืนยันชำระแล้ว" ที่ขั้นสุดท้าย' },
+  late:     { label: 'เกินกำหนดส่งใช้',    color: 'red',    icon: 'triangle-alert', title: 'เกินกำหนดส่งใช้เงินยืม',
+              user: 'เลยวันครบกำหนดส่งใช้แล้ว กรุณาติดต่อฝ่ายการเงินโดยเร็ว',
+              staff: 'เลยวันครบกำหนดส่งใช้ ควรติดตามผู้ยืม' },
+  done:     { label: 'เสร็จสิ้น',          color: 'green',  icon: 'check-check',    title: 'ดำเนินการเสร็จสิ้น',
+              user: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว', staff: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว' }
+};
+var STAGE_ORDER = ['review', 'revision', 'cheque', 'loan', 'late', 'done'];
+function fdStage(d) {
+  if (d.s1 === 'revision') return 'revision';
+  if (d.s1 !== 'approved') return 'review';
+  if (stepsOf(d).indexOf('s2') > -1 && d.s2 !== 'approved') return 'cheque';
+  if (typeOf(d.type).loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
+  return 'done';
+}
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function dateInputVal(ts) {
   var d = toDate(ts); if (!d) return '';
@@ -99,7 +132,7 @@ function isOverdue(d) {
 function stepInfo(d, sk) {
   if (sk === 's1') {
     if (d.s1 === 'approved') return { tone: 'done',   label: 'อนุมัติ' };
-    if (d.s1 === 'revision') return { tone: 'warn',   label: 'แก้ไข' };
+    if (d.s1 === 'revision') return { tone: 'warn',   label: 'รอผู้ส่งแก้ไข' };
     return { tone: 'active', label: 'กำลังดำเนินการ' };
   }
   if (sk === 's2') {
@@ -197,45 +230,79 @@ function openDetail(id) {
   var d = findDoc(id); if (!d) return;
   detailId = id; renderDetail(d); openModal('detailModal');
 }
-/* ส่วนเนื้อหาของ modal รายละเอียด: ข้อมูล + ความคืบหน้า + ประวัติ
-   acts      = ปุ่มยืนยันขั้นตอน (เฉพาะหน้าเจ้าหน้าที่, หน้าครูส่ง [])
-   extraHtml = ปุ่มเพิ่มเติมท้ายรายละเอียด (หน้าครู: แก้ไข/ลบ) */
-function buildDetailHtml(d, acts, extraHtml) {
-  var t = typeOf(d.type), loan = !!t.loan;
+/* ส่วนเนื้อหาของ modal รายละเอียด: แบนเนอร์สถานะ (บอกว่าตอนนี้เป็นอย่างไร + ต้องทำอะไรต่อ) → ยอดเงิน/ข้อมูล → ขั้นตอน → ประวัติ
+   acts       = ปุ่มยืนยันขั้นตอน (เฉพาะหน้าเจ้าหน้าที่, หน้าครูส่ง [])
+   extraHtml  = ปุ่มเพิ่มเติมท้ายขั้นตอน (หน้าครู: แก้ไข/ลบ)
+   bannerActs = ปุ่มในแบนเนอร์ (หน้าครู: ส่งใหม่อีกครั้ง / แก้ไขข้อมูล เมื่อถูกส่งกลับ)
+   staffView  = true เมื่อเปิดจากหน้าเจ้าหน้าที่ (ใช้เลือกข้อความแนะนำ) */
+function buildDetailHtml(d, acts, extraHtml, bannerActs, staffView) {
+  var t = typeOf(d.type), loan = !!t.loan, cat = catOf(d);
+  var stage = fdStage(d), sm = STAGE_META[stage];
   document.getElementById('detailTitle').textContent = t.label;
-  document.getElementById('detailSub').textContent = overallInfo(d).label;
-  var facts = [
-    ['ผู้ส่ง', d.name], ['จำนวนเงิน', '฿' + fmtMoney(d.amount)], ['ประเภทเงิน', d.fundType],
-    ['วันที่ส่งข้อมูล', fmtD(d.createdAt || new Date())]
-  ];
+  document.getElementById('detailSub').textContent = d.title || '';
+  var ico = document.querySelector('#detailModal .modal-title-icon');
+  if (ico) {
+    ico.className = 'modal-title-icon fd-cat-' + cat.color;
+    ico.style.background = 'var(--cat-pale)';
+    ico.innerHTML = '<i data-lucide="' + cat.icon + '" style="color:var(--cat);"></i>';
+  }
+
+  /* แบนเนอร์สถานะ */
+  var reason = '';
+  if (stage === 'revision') {
+    var h1 = (d.history || []).slice().reverse().filter(function(h) { return h.step === 's1' && h.text === ACTIONS['s1:revision'].title; })[0];
+    if (h1 && h1.note) reason = '<div class="fd-banner-reason"><span>เหตุผลที่ส่งกลับ</span>' + esc2(h1.note) + '</div>';
+  }
+  var banner = '<div class="fd-banner fd-cat-' + sm.color + '">' +
+    '<div class="fd-banner-ico"><i data-lucide="' + sm.icon + '"></i></div>' +
+    '<div class="fd-banner-body"><div class="fd-banner-t">' + sm.title + '</div>' +
+    '<div class="fd-banner-d">' + (staffView ? sm.staff : sm.user) + '</div>' + reason +
+    (bannerActs ? '<div class="fd-banner-act">' + bannerActs + '</div>' : '') + '</div></div>';
+
+  /* ยอดเงิน + ข้อมูลอื่น */
+  var facts = [['ผู้ส่ง', d.name], ['ประเภทเงิน', d.fundType], ['วันที่ส่งข้อมูล', fmtD(d.createdAt || new Date())]];
   if (loan) {
-    facts.push(['เลขที่สัญญา', d.contractNo || 'ยังไม่ออกเลข (ออกเมื่อตรวจเอกสารอนุมัติ)'],
-      ['วันที่ยืม', fmtD(d.loanDate)], ['วันครบกำหนดส่งใช้', fmtD(d.dueDate) + (isOverdue(d) ? ' (เกินกำหนด)' : '')]);
+    facts.push(['เลขที่สัญญา', d.contractNo || 'ยังไม่ออกเลข (ออกเมื่ออนุมัติ)'],
+      ['วันที่ยืม', fmtD(d.loanDate)], ['ครบกำหนดส่งใช้', fmtD(d.dueDate) + (isOverdue(d) ? ' (เกินกำหนด)' : '')]);
   }
   if (d.refContractNo) facts.push(['ล้างหนี้สัญญาเลขที่', d.refContractNo]);
   if (d.note) facts.push(['หมายเหตุ', d.note]);
+  var summary = '<div class="fd-sum"><div class="fd-sum-amt"><span>จำนวนเงิน</span><b>฿' + fmtMoney(d.amount) + '</b></div>' +
+    '<dl class="fd-facts">' + facts.map(function(f) { return '<div><dt>' + f[0] + '</dt><dd>' + esc2(f[1]) + '</dd></div>'; }).join('') + '</dl></div>';
 
+  /* ขั้นตอน: การ์ดต่อขั้น สีตามสถานะ */
   var steps = stepsOf(d).map(function(sk, i) {
     var inf = stepInfo(d, sk), h = lastHist(d, sk);
     var sa = (acts || []).filter(function(a) { return a.sk === sk; });
-    return '<li class="fd-step ' + inf.tone + '"><div class="fd-dot">' + (inf.tone === 'done' ? '✓' : (i + 1)) + '</div><div>' +
-      '<div class="fd-step-name">' + STEP_META[sk].name + '</div>' +
-      '<div class="fd-step-state">' + inf.label + '</div>' +
-      (h ? '<div class="fd-step-by">' + esc2(h.by) + ' · ' + fmtD(h.at) + (h.note ? ' · ' + esc2(h.note) : '') + '</div>' : '') +
+    return '<li class="fd-sc t-' + inf.tone + '"><div class="fd-sc-dot">' + (inf.tone === 'done' ? '✓' : (i + 1)) + '</div><div class="fd-sc-body">' +
+      '<div class="fd-sc-h"><span class="fd-sc-name">' + STEP_META[sk].name + '</span><span class="status-badge fd-status t-' + inf.tone + '">' + inf.label + '</span></div>' +
+      (h ? '<div class="fd-sc-by">' + esc2(h.by) + ' · ' + fmtDT(h.at) + (h.note ? '<span class="fd-sc-note">“' + esc2(h.note) + '”</span>' : '') + '</div>' : '') +
       (sa.length ? '<div class="fd-actions">' + sa.map(function(a) {
         return '<button class="' + (FD_BTN[a.cls] || FD_BTN.ok) + '" onclick="openConfirm(\'' + d.id + '\',\'' + a.sk + '\',\'' + a.act + '\')">' + a.label + '</button>';
       }).join('') + '</div>' : '') +
     '</div></li>';
   }).join('');
 
-  var hist = (d.history || []).slice().reverse().map(function(h) {
-    return '<li><time>' + fmtD(h.at) + '</time>' + esc2(h.text) + ' — ' + esc2(h.by) + (h.note ? ' (' + esc2(h.note) + ')' : '') + '</li>';
+  /* ประวัติ: ไทม์ไลน์ใหม่สุดอยู่บน พับเก็บได้ */
+  function kind(txt) {
+    if (/ส่งกลับ/.test(txt)) return 'warn';
+    if (/ยกเลิก/.test(txt)) return 'late';
+    if (/อนุมัติ|ชำระ/.test(txt)) return 'done';
+    return 'active';
+  }
+  var hs = (d.history || []).slice().reverse();
+  var hist = hs.map(function(h) {
+    return '<li class="k-' + kind(h.text || '') + '"><span class="fd-tl-dot"></span><div>' +
+      '<div class="fd-tl-t">' + esc2(h.text) + '</div>' +
+      '<div class="fd-tl-s">' + esc2(h.by) + ' · ' + fmtDT(h.at) + '</div>' +
+      (h.note ? '<div class="fd-tl-n">' + esc2(h.note) + '</div>' : '') + '</div></li>';
   }).join('');
 
-  document.getElementById('detailBody').innerHTML =
-    '<dl class="fd-facts">' + facts.map(function(f) { return '<div><dt>' + f[0] + '</dt><dd>' + esc2(f[1]) + '</dd></div>'; }).join('') + '</dl>' +
-    '<div class="fd-h">ความคืบหน้า</div><ol class="fd-steps">' + steps + '</ol>' + (extraHtml || '') +
-    '<div class="fd-h">ประวัติ</div><ul class="fd-hist">' + hist + '</ul>';
+  document.getElementById('detailBody').innerHTML = banner + summary +
+    '<div class="fd-h">ความคืบหน้า</div><ol class="fd-scs">' + steps + '</ol>' + (extraHtml || '') +
+    '<details class="fd-histbox"><summary>ประวัติการดำเนินการ <span class="status-badge t-wait">' + hs.length + ' รายการ</span></summary>' +
+    '<ol class="fd-tl">' + hist + '</ol></details>';
+  if (window.lucide) lucide.createIcons();
 }
 
 function setupScrollTopButton() {

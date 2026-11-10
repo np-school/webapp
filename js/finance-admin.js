@@ -9,22 +9,8 @@ var confirmCtx = null;
 var stageFilter = '';   /* '' | review | revision | cheque | loan | late | done  (คลิกจากการ์ดสรุป) */
 var catFilter = '';     /* '' | loan | claim | clear | purchase | payroll         (คลิกจากแถบหมวดหมู่) */
 
-/* การ์ดสรุปด้านบน: แยกสีตามสถานะ — เอกสารหนึ่งใบอยู่ได้แค่ขั้นเดียว (ดู fdStage) */
-var FD_STATS = [
-  { k: 'review',   label: 'รอตรวจเอกสาร',   color: 'amber',  icon: 'inbox' },
-  { k: 'revision', label: 'ส่งกลับแก้ไข',    color: 'violet', icon: 'undo-2' },
-  { k: 'cheque',   label: 'รอเบิก/ออกเช็ค',  color: 'sky',    icon: 'banknote' },
-  { k: 'loan',     label: 'ค้างส่งใช้เงินยืม', color: 'ink',    icon: 'wallet' },
-  { k: 'late',     label: 'เกินกำหนดส่งใช้',  color: 'red',    icon: 'triangle-alert' },
-  { k: 'done',     label: 'เสร็จสิ้น',        color: 'green',  icon: 'check-check' }
-];
-function fdStage(d) {
-  if (d.s1 === 'revision') return 'revision';
-  if (d.s1 !== 'approved') return 'review';
-  if (stepsOf(d).indexOf('s2') > -1 && d.s2 !== 'approved') return 'cheque';
-  if (typeOf(d.type).loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
-  return 'done';
-}
+/* การ์ดสรุปด้านบน: แยกสีตามสถานะ — ข้อมูลสี/ชื่อมาจาก STAGE_META ใน finance-common.js (fdStage ก็อยู่ที่นั่น) */
+var FD_STATS = STAGE_ORDER.map(function(k) { var m = STAGE_META[k]; return { k: k, label: m.label, color: m.color, icon: m.icon }; });
 
 /* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ */
 function actionsFor(d) {
@@ -280,7 +266,7 @@ function exportLedger() {
   setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
 }
 
-function renderDetail(d) { buildDetailHtml(d, actionsFor(d), ''); }
+function renderDetail(d) { buildDetailHtml(d, actionsFor(d), '', '', true); }
 
 /* ══════════════════════ ยืนยันแต่ละขั้น ══════════════════════ */
 function openConfirm(id, sk, act) {
