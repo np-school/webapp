@@ -103,7 +103,28 @@ function renderList() {
     el.innerHTML = emptyHtml(activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ไม่พบรายการ');
     return;
   }
-  el.innerHTML = rows.map(rowHtml).join('');
+  el.innerHTML = groupByType(rows).map(function(g) {
+    return '<section class="fd-group">' +
+      '<div class="fd-group-h"><span class="fd-group-t">' + esc2(g.label) + '</span>' +
+      '<span class="status-badge t-wait">' + g.rows.length + ' รายการ</span></div>' +
+      g.rows.map(rowHtml).join('') +
+    '</section>';
+  }).join('');
+}
+/* จัดกลุ่มตามประเภทเอกสาร: กลุ่มเรียงตาม DOC_TYPES, ในกลุ่มเรียงใหม่สุดไว้บน (ประเภทที่ไม่รู้จักต่อท้าย) */
+function groupByType(rows) {
+  var map = {}, out = [];
+  rows.forEach(function(d) { (map[d.type] = map[d.type] || []).push(d); });
+  function newestFirst(a, b) {
+    var ta = a.createdAt ? toDate(a.createdAt).getTime() : Date.now();
+    var tb = b.createdAt ? toDate(b.createdAt).getTime() : Date.now();
+    return tb - ta;
+  }
+  DOC_TYPES.forEach(function(t) {
+    if (map[t.key]) { out.push({ label: t.label, rows: map[t.key].sort(newestFirst) }); delete map[t.key]; }
+  });
+  Object.keys(map).forEach(function(k) { out.push({ label: typeOf(k).label, rows: map[k].sort(newestFirst) }); });
+  return out;
 }
 
 /* ── ทะเบียนลูกหนี้ (คอลัมน์ตรงกับสมุดเดิม) ── */

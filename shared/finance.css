@@ -13,6 +13,12 @@
 
 .fd-list { display:flex; flex-direction:column; gap:var(--gap-item); }
 
+/* กลุ่มตามประเภทเอกสาร (หน้า admin) */
+.fd-group { display:flex; flex-direction:column; gap:var(--gap-item); }
+.fd-group + .fd-group { margin-top:var(--gap-section); }
+.fd-group-h { display:flex; align-items:center; gap:var(--gap-tight); padding:0 2px; }
+.fd-group-t { font-size:14px; font-weight:800; color:var(--text); }
+
 /* แถวรายการ = .booking-card (ของกลาง) + layout grid + แถบสีซ้ายตามสถานะ */
 .fd-row { display:grid; grid-template-columns:1fr auto; gap:6px 16px; cursor:pointer; }
 .fd-row.fd-tone-done   { border-left:4px solid var(--green); }
