@@ -212,27 +212,27 @@ function groupByCat(rows) {
   Object.keys(map).forEach(function(k) { out.push({ key: k, rows: map[k].sort(newestFirst) }); });
   return out;
 }
-/* การ์ดรายการของหน้าเจ้าหน้าที่: พื้น/แถบซ้ายสีตามหมวดหมู่ · ป้ายสถานะรวมอยู่มุมขวา · ชิปบอกความคืบหน้าแต่ละขั้น */
+/* การ์ดรายการของหน้าเจ้าหน้าที่ (แบบกะทัดรัด 2 บรรทัด):
+   บรรทัด 1 = ป้ายหมวด + หัวข้อ + ยอดเงิน · บรรทัด 2 = ผู้ส่ง/วันที่ + แถบสีสถานะแต่ละขั้น */
 function adminRowHtml(d) {
-  var c = catOf(d), ov = overallInfo(d);
-  var chips = stepsOf(d).map(function(sk) {
+  var c = catOf(d);
+  var bars = stepsOf(d).map(function(sk) {
     var i = stepInfo(d, sk);
-    return '<span class="status-badge t-' + i.tone + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
+    return '<span class="fd-bar t-' + i.tone + '" title="' + esc2(STEP_META[sk].name + ': ' + i.label) + '"><b>' + STEP_META[sk].short + '</b>' + esc2(i.label) + '</span>';
   }).join('');
-  return '<div class="fd-card fd-cat-' + c.color + (fdStage(d) === 'late' ? ' is-late' : '') + '" onclick="openDetail(\'' + d.id + '\')">' +
-    '<div class="fd-card-main">' +
-      '<div class="fd-card-top">' +
-        '<span class="fd-cat-chip"><i data-lucide="' + c.icon + '"></i>' + esc2(typeOf(d.type).label) + '</span>' +
-        (d.contractNo ? '<span class="fd-contract">สัญญาเลขที่ ' + esc2(d.contractNo) + '</span>' : '') +
-        (activeTab === 'all' && pendingForMe(d) ? '<span class="fd-mine">รอคุณดำเนินการ</span>' : '') +
-      '</div>' +
-      '<div class="fd-title">' + esc2(d.title) + '</div>' +
-      '<div class="fd-meta"><span><i data-lucide="user"></i>' + esc2(d.name) + '</span>' +
-        '<span><i data-lucide="calendar"></i>ส่งเมื่อ ' + fmtD(d.createdAt || new Date()) + '</span></div>' +
+  return '<div class="fd-card fd-cat-' + c.color + '" onclick="openDetail(\'' + d.id + '\')">' +
+    '<div class="fd-card-l1">' +
+      '<span class="fd-cat-chip" title="' + esc2(typeOf(d.type).label) + '"><i data-lucide="' + c.icon + '"></i>' + esc2(typeOf(d.type).label) + '</span>' +
+      '<span class="fd-title">' + esc2(d.title) + '</span>' +
+      (activeTab === 'all' && pendingForMe(d) ? '<span class="fd-mine">รอคุณ</span>' : '') +
+      '<span class="fd-amt">฿' + fmtMoney(d.amount) + '</span>' +
     '</div>' +
-    '<div class="fd-card-side"><div class="fd-amt">฿' + fmtMoney(d.amount) + '</div>' +
-      '<span class="status-badge fd-status t-' + ov.tone + '">' + esc2(ov.label) + '</span></div>' +
-    '<div class="fd-chips">' + chips + '</div>' +
+    '<div class="fd-card-l2">' +
+      '<span class="fd-meta"><span><i data-lucide="user"></i>' + esc2(d.name) + '</span>' +
+        '<span><i data-lucide="calendar"></i>' + fmtD(d.createdAt || new Date()) + '</span>' +
+        (d.contractNo ? '<span><i data-lucide="file-text"></i>' + esc2(d.contractNo) + '</span>' : '') + '</span>' +
+      '<span class="fd-bars">' + bars + '</span>' +
+    '</div>' +
   '</div>';
 }
 
