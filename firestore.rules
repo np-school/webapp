@@ -527,12 +527,20 @@ service cloud.firestore {
            .hasOnly(['s1', 's2', 's3', 's4', 'settle', 'contractNo', 'history', 'updatedAt']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1', 'contractNo']) || finStep('s1')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) || finStep('s2')) &&
-         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 's4', 'settle']) || finStep('s3')))
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 's4', 'settle']) || finStep('s3'))) ||
+        /* ผู้ตรวจเอกสาร (ขั้น 1) / SuperAdmin — แก้ข้อมูลเอกสารของทุกคนได้ แต่แตะสถานะ/เลขที่สัญญาไม่ได้ */
+        (finStep('s1') &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['name', 'title', 'amount', 'fundType', 'note', 'refContractNo',
+                     'loanDate', 'dueDate', 'updatedAt', 'history']) &&
+         request.resource.data.amount is number && request.resource.data.amount > 0 &&
+         request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
+         request.resource.data.title.size() <= 500)
       );
 
-      /* ลบได้เฉพาะเจ้าของตอนยังไม่ถูกตรวจ หรือ SuperAdmin */
+      /* ลบได้: เจ้าของตอนยังไม่ถูกตรวจ / ผู้ตรวจเอกสาร (ขั้น 1) / SuperAdmin */
       allow delete: if isAuthed() && (
-        isSuperAdmin() ||
+        finStep('s1') ||
         (resource.data.uid == request.auth.uid && resource.data.s1 == 'processing')
       );
     }

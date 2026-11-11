@@ -70,6 +70,70 @@
   </div>
 </div>
 
+<!-- แก้ไขข้อมูลเอกสาร (เจ้าหน้าที่ตรวจเอกสาร / SuperAdmin) -->
+<div id="formModal" class="modal-bg">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-title-icon" style="background:var(--c-sky-pale);"><i data-lucide="file-plus" style="color:var(--c-sky);"></i></div>
+        <div><h3 id="formTitle">แก้ไขข้อมูลเอกสาร</h3><p id="formSub">กรอกครั้งเดียว แล้วนำเอกสารตัวจริงส่งที่ฝ่ายการเงิน</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('formModal')" aria-label="ปิด"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fType">ประเภทเอกสาร</label>
+      <select id="fType"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fName">ชื่อ-สกุล</label>
+      <input type="text" id="fName" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fTitle">กิจกรรม/โครงการ</label>
+      <textarea id="fTitle" rows="3" placeholder="เช่น เดินทางไปราชการเข้าร่วมอบรม... ระหว่างวันที่ ..."></textarea>
+    </div>
+    <div class="fd-field-row">
+      <div class="form-group">
+        <label class="form-label" for="fAmount">จำนวนเงิน (บาท)</label>
+        <input type="number" id="fAmount" min="0" step="0.01" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fFund">ประเภทเงิน</label>
+        <select id="fFund"></select>
+      </div>
+    </div>
+
+    <div id="fLoanBox" class="fd-field-row" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="fLoanDate">วันที่ยืม</label>
+        <input type="date" id="fLoanDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fDueDate">วันที่ครบกำหนดส่งใช้</label>
+        <input type="date" id="fDueDate">
+        <div class="fd-hint"></div>
+      </div>
+    </div>
+
+    <div id="fClearBox" class="form-group" style="display:none;">
+      <label class="form-label" for="fRef">สัญญายืมเงินที่ต้องการล้างหนี้</label>
+      <select id="fRef"></select>
+      <div class="fd-hint">แสดงเฉพาะสัญญาของผู้ส่งเอกสารนี้ที่อนุมัติแล้วและยังค้างชำระ</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fNote">หมายเหตุ (ถ้ามี)</label>
+      <input type="text" id="fNote">
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeModal('formModal')">ยกเลิก</button>
+      <button class="btn-primary" id="formSaveBtn" onclick="saveStaffEdit()">บันทึกการแก้ไข</button>
+    </div>
+  </div>
+</div>
+
 <!-- ยืนยันการเปลี่ยนสถานะ -->
 <div id="confirmModal" class="modal-bg">
   <div class="modal-box">

@@ -32,7 +32,7 @@ function actionsFor(d) {
     var L = BTN_LABEL[sk];
     if (d[sk] === 'revision') {
       out.push({ sk: sk, act: 'resume', label: L.resume, cls: 'ok' });
-    } else if (d[sk] === STEP_INIT[sk]) {
+    } else if (isOpen(d, sk)) {
       out.push({ sk: sk, act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
       out.push({ sk: sk, act: 'approve',  label: L.approve, cls: 'ok' });
     } else if (d[sk] === STEP_DONE[sk] && !nextBlocksRevert(d, sk)) {
@@ -347,7 +347,89 @@ function exportLedger() {
   setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
 }
 
-function renderDetail(d) { buildDetailHtml(d, actionsFor(d), '', '', true); }
+/* แก้ไข/ลบข้อมูลเอกสาร: SuperAdmin และผู้ตรวจเอกสาร (ขั้น 1) — ตรงกับ firestore.rules */
+function canManageDocs() { return myRoles.sa || myRoles.s1; }
+function manageHtml(d) {
+  if (!canManageDocs()) return '';
+  return '<div class="fd-actions" style="margin-top:16px;">' +
+    '<button class="' + FD_BTN.edit + '" onclick="openEditForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
+    '<button class="' + FD_BTN.danger + '" onclick="deleteDocStaff(\'' + d.id + '\')">ลบรายการ</button></div>';
+}
+function renderDetail(d) { buildDetailHtml(d, actionsFor(d), manageHtml(d), '', true); }
+
+/* ══════════════════════ แก้ไข / ลบ โดยเจ้าหน้าที่ ══════════════════════ */
+var staffEditId = null;
+function openEditForm(id) {
+  var d = findDoc(id); if (!d || !canManageDocs()) return;
+  var t = typeOf(d.type);
+  staffEditId = id;
+  var typeSel = document.getElementById('fType');
+  typeSel.innerHTML = '<option>' + esc2(t.label) + '</option>'; typeSel.disabled = true;
+  var funds = FUNDS.slice(); if (d.fundType && funds.indexOf(d.fundType) < 0) funds.push(d.fundType);
+  document.getElementById('fFund').innerHTML = funds.map(function(f) { return '<option>' + esc2(f) + '</option>'; }).join('');
+  document.getElementById('formSub').textContent = t.label + ' — ' + (d.contractNo ? 'สัญญาเลขที่ ' + d.contractNo + ' — ' : '') + d.name;
+  document.getElementById('fName').value = d.name || '';
+  document.getElementById('fTitle').value = d.title || '';
+  document.getElementById('fAmount').value = d.amount || '';
+  document.getElementById('fFund').value = d.fundType || funds[0];
+  document.getElementById('fNote').value = d.note || '';
+  document.getElementById('fLoanBox').style.display = t.loan ? 'grid' : 'none';
+  if (t.loan) {
+    document.getElementById('fLoanDate').value = dateInputVal(d.loanDate);
+    document.getElementById('fDueDate').value = dateInputVal(d.dueDate);
+  }
+  document.getElementById('fClearBox').style.display = t.clear ? 'block' : 'none';
+  if (t.clear) {
+    var opts = ['<option value="">— ไม่ระบุ —</option>'];
+    allDocs.filter(function(x) {
+      return x.uid === d.uid && typeOf(x.type).loan && x.contractNo && (x.s4 !== 'paid' || x.contractNo === d.refContractNo);
+    }).forEach(function(x) {
+      opts.push('<option value="' + esc2(x.contractNo) + '"' + (x.contractNo === d.refContractNo ? ' selected' : '') + '>' +
+        esc2(x.contractNo + ' — ' + (x.title || '').slice(0, 50)) + '</option>');
+    });
+    document.getElementById('fRef').innerHTML = opts.join('');
+  }
+  closeModal('detailModal');
+  openModal('formModal');
+}
+function saveStaffEdit() {
+  var d = findDoc(staffEditId); if (!d || !canManageDocs()) return;
+  var t = typeOf(d.type);
+  var name = document.getElementById('fName').value.trim();
+  var title = document.getElementById('fTitle').value.trim();
+  var amount = parseFloat(document.getElementById('fAmount').value);
+  if (!name || !title) { showToast('กรอกชื่อและกิจกรรม/โครงการให้ครบ', 'warn'); return; }
+  if (!(amount > 0)) { showToast('จำนวนเงินต้องมากกว่า 0', 'warn'); return; }
+  var TS = firebase.firestore.Timestamp, FV = firebase.firestore.FieldValue;
+  var upd = { name: name, title: title, amount: amount, fundType: document.getElementById('fFund').value,
+    note: document.getElementById('fNote').value.trim(),
+    refContractNo: t.clear ? document.getElementById('fRef').value : '',
+    updatedAt: FV.serverTimestamp(),
+    history: FV.arrayUnion({ step: 'doc', text: 'เจ้าหน้าที่แก้ไขข้อมูล', note: '', by: currentUser.displayName || currentUser.email, email: currentUser.email, at: TS.now() }) };
+  if (t.loan) {
+    var loanDate = parseDateInput(document.getElementById('fLoanDate').value);
+    var dueDate  = parseDateInput(document.getElementById('fDueDate').value);
+    if (!loanDate || !dueDate) { showToast('กรอกวันที่ยืมและวันครบกำหนด', 'warn'); return; }
+    if (dueDate < loanDate) { showToast('วันครบกำหนดต้องไม่ก่อนวันที่ยืม', 'warn'); return; }
+    upd.loanDate = TS.fromDate(loanDate); upd.dueDate = TS.fromDate(dueDate);
+  }
+  var btn = document.getElementById('formSaveBtn'); btn.disabled = true;
+  db.collection('financeDocs').doc(staffEditId).update(upd).then(function() {
+    closeModal('formModal'); showToast('บันทึกการแก้ไขแล้ว');
+    openDetail(staffEditId);
+  }).catch(function(err) {
+    console.error(err); showToast('บันทึกไม่สำเร็จ: ' + (err.code || err.message), 'error');
+  }).then(function() { btn.disabled = false; });
+}
+function deleteDocStaff(id) {
+  var d = findDoc(id); if (!d || !canManageDocs()) return;
+  var msg = 'ลบรายการ "' + (d.title || '').slice(0, 40) + '" ของ ' + d.name + ' ใช่หรือไม่?\nการลบแล้วกู้คืนไม่ได้';
+  if (d.contractNo) msg += '\n\nเอกสารนี้ออกเลขที่สัญญา ' + d.contractNo + ' แล้ว การลบจะทำให้เลขที่สัญญาในทะเบียนลูกหนี้ขาดหาย';
+  if (!confirm(msg)) return;
+  db.collection('financeDocs').doc(id).delete()
+    .then(function() { closeModal('detailModal'); detailId = null; showToast('ลบรายการแล้ว'); })
+    .catch(function(err) { showToast('ลบไม่สำเร็จ: ' + (err.code || err.message), 'error'); });
+}
 
 /* ══════════════════════ ยืนยันแต่ละขั้น ══════════════════════ */
 function openConfirm(id, sk, act) {
@@ -396,10 +478,10 @@ function computeUpdate(d, sk, act, extra) {
   var u = {}, FV = firebase.firestore.FieldValue;
   if (stepsOf(d).indexOf(sk) < 0 || !prevDone(d, sk)) return null;
   var cur = d[sk];
-  if (act === 'approve' && cur === STEP_INIT[sk]) {
+  if (act === 'approve' && isOpen(d, sk)) {
     u[sk] = STEP_DONE[sk];
     if (sk === 's4') u.settle = extra || {};
-  } else if (act === 'revision' && cur === STEP_INIT[sk]) {
+  } else if (act === 'revision' && isOpen(d, sk)) {
     u[sk] = 'revision';
   } else if (act === 'resume' && cur === 'revision') {
     u[sk] = STEP_INIT[sk];

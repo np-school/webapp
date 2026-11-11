@@ -99,6 +99,8 @@ function stepsOf(d) {
   if (t.clear) return ['s1'];
   return t.loan ? ['s1', 's2', 's3', 's4'] : ['s1', 's2', 's3'];
 }
+/* ขั้นนี้ "เปิดให้ทำ" = ยังไม่เสร็จและไม่ได้ถูกส่งกลับ (รองรับเอกสารเก่าที่ค่าสถานะต่างจากปัจจุบัน เช่น s3 = 'unpaid') */
+function isOpen(d, sk) { return d[sk] !== STEP_DONE[sk] && d[sk] !== 'revision'; }
 function prevDone(d, sk) {
   var st = stepsOf(d), i = st.indexOf(sk);
   return i < 1 || d[st[i - 1]] === STEP_DONE[st[i - 1]];
