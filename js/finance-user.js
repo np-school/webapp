@@ -14,7 +14,7 @@ function renderPage() {
           '<div class="page-icon blue"><i data-lucide="file-text" style="width:20px;height:20px;color:white;"></i></div>' +
           '<h1 class="page-title">ส่งเอกสารการเงินและพัสดุ</h1>' +
         '</div>' +
-        '<p class="page-sub">กรอกรายการแล้วนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน ติดตามสถานะแต่ละขั้นได้ที่นี่</p>' +
+        '<p class="page-sub">กรอกรายการแล้วนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงินหรือฝ่ายพัสดุตามประเภทเอกสาร ติดตามสถานะแต่ละขั้นได้ที่นี่</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
         '<button class="btn-primary" onclick="openForm()"><i data-lucide="plus" style="width:14px;height:14px;"></i> ส่งเอกสารใหม่</button>' +
@@ -61,7 +61,7 @@ function renderDetail(d) {
     own = '<div class="fd-actions" style="margin-top:16px;"><button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
       '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button></div>';
   } else if (d.s1 === 'approved') {
-    own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ เว้นแต่เจ้าหน้าที่ส่งกลับให้แก้ไข หากต้องการแก้ไขกรุณาติดต่อฝ่ายการเงิน</div>';
+    own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ เว้นแต่เจ้าหน้าที่ส่งกลับให้แก้ไข หากต้องการแก้ไขกรุณาติดต่อ' + deptOf(d).short + '</div>';
   }
   buildDetailHtml(d, [], own, banner, false);
 }
@@ -119,6 +119,8 @@ function onTypeChange() {
   var t = typeOf(document.getElementById('fType').value);
   document.getElementById('fLoanBox').style.display = t.loan ? 'grid' : 'none';
   document.getElementById('fClearBox').style.display = t.clear ? 'block' : 'none';
+  var sub = document.getElementById('formSub');
+  if (sub) sub.textContent = 'กรอกครั้งเดียว แล้วนำเอกสารตัวจริงส่งที่' + (DEPTS.supply.cats.indexOf(t.cat) > -1 ? DEPTS.supply : DEPTS.finance).short;
 }
 function onLoanDateChange() {
   if (fDueTouched) return;
@@ -162,7 +164,7 @@ function saveForm() {
   }
   p.then(function() {
     closeModal('formModal');
-    showToast(editingId ? 'บันทึกการแก้ไขแล้ว' : 'ส่งรายการเรียบร้อย อย่าลืมนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน');
+    showToast(editingId ? 'บันทึกการแก้ไขแล้ว' : 'ส่งรายการเรียบร้อย อย่าลืมนำเอกสารตัวจริงไปส่งที่' + (DEPTS.supply.cats.indexOf(t.cat) > -1 ? DEPTS.supply : DEPTS.finance).short);
   }).catch(function(err) {
     console.error(err); showToast('บันทึกไม่สำเร็จ: ' + (err.code || err.message), 'error');
   }).then(function() { btn.disabled = false; });

@@ -27,6 +27,13 @@ var DOC_CATS = {
   payroll:  { label: 'เงินเดือนลูกจ้าง',  color: 'ink',    icon: 'users'         }
 };
 var DOC_CAT_ORDER = ['loan', 'claim', 'clear', 'purchase', 'payroll'];
+/* ฝ่ายที่รับผิดชอบเอกสาร: พัสดุ = ชุดเบิกจัดซื้อ/จัดจ้าง + ชุดเบิกเงินเดือนลูกจ้าง, ที่เหลือเป็นของการเงิน
+   (ครูยังเลือกประเภทเอกสารจาก dropdown เดิม — ฝ่ายถูกกำหนดจากประเภทอัตโนมัติ ใช้แยกการแสดงผลในหน้าเจ้าหน้าที่) */
+var DEPTS = {
+  finance: { label: 'การเงิน', short: 'ฝ่ายการเงิน', icon: 'wallet',  cats: ['loan', 'claim', 'clear'] },
+  supply:  { label: 'พัสดุ',    short: 'ฝ่ายพัสดุ',   icon: 'package', cats: ['purchase', 'payroll'] }
+};
+var DEPT_ORDER = ['finance', 'supply'];
 var DOC_CAT_OTHER = { label: 'อื่นๆ', color: 'ink', icon: 'file-text' };
 var FUNDS = ['เงินอุดหนุนค่าจัดการเรียนการสอน', 'เงินบำรุงการศึกษา', 'เงินกิจกรรมพัฒนาผู้เรียน'];
 var STEP_META = {
@@ -69,6 +76,12 @@ function typeOf(key) {
 /* หมวดหมู่ของเอกสาร: คืน key ('loan' | 'claim' | ...) และข้อมูลสี/ไอคอน */
 function catKeyOf(d) { return typeOf(d.type).cat || ''; }
 function catOf(d) { return DOC_CATS[catKeyOf(d)] || DOC_CAT_OTHER; }
+/* ฝ่ายของเอกสาร: 'supply' (พัสดุ) หรือ 'finance' (การเงิน — ค่าเริ่มต้นของทุกประเภทที่ไม่ใช่พัสดุ) */
+function deptKeyOf(d) {
+  var c = catKeyOf(d);
+  return DEPTS.supply.cats.indexOf(c) > -1 ? 'supply' : 'finance';
+}
+function deptOf(d) { return DEPTS[deptKeyOf(d)]; }
 function stepsOf(d) {
   var t = typeOf(d.type), a = ['s1'];
   if (!t.clear) a.push('s2');
@@ -97,19 +110,19 @@ function fmtDT(ts) {
 /* ขั้นปัจจุบันของเอกสาร (หนึ่งใบอยู่ได้ขั้นเดียว) + สี/ข้อความอธิบายที่ใช้ทั้งการ์ดสรุปและแบนเนอร์ใน modal */
 var STAGE_META = {
   review:   { label: 'รอตรวจเอกสาร',     color: 'amber',  icon: 'search',         title: 'เจ้าหน้าที่กำลังตรวจเอกสาร',
-              user: 'อย่าลืมนำเอกสารตัวจริงไปส่งที่ฝ่ายการเงิน เจ้าหน้าที่จะตรวจและอนุมัติหรือส่งกลับให้แก้ไข',
+              user: 'อย่าลืมนำเอกสารตัวจริงไปส่งที่{DEPT} เจ้าหน้าที่จะตรวจและอนุมัติหรือส่งกลับให้แก้ไข',
               staff: 'ตรวจเอกสารแล้วกด "อนุมัติเอกสาร" หรือ "ส่งกลับแก้ไข" ที่ขั้นที่ 1' },
   revision: { label: 'ส่งกลับแก้ไข',      color: 'violet', icon: 'undo-2',         title: 'ถูกส่งกลับให้แก้ไข',
               user: 'แก้ไขข้อมูลตามเหตุผลที่แจ้ง แล้วกด "ส่งใหม่อีกครั้ง" เพื่อให้เจ้าหน้าที่ตรวจต่อ',
               staff: 'รอผู้ส่งแก้ไขและส่งกลับมาใหม่ (หรือกด "แก้ไขแล้ว" แทนผู้ส่งในขั้นที่ถูกส่งกลับ)' },
   cheque:   { label: 'รอเบิก/ออกเช็ค',    color: 'sky',    icon: 'banknote',       title: 'ผ่านการตรวจเอกสารแล้ว รอออกเช็ค',
-              user: 'ไม่ต้องทำอะไรเพิ่ม รอฝ่ายการเงินตรวจสอบเอกสารขอเบิกเงินและออกเช็ค',
+              user: 'ไม่ต้องทำอะไรเพิ่ม รอ{DEPT}ตรวจสอบเอกสารขอเบิกเงินและออกเช็ค',
               staff: 'ออกเช็คแล้วกด "อนุมัติ (ออกเช็คแล้ว)" ที่ขั้นที่ 2' },
   loan:     { label: 'ค้างส่งใช้เงินยืม',  color: 'ink',    icon: 'wallet',         title: 'ค้างส่งใช้เงินยืม',
               user: 'นำหลักฐานมาส่งใช้เงินยืมภายในวันครบกำหนด',
               staff: 'เมื่อผู้ยืมส่งใช้แล้วกด "ยืนยันชำระแล้ว" ที่ขั้นสุดท้าย' },
   late:     { label: 'เกินกำหนดส่งใช้',    color: 'red',    icon: 'triangle-alert', title: 'เกินกำหนดส่งใช้เงินยืม',
-              user: 'เลยวันครบกำหนดส่งใช้แล้ว กรุณาติดต่อฝ่ายการเงินโดยเร็ว',
+              user: 'เลยวันครบกำหนดส่งใช้แล้ว กรุณาติดต่อ{DEPT}โดยเร็ว',
               staff: 'เลยวันครบกำหนดส่งใช้ ควรติดตามผู้ยืม' },
   done:     { label: 'เสร็จสิ้น',          color: 'green',  icon: 'check-check',    title: 'ดำเนินการเสร็จสิ้น',
               user: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว', staff: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว' }
@@ -275,7 +288,7 @@ function buildDetailHtml(d, acts, extraHtml, bannerActs, staffView) {
   var banner = '<div class="fd-banner fd-cat-' + sm.color + '">' +
     '<div class="fd-banner-ico"><i data-lucide="' + sm.icon + '"></i></div>' +
     '<div class="fd-banner-body"><div class="fd-banner-t">' + esc2(bannerTitle) + '</div>' +
-    '<div class="fd-banner-d">' + (staffView ? sm.staff : sm.user) + '</div>' + reason +
+    '<div class="fd-banner-d">' + (staffView ? sm.staff : sm.user).replace(/\{DEPT\}/g, deptOf(d).short) + '</div>' + reason +
     (bannerActs ? '<div class="fd-banner-act">' + bannerActs + '</div>' : '') + '</div></div>';
 
   /* ยอดเงิน + ข้อมูลอื่น */

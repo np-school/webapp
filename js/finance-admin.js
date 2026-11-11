@@ -7,6 +7,7 @@ var searchQ = '';
 var ledgerFY = '';
 var confirmCtx = null;
 var stageFilter = '';   /* '' | review | revision | cheque | loan | late | done  (คลิกจากการ์ดสรุป) */
+var deptFilter = 'finance';   /* 'finance' | 'supply' — ฝ่ายที่กำลังดูอยู่ (สลับได้จากแถบด้านบน) */
 var catFilter = '';     /* '' | loan | claim | clear | purchase | payroll         (คลิกจากแถบหมวดหมู่) */
 
 /* การ์ดสรุปด้านบน: แยกสีตามสถานะ — ข้อมูลสี/ชื่อมาจาก STAGE_META ใน finance-common.js (fdStage ก็อยู่ที่นั่น) */
@@ -47,6 +48,8 @@ function actionsFor(d) {
   }
   return out;
 }
+/* เอกสารเฉพาะฝ่ายที่เลือกอยู่ — ทุกส่วนของหน้า (แท็บ/การ์ดสรุป/หมวด/ทะเบียน) ใช้ชุดนี้ */
+function deptDocs() { return allDocs.filter(function(d) { return deptKeyOf(d) === deptFilter; }); }
 function pendingForMe(d) {
   return actionsFor(d).some(function(a) { return !a.revert && a.act !== 'revision'; });
 }
@@ -59,12 +62,13 @@ function renderPage() {
           '<div class="page-icon purple"><i data-lucide="file-check" style="width:20px;height:20px;color:white;"></i></div>' +
           '<h1 class="page-title">จัดการเอกสารการเงินและพัสดุ</h1>' +
         '</div>' +
-        '<p class="page-sub">ตรวจและกดยืนยันสถานะเอกสารของครูทีละขั้น พร้อมทะเบียนคุมลูกหนี้เงินยืม</p>' +
+        '<p class="page-sub">ตรวจและกดยืนยันสถานะเอกสารของครูทีละขั้น แยกเป็นเอกสารฝ่ายการเงินและฝ่ายพัสดุ</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
         '<a class="btn-secondary" href="finance-user.html" style="text-decoration:none;display:inline-block;">ส่งเอกสารของฉัน</a>' +
       '</div>' +
     '</div>' +
+    '<div class="fd-depts" id="fdDepts"></div>' +
     '<div class="sub-tab-bar purple scroll" id="fdTabs" style="margin-bottom:var(--gap-section);"></div>' +
     '<div class="fd-stats" id="fdStats"></div>' +
     '<div class="card fd-filter-card">' +
@@ -86,16 +90,44 @@ function renderDenied() {
 
 /* วาดใหม่ทุกส่วน (เรียกตอนข้อมูลเปลี่ยน / เปลี่ยนแท็บ) */
 function refreshAll() {
-  renderTabs(); renderStats(); renderCats(); renderToolbar(); renderList();
+  renderDepts(); renderTabs(); renderStats(); renderCats(); renderToolbar(); renderList();
+}
+/* ตัวสลับฝ่าย: การเงิน | พัสดุ พร้อมจำนวนรายการที่รอฉันดำเนินการของแต่ละฝ่าย */
+function renderDepts() {
+  var el = document.getElementById('fdDepts'); if (!el) return;
+  var todo = {}, total = {};
+  allDocs.forEach(function(d) {
+    var k = deptKeyOf(d);
+    total[k] = (total[k] || 0) + 1;
+    if (pendingForMe(d)) todo[k] = (todo[k] || 0) + 1;
+  });
+  el.innerHTML = DEPT_ORDER.map(function(k) {
+    var dp = DEPTS[k], c = DOC_CATS[dp.cats[0]];
+    var sub = dp.cats.map(function(ck) { return DOC_CATS[ck].label; }).join(' · ');
+    return '<button type=\"button\" class=\"fd-dept fd-cat-' + (k === 'supply' ? 'amber' : 'sky') + (deptFilter === k ? ' active' : '') + '\" aria-pressed=\"' + (deptFilter === k) + '\" onclick=\"setDept(\'' + k + '\')\">' +
+      '<span class=\"fd-dept-ico\"><i data-lucide=\"' + dp.icon + '\"></i></span>' +
+      '<span><span class=\"fd-dept-t\">เอกสาร' + dp.label + '</span><span class=\"fd-dept-s\">' + esc2(sub) + ' · ทั้งหมด ' + (total[k] || 0) + ' รายการ</span></span>' +
+      (todo[k] ? '<span class=\"fd-dept-n\" title=\"รอคุณดำเนินการ\">' + todo[k] + '</span>' : '') +
+    '</button>';
+  }).join('');
+  lucide.createIcons();
+}
+function setDept(k) {
+  if (!DEPTS[k] || deptFilter === k) return;
+  deptFilter = k; catFilter = ''; stageFilter = ''; searchQ = '';
+  /* ทะเบียนลูกหนี้มีเฉพาะสัญญายืมเงิน (ฝ่ายการเงิน) */
+  if (k !== 'finance' && activeTab === 'ledger') activeTab = 'todo';
+  var s = document.getElementById('fdSearch'); if (s) s.value = '';
+  refreshAll();
 }
 function renderTabs() {
   var el = document.getElementById('fdTabs'); if (!el) return;
-  var todo = allDocs.filter(pendingForMe).length;
+  var todo = deptDocs().filter(pendingForMe).length;
   var tabs = [
     { k: 'todo',   l: 'รอฉันดำเนินการ', i: 'inbox',     n: todo },
     { k: 'all',    l: 'ทุกรายการ',      i: 'layers' },
     { k: 'ledger', l: 'ทะเบียนลูกหนี้',  i: 'book-open' }
-  ];
+  ].filter(function(t) { return t.k !== 'ledger' || deptFilter === 'finance'; });
   el.innerHTML = tabs.map(function(t) {
     return '<button class="sub-tab' + (activeTab === t.k ? ' active' : '') + '" onclick="setTab(\'' + t.k + '\')">' +
       '<i data-lucide="' + t.i + '" style="width:14px;height:14px;"></i> ' + t.l +
@@ -108,7 +140,7 @@ function renderStats() {
   var el = document.getElementById('fdStats'); if (!el) return;
   el.style.display = activeTab === 'ledger' ? 'none' : '';
   var n = {};
-  allDocs.forEach(function(d) { var s = fdStage(d); n[s] = (n[s] || 0) + 1; });
+  deptDocs().forEach(function(d) { var s = fdStage(d); n[s] = (n[s] || 0) + 1; });
   el.innerHTML = FD_STATS.map(function(s) {
     var on = activeTab !== 'todo' && stageFilter === s.k;
     return '<button type="button" class="stat-card fd-stat fd-cat-' + s.color + (on ? ' active' : '') + '" aria-pressed="' + on + '" onclick="setStageFilter(\'' + s.k + '\')">' +
@@ -129,8 +161,8 @@ function renderCats() {
     return '<button type="button" class="fd-pill fd-cat-' + color + (catFilter === key ? ' active' : '') + '" aria-pressed="' + (catFilter === key) + '" onclick="setCat(\'' + key + '\')">' +
       '<i data-lucide="' + icon + '"></i>' + label + '<span class="n">' + count + '</span></button>';
   }
-  el.innerHTML = pill('', 'all', 'layout-grid', 'ทุกหมวดหมู่', rows.length) +
-    DOC_CAT_ORDER.map(function(k) { var c = DOC_CATS[k]; return pill(k, c.color, c.icon, c.label, n[k] || 0); }).join('') +
+  el.innerHTML = pill('', 'all', 'layout-grid', 'ทุกหมวดหมู่ของ' + DEPTS[deptFilter].label, rows.length) +
+    DOC_CAT_ORDER.filter(function(k) { return DEPTS[deptFilter].cats.indexOf(k) > -1; }).map(function(k) { var c = DOC_CATS[k]; return pill(k, c.color, c.icon, c.label, n[k] || 0); }).join('') +
     ((stageFilter || catFilter) ? '<button type="button" class="fd-clear" onclick="clearFilters()"><i data-lucide="x"></i>ล้างตัวกรอง</button>' : '');
   lucide.createIcons();
 }
@@ -139,7 +171,7 @@ function renderToolbar() {
   var el = document.getElementById('fdLedgerCtl'); if (!el) return;
   if (activeTab !== 'ledger') { el.innerHTML = ''; return; }
   var years = {};
-  allDocs.forEach(function(d) { if (typeOf(d.type).loan && d.contractNo) years[d.fiscalYear] = 1; });
+  deptDocs().forEach(function(d) { if (typeOf(d.type).loan && d.contractNo) years[d.fiscalYear] = 1; });
   var ys = Object.keys(years).sort().reverse();
   if (!ledgerFY && ys.length) ledgerFY = ys[0];
   el.innerHTML = '<select onchange="ledgerFY=this.value;renderList()" aria-label="ปีงบประมาณ">' +
@@ -165,7 +197,7 @@ function matchQ(d) {
 }
 /* รายการตามแท็บ + การ์ดสถานะ + คำค้น (ยังไม่กรองหมวดหมู่ — ใช้นับจำนวนบนแถบหมวดหมู่) */
 function tabRows() {
-  return allDocs.filter(function(d) {
+  return deptDocs().filter(function(d) {
     return (activeTab === 'all' || pendingForMe(d)) && (!stageFilter || fdStage(d) === stageFilter) && matchQ(d);
   });
 }
@@ -175,7 +207,7 @@ function renderList() {
   var rows = tabRows().filter(function(d) { return !catFilter || catKeyOf(d) === catFilter; });
   if (!rows.length) {
     var filtered = stageFilter || catFilter || searchQ;
-    el.innerHTML = emptyHtml(filtered ? 'ไม่พบรายการตามตัวกรองนี้' : (activeTab === 'todo' ? 'ไม่มีรายการที่รอคุณดำเนินการ' : 'ยังไม่มีรายการ'));
+    el.innerHTML = emptyHtml(filtered ? 'ไม่พบรายการตามตัวกรองนี้' : (activeTab === 'todo' ? 'ไม่มีรายการ' + DEPTS[deptFilter].label + 'ที่รอคุณดำเนินการ' : 'ยังไม่มีรายการเอกสาร' + DEPTS[deptFilter].label));
     return;
   }
   el.innerHTML = groupByCat(rows).map(function(g) {
@@ -230,7 +262,7 @@ function adminRowHtml(d) {
 
 /* ── ทะเบียนลูกหนี้ (คอลัมน์ตรงกับสมุดเดิม) แยกกลุ่มตามประเภทสัญญา ── */
 function ledgerRows() {
-  return allDocs.filter(function(d) {
+  return deptDocs().filter(function(d) {
     return typeOf(d.type).loan && d.contractNo && String(d.fiscalYear) === String(ledgerFY) && matchQ(d);
   }).sort(function(a, b) { return parseInt(a.contractNo, 10) - parseInt(b.contractNo, 10); });
 }
@@ -435,7 +467,16 @@ buildPage({
       lucide.createIcons();
       setupScrollTopButton();
       refreshAll();
-      listenDocs(db.collection('financeDocs').orderBy('createdAt', 'desc').limit(500), refreshAll);
+      var firstLoad = true;
+      listenDocs(db.collection('financeDocs').orderBy('createdAt', 'desc').limit(500), function() {
+        /* โหลดครั้งแรก: ถ้าฝ่ายการเงินไม่มีงานรอแต่ฝ่ายพัสดุมี ให้เปิดฝ่ายพัสดุก่อน */
+        if (firstLoad) {
+          firstLoad = false;
+          var has = {}; allDocs.forEach(function(d) { if (pendingForMe(d)) has[deptKeyOf(d)] = true; });
+          if (!has.finance && has.supply) deptFilter = 'supply';
+        }
+        refreshAll();
+      });
     });
   }
 });
