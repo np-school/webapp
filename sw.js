@@ -49,7 +49,7 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-var CACHE_NAME = 'np-origins-v20';
+var CACHE_NAME = 'np-origins-v21';
 /* cache ทีละไฟล์ทั้งหมด — ไม่มีอะไร fail ได้
    cache.addAll แบบ all-or-nothing ทำให้ SW install fail ถ้าไฟล์ใดโหลดไม่ได้
 
@@ -90,9 +90,18 @@ function isNetworkFirst(url) {
   return url.endsWith('.html') || url.endsWith('.js');
 }
 
+/* รับคำสั่ง SKIP_WAITING จากหน้าเว็บ (ผู้ใช้กด "อัปเดตเลย" บน toast)
+   → เปิดใช้ SW ใหม่ทันที แล้ว clients.claim() ใน activate จะ reload ให้เอง */
+self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 /* Install — cache ทีละไฟล์ทั้งหมด พลาดได้ ไม่กระทบ install */
 self.addEventListener('install', function(e) {
-  self.skipWaiting();
+  /* ไม่ skipWaiting() ที่นี่อีกต่อไป — รอให้ผู้ใช้กด "อัปเดตเลย" บน toast แทน
+     (ถ้า skipWaiting ทันที SW ใหม่จะเข้าคุมก่อนที่ toast จะแสดง ทำให้ flow เสีย) */
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
       return Promise.all(

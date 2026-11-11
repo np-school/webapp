@@ -72,7 +72,67 @@
       }
     })();
   </script>
-  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(function(){console.log('SW registered');}).catch(function(e){console.warn('SW error:',e);});}</script>
+  <script>
+  // ── Service Worker: register + ดัก update ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('SW registered');
+      // ตรวจ update ทุกครั้งที่โหลดหน้า
+      reg.update();
+      // มี SW ใหม่รอติดตั้ง → แสดง toast
+      reg.addEventListener('updatefound', function() {
+        var newSW = reg.installing;
+        newSW.addEventListener('statechange', function() {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateToast(newSW);
+          }
+        });
+      });
+    }).catch(function(e) { console.warn('SW error:', e); });
+
+    // กรณีที่ reload แล้ว SW ใหม่เข้ามาคุมแล้ว → reload จริง
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+  }
+
+  function showUpdateToast(newSW) {
+    var t = document.getElementById('updateToast');
+    if (!t) return;
+    t.classList.add('show');
+    document.getElementById('btnUpdateReload').onclick = function() {
+      t.classList.remove('show');
+      newSW.postMessage({ type: 'SKIP_WAITING' });
+    };
+  }
+
+  // ── Add to Home Screen ──
+  var deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    var btn = document.getElementById('btnInstall');
+    if (btn) btn.style.display = 'flex';
+  });
+  window.addEventListener('appinstalled', function() {
+    var btn = document.getElementById('btnInstall');
+    if (btn) btn.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
+
+  function triggerInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(c) {
+      if (c.outcome === 'accepted') {
+        var btn = document.getElementById('btnInstall');
+        if (btn) btn.style.display = 'none';
+      }
+      deferredInstallPrompt = null;
+    });
+  }
+  </script>
   <title>ระบบบริการออนไลน์ - โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="shared/tailwind-built.css" rel="stylesheet">
@@ -726,5 +786,41 @@
 </div>
 
 <script src="js/index.js"></script>
+
+<!-- ── Toast: มีอัปเดตใหม่ ── -->
+<div id="updateToast" style="
+  display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1e293b;color:#f8fafc;border-radius:16px;padding:14px 18px;
+  box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:9999;
+  align-items:center;gap:12px;min-width:280px;max-width:calc(100vw - 32px);
+  font-family:'Sarabun',sans-serif;font-size:15px;
+  transition:opacity .3s,transform .3s;opacity:0;pointer-events:none;">
+  <i data-lucide="refresh-cw" style="width:20px;height:20px;flex-shrink:0;color:#38bdf8;"></i>
+  <span style="flex:1;line-height:1.4;">มีเวอร์ชันใหม่พร้อมใช้งาน</span>
+  <button id="btnUpdateReload" style="
+    background:#38bdf8;color:#0f172a;border:none;border-radius:10px;
+    padding:7px 14px;font-size:14px;font-weight:700;cursor:pointer;
+    font-family:'Sarabun',sans-serif;white-space:nowrap;">
+    อัปเดตเลย
+  </button>
+  <button onclick="document.getElementById('updateToast').classList.remove('show')" style="
+    background:transparent;border:none;color:#94a3b8;cursor:pointer;padding:4px;line-height:1;">✕</button>
+</div>
+
+<!-- ── ปุ่ม Add to Home Screen ── -->
+<button id="btnInstall" onclick="triggerInstall()" style="
+  display:none;position:fixed;bottom:24px;right:16px;
+  background:var(--accent,#2563eb);color:#fff;border:none;border-radius:14px;
+  padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;
+  font-family:'Sarabun',sans-serif;
+  align-items:center;gap:8px;
+  box-shadow:0 4px 20px rgba(37,99,235,.4);z-index:9998;">
+  <i data-lucide="plus-square" style="width:18px;height:18px;"></i>
+  เพิ่มลงหน้าจอ
+</button>
+
+<style>
+  #updateToast.show { display:flex!important; opacity:1; pointer-events:auto; }
+</style>
 </body>
 </html>
