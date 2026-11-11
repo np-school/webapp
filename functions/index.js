@@ -32,3 +32,6 @@ exports.cleanupOldBookingAttachments = require("./cleanup-old-booking-attachment
 
 // ถ้ามี Cloud Function อื่นอยู่แล้ว (เช่น lineProxy) ให้ require/export เพิ่มที่นี่
 // ตัวอย่าง: exports.lineProxy = require("./line-proxy").lineProxy;
+const financeNotifications = require("./finance-notifications");
+exports.onNewFinanceDoc            = financeNotifications.onNewFinanceDoc;
+exports.onFinanceDocStatusChanged  = financeNotifications.onFinanceDocStatusChanged;

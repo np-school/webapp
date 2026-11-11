@@ -2,7 +2,7 @@
   "name": "functions",
   "description": "Cloud Functions - NP Origins (Push Notification + Drive Upload)",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "dependencies": {
