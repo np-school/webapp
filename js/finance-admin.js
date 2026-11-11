@@ -58,6 +58,7 @@ function renderPage() {
         '<p class="page-sub">ตรวจและกดยืนยันสถานะเอกสารของครูทีละขั้น แยกเป็นเอกสารฝ่ายการเงินและฝ่ายพัสดุ</p>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+        (myRoles.sa || myRoles.s1 ? '<button class="btn-secondary" onclick="syncClearedLoans()" title="ปิดสัญญายืมที่ล้างหนี้อนุมัติแล้วแต่ยังค้างสถานะ">ซิงค์สถานะสัญญายืม</button>' : '') +
         '<a class="btn-secondary" href="finance-user.html" style="text-decoration:none;display:inline-block;">ส่งเอกสารของฉัน</a>' +
       '</div>' +
     '</div>' +
@@ -468,7 +469,11 @@ function submitConfirm() {
   var btn = document.getElementById('confirmBtn'); btn.disabled = true;
   applyStep(c.id, c.sk, c.act, note, extra).then(function(res) {
     closeModal('confirmModal');
-    showToast(res && res.contractNo ? 'อนุมัติแล้ว — ออกเลขที่สัญญา ' + res.contractNo : 'บันทึกสถานะแล้ว');
+    if (res && res.autoSettled) showToast('อนุมัติแล้ว — ปิดสัญญายืมเงิน ' + res.autoSettled + ' อัตโนมัติ');
+    else if (res && res.autoReverted) showToast('ยกเลิกแล้ว — สัญญายืมเงิน ' + res.autoReverted + ' กลับเป็นค้างส่งใช้');
+    else if (res && res.autoMissing) showToast('อนุมัติแล้ว แต่ไม่พบสัญญายืมเงิน ' + res.autoMissing + ' ของผู้ยืมคนนี้ กรุณาปิดสัญญาเอง', 'warn');
+    else if (res && res.autoSkipped) showToast('อนุมัติแล้ว แต่ยังไม่ปิดสัญญา ' + res.autoSkipped + ' อัตโนมัติ (สัญญาอยู่ระหว่างแก้ไข) กรุณาปิดเอง', 'warn');
+    else showToast(res && res.contractNo ? 'อนุมัติแล้ว — ออกเลขที่สัญญา ' + res.contractNo : 'บันทึกสถานะแล้ว');
   }).catch(function(err) {
     console.error(err); showToast(err.message || 'บันทึกไม่สำเร็จ', 'error');
   }).then(function() { btn.disabled = false; });
@@ -491,9 +496,32 @@ function computeUpdate(d, sk, act, extra) {
   }
   return Object.keys(u).length ? u : null;
 }
+/* เอกสารยืมเงินที่เอกสารล้างหนี้ฉบับนี้อ้างถึง (ของครูคนเดียวกัน + เลขสัญญาตรงกัน) */
+function findLoanFor(d) {
+  var found = null;
+  allDocs.forEach(function(x) {
+    if (x.uid === d.uid && typeOf(x.type).loan && x.contractNo && x.contractNo === d.refContractNo) found = x;
+  });
+  return found;
+}
+/* หา id สัญญายืมเงินที่เอกสารล้างหนี้อ้างถึง — หาใน allDocs ก่อน ถ้าไม่เจอ (เช่น เก่าเกิน limit 500 ที่โหลดมา) ค้นจาก Firestore ตรงๆ */
+function findLoanId(d) {
+  var local = findLoanFor(d);
+  if (local) return Promise.resolve(local.id);
+  if (!d.refContractNo || !d.uid) return Promise.resolve(null);
+  return db.collection('financeDocs').where('uid', '==', d.uid).where('contractNo', '==', d.refContractNo).get()
+    .then(function(qs) {
+      var id = null;
+      qs.forEach(function(s) { if (typeOf(s.data().type).loan) id = s.id; });
+      return id;
+    }).catch(function(err) { console.error('findLoanId', err); return null; });
+}
 function applyStep(docId, sk, act, note, extra) {
   if (!canStep(sk)) return Promise.reject(new Error('คุณไม่มีสิทธิ์ในขั้นตอนนี้'));
   var ref = db.collection('financeDocs').doc(docId), result = {};
+  var pre = findDoc(docId);
+  var preLink = !!pre && sk === 's1' && (act === 'approve' || act === 'revert') && typeOf(pre.type).clear && !!pre.refContractNo;
+  return (preLink ? findLoanId(pre) : Promise.resolve(null)).then(function(loanId) {
   return db.runTransaction(function(tx) {
     return tx.get(ref).then(function(snap) {
       if (!snap.exists) throw new Error('ไม่พบเอกสาร');
@@ -502,7 +530,17 @@ function applyStep(docId, sk, act, note, extra) {
       if (!u) throw new Error('สถานะของรายการเปลี่ยนไปแล้ว กรุณาปิดแล้วเปิดใหม่');
       var needNo = sk === 's1' && act === 'approve' && typeOf(d.type).loan && !d.contractNo;
       var cref = db.collection('counters').doc('finloan-' + d.fiscalYear);
-      return (needNo ? tx.get(cref) : Promise.resolve(null)).then(function(cs) {
+      /* ล้างหนี้ (ขั้น 1) อนุมัติ/ยกเลิกอนุมัติ → ปรับสถานะสัญญายืมเงินที่เกี่ยวข้องอัตโนมัติ */
+      var linkClear = sk === 's1' && (act === 'approve' || act === 'revert') && typeOf(d.type).clear && !!d.refContractNo;
+      var lref = linkClear && loanId ? db.collection('financeDocs').doc(loanId) : null;
+      if (linkClear && act === 'approve' && !lref) result.autoMissing = d.refContractNo;   /* ไม่พบสัญญาที่อ้างถึง — แจ้งให้ปิดเอง ไม่เงียบ */
+      return Promise.all([
+        needNo ? tx.get(cref) : Promise.resolve(null),
+        lref ? tx.get(lref) : Promise.resolve(null)
+      ]).then(function(rd) {
+        var cs = rd[0], ls = rd[1];
+        var by = currentUser.displayName || currentUser.email, nowTs = firebase.firestore.Timestamp.now();
+        var FV = firebase.firestore.FieldValue;
         if (needNo) {
           var n = (cs && cs.exists ? cs.data().n : 0) + 1;
           tx.set(cref, { n: n }, { merge: true });
@@ -511,14 +549,78 @@ function applyStep(docId, sk, act, note, extra) {
         var meta = ACTIONS[sk + ':' + act];
         u.history = (d.history || []).concat([{
           step: sk, text: meta.title, note: note || '',
-          by: currentUser.displayName || currentUser.email, email: currentUser.email,
-          at: firebase.firestore.Timestamp.now()
+          by: by, email: currentUser.email, at: nowTs
         }]);
-        u.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        u.updatedAt = FV.serverTimestamp();
         tx.update(ref, u);
+
+        if (linkClear) {
+          var ld = ls && ls.exists ? ls.data() : null;
+          if (act === 'approve') {
+            if (ld && ld.s3 === 'approved' && ld.s4 === 'unpaid') {
+              tx.update(lref, {
+                s4: 'paid',
+                settle: { date: nowTs, voucherNo: '', voucherAmount: null, cash: null, auto: true, clearDocId: docId, clearTitle: d.title || '' },
+                history: (ld.history || []).concat([{
+                  step: 's4', text: 'ปิดสัญญายืมเงินอัตโนมัติ (อนุมัติเอกสารล้างหนี้แล้ว)', note: d.title || '',
+                  by: by, email: currentUser.email, at: nowTs
+                }]),
+                updatedAt: FV.serverTimestamp()
+              });
+              result.autoSettled = ld.contractNo;
+            } else if (ld && ld.s4 !== 'paid') {
+              result.autoSkipped = ld.contractNo;   /* เช่น สัญญาถูกส่งกลับแก้ไขอยู่ — ให้ปิดเองที่ขั้นสัญญายืมเงิน */
+            }
+          } else if (ld && ld.s4 === 'paid' && ld.settle && ld.settle.auto === true && ld.settle.clearDocId === docId) {
+            /* ย้อนเฉพาะสัญญาที่ระบบปิดให้จากเอกสารนี้ — ไม่แตะสัญญาที่เจ้าหน้าที่กดปิดเอง */
+            tx.update(lref, {
+              s4: 'unpaid', settle: FV.delete(),
+              history: (ld.history || []).concat([{
+                step: 's4', text: 'ยกเลิกการปิดสัญญาอัตโนมัติ (ยกเลิกอนุมัติเอกสารล้างหนี้)', note: '',
+                by: by, email: currentUser.email, at: nowTs
+              }]),
+              updatedAt: FV.serverTimestamp()
+            });
+            result.autoReverted = ld.contractNo;
+          }
+        }
       });
     });
   }).then(function() { return result; });
+  });
+}
+
+/* ปิดสัญญายืมเงินที่ค้างอยู่ แต่เอกสารล้างหนี้ที่อ้างถึงอนุมัติ (ขั้น 1) ไปแล้ว — ใช้แก้ข้อมูลเก่าที่อนุมัติก่อนมีระบบปิดอัตโนมัติ */
+function syncClearedLoans() {
+  var FV = firebase.firestore.FieldValue, TS = firebase.firestore.Timestamp;
+  var by = currentUser.displayName || currentUser.email;
+  var pairs = [];
+  allDocs.forEach(function(c) {
+    if (!typeOf(c.type).clear || c.s1 !== 'approved' || !c.refContractNo) return;
+    var l = findLoanFor(c);
+    if (l && l.s3 === 'approved' && l.s4 !== 'paid' && l.s4 !== 'revision') pairs.push({ clear: c, loan: l });
+  });
+  if (!pairs.length) { showToast('ไม่พบสัญญายืมที่ค้างและมีเอกสารล้างหนี้อนุมัติแล้ว'); return Promise.resolve(0); }
+  if (!confirm('พบสัญญายืมเงิน ' + pairs.length + ' รายการที่ล้างหนี้อนุมัติแล้วแต่ยังค้างสถานะ\nต้องการปิดสัญญาให้อัตโนมัติใช่หรือไม่?')) return Promise.resolve(0);
+  var done = 0;
+  return pairs.reduce(function(p, x) {
+    return p.then(function() {
+      var lref = db.collection('financeDocs').doc(x.loan.id), cref = db.collection('financeDocs').doc(x.clear.id);
+      return db.runTransaction(function(tx) {
+        return Promise.all([tx.get(lref), tx.get(cref)]).then(function(r) {
+          var ld = r[0].data(), cd = r[1].data(), now = TS.now();
+          if (!ld || !cd || cd.s1 !== 'approved' || ld.s3 !== 'approved' || ld.s4 !== 'unpaid') return;
+          tx.update(lref, {
+            s4: 'paid',
+            settle: { date: now, voucherNo: '', voucherAmount: null, cash: null, auto: true, clearDocId: x.clear.id, clearTitle: cd.title || '' },
+            history: (ld.history || []).concat([{ step: 's4', text: 'ปิดสัญญายืมเงินอัตโนมัติ (อนุมัติเอกสารล้างหนี้แล้ว)', note: cd.title || '', by: by, email: currentUser.email, at: now }]),
+            updatedAt: FV.serverTimestamp()
+          });
+          done++;
+        });
+      }).catch(function(err) { console.error('syncClearedLoans', x.loan.id, err); });
+    });
+  }, Promise.resolve()).then(function() { showToast('ปิดสัญญายืมเงินที่ค้างแล้ว ' + done + ' รายการ'); return done; });
 }
 
 /* ══════════════════════ INIT ══════════════════════ */

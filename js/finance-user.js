@@ -51,13 +51,18 @@ function renderList() {
   }
   el.innerHTML = rows.map(rowHtml).join('');
 }
+/* ครูลบคำขอของตัวเองได้ตราบที่ขั้นตรวจเอกสารยังไม่อนุมัติ (กำลังตรวจ หรือถูกส่งกลับที่ขั้น 1) และยังไม่ออกเลขสัญญา */
+function canDeleteMine(d) {
+  return isMine(d) && (d.s1 === 'processing' || d.s1 === 'revision') && !d.contractNo;
+}
 function renderDetail(d) {
   var own = '', banner = '', rev = revStepOf(d);
   if (isMine(d) && rev) {
     /* ถูกส่งกลับ (ขั้นใดก็ได้): ปุ่มหลักอยู่ในแบนเนอร์ — แก้ข้อมูลก่อน แล้วกดส่งใหม่ เอกสารจะกลับไปรอตรวจที่ขั้นเดิม */
     banner = '<button class="btn-primary btn-sm" onclick="resubmitDoc(\'' + d.id + '\')">ส่งใหม่อีกครั้ง</button>' +
-      '<button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>';
-  } else if (isMine(d) && d.s1 === 'processing') {
+      '<button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
+      (rev === 's1' && canDeleteMine(d) ? '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button>' : '');
+  } else if (canDeleteMine(d)) {
     own = '<div class="fd-actions" style="margin-top:16px;"><button class="' + FD_BTN.edit + '" onclick="openForm(\'' + d.id + '\')">แก้ไขข้อมูล</button>' +
       '<button class="' + FD_BTN.danger + '" onclick="deleteDoc(\'' + d.id + '\')">ลบรายการ</button></div>';
   } else if (d.s1 === 'approved') {
@@ -218,7 +223,9 @@ function saveForm() {
   }).then(function() { btn.disabled = false; });
 }
 function deleteDoc(id) {
-  if (!confirm('ลบรายการนี้ใช่หรือไม่?')) return;
+  var d = findDoc(id);
+  if (!d || !canDeleteMine(d)) { showToast('ลบไม่ได้ เอกสารนี้ผ่านการตรวจหรือออกเลขสัญญาแล้ว', 'warn'); return; }
+  if (!confirm('ลบคำขอ "' + (d.title || '').slice(0, 40) + '" ใช่หรือไม่?\nการลบแล้วกู้คืนไม่ได้')) return;
   db.collection('financeDocs').doc(id).delete()
     .then(function() { closeModal('detailModal'); detailId = null; showToast('ลบรายการแล้ว'); })
     .catch(function(err) { showToast('ลบไม่สำเร็จ: ' + (err.code || err.message), 'error'); });

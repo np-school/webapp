@@ -528,6 +528,22 @@ service cloud.firestore {
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1', 'contractNo']) || finStep('s1')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) || finStep('s2')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 's4', 'settle']) || finStep('s3'))) ||
+        /* ผู้ตรวจเอกสาร (ขั้น 1) — ปิด/ย้อนสถานะสัญญายืมเงินอัตโนมัติ ได้เฉพาะเมื่อเอกสารล้างหนี้ที่อ้างสัญญานี้
+           (ของเจ้าของคนเดียวกัน) ถูกเขียนใน batch/transaction เดียวกันและอนุมัติขั้น 1 แล้ว (ย้อน = ไม่อนุมัติแล้ว) */
+        (finStep('s1') &&
+         resource.data.s3 == 'approved' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['s4', 'settle', 'history', 'updatedAt']) &&
+         (
+           (resource.data.s4 == 'unpaid' && request.resource.data.s4 == 'paid' &&
+            request.resource.data.settle.get('auto', false) == true &&
+            getAfter(/databases/$(database)/documents/financeDocs/$(request.resource.data.settle.clearDocId)).data.type in ['clear_trip', 'clear_project'] &&
+            getAfter(/databases/$(database)/documents/financeDocs/$(request.resource.data.settle.clearDocId)).data.s1 == 'approved' &&
+            getAfter(/databases/$(database)/documents/financeDocs/$(request.resource.data.settle.clearDocId)).data.refContractNo == resource.data.contractNo &&
+            getAfter(/databases/$(database)/documents/financeDocs/$(request.resource.data.settle.clearDocId)).data.uid == resource.data.uid) ||
+           (resource.data.s4 == 'paid' && request.resource.data.s4 == 'unpaid' &&
+            resource.data.settle.get('auto', false) == true &&
+            getAfter(/databases/$(database)/documents/financeDocs/$(resource.data.settle.clearDocId)).data.s1 != 'approved')
+         )) ||
         /* ผู้ตรวจเอกสาร (ขั้น 1) / SuperAdmin — แก้ข้อมูลเอกสารของทุกคนได้ แต่แตะสถานะ/เลขที่สัญญาไม่ได้ */
         (finStep('s1') &&
          request.resource.data.diff(resource.data).affectedKeys()
@@ -538,10 +554,12 @@ service cloud.firestore {
          request.resource.data.title.size() <= 500)
       );
 
-      /* ลบได้: เจ้าของตอนยังไม่ถูกตรวจ / ผู้ตรวจเอกสาร (ขั้น 1) / SuperAdmin */
+      /* ลบได้: เจ้าของตอนขั้นตรวจเอกสารยังไม่อนุมัติ (กำลังตรวจ/ถูกส่งกลับขั้น 1) และยังไม่ออกเลขสัญญา / ผู้ตรวจเอกสาร (ขั้น 1) / SuperAdmin */
       allow delete: if isAuthed() && (
         finStep('s1') ||
-        (resource.data.uid == request.auth.uid && resource.data.s1 == 'processing')
+        (resource.data.uid == request.auth.uid &&
+         resource.data.s1 in ['processing', 'revision'] &&
+         resource.data.get('contractNo', '') == '')
       );
     }
   }
