@@ -62,7 +62,11 @@
 .fd-ledger td { vertical-align:top; }
 .fd-ledger td.num { text-align:right; white-space:nowrap; }
 .fd-ledger tbody tr { cursor:pointer; }
-.fd-ledger tbody tr.late td { background:var(--c-red-pale); }
+.fd-ledger tbody tr.fd-lrow-done td { background:var(--c-green-pale); }
+.fd-ledger tbody tr.fd-lrow-late td { background:var(--c-red-pale); }
+.fd-ledger tbody tr.fd-lrow-open td { background:var(--white); }
+.fd-ledger tbody tr:hover td { filter:brightness(.97); }
+.fd-ledger thead th { background:var(--cat-pale); color:var(--cat-deep); border-bottom:2px solid var(--cat-tint); }
 
 .fd-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .fd-hint { font-size:11px; color:var(--text3); margin-top:4px; }

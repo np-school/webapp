@@ -242,40 +242,46 @@ function groupLedgerRows(rows) {
   return out;
 }
 function ledgerStatusBadge(d) {
-  if (d.s3 === 'paid') return '<span class="fd-bar t-done"><i data-lucide="check-circle" style="width:11px;height:11px;"></i>ชำระแล้ว</span>';
-  if (isOverdue(d))    return '<span class="fd-bar t-late"><i data-lucide="triangle-alert" style="width:11px;height:11px;"></i>เกินกำหนด</span>';
-  return '<span class="fd-bar t-active"><i data-lucide="wallet" style="width:11px;height:11px;"></i>ค้างชำระ</span>';
-}
-function ledgerCardHtml(d, i) {
-  var s = d.settle || {};
-  var cat = DOC_CATS[typeOf(d.type).cat] || DOC_CAT_OTHER;
-  var paid = d.s3 === 'paid';
-  var settleRow = paid
-    ? '<span><i data-lucide="calendar-check"></i>ส่งใช้ ' + fmtD(s.date) + '</span>' +
-      (s.voucherNo ? '<span><i data-lucide="file-text"></i>' + esc2(s.voucherNo) + '</span>' : '') +
-      (s.voucherAmount != null && s.voucherAmount !== '' ? '<span><i data-lucide="receipt"></i>฿' + fmtMoney(s.voucherAmount) + '</span>' : '')
-    : '<span><i data-lucide="calendar-x"></i>ครบกำหนด ' + fmtD(d.dueDate) + '</span>';
-  return '<div class="fd-card fd-cat-' + cat.color + '" onclick="openDetail(\'' + d.id + '\')">' +
-    '<div class="fd-card-l1">' +
-      '<span class="fd-cat-chip"><i data-lucide="file-text"></i>' + esc2(d.contractNo) + '</span>' +
-      '<span class="fd-title">' + esc2(d.title) + '</span>' +
-      ledgerStatusBadge(d) +
-      '<span class="fd-amt">฿' + fmtMoney(d.amount) + '</span>' +
-    '</div>' +
-    '<div class="fd-card-l2">' +
-      '<span class="fd-meta">' +
-        '<span><i data-lucide="user"></i>' + esc2(d.name) + '</span>' +
-        '<span><i data-lucide="calendar"></i>ยืม ' + fmtD(d.loanDate) + '</span>' +
-        settleRow +
-        (d.fundType ? '<span><i data-lucide="landmark"></i>' + esc2(d.fundType) + '</span>' : '') +
-      '</span>' +
-    '</div>' +
-  '</div>';
+  if (d.s3 === 'paid') return '<span class="fd-bar t-done">ชำระแล้ว</span>';
+  if (isOverdue(d))    return '<span class="fd-bar t-late">เกินกำหนด</span>';
+  return '<span class="fd-bar t-active">ค้างชำระ</span>';
 }
 function ledgerTableHtml(rows) {
-  return '<div style="display:flex;flex-direction:column;gap:var(--gap-item);">' +
-    rows.map(function(d, i) { return ledgerCardHtml(d, i); }).join('') +
-  '</div>';
+  var THEAD = '<thead><tr>' +
+    '<th style="width:36px">ที่</th>' +
+    '<th>วันที่ยืม</th>' +
+    '<th>เลขที่สัญญา</th>' +
+    '<th>ชื่อ-สกุล</th>' +
+    '<th>กิจกรรม/โครงการ</th>' +
+    '<th>จำนวนเงิน</th>' +
+    '<th>วันครบกำหนด</th>' +
+    '<th>สถานะ</th>' +
+    '<th>วันที่ส่งใช้</th>' +
+    '<th>เลขที่ใบสำคัญ</th>' +
+    '<th>จำนวนเงินใบสำคัญ</th>' +
+    '<th>เงินสด</th>' +
+    '<th>ประเภทเงิน</th>' +
+    '</tr></thead>';
+  var body = rows.map(function(d, i) {
+    var s = d.settle || {};
+    var late = isOverdue(d);
+    var rowCls = d.s3 === 'paid' ? 'fd-lrow-done' : (late ? 'fd-lrow-late' : 'fd-lrow-open');
+    return '<tr class="' + rowCls + '" onclick="openDetail(\'' + d.id + '\')">' +
+      '<td style="color:var(--text3);font-size:12px;text-align:center">' + (i + 1) + '</td>' +
+      '<td>' + fmtD(d.loanDate) + '</td>' +
+      '<td><b>' + esc2(d.contractNo) + '</b></td>' +
+      '<td>' + esc2(d.name) + '</td>' +
+      '<td>' + esc2(d.title) + '</td>' +
+      '<td class="num" style="font-weight:800">฿' + fmtMoney(d.amount) + '</td>' +
+      '<td>' + fmtD(d.dueDate) + '</td>' +
+      '<td>' + ledgerStatusBadge(d) + '</td>' +
+      '<td>' + (d.s3 === 'paid' ? fmtD(s.date) : '') + '</td>' +
+      '<td>' + esc2(s.voucherNo || '') + '</td>' +
+      '<td class="num">' + (s.voucherAmount != null && s.voucherAmount !== '' ? fmtMoney(s.voucherAmount) : '') + '</td>' +
+      '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
+      '<td>' + esc2(d.fundType) + '</td></tr>';
+  }).join('');
+  return '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger">' + THEAD + '<tbody>' + body + '</tbody></table></div>';
 }
 function renderLedger(el) {
   var rows = ledgerRows();
