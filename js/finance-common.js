@@ -20,11 +20,11 @@ var DOC_TYPES = [
 ];
 /* หมวดหมู่เอกสาร (ใช้แยกสี/กลุ่มในหน้าเจ้าหน้าที่) — color = ชื่อชุดสีใน finance.css (.fd-cat-<color>) */
 var DOC_CATS = {
-  loan:     { label: 'ยืมเงิน',          color: 'sky',    icon: 'hand-coins'    },
-  claim:    { label: 'เบิกเงิน',         color: 'green',  icon: 'receipt'       },
-  clear:    { label: 'ล้างหนี้สัญญายืม',  color: 'violet', icon: 'badge-check'   },
-  purchase: { label: 'จัดซื้อ/จัดจ้าง',   color: 'amber',  icon: 'shopping-cart' },
-  payroll:  { label: 'เงินเดือนลูกจ้าง',  color: 'ink',    icon: 'users'         }
+  loan:     { label: 'ยืมเงิน',          full: 'ขอยืมเงิน (ไปราชการ / จัดทำโครงการ)',               color: 'sky',    icon: 'hand-coins'    },
+  claim:    { label: 'เบิกเงิน',         full: 'เบิกเงิน (ไปราชการ / จัดทำโครงการ)',                color: 'green',  icon: 'receipt'       },
+  clear:    { label: 'ล้างหนี้สัญญายืม',  full: 'ล้างหนี้สัญญายืมเงิน (ไปราชการ / จัดทำโครงการ)',    color: 'violet', icon: 'badge-check'   },
+  purchase: { label: 'จัดซื้อ/จัดจ้าง',   full: 'ชุดเบิกจัดซื้อ/จัดจ้าง',                            color: 'amber',  icon: 'shopping-cart' },
+  payroll:  { label: 'เงินเดือนลูกจ้าง',  full: 'ชุดเบิกเงินเดือนลูกจ้าง',                           color: 'ink',    icon: 'users'         }
 };
 var DOC_CAT_ORDER = ['loan', 'claim', 'clear', 'purchase', 'payroll'];
 /* ฝ่ายที่รับผิดชอบเอกสาร: พัสดุ = ชุดเบิกจัดซื้อ/จัดจ้าง + ชุดเบิกเงินเดือนลูกจ้าง, ที่เหลือเป็นของการเงิน
@@ -76,6 +76,8 @@ function typeOf(key) {
 /* หมวดหมู่ของเอกสาร: คืน key ('loan' | 'claim' | ...) และข้อมูลสี/ไอคอน */
 function catKeyOf(d) { return typeOf(d.type).cat || ''; }
 function catOf(d) { return DOC_CATS[catKeyOf(d)] || DOC_CAT_OTHER; }
+/* ชื่อเต็มของหมวด (ใช้เป็นหัวข้อกลุ่มในหน้าเจ้าหน้าที่) — ถ้าไม่มี full ใช้ label */
+function catFull(c) { return (c && (c.full || c.label)) || ''; }
 /* ฝ่ายของเอกสาร: 'supply' (พัสดุ) หรือ 'finance' (การเงิน — ค่าเริ่มต้นของทุกประเภทที่ไม่ใช่พัสดุ) */
 function deptKeyOf(d) {
   var c = catKeyOf(d);
@@ -241,15 +243,16 @@ function scrollToTopContent() {
 function rowHtml(d) {
   var chips = stepsOf(d).map(function(sk) {
     var i = stepInfo(d, sk);
-    return '<span class="status-badge t-' + i.tone + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
+    return '<span class="status-badge t-' + i.tone + '" title="' + esc2(STEP_META[sk].name + ': ' + i.label) + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
   }).join('');
+  /* การ์ดกะทัดรัด 2 บรรทัด: [ประเภท · หัวข้อ ........ ยอดเงิน] / [ผู้ส่ง · วันที่ ........ สถานะแต่ละขั้น] */
   return '<div class="booking-card fd-row fd-tone-' + overallInfo(d).tone + '" onclick="openDetail(\'' + d.id + '\')">' +
-    '<div>' +
-      '<div class="fd-type">' + esc2(typeOf(d.type).label) + (d.contractNo ? ' · สัญญาเลขที่ ' + esc2(d.contractNo) : '') + '</div>' +
-      '<div class="fd-title">' + esc2(d.title) + '</div>' +
-      '<div class="fd-meta">' + esc2(d.name) + ' · ส่งเมื่อ ' + fmtD(d.createdAt || new Date()) + '</div>' +
+    '<div class="fd-row-main">' +
+      '<span class="fd-type">' + esc2(typeOf(d.type).label) + (d.contractNo ? ' · ' + esc2(d.contractNo) : '') + '</span>' +
+      '<span class="fd-title">' + esc2(d.title) + '</span>' +
     '</div>' +
     '<div class="fd-amt">฿' + fmtMoney(d.amount) + '</div>' +
+    '<div class="fd-meta">' + esc2(d.name) + ' · ' + fmtD(d.createdAt || new Date()) + '</div>' +
     '<div class="fd-chips">' + chips + '</div>' +
   '</div>';
 }

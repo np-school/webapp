@@ -158,7 +158,7 @@ function renderCats() {
   var rows = tabRows(), n = {};
   rows.forEach(function(d) { var k = catKeyOf(d); n[k] = (n[k] || 0) + 1; });
   function pill(key, color, icon, label, count) {
-    return '<button type="button" class="fd-pill fd-cat-' + color + (catFilter === key ? ' active' : '') + '" aria-pressed="' + (catFilter === key) + '" onclick="setCat(\'' + key + '\')">' +
+    return '<button type="button" class="fd-pill fd-cat-' + color + (catFilter === key ? ' active' : '') + '" aria-pressed="' + (catFilter === key) + '" title="' + esc2(catFull(DOC_CATS[key]) || label) + '" onclick="setCat(\'' + key + '\')">' +
       '<i data-lucide="' + icon + '"></i>' + label + '<span class="n">' + count + '</span></button>';
   }
   el.innerHTML = pill('', 'all', 'layout-grid', 'ทุกหมวดหมู่ของ' + DEPTS[deptFilter].label, rows.length) +
@@ -214,7 +214,7 @@ function renderList() {
     var c = DOC_CATS[g.key] || DOC_CAT_OTHER;
     return '<section class="fd-group fd-cat-' + c.color + '">' +
       '<div class="fd-group-h"><span class="fd-group-ico"><i data-lucide="' + c.icon + '"></i></span>' +
-      '<span class="fd-group-t">' + esc2(c.label) + '</span>' +
+      '<span class="fd-group-t">' + esc2(catFull(c)) + '</span>' +
       '<span class="fd-group-n">' + g.rows.length + ' รายการ</span></div>' +
       g.rows.map(adminRowHtml).join('') +
     '</section>';
