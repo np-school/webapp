@@ -124,8 +124,8 @@ function renderTabs() {
   var el = document.getElementById('fdTabs'); if (!el) return;
   var todo = deptDocs().filter(pendingForMe).length;
   var tabs = [
-    { k: 'todo',   l: 'รอฉันดำเนินการ', i: 'inbox',     n: todo },
-    { k: 'all',    l: 'ทุกรายการ',      i: 'layers' },
+    { k: 'todo',   l: 'รอดำเนินการ', i: 'inbox',     n: todo },
+    { k: 'all',    l: 'รายการทั้งหมด',      i: 'layers' },
     { k: 'ledger', l: 'ทะเบียนลูกหนี้',  i: 'book-open' }
   ].filter(function(t) { return t.k !== 'ledger' || deptFilter === 'finance'; });
   el.innerHTML = tabs.map(function(t) {
