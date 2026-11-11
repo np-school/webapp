@@ -235,3 +235,13 @@
   .fd-row .fd-meta { grid-column:1 / -1; }
   .fd-row .fd-chips { grid-column:1 / -1; justify-content:flex-start; }
 }
+
+
+/* ── ทะเบียนลูกหนี้แบบกะทัดรัด: ทุกคอลัมน์บรรทัดเดียว ยกเว้นชื่อกิจกรรม/โครงการให้ขึ้นได้สูงสุด 2 บรรทัด ── */
+.fd-ledger { min-width:1180px; font-size:12.5px; }
+.fd-ledger th, .fd-ledger td { padding:7px 9px; white-space:nowrap; vertical-align:middle; line-height:1.35; }
+.fd-ledger th.num { text-align:right; }
+.fd-ledger td.c-name { max-width:170px; overflow:hidden; text-overflow:ellipsis; }
+.fd-ledger th.c-title, .fd-ledger td.c-title { white-space:normal; min-width:240px; max-width:340px; }
+.fd-ledger td.c-title span { display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.fd-ledger td .fd-bar { font-size:11px; padding:1px 8px; }

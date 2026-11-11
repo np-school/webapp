@@ -273,6 +273,10 @@ function groupLedgerRows(rows) {
   DOC_TYPES.forEach(function(t) { if (t.loan && map[t.key]) out.push({ type: t, rows: map[t.key] }); });
   return out;
 }
+/* ชื่อย่อประเภทเงินสำหรับคอลัมน์แคบในตาราง (เอาเมาส์ชี้ดูชื่อเต็ม / ส่งออก CSV ใช้ชื่อเต็ม) */
+function fundShort(f) {
+  return String(f || '').replace(/^เงินอุดหนุนค่าจัดการเรียนการสอน$/, 'อุดหนุนค่าจัดการเรียนการสอน').replace(/^เงิน/, '');
+}
 function ledgerStatusBadge(d) {
   if (d.s3 === 'paid') return '<span class="fd-bar t-done">ชำระแล้ว</span>';
   if (isOverdue(d))    return '<span class="fd-bar t-late">เกินกำหนด</span>';
@@ -284,14 +288,14 @@ function ledgerTableHtml(rows) {
     '<th>วันที่ยืม</th>' +
     '<th>เลขที่สัญญา</th>' +
     '<th>ชื่อ-สกุล</th>' +
-    '<th>กิจกรรม/โครงการ</th>' +
-    '<th>จำนวนเงิน</th>' +
+    '<th class="c-title">กิจกรรม/โครงการ</th>' +
+    '<th class="num">จำนวนเงิน</th>' +
     '<th>วันครบกำหนด</th>' +
     '<th>สถานะ</th>' +
     '<th>วันที่ส่งใช้</th>' +
     '<th>เลขที่ใบสำคัญ</th>' +
-    '<th>จำนวนเงินใบสำคัญ</th>' +
-    '<th>เงินสด</th>' +
+    '<th class="num">ใบสำคัญ (บาท)</th>' +
+    '<th class="num">เงินสด</th>' +
     '<th>ประเภทเงิน</th>' +
     '</tr></thead>';
   var body = rows.map(function(d, i) {
@@ -302,8 +306,8 @@ function ledgerTableHtml(rows) {
       '<td style="color:var(--text3);font-size:12px;text-align:center">' + (i + 1) + '</td>' +
       '<td>' + fmtD(d.loanDate) + '</td>' +
       '<td><b>' + esc2(d.contractNo) + '</b></td>' +
-      '<td>' + esc2(d.name) + '</td>' +
-      '<td>' + esc2(d.title) + '</td>' +
+      '<td class="c-name">' + esc2(d.name) + '</td>' +
+      '<td class="c-title" title="' + esc2(d.title) + '"><span>' + esc2(d.title) + '</span></td>' +
       '<td class="num" style="font-weight:800">฿' + fmtMoney(d.amount) + '</td>' +
       '<td>' + fmtD(d.dueDate) + '</td>' +
       '<td>' + ledgerStatusBadge(d) + '</td>' +
@@ -311,7 +315,7 @@ function ledgerTableHtml(rows) {
       '<td>' + esc2(s.voucherNo || '') + '</td>' +
       '<td class="num">' + (s.voucherAmount != null && s.voucherAmount !== '' ? fmtMoney(s.voucherAmount) : '') + '</td>' +
       '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
-      '<td>' + esc2(d.fundType) + '</td></tr>';
+      '<td title="' + esc2(d.fundType) + '">' + esc2(fundShort(d.fundType)) + '</td></tr>';
   }).join('');
   return '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger">' + THEAD + '<tbody>' + body + '</tbody></table></div>';
 }
