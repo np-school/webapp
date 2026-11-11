@@ -65,6 +65,7 @@ function renderPage() {
     '<div class="fd-depts" id="fdDepts"></div>' +
     '<div class="sub-tab-bar purple scroll" id="fdTabs" style="margin-bottom:var(--gap-section);"></div>' +
     '<div class="fd-stats" id="fdStats"></div>' +
+    '<div class="fd-charts" id="fdCharts"></div>' +
     '<div class="card fd-filter-card">' +
       '<div class="fd-toolbar">' +
         '<input type="text" class="search-box" id="fdSearch" placeholder="ค้นหาชื่อ / โครงการ / เลขที่สัญญา" oninput="onSearch(this.value)">' +
@@ -133,16 +134,104 @@ function renderTabs() {
 function renderStats() {
   var el = document.getElementById('fdStats'); if (!el) return;
   el.style.display = activeTab === 'ledger' ? 'none' : '';
-  var n = {};
-  deptDocs().forEach(function(d) { var s = fdStage(d); n[s] = (n[s] || 0) + 1; });
+  var n = {}, total = 0;
+  deptDocs().forEach(function(d) { var s = fdStage(d); n[s] = (n[s] || 0) + 1; total++; });
   el.innerHTML = FD_STATS.map(function(s) {
-    var on = activeTab !== 'todo' && stageFilter === s.k;
-    return '<button type="button" class="stat-card fd-stat fd-cat-' + s.color + (on ? ' active' : '') + '" aria-pressed="' + on + '" onclick="setStageFilter(\'' + s.k + '\')">' +
-      '<span class="fd-stat-ico"><i data-lucide="' + s.icon + '"></i></span>' +
-      '<span><span class="fd-stat-n">' + (n[s.k] || 0) + '</span><span class="fd-stat-l">' + s.label + '</span></span>' +
+    var on = activeTab !== 'todo' && stageFilter === s.k, c = n[s.k] || 0;
+    var pct = total ? Math.round(c / total * 100) : 0;
+    return '<button type="button" class="stat-card fd-stat fd-cat-' + s.color + (on ? ' active' : '') + (c ? '' : ' is-zero') + '" aria-pressed="' + on + '" onclick="setStageFilter(\'' + s.k + '\')">' +
+      '<span class="fd-stat-top"><span class="fd-stat-ico"><i data-lucide="' + s.icon + '"></i></span>' +
+        '<span class="fd-stat-n">' + c + '</span></span>' +
+      '<span class="fd-stat-l">' + s.label + '</span>' +
+      '<span class="fd-stat-bar" title="' + pct + '% ของเอกสารทั้งหมด"><i style="width:' + pct + '%"></i></span>' +
     '</button>';
   }).join('');
   lucide.createIcons();
+  renderCharts(n, total);
+}
+
+/* ══════════════════════ กราฟสรุป (SVG ล้วน ไม่พึ่งไลบรารี) ══════════════════════ */
+var STAGE_COLOR = { amber: 'var(--c-amber)', violet: 'var(--c-violet)', sky: 'var(--c-sky)', teal: '#0d9488', ink: 'var(--c-ink-mid)', red: 'var(--c-red)', green: 'var(--c-green)' };
+var TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+function fmtShort(n) { n = Number(n) || 0; return n >= 1e6 ? (n / 1e6).toFixed(1) + ' ล้าน' : n >= 1e4 ? (n / 1e3).toFixed(0) + 'k' : fmtMoney(n).replace(/\.00$/, ''); }
+function chartCard(title, sub, body) {
+  return '<section class="fd-chart-card"><div class="fd-chart-h"><b>' + title + '</b><span>' + sub + '</span></div>' + body + '</section>';
+}
+/* 1) โดนัท: สัดส่วนเอกสารตามขั้นตอน (กดที่รายการเพื่อกรอง) */
+function chartDonut(n, total) {
+  var R = 54, C = 2 * Math.PI * R, acc = 0, segs = '';
+  var items = FD_STATS.filter(function(s) { return n[s.k]; });
+  items.forEach(function(s) {
+    var len = n[s.k] / total * C, gap = items.length > 1 ? 2.5 : 0;
+    segs += '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke-width="16" stroke-linecap="butt" style="stroke:' + STAGE_COLOR[s.color] + '" ' +
+      'stroke-dasharray="' + Math.max(len - gap, 0.5).toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 70 70)">' +
+      '<title>' + s.label + ': ' + n[s.k] + '</title></circle>';
+    acc += len;
+  });
+  var svg = '<svg viewBox="0 0 140 140" class="fd-donut" role="img" aria-label="สัดส่วนเอกสารตามขั้นตอน">' +
+    '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke-width="16" style="stroke:var(--bg-alt)"/>' + segs +
+    '<text x="70" y="68" text-anchor="middle" class="fd-donut-n">' + total + '</text>' +
+    '<text x="70" y="86" text-anchor="middle" class="fd-donut-l">เอกสาร</text></svg>';
+  var legend = FD_STATS.map(function(s) {
+    var c = n[s.k] || 0;
+    return '<button type="button" class="fd-leg' + (c ? '' : ' is-zero') + '" onclick="setStageFilter(\'' + s.k + '\')">' +
+      '<i style="background:' + STAGE_COLOR[s.color] + '"></i><span>' + s.label + '</span><b>' + c + '</b></button>';
+  }).join('');
+  return svg + '<div class="fd-legend">' + legend + '</div>';
+}
+/* 2) แท่งซ้อน: เอกสารที่ส่งเข้ามารายเดือน 6 เดือนล่าสุด (เสร็จสิ้น / อยู่ระหว่างดำเนินการ) */
+function chartMonthly(docs) {
+  var now = new Date(), months = [], i, k;
+  for (i = 5; i >= 0; i--) { var dt = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({ y: dt.getFullYear(), m: dt.getMonth(), done: 0, open: 0 }); }
+  docs.forEach(function(d) {
+    var dd = toDate(d.createdAt) || now;
+    for (k = 0; k < months.length; k++) if (months[k].y === dd.getFullYear() && months[k].m === dd.getMonth()) {
+      if (fdStage(d) === 'done') months[k].done++; else months[k].open++;
+    }
+  });
+  var max = 0; months.forEach(function(m) { max = Math.max(max, m.done + m.open); });
+  if (!max) return '<div class="fd-chart-empty">ยังไม่มีเอกสารใน 6 เดือนล่าสุด</div>';
+  var BASE = 118, H = 84, svg = '<svg viewBox="0 0 300 146" class="fd-bars" role="img" aria-label="เอกสารรายเดือน">' +
+    '<line x1="0" y1="' + BASE + '" x2="300" y2="' + BASE + '" style="stroke:var(--border)"/>';
+  months.forEach(function(m, idx) {
+    var x = idx * 50 + 10, hd = m.done / max * H, ho = m.open / max * H, t = m.done + m.open;
+    svg += '<g><title>' + TH_MON[m.m] + ': เสร็จสิ้น ' + m.done + ' · ระหว่างดำเนินการ ' + m.open + '</title>';
+    if (m.open) svg += '<rect x="' + x + '" y="' + (BASE - hd - ho).toFixed(1) + '" width="30" height="' + ho.toFixed(1) + '" rx="4" style="fill:var(--c-sky)"/>';
+    if (m.done) svg += '<rect x="' + x + '" y="' + (BASE - hd).toFixed(1) + '" width="30" height="' + hd.toFixed(1) + '" rx="4" style="fill:var(--c-green)"/>';
+    if (t) svg += '<text x="' + (x + 15) + '" y="' + (BASE - hd - ho - 5).toFixed(1) + '" text-anchor="middle" class="fd-bar-v">' + t + '</text>';
+    svg += '<text x="' + (x + 15) + '" y="136" text-anchor="middle" class="fd-bar-m">' + TH_MON[m.m] + '</text></g>';
+  });
+  svg += '</svg>';
+  return svg + '<div class="fd-legend fd-legend-row"><span class="fd-leg"><i style="background:var(--c-green)"></i><span>เสร็จสิ้น</span></span>' +
+    '<span class="fd-leg"><i style="background:var(--c-sky)"></i><span>ระหว่างดำเนินการ</span></span></div>';
+}
+/* 3) ยอดเงินยืม: ชำระแล้ว / ค้างส่งใช้ / เกินกำหนด (เฉพาะสัญญาที่อนุมัติเบิกเงินแล้ว) */
+function chartLoans(docs) {
+  var a = { paid: [0, 0], open: [0, 0], late: [0, 0] };
+  docs.forEach(function(d) {
+    if (!typeOf(d.type).loan || !d.contractNo || d.s3 !== 'approved') return;
+    var k = d.s4 === 'paid' ? 'paid' : (isOverdue(d) ? 'late' : 'open');
+    a[k][0] += Number(d.amount) || 0; a[k][1]++;
+  });
+  var sum = a.paid[0] + a.open[0] + a.late[0];
+  if (!sum) return '<div class="fd-chart-empty">ยังไม่มีสัญญายืมเงินที่อนุมัติเบิกเงินแล้ว</div>';
+  var rows = [['paid', 'ชำระแล้ว', 'var(--c-green)'], ['open', 'ค้างส่งใช้', 'var(--c-sky)'], ['late', 'เกินกำหนด', 'var(--c-red)']];
+  return '<div class="fd-loan-total"><span>ยอดค้างส่งใช้รวม</span><b>฿' + fmtMoney(a.open[0] + a.late[0]) + '</b></div>' +
+    rows.map(function(r) {
+      var v = a[r[0]], pct = sum ? v[0] / sum * 100 : 0;
+      return '<div class="fd-loan-row"><div class="fd-loan-h"><span><i style="background:' + r[2] + '"></i>' + r[1] + ' <em>' + v[1] + ' สัญญา</em></span><b>฿' + fmtMoney(v[0]) + '</b></div>' +
+        '<div class="fd-hbar"><i style="width:' + pct.toFixed(1) + '%;background:' + r[2] + '"></i></div></div>';
+    }).join('');
+}
+function renderCharts(n, total) {
+  var el = document.getElementById('fdCharts'); if (!el) return;
+  if (activeTab === 'ledger') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  var docs = deptDocs();
+  el.innerHTML =
+    chartCard('สัดส่วนตามขั้นตอน', 'กดเพื่อกรอง', total ? '<div class="fd-donut-wrap">' + chartDonut(n, total) + '</div>' : '<div class="fd-chart-empty">ยังไม่มีเอกสาร</div>') +
+    chartCard('เอกสารรายเดือน', '6 เดือนล่าสุด', chartMonthly(docs)) +
+    chartCard('ยอดเงินยืม', 'สัญญาที่เบิกเงินแล้ว', chartLoans(docs));
 }
 /* แถบเลือกหมวดหมู่ (แต่ละหมวดมีสีของตัวเอง) พร้อมจำนวนรายการ */
 function renderCats() {
@@ -276,40 +365,40 @@ function ledgerStatusBadge(d) {
   if (isOverdue(d))    return '<span class="fd-bar t-late">เกินกำหนด</span>';
   return '<span class="fd-bar t-active">ค้างชำระ</span>';
 }
+function ledgerDueHint(d) {
+  if (d.s4 === 'paid') return d.settle && d.settle.date ? 'ส่งใช้ ' + fmtD(d.settle.date) : '';
+  var due = toDate(d.dueDate); if (!due) return '';
+  var t = new Date(); t.setHours(0, 0, 0, 0);
+  var days = Math.round((due - t) / 86400000);
+  return days < 0 ? 'เกินมา ' + (-days) + ' วัน' : (days === 0 ? 'ครบกำหนดวันนี้' : 'อีก ' + days + ' วัน');
+}
+/* ทะเบียนลูกหนี้ — รวมคอลัมน์ให้เหลือ 7 ช่อง แต่ละแถวมี 2 บรรทัด (บรรทัดบนเด่น / บรรทัดล่างรอง) เพื่อไม่ต้องเลื่อนซ้ายขวา */
 function ledgerTableHtml(rows) {
-  var THEAD = '<thead><tr>' +
-    '<th style="width:36px">ที่</th>' +
-    '<th>วันที่ยืม</th>' +
-    '<th>เลขที่สัญญา</th>' +
-    '<th>ชื่อ-สกุล</th>' +
-    '<th class="c-title">กิจกรรม/โครงการ</th>' +
-    '<th class="num">จำนวนเงิน</th>' +
-    '<th>วันครบกำหนด</th>' +
-    '<th>สถานะ</th>' +
-    '<th>วันที่ส่งใช้</th>' +
-    '<th>เลขที่ใบสำคัญ</th>' +
-    '<th class="num">ใบสำคัญ (บาท)</th>' +
-    '<th class="num">เงินสด</th>' +
-    '<th>ประเภทเงิน</th>' +
+  var THEAD = '<colgroup><col style="width:4%"><col style="width:14%"><col style="width:17%"><col style="width:23%"><col style="width:14%"><col style="width:13%"><col style="width:15%"></colgroup>' +
+    '<thead><tr>' +
+    '<th>ที่</th>' +
+    '<th>เลขที่สัญญา<small>วันที่ยืม</small></th>' +
+    '<th>ชื่อ-สกุล<small>ประเภทเงิน</small></th>' +
+    '<th>กิจกรรม/โครงการ</th>' +
+    '<th class="num">จำนวนเงิน<small>วันครบกำหนด</small></th>' +
+    '<th>สถานะ<small>กำหนดส่งใช้</small></th>' +
+    '<th>ใบสำคัญ<small>จำนวนเงิน / เงินสด</small></th>' +
     '</tr></thead>';
   var body = rows.map(function(d, i) {
-    var s = d.settle || {};
-    var late = isOverdue(d);
-    var rowCls = d.s4 === 'paid' ? 'fd-lrow-done' : (late ? 'fd-lrow-late' : 'fd-lrow-open');
+    var s = d.settle || {}, paid = d.s4 === 'paid';
+    var rowCls = paid ? 'fd-lrow-done' : (isOverdue(d) ? 'fd-lrow-late' : 'fd-lrow-open');
+    var vAmt = [];
+    if (s.voucherAmount != null && s.voucherAmount !== '') vAmt.push('฿' + fmtMoney(s.voucherAmount));
+    if (s.cash) vAmt.push('สด ฿' + fmtMoney(s.cash));
     return '<tr class="' + rowCls + '" onclick="openDetail(\'' + d.id + '\')">' +
-      '<td style="color:var(--text3);font-size:12px;text-align:center">' + (i + 1) + '</td>' +
-      '<td>' + fmtD(d.loanDate) + '</td>' +
-      '<td><b>' + esc2(d.contractNo) + '</b></td>' +
-      '<td class="c-name">' + esc2(d.name) + '</td>' +
+      '<td class="c-idx">' + (i + 1) + '</td>' +
+      '<td><div class="l1">' + esc2(d.contractNo) + '</div><div class="l2">' + fmtD(d.loanDate) + '</div></td>' +
+      '<td><div class="l1" title="' + esc2(d.name) + '">' + esc2(d.name) + '</div><div class="l2" title="' + esc2(d.fundType) + '">' + esc2(fundShort(d.fundType)) + '</div></td>' +
       '<td class="c-title" title="' + esc2(d.title) + '"><span>' + esc2(d.title) + '</span></td>' +
-      '<td class="num" style="font-weight:800">฿' + fmtMoney(d.amount) + '</td>' +
-      '<td>' + fmtD(d.dueDate) + '</td>' +
-      '<td>' + ledgerStatusBadge(d) + '</td>' +
-      '<td>' + (d.s4 === 'paid' ? fmtD(s.date) : '') + '</td>' +
-      '<td>' + esc2(s.voucherNo || '') + '</td>' +
-      '<td class="num">' + (s.voucherAmount != null && s.voucherAmount !== '' ? fmtMoney(s.voucherAmount) : '') + '</td>' +
-      '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
-      '<td title="' + esc2(d.fundType) + '">' + esc2(fundShort(d.fundType)) + '</td></tr>';
+      '<td class="num"><div class="l1">฿' + fmtMoney(d.amount) + '</div><div class="l2">' + fmtD(d.dueDate) + '</div></td>' +
+      '<td class="c-status"><div class="l1">' + ledgerStatusBadge(d) + '</div><div class="l2">' + esc2(ledgerDueHint(d)) + '</div></td>' +
+      '<td><div class="l1">' + (paid && s.voucherNo ? esc2(s.voucherNo) : '<span class="l-none">—</span>') + '</div><div class="l2">' + (vAmt.length ? vAmt.join(' · ') : '') + '</div></td>' +
+      '</tr>';
   }).join('');
   return '<div class="tbl-wrap fd-ledger-wrap"><table class="data-table fd-ledger">' + THEAD + '<tbody>' + body + '</tbody></table></div>';
 }
