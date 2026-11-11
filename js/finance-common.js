@@ -248,20 +248,29 @@ function scrollToTopContent() {
   var content = document.getElementById('pageContent');
   if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function rowHtml(d) {
-  var chips = stepsOf(d).map(function(sk) {
-    var i = stepInfo(d, sk);
-    return '<span class="status-badge t-' + i.tone + '" title="' + esc2(STEP_META[sk].name + ': ' + i.label) + '"><b>' + STEP_META[sk].short + '</b>' + i.label + '</span>';
+/* แถบสถานะกะทัดรัด: จุดต่อเส้นแทนแต่ละขั้น (เขียว=ผ่านแล้ว · ฟ้า=กำลังทำ · เหลือง=ส่งกลับ · แดง=เกินกำหนด · เทา=รอ) + ป้ายสถานะปัจจุบันป้ายเดียว
+   เอกสารเสร็จสิ้นหรือมีขั้นเดียว (ล้างหนี้) แสดงเฉพาะป้าย — ชี้เมาส์ที่จุดเพื่อดูชื่อขั้น/สถานะ */
+function stepperHtml(d) {
+  var st = stepsOf(d), stage = fdStage(d), m = STAGE_META[stage];
+  var pill = '<span class="fd-sp fd-cat-' + m.color + '">' + esc2(m.label) + '</span>';
+  if (stage === 'done' || st.length < 2) return '<span class="fd-stepper">' + pill + '</span>';
+  var dots = st.map(function(sk, i) {
+    var inf = stepInfo(d, sk);
+    return (i ? '<b class="fd-sl' + (stepInfo(d, st[i - 1]).tone === 'done' ? ' on' : '') + '"></b>' : '') +
+      '<i class="fd-sd t-' + inf.tone + '" title="' + esc2(STEP_META[sk].name + ': ' + inf.label) + '"></i>';
   }).join('');
-  /* การ์ดกะทัดรัด 2 บรรทัด: [ประเภท · หัวข้อ ........ ยอดเงิน] / [ผู้ส่ง · วันที่ ........ สถานะแต่ละขั้น] */
+  return '<span class="fd-stepper"><span class="fd-sds">' + dots + '</span>' + pill + '</span>';
+}
+function rowHtml(d) {
+  /* การ์ดกะทัดรัด 2 บรรทัดเสมอ: [ประเภท · หัวข้อ ........ ยอดเงิน] / [ผู้ส่ง · วันที่ ........ จุดสถานะ + ป้าย] */
   return '<div class="booking-card fd-row fd-tone-' + overallInfo(d).tone + '" onclick="openDetail(\'' + d.id + '\')">' +
     '<div class="fd-row-main">' +
       '<span class="fd-type">' + esc2(typeOf(d.type).label) + (d.contractNo ? ' · ' + esc2(d.contractNo) : '') + '</span>' +
       '<span class="fd-title">' + esc2(d.title) + '</span>' +
     '</div>' +
     '<div class="fd-amt">฿' + fmtMoney(d.amount) + '</div>' +
-    '<div class="fd-meta">' + esc2(d.name) + ' · ' + fmtD(d.createdAt || new Date()) + '</div>' +
-    '<div class="fd-chips">' + chips + '</div>' +
+    '<div class="fd-meta"><span class="n">' + esc2(d.name) + '</span><time>· ' + fmtD(d.createdAt || new Date()) + '</time></div>' +
+    '<div class="fd-chips">' + stepperHtml(d) + '</div>' +
   '</div>';
 }
 

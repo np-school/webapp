@@ -323,10 +323,6 @@ function groupByCat(rows) {
    บรรทัด 1 = ป้ายหมวด + หัวข้อ + ยอดเงิน · บรรทัด 2 = ผู้ส่ง/วันที่ + แถบสีสถานะแต่ละขั้น */
 function adminRowHtml(d) {
   var c = catOf(d);
-  var bars = stepsOf(d).map(function(sk) {
-    var i = stepInfo(d, sk);
-    return '<span class="fd-bar t-' + i.tone + '" title="' + esc2(STEP_META[sk].name + ': ' + i.label) + '"><b>' + STEP_META[sk].short + '</b>' + esc2(i.label) + '</span>';
-  }).join('');
   return '<div class="fd-card fd-cat-' + c.color + '" onclick="openDetail(\'' + d.id + '\')">' +
     '<div class="fd-card-l1">' +
       '<span class="fd-cat-chip" title="' + esc2(typeOf(d.type).label) + '"><i data-lucide="' + c.icon + '"></i>' + esc2(typeOf(d.type).label) + '</span>' +
@@ -338,7 +334,7 @@ function adminRowHtml(d) {
       '<span class="fd-meta"><span><i data-lucide="user"></i>' + esc2(d.name) + '</span>' +
         '<span><i data-lucide="calendar"></i>' + fmtD(d.createdAt || new Date()) + '</span>' +
         (d.contractNo ? '<span><i data-lucide="file-text"></i>' + esc2(d.contractNo) + '</span>' : '') + '</span>' +
-      '<span class="fd-bars">' + bars + '</span>' +
+      stepperHtml(d) +
     '</div>' +
   '</div>';
 }

@@ -321,3 +321,43 @@ span.fd-leg { cursor:default; }
 .fd-ledger tbody tr.fd-lrow-late td.num .l2, .fd-ledger tbody tr.fd-lrow-late td.c-status .l2 { color:var(--c-red-deep); font-weight:700; }
 @media (max-width:820px) { .fd-ledger { min-width:760px !important; } }
 @media (min-width:640px) and (max-width:1099px) { .fd-charts .fd-chart-card:last-child:nth-child(odd) { grid-column:1 / -1; } }
+
+
+/* ══════════════ แถบสถานะแบบจุดต่อเส้น + การ์ดรายการ 2 บรรทัดเสมอ ══════════════ */
+.fd-stepper { display:inline-flex; align-items:center; gap:10px; flex-shrink:0; }
+.fd-sds { display:inline-flex; align-items:center; padding:0 3px; }
+.fd-sd { display:block; width:10px; height:10px; border-radius:50%; background:var(--border-mid); flex-shrink:0; }
+.fd-sd.t-done   { background:var(--c-green); }
+.fd-sd.t-active { background:var(--c-sky);   box-shadow:0 0 0 3px var(--c-sky-tint); }
+.fd-sd.t-warn   { background:var(--c-amber); box-shadow:0 0 0 3px var(--c-amber-tint); }
+.fd-sd.t-late   { background:var(--c-red);   box-shadow:0 0 0 3px var(--c-red-tint); }
+.fd-sl { display:block; width:10px; height:2px; background:var(--border-mid); flex-shrink:0; }
+.fd-sl.on { background:var(--c-green); }
+.fd-sp { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:800; line-height:1.5; white-space:nowrap;
+  background:var(--white); color:var(--cat-deep); border:1px solid var(--cat-tint); }
+
+/* ไม่ให้ตัดบรรทัด: ชื่อ/ข้อมูลย่อด้วย … แทน (ทั้งหน้าเจ้าหน้าที่และหน้าครู) */
+.fd-card-l1, .fd-card-l2 { flex-wrap:nowrap; }
+.fd-card-l2 { justify-content:space-between; }
+.fd-card .fd-meta { flex-wrap:nowrap; min-width:0; overflow:hidden; }
+.fd-card .fd-meta span { white-space:nowrap; }
+.fd-card .fd-meta span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.fd-row .fd-chips { grid-column:auto; justify-content:flex-end; flex-wrap:nowrap; }
+.fd-row .fd-meta  { grid-column:auto; min-width:0; }
+@media (max-width:560px) {
+  .fd-card .fd-title { flex-basis:auto; order:0; white-space:nowrap; }
+  .fd-cat-chip { max-width:104px; }
+  .fd-card .fd-meta span:nth-child(n+3) { display:none; }
+  .fd-stepper { gap:6px; }
+  .fd-sl { width:6px; }
+  .fd-sp { padding:2px 8px; font-size:10.5px; }
+  .fd-row .fd-meta, .fd-row .fd-chips { grid-column:auto; }
+  .fd-row .fd-chips { justify-content:flex-end; }
+}
+.fd-row .fd-meta { display:flex; gap:4px; }
+.fd-row .fd-meta .n { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.fd-row .fd-meta time { flex-shrink:0; }
+@media (max-width:560px) {
+  .fd-row .fd-type { max-width:74px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fd-cat-chip { max-width:78px; }
+}
