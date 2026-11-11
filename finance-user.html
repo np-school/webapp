@@ -103,9 +103,9 @@
     </div>
 
     <div id="fClearBox" class="form-group" style="display:none;">
-      <label class="form-label" for="fRef">สัญญายืมเงินที่ต้องการล้างหนี้</label>
-      <select id="fRef"></select>
-      <div class="fd-hint">แสดงเฉพาะสัญญาของคุณที่อนุมัติแล้วและยังค้างชำระ</div>
+      <label class="form-label" for="fRef">สัญญายืมเงินที่ต้องการล้างหนี้ (จำเป็น)</label>
+      <select id="fRef" onchange="onRefChange()"></select>
+      <div class="fd-hint" id="fRefInfo">แสดงเฉพาะสัญญาของคุณที่ได้รับอนุมัติเบิกเงินแล้วและยังค้างชำระ</div>
     </div>
 
     <div class="form-group">

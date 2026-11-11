@@ -63,6 +63,10 @@ function renderDetail(d) {
   } else if (d.s1 === 'approved') {
     own = '<div class="fd-hint" style="margin-top:12px;">เอกสารผ่านการตรวจแล้ว ไม่สามารถแก้ไขข้อมูลได้ เว้นแต่เจ้าหน้าที่ส่งกลับให้แก้ไข หากต้องการแก้ไขกรุณาติดต่อ' + deptOf(d).short + '</div>';
   }
+  if (isMine(d) && typeOf(d.type).loan && d.contractNo && d.s3 === 'approved' && d.s4 !== 'paid') {
+    own += '<div class="fd-actions" style="margin-top:12px;"><button class="btn-primary btn-sm" onclick="closeModal(\'detailModal\');openClearFor(\'' + d.id + '\')">' +
+      '<i data-lucide="badge-check" style="width:14px;height:14px;"></i> ส่งล้างหนี้สัญญานี้</button></div>';
+  }
   buildDetailHtml(d, [], own, banner, false);
 }
 /* ผู้ส่งกดส่งใหม่หลังแก้ไข: ขั้นที่ถูกส่งกลับ revision → สถานะรอตรวจของขั้นนั้น (REV_BACK) — ต้องมี firestore.rules ที่อนุญาต */
@@ -106,21 +110,64 @@ function openForm(id) {
   closeModal('detailModal');
   openModal('formModal');
 }
+/* สัญญาที่ล้างหนี้ได้: ของครูคนนี้ + ออกเลขแล้ว + ขั้น 3 อนุมัติเบิกเงินแล้ว (เงินออกจริง) + ยังไม่ปิดสัญญา
+   และตรงชนิดกับเอกสารล้างหนี้ (ล้างหนี้ไปราชการ ↔ ยืมไปราชการ, ล้างหนี้โครงการ ↔ ยืมโครงการ)
+   สัญญาที่เลือกไว้อยู่แล้ว (ตอนแก้ไขเอกสารเดิม) จะแสดงเสมอแม้ปิดไปแล้ว */
+function refLoans(selected) {
+  var ft = document.getElementById('fType').value;
+  var want = ft === 'clear_trip' ? 'loan_trip' : (ft === 'clear_project' ? 'loan_project' : null);
+  return allDocs.filter(function(d) {
+    if (!isMine(d) || !typeOf(d.type).loan || !d.contractNo) return false;
+    if (want && d.type !== want) return false;
+    return d.contractNo === selected || (d.s3 === 'approved' && d.s4 !== 'paid');
+  });
+}
 function fillRefOptions(selected) {
-  var opts = ['<option value="">— ไม่ระบุ —</option>'];
-  allDocs.filter(function(d) { return isMine(d) && typeOf(d.type).loan && d.contractNo && d.s4 !== 'paid'; })
-    .forEach(function(d) {
-      opts.push('<option value="' + esc2(d.contractNo) + '"' + (d.contractNo === selected ? ' selected' : '') + '>' +
-        esc2(d.contractNo + ' — ' + d.title.slice(0, 50)) + '</option>');
-    });
+  var list = refLoans(selected);
+  var opts = ['<option value="">— เลือกสัญญา —</option>'];
+  list.forEach(function(d) {
+    opts.push('<option value="' + esc2(d.contractNo) + '"' + (d.contractNo === selected ? ' selected' : '') + '>' +
+      esc2(d.contractNo + ' — ' + d.title.slice(0, 50)) + '</option>');
+  });
   document.getElementById('fRef').innerHTML = opts.join('');
+  onRefChange(true);
+  var info = document.getElementById('fRefInfo');
+  if (!list.length && info) {
+    info.innerHTML = '<span style="color:var(--c-red-deep,#b91c1c);">ไม่พบสัญญายืมเงินที่ได้รับอนุมัติเบิกเงินแล้วและยังค้างชำระ หากเคยยืมนอกระบบนี้ กรุณาติดต่อ' +
+      esc2((DEPTS.finance).short) + '</span>';
+  }
+}
+/* เลือกสัญญาแล้วโชว์รายละเอียดให้ตรวจ + เติมชื่อกิจกรรม/ยอดให้ถ้ายังว่าง (แก้ไขต่อได้) */
+function onRefChange(keepFields) {
+  var no = document.getElementById('fRef').value, info = document.getElementById('fRefInfo');
+  var d = null;
+  allDocs.forEach(function(x) { if (isMine(x) && typeOf(x.type).loan && x.contractNo === no) d = x; });
+  if (!info) return;
+  if (!d) { info.textContent = 'แสดงเฉพาะสัญญาของคุณที่ได้รับอนุมัติเบิกเงินแล้วและยังค้างชำระ'; return; }
+  info.innerHTML = 'สัญญา ' + esc2(d.contractNo) + ' · ยอดยืม <b>฿' + fmtMoney(d.amount) + '</b> · ยืมวันที่ ' + fmtD(d.loanDate) +
+    ' · ครบกำหนด ' + fmtD(d.dueDate) + '<br>' + esc2(d.title);
+  if (keepFields === true) return;
+  var tEl = document.getElementById('fTitle'), aEl = document.getElementById('fAmount');
+  if (!tEl.value.trim()) tEl.value = 'ล้างหนี้สัญญายืมเงิน ' + d.contractNo + ' — ' + d.title;
+  if (!aEl.value) aEl.value = d.amount;
 }
 function onTypeChange() {
   var t = typeOf(document.getElementById('fType').value);
   document.getElementById('fLoanBox').style.display = t.loan ? 'grid' : 'none';
   document.getElementById('fClearBox').style.display = t.clear ? 'block' : 'none';
+  if (t.clear) fillRefOptions(document.getElementById('fRef').value);
   var sub = document.getElementById('formSub');
   if (sub) sub.textContent = 'กรอกครั้งเดียว แล้วนำเอกสารตัวจริงส่งที่' + (DEPTS.supply.cats.indexOf(t.cat) > -1 ? DEPTS.supply : DEPTS.finance).short;
+}
+/* ปุ่มในการ์ดสัญญายืม: เปิดฟอร์มล้างหนี้พร้อมเลือกสัญญานี้ให้ */
+function openClearFor(id) {
+  var d = findDoc(id); if (!d || !isMine(d) || !typeOf(d.type).loan) return;
+  openForm();
+  var typeSel = document.getElementById('fType');
+  typeSel.value = d.type === 'loan_trip' ? 'clear_trip' : 'clear_project';
+  onTypeChange();
+  document.getElementById('fRef').value = d.contractNo;
+  onRefChange();
 }
 function onLoanDateChange() {
   if (fDueTouched) return;
@@ -144,6 +191,7 @@ function saveForm() {
     if (dueDate < loanDate) { showToast('วันครบกำหนดต้องไม่ก่อนวันที่ยืม', 'warn'); return; }
   }
   var ref = t.clear ? document.getElementById('fRef').value : '';
+  if (t.clear && !ref) { showToast('เลือกสัญญายืมเงินที่ต้องการล้างหนี้', 'warn'); return; }
   var TS = firebase.firestore.Timestamp, FV = firebase.firestore.FieldValue;
   var btn = document.getElementById('formSaveBtn'); btn.disabled = true;
   var hist = { step: 'doc', text: editingId ? 'ผู้ส่งแก้ไขข้อมูล' : 'ส่งเอกสาร', by: name, email: currentUser.email, at: TS.now() };
