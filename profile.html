@@ -25,6 +25,7 @@
   <title>โปรไฟล์บุคลากร – โรงเรียนหนองกี่พิทยาคม</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="shared/tailwind-built.css" rel="stylesheet">
+  <link href="shared/utilities.css" rel="stylesheet">
   <link href="shared/styles-new.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@1.24.0"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -279,7 +280,7 @@
 <!-- Loading -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังโหลดข้อมูล...</p>
+  <p class="u-ctext2-fs14px-fw700">กำลังโหลดข้อมูล...</p>
 </div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -289,7 +290,7 @@
 
 <!-- ปุ่มย้อนกลับไปด้านบน -->
 <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTopContent()" title="ย้อนกลับด้านบน">
-  <i data-lucide="arrow-up" style="width:20px;height:20px;"></i>
+  <i data-lucide="arrow-up" class="u-w20px-h20px"></i>
 </button>
 
 <!-- ─── Page Content (inject เข้า contentEl ใน onAuth) ─────────────────── -->
@@ -301,7 +302,7 @@
       <i data-lucide="eye" style="width:15px;height:15px;color:var(--role-director-color);flex-shrink:0;"></i>
       <span id="viewModeName" style="font-size:13px;font-weight:700;color:var(--amber-dark);">กำลังดูโปรไฟล์บุคลากร — (โหมดอ่านอย่างเดียว)</span>
     </div>
-    <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--amber-dark);color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i> กลับรายชื่อบุคลากร</a>
+    <a href="staff.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--amber-dark);color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" class="u-w13px-h13px"></i> กลับรายชื่อบุคลากร</a>
   </div>
 
       <!-- Hero -->
@@ -312,13 +313,13 @@
           <div class="avatar-ring" id="avatarWrap">
             <span class="avatar-initials" id="avatarInitials">?</span>
           </div>
-          <div style="flex:1;min-width:160px;">
+          <div class="u-fx1-minw160px">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:1.5px;margin-bottom:4px;">โปรไฟล์บุคลากร</div>
 
             <h1 id="profileName" style="font-size:21px;font-weight:800;color:white;margin-bottom:6px;line-height:1.25;">—</h1>
             <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;">
-              <span id="profilePosition" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;"></span>
-              <span id="profileGroup" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;"></span>
+              <span id="profilePosition" class="u-f660d4c" style="background:rgba(255,255,255,.12);"></span>
+              <span id="profileGroup" class="u-f660d4c" style="background:rgba(255,255,255,.12);"></span>
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,.4);" id="profileEmail"></div>
           </div>
@@ -329,25 +330,25 @@
       <!-- Subtab bar -->
       <div class="sub-tab-bar scroll" id="subtabBar">
         <button class="sub-tab active" data-tab="sar">
-          <i data-lucide="layout-dashboard" style="width:15px;height:15px;"></i> Self-Assessment Report
+          <i data-lucide="layout-dashboard" class="u-w15px-h15px"></i> Self-Assessment Report
         </button>
         <button class="sub-tab" data-tab="personal">
-          <i data-lucide="user" style="width:15px;height:15px;"></i> ข้อมูลส่วนตัว
+          <i data-lucide="user" class="u-w15px-h15px"></i> ข้อมูลส่วนตัว
         </button>
         <button class="sub-tab" data-tab="career">
-          <i data-lucide="briefcase" style="width:15px;height:15px;"></i> ประวัติการทำงาน
+          <i data-lucide="briefcase" class="u-w15px-h15px"></i> ประวัติการทำงาน
         </button>
         <button class="sub-tab" data-tab="teaching">
-          <i data-lucide="book-open" style="width:15px;height:15px;"></i> ภาระงานสอน
+          <i data-lucide="book-open" class="u-w15px-h15px"></i> ภาระงานสอน
         </button>
         <button class="sub-tab" data-tab="duties">
-          <i data-lucide="clipboard-list" style="width:15px;height:15px;"></i> งานที่ได้รับมอบหมาย
+          <i data-lucide="clipboard-list" class="u-w15px-h15px"></i> งานที่ได้รับมอบหมาย
         </button>
         <button class="sub-tab" data-tab="development">
-          <i data-lucide="award" style="width:15px;height:15px;"></i> การพัฒนาตนเอง
+          <i data-lucide="award" class="u-w15px-h15px"></i> การพัฒนาตนเอง
         </button>
         <button class="sub-tab" data-tab="media">
-          <i data-lucide="layout-grid" style="width:15px;height:15px;"></i> สื่อนวัตกรรม
+          <i data-lucide="layout-grid" class="u-w15px-h15px"></i> สื่อนวัตกรรม
         </button>
       </div>
 
@@ -363,7 +364,7 @@
             <!-- ข้อมูลส่วนตัว -->
             <div class="sar-card">
               <div class="sar-card-head">
-                <div class="sar-card-icon" style="background:var(--accent-tint);"><i data-lucide="user-circle" style="width:17px;height:17px;color:var(--accent);"></i></div>
+                <div class="u-bgaccent-tint sar-card-icon"><i data-lucide="user-circle" class="u-w17px-h17px-caccent"></i></div>
                 <div class="sar-card-title">ข้อมูลส่วนตัว</div>
               </div>
               <div class="sar-card-body" id="sar-personal-body">
@@ -374,7 +375,7 @@
             <!-- ประวัติการศึกษา -->
             <div class="sar-card">
               <div class="sar-card-head">
-                <div class="sar-card-icon" style="background:var(--violet-light);"><i data-lucide="graduation-cap" style="width:17px;height:17px;color:var(--violet);"></i></div>
+                <div class="u-bgviolet-light sar-card-icon"><i data-lucide="graduation-cap" class="u-w17px-h17px-cviolet"></i></div>
                 <div class="sar-card-title">ประวัติการศึกษา</div>
               </div>
               <div class="sar-card-body" id="sar-education-body">
@@ -403,7 +404,7 @@
         <div class="sar-grid" style="gap:14px;margin-bottom:14px;">
 
           <!-- ภาระงานสอน (full width) -->
-          <div class="sar-card" style="grid-column:1/-1;">
+          <div class="u-gc1-1 sar-card">
             <div class="sar-card-head">
               <div class="sar-card-icon" style="background:var(--orange-light);"><i data-lucide="book-open" style="width:17px;height:17px;color:var(--orange-mid);"></i></div>
               <div class="sar-card-title">ภาระงานสอนตามตาราง</div>
@@ -416,7 +417,7 @@
           <!-- งานที่ได้รับมอบหมาย -->
           <div class="sar-card">
             <div class="sar-card-head">
-              <div class="sar-card-icon" style="background:var(--violet-light);"><i data-lucide="clipboard-list" style="width:17px;height:17px;color:var(--violet);"></i></div>
+              <div class="u-bgviolet-light sar-card-icon"><i data-lucide="clipboard-list" class="u-w17px-h17px-cviolet"></i></div>
               <div class="sar-card-title">งานที่ได้รับมอบหมาย</div>
             </div>
             <div class="sar-card-body" id="sar-duties-body">
@@ -436,7 +437,7 @@
           </div>
 
           <!-- สื่อนวัตกรรม (full width) -->
-          <div class="sar-card" style="grid-column:1/-1;">
+          <div class="u-gc1-1 sar-card">
             <div class="sar-card-head">
               <div class="sar-card-icon" style="background:var(--cyan-light);"><i data-lucide="layout-grid" style="width:17px;height:17px;color:var(--cyan);"></i></div>
               <div class="sar-card-title">สื่อนวัตกรรมการเรียนรู้</div>
@@ -452,14 +453,14 @@
         <div style="margin-top:14px;">
           <div class="sar-card" id="portfolioSummaryCard">
             <div class="sar-card-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div class="sar-card-icon" style="background:var(--accent-tint);"><i data-lucide="folder-check" style="width:17px;height:17px;color:var(--accent);"></i></div>
+              <div class="u-dflex-aicenter-g10px">
+                <div class="u-bgaccent-tint sar-card-icon"><i data-lucide="folder-check" class="u-w17px-h17px-caccent"></i></div>
                 <div>
-                  <div class="sar-card-title" style="margin-bottom:2px;">สรุปการส่งงาน Portfolio</div>
+                  <div class="u-mb2px sar-card-title">สรุปการส่งงาน Portfolio</div>
                   <div id="portfolioSemLabel" style="font-size:10px;font-weight:700;color:var(--text3);">กำลังโหลด...</div>
                 </div>
               </div>
-              <div style="display:flex;align-items:center;gap:10px;">
+              <div class="u-dflex-aicenter-g10px">
                 <div style="font-size:12px;font-weight:700;color:var(--text2);" id="portfolioProgressText">—</div>
                 <div style="width:100px;background:var(--border);border-radius:6px;height:7px;overflow:hidden;">
                   <div id="portfolioProgressBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--blue-bright));width:0%;transition:width .6s;"></div>
@@ -479,8 +480,8 @@
         <!-- ประวัติโรงเรียน -->
         <div class="info-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div class="info-card-title"><i data-lucide="map-pin" style="width:18px;height:18px;color:var(--violet);"></i> ประวัติโรงเรียน</div>
-            <button class="btn-primary purple edit-only" onclick="addCareerHistoryItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มโรงเรียน</button>
+            <div class="info-card-title"><i data-lucide="map-pin" class="u-w18px-h18px-cviolet"></i> ประวัติโรงเรียน</div>
+            <button class="btn-primary purple edit-only" onclick="addCareerHistoryItem()"><i data-lucide="plus" class="u-w14px-h14px"></i> เพิ่มโรงเรียน</button>
           </div>
           <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:var(--bg);border-radius:8px;display:flex;align-items:center;gap:6px;">
             <i data-lucide="info" style="width:13px;height:13px;color:var(--text3);flex-shrink:0;"></i>
@@ -494,25 +495,25 @@
       <div class="tab-pane" data-panel="personal" id="panel-personal">
         <div class="info-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div class="info-card-title"><i data-lucide="user-circle" style="width:18px;height:18px;color:var(--accent);"></i> ข้อมูลส่วนตัว</div>
+            <div class="info-card-title"><i data-lucide="user-circle" class="u-w18px-h18px-caccent"></i> ข้อมูลส่วนตัว</div>
             <div id="personalActions" style="display:flex;gap:8px;">
-              <button class="btn-primary edit-only" onclick="editSection('personal')"><i data-lucide="pencil" style="width:14px;height:14px;"></i> แก้ไข</button>
+              <button class="btn-primary edit-only" onclick="editSection('personal')"><i data-lucide="pencil" class="u-w14px-h14px"></i> แก้ไข</button>
             </div>
           </div>
           <!-- View mode -->
           <div id="personalView">
             <!-- Synced with staff.html section -->
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <div class="u-daba13e">
+              <div class="u-dflex-aicenter-g6px-mb12px">
                 <i data-lucide="refresh-cw" style="width:13px;height:13px;color:var(--violet);flex-shrink:0;"></i>
-                <span style="font-size:10px;font-weight:800;color:var(--violet);letter-spacing:.8px;text-transform:uppercase;">ข้อมูลบุคลากร</span>
+                <span class="u-4ab3bcc">ข้อมูลบุคลากร</span>
                 <span style="font-size:10px;color:var(--text3);font-weight:600;">· ซิงค์กับระบบจัดการบุคลากร แก้ไขได้ทั้งสองฝั่ง</span>
               </div>
               <div class="info-grid">
-                <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ชื่อ-นามสกุล</div><div class="info-val" id="v_fullname" style="background:var(--border-soft);color:var(--text-mid);">—</div></div>
-                <div class="info-field"><div class="info-label">ตำแหน่ง</div><div class="info-val" id="v_position" style="background:var(--border-soft);color:var(--text-mid);">—</div></div>
-                <div class="info-field"><div class="info-label">กลุ่มสาระ / กลุ่มงาน</div><div class="info-val" id="v_group" style="background:var(--border-soft);color:var(--text-mid);">—</div></div>
-                <div class="info-field"><div class="info-label">วิทยฐานะ</div><div class="info-val" id="v_acrank" style="background:var(--border-soft);color:var(--text-mid);">—</div></div>
+                <div class="u-gc1-1 info-field"><div class="info-label">ชื่อ-นามสกุล</div><div class="u-ctext-mid info-val" id="v_fullname" style="background:var(--border-soft);">—</div></div>
+                <div class="info-field"><div class="info-label">ตำแหน่ง</div><div class="u-ctext-mid info-val" id="v_position" style="background:var(--border-soft);">—</div></div>
+                <div class="info-field"><div class="info-label">กลุ่มสาระ / กลุ่มงาน</div><div class="u-ctext-mid info-val" id="v_group" style="background:var(--border-soft);">—</div></div>
+                <div class="info-field"><div class="info-label">วิทยฐานะ</div><div class="u-ctext-mid info-val" id="v_acrank" style="background:var(--border-soft);">—</div></div>
               </div>
             </div>
             <!-- User-owned section -->
@@ -523,7 +524,7 @@
               <div class="info-field"><div class="info-label">เชื้อชาติ</div><div class="info-label2" id="v_ethnicity" style="font-size:14px;font-weight:600;color:var(--text-dark);background:var(--bg);padding:9px 13px;border-radius:10px;min-height:38px;display:flex;align-items:center;">—</div></div>
               <div class="info-field"><div class="info-label">ศาสนา</div><div class="info-val" id="v_religion">—</div></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><div class="info-val" id="v_phone">—</div></div>
-              <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
+              <div class="u-gc1-1 info-field"><div class="info-label">ที่อยู่ปัจจุบัน</div><div class="info-val" id="v_address">—</div></div>
             </div>
           </div>
           <!-- Education list -->
@@ -533,7 +534,7 @@
                 <i data-lucide="graduation-cap" style="width:16px;height:16px;color:var(--violet);"></i> ประวัติการศึกษา
               </div>
               <button class="btn-primary purple edit-only" style="padding:7px 13px;font-size:12px;" onclick="addEducationItem()">
-                <i data-lucide="plus" style="width:13px;height:13px;"></i> เพิ่ม
+                <i data-lucide="plus" class="u-w13px-h13px"></i> เพิ่ม
               </button>
             </div>
             <div id="educationList"><div class="empty-block">ยังไม่มีข้อมูลการศึกษา</div></div>
@@ -542,13 +543,13 @@
           <!-- Edit mode -->
           <div id="personalEdit" style="display:none;">
             <!-- Synced with staff.html — editable both sides -->
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <div class="u-daba13e">
+              <div class="u-dflex-aicenter-g6px-mb12px">
                 <i data-lucide="refresh-cw" style="width:12px;height:12px;color:var(--violet);flex-shrink:0;"></i>
-                <span style="font-size:10px;font-weight:800;color:var(--violet);letter-spacing:.8px;text-transform:uppercase;">ข้อมูลบุคลากร — ซิงค์กับระบบจัดการบุคลากร</span>
+                <span class="u-4ab3bcc">ข้อมูลบุคลากร — ซิงค์กับระบบจัดการบุคลากร</span>
               </div>
               <div class="info-grid">
-                <div class="info-field" style="grid-column:1/-1;">
+                <div class="u-gc1-1 info-field">
                   <div class="info-label">ชื่อ-นามสกุล</div>
                   <input type="text" id="e_fullname" placeholder="นาย/นาง/นางสาว ชื่อ นามสกุล">
                 </div>
@@ -595,7 +596,7 @@
               <div class="info-field"><div class="info-label">เชื้อชาติ</div><input type="text" id="e_ethnicity" placeholder="ไทย"></div>
               <div class="info-field"><div class="info-label">ศาสนา</div><input type="text" id="e_religion" placeholder="พุทธ"></div>
               <div class="info-field"><div class="info-label">เบอร์โทรศัพท์</div><input type="text" id="e_phone" placeholder="08x-xxx-xxxx"></div>
-              <div class="info-field" style="grid-column:1/-1;"><div class="info-label">ที่อยู่ปัจจุบัน</div><textarea id="e_address" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"></textarea></div>
+              <div class="u-gc1-1 info-field"><div class="info-label">ที่อยู่ปัจจุบัน</div><textarea id="e_address" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"></textarea></div>
             </div>
           </div>
         </div>
@@ -603,10 +604,10 @@
 
       <!-- ─── PANEL: ภาระงานสอน ─── -->
       <div class="tab-pane" data-panel="teaching" id="panel-teaching">
-        <div class="info-card" style="padding:0;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
-            <div class="info-card-title" style="margin:0;"><i data-lucide="book-open" style="width:18px;height:18px;color:var(--accent);"></i> ภาระงานสอนตามตาราง</div>
-            <button class="btn-primary edit-only" onclick="addTeachRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายวิชา</button>
+        <div class="u-p0-ovhidden info-card">
+          <div class="u-92b0c26">
+            <div class="u-m0 info-card-title"><i data-lucide="book-open" class="u-w18px-h18px-caccent"></i> ภาระงานสอนตามตาราง</div>
+            <button class="btn-primary edit-only" onclick="addTeachRow()"><i data-lucide="plus" class="u-w14px-h14px"></i> เพิ่มรายวิชา</button>
           </div>
           <!-- header -->
           <div class="teach-header-row" style="display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--bg);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);">
@@ -625,10 +626,10 @@
 
       <!-- ─── PANEL: งานที่ได้รับมอบหมาย ─── -->
       <div class="tab-pane" data-panel="duties" id="panel-duties">
-        <div class="info-card" style="padding:0;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
-            <div class="info-card-title" style="margin:0;"><i data-lucide="clipboard-list" style="width:18px;height:18px;color:var(--violet);"></i> ภาระงานที่ได้รับหมายมอบ</div>
-            <button class="btn-primary purple edit-only" onclick="addDutyRow()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มงาน</button>
+        <div class="u-p0-ovhidden info-card">
+          <div class="u-92b0c26">
+            <div class="u-m0 info-card-title"><i data-lucide="clipboard-list" class="u-w18px-h18px-cviolet"></i> ภาระงานที่ได้รับหมายมอบ</div>
+            <button class="btn-primary purple edit-only" onclick="addDutyRow()"><i data-lucide="plus" class="u-w14px-h14px"></i> เพิ่มงาน</button>
           </div>
           <div id="dutiesList"><div class="empty-block">ยังไม่มีข้อมูลงานที่ได้รับมอบหมาย</div></div>
         </div>
@@ -636,23 +637,23 @@
 
       <!-- ─── PANEL: การพัฒนาตนเอง ─── -->
       <div class="tab-pane" data-panel="development" id="panel-development">
-        <div class="info-card" style="padding:0;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
-            <div class="info-card-title" style="margin:0;"><i data-lucide="award" style="width:18px;height:18px;color:var(--accent-warn);"></i> การพัฒนาตนเอง / อบรม / สัมมนา</div>
-            <button class="btn-primary amber edit-only" onclick="addDevItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มรายการ</button>
+        <div class="u-p0-ovhidden info-card">
+          <div class="u-92b0c26">
+            <div class="u-m0 info-card-title"><i data-lucide="award" style="width:18px;height:18px;color:var(--accent-warn);"></i> การพัฒนาตนเอง / อบรม / สัมมนา</div>
+            <button class="btn-primary amber edit-only" onclick="addDevItem()"><i data-lucide="plus" class="u-w14px-h14px"></i> เพิ่มรายการ</button>
           </div>
-          <div id="devList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div></div>
+          <div id="devList" class="u-p0-16px-16px"><div class="empty-block">ยังไม่มีข้อมูลการพัฒนาตนเอง</div></div>
         </div>
       </div>
 
       <!-- ─── PANEL: สื่อนวัตกรรม ─── -->
       <div class="tab-pane" data-panel="media" id="panel-media">
-        <div class="info-card" style="padding:0;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;">
-            <div class="info-card-title" style="margin:0;"><i data-lucide="layout-grid" style="width:18px;height:18px;color:var(--cyan);"></i> สื่อนวัตกรรมการเรียนรู้</div>
-            <button class="btn-primary edit-only" style="background:var(--cyan);" onclick="addMediaItem()"><i data-lucide="plus" style="width:14px;height:14px;"></i> เพิ่มสื่อ</button>
+        <div class="u-p0-ovhidden info-card">
+          <div class="u-92b0c26">
+            <div class="u-m0 info-card-title"><i data-lucide="layout-grid" style="width:18px;height:18px;color:var(--cyan);"></i> สื่อนวัตกรรมการเรียนรู้</div>
+            <button class="btn-primary edit-only" style="background:var(--cyan);" onclick="addMediaItem()"><i data-lucide="plus" class="u-w14px-h14px"></i> เพิ่มสื่อ</button>
           </div>
-          <div id="mediaList" style="padding:0 16px 16px;"><div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div></div>
+          <div id="mediaList" class="u-p0-16px-16px"><div class="empty-block">ยังไม่มีข้อมูลสื่อนวัตกรรม</div></div>
         </div>
       </div>
 
