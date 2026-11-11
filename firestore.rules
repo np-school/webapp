@@ -440,7 +440,8 @@ service cloud.firestore {
           request.resource.data.status == 'in' &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'returnDate', 'returnCondition', 'accessories',
-                      'deviceReturned', 'deviceReturnDate', 'returnedBy', 'claimNote']) &&
+                      'deviceReturned', 'deviceReturnDate', 'returnedBy', 'claimNote',
+                      'updatedAt']) &&
           (!('returnCondition' in request.resource.data) || request.resource.data.returnCondition in ['ok', 'claim'])
         ) ||
         (
@@ -448,7 +449,8 @@ service cloud.firestore {
           request.resource.data.status == 'out' &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['accessories', 'deviceId', 'friendlyName', 'serialNumber', 'borrowDate',
-                      'deviceReturned', 'deviceReturnDate', 'returnCondition', 'recordedBy']) &&
+                      'deviceReturned', 'deviceReturnDate', 'returnCondition', 'recordedBy',
+                      'updatedAt']) &&
           (!('returnCondition' in request.resource.data) || request.resource.data.returnCondition in ['ok', 'claim'])
         )
       );
@@ -464,15 +466,11 @@ service cloud.firestore {
       allow delete: if hasPerm('ipad');
     }
 
-    /* ── ระบบส่งเอกสารการเงินและพัสดุ (finance-docs.html) ── */
-    function finCfg() {
-      return get(/databases/$(database)/documents/financeSettings/config).data;
-    }
-    function finCfgExists() {
-      return exists(/databases/$(database)/documents/financeSettings/config);
-    }
+    /* ── ระบบส่งเอกสารการเงินและพัสดุ (finance-user.html / finance-admin.html) — ขั้นตอน: s1 ตรวจเอกสาร → s2 ใบปะหน้า/เสนอผู้บริหาร → s3 อนุมัติขอเบิกเงิน (→ s4 ติดตามสัญญา เฉพาะยืมเงิน, ล้างหนี้มีแค่ s1) ── */
+    /* สิทธิ์เจ้าหน้าที่ดึงจาก admins/{email}.permissions (ตั้งที่หน้าจัดการสิทธิ์) — ตรงกับ finance-common.js → loadFinRoles()
+       s1 = financeCheck (ตรวจเอกสาร) | s2 = financeCheque (ใบปะหน้า/เสนอผู้บริหาร) | s3 = financeLoan (อนุมัติขอเบิกเงิน + สัญญายืมเงิน s4) */
     function finStep(step) {
-      return isSuperAdmin() || (finCfgExists() && myEmail() in finCfg().get(step, []));
+      return hasPerm(step == 's1' ? 'financeCheck' : (step == 's2' ? 'financeCheque' : 'financeLoan'));
     }
     function finAny() {
       return finStep('s1') || finStep('s2') || finStep('s3');
@@ -497,7 +495,8 @@ service cloud.firestore {
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.s1 == 'processing' &&
         request.resource.data.s2 == 'waiting' &&
-        request.resource.data.s3 == 'unpaid' &&
+        request.resource.data.s3 == 'waiting' &&
+        request.resource.data.s4 == 'unpaid' &&
         request.resource.data.type in ['loan_trip', 'loan_project', 'claim_trip', 'claim_project',
                                        'clear_trip', 'clear_project', 'purchase', 'payroll'] &&
         request.resource.data.amount is number && request.resource.data.amount > 0 &&
@@ -508,25 +507,27 @@ service cloud.firestore {
 
       allow update: if isAuthed() && (
         /* เจ้าของแก้ข้อมูลได้จนกว่าขั้นตรวจเอกสารจะอนุมัติ "หรือ" ตอนที่ขั้นใดขั้นหนึ่งถูกส่งกลับให้แก้ไข (ห้ามแตะเลขสัญญา)
-           และแตะสถานะได้อย่างเดียว: ขั้นที่ถูกส่งกลับ revision → สถานะรอตรวจของขั้นเดิม (s1→processing, s2→waiting, s3→unpaid) */
+           และแตะสถานะได้อย่างเดียว: ขั้นที่ถูกส่งกลับ revision → สถานะรอตรวจของขั้นเดิม (s1→processing, s2→waiting, s3→waiting, s4→unpaid) */
         (resource.data.uid == request.auth.uid &&
-         (resource.data.s1 != 'approved' || resource.data.s2 == 'revision' || resource.data.s3 == 'revision') &&
+         (resource.data.s1 != 'approved' || resource.data.s2 == 'revision' || resource.data.s3 == 'revision' || resource.data.s4 == 'revision') &&
          request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['name', 'title', 'amount', 'fundType', 'note', 'refContractNo',
-                     'loanDate', 'dueDate', 'updatedAt', 'history', 's1', 's2', 's3']) &&
+                     'loanDate', 'dueDate', 'updatedAt', 'history', 's1', 's2', 's3', 's4']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1']) ||
           (resource.data.s1 == 'revision' && request.resource.data.s1 == 'processing')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) ||
           (resource.data.s2 == 'revision' && request.resource.data.s2 == 'waiting')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3']) ||
-          (resource.data.s3 == 'revision' && request.resource.data.s3 == 'unpaid'))) ||
+          (resource.data.s3 == 'revision' && request.resource.data.s3 == 'waiting')) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s4']) ||
+          (resource.data.s4 == 'revision' && request.resource.data.s4 == 'unpaid'))) ||
         /* เจ้าหน้าที่ — แก้ฟิลด์สถานะของ "ขั้นที่ตัวเองรับผิดชอบ" เท่านั้น */
         (finAny() &&
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['s1', 's2', 's3', 'settle', 'contractNo', 'history', 'updatedAt']) &&
+           .hasOnly(['s1', 's2', 's3', 's4', 'settle', 'contractNo', 'history', 'updatedAt']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s1', 'contractNo']) || finStep('s1')) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s2']) || finStep('s2')) &&
-         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 'settle']) || finStep('s3')))
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['s3', 's4', 'settle']) || finStep('s3')))
       );
 
       /* ลบได้เฉพาะเจ้าของตอนยังไม่ถูกตรวจ หรือ SuperAdmin */

@@ -108,7 +108,7 @@ function openForm(id) {
 }
 function fillRefOptions(selected) {
   var opts = ['<option value="">— ไม่ระบุ —</option>'];
-  allDocs.filter(function(d) { return isMine(d) && typeOf(d.type).loan && d.contractNo && d.s3 !== 'paid'; })
+  allDocs.filter(function(d) { return isMine(d) && typeOf(d.type).loan && d.contractNo && d.s4 !== 'paid'; })
     .forEach(function(d) {
       opts.push('<option value="' + esc2(d.contractNo) + '"' + (d.contractNo === selected ? ' selected' : '') + '>' +
         esc2(d.contractNo + ' — ' + d.title.slice(0, 50)) + '</option>');
@@ -157,7 +157,7 @@ function saveForm() {
     var doc = { uid: currentUser.uid, email: (currentUser.email || '').toLowerCase(), name: name, type: key, title: title,
       amount: amount, fundType: fund, note: note, refContractNo: ref,
       fiscalYear: fiscalYearOf(loanDate || new Date()),
-      s1: 'processing', s2: 'waiting', s3: 'unpaid', history: [hist],
+      s1: 'processing', s2: 'waiting', s3: 'waiting', s4: 'unpaid', history: [hist],
       createdAt: FV.serverTimestamp(), updatedAt: FV.serverTimestamp() };
     if (t.loan) { doc.loanDate = TS.fromDate(loanDate); doc.dueDate = TS.fromDate(dueDate); }
     p = db.collection('financeDocs').add(doc);

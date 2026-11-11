@@ -3,7 +3,7 @@
    ใช้โดย finance-user.html (ครู) และ finance-admin.html (เจ้าหน้าที่)
    ต้อง <script> ไฟล์นี้ก่อน finance-user.js / finance-admin.js
    Collections: financeDocs, counters (finloan-<ปีงบ>)
-   สิทธิ์เจ้าหน้าที่: admins/{email}.permissions → financeCheck (ขั้น 1), financeCheque (ขั้น 2), financeLoan (ขั้น 3)
+   สิทธิ์เจ้าหน้าที่: admins/{email}.permissions → financeCheck (ขั้น 1 ตรวจเอกสาร), financeCheque (ขั้น 2 ใบปะหน้า/เสนอผู้บริหาร), financeLoan (ขั้น 3 อนุมัติขอเบิกเงิน + ขั้น 4 สัญญายืมเงิน)
    ตั้งค่าได้ที่หน้า admin-role (กลุ่มบริหารงบประมาณ)
    ══════════════════════════════════════════════════════════════ */
 
@@ -38,26 +38,34 @@ var DOC_CAT_OTHER = { label: 'อื่นๆ', color: 'ink', icon: 'file-text' 
 var FUNDS = ['เงินอุดหนุนค่าจัดการเรียนการสอน', 'เงินบำรุงการศึกษา', 'เงินกิจกรรมพัฒนาผู้เรียน'];
 var STEP_META = {
   s1: { name: 'ตรวจเอกสาร',                 short: 'ตรวจเอกสาร' },
-  s2: { name: 'ตรวจสอบเอกสารขอเบิกเงิน',    short: 'ขอเบิกเงิน' },
-  s3: { name: 'ตรวจสอบสัญญายืมเงิน',        short: 'สัญญายืมเงิน' }
+  s2: { name: 'ทำใบปะหน้า/เสนอผู้บริหาร',    short: 'เสนอผู้บริหาร' },
+  s3: { name: 'อนุมัติเอกสารขอเบิกเงิน',      short: 'อนุมัติเบิกเงิน' },
+  s4: { name: 'ติดตามสัญญายืมเงิน',           short: 'สัญญายืมเงิน' }   /* เฉพาะเอกสารยืมเงิน */
 };
+/* สถานะเริ่มต้น / สถานะเสร็จของแต่ละขั้น (ทุกขั้นมี 'revision' = ส่งกลับแก้ไข เพิ่มจากนี้) */
+var STEP_INIT = { s1: 'processing', s2: 'waiting', s3: 'waiting', s4: 'unpaid' };
+var STEP_DONE = { s1: 'approved',   s2: 'approved', s3: 'approved', s4: 'paid' };
 var ACTIONS = {
   's1:approve':  { title: 'อนุมัติเอกสาร',                    btn: 'ยืนยันอนุมัติ' },
   's1:revision': { title: 'ส่งกลับแก้ไข',                     btn: 'ส่งกลับแก้ไข', noteRequired: true },
   's1:resume':   { title: 'แก้ไขเรียบร้อย กลับไปกำลังดำเนินการ', btn: 'ยืนยัน' },
   's1:revert':   { title: 'ยกเลิกการอนุมัติ (ตรวจเอกสาร)',     btn: 'ยกเลิกการอนุมัติ' },
-  's2:revision': { title: 'ส่งกลับแก้ไข (ขอเบิกเงิน)',         btn: 'ส่งกลับแก้ไข', noteRequired: true },
-  's2:resume':   { title: 'แก้ไขเรียบร้อย กลับไปรอเบิก/ออกเช็ค', btn: 'ยืนยัน' },
-  's2:approve':  { title: 'อนุมัติเอกสารขอเบิกเงิน (ออกเช็คแล้ว)', btn: 'ยืนยันอนุมัติ' },
-  's2:revert':   { title: 'ยกเลิกการอนุมัติ (ขอเบิกเงิน)',     btn: 'ยกเลิกการอนุมัติ' },
-  's3:revision': { title: 'ส่งกลับแก้ไข (สัญญายืมเงิน)',       btn: 'ส่งกลับแก้ไข', noteRequired: true },
-  's3:resume':   { title: 'แก้ไขเรียบร้อย กลับไปค้างส่งใช้เงินยืม', btn: 'ยืนยัน' },
-  's3:approve':  { title: 'ยืนยันชำระแล้ว (ปิดสัญญายืมเงิน)',   btn: 'ยืนยันชำระแล้ว', settle: true },
-  's3:revert':   { title: 'ยกเลิกสถานะชำระแล้ว',               btn: 'ยกเลิกสถานะ' }
+  's2:approve':  { title: 'อนุมัติใบปะหน้า — เสนอผู้บริหารแล้ว', btn: 'ยืนยัน' },
+  's2:revision': { title: 'ส่งกลับแก้ไข (ใบปะหน้า/เสนอผู้บริหาร)', btn: 'ส่งกลับแก้ไข', noteRequired: true },
+  's2:resume':   { title: 'แก้ไขเรียบร้อย กลับไปรอทำใบปะหน้า/เสนอผู้บริหาร', btn: 'ยืนยัน' },
+  's2:revert':   { title: 'ยกเลิกการอนุมัติ (ใบปะหน้า/เสนอผู้บริหาร)', btn: 'ยกเลิกการอนุมัติ' },
+  's3:approve':  { title: 'อนุมัติเอกสารขอเบิกเงิน',            btn: 'ยืนยันอนุมัติ' },
+  's3:revision': { title: 'ส่งกลับแก้ไข (ขอเบิกเงิน)',          btn: 'ส่งกลับแก้ไข', noteRequired: true },
+  's3:resume':   { title: 'แก้ไขเรียบร้อย กลับไปรออนุมัติขอเบิกเงิน', btn: 'ยืนยัน' },
+  's3:revert':   { title: 'ยกเลิกการอนุมัติ (ขอเบิกเงิน)',      btn: 'ยกเลิกการอนุมัติ' },
+  's4:revision': { title: 'ส่งกลับแก้ไข (สัญญายืมเงิน)',       btn: 'ส่งกลับแก้ไข', noteRequired: true },
+  's4:resume':   { title: 'แก้ไขเรียบร้อย กลับไปค้างส่งใช้เงินยืม', btn: 'ยืนยัน' },
+  's4:approve':  { title: 'ยืนยันชำระแล้ว (ปิดสัญญายืมเงิน)',   btn: 'ยืนยันชำระแล้ว', settle: true },
+  's4:revert':   { title: 'ยกเลิกสถานะชำระแล้ว',               btn: 'ยกเลิกสถานะ' }
 };
 var DEFAULT_DUE_DAYS = 15;
 /* ถูกส่งกลับที่ขั้นไหน → ผู้ส่งกด "ส่งใหม่อีกครั้ง" แล้วกลับไปสถานะรอตรวจของ "ขั้นเดิม" (ไม่ต้องเริ่มขั้น 1 ใหม่) */
-var REV_BACK = { s1: 'processing', s2: 'waiting', s3: 'unpaid' };
+var REV_BACK = { s1: 'processing', s2: 'waiting', s3: 'waiting', s4: 'unpaid' };
 
 /* ══════════════════════ STATE (ร่วม) ══════════════════════ */
 var currentUser = null;
@@ -68,7 +76,8 @@ var unsubDocs = null;
 
 /* ══════════════════════ HELPERS ══════════════════════ */
 function isStaff() { return myRoles.sa || myRoles.s1 || myRoles.s2 || myRoles.s3; }
-function canStep(sk) { return myRoles.sa || myRoles[sk]; }
+/* ขั้น 4 (สัญญายืมเงิน) ใช้สิทธิ์เดียวกับขั้น 3 (financeLoan) */
+function canStep(sk) { return myRoles.sa || myRoles[sk === 's4' ? 's3' : sk]; }
 function typeOf(key) {
   for (var i = 0; i < DOC_TYPES.length; i++) if (DOC_TYPES[i].key === key) return DOC_TYPES[i];
   return { key: key, label: key || '-' };
@@ -84,11 +93,15 @@ function deptKeyOf(d) {
   return DEPTS.supply.cats.indexOf(c) > -1 ? 'supply' : 'finance';
 }
 function deptOf(d) { return DEPTS[deptKeyOf(d)]; }
+/* ทุกประเภท: ตรวจเอกสาร → ใบปะหน้า/เสนอผู้บริหาร → อนุมัติขอเบิกเงิน | ล้างหนี้ = ตรวจเอกสารขั้นเดียว | ยืมเงิน = + ติดตามสัญญา (s4) */
 function stepsOf(d) {
-  var t = typeOf(d.type), a = ['s1'];
-  if (!t.clear) a.push('s2');
-  if (t.loan) a.push('s3');
-  return a;
+  var t = typeOf(d.type);
+  if (t.clear) return ['s1'];
+  return t.loan ? ['s1', 's2', 's3', 's4'] : ['s1', 's2', 's3'];
+}
+function prevDone(d, sk) {
+  var st = stepsOf(d), i = st.indexOf(sk);
+  return i < 1 || d[st[i - 1]] === STEP_DONE[st[i - 1]];
 }
 /* ขั้นที่กำลังถูกส่งกลับให้แก้ไข ('s1' | 's2' | 's3' | '' = ไม่มี) — เอกสารหนึ่งใบมีได้ขั้นเดียวเสมอ */
 function revStepOf(d) {
@@ -117,9 +130,12 @@ var STAGE_META = {
   revision: { label: 'ส่งกลับแก้ไข',      color: 'violet', icon: 'undo-2',         title: 'ถูกส่งกลับให้แก้ไข',
               user: 'แก้ไขข้อมูลตามเหตุผลที่แจ้ง แล้วกด "ส่งใหม่อีกครั้ง" เพื่อให้เจ้าหน้าที่ตรวจต่อ',
               staff: 'รอผู้ส่งแก้ไขและส่งกลับมาใหม่ (หรือกด "แก้ไขแล้ว" แทนผู้ส่งในขั้นที่ถูกส่งกลับ)' },
-  cheque:   { label: 'รอเบิก/ออกเช็ค',    color: 'sky',    icon: 'banknote',       title: 'ผ่านการตรวจเอกสารแล้ว รอออกเช็ค',
-              user: 'ไม่ต้องทำอะไรเพิ่ม รอ{DEPT}ตรวจสอบเอกสารขอเบิกเงินและออกเช็ค',
-              staff: 'ออกเช็คแล้วกด "อนุมัติ (ออกเช็คแล้ว)" ที่ขั้นที่ 2' },
+  cover:    { label: 'รอเสนอผู้บริหาร',   color: 'sky',    icon: 'file-text',      title: 'ผ่านการตรวจเอกสารแล้ว รอทำใบปะหน้าและเสนอผู้บริหาร',
+              user: 'ไม่ต้องทำอะไรเพิ่ม รอ{DEPT}ทำใบปะหน้าและเสนอผู้บริหาร',
+              staff: 'ทำใบปะหน้าและเสนอผู้บริหารแล้วกด \"เสนอผู้บริหารแล้ว\" ที่ขั้นที่ 2' },
+  approve:  { label: 'รออนุมัติเบิก',      color: 'teal',   icon: 'banknote',       title: 'เสนอผู้บริหารแล้ว รออนุมัติเอกสารขอเบิกเงิน',
+              user: 'ไม่ต้องทำอะไรเพิ่ม รอผู้บริหารอนุมัติและ{DEPT}ดำเนินการเบิกเงิน',
+              staff: 'เมื่อผู้บริหารอนุมัติแล้วกด \"อนุมัติเอกสารขอเบิกเงิน\" ที่ขั้นที่ 3' },
   loan:     { label: 'ค้างส่งใช้เงินยืม',  color: 'ink',    icon: 'wallet',         title: 'ค้างส่งใช้เงินยืม',
               user: 'นำหลักฐานมาส่งใช้เงินยืมภายในวันครบกำหนด',
               staff: 'เมื่อผู้ยืมส่งใช้แล้วกด "ยืนยันชำระแล้ว" ที่ขั้นสุดท้าย' },
@@ -129,15 +145,15 @@ var STAGE_META = {
   done:     { label: 'เสร็จสิ้น',          color: 'green',  icon: 'check-check',    title: 'ดำเนินการเสร็จสิ้น',
               user: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว', staff: 'เอกสารนี้ผ่านทุกขั้นตอนแล้ว' }
 };
-var STAGE_ORDER = ['review', 'revision', 'cheque', 'loan', 'late', 'done'];
+var STAGE_ORDER = ['review', 'revision', 'cover', 'approve', 'loan', 'late', 'done'];
+var STAGE_OF_STEP = { s1: 'review', s2: 'cover', s3: 'approve' };
 function fdStage(d) {
-  var hasS2 = stepsOf(d).indexOf('s2') > -1, loan = !!typeOf(d.type).loan;
-  if (d.s1 === 'revision') return 'revision';
-  if (d.s1 !== 'approved') return 'review';
-  if (hasS2 && d.s2 === 'revision') return 'revision';
-  if (hasS2 && d.s2 !== 'approved') return 'cheque';
-  if (loan && d.s3 === 'revision') return 'revision';
-  if (loan && d.s3 !== 'paid') return isOverdue(d) ? 'late' : 'loan';
+  var st = stepsOf(d);
+  for (var i = 0; i < st.length; i++) {
+    var sk = st[i];
+    if (d[sk] === 'revision') return 'revision';
+    if (d[sk] !== STEP_DONE[sk]) return sk === 's4' ? (isOverdue(d) ? 'late' : 'loan') : STAGE_OF_STEP[sk];
+  }
   return 'done';
 }
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -155,26 +171,16 @@ function fiscalYearOf(date) {
   return (date.getMonth() >= 9 ? date.getFullYear() + 1 : date.getFullYear()) + 543;
 }
 function isOverdue(d) {
-  if (!typeOf(d.type).loan || d.s3 === 'paid' || d.s2 !== 'approved' || !d.dueDate) return false;
+  if (!typeOf(d.type).loan || d.s4 === 'paid' || d.s3 !== 'approved' || !d.dueDate) return false;
   var t = new Date(); t.setHours(0, 0, 0, 0);
   return toDate(d.dueDate) < t;
 }
 function stepInfo(d, sk) {
-  if (sk === 's1') {
-    if (d.s1 === 'approved') return { tone: 'done',   label: 'อนุมัติ' };
-    if (d.s1 === 'revision') return { tone: 'warn',   label: 'รอผู้ส่งแก้ไข' };
-    return { tone: 'active', label: 'กำลังดำเนินการ' };
-  }
-  if (sk === 's2') {
-    if (d.s2 === 'approved') return { tone: 'done',   label: 'อนุมัติ' };
-    if (d.s1 !== 'approved') return { tone: 'wait',   label: 'รอขั้นก่อนหน้า' };
-    if (d.s2 === 'revision') return { tone: 'warn',   label: 'รอผู้ส่งแก้ไข' };
-    return { tone: 'active', label: 'กำลังดำเนินการ' };
-  }
-  if (d.s3 === 'paid')       return { tone: 'done', label: 'ชำระแล้ว' };
-  if (d.s2 !== 'approved')   return { tone: 'wait', label: 'รอขั้นก่อนหน้า' };
-  if (d.s3 === 'revision')   return { tone: 'warn', label: 'รอผู้ส่งแก้ไข' };
-  return isOverdue(d) ? { tone: 'late', label: 'ค้างชำระ (เกินกำหนด)' } : { tone: 'active', label: 'ค้างชำระ' };
+  if (d[sk] === STEP_DONE[sk])  return { tone: 'done', label: sk === 's4' ? 'ชำระแล้ว' : 'อนุมัติ' };
+  if (!prevDone(d, sk))         return { tone: 'wait', label: 'รอขั้นก่อนหน้า' };
+  if (d[sk] === 'revision')     return { tone: 'warn', label: 'รอผู้ส่งแก้ไข' };
+  if (sk === 's4') return isOverdue(d) ? { tone: 'late', label: 'ค้างชำระ (เกินกำหนด)' } : { tone: 'active', label: 'ค้างชำระ' };
+  return { tone: 'active', label: 'กำลังดำเนินการ' };
 }
 function overallInfo(d) {
   var steps = stepsOf(d);

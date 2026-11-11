@@ -81,13 +81,14 @@
 .fd-cat-green  { --cat:var(--c-green);  --cat-pale:var(--c-green-pale);  --cat-tint:var(--c-green-tint);  --cat-deep:var(--c-green-deep); }
 .fd-cat-violet { --cat:var(--c-violet); --cat-pale:var(--c-violet-pale); --cat-tint:var(--c-violet-tint); --cat-deep:var(--c-violet-deep); }
 .fd-cat-amber  { --cat:var(--c-amber);  --cat-pale:var(--c-amber-pale);  --cat-tint:var(--c-amber-tint);  --cat-deep:var(--c-amber-deep); }
+.fd-cat-teal   { --cat:#0d9488; --cat-pale:#ccfbf1; --cat-tint:#99f6e4; --cat-deep:#115e59; }
 .fd-cat-red    { --cat:var(--c-red);    --cat-pale:var(--c-red-pale);    --cat-tint:var(--c-red-tint);    --cat-deep:var(--c-red-deep); }
 .fd-cat-ink    { --cat:var(--c-ink-mid); --cat-pale:var(--c-ink-pale);   --cat-tint:var(--c-ink-tint);    --cat-deep:var(--c-ink); }
 .fd-cat-all    { --cat:var(--accent);   --cat-pale:var(--white);         --cat-tint:var(--border);        --cat-deep:var(--text2); }
 
 /* การ์ดสรุปตามสถานะ (กดเพื่อกรอง) */
 .fd-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--gap-card); margin-bottom:var(--gap-section); }
-@media (min-width:1280px) { .fd-stats { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+@media (min-width:1280px) { .fd-stats { grid-template-columns:repeat(7,minmax(0,1fr)); } }
 .fd-stat { appearance:none; font:inherit; text-align:left; width:100%; cursor:pointer; padding:14px 16px; transition:border-color .15s, box-shadow .15s, transform .15s; }
 .fd-stat:hover { border-color:var(--cat-tint); transform:translateY(-1px); }
 .fd-stat.active { border-color:var(--cat); box-shadow:0 0 0 3px var(--cat-tint); }

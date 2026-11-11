@@ -32,7 +32,7 @@ var PERM_DEFS = [
   },
   {
     key: 'financeCheck',
-    label: 'เอกสารการเงิน: ผู้ตรวจเอกสาร',
+    label: 'เอกสารการเงิน/พัสดุ: ผู้ตรวจเอกสาร',
     desc: 'ตรวจและอนุมัติ/ส่งกลับแก้ไขเอกสารการเงินและพัสดุ (ขั้นที่ 1)',
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'file-check',
@@ -42,18 +42,18 @@ var PERM_DEFS = [
   },
   {
     key: 'financeCheque',
-    label: 'เอกสารการเงิน: ผู้ออกเช็ค',
-    desc: 'ยืนยันตรวจสอบเอกสารขอเบิกเงิน/ออกเช็ค (ขั้นที่ 2)',
+    label: 'เอกสารการเงิน/พัสดุ: ใบปะหน้า/เสนอผู้บริหาร',
+    desc: 'ทำใบปะหน้าและเสนอผู้บริหาร (ขั้นที่ 2)',
     group: 'กลุ่มบริหารงบประมาณ',
-    icon: 'banknote',
+    icon: 'file-text',
     get color()  { return cssVar('--role-budget-color');  },
     get bg()     { return cssVar('--role-budget-bg');     },
     get border() { return cssVar('--role-budget-border'); }
   },
   {
     key: 'financeLoan',
-    label: 'เอกสารการเงิน: ตรวจสัญญายืมเงิน',
-    desc: 'ยืนยันสถานะชำระแล้วของสัญญายืมเงิน (ขั้นที่ 3)',
+    label: 'เอกสารการเงิน/พัสดุ: อนุมัติขอเบิกเงิน',
+    desc: 'อนุมัติเอกสารขอเบิกเงิน (ขั้นที่ 3) และยืนยันชำระสัญญายืมเงิน',
     group: 'กลุ่มบริหารงบประมาณ',
     icon: 'receipt',
     get color()  { return cssVar('--role-budget-color');  },

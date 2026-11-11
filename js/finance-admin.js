@@ -1,51 +1,44 @@
 /* ══════════════════════════════════════════════════════════════
    finance-admin.js — หน้าเจ้าหน้าที่: กดยืนยันแต่ละขั้น + ทะเบียนลูกหนี้
-   (ต้องโหลด finance-common.js ก่อน) สิทธิ์ตาม admins/{email}.permissions (financeCheck / financeCheque / financeLoan)
+   (ต้องโหลด finance-common.js ก่อน) สิทธิ์ตาม admins/{email}.permissions (financeCheck = ขั้น 1, financeCheque = ขั้น 2, financeLoan = ขั้น 3-4)
    ══════════════════════════════════════════════════════════════ */
 var activeTab = 'todo';
 var searchQ = '';
 var ledgerFY = '';
 var confirmCtx = null;
-var stageFilter = '';   /* '' | review | revision | cheque | loan | late | done  (คลิกจากการ์ดสรุป) */
+var stageFilter = '';   /* '' | review | revision | cover | approve | loan | late | done  (คลิกจากการ์ดสรุป) */
 var deptFilter = 'finance';   /* 'finance' | 'supply' — ฝ่ายที่กำลังดูอยู่ (สลับได้จากแถบด้านบน) */
 var catFilter = '';     /* '' | loan | claim | clear | purchase | payroll         (คลิกจากแถบหมวดหมู่) */
 
 /* การ์ดสรุปด้านบน: แยกสีตามสถานะ — ข้อมูลสี/ชื่อมาจาก STAGE_META ใน finance-common.js (fdStage ก็อยู่ที่นั่น) */
 var FD_STATS = STAGE_ORDER.map(function(k) { var m = STAGE_META[k]; return { k: k, label: m.label, color: m.color, icon: m.icon }; });
 
-/* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ — ทุกขั้น (1-3) กด "ส่งกลับแก้ไข" ได้ตอนที่เอกสารอยู่ในขั้นนั้น */
+/* ปุ่มที่ผู้ใช้คนนี้กดได้กับเอกสารนี้ — ทุกขั้น (1-4) กด "ส่งกลับแก้ไข" ได้ตอนที่เอกสารอยู่ในขั้นนั้น */
+var BTN_LABEL = {
+  s1: { approve: 'อนุมัติเอกสาร',            resume: 'แก้ไขแล้ว → กำลังดำเนินการ' },
+  s2: { approve: 'เสนอผู้บริหารแล้ว',         resume: 'แก้ไขแล้ว → รอทำใบปะหน้า/เสนอผู้บริหาร' },
+  s3: { approve: 'อนุมัติเอกสารขอเบิกเงิน',   resume: 'แก้ไขแล้ว → รออนุมัติขอเบิกเงิน' },
+  s4: { approve: 'ยืนยันชำระแล้ว',           resume: 'แก้ไขแล้ว → ค้างส่งใช้เงินยืม', revert: 'ยกเลิกสถานะชำระแล้ว' }
+};
+/* ขั้นถัดไปเริ่มแล้ว (อนุมัติแล้ว/กำลังถูกส่งกลับ) → ห้ามยกเลิกการอนุมัติขั้นนี้ */
+function nextBlocksRevert(d, sk) {
+  var st = stepsOf(d), n = st[st.indexOf(sk) + 1];
+  return !!n && (d[n] === STEP_DONE[n] || d[n] === 'revision');
+}
 function actionsFor(d) {
-  var out = [], st = stepsOf(d);
-  if (canStep('s1')) {
-    if (d.s1 === 'processing') {
-      out.push({ sk: 's1', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
-      out.push({ sk: 's1', act: 'approve',  label: 'อนุมัติเอกสาร', cls: 'ok' });
-    } else if (d.s1 === 'revision') {
-      out.push({ sk: 's1', act: 'resume', label: 'แก้ไขแล้ว → กำลังดำเนินการ', cls: 'ok' });
-    } else if (d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision') {
-      out.push({ sk: 's1', act: 'revert', label: 'ยกเลิกการอนุมัติ', cls: 'plain', revert: true });
+  var out = [];
+  stepsOf(d).forEach(function(sk) {
+    if (!canStep(sk) || !prevDone(d, sk)) return;
+    var L = BTN_LABEL[sk];
+    if (d[sk] === 'revision') {
+      out.push({ sk: sk, act: 'resume', label: L.resume, cls: 'ok' });
+    } else if (d[sk] === STEP_INIT[sk]) {
+      out.push({ sk: sk, act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
+      out.push({ sk: sk, act: 'approve',  label: L.approve, cls: 'ok' });
+    } else if (d[sk] === STEP_DONE[sk] && !nextBlocksRevert(d, sk)) {
+      out.push({ sk: sk, act: 'revert', label: L.revert || 'ยกเลิกการอนุมัติ', cls: 'plain', revert: true });
     }
-  }
-  if (st.indexOf('s2') > -1 && canStep('s2') && d.s1 === 'approved') {
-    if (d.s2 === 'revision') {
-      out.push({ sk: 's2', act: 'resume', label: 'แก้ไขแล้ว → รอเบิก/ออกเช็ค', cls: 'ok' });
-    } else if (d.s2 !== 'approved') {
-      out.push({ sk: 's2', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
-      out.push({ sk: 's2', act: 'approve',  label: 'อนุมัติ (ออกเช็คแล้ว)', cls: 'ok' });
-    } else if (d.s3 !== 'paid' && d.s3 !== 'revision') {
-      out.push({ sk: 's2', act: 'revert', label: 'ยกเลิกการอนุมัติ', cls: 'plain', revert: true });
-    }
-  }
-  if (st.indexOf('s3') > -1 && canStep('s3') && d.s2 === 'approved') {
-    if (d.s3 === 'revision') {
-      out.push({ sk: 's3', act: 'resume', label: 'แก้ไขแล้ว → ค้างส่งใช้เงินยืม', cls: 'ok' });
-    } else if (d.s3 !== 'paid') {
-      out.push({ sk: 's3', act: 'revision', label: 'ส่งกลับแก้ไข', cls: 'warn' });
-      out.push({ sk: 's3', act: 'approve',  label: 'ยืนยันชำระแล้ว', cls: 'ok' });
-    } else {
-      out.push({ sk: 's3', act: 'revert', label: 'ยกเลิกสถานะชำระแล้ว', cls: 'plain', revert: true });
-    }
-  }
+  });
   return out;
 }
 /* เอกสารเฉพาะฝ่ายที่เลือกอยู่ — ทุกส่วนของหน้า (แท็บ/การ์ดสรุป/หมวด/ทะเบียน) ใช้ชุดนี้ */
@@ -278,7 +271,7 @@ function fundShort(f) {
   return String(f || '').replace(/^เงินอุดหนุนค่าจัดการเรียนการสอน$/, 'อุดหนุนค่าจัดการเรียนการสอน').replace(/^เงิน/, '');
 }
 function ledgerStatusBadge(d) {
-  if (d.s3 === 'paid') return '<span class="fd-bar t-done">ชำระแล้ว</span>';
+  if (d.s4 === 'paid') return '<span class="fd-bar t-done">ชำระแล้ว</span>';
   if (isOverdue(d))    return '<span class="fd-bar t-late">เกินกำหนด</span>';
   return '<span class="fd-bar t-active">ค้างชำระ</span>';
 }
@@ -301,7 +294,7 @@ function ledgerTableHtml(rows) {
   var body = rows.map(function(d, i) {
     var s = d.settle || {};
     var late = isOverdue(d);
-    var rowCls = d.s3 === 'paid' ? 'fd-lrow-done' : (late ? 'fd-lrow-late' : 'fd-lrow-open');
+    var rowCls = d.s4 === 'paid' ? 'fd-lrow-done' : (late ? 'fd-lrow-late' : 'fd-lrow-open');
     return '<tr class="' + rowCls + '" onclick="openDetail(\'' + d.id + '\')">' +
       '<td style="color:var(--text3);font-size:12px;text-align:center">' + (i + 1) + '</td>' +
       '<td>' + fmtD(d.loanDate) + '</td>' +
@@ -311,7 +304,7 @@ function ledgerTableHtml(rows) {
       '<td class="num" style="font-weight:800">฿' + fmtMoney(d.amount) + '</td>' +
       '<td>' + fmtD(d.dueDate) + '</td>' +
       '<td>' + ledgerStatusBadge(d) + '</td>' +
-      '<td>' + (d.s3 === 'paid' ? fmtD(s.date) : '') + '</td>' +
+      '<td>' + (d.s4 === 'paid' ? fmtD(s.date) : '') + '</td>' +
       '<td>' + esc2(s.voucherNo || '') + '</td>' +
       '<td class="num">' + (s.voucherAmount != null && s.voucherAmount !== '' ? fmtMoney(s.voucherAmount) : '') + '</td>' +
       '<td class="num">' + (s.cash ? fmtMoney(s.cash) : '') + '</td>' +
@@ -344,7 +337,7 @@ function exportLedger() {
   rows.forEach(function(d, i) {
     var s = d.settle || {};
     lines.push([i + 1, typeOf(d.type).label, fmtD(d.loanDate), d.contractNo, d.name, d.title, d.amount, fmtD(d.dueDate),
-      d.s3 === 'paid' ? fmtD(s.date) : 'ค้างชำระ', s.voucherNo || '', s.voucherAmount || '', s.cash || '', d.fundType].map(q).join(','));
+      d.s4 === 'paid' ? fmtD(s.date) : 'ค้างชำระ', s.voucherNo || '', s.voucherAmount || '', s.cash || '', d.fundType].map(q).join(','));
   });
   var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
   var a = document.createElement('a');
@@ -401,23 +394,18 @@ function submitConfirm() {
 /* คำนวณการเปลี่ยนสถานะ — คืน null ถ้า state ปัจจุบันไม่ตรงเงื่อนไข (กันกดซ้ำ/คนละเครื่อง) */
 function computeUpdate(d, sk, act, extra) {
   var u = {}, FV = firebase.firestore.FieldValue;
-  if (sk === 's1') {
-    if (act === 'approve'  && d.s1 === 'processing') u.s1 = 'approved';
-    if (act === 'revision' && d.s1 === 'processing') u.s1 = 'revision';
-    if (act === 'resume'   && d.s1 === 'revision')   u.s1 = 'processing';
-    if (act === 'revert'   && d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision') u.s1 = 'processing';
-  } else if (sk === 's2') {
-    var s2Open = d.s1 === 'approved' && d.s2 !== 'approved' && d.s2 !== 'revision';
-    if (act === 'approve'  && s2Open) u.s2 = 'approved';
-    if (act === 'revision' && s2Open) u.s2 = 'revision';
-    if (act === 'resume'   && d.s1 === 'approved' && d.s2 === 'revision') u.s2 = 'waiting';
-    if (act === 'revert'   && d.s2 === 'approved' && d.s3 !== 'paid' && d.s3 !== 'revision') u.s2 = 'waiting';
-  } else if (sk === 's3') {
-    var s3Open = d.s2 === 'approved' && d.s3 !== 'paid' && d.s3 !== 'revision';
-    if (act === 'approve'  && s3Open) { u.s3 = 'paid'; u.settle = extra || {}; }
-    if (act === 'revision' && s3Open) u.s3 = 'revision';
-    if (act === 'resume'   && d.s2 === 'approved' && d.s3 === 'revision') u.s3 = 'unpaid';
-    if (act === 'revert'   && d.s3 === 'paid') { u.s3 = 'unpaid'; u.settle = FV.delete(); }
+  if (stepsOf(d).indexOf(sk) < 0 || !prevDone(d, sk)) return null;
+  var cur = d[sk];
+  if (act === 'approve' && cur === STEP_INIT[sk]) {
+    u[sk] = STEP_DONE[sk];
+    if (sk === 's4') u.settle = extra || {};
+  } else if (act === 'revision' && cur === STEP_INIT[sk]) {
+    u[sk] = 'revision';
+  } else if (act === 'resume' && cur === 'revision') {
+    u[sk] = STEP_INIT[sk];
+  } else if (act === 'revert' && cur === STEP_DONE[sk] && !nextBlocksRevert(d, sk)) {
+    u[sk] = STEP_INIT[sk];
+    if (sk === 's4') u.settle = FV.delete();
   }
   return Object.keys(u).length ? u : null;
 }
